@@ -8,72 +8,50 @@ import { BottomSheet } from './BottomSheet';
 import { useDepartures } from '../hooks/useDepartures';
 import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
-import { useAnimatedVehicles } from '../hooks/useAnimatedVehicles';
 import { LiveStatus } from './LiveStatus';
-import { vehicleColorExpression } from '../utils/vehicleColors';
+import { vehicleColorExpression, getVehicleColor } from '../utils/vehicleColors';
+import { SettingsModal } from './SettingsModal';
+import { WelcomeModal } from './WelcomeModal';
+import { Settings } from 'lucide-react';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
+// Styling layers for stops
 const clusterLayer: any = { id: 'clusters', type: 'circle', source: 'pid-stops', filter: ['has', 'point_count'], paint: { 'circle-color': '#334155', 'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 30, 25], 'circle-opacity': 0.8, 'circle-stroke-width': 1, 'circle-stroke-color': '#475569' } };
 const clusterCountLayer: any = { id: 'cluster-count', type: 'symbol', source: 'pid-stops', filter: ['has', 'point_count'], layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 12 }, paint: { 'text-color': '#f8fafc' } };
-
-// MAIN STOPS (Type 0 and 1)
 const stopPointLayer: any = {
-    id: 'unclustered-point', type: 'circle', source: 'pid-stops', filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'location_type'], 2]],
+    id: 'unclustered-point',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['!', ['has', 'point_count']],
     paint: {
-        'circle-radius': ['match', ['get', 'location_type'], 1, 8, 6],
-        'circle-color': ['match', ['get', 'location_type'], 1, '#38bdf8', '#1e293b'],
+        'circle-radius': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
+            1, 10, // Station
+            2, 7,  // Entrance
+            6     // Regular stop
+        ],
+        'circle-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
+            1, '#38bdf8', // Station
+            2, '#FFFFFF', // Entrance (crisp white)
+            '#1e293b'    // Regular stop
+        ],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#38bdf8'
-    }
-};
-const stopLabelLayer: any = {
-    id: 'unclustered-label', type: 'symbol', source: 'pid-stops', filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'location_type'], 2]], minzoom: 14.5,
-    layout: {
-        'text-field': ['case',
-            ['any', ['!', ['has', 'platform_code']], ['==', ['get', 'platform_code'], ''], ['==', ['get', 'platform_code'], null]],
-            ['get', 'stop_name'],
-            ['concat', ['get', 'stop_name'], ' (', ['get', 'platform_code'], ')']
-        ],
-        'text-size': 10,
-        'text-offset': [0, 1.2],
-        'text-anchor': 'top',
-        'text-font': ['Open Sans Regular']
-    },
-    paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0f172a', 'text-halo-width': 1 }
-};
-
-const entranceLabelLayer: any = {
-    id: 'entrance-labels-native', type: 'symbol', source: 'pid-stops', filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'location_type'], 2]], minzoom: 16.5,
-    layout: {
-        'text-field': ['get', 'stop_name'],
-        'text-size': 10,
-        'text-offset': [0, 1.2],
-        'text-anchor': 'top',
-        'text-font': ['Open Sans Regular']
-    },
-    paint: {
-        'text-color': '#94a3b8',
-        'text-halo-color': '#0f172a',
-        'text-halo-width': 1
     }
 };
 
 const INITIAL = (() => {
     const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-    return { lat: parseFloat(p.get('lat') || '50.0755'), lng: parseFloat(p.get('lng') || '14.4378'), z: parseFloat(p.get('z') || '12'), stopId: p.get('stop') };
+    return { lat: parseFloat(p.get('lat') || '50.0755'), lng: parseFloat(p.get('lng') || '14.4378'), z: parseFloat(p.get('z') || '13') };
 })();
-
-
-
-
 
 export const Map: React.FC = () => {
     const mapRef = useRef<any>(null);
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
-
+    const [showVehicles, setShowVehicles] = useState(true);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const debounceRef = useRef<any>(null);
 
     const { data: rawVehicles, isFetching: fetchingVehicles } = useVehicles(debouncedBounds);
@@ -82,26 +60,20 @@ export const Map: React.FC = () => {
 
     const onMove = useCallback((evt: any) => {
         const { latitude, longitude, zoom } = evt.viewState;
+        const b = evt.target.getBounds();
+        const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
 
+        // Update URL
         const url = new URL(window.location.href);
         url.searchParams.set('lat', latitude.toFixed(5));
         url.searchParams.set('lng', longitude.toFixed(5));
         url.searchParams.set('z', zoom.toFixed(2));
-        if (selectedStop) url.searchParams.set('stop', selectedStop.id);
         window.history.replaceState({}, '', url.toString());
 
-        const b = evt.target.getBounds();
-        const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
-
         setBounds(currentBounds);
-
-        // Debounce network request
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setDebouncedBounds(currentBounds);
-        }, 800);
-
-    }, [selectedStop]);
+        debounceRef.current = setTimeout(() => setDebouncedBounds(currentBounds), 800);
+    }, []);
 
     const onLoad = useCallback((evt: any) => {
         const map = evt.target;
@@ -114,24 +86,44 @@ export const Map: React.FC = () => {
         }
     }, []);
 
+    const [expandedLines, setExpandedLines] = useState<string[]>([]);
+
+    const groupedDepartures = useMemo(() => {
+        if (!departures?.departures) return [];
+        const groups: Record<string, any[]> = {};
+
+        // Group departures by line name
+        departures.departures.forEach((dep: any) => {
+            const key = dep.line;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(dep);
+        });
+
+        // Convert to array and preserve overall chronological order based on first departure
+        return Object.entries(groups).map(([line, deps]) => ({
+            line,
+            type: deps[0].type,
+            departures: deps // Keep all for toggle functionality
+        })).sort((a, b) => {
+            const timeA = new Date(a.departures[0].timestamp).getTime();
+            const timeB = new Date(b.departures[0].timestamp).getTime();
+            return timeA - timeB;
+        });
+    }, [departures]);
+
     const stopsData = useMemo(() => {
         if (!stops) return null;
-        return {
-            type: 'FeatureCollection' as const,
-            features: (stops as any).features?.filter((f: any) => f.properties.location_type !== 2)
-        };
+        return { type: 'FeatureCollection' as const, features: (stops as any).features };
     }, [stops]);
 
-    const entrancesData = useMemo(() => {
-        if (!stops) return null;
-        return {
-            type: 'FeatureCollection' as const,
-            features: (stops as any).features?.filter((f: any) => f.properties.location_type === 2)
-        };
-    }, [stops]);
+    const toggleLine = (line: string) => {
+        setExpandedLines(prev =>
+            prev.includes(line) ? prev.filter(l => l !== line) : [...prev, line]
+        );
+    };
 
     return (
-        <div className="w-full h-full bg-slate-900 relative">
+        <div className="w-full h-full bg-black relative">
             <LiveStatus fetching={fetchingVehicles} rawVehicles={rawVehicles} bounds={bounds} />
 
             <MapGL
@@ -142,6 +134,14 @@ export const Map: React.FC = () => {
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
                 mapLib={maplibregl}
+                onMouseEnter={(evt) => {
+                    if (evt.features?.length) {
+                        evt.target.getCanvas().style.cursor = 'pointer';
+                    }
+                }}
+                onMouseLeave={(evt) => {
+                    evt.target.getCanvas().style.cursor = '';
+                }}
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f) return;
@@ -149,41 +149,33 @@ export const Map: React.FC = () => {
                         const pc = f.properties.platform_code;
                         const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
                         setSelectedStop({ id: f.properties.stop_id, name });
-                    }
-                    if (f.layer.id === 'clusters' || f.layer.id === 'cluster-count') {
-                        const m = evt.target;
-                        const source = m.getSource('pid-stops') as any;
-                        if (source && source.getClusterExpansionZoom) {
-                            source.getClusterExpansionZoom(f.properties!.cluster_id, (err: any, z: number) => {
-                                if (!err) m.easeTo({ center: (f.geometry as any).coordinates, zoom: z + 0.5, duration: 400 });
-                            });
-                        }
+                        setExpandedLines([]); // Reset on new stop
                     }
                 }}
-                interactiveLayerIds={['clusters', 'cluster-count', 'unclustered-point']}
-                onMouseEnter={(e: any) => { if (e.target.getCanvas()) e.target.getCanvas().style.cursor = 'pointer'; }}
-                onMouseLeave={(e: any) => { if (e.target.getCanvas()) e.target.getCanvas().style.cursor = ''; }}
+                interactiveLayerIds={['unclustered-point', 'clusters']}
             >
-                <NavigationControl position="bottom-right" showCompass={false} />
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                        title="Settings"
+                    >
+                        <Settings size={20} className="group-hover:rotate-45 transition-transform" />
+                    </button>
+                    <NavigationControl position="top-right" showCompass={false} style={{ position: 'relative', top: 0, right: 0 }} />
+                </div>
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
                         <Layer {...clusterLayer} />
                         <Layer {...clusterCountLayer} />
                         <Layer {...stopPointLayer} />
-                        <Layer {...stopLabelLayer} />
                     </Source>
                 )}
 
-                {entrancesData && (
-                    <Source id="pid-entrances" type="geojson" data={entrancesData} cluster={false}>
-                        <Layer {...entranceLabelLayer} source="pid-entrances" />
-                    </Source>
-                )}
-
-                {rawVehicles && (
+                {showVehicles && rawVehicles && (
                     <Source id="pid-vehicles" type="geojson" data={rawVehicles}>
-                        {/* 1. Vehicle Circle */}
+                        {/* 1. Base Circle */}
                         <Layer
                             id="vehicles-point"
                             type="circle"
@@ -194,20 +186,21 @@ export const Map: React.FC = () => {
                                 'circle-stroke-color': '#FFFFFF'
                             }}
                         />
-                        {/* 2. Direction Arrow - Using 'v' with anchor 'top' for max stability */}
+                        {/* 2. Direction Arrow Triangle ▲ */}
                         <Layer
                             id="vehicles-direction"
                             type="symbol"
-                            minzoom={10}
+                            minzoom={11}
                             layout={{
-                                'text-field': 'v',
-                                'text-font': ['Open Sans Regular'],
-                                'text-size': ['interpolate', ['linear'], ['zoom'], 10, 16, 16, 24],
-                                'text-rotate': ['+', ['coalesce', ['get', 'bearing'], 0], 180],
+                                'text-field': '▲',
+                                'text-font': ['Noto Sans Regular', 'Open Sans Bold'],
+                                'text-size': ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 14],
+                                'text-rotate': ['get', 'bearing'],
                                 'text-rotation-alignment': 'map',
                                 'text-allow-overlap': true,
                                 'text-ignore-placement': true,
-                                'text-anchor': 'top' // Automatically offsets it out of center
+                                'text-offset': [0, -1.7],
+                                'text-anchor': 'center'
                             }}
                             paint={{
                                 'text-color': vehicleColorExpression,
@@ -215,15 +208,15 @@ export const Map: React.FC = () => {
                                 'text-halo-width': 1.5
                             }}
                         />
-                        {/* 3. Line Number (White and Centered) */}
+                        {/* 3. Line Label (White and Centered) */}
                         <Layer
                             id="vehicles-label"
                             type="symbol"
                             minzoom={10}
                             layout={{
                                 'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
-                                'text-size': ['interpolate', ['linear'], ['zoom'], 10, 8, 16, 12],
-                                'text-font': ['Open Sans Regular'],
+                                'text-font': ['Noto Sans Regular', 'Open Sans Bold'],
+                                'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
                                 'text-allow-overlap': true,
                                 'text-ignore-placement': true,
                                 'text-anchor': 'center'
@@ -231,37 +224,80 @@ export const Map: React.FC = () => {
                             paint={{
                                 'text-color': '#FFFFFF',
                                 'text-halo-color': '#000000',
-                                'text-halo-width': 1.5
+                                'text-halo-width': 2
                             }}
                         />
                     </Source>
                 )}
-
-
             </MapGL>
 
-            <BottomSheet isOpen={!!selectedStop} onClose={() => { setSelectedStop(null); const url = new URL(window.location.href); url.searchParams.delete('stop'); window.history.replaceState({}, '', url.toString()); }} title={selectedStop?.name}>
-                <div className="space-y-4 pt-2">
-                    {loadingDeps ? (
-                        <div className="flex flex-col gap-3">
-                            {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-800/50 animate-pulse rounded-2xl" />)}
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {departures?.departures?.length > 0 ? (
-                                departures.departures.map((dep: any, idx: number) => (
-                                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-800/40 rounded-2xl border border-slate-700/30">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 flex items-center justify-center bg-rose-600 rounded-xl font-bold text-white shadow-lg text-sm">{dep.line}</div>
-                                            <div><div className="text-white font-semibold leading-tight">{dep.headsign}</div><div className="text-slate-500 text-[10px] mt-1">{format(parseISO(dep.scheduled), 'HH:mm')}</div></div>
-                                        </div>
-                                        <div className="text-right"><div className="text-lg font-mono font-bold"><Countdown timestamp={dep.timestamp} /></div>{dep.delay > 0 && <div className="text-rose-400 text-[10px] font-medium uppercase mt-1">+{Math.round(dep.delay / 60)}m delay</div>}</div>
+            <WelcomeModal />
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                showVehicles={showVehicles}
+                setShowVehicles={setShowVehicles}
+            />
+
+            <BottomSheet isOpen={!!selectedStop} onClose={() => setSelectedStop(null)} title={selectedStop?.name}>
+                <div className="space-y-6 pt-2">
+                    {groupedDepartures.map((group) => {
+                        const isExpanded = expandedLines.includes(group.line);
+                        const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
+                        const hasMore = group.departures.length > 1;
+
+                        return (
+                            <div key={group.line} className="space-y-3">
+                                {/* Group Header */}
+                                <div className="flex items-center gap-3 px-1">
+                                    <div
+                                        className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
+                                        style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
+                                    >
+                                        {group.line}
                                     </div>
-                                ))
-                            ) : (
-                                <div className="py-12 text-center text-slate-500">No upcoming departures found.</div>
-                            )}
-                        </div>
+                                    <div className="h-[1px] flex-1 bg-white/10" />
+                                </div>
+
+                                {/* Departures for this line */}
+                                <div className="space-y-2">
+                                    {visibleDepartures.map((dep: any, idx: number) => (
+                                        <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
+                                                    <div className="text-slate-500 text-[10px] mt-1 flex items-center gap-2">
+                                                        <span>{format(parseISO(dep.scheduled), 'HH:mm')}</span>
+                                                        {dep.delay > 30 && <span className="text-rose-400">+{Math.round(dep.delay / 60)}m delay</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-lg font-mono font-bold text-emerald-400">
+                                                    <Countdown timestamp={dep.timestamp} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Show More Button */}
+                                    {hasMore && (
+                                        <button
+                                            onClick={() => toggleLine(group.line)}
+                                            className="w-full py-2 text-slate-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-slate-400 transition-colors"
+                                        >
+                                            <div className="h-[1px] flex-1 bg-white/5" />
+                                            <span>{isExpanded ? 'Show less' : `+ ${group.departures.length - 1} more connections`}</span>
+                                            <div className="h-[1px] flex-1 bg-white/5" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {groupedDepartures.length === 0 && !loadingDeps && (
+                        <div className="py-12 text-center text-slate-500">No upcoming departures found.</div>
                     )}
                 </div>
             </BottomSheet>

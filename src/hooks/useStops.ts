@@ -7,8 +7,8 @@ localforage.config({
     storeName: 'stops_cache'
 });
 
-const CACHE_KEY = 'pid_stops_geojson_v10'; // Cache version v10
-const CACHE_TS_KEY = 'pid_stops_updated_at_v10';
+const CACHE_KEY = 'pid_stops_geojson_v11'; // Cache version v11
+const CACHE_TS_KEY = 'pid_stops_updated_at_v11';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 export const useStops = () => {

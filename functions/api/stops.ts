@@ -5,52 +5,60 @@ interface Env {
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
 
-    const fetchPage = async (offset: number) => {
-        const url = new URL("https://api.golemio.cz/v2/gtfs/stops");
-        url.searchParams.set("limit", "10000");
-        url.searchParams.set("offset", offset.toString());
-        const res = await fetch(url.toString(), {
-            headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
-            cf: { cacheTtl: 3600, cacheEverything: true }
-        } as any);
-        return res.ok ? res.json() : null;
+    const fetchAllStops = async () => {
+        let allFeatures: any[] = [];
+        let offset = 0;
+        const limit = 10000;
+
+        while (offset < 40000) {
+            const url = new URL("https://api.golemio.cz/v2/gtfs/stops");
+            url.searchParams.set("limit", limit.toString());
+            url.searchParams.set("offset", offset.toString());
+
+            const res = await fetch(url.toString(), {
+                headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
+                cf: { cacheTtl: 3600, cacheEverything: true }
+            } as any);
+
+            if (!res.ok) break;
+            const data = await res.json();
+            if (!data.features || data.features.length === 0) break;
+
+            allFeatures = [...allFeatures, ...data.features];
+            if (data.features.length < limit) break;
+            offset += limit;
+        }
+        return allFeatures;
     };
 
     try {
-        const [p1, p2] = await Promise.all([fetchPage(0), fetchPage(10000)]);
-        if (!p1) return new Response("Golemio error", { status: 502 });
-        const all = [...(p1.features || []), ...(p2?.features || [])];
+        const all = await fetchAllStops();
+        if (all.length === 0) return new Response("Golemio error or no data", { status: 502 });
 
-        // 1. Map Metro Stations (Type 1)
         const stationAnchors = new Map();
         const stationChildren = new Map();
 
-        for (const f of all) {
-            if (f.properties.location_type === 1) {
-                stationAnchors.set(f.properties.stop_id, f);
-            }
-        }
-
-        // 2. Map children to parents
+        // 1. Map Metro Stations and identify parents
         for (const f of all) {
             const p = f.properties;
-            if (p.location_type === 0 && p.parent_station && stationAnchors.has(p.parent_station)) {
+            const type = Number(p.location_type);
+            if (type === 1) {
+                stationAnchors.set(p.stop_id, f);
+            }
+            if (p.parent_station) {
                 if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
                 stationChildren.get(p.parent_station).push(p.stop_id);
             }
         }
 
-        const groups = {};
-        const handledChildren = new Set();
+        const groups: Record<string, any> = {};
 
         for (const f of all) {
             const p = f.properties;
-            if (p.zone_id === null) continue;
-
-            const type = p.location_type;
+            const type = Number(p.location_type);
             const stopId = p.stop_id;
 
-            // METRO STATION (Anchor)
+            // METRO STATION (Type 1)
             if (type === 1) {
                 const children = stationChildren.get(stopId) || [];
                 const key = `metro_station_${stopId}`;
@@ -58,6 +66,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                     ...f,
                     properties: {
                         ...p,
+                        location_type: 1,
                         stop_id: children.length > 0 ? children.join(',') : stopId
                     }
                 };
@@ -66,19 +75,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             // ENTRANCE (Type 2)
             if (type === 2) {
-                groups[`entrance_${stopId}`] = f;
+                groups[`entrance_${stopId}`] = {
+                    ...f,
+                    properties: { ...p, location_type: 2 }
+                };
                 continue;
             }
 
             // PLATFORM / STOP POINT (Type 0)
-            if (type === 0) {
-                // If it's a metro platform handled by an anchor, skip it
+            if (type === 0 || isNaN(type)) {
+                // If it belongs to a metro station, we handles it via anchor
                 if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
 
-                // Regular Bus/Tram stop (Grouping by name and platform code)
-                const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}_${p.zone_id}`;
+                // Final filtering - we need at least a name
+                if (!p.stop_name) continue;
+
+                const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}_${p.zone_id || 'no_zone'}`;
                 if (!groups[key]) {
-                    groups[key] = { ...f, properties: { ...p, all_ids: [stopId] } };
+                    groups[key] = {
+                        ...f,
+                        properties: { ...p, location_type: 0, all_ids: [stopId] }
+                    };
                 } else {
                     groups[key].properties.all_ids.push(stopId);
                 }
@@ -95,7 +112,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         });
 
         return new Response(JSON.stringify({ type: "FeatureCollection", features }), {
-            headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" }
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "public, max-age=3600"
+            }
         });
-    } catch (err) { return new Response("Error", { status: 500 }); }
+    } catch (err) {
+        return new Response("Error: " + (err instanceof Error ? err.message : "unknown"), { status: 500 });
+    }
 };

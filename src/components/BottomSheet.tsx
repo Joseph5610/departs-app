@@ -35,22 +35,22 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                         onDragEnd={(_, info) => {
                             if (info.offset.y > 100) onClose();
                         }}
-                        className="absolute bottom-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-t border-slate-700/50 rounded-t-3xl shadow-2xl max-h-[80%] flex flex-col"
+                        className="absolute bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl shadow-2xl max-h-[80%] flex flex-col"
                     >
                         {/* Handle Bar */}
                         <div className="flex justify-center p-3 cursor-grab active:cursor-grabbing">
-                            <div className="w-12 h-1.5 bg-slate-700 rounded-full" />
+                            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
                         </div>
 
                         {/* Header */}
-                        {(title || onClose) && (
+                        {(title) && (
                             <div className="px-6 pb-4 flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-white pr-4 truncate">
                                     {title}
                                 </h2>
                                 <button
                                     onClick={onClose}
-                                    className="p-2 bg-slate-800/50 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
                                 >
                                     <X size={20} />
                                 </button>

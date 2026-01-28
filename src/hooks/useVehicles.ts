@@ -12,8 +12,8 @@ export const useVehicles = (bounds: string | null) => {
         queryKey: ['vehicles', bounds],
         queryFn: () => fetchVehicles(bounds!),
         enabled: !!bounds,
-        refetchInterval: 15000,
-        staleTime: 12000,
+        refetchInterval: 5000,
+        staleTime: 4000,
         refetchOnMount: false,
         refetchOnReconnect: false,
     });
