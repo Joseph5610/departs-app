@@ -2,7 +2,7 @@ interface Env {
     GOLEMIO_API_KEY: string;
 }
 
-export const onRequest: PagesFunction<Env> = async (context) => {
+export const onRequest: PagesFunction<Env> = async (context: any) => {
     const { request, env } = context;
     const url = new URL(request.url);
     const bounds = url.searchParams.get("bounds"); // expected format: latMin,longMin,latMax,longMax

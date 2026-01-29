@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface LiveStatusProps {
     fetching: boolean;
-    rawVehicles: any;
     bounds: string | null;
     lastUpdate: number;
 }
