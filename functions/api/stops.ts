@@ -73,7 +73,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 continue;
             }
 
-            // ENTRANCE (Type 2)
+            // ENTRANCE (Type 2) - Static, non-clickable in UI
             if (type === 2) {
                 groups[`entrance_${stopId}`] = {
                     ...f,
@@ -84,13 +84,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             // PLATFORM / STOP POINT (Type 0)
             if (type === 0 || isNaN(type)) {
-                // If it belongs to a metro station, we handles it via anchor
+                // If it belongs to a metro station or is an entrance already handled, skip
                 if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
 
-                // Final filtering - we need at least a name
                 if (!p.stop_name) continue;
 
-                const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}_${p.zone_id || 'no_zone'}`;
+                // SAFE FILTER: drop technical stops ONLY if they are orphans (no parent) AND have no zone.
+                // Keeps metro platforms (which have parent) even if they lack zone_id.
+                if (!p.zone_id && !p.parent_station) continue;
+
+                const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}_${p.zone_id}`;
                 if (!groups[key]) {
                     groups[key] = {
                         ...f,
@@ -114,7 +117,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return new Response(JSON.stringify({ type: "FeatureCollection", features }), {
             headers: {
                 "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=3600"
+                "Cache-Control": "no-store, max-age=0"
             }
         });
     } catch (err) {

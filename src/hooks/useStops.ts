@@ -7,8 +7,8 @@ localforage.config({
     storeName: 'stops_cache'
 });
 
-const CACHE_KEY = 'pid_stops_geojson_v11'; // Cache version v11
-const CACHE_TS_KEY = 'pid_stops_updated_at_v11';
+const CACHE_KEY = 'pid_stops_geojson_v12'; // Cache version v12 (Force refresh)
+const CACHE_TS_KEY = 'pid_stops_updated_at_v12';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 export const useStops = () => {
@@ -29,7 +29,7 @@ export const useStops = () => {
 
             // 3. Otherwise (missing or old), fetch from API
             console.log('Fetching stops from API (Stale or Missing)...');
-            const res = await fetch('/api/stops');
+            const res = await fetch(`/api/stops?t=${now}`); // Cache busting
             if (!res.ok) {
                 // Failsafe: if API fails but we have old data, return old data
                 if (cached) {

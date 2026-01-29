@@ -16,33 +16,122 @@ import { Settings } from 'lucide-react';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
-// Styling layers for stops
-const clusterLayer: any = { id: 'clusters', type: 'circle', source: 'pid-stops', filter: ['has', 'point_count'], paint: { 'circle-color': '#334155', 'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 30, 25], 'circle-opacity': 0.8, 'circle-stroke-width': 1, 'circle-stroke-color': '#475569' } };
-const clusterCountLayer: any = { id: 'cluster-count', type: 'symbol', source: 'pid-stops', filter: ['has', 'point_count'], layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 12 }, paint: { 'text-color': '#f8fafc' } };
+// Layer Definitions
+const clusterLayer: any = {
+    id: 'clusters',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['has', 'point_count'],
+    paint: {
+        'circle-color': '#334155',
+        'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 30, 25],
+        'circle-opacity': 0.8,
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#475569'
+    }
+};
+
+const clusterCountLayer: any = {
+    id: 'cluster-count',
+    type: 'symbol',
+    source: 'pid-stops',
+    filter: ['has', 'point_count'],
+    layout: {
+        'text-field': '{point_count_abbreviated}',
+        'text-size': 12
+    },
+    paint: {
+        'text-color': '#f8fafc'
+    }
+};
+
 const stopPointLayer: any = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
-    filter: ['!', ['has', 'point_count']],
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+    ],
     paint: {
         'circle-radius': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
             1, 10, // Station
-            2, 7,  // Entrance
-            6     // Regular stop
+            6     // Stop
         ],
         'circle-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
             1, '#38bdf8', // Station
-            2, '#FFFFFF', // Entrance (crisp white)
-            '#1e293b'    // Regular stop
+            '#1e293b'    // Stop
         ],
         'circle-stroke-width': 2,
         'circle-stroke-color': '#38bdf8'
     }
 };
 
+const stopLabelLayer: any = {
+    id: 'stop-labels',
+    type: 'symbol',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+    ],
+    minzoom: 10,
+    layout: {
+        'text-field': [
+            'case',
+            ['all',
+                ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['has', 'platform_code'],
+                ['!=', ['get', 'platform_code'], '']
+            ],
+            ['concat', ['get', 'stop_name'], ' (', ['get', 'platform_code'], ')'],
+            ['get', 'stop_name']
+        ],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 8, 16, 12],
+        'text-offset': [0, 1.2],
+        'text-anchor': 'top',
+        'text-max-width': 10,
+        'text-allow-overlap': false,
+        'text-ignore-placement': false
+    },
+    paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1
+    }
+};
+
+const entranceLayer: any = {
+    id: 'entrance-layer',
+    type: 'symbol',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+    ],
+    minzoom: 16,
+    layout: {
+        'text-field': ['get', 'stop_name'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': 11,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+    },
+    paint: {
+        'text-color': '#e2e8f0',
+        'text-halo-color': '#0f172a',
+        'text-halo-width': 1
+    }
+};
+
 const INITIAL = (() => {
     const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-    return { lat: parseFloat(p.get('lat') || '50.0755'), lng: parseFloat(p.get('lng') || '14.4378'), z: parseFloat(p.get('z') || '13') };
+    return {
+        lat: parseFloat(p.get('lat') || '50.0755'),
+        lng: parseFloat(p.get('lng') || '14.4378'),
+        z: parseFloat(p.get('z') || '13')
+    };
 })();
 
 export const Map: React.FC = () => {
@@ -52,6 +141,7 @@ export const Map: React.FC = () => {
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
     const [showVehicles, setShowVehicles] = useState(true);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [expandedLines, setExpandedLines] = useState<string[]>([]);
     const debounceRef = useRef<any>(null);
 
     const { data: rawVehicles, isFetching: fetchingVehicles } = useVehicles(debouncedBounds);
@@ -63,7 +153,6 @@ export const Map: React.FC = () => {
         const b = evt.target.getBounds();
         const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
 
-        // Update URL
         const url = new URL(window.location.href);
         url.searchParams.set('lat', latitude.toFixed(5));
         url.searchParams.set('lng', longitude.toFixed(5));
@@ -77,6 +166,31 @@ export const Map: React.FC = () => {
 
     const onLoad = useCallback((evt: any) => {
         const map = evt.target;
+
+        // Register custom Centered Bearing Arrow (SDF)
+        const size = 64;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.clearRect(0, 0, size, size);
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            // Sharper, compact arrow
+            ctx.moveTo(32, 12);
+            ctx.lineTo(18, 46);  // Slightly narrower
+            ctx.lineTo(32, 38);  // Slightly shallower cut
+            ctx.lineTo(46, 46);  // Slightly narrower
+            ctx.closePath();
+            ctx.fill();
+
+            if (!map.hasImage('v-arrow-centered')) {
+                const imageData = ctx.getImageData(0, 0, size, size);
+                map.addImage('v-arrow-centered', imageData, { sdf: true });
+            }
+        }
+
         const b = map.getBounds();
         const z = map.getZoom();
         if (b && z >= 11) {
@@ -86,24 +200,18 @@ export const Map: React.FC = () => {
         }
     }, []);
 
-    const [expandedLines, setExpandedLines] = useState<string[]>([]);
-
     const groupedDepartures = useMemo(() => {
         if (!departures?.departures) return [];
         const groups: Record<string, any[]> = {};
-
-        // Group departures by line name
         departures.departures.forEach((dep: any) => {
             const key = dep.line;
             if (!groups[key]) groups[key] = [];
             groups[key].push(dep);
         });
-
-        // Convert to array and preserve overall chronological order based on first departure
         return Object.entries(groups).map(([line, deps]) => ({
             line,
             type: deps[0].type,
-            departures: deps // Keep all for toggle functionality
+            departures: deps
         })).sort((a, b) => {
             const timeA = new Date(a.departures[0].timestamp).getTime();
             const timeB = new Date(b.departures[0].timestamp).getTime();
@@ -135,7 +243,8 @@ export const Map: React.FC = () => {
                 mapStyle={MAP_STYLE}
                 mapLib={maplibregl}
                 onMouseEnter={(evt) => {
-                    if (evt.features?.length) {
+                    const features = evt.features;
+                    if (features?.length && features[0].layer.id !== 'entrance-layer') {
                         evt.target.getCanvas().style.cursor = 'pointer';
                     }
                 }}
@@ -144,12 +253,27 @@ export const Map: React.FC = () => {
                 }}
                 onClick={(evt) => {
                     const f = evt.features?.[0];
-                    if (!f) return;
+                    if (!f || f.layer.id === 'entrance-layer') return;
+
+                    if (f.layer.id === 'clusters') {
+                        const clusterId = f.properties.cluster_id;
+                        const source = mapRef.current.getMap().getSource('pid-stops');
+                        source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+                            if (err) return;
+                            mapRef.current.easeTo({
+                                center: (f.geometry as any).coordinates,
+                                zoom,
+                                duration: 500
+                            });
+                        });
+                        return;
+                    }
+
                     if (f.layer.id === 'unclustered-point') {
                         const pc = f.properties.platform_code;
                         const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
                         setSelectedStop({ id: f.properties.stop_id, name });
-                        setExpandedLines([]); // Reset on new stop
+                        setExpandedLines([]);
                     }
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters']}
@@ -162,20 +286,21 @@ export const Map: React.FC = () => {
                     >
                         <Settings size={20} className="group-hover:rotate-45 transition-transform" />
                     </button>
-                    <NavigationControl position="top-right" showCompass={false} style={{ position: 'relative', top: 0, right: 0 }} />
                 </div>
+                <NavigationControl position="bottom-right" showCompass={false} />
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
                         <Layer {...clusterLayer} />
                         <Layer {...clusterCountLayer} />
                         <Layer {...stopPointLayer} />
+                        <Layer {...stopLabelLayer} />
+                        <Layer {...entranceLayer} />
                     </Source>
                 )}
 
                 {showVehicles && rawVehicles && (
                     <Source id="pid-vehicles" type="geojson" data={rawVehicles}>
-                        {/* 1. Base Circle */}
                         <Layer
                             id="vehicles-point"
                             type="circle"
@@ -186,36 +311,53 @@ export const Map: React.FC = () => {
                                 'circle-stroke-color': '#FFFFFF'
                             }}
                         />
-                        {/* 2. Direction Arrow Triangle ▲ */}
+
+                        {/* BORDER LAYER - Solid white arrow shadow */}
                         <Layer
-                            id="vehicles-direction"
+                            id="vehicles-direction-bg"
                             type="symbol"
                             minzoom={11}
                             layout={{
-                                'text-field': '▲',
-                                'text-font': ['Noto Sans Regular', 'Open Sans Bold'],
-                                'text-size': ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 14],
-                                'text-rotate': ['get', 'bearing'],
-                                'text-rotation-alignment': 'map',
-                                'text-allow-overlap': true,
-                                'text-ignore-placement': true,
-                                'text-offset': [0, -1.7],
-                                'text-anchor': 'center'
+                                'icon-image': 'v-arrow-centered',
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.3, 16, 0.5],
+                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
+                                'icon-rotation-alignment': 'map',
+                                'icon-allow-overlap': true,
+                                'icon-ignore-placement': true,
+                                'icon-offset': [0, -48],
+                                'icon-anchor': 'center'
                             }}
                             paint={{
-                                'text-color': vehicleColorExpression,
-                                'text-halo-color': '#FFFFFF',
-                                'text-halo-width': 1.5
+                                'icon-color': '#FFFFFF'
                             }}
                         />
-                        {/* 3. Line Label (White and Centered) */}
+
+                        {/* FOREGROUND LAYER - Colored arrow */}
+                        <Layer
+                            id="vehicles-direction-fg"
+                            type="symbol"
+                            minzoom={11}
+                            layout={{
+                                'icon-image': 'v-arrow-centered',
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.25, 16, 0.45],
+                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
+                                'icon-rotation-alignment': 'map',
+                                'icon-allow-overlap': true,
+                                'icon-ignore-placement': true,
+                                'icon-offset': [0, -48],
+                                'icon-anchor': 'center'
+                            }}
+                            paint={{
+                                'icon-color': vehicleColorExpression
+                            }}
+                        />
+
                         <Layer
                             id="vehicles-label"
                             type="symbol"
                             minzoom={10}
                             layout={{
                                 'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
-                                'text-font': ['Noto Sans Regular', 'Open Sans Bold'],
                                 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
                                 'text-allow-overlap': true,
                                 'text-ignore-placement': true,
@@ -224,7 +366,7 @@ export const Map: React.FC = () => {
                             paint={{
                                 'text-color': '#FFFFFF',
                                 'text-halo-color': '#000000',
-                                'text-halo-width': 2
+                                'text-halo-width': 1
                             }}
                         />
                     </Source>
@@ -248,7 +390,6 @@ export const Map: React.FC = () => {
 
                         return (
                             <div key={group.line} className="space-y-3">
-                                {/* Group Header */}
                                 <div className="flex items-center gap-3 px-1">
                                     <div
                                         className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
@@ -259,7 +400,6 @@ export const Map: React.FC = () => {
                                     <div className="h-[1px] flex-1 bg-white/10" />
                                 </div>
 
-                                {/* Departures for this line */}
                                 <div className="space-y-2">
                                     {visibleDepartures.map((dep: any, idx: number) => (
                                         <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
@@ -268,7 +408,7 @@ export const Map: React.FC = () => {
                                                     <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
                                                     <div className="text-slate-500 text-[10px] mt-1 flex items-center gap-2">
                                                         <span>{format(parseISO(dep.scheduled), 'HH:mm')}</span>
-                                                        {dep.delay > 30 && <span className="text-rose-400">+{Math.round(dep.delay / 60)}m delay</span>}
+                                                        {dep.delay > 30 && <span className="text-rose-400">+{Math.round(dep.delay / 60)}min delay</span>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -280,7 +420,6 @@ export const Map: React.FC = () => {
                                         </div>
                                     ))}
 
-                                    {/* Show More Button */}
                                     {hasMore && (
                                         <button
                                             onClick={() => toggleLine(group.line)}
