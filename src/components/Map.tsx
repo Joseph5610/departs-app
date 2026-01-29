@@ -278,7 +278,13 @@ export const Map: React.FC = () => {
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters']}
             >
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                <div
+                    className="absolute top-4 right-4 z-10 flex flex-col gap-2"
+                    style={{
+                        top: 'calc(1rem + env(safe-area-inset-top, 0px))',
+                        right: 'calc(1rem + env(safe-area-inset-right, 0px))'
+                    }}
+                >
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"

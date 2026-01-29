@@ -58,7 +58,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                         )}
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar">
+                        <div
+                            className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar"
+                            style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
+                        >
                             {children}
                         </div>
                     </motion.div>
