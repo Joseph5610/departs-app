@@ -42,7 +42,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             headers: {
                 "Content-Type": "application/json",
                 "Cache-Control": "public, max-age=20, s-maxage=20", // CDN cache
-                "Access-Control-Allow-Origin": "*",
             },
         });
     } catch (err) {
