@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { MapPin, Info, ArrowRight } from 'lucide-react';
 
-export const WelcomeModal: React.FC = () => {
+export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -15,6 +15,7 @@ export const WelcomeModal: React.FC = () => {
     const handleClose = () => {
         localStorage.setItem('departs_welcome_seen', 'true');
         setIsOpen(false);
+        onGetStarted();
     };
 
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import MapGL, { Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -12,7 +12,7 @@ import { LiveStatus } from './LiveStatus';
 import { vehicleColorExpression, getVehicleColor } from '../utils/vehicleColors';
 import { SettingsModal } from './SettingsModal';
 import { WelcomeModal } from './WelcomeModal';
-import { Settings } from 'lucide-react';
+import { Settings, LocateFixed } from 'lucide-react';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -233,6 +233,28 @@ export const Map: React.FC = () => {
     const { data: stops } = useStops();
     const { data: departures, isLoading: loadingDeps } = useDepartures(selectedStop?.id || null);
 
+    // Sync selectedStop with URL
+    useEffect(() => {
+        const p = new URLSearchParams(window.location.search);
+        const id = p.get('stopId');
+        const name = p.get('stopName');
+        if (id && name && !selectedStop) {
+            setSelectedStop({ id, name });
+        }
+    }, []);
+
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        if (selectedStop) {
+            url.searchParams.set('stopId', selectedStop.id);
+            url.searchParams.set('stopName', selectedStop.name);
+        } else {
+            url.searchParams.delete('stopId');
+            url.searchParams.delete('stopName');
+        }
+        window.history.replaceState({}, '', url.toString());
+    }, [selectedStop]);
+
     const onMove = useCallback((evt: any) => {
         const { zoom } = evt.viewState;
         const b = evt.target.getBounds();
@@ -281,6 +303,31 @@ export const Map: React.FC = () => {
         setBounds(currentBounds);
         setDebouncedBounds(currentBounds);
     }, []);
+
+    const handleLocate = () => {
+        console.log('🛰️ Štartujem manuálnu geolokáciu...');
+        if (!navigator.geolocation) {
+            alert('Tvoj prehliadač nepodporuje geolokáciu.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                console.log('✅ Poloha nájdená:', latitude, longitude);
+                mapRef.current?.getMap().flyTo({
+                    center: [longitude, latitude],
+                    zoom: 15,
+                    duration: 2000
+                });
+            },
+            (err) => {
+                console.error('❌ Geolokácia zlyhala:', err);
+                alert(`Chyba: ${err.message} (Kód: ${err.code}). Skontroluj nastavenia súkromia v macOS/Browseri.`);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
 
 
 
@@ -448,6 +495,13 @@ export const Map: React.FC = () => {
                     }}
                 >
                     <button
+                        onClick={handleLocate}
+                        className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                        title="My Location"
+                    >
+                        <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
+                    </button>
+                    <button
                         onClick={() => setIsSettingsOpen(true)}
                         className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                         title="Settings"
@@ -456,6 +510,7 @@ export const Map: React.FC = () => {
                     </button>
                 </div>
                 <NavigationControl position="bottom-right" showCompass={false} />
+
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
@@ -542,7 +597,7 @@ export const Map: React.FC = () => {
                 )}
             </MapGL>
 
-            <WelcomeModal />
+            <WelcomeModal onGetStarted={handleLocate} />
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
