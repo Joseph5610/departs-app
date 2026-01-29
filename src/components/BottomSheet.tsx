@@ -35,7 +35,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                         onDragEnd={(_, info) => {
                             if (info.offset.y > 100) onClose();
                         }}
-                        className="absolute bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl shadow-2xl max-h-[80%] flex flex-col"
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col"
                     >
                         {/* Handle Bar */}
                         <div className="flex justify-center p-3 cursor-grab active:cursor-grabbing">
@@ -60,7 +60,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                         {/* Content */}
                         <div
                             className="flex-1 overflow-y-auto px-6 pb-8 custom-scrollbar"
-                            style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
+                            style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
                         >
                             {children}
                         </div>

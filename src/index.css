@@ -37,7 +37,11 @@ body,
   overflow: hidden;
   background-color: #000000;
   color: #f8fafc;
+  /* Prevent pull-to-refresh and bounce effects that break map gestures */
+  overscroll-behavior: none;
+  touch-action: none;
 }
+
 
 
 
@@ -46,7 +50,9 @@ body,
 .custom-scrollbar {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
+
 
 /* 
   Global interactivity - Ensure all buttons show pointer cursor 
@@ -57,8 +63,16 @@ button,
   cursor: pointer !important;
 }
 
-/* MapLibre Navigation Control Safe Area Fix */
+/* MapLibre Navigation Control - Standard Desktop Position */
 .maplibregl-ctrl-bottom-right {
-  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
-  margin-right: calc(env(safe-area-inset-right, 0px) + 0.5rem) !important;
+  margin-bottom: 0.5rem !important;
+  margin-right: 0.5rem !important;
+}
+
+/* Mobile Safe Area Fix (Safari browser bar & Home indicator) */
+@media (max-width: 768px) {
+  .maplibregl-ctrl-bottom-right {
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 4.5rem) !important;
+    margin-right: calc(env(safe-area-inset-right, 0px) + 0.5rem) !important;
+  }
 }
