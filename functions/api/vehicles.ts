@@ -27,7 +27,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 "Content-Type": "application/json",
             },
             cf: {
-                cacheTtl: 20,
+                cacheTtl: 10,
                 cacheEverything: true,
             }
         } as any);
@@ -41,7 +41,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return new Response(JSON.stringify(data), {
             headers: {
                 "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=20, s-maxage=20", // CDN cache
+                "Cache-Control": "public, max-age=10, s-maxage=10", // CDN cache 10s
             },
         });
     } catch (err) {

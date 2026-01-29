@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import type { VehicleCollection } from '../types/pid';
 
 const fetchVehicles = async (bounds: string): Promise<VehicleCollection> => {
@@ -12,8 +12,10 @@ export const useVehicles = (bounds: string | null) => {
         queryKey: ['vehicles', bounds],
         queryFn: () => fetchVehicles(bounds!),
         enabled: !!bounds,
-        refetchInterval: 5000,
-        staleTime: 4000,
+        refetchInterval: 15000,
+        staleTime: 12000,
+        gcTime: 60000,
+        placeholderData: keepPreviousData,
         refetchOnMount: false,
         refetchOnReconnect: false,
     });

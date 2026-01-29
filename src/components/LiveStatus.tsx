@@ -5,23 +5,24 @@ interface LiveStatusProps {
     fetching: boolean;
     rawVehicles: any;
     bounds: string | null;
+    lastUpdate: number;
 }
 
-export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, rawVehicles, bounds }) => {
+export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUpdate }) => {
     const [nextRefreshIn, setNextRefreshIn] = useState(15);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setNextRefreshIn((prev) => (prev > 0 ? prev - 1 : 15));
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
+        const calculateRemaining = () => {
+            const now = Date.now();
+            const elapsed = Math.floor((now - lastUpdate) / 1000);
+            const remaining = Math.max(0, 15 - elapsed);
+            setNextRefreshIn(remaining);
+        };
 
-    useEffect(() => {
-        if (!fetching) {
-            setNextRefreshIn(15);
-        }
-    }, [rawVehicles, fetching]);
+        calculateRemaining();
+        const timer = setInterval(calculateRemaining, 1000);
+        return () => clearInterval(timer);
+    }, [lastUpdate]);
 
     if (!bounds) return null;
 

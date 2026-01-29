@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal } from './Modal';
 import { Eye, EyeOff } from 'lucide-react';
+import { version } from '../../package.json';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -45,6 +46,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="text-amber-200/80 text-xs leading-relaxed">
                         <strong>Tip:</strong> Hiding vehicles can speed up map loading in areas with poor connection.
                     </div>
+                </div>
+
+                <div className="pt-4 flex justify-center">
+                    <span className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">
+                        Version {version}
+                    </span>
                 </div>
             </div>
         </Modal>

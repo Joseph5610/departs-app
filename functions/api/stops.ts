@@ -155,7 +155,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return new Response(JSON.stringify({ type: "FeatureCollection", features }), {
             headers: {
                 "Content-Type": "application/json",
-                "Cache-Control": "no-store, max-age=0"
+                "Cache-Control": "public, max-age=86400, s-maxage=86400", // 24h CDN cache
             }
         });
     } catch (err) {

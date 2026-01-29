@@ -3,12 +3,12 @@ import localforage from 'localforage';
 
 // Configure localforage for IndexedDB
 localforage.config({
-    name: 'nextstop',
+    name: 'departs',
     storeName: 'stops_cache'
 });
 
-const CACHE_KEY = 'pid_stops_geojson_v14'; // Cache version v14 (Force refresh)
-const CACHE_TS_KEY = 'pid_stops_updated_at_v14';
+const CACHE_KEY = 'pid_stops_geojson_v15'; // Cache version v15
+const CACHE_TS_KEY = 'pid_stops_updated_at_v15';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 export const useStops = () => {
