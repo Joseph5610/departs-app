@@ -49,11 +49,16 @@ export const vehicleColorExpression: any = [
     ['any', ['==', ['get', 'gtfs_route_short_name'], 'B'], ['==', ['get', 'route_short_name'], 'B']], '#F9B233',
     ['any', ['==', ['get', 'gtfs_route_short_name'], 'C'], ['==', ['get', 'route_short_name'], 'C']], '#E31E24',
 
-    // 2. Night Routes Detection (90-99 or 900+)
+    // 2. Night Routes Detection (90-99 or 9xx)
     [
         'any',
+        // Trams 90-99
         ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
-        ['>=', ['to-number', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '0']], 900]
+        // Buses 9xx (Length 3, Starts with 9) - avoids to-number failures on 'X25' etc.
+        ['all',
+            ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']]], 3],
+            ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], 0, 1], '9']
+        ]
     ], '#111827',
 
     // 3. Type-based fallback

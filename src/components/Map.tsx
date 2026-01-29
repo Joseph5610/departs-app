@@ -58,12 +58,64 @@ const stopPointLayer: any = {
             1, 10, // Station
             6     // Stop
         ],
-        'circle-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
-            1, '#38bdf8', // Station
-            '#1e293b'    // Stop
+        'circle-color': ['case',
+            // Only apply custom colors for Stations (Type 1)
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            ['match', ['get', 'stop_name'],
+                // Transfers -> WHITE
+                'Můstek', '#FFFFFF',
+                'Muzeum', '#FFFFFF',
+                'Florenc', '#FFFFFF',
+
+                // Single Lines (Check if 'metro_lines' contains specific line)
+                // Since Mapbox expressions with arrays are tricky, we rely on the backend strictly sending correct single letters for non-transfers.
+                // Or simplified: we know the station names (except new ones).
+                // Actually, 'match' on specific arrays is hard.
+                // Let's use the 'in' check on the array if possible, or fallback to name-based logic since we have the list.
+                // BUT WAIT: maplibre 'match' works on scalar values mainly. 
+                // Let's use a simpler approach: check membership in the array string representation or just use 'case' logic.
+                // The most robust way without complex expressions:
+                // We will rely on the fact that for single line stations, we can just check the first element.
+                // But wait, it's easier to just match the lines we know.
+
+                // LINE A
+                'Nemocnice Motol', '#00A562', 'Petřiny', '#00A562', 'Nádraží Veleslavín', '#00A562', 'Bořislavka', '#00A562',
+                'Dejvická', '#00A562', 'Hradčanská', '#00A562', 'Malostranská', '#00A562', 'Staroměstská', '#00A562',
+                'Náměstí Míru', '#00A562', 'Jiřího z Poděbrad', '#00A562', 'Flora', '#00A562', 'Želivského', '#00A562',
+                'Strašnická', '#00A562', 'Skalka', '#00A562', 'Depo Hostivař', '#00A562',
+
+                // LINE B
+                'Zličín', '#DEBD29', 'Stodůlky', '#DEBD29', 'Luka', '#DEBD29', 'Lužiny', '#DEBD29', 'Hůrka', '#DEBD29',
+                'Nové Butovice', '#DEBD29', 'Jinonice', '#DEBD29', 'Radlická', '#DEBD29', 'Smíchovské nádraží', '#DEBD29',
+                'Anděl', '#DEBD29', 'Karlovo náměstí', '#DEBD29', 'Národní třída', '#DEBD29', 'Náměstí Republiky', '#DEBD29',
+                'Křižíkova', '#DEBD29', 'Invalidovna', '#DEBD29', 'Palmovka', '#DEBD29', 'Českomoravská', '#DEBD29',
+                'Vysočanská', '#DEBD29', 'Kolbenova', '#DEBD29', 'Hloubětín', '#DEBD29', 'Rajská zahrada', '#DEBD29', 'Černý Most', '#DEBD29',
+
+                // LINE C
+                'Letňany', '#C6242D', 'Prosek', '#C6242D', 'Střížkov', '#C6242D', 'Ládví', '#C6242D', 'Kobylisy', '#C6242D',
+                'Nádraží Holešovice', '#C6242D', 'Vltavská', '#C6242D', 'Hlavní nádraží', '#C6242D', 'I. P. Pavlova', '#C6242D',
+                'Vyšehrad', '#C6242D', 'Pražského povstání', '#C6242D', 'Pankrác', '#C6242D', 'Budějovická', '#C6242D',
+                'Kačerov', '#C6242D', 'Roztyly', '#C6242D', 'Chodov', '#C6242D', 'Opatov', '#C6242D', 'Háje', '#C6242D',
+
+                '#38bdf8' // Default (Blue) for unknown stations
+            ],
+
+            // Default for Stops (Type 0 or null)
+            '#1e293b'
         ],
         'circle-stroke-width': 2,
-        'circle-stroke-color': '#38bdf8'
+        'circle-stroke-color': ['match', ['get', 'stop_name'],
+            // Transfers -> BLACK STROKE
+            'Můstek', '#000000',
+            'Muzeum', '#000000',
+            'Florenc', '#000000',
+
+            // Default Logic
+            ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
+                1, '#ffffff', // Other Stations -> White Stroke
+                '#38bdf8'    // Regular Stops -> Blue Stroke
+            ]
+        ]
     }
 };
 
@@ -82,7 +134,7 @@ const stopLabelLayer: any = {
             ['all',
                 ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
                 ['has', 'platform_code'],
-                ['!=', ['get', 'platform_code'], '']
+                ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
             ],
             ['concat', ['get', 'stop_name'], ' (', ['get', 'platform_code'], ')'],
             ['get', 'stop_name']
@@ -149,6 +201,39 @@ export const Map: React.FC = () => {
     const { data: departures, isLoading: loadingDeps } = useDepartures(selectedStop?.id || null);
 
     const onMove = useCallback((evt: any) => {
+        const { zoom } = evt.viewState;
+        const b = evt.target.getBounds();
+        const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
+
+        // Only update bounds state if "validity" changes (i.e. crossing zoom threshold)
+        // or if we really need immediate feedback. 
+        // For LiveStatus which just checks if bounds exists, we don't need precise coords every frame.
+        // However, to keep it simple and safe, we can just defer precise updates.
+        // But useVehicles uses debounced.
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            setDebouncedBounds(currentBounds);
+
+            // Also update the UI 'bounds' here (debounced) to prevent frequent re-renders 
+            // of LiveStatus during dragging. 
+            // If instant feedback for zoom threshold is needed, we could separate that state.
+            setBounds(currentBounds);
+        }, 800);
+
+        // If we need immediate reaction to Zoom < 11 (hiding the pill immediately), 
+        // we can add a check here, but let's see if debouncing is enough.
+        // Actually, if I zoom out fast, I want the pill to disappear.
+        if (zoom < 11 && bounds !== null) {
+            setBounds(null);
+        } else if (zoom >= 11 && bounds === null) {
+            // We can't easily get 'bounds' inside callback without deps. 
+            // But we can just set it.
+            setBounds(currentBounds);
+        }
+    }, [bounds]);
+
+    const onMoveEnd = useCallback((evt: any) => {
         const { latitude, longitude, zoom } = evt.viewState;
         const b = evt.target.getBounds();
         const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
@@ -159,10 +244,12 @@ export const Map: React.FC = () => {
         url.searchParams.set('z', zoom.toFixed(2));
         window.history.replaceState({}, '', url.toString());
 
+        // Ensure explicit set at end of move
         setBounds(currentBounds);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => setDebouncedBounds(currentBounds), 800);
+        setDebouncedBounds(currentBounds);
     }, []);
+
+
 
     const onLoad = useCallback((evt: any) => {
         const map = evt.target;
@@ -238,6 +325,7 @@ export const Map: React.FC = () => {
                 ref={mapRef}
                 initialViewState={{ latitude: INITIAL.lat, longitude: INITIAL.lng, zoom: INITIAL.z }}
                 onMove={onMove}
+                onMoveEnd={onMoveEnd}
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
