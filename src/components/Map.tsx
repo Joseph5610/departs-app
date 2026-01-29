@@ -51,7 +51,12 @@ const stopPointLayer: any = {
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
+        ['!', ['all',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+        ]]
     ],
     paint: {
         'circle-radius': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
@@ -104,17 +109,45 @@ const stopPointLayer: any = {
             '#1e293b'
         ],
         'circle-stroke-width': 2,
-        'circle-stroke-color': ['match', ['get', 'stop_name'],
-            // Transfers -> BLACK STROKE
-            'Můstek', '#000000',
-            'Muzeum', '#000000',
-            'Florenc', '#000000',
+        'circle-stroke-color': ['case',
+            // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
+            ['all',
+                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+            ],
+            '#000000',
 
-            // Default Logic
-            ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
-                1, '#ffffff', // Other Stations -> White Stroke
-                '#38bdf8'    // Regular Stops -> Blue Stroke
-            ]
+            // 2. Other Stations (Type 1) -> WHITE stroke
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            '#ffffff',
+
+            // 3. Regular Stops (Type 0) -> BLUE stroke
+            '#38bdf8'
+        ]
+    }
+};
+
+const transferStationLayer: any = {
+    id: 'transfer-stations',
+    type: 'symbol',
+    source: 'pid-stops',
+    filter: ['all',
+        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+        ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+    ],
+    minzoom: 10,
+    layout: {
+        'icon-image': ['match', ['get', 'stop_name'],
+            'Můstek', 'transfer-A-B',
+            'Muzeum', 'transfer-A-C',
+            'Florenc', 'transfer-B-C',
+            ''
+        ],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 15, 0.6],
+        'icon-allow-overlap': true,
+        'icon-offset': ['match', ['get', 'stop_name'],
+            'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
+            ['literal', [0, 0]]
         ]
     }
 };
@@ -278,6 +311,47 @@ export const Map: React.FC = () => {
             }
         }
 
+        // Generate Split Icons for Transfers
+        const addSplitIcon = (id: string, c1: string, c2: string) => {
+            const size = 64;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                const cx = size / 2;
+                const cy = size / 2;
+                const r = size / 2 - 4; // Margin for stroke
+
+                // White border background
+                ctx.beginPath();
+                ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+
+                // Left Half
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, Math.PI * 0.5, Math.PI * 1.5);
+                ctx.fillStyle = c1;
+                ctx.fill();
+
+                // Right Half
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, Math.PI * 1.5, Math.PI * 2.5);
+                ctx.fillStyle = c2;
+                ctx.fill();
+
+                if (!map.hasImage(id)) {
+                    map.addImage(id, ctx.getImageData(0, 0, size, size), { pixelRatio: 2 });
+                }
+            }
+        };
+
+        // Register Transfer Icons
+        addSplitIcon('transfer-A-B', '#00A562', '#DEBD29'); // Mustek (Green/Yellow)
+        addSplitIcon('transfer-A-C', '#00A562', '#C6242D'); // Muzeum (Green/Red)
+        addSplitIcon('transfer-B-C', '#DEBD29', '#C6242D'); // Florenc (Yellow/Red)
+
         const b = map.getBounds();
         const z = map.getZoom();
         if (b && z >= 11) {
@@ -357,14 +431,14 @@ export const Map: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'unclustered-point') {
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
                         const pc = f.properties.platform_code;
                         const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
                         setSelectedStop({ id: f.properties.stop_id, name });
                         setExpandedLines([]);
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'clusters']}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations']}
             >
                 <div
                     className="absolute top-4 right-4 z-10 flex flex-col gap-2"
@@ -388,6 +462,7 @@ export const Map: React.FC = () => {
                         <Layer {...clusterLayer} />
                         <Layer {...clusterCountLayer} />
                         <Layer {...stopPointLayer} />
+                        <Layer {...transferStationLayer} />
                         <Layer {...stopLabelLayer} />
                         <Layer {...entranceLayer} />
                     </Source>

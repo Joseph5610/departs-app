@@ -46,8 +46,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 stationAnchors.set(p.stop_id, f);
             }
             if (p.parent_station) {
-                if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
-                stationChildren.get(p.parent_station).push(p.stop_id);
+                // Only add platforms/stops to children, ignore entrances (type 2)
+                // Otherwise departure API URL gets too long and fails (400)
+                if (type !== 2) {
+                    if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
+                    stationChildren.get(p.parent_station).push(p.stop_id);
+                }
             }
         }
 

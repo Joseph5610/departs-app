@@ -12,8 +12,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     try {
         const rawIds = stopId.split(',');
         // Filter out station IDs (Type 1), only platforms work in departures.
-        // Station IDs usually have 'S' (e.g., U123S1).
-        const finalIds = rawIds.filter(id => !id.includes('S'));
+        // Also filter out 'N' IDs (Internal nodes?) and 'E' (Entrances) which cause bloat and 400 errors.
+        // We generally only want IDs containing 'Z' (Zastávka/Stop) which are the actual boarding platforms.
+        const finalIds = rawIds.filter(id => {
+            if (id.includes('S')) return false; // Stations/Entrances
+            // Check for 'Z' as indicator of a Stop identifier.
+            // PID IDs usually look like U123Z1 or U123Z1P. 
+            // The problematic ones are U1072N1, U1072N2 etc.
+            if (!id.includes('Z')) return false;
+            return true;
+        });
         const idsToFetch = finalIds.length > 0 ? finalIds : rawIds;
 
         // Using the most stable Golemio endpoint
