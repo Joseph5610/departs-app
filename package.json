@@ -1,7 +1,7 @@
 {
   "name": "pid",
   "private": true,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "scripts": {
     "dev": "wrangler pages dev --proxy 5173 -- npm run dev:vite",

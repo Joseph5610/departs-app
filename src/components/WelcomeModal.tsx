@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
-import { MapPin, Info, ArrowRight } from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 
 export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
     const [isOpen, setIsOpen] = useState(false);
