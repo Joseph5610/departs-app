@@ -1,216 +1,29 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import MapGL, { Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
+import React, { useRef } from 'react';
+import MapGL, { Source, Layer, NavigationControl, type MapRef } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useVehicles } from '../hooks/useVehicles';
-import { useVehicleDetail } from '../hooks/useVehicleDetail';
-import { useStops } from '../hooks/useStops';
 import { BottomSheet } from './BottomSheet';
-import { useDepartures } from '../hooks/useDepartures';
-import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { LiveStatus } from './LiveStatus';
 import { vehicleColorExpression, getVehicleColor } from '../utils/vehicleColors';
 import { SettingsModal } from './SettingsModal';
 import { WelcomeModal } from './WelcomeModal';
 import { UpdatePopup } from './UpdatePopup';
+import { Search } from './Search';
+import { StatusPill } from './StatusPill';
 import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin } from 'lucide-react';
+import {
+    clusterLayer,
+    clusterCountLayer,
+    stopPointLayer,
+    transferStationLayer,
+    stopLabelLayer,
+    entranceLayer
+} from '../config/mapLayers';
+import { useMapLogic } from '../hooks/useMapLogic';
+import { format, parseISO } from 'date-fns';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-
-// Layer Definitions
-const clusterLayer: any = {
-    id: 'clusters',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['has', 'point_count'],
-    paint: {
-        'circle-color': '#334155',
-        'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 30, 25],
-        'circle-opacity': 0.8,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': '#475569'
-    }
-};
-
-const clusterCountLayer: any = {
-    id: 'cluster-count',
-    type: 'symbol',
-    source: 'pid-stops',
-    filter: ['has', 'point_count'],
-    layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-size': 12
-    },
-    paint: {
-        'text-color': '#f8fafc'
-    }
-};
-
-const stopPointLayer: any = {
-    id: 'unclustered-point',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
-        ['!', ['all',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
-        ]]
-    ],
-    paint: {
-        'circle-radius': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
-            1, 10, // Station
-            6     // Stop
-        ],
-        'circle-color': ['case',
-            // Only apply custom colors for Stations (Type 1)
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'],
-                // Transfers -> WHITE
-                'Můstek', '#FFFFFF',
-                'Muzeum', '#FFFFFF',
-                'Florenc', '#FFFFFF',
-
-                // Single Lines (Check if 'metro_lines' contains specific line)
-                // Since Mapbox expressions with arrays are tricky, we rely on the backend strictly sending correct single letters for non-transfers.
-                // Or simplified: we know the station names (except new ones).
-                // Actually, 'match' on specific arrays is hard.
-                // Let's use the 'in' check on the array if possible, or fallback to name-based logic since we have the list.
-                // BUT WAIT: maplibre 'match' works on scalar values mainly. 
-                // Let's use a simpler approach: check membership in the array string representation or just use 'case' logic.
-                // The most robust way without complex expressions:
-                // We will rely on the fact that for single line stations, we can just check the first element.
-                // But wait, it's easier to just match the lines we know.
-
-                // LINE A
-                'Nemocnice Motol', '#00A562', 'Petřiny', '#00A562', 'Nádraží Veleslavín', '#00A562', 'Bořislavka', '#00A562',
-                'Dejvická', '#00A562', 'Hradčanská', '#00A562', 'Malostranská', '#00A562', 'Staroměstská', '#00A562',
-                'Náměstí Míru', '#00A562', 'Jiřího z Poděbrad', '#00A562', 'Flora', '#00A562', 'Želivského', '#00A562',
-                'Strašnická', '#00A562', 'Skalka', '#00A562', 'Depo Hostivař', '#00A562',
-
-                // LINE B
-                'Zličín', '#DEBD29', 'Stodůlky', '#DEBD29', 'Luka', '#DEBD29', 'Lužiny', '#DEBD29', 'Hůrka', '#DEBD29',
-                'Nové Butovice', '#DEBD29', 'Jinonice', '#DEBD29', 'Radlická', '#DEBD29', 'Smíchovské nádraží', '#DEBD29',
-                'Anděl', '#DEBD29', 'Karlovo náměstí', '#DEBD29', 'Národní třída', '#DEBD29', 'Náměstí Republiky', '#DEBD29',
-                'Křižíkova', '#DEBD29', 'Invalidovna', '#DEBD29', 'Palmovka', '#DEBD29', 'Českomoravská', '#DEBD29',
-                'Vysočanská', '#DEBD29', 'Kolbenova', '#DEBD29', 'Hloubětín', '#DEBD29', 'Rajská zahrada', '#DEBD29', 'Černý Most', '#DEBD29',
-
-                // LINE C
-                'Letňany', '#C6242D', 'Prosek', '#C6242D', 'Střížkov', '#C6242D', 'Ládví', '#C6242D', 'Kobylisy', '#C6242D',
-                'Nádraží Holešovice', '#C6242D', 'Vltavská', '#C6242D', 'Hlavní nádraží', '#C6242D', 'I. P. Pavlova', '#C6242D',
-                'Vyšehrad', '#C6242D', 'Pražského povstání', '#C6242D', 'Pankrác', '#C6242D', 'Budějovická', '#C6242D',
-                'Kačerov', '#C6242D', 'Roztyly', '#C6242D', 'Chodov', '#C6242D', 'Opatov', '#C6242D', 'Háje', '#C6242D',
-
-                '#38bdf8' // Default (Blue) for unknown stations
-            ],
-
-            // Default for Stops (Type 0 or null)
-            '#1e293b'
-        ],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': ['case',
-            // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
-            ['all',
-                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
-            ],
-            '#000000',
-
-            // 2. Other Stations (Type 1) -> WHITE stroke
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            '#ffffff',
-
-            // 3. Regular Stops (Type 0) -> BLUE stroke
-            '#38bdf8'
-        ]
-    }
-};
-
-const transferStationLayer: any = {
-    id: 'transfer-stations',
-    type: 'symbol',
-    source: 'pid-stops',
-    filter: ['all',
-        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
-    ],
-    minzoom: 10,
-    layout: {
-        'icon-image': ['match', ['get', 'stop_name'],
-            'Můstek', 'transfer-A-B',
-            'Muzeum', 'transfer-A-C',
-            'Florenc', 'transfer-B-C',
-            ''
-        ],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 15, 0.6],
-        'icon-allow-overlap': true,
-        'icon-offset': ['match', ['get', 'stop_name'],
-            'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
-            ['literal', [0, 0]]
-        ]
-    }
-};
-
-const stopLabelLayer: any = {
-    id: 'stop-labels',
-    type: 'symbol',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
-    ],
-    minzoom: 10,
-    layout: {
-        'text-field': [
-            'case',
-            ['all',
-                ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['has', 'platform_code'],
-                ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
-            ],
-            ['concat', ['get', 'stop_name'], ' (', ['get', 'platform_code'], ')'],
-            ['get', 'stop_name']
-        ],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 8, 16, 12],
-        'text-offset': [0, 1.2],
-        'text-anchor': 'top',
-        'text-max-width': 10,
-        'text-allow-overlap': false,
-        'text-ignore-placement': false
-    },
-    paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': '#000000',
-        'text-halo-width': 1
-    }
-};
-
-const entranceLayer: any = {
-    id: 'entrance-layer',
-    type: 'symbol',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
-    ],
-    minzoom: 16,
-    layout: {
-        'text-field': ['get', 'stop_name'],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': 11,
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
-    },
-    paint: {
-        'text-color': '#e2e8f0',
-        'text-halo-color': '#0f172a',
-        'text-halo-width': 1
-    }
-};
 
 const INITIAL = (() => {
     const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -222,291 +35,40 @@ const INITIAL = (() => {
 })();
 
 export const Map: React.FC = () => {
-    const mapRef = useRef<any>(null);
-    const [bounds, setBounds] = useState<string | null>(null);
-    const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
-    const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
-    const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [showVehicles, setShowVehicles] = useState(true);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [expandedLines, setExpandedLines] = useState<string[]>([]);
-    const debounceRef = useRef<any>(null);
+    const mapRef = useRef<MapRef>(null);
 
-    const { data: rawVehicles, isFetching: fetchingVehicles, dataUpdatedAt } = useVehicles(debouncedBounds);
-    const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail(
-        selectedVehicle?.vehicle_id,
-        selectedVehicle?.gtfs_trip_id
-    );
-    const { data: stops } = useStops();
-    const { data: departures, isLoading: loadingDeps } = useDepartures(selectedStop?.id || null);
-
-    // Sync selectedStop with URL
-    useEffect(() => {
-        const p = new URLSearchParams(window.location.search);
-        const id = p.get('stopId');
-        const name = p.get('stopName');
-        if (id && name && !selectedStop) {
-            setSelectedStop({ id, name });
-        }
-    }, []);
-
-    useEffect(() => {
-        const url = new URL(window.location.href);
-        if (selectedStop) {
-            url.searchParams.set('stopId', selectedStop.id);
-            url.searchParams.set('stopName', selectedStop.name);
-        } else {
-            url.searchParams.delete('stopId');
-            url.searchParams.delete('stopName');
-        }
-        window.history.replaceState({}, '', url.toString());
-    }, [selectedStop]);
-
-    // Auto-following logic: Keep map centered on selected vehicle
-    useEffect(() => {
-        if (!isFollowing || !selectedVehicle || !rawVehicles || !mapRef.current) return;
-
-        const vehicleFeature = rawVehicles.features.find(
-            (f: any) => f.properties.vehicle_id === selectedVehicle.vehicle_id
-        );
-
-        if (vehicleFeature) {
-            const [lng, lat] = vehicleFeature.geometry.coordinates;
-            const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-
-            mapRef.current.easeTo({
-                center: [lng, lat],
-                duration: 1000,
-                essential: true,
-                // On mobile, push the center up by adding bottom padding to account for the BottomSheet
-                padding: isMobile ? { bottom: window.innerHeight / 2.2, top: 0, left: 0, right: 0 } : { bottom: 0, top: 0, left: 0, right: 0 }
-            });
-        }
-    }, [rawVehicles, isFollowing, selectedVehicle]);
-
-    // Pulsing animation for selected vehicle
-    useEffect(() => {
-        let frame: number;
-        const animate = () => {
-            const map = mapRef.current?.getMap();
-            if (map && selectedVehicle && isFollowing) {
-                const time = Date.now() / 350;
-                const radius = 30 + Math.sin(time) * 30; // Pulsates between 0 and 60
-                const opacity = 0.9 - (radius / 80); // Max 0.9
-
-                try {
-                    if (map.getLayer('vehicles-pulse')) {
-                        map.setPaintProperty('vehicles-pulse', 'circle-radius', radius);
-                        map.setPaintProperty('vehicles-pulse', 'circle-opacity', Math.max(0.1, opacity));
-                    }
-                } catch (e) {
-                    // Layer might not be ready yet
-                }
-            }
-            frame = requestAnimationFrame(animate);
-        };
-
-        if (selectedVehicle && isFollowing) {
-            frame = requestAnimationFrame(animate);
-        }
-
-        return () => {
-            cancelAnimationFrame(frame);
-            // Cleanup pulse layer when tracking stops
-            const map = mapRef.current?.getMap();
-            if (map && map.getLayer('vehicles-pulse')) {
-                try {
-                    map.setPaintProperty('vehicles-pulse', 'circle-radius', 0);
-                    map.setPaintProperty('vehicles-pulse', 'circle-opacity', 0);
-                } catch (e) {
-                    // Silently fail if map is being unmounted
-                }
-            }
-        };
-    }, [selectedVehicle, isFollowing]);
-
-    const onMove = useCallback((evt: any) => {
-        const { zoom } = evt.viewState;
-
-        // If this is a programmatic move (like easeTo in auto-follow),
-        // we MUST ignore it, otherwise we get an infinite refresh loop.
-        if (!evt.originalEvent) return;
-
-        // If user is manually moving, stop following
-        if (isFollowing) {
-            setIsFollowing(false);
-        }
-
-        const b = evt.target.getBounds();
-
-        // Round to 3 decimal places (~100m) to increase cache hit ratio
-        const round = (num: number) => Math.round(num * 1000) / 1000;
-        const currentBounds = b && zoom >= 11
-            ? `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`
-            : null;
-
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            setDebouncedBounds(currentBounds);
-            setBounds(currentBounds);
-        }, 1000);
-
-        // Immediate reaction for zoom threshold
-        if (zoom < 11 && bounds !== null) {
-            setBounds(null);
-        }
-    }, [bounds, isFollowing]);
-
-    const onMoveEnd = useCallback((evt: any) => {
-        const { latitude, longitude, zoom } = evt.viewState;
-        const b = evt.target.getBounds();
-        const currentBounds = b && zoom >= 11 ? `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}` : null;
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('lat', latitude.toFixed(5));
-        url.searchParams.set('lng', longitude.toFixed(5));
-        url.searchParams.set('z', zoom.toFixed(2));
-        window.history.replaceState({}, '', url.toString());
-
-        // Ensure explicit set at end of move
-        setBounds(currentBounds);
-        setDebouncedBounds(currentBounds);
-    }, []);
-
-    const handleLocate = () => {
-        console.log('🛰️ Štartujem manuálnu geolokáciu...');
-        if (!navigator.geolocation) {
-            alert('Tvoj prehliadač nepodporuje geolokáciu.');
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                console.log('✅ Poloha nájdená:', latitude, longitude);
-                mapRef.current?.getMap().flyTo({
-                    center: [longitude, latitude],
-                    zoom: 15,
-                    duration: 2000
-                });
-            },
-            (err) => {
-                console.error('❌ Geolokácia zlyhala:', err);
-                alert(`Chyba: ${err.message} (Kód: ${err.code}). Skontroluj nastavenia súkromia v macOS/Browseri.`);
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    };
-
-
-
-    const onLoad = useCallback((evt: any) => {
-        const map = evt.target;
-
-        // Register custom Centered Bearing Arrow (SDF)
-        const size = 64;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.clearRect(0, 0, size, size);
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            // Sharper, compact arrow
-            ctx.moveTo(32, 12);
-            ctx.lineTo(18, 46);  // Slightly narrower
-            ctx.lineTo(32, 38);  // Slightly shallower cut
-            ctx.lineTo(46, 46);  // Slightly narrower
-            ctx.closePath();
-            ctx.fill();
-
-            if (!map.hasImage('v-arrow-centered')) {
-                const imageData = ctx.getImageData(0, 0, size, size);
-                map.addImage('v-arrow-centered', imageData, { sdf: true });
-            }
-        }
-
-        // Generate Split Icons for Transfers
-        const addSplitIcon = (id: string, c1: string, c2: string) => {
-            const size = 64;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                const cx = size / 2;
-                const cy = size / 2;
-                const r = size / 2 - 4; // Margin for stroke
-
-                // White border background
-                ctx.beginPath();
-                ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-                ctx.fillStyle = 'white';
-                ctx.fill();
-
-                // Left Half
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, Math.PI * 0.5, Math.PI * 1.5);
-                ctx.fillStyle = c1;
-                ctx.fill();
-
-                // Right Half
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, Math.PI * 1.5, Math.PI * 2.5);
-                ctx.fillStyle = c2;
-                ctx.fill();
-
-                if (!map.hasImage(id)) {
-                    map.addImage(id, ctx.getImageData(0, 0, size, size), { pixelRatio: 2 });
-                }
-            }
-        };
-
-        // Register Transfer Icons
-        addSplitIcon('transfer-A-B', '#00A562', '#DEBD29'); // Mustek (Green/Yellow)
-        addSplitIcon('transfer-A-C', '#00A562', '#C6242D'); // Muzeum (Green/Red)
-        addSplitIcon('transfer-B-C', '#DEBD29', '#C6242D'); // Florenc (Yellow/Red)
-
-        const b = map.getBounds();
-        const z = map.getZoom();
-        if (b && z >= 11) {
-            const initialBounds = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
-            setBounds(initialBounds);
-            setDebouncedBounds(initialBounds);
-        }
-    }, []);
-
-    const groupedDepartures = useMemo(() => {
-        if (!departures?.departures) return [];
-        const groups: Record<string, any[]> = {};
-        departures.departures.forEach((dep: any) => {
-            const key = dep.line;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(dep);
-        });
-        return Object.entries(groups).map(([line, deps]) => ({
-            line,
-            type: deps[0].type,
-            departures: deps
-        })).sort((a, b) => {
-            const timeA = new Date(a.departures[0].timestamp).getTime();
-            const timeB = new Date(b.departures[0].timestamp).getTime();
-            return timeA - timeB;
-        });
-    }, [departures]);
-
-    const stopsData = useMemo(() => {
-        if (!stops) return null;
-        return { type: 'FeatureCollection' as const, features: (stops as any).features };
-    }, [stops]);
-
-    const toggleLine = (line: string) => {
-        setExpandedLines(prev =>
-            prev.includes(line) ? prev.filter(l => l !== line) : [...prev, line]
-        );
-    };
+    const {
+        bounds,
+        selectedStop,
+        selectedVehicle,
+        isFollowing,
+        showVehicles,
+        isSettingsOpen,
+        expandedLines,
+        setSelectedStop,
+        setSelectedVehicle,
+        setIsFollowing,
+        setShowVehicles,
+        setIsSettingsOpen,
+        handleLocate,
+        onMove,
+        onMoveEnd,
+        onLoad,
+        onDragStart,
+        handleDepartureClick,
+        toggleLine,
+        setExpandedLines,
+        displayVehicles,
+        vehicleDetail,
+        loadingDetail,
+        stopsData,
+        groupedDepartures,
+        stops,
+        loadingDeps,
+        routeShapeData,
+        fetchingVehicles,
+        dataUpdatedAt
+    } = useMapLogic(mapRef);
 
     return (
         <div className="w-full h-full bg-black relative">
@@ -520,7 +82,8 @@ export const Map: React.FC = () => {
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
-                mapLib={maplibregl}
+                mapLib={maplibregl as any} // Cast as any if type mismatch persists
+                onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
                     if (features?.length && features[0].layer.id !== 'entrance-layer') {
@@ -536,10 +99,12 @@ export const Map: React.FC = () => {
 
                     if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
-                        const source = mapRef.current.getMap().getSource('pid-stops');
+                        const source = (mapRef.current!.getMap() as any).getSource('pid-stops');
+                        // Note: mapRef.current is MapRef, getMap() returns MapLibre map instance. 
+                        // getSource might return a type that doesn't have getClusterExpansionZoom in basic types, but it exists on GeoJSONSource.
                         source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
                             if (err) return;
-                            mapRef.current.easeTo({
+                            mapRef.current?.easeTo({
                                 center: (f.geometry as any).coordinates,
                                 zoom,
                                 duration: 500
@@ -565,6 +130,43 @@ export const Map: React.FC = () => {
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
             >
+                {/* Route Shape Layer - Absolute bottom (rendered first) */}
+                {routeShapeData && (
+                    <Source id="route-shape" type="geojson" data={routeShapeData}>
+                        <Layer
+                            id="route-line"
+                            type="line"
+                            layout={{
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            }}
+                            paint={{
+                                'line-color': getVehicleColor(selectedVehicle?.route_type || selectedVehicle?.t, selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n),
+                                'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
+                                'line-opacity': 0.6,
+                                'line-blur': 1
+                            }}
+                        />
+                    </Source>
+                )}
+
+                <Search
+                    stops={stops as any}
+                    onSelect={(stop) => {
+                        const [lng, lat] = stop.geometry.coordinates;
+                        mapRef.current?.flyTo({
+                            center: [lng, lat],
+                            zoom: 16,
+                            duration: 2000
+                        });
+                        const pc = stop.properties.platform_code;
+                        const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
+                        setSelectedStop({ id: stop.properties.stop_id, name });
+                        setSelectedVehicle(null);
+                        setExpandedLines([]);
+                    }}
+                />
+
                 <div
                     className="absolute top-4 right-4 z-10 flex flex-col gap-2"
                     style={{
@@ -589,7 +191,6 @@ export const Map: React.FC = () => {
                 </div>
                 <NavigationControl position="bottom-right" showCompass={false} />
 
-
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
                         <Layer {...clusterLayer} />
@@ -601,13 +202,13 @@ export const Map: React.FC = () => {
                     </Source>
                 )}
 
-                {showVehicles && rawVehicles && (
-                    <Source id="pid-vehicles" type="geojson" data={rawVehicles}>
+                {showVehicles && displayVehicles && (
+                    <Source id="pid-vehicles" type="geojson" data={displayVehicles}>
                         {/* Pulse Effect for selected vehicle */}
                         <Layer
                             id="vehicles-pulse"
                             type="circle"
-                            filter={['all', ['==', ['get', 'vehicle_id'], selectedVehicle?.vehicle_id || 'NONE'], ['literal', isFollowing]]}
+                            filter={['all', ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle?.vehicle_id || selectedVehicle?.id || 'NONE'], ['literal', isFollowing]]}
                             paint={{
                                 'circle-radius': 0,
                                 'circle-color': vehicleColorExpression,
@@ -618,6 +219,7 @@ export const Map: React.FC = () => {
                         <Layer
                             id="vehicles-point"
                             type="circle"
+                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                             paint={{
                                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
                                 'circle-color': vehicleColorExpression,
@@ -631,10 +233,11 @@ export const Map: React.FC = () => {
                             id="vehicles-direction-bg"
                             type="symbol"
                             minzoom={11}
+                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                             layout={{
                                 'icon-image': 'v-arrow-centered',
                                 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.3, 16, 0.5],
-                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
+                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
                                 'icon-rotation-alignment': 'map',
                                 'icon-allow-overlap': true,
                                 'icon-ignore-placement': true,
@@ -651,10 +254,11 @@ export const Map: React.FC = () => {
                             id="vehicles-direction-fg"
                             type="symbol"
                             minzoom={11}
+                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                             layout={{
                                 'icon-image': 'v-arrow-centered',
                                 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.25, 16, 0.45],
-                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
+                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
                                 'icon-rotation-alignment': 'map',
                                 'icon-allow-overlap': true,
                                 'icon-ignore-placement': true,
@@ -670,8 +274,9 @@ export const Map: React.FC = () => {
                             id="vehicles-label"
                             type="symbol"
                             minzoom={10}
+                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                             layout={{
-                                'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
+                                'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
                                 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
                                 'text-allow-overlap': true,
                                 'text-ignore-placement': true,
@@ -699,11 +304,11 @@ export const Map: React.FC = () => {
             <BottomSheet
                 isOpen={!!selectedStop || !!selectedVehicle}
                 onClose={() => { setSelectedStop(null); setSelectedVehicle(null); setIsFollowing(false); }}
-                title={selectedStop ? selectedStop.name : (selectedVehicle ? `Line ${selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}` : '')}
+                title={selectedStop ? selectedStop.name : (selectedVehicle && window.innerWidth >= 768 ? `Line ${selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}` : '')}
             >
-                <div className="space-y-6 pt-2">
+                <div className="space-y-4 pt-1">
                     {selectedVehicle && (
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {/* Loading State */}
                             {loadingDetail && !vehicleDetail && (
                                 <div className="py-8 flex flex-col items-center justify-center gap-3">
@@ -712,17 +317,32 @@ export const Map: React.FC = () => {
                                 </div>
                             )}
 
+                            {/* Warning: Before Track / Previous Trip */}
+                            {(['before_track', 'before_track_delayed'].includes(selectedVehicle.state_position) || ['before_track', 'before_track_delayed'].includes(vehicleDetail?.state_position || '')) && (
+                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4">
+                                    <div className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
+                                        <Info size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-amber-500 font-bold text-sm">Vehicle is performing a previous trip</h4>
+                                        <p className="text-amber-500/80 text-xs mt-1 leading-relaxed">
+                                            The vehicle hasn't started this specific trip yet. The location shown might be from its previous service.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
                                 <div
                                     className="absolute inset-0 opacity-10"
-                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name) }}
+                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
                                 />
                                 <div
                                     className="w-14 h-14 md:w-20 md:h-20 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
-                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name) }}
+                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
                                     onClick={() => setIsFollowing(!isFollowing)}
                                 >
-                                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}</span>
+                                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}</span>
                                     <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-slate-700'}`}>
                                         <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                                     </div>
@@ -732,17 +352,18 @@ export const Map: React.FC = () => {
                                         {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || 'Heading to destination'}
                                     </h3>
                                     <div className="flex items-center md:justify-center gap-2">
-                                        <div className={`px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'
-                                            }`}>
-                                            {(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30
-                                                ? `Delay ${Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) / 60)} min`
+                                        <StatusPill
+                                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30 ? 'danger' : 'success'}
+                                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30
+                                                ? `Delay ${Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60)} min`
                                                 : 'On time'}
-                                        </div>
+                                        />
                                         {vehicleDetail?.vehicle_descriptor?.is_air_conditioned && (
-                                            <div className="p-1 px-2 bg-sky-500/20 text-sky-400 rounded-full flex items-center gap-1">
-                                                <Snowflake size={10} />
-                                                <span className="text-[10px] font-bold">AC</span>
-                                            </div>
+                                            <StatusPill
+                                                variant="info"
+                                                label="AC"
+                                                icon={<Snowflake size={10} />}
+                                            />
                                         )}
                                     </div>
                                 </div>
@@ -801,7 +422,7 @@ export const Map: React.FC = () => {
                             <div className="hidden md:grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                     <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-1">Vehicle ID</div>
-                                    <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || 'N/A'}</div>
+                                    <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || selectedVehicle.id || 'N/A'}</div>
                                 </div>
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                     <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-1">Status</div>
@@ -830,7 +451,13 @@ export const Map: React.FC = () => {
 
                                 <div className="space-y-2">
                                     {visibleDepartures.map((dep: any, idx: number) => (
-                                        <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                                        <div
+                                            key={idx}
+                                            onClick={() => dep.tripId && handleDepartureClick(dep.tripId)}
+                                            className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
+                                                ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
+                                            `}
+                                        >
                                             <div className="flex items-center gap-4">
                                                 <div className="flex flex-col">
                                                     <div className="text-white font-semibold leading-tight">{dep.headsign}</div>

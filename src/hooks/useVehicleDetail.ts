@@ -25,6 +25,9 @@ export interface VehicleDetail {
             };
         }>;
     };
+    shapes?: {
+        features: any[];
+    };
 }
 
 const fetchVehicleDetail = async (vehicleId: string, tripId: string): Promise<VehicleDetail> => {

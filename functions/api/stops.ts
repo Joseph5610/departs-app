@@ -2,6 +2,8 @@ interface Env {
     GOLEMIO_API_KEY: string;
 }
 
+import { METRO_STATIONS } from '../_utils/metro-data';
+
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
 
@@ -21,7 +23,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             } as any);
 
             if (!res.ok) break;
-            const data = await res.json();
+            const data = await res.json() as { features: any[] };
             if (!data.features || data.features.length === 0) break;
 
             allFeatures = [...allFeatures, ...data.features];
@@ -64,32 +66,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             // Hardcoded Metro Station -> Lines mapping
             // used to colorize stations on the map
-            const METRO_STATIONS: Record<string, string[]> = {
-                // Line A (Green)
-                "Nemocnice Motol": ["A"], "Petřiny": ["A"], "Nádraží Veleslavín": ["A"], "Bořislavka": ["A"],
-                "Dejvická": ["A"], "Hradčanská": ["A"], "Malostranská": ["A"], "Staroměstská": ["A"],
-                "Náměstí Míru": ["A"], "Jiřího z Poděbrad": ["A"], "Flora": ["A"], "Želivského": ["A"],
-                "Strašnická": ["A"], "Skalka": ["A"], "Depo Hostivař": ["A"],
-
-                // Line B (Yellow)
-                "Zličín": ["B"], "Stodůlky": ["B"], "Luka": ["B"], "Lužiny": ["B"], "Hůrka": ["B"],
-                "Nové Butovice": ["B"], "Jinonice": ["B"], "Radlická": ["B"], "Smíchovské nádraží": ["B"],
-                "Anděl": ["B"], "Karlovo náměstí": ["B"], "Národní třída": ["B"], "Náměstí Republiky": ["B"],
-                "Křižíkova": ["B"], "Invalidovna": ["B"], "Palmovka": ["B"], "Českomoravská": ["B"],
-                "Vysočanská": ["B"], "Kolbenova": ["B"], "Hloubětín": ["B"], "Rajská zahrada": ["B"], "Černý Most": ["B"],
-
-                // Line C (Red)
-                "Letňany": ["C"], "Prosek": ["C"], "Střížkov": ["C"], "Ládví": ["C"], "Kobylisy": ["C"],
-                "Nádraží Holešovice": ["C"], "Vltavská": ["C"], "Hlavní nádraží": ["C"], "I. P. Pavlova": ["C"],
-                "Vyšehrad": ["C"], "Pražského povstání": ["C"], "Pankrác": ["C"], "Budějovická": ["C"],
-                "Kačerov": ["C"], "Roztyly": ["C"], "Chodov": ["C"], "Opatov": ["C"], "Háje": ["C"],
-
-                // Transfers
-                "Můstek": ["A", "B"],
-                "Muzeum": ["A", "C"],
-                "Florenc": ["B", "C"]
-            };
-
             // METRO STATION (Type 1)
             if (type === 1) {
                 const children = stationChildren.get(stopId) || [];

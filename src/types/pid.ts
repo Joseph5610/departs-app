@@ -15,13 +15,22 @@ export interface VehicleProperties {
     last_updated?: string;
 }
 
+export interface LiteVehicleProperties {
+    id: string;       // vehicle_id
+    tId?: string;     // gtfs_trip_id
+    n?: string;       // route_short_name (Number)
+    t?: string;       // route_type (Type)
+    b?: number;       // bearing
+    d?: number;       // delay
+}
+
 export interface VehicleFeature {
     type: "Feature";
     geometry: {
         type: "Point";
         coordinates: [number, number]; // [lon, lat]
     };
-    properties: VehicleProperties;
+    properties: VehicleProperties | LiteVehicleProperties;
 }
 
 export interface VehicleCollection {

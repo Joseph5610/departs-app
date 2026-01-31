@@ -45,24 +45,36 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
 export const vehicleColorExpression: any = [
     'case',
     // 1. Metro Specifics (Priority)
-    ['any', ['==', ['get', 'gtfs_route_short_name'], 'A'], ['==', ['get', 'route_short_name'], 'A']], '#00A651',
-    ['any', ['==', ['get', 'gtfs_route_short_name'], 'B'], ['==', ['get', 'route_short_name'], 'B']], '#F9B233',
-    ['any', ['==', ['get', 'gtfs_route_short_name'], 'C'], ['==', ['get', 'route_short_name'], 'C']], '#E31E24',
+    ['any',
+        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'A'],
+        ['==', ['to-string', ['get', 'route_short_name']], 'A'],
+        ['==', ['to-string', ['get', 'n']], 'A']
+    ], '#00A651',
+    ['any',
+        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'B'],
+        ['==', ['to-string', ['get', 'route_short_name']], 'B'],
+        ['==', ['to-string', ['get', 'n']], 'B']
+    ], '#F9B233',
+    ['any',
+        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'C'],
+        ['==', ['to-string', ['get', 'route_short_name']], 'C'],
+        ['==', ['to-string', ['get', 'n']], 'C']
+    ], '#E31E24',
 
     // 2. Night Routes Detection (90-99 or 9xx)
     [
         'any',
         // Trams 90-99
-        ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
-        // Buses 9xx (Length 3, Starts with 9) - avoids to-number failures on 'X25' etc.
+        ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
+        // Buses 9xx (Length 3, Starts with 9)
         ['all',
-            ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']]], 3],
-            ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], 0, 1], '9']
+            ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], 3],
+            ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], '9']
         ]
     ], '#111827',
 
-    // 3. Type-based fallback
-    ['match', ['to-string', ['get', 'route_type']],
+    // 3. Type-based fallback (Ensure 't' is treated as string)
+    ['match', ['to-string', ['coalesce', ['get', 'route_type'], ['get', 't'], '']],
         '0', '#930019', 'tram', '#930019',
         '1', '#AD0B00', 'metro', '#AD0B00',
         '3', '#005CBF', 'bus', '#005CBF',

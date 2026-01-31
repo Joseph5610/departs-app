@@ -62,7 +62,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             line: item.route.short_name,
             type: item.route.type,
             headsign: item.trip.headsign,
-            isCanceled: item.trip.is_canceled
+            isCanceled: item.trip.is_canceled,
+            tripId: item.trip.id
         }));
 
         // Sort by time

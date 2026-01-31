@@ -1,10 +1,13 @@
 import { Map } from './components/Map';
+import { ToastProvider } from './components/Toast';
 
 function App() {
   return (
-    <div className="w-full h-full overflow-hidden">
-      <Map />
-    </div>
+    <ToastProvider>
+      <div className="w-full h-full overflow-hidden">
+        <Map />
+      </div>
+    </ToastProvider>
   );
 }
 

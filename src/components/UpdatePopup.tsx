@@ -37,10 +37,10 @@ export const UpdatePopup: React.FC = () => {
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-white text-sm font-semibold">
-                                    {needRefresh ? 'New version available!' : 'App ready to work offline'}
+                                    {needRefresh ? 'New version available!' : 'Get the app experience'}
                                 </span>
                                 <span className="text-slate-400 text-xs mt-0.5">
-                                    {needRefresh ? 'Update now to get latest features.' : 'You can use the app even without signal.'}
+                                    {needRefresh ? 'Update now to get latest features.' : 'Add it to your home screen for quick access.'}
                                 </span>
                             </div>
                         </div>

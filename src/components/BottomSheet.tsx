@@ -16,13 +16,13 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop - Only on mobile to focus on the content */}
+                    {/* Backdrop - Transparent and no blur on mobile to keep map visible */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 md:hidden"
+                        className="fixed inset-0 z-40 md:hidden pointer-events-none"
                     />
 
                     {/* Sheet / Sidebar */}
@@ -39,11 +39,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                                 if (info.offset.y > 100) onClose();
                             }
                         } : {})}
-                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-black/90 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl max-h-[85vh] md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
+                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-black/95 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl max-h-[85vh] md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
                     >
                         {/* Handle Bar - Mobile only */}
-                        <div className="flex justify-center p-3 md:hidden cursor-grab active:cursor-grabbing">
-                            <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+                        <div className="flex justify-center p-2.5 md:hidden cursor-grab active:cursor-grabbing">
+                            <div className="w-12 h-1 bg-white/10 rounded-full" />
                         </div>
 
                         {/* Header */}
@@ -63,9 +63,9 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
 
                         {/* Content */}
                         <div
-                            className="flex-1 overflow-y-auto px-6 pb-20 md:pb-8 custom-scrollbar"
+                            className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar"
                             style={{
-                                paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '2rem'
+                                paddingBottom: isMobile ? 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' : '2rem'
                             }}
                         >
                             {children}

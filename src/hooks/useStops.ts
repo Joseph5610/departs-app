@@ -29,7 +29,7 @@ export const useStops = () => {
 
             // 3. Otherwise (missing or old), fetch from API
             console.log('Fetching stops from API (Stale or Missing)...');
-            const res = await fetch(`/api/stops?t=${now}`); // Cache busting
+            const res = await fetch('/api/stops');
             if (!res.ok) {
                 // Failsafe: if API fails but we have old data, return old data
                 if (cached) {

@@ -22,8 +22,8 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
         <Modal isOpen={isOpen} onClose={handleClose} title="Welcome to departs.app">
             <div className="space-y-8">
                 <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-20 h-20 bg-emerald-500/10 rounded-3xl flex items-center justify-center text-emerald-500 shadow-inner">
-                        <MapPin size={40} strokeWidth={1.5} />
+                    <div className="w-24 h-24 bg-black/20 rounded-[2rem] flex items-center justify-center p-4 ring-1 ring-white/10 shadow-2xl backdrop-blur-xl">
+                        <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
                     </div>
                     <div>
                         <p className="text-slate-400 text-sm leading-relaxed max-w-[280px]">
