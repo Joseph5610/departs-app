@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 
 .wrangler/
-.dev.vars  
+.dev.vars
+test-results
