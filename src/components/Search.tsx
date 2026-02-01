@@ -73,11 +73,13 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
     return (
         <div
             ref={containerRef}
-            className="absolute top-4 left-4 z-10 w-[calc(100%-2rem)] md:w-80"
-            style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))', left: 'calc(1rem + env(safe-area-inset-left, 0px))' }}
+            className="absolute top-4 left-4 z-10 right-16 md:right-auto md:w-80"
+            style={{
+                top: 'calc(1rem + env(safe-area-inset-top, 0px))',
+                left: 'calc(1rem + env(safe-area-inset-left, 0px))'
+            }}
         >
             <div className="relative h-11 flex items-center">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={20} />
                 <input
                     type="text"
                     value={query}
@@ -89,6 +91,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
                     placeholder="Search stops..."
                     className="w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border border-white/10 shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none z-10" size={20} />
                 {query && (
                     <button
                         onClick={() => {
