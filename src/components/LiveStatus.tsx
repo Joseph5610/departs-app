@@ -36,13 +36,13 @@ export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUp
                 style={{ top: 'calc(4.5rem + env(safe-area-inset-top, 0px))' }}
             >
                 <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${fetching ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-                <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+                <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
                     {fetching ? (
                         'Refreshing'
                     ) : (
                         <>
                             Live
-                            <span className="text-slate-500 font-mono tabular-nums">{nextRefreshIn}s</span>
+                            <span className="text-zinc-500 font-mono tabular-nums">{nextRefreshIn}s</span>
                         </>
                     )}
                 </span>

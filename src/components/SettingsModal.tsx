@@ -24,17 +24,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
                 >
                     <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <div className={`p-3 rounded-xl transition-colors shrink-0 hidden md:block ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'}`}>
+                        <div className={`p-3 rounded-xl transition-colors shrink-0 hidden md:block ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'}`}>
                             {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="text-white font-semibold truncate">Live vehicle locations</div>
-                            <div className="text-slate-500 text-xs mt-0.5 leading-tight">Show buses, trams, and metro</div>
+                            <div className="text-zinc-500 text-xs mt-0.5 leading-tight">Show buses, trams, and metro</div>
                         </div>
                     </div>
 
                     <div
-                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
                     >
                         <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
@@ -49,7 +49,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 <div className="pt-4 flex justify-center">
-                    <span className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">
+                    <span className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">
                         Version {version}
                     </span>
                 </div>
