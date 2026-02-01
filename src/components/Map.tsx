@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import MapGL, { Source, Layer, NavigationControl, type MapRef } from 'react-map-gl/maplibre';
+import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
@@ -11,7 +11,7 @@ import { WelcomeModal } from './WelcomeModal';
 import { UpdatePopup } from './UpdatePopup';
 import { Search } from './Search';
 import { StatusPill } from './StatusPill';
-import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin } from 'lucide-react';
+import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin, Plus, Minus } from 'lucide-react';
 import {
     clusterLayer,
     clusterCountLayer,
@@ -69,6 +69,14 @@ export const Map: React.FC = () => {
         fetchingVehicles,
         dataUpdatedAt
     } = useMapLogic(mapRef);
+
+    const handleZoomIn = () => {
+        mapRef.current?.zoomIn();
+    };
+
+    const handleZoomOut = () => {
+        mapRef.current?.zoomOut();
+    };
 
     return (
         <div className="w-full h-full bg-black relative">
@@ -188,8 +196,24 @@ export const Map: React.FC = () => {
                     >
                         <Settings size={20} className="group-hover:rotate-45 transition-transform" />
                     </button>
+
+                    <div className="flex flex-col gap-2 mt-2">
+                        <button
+                            onClick={handleZoomIn}
+                            className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                            title="Zoom In"
+                        >
+                            <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                        <button
+                            onClick={handleZoomOut}
+                            className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                            title="Zoom Out"
+                        >
+                            <Minus size={20} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                    </div>
                 </div>
-                <NavigationControl position="bottom-right" showCompass={false} />
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
