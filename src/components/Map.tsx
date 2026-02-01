@@ -197,17 +197,18 @@ export const Map: React.FC = () => {
                         <Settings size={20} className="group-hover:rotate-45 transition-transform" />
                     </button>
 
-                    <div className="flex flex-col gap-2 mt-2">
+                    <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
                         <button
                             onClick={handleZoomIn}
-                            className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
                             title="Zoom In"
                         >
                             <Plus size={20} className="group-hover:scale-110 transition-transform" />
                         </button>
+                        <div className="mx-2 h-[1px] bg-white/10" />
                         <button
                             onClick={handleZoomOut}
-                            className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
                             title="Zoom Out"
                         >
                             <Minus size={20} className="group-hover:scale-110 transition-transform" />
