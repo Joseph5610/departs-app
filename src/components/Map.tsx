@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import MapGL, { Source, Layer, NavigationControl, type MapRef } from 'react-map-gl/maplibre';
+import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
@@ -11,7 +11,7 @@ import { WelcomeModal } from './WelcomeModal';
 import { UpdatePopup } from './UpdatePopup';
 import { Search } from './Search';
 import { StatusPill } from './StatusPill';
-import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin } from 'lucide-react';
+import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin, Plus, Minus } from 'lucide-react';
 import {
     clusterLayer,
     clusterCountLayer,
@@ -69,6 +69,14 @@ export const Map: React.FC = () => {
         fetchingVehicles,
         dataUpdatedAt
     } = useMapLogic(mapRef);
+
+    const handleZoomIn = () => {
+        mapRef.current?.zoomIn();
+    };
+
+    const handleZoomOut = () => {
+        mapRef.current?.zoomOut();
+    };
 
     return (
         <div className="w-full h-full bg-black relative">
@@ -176,20 +184,37 @@ export const Map: React.FC = () => {
                 >
                     <button
                         onClick={handleLocate}
-                        className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                        className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                         title="My Location"
                     >
                         <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
                     </button>
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-3 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                        className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                         title="Settings"
                     >
                         <Settings size={20} className="group-hover:rotate-45 transition-transform" />
                     </button>
+
+                    <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
+                        <button
+                            onClick={handleZoomIn}
+                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
+                            title="Zoom In"
+                        >
+                            <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                        <div className="mx-2 h-[1px] bg-white/10" />
+                        <button
+                            onClick={handleZoomOut}
+                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
+                            title="Zoom Out"
+                        >
+                            <Minus size={20} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                    </div>
                 </div>
-                <NavigationControl position="bottom-right" showCompass={false} />
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
@@ -313,7 +338,7 @@ export const Map: React.FC = () => {
                             {loadingDetail && !vehicleDetail && (
                                 <div className="py-8 flex flex-col items-center justify-center gap-3">
                                     <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Fetching live details...</span>
+                                    <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Fetching live details...</span>
                                 </div>
                             )}
 
@@ -343,7 +368,7 @@ export const Map: React.FC = () => {
                                     onClick={() => setIsFollowing(!isFollowing)}
                                 >
                                     <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}</span>
-                                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-slate-700'}`}>
+                                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
                                         <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                                     </div>
                                 </div>
@@ -373,15 +398,15 @@ export const Map: React.FC = () => {
                             {vehicleDetail?.vehicle_descriptor?.operator && (
                                 <div className="flex flex-row items-center justify-between md:p-4 p-1 md:bg-white/5 md:border md:border-white/5 rounded-2xl">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-white/5 rounded-xl text-slate-400 hidden md:block">
+                                        <div className="p-2 bg-white/5 rounded-xl text-zinc-400 hidden md:block">
                                             <Info size={16} />
                                         </div>
                                         <div className="flex flex-col md:block">
                                             <div className="text-white text-sm font-semibold hidden md:block">
                                                 {vehicleDetail.vehicle_descriptor.operator}
                                             </div>
-                                            <div className="text-slate-500 text-[10px]">
-                                                <span className="md:hidden font-bold text-slate-400">{vehicleDetail.vehicle_descriptor.operator} • </span>
+                                            <div className="text-zinc-500 text-[10px]">
+                                                <span className="md:hidden font-bold text-zinc-400">{vehicleDetail.vehicle_descriptor.operator} • </span>
                                                 {vehicleDetail.vehicle_descriptor.vehicle_type || 'Vehicle'}
                                                 {vehicleDetail.vehicle_descriptor.vehicle_registration_number ? ` • #${vehicleDetail.vehicle_descriptor.vehicle_registration_number}` : ''}
                                             </div>
@@ -399,7 +424,7 @@ export const Map: React.FC = () => {
                             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between px-1">
-                                        <span className="text-slate-500 text-[10px] uppercase font-black tracking-widest">Route Schedule</span>
+                                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">Route Schedule</span>
                                     </div>
                                     <div className="space-y-0.5 relative pl-4">
                                         <div className="absolute left-1 top-2 bottom-6 w-0.5 bg-white/10" />
@@ -410,8 +435,8 @@ export const Map: React.FC = () => {
                                             .map((stop, idx) => (
                                                 <div key={idx} className="relative py-2 flex items-center justify-between">
                                                     <div className="absolute -left-3.5 w-1.5 h-1.5 rounded-full bg-white/30 border border-black" />
-                                                    <span className="text-slate-200 text-sm font-medium truncate pr-4">{stop.properties.stop_name}</span>
-                                                    <span className="text-slate-500 text-xs font-mono shrink-0">{stop.properties.arrival_time?.slice(0, 5)}</span>
+                                                    <span className="text-zinc-200 text-sm font-medium truncate pr-4">{stop.properties.stop_name}</span>
+                                                    <span className="text-zinc-500 text-xs font-mono shrink-0">{stop.properties.arrival_time?.slice(0, 5)}</span>
                                                 </div>
                                             ))}
                                     </div>
@@ -421,11 +446,11 @@ export const Map: React.FC = () => {
                             {/* Basic Metadata - Desktop only to save space on mobile */}
                             <div className="hidden md:grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-1">Vehicle ID</div>
+                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">Vehicle ID</div>
                                     <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || selectedVehicle.id || 'N/A'}</div>
                                 </div>
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest mb-1">Status</div>
+                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">Status</div>
                                     <div className="text-white text-xs capitalize">{selectedVehicle.state_position?.replace(/_/g, ' ') || 'In transit'}</div>
                                 </div>
                             </div>
@@ -461,7 +486,7 @@ export const Map: React.FC = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="flex flex-col">
                                                     <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
-                                                    <div className="text-slate-500 text-[10px] mt-1 flex items-center gap-2">
+                                                    <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
                                                         <span>{format(parseISO(dep.scheduled), 'HH:mm')}</span>
                                                         {dep.delay > 30 && <span className="text-rose-400">+{Math.round(dep.delay / 60)}min delay</span>}
                                                     </div>
@@ -478,7 +503,7 @@ export const Map: React.FC = () => {
                                     {hasMore && (
                                         <button
                                             onClick={() => toggleLine(group.line)}
-                                            className="w-full py-2 text-slate-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-slate-400 transition-colors"
+                                            className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
                                         >
                                             <div className="h-[1px] flex-1 bg-white/5" />
                                             <span>{isExpanded ? 'Show less' : `+ ${group.departures.length - 1} more connections`}</span>
@@ -491,7 +516,7 @@ export const Map: React.FC = () => {
                     })}
 
                     {selectedStop && groupedDepartures.length === 0 && !loadingDeps && (
-                        <div className="py-12 text-center text-slate-500">No upcoming departures found.</div>
+                        <div className="py-12 text-center text-zinc-500">No upcoming departures found.</div>
                     )}
                 </div>
             </BottomSheet>

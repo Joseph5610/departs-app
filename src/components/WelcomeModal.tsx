@@ -26,7 +26,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                         <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
                     </div>
                     <div>
-                        <p className="text-slate-400 text-sm leading-relaxed max-w-[280px]">
+                        <p className="text-zinc-400 text-sm leading-relaxed max-w-[280px]">
                             The fastest way to track departures and real-time locations of your transport.
                         </p>
                     </div>
@@ -37,7 +37,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
                             <div className="text-white font-semibold text-sm">Click on a stop</div>
-                            <div className="text-slate-500 text-xs mt-1">See upcoming departures with real-time delay info.</div>
+                            <div className="text-zinc-500 text-xs mt-1">See upcoming departures with real-time delay info.</div>
                         </div>
                     </div>
 
@@ -45,7 +45,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
                             <div className="text-white font-semibold text-sm">Track vehicles</div>
-                            <div className="text-slate-500 text-xs mt-1">The arrow next to a vehicle shows its current direction.</div>
+                            <div className="text-zinc-500 text-xs mt-1">The arrow next to a vehicle shows its current direction.</div>
                         </div>
                     </div>
                 </div>
