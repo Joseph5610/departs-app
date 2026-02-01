@@ -76,14 +76,14 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
         <div ref={containerRef} className="absolute left-4 top-4 z-20 w-[calc(100%-100px)] md:w-80 group">
             <div
                 className={`
-                    relative flex items-center gap-3 p-3
-                    bg-zinc-950/70 backdrop-blur-2xl rounded-2xl border border-white/20
-                    shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-300
+                    relative flex items-center gap-3 px-4 h-11
+                    bg-black/40 backdrop-blur-md rounded-2xl border border-white/10
+                    shadow-2xl transition-all duration-300
                     ${isOpen && results.length > 0 ? 'rounded-b-none border-b-transparent ring-2 ring-white/5' : ''}
                 `}
                 style={{ top: 'calc(0rem + env(safe-area-inset-top, 0px))' }}
             >
-                <SearchIcon size={18} className="text-slate-400 group-focus-within:text-white transition-colors" />
+                <SearchIcon size={20} className="text-slate-400 group-focus-within:text-white transition-colors" />
                 <input
                     type="text"
                     value={query}
@@ -100,7 +100,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
                         onClick={() => setQuery('')}
                         className="p-1 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-all"
                     >
-                        <X size={16} />
+                        <X size={18} />
                     </button>
                 )}
             </div>
