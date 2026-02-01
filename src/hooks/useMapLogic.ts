@@ -13,7 +13,13 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
-    const [showVehicles, setShowVehicles] = useState(true);
+    const [showVehicles, setShowVehicles] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('showVehicles');
+            return saved !== null ? saved === 'true' : true;
+        }
+        return true;
+    });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [expandedLines, setExpandedLines] = useState<string[]>([]);
     const debounceRef = useRef<any>(null);
@@ -287,6 +293,11 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     };
 
     // Effect to upgrade selectedVehicle from "Trip-based" to "Live"
+    // Persist showVehicles to localStorage
+    useEffect(() => {
+        localStorage.setItem('showVehicles', String(showVehicles));
+    }, [showVehicles]);
+
     useEffect(() => {
         if (!selectedVehicle || !rawVehicles || !isFollowing) return;
 
