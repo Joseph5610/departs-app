@@ -12,7 +12,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({ label, icon, variant = '
         danger: 'bg-rose-500/20 text-rose-400 border-rose-500/10',
         info: 'bg-sky-500/20 text-sky-400 border-sky-500/10',
         warning: 'bg-amber-500/20 text-amber-400 border-amber-500/10',
-        neutral: 'bg-white/5 text-slate-400 border-white/5',
+        neutral: 'bg-white/5 text-zinc-400 border-white/5',
     };
 
     return (

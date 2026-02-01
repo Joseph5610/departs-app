@@ -39,7 +39,7 @@ export const UpdatePopup: React.FC = () => {
                                 <span className="text-white text-sm font-semibold">
                                     {needRefresh ? 'New version available!' : 'Get the app experience'}
                                 </span>
-                                <span className="text-slate-400 text-xs mt-0.5">
+                                <span className="text-zinc-400 text-xs mt-0.5">
                                     {needRefresh ? 'Update now to get latest features.' : 'Add it to your home screen for quick access.'}
                                 </span>
                             </div>
@@ -56,7 +56,7 @@ export const UpdatePopup: React.FC = () => {
                             )}
                             <button
                                 onClick={close}
-                                className="p-1.5 hover:bg-white/5 rounded-lg text-slate-500 transition-colors"
+                                className="p-1.5 hover:bg-white/5 rounded-lg text-zinc-500 transition-colors"
                             >
                                 <X size={16} />
                             </button>
