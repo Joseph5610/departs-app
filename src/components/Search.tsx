@@ -87,7 +87,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
                     }}
                     onFocus={() => setIsOpen(true)}
                     placeholder="Search stops..."
-                    className="w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white placeholder:text-zinc-500 rounded-2xl border border-white/10 shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border border-white/10 shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
                 {query && (
                     <button
