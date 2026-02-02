@@ -414,7 +414,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         const groups: Record<string, any[]> = {};
         departures.departures.forEach((dep: any) => {
             // Metro (type 1) is grouped by line AND direction
-            const key = dep.type === 1 ? `${dep.line}-${dep.directionId}` : dep.line;
+            const lineName = String(dep.line).toUpperCase();
+            const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
+            const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
             if (!groups[key]) groups[key] = [];
             groups[key].push(dep);
         });
