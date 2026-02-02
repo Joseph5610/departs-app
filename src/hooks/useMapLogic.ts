@@ -22,6 +22,13 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+    const [departureSort, setDepartureSort] = useState<'line' | 'departure'>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('departureSort');
+            return (saved === 'line' || saved === 'departure') ? saved : 'line';
+        }
+        return 'line';
+    });
     const debounceRef = useRef<any>(null);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
@@ -293,10 +300,14 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     };
 
     // Effect to upgrade selectedVehicle from "Trip-based" to "Live"
-    // Persist showVehicles to localStorage
+    // Persist showVehicles and departureSort to localStorage
     useEffect(() => {
         localStorage.setItem('showVehicles', String(showVehicles));
     }, [showVehicles]);
+
+    useEffect(() => {
+        localStorage.setItem('departureSort', departureSort);
+    }, [departureSort]);
 
     useEffect(() => {
         if (!selectedVehicle || !rawVehicles || !isFollowing) return;
@@ -420,25 +431,38 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             if (!groups[key]) groups[key] = [];
             groups[key].push(dep);
         });
-        return Object.entries(groups).map(([key, deps]) => ({
+
+        const result = Object.entries(groups).map(([key, deps]) => ({
             groupId: key,
             line: deps[0].line,
             type: deps[0].type,
             departures: deps
-        })).sort((a, b) => {
-            const typeA = Number(a.type) || 0;
-            const typeB = Number(b.type) || 0;
-            if (typeA !== typeB) return typeA - typeB;
+        }));
 
-            const lineA = String(a.line);
-            const lineB = String(b.line);
-            if (lineA !== lineB) return lineA.localeCompare(lineB);
+        if (departureSort === 'line') {
+            result.sort((a, b) => {
+                const typeA = Number(a.type) || 0;
+                const typeB = Number(b.type) || 0;
+                if (typeA !== typeB) return typeA - typeB;
 
-            const timeA = new Date(a.departures[0].timestamp).getTime();
-            const timeB = new Date(b.departures[0].timestamp).getTime();
-            return timeA - timeB;
-        });
-    }, [departures]);
+                const lineA = String(a.line);
+                const lineB = String(b.line);
+                if (lineA !== lineB) return lineA.localeCompare(lineB, undefined, { numeric: true, sensitivity: 'base' });
+
+                const timeA = new Date(a.departures[0].timestamp).getTime();
+                const timeB = new Date(b.departures[0].timestamp).getTime();
+                return timeA - timeB;
+            });
+        } else {
+            // Sort by departure time
+            result.sort((a, b) => {
+                const timeA = new Date(a.departures[0].timestamp).getTime();
+                const timeB = new Date(b.departures[0].timestamp).getTime();
+                return timeA - timeB;
+            });
+        }
+        return result;
+    }, [departures, departureSort]);
 
     const stopsData = useMemo(() => {
         if (!stops) return null;
@@ -487,12 +511,14 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         showVehicles,
         isSettingsOpen,
         expandedGroups,
+        departureSort,
         // Setters / Actions
         setSelectedStop,
         setSelectedVehicle,
         setIsFollowing,
         setShowVehicles,
         setIsSettingsOpen,
+        setDepartureSort,
         handleLocate,
         onMove,
         onMoveEnd,
