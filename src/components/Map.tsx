@@ -24,7 +24,8 @@ import {
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
 import { format, parseISO } from 'date-fns';
-import { cs, enUS } from 'date-fns/locale';
+import { cs } from 'date-fns/locale/cs';
+import { enUS } from 'date-fns/locale/en-US';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
