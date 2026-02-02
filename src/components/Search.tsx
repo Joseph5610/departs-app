@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
+import { normalizeString } from '../utils/stringUtils';
 
 interface Stop {
     type: 'Feature';
@@ -27,16 +28,19 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
     const results = useMemo(() => {
         if (!stops?.features || query.length < 2) return [];
 
-        const normalizedQuery = query.toLowerCase();
+        const normalizedQuery = normalizeString(query);
 
         // 1. Filter and score matches
         const matches = (stops.features as Stop[])
-            .filter(stop => stop.properties.stop_name.toLowerCase().includes(normalizedQuery))
-            .map(stop => {
-                const name = stop.properties.stop_name.toLowerCase();
+            .map(stop => ({
+                stop,
+                normalizedName: normalizeString(stop.properties.stop_name)
+            }))
+            .filter(item => item.normalizedName.includes(normalizedQuery))
+            .map(item => {
                 let score = 0;
-                if (name.startsWith(normalizedQuery)) score += 100;
-                return { stop, score };
+                if (item.normalizedName.startsWith(normalizedQuery)) score += 100;
+                return { stop: item.stop, score };
             });
 
         // 2. Sort by score and name
