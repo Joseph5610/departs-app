@@ -55,20 +55,52 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const allGroups = Array.isArray(data) ? data : [];
         const flattened = allGroups.flat();
 
-        const departures = flattened.map((item: any) => ({
-            timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
-            scheduled: item.departure.timestamp_scheduled,
-            delay: item.departure.delay_seconds || 0,
-            line: String(item.route?.short_name || '?'),
-            type: String(item.route?.type || (['A', 'B', 'C'].includes(item.route?.short_name) ? '1' : '0')),
-            // direction_id is often 0 or 1. Fallback to platform_code (ideal for Metro) then headsign.
-            directionId: String((item.trip?.direction_id !== undefined && item.trip?.direction_id !== null)
-                ? item.trip.direction_id
-                : (item.stop?.platform_code || item.trip?.headsign || '0')),
-            headsign: item.trip?.headsign || 'Unknown',
-            isCanceled: item.trip?.is_canceled || false,
-            tripId: item.trip?.id
-        }));
+        const departures = flattened.map((item: any) => {
+            const line = String(item.route?.short_name || '?').toUpperCase();
+            const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
+            const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
+
+            let directionId: string | number | null | undefined = item.trip?.direction_id;
+
+            // For Metro, we prefer platform_code as it's more stable for grouping at transfer stations
+            if (isMetro && (item.stop?.platform_code !== undefined && item.stop?.platform_code !== null)) {
+                directionId = item.stop.platform_code;
+            }
+
+            // Fallback for shortened trips or missing data
+            if (directionId === undefined || directionId === null) {
+                if (isMetro) {
+                    const headsign = item.trip?.headsign || '';
+                    if (line === 'A') {
+                        if (['Nemocnice Motol', 'Petřiny', 'Dejvická'].includes(headsign)) directionId = 'A0';
+                        else if (['Depo Hostivař', 'Skalka', 'Strašnická', 'Želivského'].includes(headsign)) directionId = 'A1';
+                    } else if (line === 'B') {
+                        if (['Zličín', 'Nové Butovice', 'Smíchovské nádraží'].includes(headsign)) directionId = 'B0';
+                        else if (['Černý Most', 'Vysočanská', 'Českomoravská'].includes(headsign)) directionId = 'B1';
+                    } else if (line === 'C') {
+                        if (['Letňany', 'Ládví', 'Nádraží Holešovice'].includes(headsign)) directionId = 'C0';
+                        else if (['Háje', 'Kačerov', 'Pražského povstání'].includes(headsign)) directionId = 'C1';
+                    }
+                }
+
+                // Final fallback
+                if (directionId === undefined || directionId === null) {
+                    directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
+                }
+            }
+
+            return {
+                timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
+                scheduled: item.departure.timestamp_scheduled,
+                delay: item.departure.delay_seconds || 0,
+                line,
+                type,
+                directionId: String(directionId),
+                headsign: item.trip?.headsign || 'Unknown',
+                isCanceled: item.trip?.is_canceled || false,
+                tripId: item.trip?.id
+            };
+        });
 
         // Sort by time
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
