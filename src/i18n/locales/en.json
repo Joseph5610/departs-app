@@ -1,0 +1,87 @@
+{
+  "search": {
+    "placeholder": "Search stops...",
+    "platform": "Platform {{code}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "liveVehicles": {
+      "title": "Live vehicle locations",
+      "description": "Show buses, trams, and metro"
+    },
+    "tip": {
+      "prefix": "Tip:",
+      "text": "Hiding vehicles can speed up map loading in areas with poor connection."
+    },
+    "language": {
+      "title": "Language",
+      "en": "English",
+      "cs": "Čeština"
+    },
+    "version": "Version {{version}}"
+  },
+  "welcome": {
+    "title": "Welcome to departs.app",
+    "description": "The fastest way to track departures and real-time locations of your transport.",
+    "steps": {
+      "clickStop": {
+        "title": "Click on a stop",
+        "description": "See upcoming departures with real-time delay info."
+      },
+      "trackVehicles": {
+        "title": "Track vehicles",
+        "description": "The arrow next to a vehicle shows its current direction."
+      }
+    },
+    "cta": "Get Started"
+  },
+  "map": {
+    "controls": {
+      "myLocation": "My Location",
+      "settings": "Settings",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out"
+    },
+    "vehicleDetails": {
+      "fetching": "Fetching live details...",
+      "previousTrip": "Vehicle is performing a previous trip",
+      "previousTripDescription": "The vehicle hasn't started this specific trip yet. The location shown might be from its previous service.",
+      "headingToDestination": "Heading to destination",
+      "onTime": "On time",
+      "delayLabel": "Delay {{minutes}} min",
+      "routeSchedule": "Route Schedule",
+      "vehicleId": "Vehicle ID",
+      "status": "Status",
+      "inTransit": "In transit",
+      "notAvailable": "N/A",
+      "lineLabel": "Line {{line}}",
+      "operator": "{{operator}} • ",
+      "vehicle": "Vehicle",
+      "ac": "AC"
+    },
+    "departures": {
+      "noUpcoming": "No upcoming departures found.",
+      "delay": "+{{minutes}}min delay",
+      "moreConnections": "+ {{count}} more connections",
+      "showLess": "Show less",
+      "now": "Now",
+      "minutes": "{{count}} min"
+    }
+  },
+  "update": {
+    "newVersion": "New version available!",
+    "pwaPrompt": "Get the app experience",
+    "updateNow": "Update now to get latest features.",
+    "addToHome": "Add it to your home screen for quick access.",
+    "updateButton": "Update"
+  },
+  "liveStatus": {
+    "refreshing": "Refreshing",
+    "live": "Live"
+  },
+  "toasts": {
+    "geoNotSupported": "Your browser does not support geolocation.",
+    "geoError": "Could not retrieve location. Please check browser permissions.",
+    "vehicleNotFound": "Vehicle not found. It probably has not started yet."
+  }
+}

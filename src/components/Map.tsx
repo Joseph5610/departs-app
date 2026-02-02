@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -23,6 +24,8 @@ import {
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
 import { format, parseISO } from 'date-fns';
+import { cs } from 'date-fns/locale/cs';
+import { enUS } from 'date-fns/locale/en-US';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -35,7 +38,13 @@ const INITIAL = (() => {
     };
 })();
 
+const dateLocales: Record<string, any> = {
+    cs: cs,
+    en: enUS
+};
+
 export const Map: React.FC = () => {
+    const { t, i18n } = useTranslation();
     const mapRef = useRef<MapRef>(null);
 
     const {
@@ -186,14 +195,14 @@ export const Map: React.FC = () => {
                     <button
                         onClick={handleLocate}
                         className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                        title="My Location"
+                        title={t('map.controls.myLocation')}
                     >
                         <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
                     </button>
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                        title="Settings"
+                        title={t('map.controls.settings')}
                     >
                         <Settings size={20} className="group-hover:rotate-45 transition-transform" />
                     </button>
@@ -202,7 +211,7 @@ export const Map: React.FC = () => {
                         <button
                             onClick={handleZoomIn}
                             className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
-                            title="Zoom In"
+                            title={t('map.controls.zoomIn')}
                         >
                             <Plus size={20} className="group-hover:scale-110 transition-transform" />
                         </button>
@@ -210,7 +219,7 @@ export const Map: React.FC = () => {
                         <button
                             onClick={handleZoomOut}
                             className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
-                            title="Zoom Out"
+                            title={t('map.controls.zoomOut')}
                         >
                             <Minus size={20} className="group-hover:scale-110 transition-transform" />
                         </button>
@@ -331,7 +340,7 @@ export const Map: React.FC = () => {
             <BottomSheet
                 isOpen={!!selectedStop || !!selectedVehicle}
                 onClose={() => { setSelectedStop(null); setSelectedVehicle(null); setIsFollowing(false); }}
-                title={selectedStop ? selectedStop.name : (selectedVehicle && window.innerWidth >= 768 ? `Line ${selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}` : '')}
+                title={selectedStop ? selectedStop.name : (selectedVehicle && window.innerWidth >= 768 ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n }) : '')}
             >
                 <div className="space-y-4 pt-1">
                     {selectedVehicle && (
@@ -340,7 +349,7 @@ export const Map: React.FC = () => {
                             {loadingDetail && !vehicleDetail && (
                                 <div className="py-8 flex flex-col items-center justify-center gap-3">
                                     <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                    <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Fetching live details...</span>
+                                    <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t('map.vehicleDetails.fetching')}</span>
                                 </div>
                             )}
 
@@ -351,9 +360,9 @@ export const Map: React.FC = () => {
                                         <Info size={20} />
                                     </div>
                                     <div>
-                                        <h4 className="text-amber-500 font-bold text-sm">Vehicle is performing a previous trip</h4>
+                                        <h4 className="text-amber-500 font-bold text-sm">{t('map.vehicleDetails.previousTrip')}</h4>
                                         <p className="text-amber-500/80 text-xs mt-1 leading-relaxed">
-                                            The vehicle hasn't started this specific trip yet. The location shown might be from its previous service.
+                                        {t('map.vehicleDetails.previousTripDescription')}
                                         </p>
                                     </div>
                                 </div>
@@ -376,19 +385,19 @@ export const Map: React.FC = () => {
                                 </div>
                                 <div className="z-10 flex-1 min-w-0 md:w-full">
                                     <h3 className="text-lg md:text-xl font-bold text-white mb-1 truncate">
-                                        {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || 'Heading to destination'}
+                                        {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                                     </h3>
                                     <div className="flex items-center md:justify-center gap-2">
                                         <StatusPill
                                             variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30 ? 'danger' : 'success'}
                                             label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30
-                                                ? `Delay ${Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60)} min`
-                                                : 'On time'}
+                                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60) })
+                                                : t('map.vehicleDetails.onTime')}
                                         />
                                         {vehicleDetail?.vehicle_descriptor?.is_air_conditioned && (
                                             <StatusPill
                                                 variant="info"
-                                                label="AC"
+                                                label={t('map.vehicleDetails.ac')}
                                                 icon={<Snowflake size={10} />}
                                             />
                                         )}
@@ -408,8 +417,8 @@ export const Map: React.FC = () => {
                                                 {vehicleDetail.vehicle_descriptor.operator}
                                             </div>
                                             <div className="text-zinc-500 text-[10px]">
-                                                <span className="md:hidden font-bold text-zinc-400">{vehicleDetail.vehicle_descriptor.operator} • </span>
-                                                {vehicleDetail.vehicle_descriptor.vehicle_type || 'Vehicle'}
+                                                <span className="md:hidden font-bold text-zinc-400">{t('map.vehicleDetails.operator', { operator: vehicleDetail.vehicle_descriptor.operator })}</span>
+                                                {vehicleDetail.vehicle_descriptor.vehicle_type || t('map.vehicleDetails.vehicle')}
                                                 {vehicleDetail.vehicle_descriptor.vehicle_registration_number ? ` • #${vehicleDetail.vehicle_descriptor.vehicle_registration_number}` : ''}
                                             </div>
                                         </div>
@@ -426,7 +435,7 @@ export const Map: React.FC = () => {
                             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between px-1">
-                                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">Route Schedule</span>
+                                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
                                     </div>
                                     <div className="space-y-0.5 relative pl-4">
                                         <div className="absolute left-1 top-2 bottom-6 w-0.5 bg-white/10" />
@@ -448,12 +457,12 @@ export const Map: React.FC = () => {
                             {/* Basic Metadata - Desktop only to save space on mobile */}
                             <div className="hidden md:grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">Vehicle ID</div>
-                                    <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || selectedVehicle.id || 'N/A'}</div>
+                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">{t('map.vehicleDetails.vehicleId')}</div>
+                                    <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || selectedVehicle.id || t('map.vehicleDetails.notAvailable')}</div>
                                 </div>
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">Status</div>
-                                    <div className="text-white text-xs capitalize">{selectedVehicle.state_position?.replace(/_/g, ' ') || 'In transit'}</div>
+                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">{t('map.vehicleDetails.status')}</div>
+                                    <div className="text-white text-xs capitalize">{selectedVehicle.state_position?.replace(/_/g, ' ') || t('map.vehicleDetails.inTransit')}</div>
                                 </div>
                             </div>
                         </div>
@@ -494,8 +503,10 @@ export const Map: React.FC = () => {
                                                 <div className="flex flex-col">
                                                     <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
                                                     <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                        <span>{format(parseISO(dep.scheduled), 'HH:mm')}</span>
-                                                        {dep.delay > 30 && <span className="text-rose-400">+{Math.round(dep.delay / 60)}min delay</span>}
+                                                        <span>{format(parseISO(dep.scheduled), 'HH:mm', {
+                                                            locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
+                                                        })}</span>
+                                                        {dep.delay > 30 && <span className="text-rose-400">{t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}</span>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -513,7 +524,7 @@ export const Map: React.FC = () => {
                                             className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
                                         >
                                             <div className="h-[1px] flex-1 bg-white/5" />
-                                            <span>{isExpanded ? 'Show less' : `+ ${group.departures.length - 1} more connections`}</span>
+                                            <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
                                             <div className="h-[1px] flex-1 bg-white/5" />
                                         </button>
                                     )}
@@ -523,7 +534,7 @@ export const Map: React.FC = () => {
                     })}
 
                     {selectedStop && groupedDepartures.length === 0 && !loadingDeps && (
-                        <div className="py-12 text-center text-zinc-500">No upcoming departures found.</div>
+                        <div className="py-12 text-center text-zinc-500">{t('map.departures.noUpcoming')}</div>
                     )}
                 </div>
             </BottomSheet>

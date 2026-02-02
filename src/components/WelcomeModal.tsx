@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Info, ArrowRight } from 'lucide-react';
 
 export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -19,7 +21,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Welcome to departs.app">
+        <Modal isOpen={isOpen} onClose={handleClose} title={t('welcome.title')}>
             <div className="space-y-8">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="w-24 h-24 bg-black/20 rounded-[2rem] flex items-center justify-center p-4 ring-1 ring-white/10 shadow-2xl backdrop-blur-xl">
@@ -27,7 +29,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                     </div>
                     <div>
                         <p className="text-zinc-400 text-sm leading-relaxed max-w-[280px]">
-                            The fastest way to track departures and real-time locations of your transport.
+                            {t('welcome.description')}
                         </p>
                     </div>
                 </div>
@@ -36,16 +38,16 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                     <div className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
-                            <div className="text-white font-semibold text-sm">Click on a stop</div>
-                            <div className="text-zinc-500 text-xs mt-1">See upcoming departures with real-time delay info.</div>
+                            <div className="text-white font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
+                            <div className="text-zinc-500 text-xs mt-1">{t('welcome.steps.clickStop.description')}</div>
                         </div>
                     </div>
 
                     <div className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
-                            <div className="text-white font-semibold text-sm">Track vehicles</div>
-                            <div className="text-zinc-500 text-xs mt-1">The arrow next to a vehicle shows its current direction.</div>
+                            <div className="text-white font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
+                            <div className="text-zinc-500 text-xs mt-1">{t('welcome.steps.trackVehicles.description')}</div>
                         </div>
                     </div>
                 </div>
@@ -54,7 +56,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
                     onClick={handleClose}
                     className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 group"
                 >
-                    Get Started
+                    {t('welcome.cta')}
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>

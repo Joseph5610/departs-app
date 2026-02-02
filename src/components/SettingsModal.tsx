@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Eye, EyeOff } from 'lucide-react';
 import { version } from '../../package.json';
@@ -16,8 +17,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     showVehicles,
     setShowVehicles
 }) => {
+    const { t, i18n } = useTranslation();
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Settings">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
             <div className="space-y-6">
                 <button
                     onClick={() => setShowVehicles(!showVehicles)}
@@ -28,8 +31,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <div className="text-white font-semibold truncate">Live vehicle locations</div>
-                            <div className="text-zinc-500 text-xs mt-0.5 leading-tight">Show buses, trams, and metro</div>
+                            <div className="text-white font-semibold truncate">{t('settings.liveVehicles.title')}</div>
+                            <div className="text-zinc-500 text-xs mt-0.5 leading-tight">{t('settings.liveVehicles.description')}</div>
                         </div>
                     </div>
 
@@ -42,15 +45,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                 </button>
 
+                <div className="space-y-3">
+                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">{t('settings.language.title')}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {(['en', 'cs'] as const).map((lang) => (
+                            <button
+                                key={lang}
+                                onClick={() => i18n.changeLanguage(lang)}
+                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${
+                                    (i18n.resolvedLanguage || i18n.language).startsWith(lang)
+                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
+                                        : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
+                                }`}
+                            >
+                                {t(`settings.language.${lang}`)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
                     <div className="text-amber-200/80 text-xs leading-relaxed">
-                        <strong>Tip:</strong> Hiding vehicles can speed up map loading in areas with poor connection.
+                        <strong>{t('settings.tip.prefix')}</strong> {t('settings.tip.text')}
                     </div>
                 </div>
 
                 <div className="pt-4 flex justify-center">
                     <span className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">
-                        Version {version}
+                        {t('settings.version', { version })}
                     </span>
                 </div>
             </div>

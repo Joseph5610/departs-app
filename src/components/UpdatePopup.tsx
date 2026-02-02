@@ -1,8 +1,10 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export const UpdatePopup: React.FC = () => {
+    const { t } = useTranslation();
     const {
         offlineReady: [offlineReady, setOfflineReady],
         needRefresh: [needRefresh, setNeedRefresh],
@@ -37,10 +39,10 @@ export const UpdatePopup: React.FC = () => {
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-white text-sm font-semibold">
-                                    {needRefresh ? 'New version available!' : 'Get the app experience'}
+                                    {needRefresh ? t('update.newVersion') : t('update.pwaPrompt')}
                                 </span>
                                 <span className="text-zinc-400 text-xs mt-0.5">
-                                    {needRefresh ? 'Update now to get latest features.' : 'Add it to your home screen for quick access.'}
+                                    {needRefresh ? t('update.updateNow') : t('update.addToHome')}
                                 </span>
                             </div>
                         </div>
@@ -51,7 +53,7 @@ export const UpdatePopup: React.FC = () => {
                                     onClick={() => updateServiceWorker(true)}
                                     className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold rounded-lg transition-all"
                                 >
-                                    Update
+                                    {t('update.updateButton')}
                                 </button>
                             )}
                             <button

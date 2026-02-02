@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
 import { normalizeString } from '../utils/stringUtils';
 
@@ -22,6 +23,7 @@ interface SearchProps {
 }
 
 export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
+    const { t } = useTranslation();
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -129,7 +131,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
                         setIsOpen(true);
                     }}
                     onFocus={() => setIsOpen(true)}
-                    placeholder="Search stops..."
+                    placeholder={t('search.placeholder')}
                     className="w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border border-white/10 shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none z-10" size={20} />
@@ -163,7 +165,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
                             <div className="flex flex-col">
                                 <span className="text-white font-medium">{stop.properties.stop_name}</span>
                                 {stop.properties.platform_code && (
-                                    <span className="text-zinc-500 text-xs">Platform {stop.properties.platform_code}</span>
+                                    <span className="text-zinc-500 text-xs">{t('search.platform', { code: stop.properties.platform_code })}</span>
                                 )}
                             </div>
                         </button>
