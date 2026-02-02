@@ -1,0 +1,81 @@
+{
+  "search": {
+    "placeholder": "Hledat zastávky...",
+    "platform": "Nástupiště {{code}}"
+  },
+  "settings": {
+    "title": "Nastavení",
+    "liveVehicles": {
+      "title": "Poloha vozidel v reálném čase",
+      "description": "Zobrazit autobusy, tramvaje a metro"
+    },
+    "tip": {
+      "prefix": "Tip:",
+      "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
+    },
+    "version": "Verze {{version}}"
+  },
+  "welcome": {
+    "title": "Vítejte v departs.app",
+    "description": "Nejrychlejší způsob, jak sledovat odjezdy a polohu vašich spojů v reálném čase.",
+    "steps": {
+      "clickStop": {
+        "title": "Klikněte na zastávku",
+        "description": "Zobrazte si nadcházející odjezdy s informacemi o zpoždění."
+      },
+      "trackVehicles": {
+        "title": "Sledujte vozidla",
+        "description": "Šipka u vozidla ukazuje jeho aktuální směr."
+      }
+    },
+    "cta": "Začínáme"
+  },
+  "map": {
+    "controls": {
+      "myLocation": "Moje poloha",
+      "settings": "Nastavení",
+      "zoomIn": "Přiblížit",
+      "zoomOut": "Oddálit"
+    },
+    "vehicleDetails": {
+      "fetching": "Načítání podrobností...",
+      "previousTrip": "Vozidlo vykonává předchozí jízdu",
+      "previousTripDescription": "Vozidlo ještě nezahájilo tuto konkrétní jízdu. Zobrazená poloha může být z jeho předchozího spoje.",
+      "headingToDestination": "Směr konečná zastávka",
+      "onTime": "Na čas",
+      "delayLabel": "Zpoždění {{minutes}} min",
+      "routeSchedule": "Jízdní řád linky",
+      "vehicleId": "ID vozidla",
+      "status": "Stav",
+      "inTransit": "Na cestě",
+      "notAvailable": "N/A",
+      "lineLabel": "Linka {{line}}",
+      "operator": "{{operator}} • ",
+      "vehicle": "Vozidlo"
+    },
+    "departures": {
+      "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
+      "delay": "+{{minutes}}min zpoždění",
+      "moreConnections": "+ {{count}} další spoje",
+      "showLess": "Zobrazit méně",
+      "now": "Nyní",
+      "minutes": "{{count}} min"
+    }
+  },
+  "update": {
+    "newVersion": "Nová verze k dispozici!",
+    "pwaPrompt": "Získejte aplikaci",
+    "updateNow": "Aktualizujte pro nejnovější funkce.",
+    "addToHome": "Přidejte si aplikaci na plochu pro rychlý přístup.",
+    "updateButton": "Aktualizovat"
+  },
+  "liveStatus": {
+    "refreshing": "Aktualizace",
+    "live": "Živě"
+  },
+  "toasts": {
+    "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",
+    "geoError": "Nepodařilo se získat polohu. Zkontrolujte prosím oprávnění prohlížeče.",
+    "vehicleNotFound": "Vozidlo nebylo nalezeno. Pravděpodobně ještě nevyjelo."
+  }
+}
