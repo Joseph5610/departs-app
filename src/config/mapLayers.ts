@@ -42,9 +42,9 @@ export const stopPointLayer: any = {
         ]]
     ],
     paint: {
-        'circle-radius': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]],
-            1, 10, // Station
-            6     // Stop
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 6],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 15, 11]
         ],
         'circle-color': ['case',
             // Only apply custom colors for Stations (Type 1)
@@ -111,28 +111,46 @@ export const stopLabelLayer: any = {
     ],
     minzoom: 10,
     layout: {
-        'text-field': [
-            'case',
-            ['all',
-                ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['has', 'platform_code'],
-                ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
-            ],
-            ['concat', ['get', 'stop_name'], ' (', ['get', 'platform_code'], ')'],
-            ['get', 'stop_name']
-        ],
+        'text-field': ['get', 'stop_name'],
         'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 8, 16, 12],
-        'text-offset': [0, 1.2],
+        'text-offset': [0, 1.5],
         'text-anchor': 'top',
         'text-max-width': 10,
         'text-allow-overlap': false,
-        'text-ignore-placement': false
+        'text-ignore-placement': false,
+        'text-padding': 20
     },
     paint: {
         'text-color': '#ffffff',
         'text-halo-color': '#000000',
         'text-halo-width': 1
+    }
+};
+
+export const platformLabelLayer: any = {
+    id: 'platform-labels',
+    type: 'symbol',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['has', 'platform_code'],
+        ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
+    ],
+    minzoom: 14,
+    layout: {
+        'text-field': ['get', 'platform_code'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 14, 9, 18, 13],
+        'text-anchor': 'center',
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+    },
+    paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 0.5
     }
 };
 
