@@ -18,6 +18,7 @@ import {
     stopPointLayer,
     transferStationLayer,
     stopLabelLayer,
+    platformLabelLayer,
     entranceLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
@@ -221,6 +222,7 @@ export const Map: React.FC = () => {
                         <Layer {...clusterLayer} />
                         <Layer {...clusterCountLayer} />
                         <Layer {...stopPointLayer} />
+                        <Layer {...platformLabelLayer} />
                         <Layer {...transferStationLayer} />
                         <Layer {...stopLabelLayer} />
                         <Layer {...entranceLayer} />
