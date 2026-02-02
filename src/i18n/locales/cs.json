@@ -13,6 +13,11 @@
       "prefix": "Tip:",
       "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
     },
+    "language": {
+      "title": "Jazyk",
+      "en": "English",
+      "cs": "Čeština"
+    },
     "version": "Verze {{version}}"
   },
   "welcome": {
@@ -51,7 +56,8 @@
       "notAvailable": "N/A",
       "lineLabel": "Linka {{line}}",
       "operator": "{{operator}} • ",
-      "vehicle": "Vozidlo"
+      "vehicle": "Vozidlo",
+      "ac": "Klima"
     },
     "departures": {
       "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",

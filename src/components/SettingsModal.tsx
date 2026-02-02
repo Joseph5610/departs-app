@@ -17,7 +17,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     showVehicles,
     setShowVehicles
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
@@ -44,6 +44,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         />
                     </div>
                 </button>
+
+                <div className="space-y-3">
+                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">{t('settings.language.title')}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {(['en', 'cs'] as const).map((lang) => (
+                            <button
+                                key={lang}
+                                onClick={() => i18n.changeLanguage(lang)}
+                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${
+                                    (i18n.resolvedLanguage || i18n.language).startsWith(lang)
+                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
+                                        : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
+                                }`}
+                            >
+                                {t(`settings.language.${lang}`)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
                     <div className="text-amber-200/80 text-xs leading-relaxed">

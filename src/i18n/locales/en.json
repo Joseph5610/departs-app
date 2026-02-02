@@ -13,6 +13,11 @@
       "prefix": "Tip:",
       "text": "Hiding vehicles can speed up map loading in areas with poor connection."
     },
+    "language": {
+      "title": "Language",
+      "en": "English",
+      "cs": "Čeština"
+    },
     "version": "Version {{version}}"
   },
   "welcome": {
@@ -51,7 +56,8 @@
       "notAvailable": "N/A",
       "lineLabel": "Line {{line}}",
       "operator": "{{operator}} • ",
-      "vehicle": "Vehicle"
+      "vehicle": "Vehicle",
+      "ac": "AC"
     },
     "departures": {
       "noUpcoming": "No upcoming departures found.",

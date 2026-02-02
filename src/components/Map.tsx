@@ -24,6 +24,7 @@ import {
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
 import { format, parseISO } from 'date-fns';
+import { cs, enUS } from 'date-fns/locale';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -36,8 +37,13 @@ const INITIAL = (() => {
     };
 })();
 
+const dateLocales: Record<string, any> = {
+    cs: cs,
+    en: enUS
+};
+
 export const Map: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const mapRef = useRef<MapRef>(null);
 
     const {
@@ -390,7 +396,7 @@ export const Map: React.FC = () => {
                                         {vehicleDetail?.vehicle_descriptor?.is_air_conditioned && (
                                             <StatusPill
                                                 variant="info"
-                                                label="AC"
+                                                label={t('map.vehicleDetails.ac')}
                                                 icon={<Snowflake size={10} />}
                                             />
                                         )}
@@ -496,7 +502,9 @@ export const Map: React.FC = () => {
                                                 <div className="flex flex-col">
                                                     <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
                                                     <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                        <span>{format(parseISO(dep.scheduled), 'HH:mm')}</span>
+                                                        <span>{format(parseISO(dep.scheduled), 'HH:mm', {
+                                                            locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
+                                                        })}</span>
                                                         {dep.delay > 30 && <span className="text-rose-400">{t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}</span>}
                                                     </div>
                                                 </div>
