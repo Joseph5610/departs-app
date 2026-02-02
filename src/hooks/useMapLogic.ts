@@ -436,7 +436,8 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             groupId: key,
             line: deps[0].line,
             type: deps[0].type,
-            departures: deps
+            departures: deps,
+            firstTime: new Date(deps[0].timestamp).getTime()
         }));
 
         if (departureSort === 'line') {
@@ -449,17 +450,11 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                 const lineB = String(b.line);
                 if (lineA !== lineB) return lineA.localeCompare(lineB, undefined, { numeric: true, sensitivity: 'base' });
 
-                const timeA = new Date(a.departures[0].timestamp).getTime();
-                const timeB = new Date(b.departures[0].timestamp).getTime();
-                return timeA - timeB;
+                return a.firstTime - b.firstTime;
             });
         } else {
             // Sort by departure time
-            result.sort((a, b) => {
-                const timeA = new Date(a.departures[0].timestamp).getTime();
-                const timeB = new Date(b.departures[0].timestamp).getTime();
-                return timeA - timeB;
-            });
+            result.sort((a, b) => a.firstTime - b.firstTime);
         }
         return result;
     }, [departures, departureSort]);
