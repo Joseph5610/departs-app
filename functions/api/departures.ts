@@ -61,6 +61,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             delay: item.departure.delay_seconds || 0,
             line: item.route.short_name,
             type: item.route.type,
+            directionId: item.trip.direction_id,
             headsign: item.trip.headsign,
             isCanceled: item.trip.is_canceled,
             tripId: item.trip.id

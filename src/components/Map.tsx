@@ -45,7 +45,7 @@ export const Map: React.FC = () => {
         isFollowing,
         showVehicles,
         isSettingsOpen,
-        expandedLines,
+        expandedGroups,
         setSelectedStop,
         setSelectedVehicle,
         setIsFollowing,
@@ -57,8 +57,8 @@ export const Map: React.FC = () => {
         onLoad,
         onDragStart,
         handleDepartureClick,
-        toggleLine,
-        setExpandedLines,
+        toggleGroup,
+        setExpandedGroups,
         displayVehicles,
         vehicleDetail,
         loadingDetail,
@@ -134,7 +134,7 @@ export const Map: React.FC = () => {
                         const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
                         setSelectedStop({ id: f.properties.stop_id, name });
                         setSelectedVehicle(null);
-                        setExpandedLines([]);
+                        setExpandedGroups([]);
                     }
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
@@ -172,7 +172,7 @@ export const Map: React.FC = () => {
                         const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
                         setSelectedStop({ id: stop.properties.stop_id, name });
                         setSelectedVehicle(null);
-                        setExpandedLines([]);
+                        setExpandedGroups([]);
                     }}
                 />
 
@@ -460,12 +460,12 @@ export const Map: React.FC = () => {
                     )}
 
                     {selectedStop && groupedDepartures.map((group) => {
-                        const isExpanded = expandedLines.includes(group.line);
+                        const isExpanded = expandedGroups.includes(group.groupId);
                         const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
                         const hasMore = group.departures.length > 1;
 
                         return (
-                            <div key={group.line} className="space-y-3">
+                            <div key={group.groupId} className="space-y-3">
                                 <div className="flex items-center gap-3 px-1">
                                     <div
                                         className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
@@ -504,7 +504,7 @@ export const Map: React.FC = () => {
 
                                     {hasMore && (
                                         <button
-                                            onClick={() => toggleLine(group.line)}
+                                            onClick={() => toggleGroup(group.groupId)}
                                             className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
                                         >
                                             <div className="h-[1px] flex-1 bg-white/5" />
