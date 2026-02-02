@@ -28,18 +28,53 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
     const results = useMemo(() => {
         if (!stops?.features || query.length < 2) return [];
 
-        const normalizedQuery = normalizeString(query);
+        const normalizedQuery = normalizeString(query).trim();
+        const queryTokens = normalizedQuery.split(/[-\s/]+/);
 
         // 1. Filter and score matches
         const matches = (stops.features as Stop[])
-            .map(stop => ({
-                stop,
-                normalizedName: normalizeString(stop.properties.stop_name)
-            }))
-            .filter(item => item.normalizedName.includes(normalizedQuery))
+            .map(stop => {
+                const normalizedName = normalizeString(stop.properties.stop_name);
+                return {
+                    stop,
+                    normalizedName,
+                    nameTokens: normalizedName.split(/[-\s/]+/)
+                };
+            })
+            .filter(item => {
+                // Every query token must match at least one name token (as prefix)
+                return queryTokens.every(qToken =>
+                    item.nameTokens.some(nToken => nToken.startsWith(qToken))
+                );
+            })
             .map(item => {
                 let score = 0;
-                if (item.normalizedName.startsWith(normalizedQuery)) score += 100;
+
+                // Exact match (highest priority)
+                if (item.normalizedName === normalizedQuery) {
+                    score += 1000;
+                }
+                // Starts with the full query string (e.g., "sidliste c" matches "sidliste cakovice")
+                else if (item.normalizedName.startsWith(normalizedQuery)) {
+                    score += 500;
+                }
+                // Sequential token prefix match (e.g., "sidl cak" matches "sidliste cakovice")
+                else {
+                    let matchesSequentially = true;
+                    for (let i = 0; i < queryTokens.length; i++) {
+                        if (!item.nameTokens[i] || !item.nameTokens[i].startsWith(queryTokens[i])) {
+                            matchesSequentially = false;
+                            break;
+                        }
+                    }
+                    if (matchesSequentially) score += 250;
+                }
+
+                // First token match bonus
+                if (item.nameTokens[0] && item.nameTokens[0].startsWith(queryTokens[0])) {
+                    score += 100;
+                }
+
                 return { stop: item.stop, score };
             });
 
