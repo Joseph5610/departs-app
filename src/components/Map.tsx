@@ -12,7 +12,7 @@ import { WelcomeModal } from './WelcomeModal';
 import { UpdatePopup } from './UpdatePopup';
 import { Search } from './Search';
 import { StatusPill } from './StatusPill';
-import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin, Plus, Minus } from 'lucide-react';
+import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin, Plus, Minus, ArrowDownAz, Clock } from 'lucide-react';
 import {
     clusterLayer,
     clusterCountLayer,
@@ -77,7 +77,9 @@ export const Map: React.FC = () => {
         loadingDeps,
         routeShapeData,
         fetchingVehicles,
-        dataUpdatedAt
+        dataUpdatedAt,
+        departureSort,
+        setDepartureSort
     } = useMapLogic(mapRef);
 
     const handleZoomIn = () => {
@@ -343,6 +345,28 @@ export const Map: React.FC = () => {
                 title={selectedStop ? selectedStop.name : (selectedVehicle && window.innerWidth >= 768 ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n }) : '')}
             >
                 <div className="space-y-4 pt-1">
+                    {selectedStop && (
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest px-1">Upcoming Departures</span>
+                            <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
+                                <button
+                                    onClick={() => setDepartureSort('line')}
+                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title="Sort by line"
+                                >
+                                    <ArrowDownAz size={14} />
+                                </button>
+                                <button
+                                    onClick={() => setDepartureSort('departure')}
+                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title="Sort by departure time"
+                                >
+                                    <Clock size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {selectedVehicle && (
                         <div className="space-y-4">
                             {/* Loading State */}
