@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LiveStatusProps {
@@ -8,6 +9,7 @@ interface LiveStatusProps {
 }
 
 export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUpdate }) => {
+    const { t } = useTranslation();
     const [nextRefreshIn, setNextRefreshIn] = useState(15);
 
     useEffect(() => {
@@ -38,10 +40,10 @@ export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUp
                 <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${fetching ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                 <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
                     {fetching ? (
-                        'Refreshing'
+                        t('liveStatus.refreshing')
                     ) : (
                         <>
-                            Live
+                            {t('liveStatus.live')}
                             <span className="text-zinc-500 font-mono tabular-nums">{nextRefreshIn}s</span>
                         </>
                     )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
 
 interface CountdownProps {
@@ -6,6 +7,7 @@ interface CountdownProps {
 }
 
 export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
+    const { t } = useTranslation();
     const [secondsLeft, setSecondsLeft] = useState(() =>
         differenceInSeconds(parseISO(timestamp), new Date())
     );
@@ -22,7 +24,7 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     }, [timestamp]);
 
     if (secondsLeft <= 0) {
-        return <span className="text-emerald-400 animate-pulse">Now</span>;
+        return <span className="text-emerald-400 animate-pulse">{t('map.departures.now')}</span>;
     }
 
     const mins = Math.floor(secondsLeft / 60);
@@ -38,5 +40,5 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     }
 
     // Over 20 minutes, just show minutes to keep it clean
-    return <span className="text-white">{mins} min</span>;
+    return <span className="text-white">{t('map.departures.minutes', { count: mins })}</span>;
 };

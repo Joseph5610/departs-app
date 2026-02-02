@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVehicles } from './useVehicles';
 import { useVehicleDetail } from './useVehicleDetail';
 import { useStops } from './useStops';
@@ -7,6 +8,7 @@ import { useToast } from '../components/Toast';
 import type { MapRef } from 'react-map-gl/maplibre';
 
 export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
@@ -216,7 +218,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const handleLocate = () => {
         console.log('🛰️ Starting manual geolocation...');
         if (!navigator.geolocation) {
-            showToast('Your browser does not support geolocation.', 'error');
+            showToast(t('toasts.geoNotSupported'), 'error');
             return;
         }
 
@@ -232,7 +234,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             },
             (err) => {
                 console.error('Geolocation error:', err);
-                showToast('Could not retrieve location. Please check browser permissions.', 'error');
+                showToast(t('toasts.geoError'), 'error');
             }
         );
     };
@@ -261,7 +263,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
 
         if (!vehicleFeature) {
-            showToast('Vehicle not found. It probably has not started yet.', 'error');
+            showToast(t('toasts.vehicleNotFound'), 'error');
             return;
         }
 
