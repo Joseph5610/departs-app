@@ -8,6 +8,7 @@ interface Stop {
         stop_id: string;
         stop_name: string;
         platform_code?: string;
+        location_type?: number;
     };
     geometry: {
         type: 'Point';
@@ -33,6 +34,7 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
 
         // 1. Filter and score matches
         const matches = (stops.features as Stop[])
+            .filter(stop => stop.properties.location_type !== 2)
             .map(stop => {
                 const normalizedName = normalizeString(stop.properties.stop_name);
                 return {
