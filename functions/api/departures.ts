@@ -62,31 +62,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             let directionId: string | number | null | undefined = item.trip?.direction_id;
 
-            // For Metro, we prefer platform_code as it's more stable for grouping at transfer stations
-            if (isMetro && (item.stop?.platform_code !== undefined && item.stop?.platform_code !== null)) {
-                directionId = item.stop.platform_code;
+            // For Metro, we use the specific Stop ID (platform ID) as the primary direction indicator.
+            // This ensures all trips from the same platform (full or shortened) group together.
+            if (isMetro && item.stop?.id) {
+                directionId = item.stop.id;
             }
 
-            // Fallback for shortened trips or missing data
+            // Fallback for missing data
             if (directionId === undefined || directionId === null) {
-                if (isMetro) {
-                    const headsign = item.trip?.headsign || '';
-                    if (line === 'A') {
-                        if (['Nemocnice Motol', 'Petřiny', 'Dejvická'].includes(headsign)) directionId = 'A0';
-                        else if (['Depo Hostivař', 'Skalka', 'Strašnická', 'Želivského'].includes(headsign)) directionId = 'A1';
-                    } else if (line === 'B') {
-                        if (['Zličín', 'Nové Butovice', 'Smíchovské nádraží'].includes(headsign)) directionId = 'B0';
-                        else if (['Černý Most', 'Vysočanská', 'Českomoravská'].includes(headsign)) directionId = 'B1';
-                    } else if (line === 'C') {
-                        if (['Letňany', 'Ládví', 'Nádraží Holešovice'].includes(headsign)) directionId = 'C0';
-                        else if (['Háje', 'Kačerov', 'Pražského povstání'].includes(headsign)) directionId = 'C1';
-                    }
-                }
-
-                // Final fallback
-                if (directionId === undefined || directionId === null) {
-                    directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
-                }
+                directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
             }
 
             return {
