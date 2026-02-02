@@ -32,8 +32,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
         golemioUrl.searchParams.append("stopIds", stopIdsParam); // Note: some versions don't need [] in searchParams.append if already in key
 
-        // Limit data to prevent excessive requests, 12 items / 60 mins is plenty for grouped view
-        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=12&minutesAfter=60`;
+        // Limit data to prevent excessive requests, 16 items / 60 mins is plenty for grouped view
+        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=16&minutesAfter=60`;
 
         const response = await fetch(finalUrl, {
             headers: {

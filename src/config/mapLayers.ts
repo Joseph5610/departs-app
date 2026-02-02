@@ -92,7 +92,7 @@ export const transferStationLayer: any = {
             'Florenc', 'transfer-B-C',
             ''
         ],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 15, 0.6],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 15, 0.9],
         'icon-allow-overlap': true,
         'icon-offset': ['match', ['get', 'stop_name'],
             'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
