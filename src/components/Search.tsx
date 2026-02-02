@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
+import { normalizeString } from '../utils/stringUtils';
 
 interface Stop {
     type: 'Feature';
@@ -27,16 +28,54 @@ export const Search: React.FC<SearchProps> = ({ stops, onSelect }) => {
     const results = useMemo(() => {
         if (!stops?.features || query.length < 2) return [];
 
-        const normalizedQuery = query.toLowerCase();
+        const normalizedQuery = normalizeString(query).trim();
+        const queryTokens = normalizedQuery.split(/[-\s/]+/);
 
         // 1. Filter and score matches
         const matches = (stops.features as Stop[])
-            .filter(stop => stop.properties.stop_name.toLowerCase().includes(normalizedQuery))
             .map(stop => {
-                const name = stop.properties.stop_name.toLowerCase();
+                const normalizedName = normalizeString(stop.properties.stop_name);
+                return {
+                    stop,
+                    normalizedName,
+                    nameTokens: normalizedName.split(/[-\s/]+/)
+                };
+            })
+            .filter(item => {
+                // Every query token must match at least one name token (as prefix)
+                return queryTokens.every(qToken =>
+                    item.nameTokens.some(nToken => nToken.startsWith(qToken))
+                );
+            })
+            .map(item => {
                 let score = 0;
-                if (name.startsWith(normalizedQuery)) score += 100;
-                return { stop, score };
+
+                // Exact match (highest priority)
+                if (item.normalizedName === normalizedQuery) {
+                    score += 1000;
+                }
+                // Starts with the full query string (e.g., "sidliste c" matches "sidliste cakovice")
+                else if (item.normalizedName.startsWith(normalizedQuery)) {
+                    score += 500;
+                }
+                // Sequential token prefix match (e.g., "sidl cak" matches "sidliste cakovice")
+                else {
+                    let matchesSequentially = true;
+                    for (let i = 0; i < queryTokens.length; i++) {
+                        if (!item.nameTokens[i] || !item.nameTokens[i].startsWith(queryTokens[i])) {
+                            matchesSequentially = false;
+                            break;
+                        }
+                    }
+                    if (matchesSequentially) score += 250;
+                }
+
+                // First token match bonus
+                if (item.nameTokens[0] && item.nameTokens[0].startsWith(queryTokens[0])) {
+                    score += 100;
+                }
+
+                return { stop: item.stop, score };
             });
 
         // 2. Sort by score and name
