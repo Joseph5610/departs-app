@@ -21,7 +21,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         return true;
     });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [expandedLines, setExpandedLines] = useState<string[]>([]);
+    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
     const debounceRef = useRef<any>(null);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
@@ -413,15 +413,27 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         if (!departures?.departures) return [];
         const groups: Record<string, any[]> = {};
         departures.departures.forEach((dep: any) => {
-            const key = dep.line;
+            // Metro (type 1) is grouped by line AND direction
+            const lineName = String(dep.line).toUpperCase();
+            const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
+            const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
             if (!groups[key]) groups[key] = [];
             groups[key].push(dep);
         });
-        return Object.entries(groups).map(([line, deps]) => ({
-            line,
+        return Object.entries(groups).map(([key, deps]) => ({
+            groupId: key,
+            line: deps[0].line,
             type: deps[0].type,
             departures: deps
         })).sort((a, b) => {
+            const typeA = Number(a.type) || 0;
+            const typeB = Number(b.type) || 0;
+            if (typeA !== typeB) return typeA - typeB;
+
+            const lineA = String(a.line);
+            const lineB = String(b.line);
+            if (lineA !== lineB) return lineA.localeCompare(lineB);
+
             const timeA = new Date(a.departures[0].timestamp).getTime();
             const timeB = new Date(b.departures[0].timestamp).getTime();
             return timeA - timeB;
@@ -460,9 +472,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         };
     }, [selectedVehicle, vehicleDetail]);
 
-    const toggleLine = (line: string) => {
-        setExpandedLines(prev =>
-            prev.includes(line) ? prev.filter(l => l !== line) : [...prev, line]
+    const toggleGroup = (groupId: string) => {
+        setExpandedGroups(prev =>
+            prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
         );
     };
 
@@ -474,7 +486,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         isFollowing,
         showVehicles,
         isSettingsOpen,
-        expandedLines,
+        expandedGroups,
         // Setters / Actions
         setSelectedStop,
         setSelectedVehicle,
@@ -487,8 +499,8 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         onLoad,
         onDragStart,
         handleDepartureClick,
-        toggleLine,
-        setExpandedLines,
+        toggleGroup,
+        setExpandedGroups,
         // Data
         displayVehicles,
         vehicleDetail,

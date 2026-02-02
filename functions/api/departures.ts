@@ -32,8 +32,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
         golemioUrl.searchParams.append("stopIds", stopIdsParam); // Note: some versions don't need [] in searchParams.append if already in key
 
-        // Limit data to prevent excessive requests, 12 items / 60 mins is plenty for grouped view
-        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=12&minutesAfter=60`;
+        // Limit data to prevent excessive requests, 16 items / 60 mins is plenty for grouped view
+        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=16&minutesAfter=60`;
 
         const response = await fetch(finalUrl, {
             headers: {
@@ -55,16 +55,36 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const allGroups = Array.isArray(data) ? data : [];
         const flattened = allGroups.flat();
 
-        const departures = flattened.map((item: any) => ({
-            timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
-            scheduled: item.departure.timestamp_scheduled,
-            delay: item.departure.delay_seconds || 0,
-            line: item.route.short_name,
-            type: item.route.type,
-            headsign: item.trip.headsign,
-            isCanceled: item.trip.is_canceled,
-            tripId: item.trip.id
-        }));
+        const departures = flattened.map((item: any) => {
+            const line = String(item.route?.short_name || '?').toUpperCase();
+            const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
+            const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
+
+            let directionId: string | number | null | undefined = item.trip?.direction_id;
+
+            // For Metro, we use the specific Stop ID (platform ID) as the primary direction indicator.
+            // This ensures all trips from the same platform (full or shortened) group together.
+            if (isMetro && item.stop?.id) {
+                directionId = item.stop.id;
+            }
+
+            // Fallback for missing data
+            if (directionId === undefined || directionId === null) {
+                directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
+            }
+
+            return {
+                timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
+                scheduled: item.departure.timestamp_scheduled,
+                delay: item.departure.delay_seconds || 0,
+                line,
+                type,
+                directionId: String(directionId),
+                headsign: item.trip?.headsign || 'Unknown',
+                isCanceled: item.trip?.is_canceled || false,
+                tripId: item.trip?.id
+            };
+        });
 
         // Sort by time
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
