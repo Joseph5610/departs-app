@@ -459,22 +459,27 @@ export const Map: React.FC = () => {
                         </div>
                     )}
 
-                    {selectedStop && groupedDepartures.map((group) => {
+                    {selectedStop && groupedDepartures.map((group, index) => {
                         const isExpanded = expandedGroups.includes(group.groupId);
                         const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
                         const hasMore = group.departures.length > 1;
 
+                        const prevGroup = index > 0 ? groupedDepartures[index - 1] : null;
+                        const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
+
                         return (
-                            <div key={group.groupId} className="space-y-3">
-                                <div className="flex items-center gap-3 px-1">
-                                    <div
-                                        className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
-                                        style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
-                                    >
-                                        {group.line}
+                            <div key={group.groupId} className={showHeader ? "space-y-3" : "space-y-3 -mt-1"}>
+                                {showHeader && (
+                                    <div className="flex items-center gap-3 px-1">
+                                        <div
+                                            className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
+                                            style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
+                                        >
+                                            {group.line}
+                                        </div>
+                                        <div className="h-[1px] flex-1 bg-white/10" />
                                     </div>
-                                    <div className="h-[1px] flex-1 bg-white/10" />
-                                </div>
+                                )}
 
                                 <div className="space-y-2">
                                     {visibleDepartures.map((dep: any, idx: number) => (

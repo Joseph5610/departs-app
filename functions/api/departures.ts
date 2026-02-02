@@ -59,12 +59,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
             scheduled: item.departure.timestamp_scheduled,
             delay: item.departure.delay_seconds || 0,
-            line: item.route?.short_name || '?',
-            type: item.route?.type || (['A', 'B', 'C'].includes(item.route?.short_name) ? '1' : '0'),
-            // direction_id is often 0 or 1, but we fallback to headsign to ensure grouping by direction works even if ID is missing
-            directionId: (item.trip?.direction_id !== undefined && item.trip?.direction_id !== null)
-                ? String(item.trip.direction_id)
-                : (item.trip?.headsign || item.stop?.platform_code || '0'),
+            line: String(item.route?.short_name || '?'),
+            type: String(item.route?.type || (['A', 'B', 'C'].includes(item.route?.short_name) ? '1' : '0')),
+            // direction_id is often 0 or 1. Fallback to platform_code (ideal for Metro) then headsign.
+            directionId: String((item.trip?.direction_id !== undefined && item.trip?.direction_id !== null)
+                ? item.trip.direction_id
+                : (item.stop?.platform_code || item.trip?.headsign || '0')),
             headsign: item.trip?.headsign || 'Unknown',
             isCanceled: item.trip?.is_canceled || false,
             tripId: item.trip?.id

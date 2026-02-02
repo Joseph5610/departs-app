@@ -426,6 +426,14 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             type: deps[0].type,
             departures: deps
         })).sort((a, b) => {
+            const typeA = Number(a.type) || 0;
+            const typeB = Number(b.type) || 0;
+            if (typeA !== typeB) return typeA - typeB;
+
+            const lineA = String(a.line);
+            const lineB = String(b.line);
+            if (lineA !== lineB) return lineA.localeCompare(lineB);
+
             const timeA = new Date(a.departures[0].timestamp).getTime();
             const timeB = new Date(b.departures[0].timestamp).getTime();
             return timeA - timeB;
