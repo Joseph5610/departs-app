@@ -32,6 +32,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         return 'line';
     });
     const debounceRef = useRef<any>(null);
+    const isLocating = useRef(false);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
     const trackedId = useMemo(() => {
@@ -222,15 +223,27 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [isFollowing]);
 
-    const handleLocate = () => {
-        console.log('🛰️ Starting manual geolocation...');
-        if (!navigator.geolocation) {
-            showToast(t('toasts.geoNotSupported'), 'error');
+    const performGeolocation = useCallback((isManual: boolean = true) => {
+        if (isLocating.current) {
+            if (isManual) console.log('⏳ Geolocation already in progress, skipping...');
             return;
         }
 
+        if (isManual) {
+            console.log('🛰️ Starting manual geolocation...');
+        } else {
+            console.log('🛰️ Starting automatic geolocation...');
+        }
+
+        if (!navigator.geolocation) {
+            if (isManual) showToast(t('toasts.geoNotSupported'), 'error');
+            return;
+        }
+
+        isLocating.current = true;
         navigator.geolocation.getCurrentPosition(
             (pos) => {
+                isLocating.current = false;
                 const { latitude, longitude } = pos.coords;
                 console.log('✅ Position found:', latitude, longitude);
                 mapRef.current?.getMap().flyTo({
@@ -240,11 +253,23 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                 });
             },
             (err) => {
-                console.error('Geolocation error:', err);
-                showToast(t('toasts.geoError'), 'error');
+                isLocating.current = false;
+                console.error(`Geolocation error (${err.code}): ${err.message}`);
+                if (isManual) {
+                    showToast(t('toasts.geoError'), 'error');
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
             }
         );
-    };
+    }, [mapRef, showToast, t]);
+
+    const handleLocate = useCallback(() => {
+        performGeolocation(true);
+    }, [performGeolocation]);
 
     const onDragStart = useCallback(() => {
         if (isFollowing) {
@@ -407,20 +432,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         // Auto-locate if no params in URL
         const p = new URLSearchParams(window.location.search);
         if (!p.has('lat') && !p.has('lng') && !p.has('z') && !p.has('stopId') && !p.has('tripId')) {
-            // We can't call handleLocate directly easily because it depends on mapRef which is ready here,
-            // but we can inline the logic or use a timeout to ensure everything is settled.
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    map.flyTo({
-                        center: [longitude, latitude],
-                        zoom: 15,
-                        duration: 2000
-                    });
-                });
-            }
+            performGeolocation(false);
         }
-    }, []);
+    }, [performGeolocation]);
 
     const groupedDepartures = useMemo(() => {
         if (!departures?.departures) return [];
