@@ -80,7 +80,8 @@ export const Map: React.FC = () => {
         dataUpdatedAt,
         departureSort,
         setDepartureSort,
-        userLocation
+        userLocation,
+        mapLoaded
     } = useMapLogic(mapRef);
 
     const handleZoomIn = () => {
@@ -152,7 +153,7 @@ export const Map: React.FC = () => {
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
             >
                 {/* Route Shape Layer - Absolute bottom (rendered first) */}
-                {routeShapeData && (
+                {mapLoaded && routeShapeData && (
                     <Source id="route-shape" type="geojson" data={routeShapeData}>
                         <Layer
                             id="route-line"
@@ -229,7 +230,7 @@ export const Map: React.FC = () => {
                     </div>
                 </div>
 
-                {userLocation && (
+                {mapLoaded && userLocation && (
                     <Source id="user-location" type="geojson" data={{
                         type: 'FeatureCollection',
                         features: [{
@@ -260,7 +261,7 @@ export const Map: React.FC = () => {
                     </Source>
                 )}
 
-                {stopsData && (
+                {mapLoaded && stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
                         <Layer {...clusterLayer} />
                         <Layer {...clusterCountLayer} />
@@ -272,7 +273,7 @@ export const Map: React.FC = () => {
                     </Source>
                 )}
 
-                {showVehicles && displayVehicles && (
+                {mapLoaded && showVehicles && displayVehicles && (
                     <Source id="pid-vehicles" type="geojson" data={displayVehicles}>
                         {/* Pulse Effect for selected vehicle */}
                         <Layer

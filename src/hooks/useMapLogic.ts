@@ -5,11 +5,13 @@ import { useVehicleDetail } from './useVehicleDetail';
 import { useStops } from './useStops';
 import { useDepartures } from './useDepartures';
 import { useToast } from '../components/Toast';
+import { addAllIcons } from '../utils/mapIcons';
 import type { MapRef } from 'react-map-gl/maplibre';
 
 export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
+    const [mapLoaded, setMapLoaded] = useState(false);
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -367,61 +369,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const onLoad = useCallback((evt: any) => {
         const map = evt.target;
 
-        // Custom Bearing Arrow (SDF) - Copied from original
-        const size = 64;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.clearRect(0, 0, size, size);
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.moveTo(32, 12);
-            ctx.lineTo(18, 46);
-            ctx.lineTo(32, 38);
-            ctx.lineTo(46, 46);
-            ctx.closePath();
-            ctx.fill();
-
-            if (!map.hasImage('v-arrow-centered')) {
-                const imageData = ctx.getImageData(0, 0, size, size);
-                map.addImage('v-arrow-centered', imageData, { sdf: true });
-            }
-        }
-
-        // Split Icons for Transfers - Copied from original
-        const addSplitIcon = (id: string, c1: string, c2: string) => {
-            const size = 64;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                const cx = size / 2;
-                const cy = size / 2;
-                const r = size / 2 - 4;
-                ctx.beginPath();
-                ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-                ctx.fillStyle = 'white';
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, Math.PI * 0.5, Math.PI * 1.5);
-                ctx.fillStyle = c1;
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, Math.PI * 1.5, Math.PI * 2.5);
-                ctx.fillStyle = c2;
-                ctx.fill();
-                if (!map.hasImage(id)) {
-                    map.addImage(id, ctx.getImageData(0, 0, size, size), { pixelRatio: 2 });
-                }
-            }
-        };
-
-        addSplitIcon('transfer-A-B', '#00A562', '#DEBD29');
-        addSplitIcon('transfer-A-C', '#00A562', '#C6242D');
-        addSplitIcon('transfer-B-C', '#DEBD29', '#C6242D');
+        // Add all custom icons to the map style
+        addAllIcons(map);
+        setMapLoaded(true);
 
         const b = map.getBounds();
         const z = map.getZoom();
@@ -551,6 +501,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         loadingDeps,
         routeShapeData,
         fetchingVehicles,
-        dataUpdatedAt
+        dataUpdatedAt,
+        mapLoaded
     };
 };
