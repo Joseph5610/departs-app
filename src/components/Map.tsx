@@ -79,7 +79,8 @@ export const Map: React.FC = () => {
         fetchingVehicles,
         dataUpdatedAt,
         departureSort,
-        setDepartureSort
+        setDepartureSort,
+        userLocation
     } = useMapLogic(mapRef);
 
     const handleZoomIn = () => {
@@ -227,6 +228,37 @@ export const Map: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
+                {userLocation && (
+                    <Source id="user-location" type="geojson" data={{
+                        type: 'FeatureCollection',
+                        features: [{
+                            type: 'Feature',
+                            geometry: { type: 'Point', coordinates: userLocation },
+                            properties: {}
+                        }]
+                    }}>
+                        <Layer
+                            id="user-location-pulse"
+                            type="circle"
+                            paint={{
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
+                                'circle-color': '#3b82f6',
+                                'circle-opacity': 0.15,
+                            }}
+                        />
+                        <Layer
+                            id="user-location-point"
+                            type="circle"
+                            paint={{
+                                'circle-radius': 7,
+                                'circle-color': '#3b82f6',
+                                'circle-stroke-width': 2,
+                                'circle-stroke-color': '#FFFFFF'
+                            }}
+                        />
+                    </Source>
+                )}
 
                 {stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>

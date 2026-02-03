@@ -12,6 +12,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const { showToast } = useToast();
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -246,6 +247,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                 isLocating.current = false;
                 const { latitude, longitude } = pos.coords;
                 console.log('✅ Position found:', latitude, longitude);
+                setUserLocation([longitude, latitude]);
                 mapRef.current?.getMap().flyTo({
                     center: [longitude, latitude],
                     zoom: 15,
@@ -518,6 +520,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         debouncedBounds,
         selectedStop,
         selectedVehicle,
+        userLocation,
         isFollowing,
         showVehicles,
         isSettingsOpen,
