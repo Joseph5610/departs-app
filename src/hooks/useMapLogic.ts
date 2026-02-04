@@ -492,6 +492,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         toggleGroup,
         setExpandedGroups,
         // Data
+        mapLoaded,
         displayVehicles,
         vehicleDetail,
         loadingDetail,
