@@ -228,17 +228,15 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
     const performGeolocation = useCallback((isManual: boolean = true) => {
         if (isLocating.current) {
-            if (isManual) console.log('⏳ Geolocation already in progress, skipping...');
+            console.log(`⏳ Geolocation already in progress (requested as ${isManual ? 'manual' : 'auto'}), skipping...`);
             return;
         }
 
-        if (isManual) {
-            console.log('🛰️ Starting manual geolocation...');
-        } else {
-            console.log('🛰️ Starting automatic geolocation...');
-        }
+        const mode = isManual ? 'manual' : 'auto';
+        console.log(`🛰️ Starting ${mode} geolocation...`);
 
         if (!navigator.geolocation) {
+            console.error('❌ Geolocation is not supported by this browser.');
             if (isManual) showToast(t('toasts.geoNotSupported'), 'error');
             return;
         }
@@ -247,8 +245,8 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 isLocating.current = false;
-                const { latitude, longitude } = pos.coords;
-                console.log('✅ Position found:', latitude, longitude);
+                const { latitude, longitude, accuracy } = pos.coords;
+                console.log(`✅ Position found: ${latitude}, ${longitude} (accuracy: ${Math.round(accuracy)}m)`);
                 setUserLocation([longitude, latitude]);
                 mapRef.current?.getMap().flyTo({
                     center: [longitude, latitude],
@@ -258,7 +256,15 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             },
             (err) => {
                 isLocating.current = false;
-                console.error(`Geolocation error (${err.code}): ${err.message}`);
+                // Detailed logging for GeolocationPositionError
+                const errorTypes = {
+                    [err.PERMISSION_DENIED]: 'PERMISSION_DENIED',
+                    [err.POSITION_UNAVAILABLE]: 'POSITION_UNAVAILABLE',
+                    [err.TIMEOUT]: 'TIMEOUT'
+                };
+                const errorType = (errorTypes as any)[err.code] || 'UNKNOWN_ERROR';
+                console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
+
                 if (isManual) {
                     showToast(t('toasts.geoError'), 'error');
                 }
@@ -271,7 +277,11 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         );
     }, [mapRef, showToast, t]);
 
-    const handleLocate = useCallback(() => {
+    const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         performGeolocation(true);
     }, [performGeolocation]);
 
@@ -492,7 +502,6 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         toggleGroup,
         setExpandedGroups,
         // Data
-        mapLoaded,
         displayVehicles,
         vehicleDetail,
         loadingDetail,

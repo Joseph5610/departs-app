@@ -13,14 +13,12 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     );
 
     useEffect(() => {
-        const update = () => {
-            setSecondsLeft(differenceInSeconds(parseISO(timestamp), new Date()));
-        };
-
         // Initial sync
-        update();
+        setSecondsLeft(differenceInSeconds(parseISO(timestamp), new Date()));
 
-        const interval = setInterval(update, 1000);
+        const interval = setInterval(() => {
+            setSecondsLeft(prev => prev - 1);
+        }, 1000);
 
         return () => clearInterval(interval);
     }, [timestamp]);

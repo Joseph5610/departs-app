@@ -197,7 +197,7 @@ export const Map: React.FC = () => {
                     }}
                 >
                     <button
-                        onClick={handleLocate}
+                        onClick={(e) => handleLocate(e)}
                         className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                         title={t('map.controls.myLocation')}
                     >
