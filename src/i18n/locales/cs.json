@@ -60,6 +60,7 @@
       "ac": "Klima"
     },
     "departures": {
+      "upcoming": "Nadcházející odjezdy",
       "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
       "delay": "+{{minutes}}min zpoždění",
       "moreConnections": "+ {{count}} další spoje",

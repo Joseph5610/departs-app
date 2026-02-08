@@ -60,6 +60,7 @@
       "ac": "AC"
     },
     "departures": {
+      "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
       "delay": "+{{minutes}}min delay",
       "moreConnections": "+ {{count}} more connections",

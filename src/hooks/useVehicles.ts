@@ -1,29 +1,31 @@
+
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import type { VehicleCollection } from '../types/pid';
 
-const fetchVehicles = async (bounds: string | null, trackedId: string | null): Promise<VehicleCollection> => {
+// 1. Fetcher now returns raw feature arrays (deduplication happens in select)
+const fetchRawVehicles = async (bounds: string | null, trackedId: string | null): Promise<any[]> => {
     const promises: Promise<Response>[] = [];
 
-    // Always fetch bounds if available (background traffic)
-    if (bounds) {
-        promises.push(fetch(`/api/vehicles?bounds=${bounds}`));
-    }
+    if (bounds) promises.push(fetch(`/api/vehicles?bounds=${bounds}`));
+    if (trackedId) promises.push(fetch(`/api/vehicles?tripId=${trackedId}`));
 
-    // Always fetch tracked vehicle if available (ensures it doesn't disappear)
-    if (trackedId) {
-        promises.push(fetch(`/api/vehicles?tripId=${trackedId}`));
-    }
-
-    if (promises.length === 0) return { type: 'FeatureCollection', features: [] };
+    if (promises.length === 0) return [];
 
     try {
         const responses = await Promise.all(promises);
         const jsons = await Promise.all(responses.map(r => r.ok ? r.json() : { features: [] }));
+        return jsons.flatMap((j: any) => j.features || []);
+    } catch (e) {
+        console.error("Error fetching vehicles:", e);
+        return [];
+    }
+};
 
-        // Merge features from all responses
-        const allFeatures = jsons.flatMap((j: any) => j.features || []);
-
-        // Deduplicate by vehicle_id (or id)
+export const useVehicles = (bounds: string | null, trackedId: string | null = null) => {
+    // 2. Select function to transform and deduplicate data
+    // Use useCallback to ensure the function reference is stable
+    const selectFn = useCallback((allFeatures: any[]): VehicleCollection => {
         const seen = new Set();
         const uniqueFeatures = [];
         for (const f of allFeatures) {
@@ -38,16 +40,12 @@ const fetchVehicles = async (bounds: string | null, trackedId: string | null): P
             type: 'FeatureCollection',
             features: uniqueFeatures as any
         };
-    } catch (e) {
-        console.error("Error fetching vehicles:", e);
-        return { type: 'FeatureCollection', features: [] };
-    }
-};
+    }, []);
 
-export const useVehicles = (bounds: string | null, trackedId: string | null = null) => {
     return useQuery({
         queryKey: ['vehicles', bounds, trackedId],
-        queryFn: () => fetchVehicles(bounds, trackedId),
+        queryFn: () => fetchRawVehicles(bounds, trackedId),
+        select: selectFn,
         enabled: !!bounds || !!trackedId,
         refetchInterval: 10000,
         staleTime: 5000,

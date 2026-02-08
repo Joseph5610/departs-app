@@ -2,6 +2,20 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.1.5] - 2026-02-08
+
+### Fixed
+- **Translations**: Fixed missing translation for the "Upcoming Departures" string in the stop panel.
+
+---
+
+## [0.1.4] - 2026-02-08
+
+### Fixed
+- **UI/UX**: Refined vehicle stacking and orientation indicators on the map for better clarity.
+
+---
+
 ## [0.1.3] - 2026-01-29
 
 ### Added

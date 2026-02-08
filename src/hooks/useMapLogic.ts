@@ -1,12 +1,16 @@
+
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useVehicles } from './useVehicles';
 import { useVehicleDetail } from './useVehicleDetail';
 import { useStops } from './useStops';
 import { useDepartures } from './useDepartures';
+import { useGeolocation } from './useGeolocation';
+import { useGroupedDepartures } from './useGroupedDepartures';
+import { useRouteShape } from './useRouteShape';
 import { useToast } from '../components/Toast';
 import { addAllIcons } from '../utils/mapIcons';
 import type { MapRef } from 'react-map-gl/maplibre';
+import { useTranslation } from 'react-i18next';
 
 export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
@@ -14,7 +18,6 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
-    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -35,7 +38,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         return 'line';
     });
     const debounceRef = useRef<any>(null);
-    const isLocating = useRef(false);
+
+    // Use extracted hooks
+    const { userLocation, performGeolocation, handleLocate } = useGeolocation(mapRef);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
     const trackedId = useMemo(() => {
@@ -50,6 +55,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     );
     const { data: stops } = useStops();
     const { data: departures, isLoading: loadingDeps } = useDepartures(selectedStop?.id || null);
+
+    const groupedDepartures = useGroupedDepartures(departures, departureSort);
+    const routeShapeData = useRouteShape(selectedVehicle, vehicleDetail);
 
     // Sync selectedStop with URL
     useEffect(() => {
@@ -75,42 +83,81 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
     // Merge raw vehicles with selected vehicle to ensure tracked vehicle is always visible
     const displayVehicles = useMemo(() => {
-        if (!rawVehicles) {
-            return selectedVehicle && selectedVehicle._geometry
-                ? {
-                    type: 'FeatureCollection',
-                    features: [{
+        let features = rawVehicles?.features || [];
+
+        // 1. Ensure selected vehicle is in the list
+        if (selectedVehicle) {
+            const exists = features.find((f: any) => {
+                const fid = f.properties.vehicle_id || f.properties.id;
+                const sid = selectedVehicle.vehicle_id || selectedVehicle.id;
+                return fid === sid;
+            });
+
+            if (!exists) {
+                features = [
+                    ...features,
+                    {
                         type: 'Feature',
-                        geometry: { type: 'Point', coordinates: selectedVehicle._geometry },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: selectedVehicle._geometry || [0, 0]
+                        },
                         properties: selectedVehicle
-                    }]
-                }
-                : null;
+                    }
+                ];
+            }
         }
 
-        if (!selectedVehicle) return rawVehicles;
+        if (features.length === 0) return null;
 
-        const exists = (rawVehicles.features as any[]).find(f => {
-            const fid = f.properties.vehicle_id || f.properties.id;
-            const sid = selectedVehicle.vehicle_id || selectedVehicle.id;
-            return fid === sid;
+        // 2. JITTERING: Detect stacks and spread them out
+        // Group by coordinate key "lng,lat"
+        const groups: Record<string, any[]> = {};
+        features.forEach((f: any) => {
+            const key = f.geometry.coordinates.join(',');
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(f);
         });
 
-        if (exists) return rawVehicles;
+        const jitteredFeatures: any[] = [];
+        const BASE_JITTER_RADIUS = 0.00012; // Slightly increased for better visibility
+
+        Object.values(groups).forEach(group => {
+            if (group.length === 1) {
+                jitteredFeatures.push(group[0]);
+            } else {
+                // Stack detected! Spread them in a circle
+                const count = group.length;
+                const angleStep = (2 * Math.PI) / count;
+
+                group.forEach((f, index) => {
+                    const [lng, lat] = f.geometry.coordinates;
+                    const angle = index * angleStep;
+
+                    // Alternating radius for large groups (> 4) to prevent overlap
+                    let currentRadius = BASE_JITTER_RADIUS;
+                    if (count > 4) {
+                        currentRadius = index % 2 === 0 ? BASE_JITTER_RADIUS * 0.8 : BASE_JITTER_RADIUS * 1.35;
+                    }
+
+                    // Simple offset calculation
+                    const newLng = lng + currentRadius * Math.cos(angle) * 1.3;
+                    const newLat = lat + currentRadius * Math.sin(angle);
+
+                    jitteredFeatures.push({
+                        ...f,
+                        geometry: {
+                            ...f.geometry,
+                            coordinates: [newLng, newLat]
+                        }
+                    });
+                });
+            }
+        });
 
         return {
-            ...rawVehicles,
-            features: [
-                ...rawVehicles.features,
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: selectedVehicle._geometry || [0, 0]
-                    },
-                    properties: selectedVehicle
-                }
-            ]
+            type: 'FeatureCollection',
+            features: jitteredFeatures
         } as any;
     }, [rawVehicles, selectedVehicle]);
 
@@ -226,65 +273,6 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [isFollowing]);
 
-    const performGeolocation = useCallback((isManual: boolean = true) => {
-        if (isLocating.current) {
-            console.log(`⏳ Geolocation already in progress (requested as ${isManual ? 'manual' : 'auto'}), skipping...`);
-            return;
-        }
-
-        const mode = isManual ? 'manual' : 'auto';
-        console.log(`🛰️ Starting ${mode} geolocation...`);
-
-        if (!navigator.geolocation) {
-            console.error('❌ Geolocation is not supported by this browser.');
-            if (isManual) showToast(t('toasts.geoNotSupported'), 'error');
-            return;
-        }
-
-        isLocating.current = true;
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                isLocating.current = false;
-                const { latitude, longitude, accuracy } = pos.coords;
-                console.log(`✅ Position found: ${latitude}, ${longitude} (accuracy: ${Math.round(accuracy)}m)`);
-                setUserLocation([longitude, latitude]);
-                mapRef.current?.getMap().flyTo({
-                    center: [longitude, latitude],
-                    zoom: 15,
-                    duration: 2000
-                });
-            },
-            (err) => {
-                isLocating.current = false;
-                // Detailed logging for GeolocationPositionError
-                const errorTypes = {
-                    [err.PERMISSION_DENIED]: 'PERMISSION_DENIED',
-                    [err.POSITION_UNAVAILABLE]: 'POSITION_UNAVAILABLE',
-                    [err.TIMEOUT]: 'TIMEOUT'
-                };
-                const errorType = (errorTypes as any)[err.code] || 'UNKNOWN_ERROR';
-                console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
-
-                if (isManual) {
-                    showToast(t('toasts.geoError'), 'error');
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000
-            }
-        );
-    }, [mapRef, showToast, t]);
-
-    const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        performGeolocation(true);
-    }, [performGeolocation]);
-
     const onDragStart = useCallback(() => {
         if (isFollowing) {
             console.log('👆 Drag detected, disabling auto-follow');
@@ -398,76 +386,10 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [performGeolocation]);
 
-    const groupedDepartures = useMemo(() => {
-        if (!departures?.departures) return [];
-        const groups: Record<string, any[]> = {};
-        departures.departures.forEach((dep: any) => {
-            // Metro (type 1) is grouped by line AND direction
-            const lineName = String(dep.line).toUpperCase();
-            const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
-            const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(dep);
-        });
-
-        const result = Object.entries(groups).map(([key, deps]) => ({
-            groupId: key,
-            line: deps[0].line,
-            type: deps[0].type,
-            departures: deps,
-            firstTime: new Date(deps[0].timestamp).getTime()
-        }));
-
-        if (departureSort === 'line') {
-            result.sort((a, b) => {
-                const typeA = Number(a.type) || 0;
-                const typeB = Number(b.type) || 0;
-                if (typeA !== typeB) return typeA - typeB;
-
-                const lineA = String(a.line);
-                const lineB = String(b.line);
-                if (lineA !== lineB) return lineA.localeCompare(lineB, undefined, { numeric: true, sensitivity: 'base' });
-
-                return a.firstTime - b.firstTime;
-            });
-        } else {
-            // Sort by departure time
-            result.sort((a, b) => a.firstTime - b.firstTime);
-        }
-        return result;
-    }, [departures, departureSort]);
-
     const stopsData = useMemo(() => {
         if (!stops) return null;
         return { type: 'FeatureCollection' as const, features: (stops as any).features };
     }, [stops]);
-
-    const routeShapeData = useMemo(() => {
-        if (!selectedVehicle || !vehicleDetail?.shapes?.features) return null;
-
-        const coordinates = vehicleDetail.shapes.features
-            .filter((f: any) => f.geometry.type === 'Point')
-            .map((f: any) => f.geometry.coordinates);
-
-        if (coordinates.length < 2) {
-            return {
-                type: 'FeatureCollection' as const,
-                features: vehicleDetail.shapes.features
-            };
-        }
-
-        return {
-            type: 'FeatureCollection' as const,
-            features: [{
-                type: 'Feature',
-                geometry: {
-                    type: 'LineString',
-                    coordinates: coordinates
-                },
-                properties: {}
-            }]
-        };
-    }, [selectedVehicle, vehicleDetail]);
 
     const toggleGroup = (groupId: string) => {
         setExpandedGroups(prev =>

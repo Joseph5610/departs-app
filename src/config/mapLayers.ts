@@ -1,16 +1,67 @@
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
+// 1. The GLOW Layer (Background)
 export const clusterLayer: any = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     paint: {
-        'circle-color': '#334155',
-        'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 30, 25],
-        'circle-opacity': 0.8,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': '#475569'
+        // Glowing Color - Smooth Gradient (City Lights)
+        // Glowing Color - Smart Clustering (Metro/Bus)
+        'circle-color': [
+            'case',
+            // Metro C (Red)
+            ['==', ['get', 'has_metro_c'], 1],
+            ['interpolate', ['linear'], ['get', 'point_count'],
+                0, '#fca5a5', 100, '#dc2626'],
+
+            // Metro B (Yellow)
+            ['==', ['get', 'has_metro_b'], 1],
+            ['interpolate', ['linear'], ['get', 'point_count'],
+                0, '#fde047', 100, '#ca8a04'],
+
+            // Metro A (Green)
+            ['==', ['get', 'has_metro_a'], 1],
+            ['interpolate', ['linear'], ['get', 'point_count'],
+                0, '#86efac', 100, '#16a34a'],
+
+            // Default Bus (Blue)
+            ['interpolate', ['linear'], ['get', 'point_count'],
+                0, '#e0f2fe',    // < 10: White/Cyan
+                20, '#38bdf8',   // 20: Sky Blue
+                100, '#0284c7'   // 100+: Ocean Blue
+            ]
+        ],
+
+        // Radius scaling - smoother growth + Organic random factor
+        'circle-radius': [
+            '+',
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, 20, 100, 50],
+            ['*', ['get', 'cluster_seed'], 15] // Add 0-15px random "wobble"
+        ],
+
+        // Opacity - Random flicker effect
+        'circle-opacity': [
+            '+',
+            0.5,
+            ['*', ['get', 'cluster_seed'], 0.3] // 0.5 - 0.8 opacity range
+        ],
+        'circle-blur': 0.6     // Less blur for better definition (neon style)
+    }
+};
+
+// 2. The CORE Layer (Foreground - Bright Center)
+export const clusterCoreLayer: any = {
+    id: 'cluster-core',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['has', 'point_count'],
+    paint: {
+        'circle-color': '#ffffff',
+        'circle-radius': 2.5, // Smaller (was 4)
+        'circle-opacity': 0.8, // Less harsh (was 1.0)
+        'circle-blur': 0.4     // Softened edges (was 0)
     }
 };
 
@@ -20,11 +71,11 @@ export const clusterCountLayer: any = {
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-size': 12
+        'text-field': '', // Empty text - we just want the circle
+        'text-size': 0
     },
     paint: {
-        'text-color': '#f8fafc'
+        'text-color': 'transparent'
     }
 };
 

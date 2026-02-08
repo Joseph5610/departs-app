@@ -25,9 +25,7 @@ export interface VehicleDetail {
             };
         }>;
     };
-    shapes?: {
-        features: any[];
-    };
+    shapes?: number[][]; // Optimized: [[lng, lat], [lng, lat], ...]
 }
 
 const fetchVehicleDetail = async (vehicleId: string, tripId: string): Promise<VehicleDetail> => {

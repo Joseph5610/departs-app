@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
@@ -7,14 +8,13 @@ import { BottomSheet } from './BottomSheet';
 import { Countdown } from './Countdown';
 import { LiveStatus } from './LiveStatus';
 import { vehicleColorExpression, getVehicleColor } from '../utils/vehicleColors';
-import { SettingsModal } from './SettingsModal';
-import { WelcomeModal } from './WelcomeModal';
-import { UpdatePopup } from './UpdatePopup';
+const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
+const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
+const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
-import { StatusPill } from './StatusPill';
-import { Settings, LocateFixed, Snowflake, Accessibility, Info, MapPin, Plus, Minus, ArrowDownAz, Clock } from 'lucide-react';
 import {
     clusterLayer,
+    clusterCoreLayer,
     clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
@@ -26,6 +26,14 @@ import { useMapLogic } from '../hooks/useMapLogic';
 import { format, parseISO } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
+import { MapControls } from './MapControls';
+import { VehicleDetail } from './VehicleDetail';
+import { ArrowDownAz, Clock } from 'lucide-react';
+
+const EMPTY_GEOJSON = {
+    type: 'FeatureCollection',
+    features: []
+};
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -104,7 +112,7 @@ export const Map: React.FC = () => {
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
-                mapLib={maplibregl as any} // Cast as any if type mismatch persists
+                mapLib={maplibregl as any}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
@@ -122,8 +130,6 @@ export const Map: React.FC = () => {
                     if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
                         const source = (mapRef.current!.getMap() as any).getSource('pid-stops');
-                        // Note: mapRef.current is MapRef, getMap() returns MapLibre map instance. 
-                        // getSource might return a type that doesn't have getClusterExpansionZoom in basic types, but it exists on GeoJSONSource.
                         source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
                             if (err) return;
                             mapRef.current?.easeTo({
@@ -138,7 +144,7 @@ export const Map: React.FC = () => {
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
                         setSelectedVehicle(f.properties);
                         setSelectedStop(null);
-                        setIsFollowing(true); // Auto-start following on selection
+                        setIsFollowing(true);
                         return;
                     }
 
@@ -152,9 +158,10 @@ export const Map: React.FC = () => {
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
             >
-                {/* Route Shape Layer - Absolute bottom (rendered first) */}
-                {mapLoaded && routeShapeData && (
-                    <Source id="route-shape" type="geojson" data={routeShapeData}>
+
+                {/* Route Shape Layer - PERSISTENT SOURCE (Optimization) */}
+                {mapLoaded && (
+                    <Source id="route-shape" type="geojson" data={routeShapeData || (EMPTY_GEOJSON as any)}>
                         <Layer
                             id="route-line"
                             type="line"
@@ -189,46 +196,12 @@ export const Map: React.FC = () => {
                     }}
                 />
 
-                <div
-                    className="absolute top-4 right-4 z-10 flex flex-col gap-2"
-                    style={{
-                        top: 'calc(1rem + env(safe-area-inset-top, 0px))',
-                        right: 'calc(1rem + env(safe-area-inset-right, 0px))'
-                    }}
-                >
-                    <button
-                        onClick={(e) => handleLocate(e)}
-                        className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                        title={t('map.controls.myLocation')}
-                    >
-                        <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
-                    </button>
-                    <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                        title={t('map.controls.settings')}
-                    >
-                        <Settings size={20} className="group-hover:rotate-45 transition-transform" />
-                    </button>
-
-                    <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
-                        <button
-                            onClick={handleZoomIn}
-                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
-                            title={t('map.controls.zoomIn')}
-                        >
-                            <Plus size={20} className="group-hover:scale-110 transition-transform" />
-                        </button>
-                        <div className="mx-2 h-[1px] bg-white/10" />
-                        <button
-                            onClick={handleZoomOut}
-                            className="p-3 text-white hover:bg-white/5 transition-colors pointer-events-auto group"
-                            title={t('map.controls.zoomOut')}
-                        >
-                            <Minus size={20} className="group-hover:scale-110 transition-transform" />
-                        </button>
-                    </div>
-                </div>
+                <MapControls
+                    onLocate={handleLocate}
+                    onSettings={() => setIsSettingsOpen(true)}
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                />
 
                 {mapLoaded && userLocation && (
                     <Source id="user-location" type="geojson" data={{
@@ -262,8 +235,22 @@ export const Map: React.FC = () => {
                 )}
 
                 {mapLoaded && stopsData && (
-                    <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>
+                    <Source
+                        id="pid-stops"
+                        type="geojson"
+                        data={stopsData}
+                        cluster={true}
+                        clusterMaxZoom={13}
+                        clusterRadius={40}
+                        clusterProperties={{
+                            has_metro_a: ['max', ['get', 'metro_a']],
+                            has_metro_b: ['max', ['get', 'metro_b']],
+                            has_metro_c: ['max', ['get', 'metro_c']],
+                            cluster_seed: ['max', ['get', 'variant_seed']]
+                        }}
+                    >
                         <Layer {...clusterLayer} />
+                        <Layer {...clusterCoreLayer} />
                         <Layer {...clusterCountLayer} />
                         <Layer {...stopPointLayer} />
                         <Layer {...platformLabelLayer} />
@@ -363,14 +350,16 @@ export const Map: React.FC = () => {
                 )}
             </MapGL>
 
-            <WelcomeModal onGetStarted={handleLocate} />
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                showVehicles={showVehicles}
-                setShowVehicles={setShowVehicles}
-            />
-            <UpdatePopup />
+            <React.Suspense fallback={null}>
+                <WelcomeModal onGetStarted={handleLocate} />
+                <SettingsModal
+                    isOpen={isSettingsOpen}
+                    onClose={() => setIsSettingsOpen(false)}
+                    showVehicles={showVehicles}
+                    setShowVehicles={setShowVehicles}
+                />
+                <UpdatePopup />
+            </React.Suspense>
 
             <BottomSheet
                 isOpen={!!selectedStop || !!selectedVehicle}
@@ -380,7 +369,7 @@ export const Map: React.FC = () => {
                 <div className="space-y-4 pt-1">
                     {selectedStop && (
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest px-1">Upcoming Departures</span>
+                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                             <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
                                 <button
                                     onClick={() => setDepartureSort('line')}
@@ -400,130 +389,13 @@ export const Map: React.FC = () => {
                         </div>
                     )}
 
-                    {selectedVehicle && (
-                        <div className="space-y-4">
-                            {/* Loading State */}
-                            {loadingDetail && !vehicleDetail && (
-                                <div className="py-8 flex flex-col items-center justify-center gap-3">
-                                    <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                    <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t('map.vehicleDetails.fetching')}</span>
-                                </div>
-                            )}
-
-                            {/* Warning: Before Track / Previous Trip */}
-                            {(['before_track', 'before_track_delayed'].includes(selectedVehicle.state_position) || ['before_track', 'before_track_delayed'].includes(vehicleDetail?.state_position || '')) && (
-                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4">
-                                    <div className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
-                                        <Info size={20} />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-amber-500 font-bold text-sm">{t('map.vehicleDetails.previousTrip')}</h4>
-                                        <p className="text-amber-500/80 text-xs mt-1 leading-relaxed">
-                                        {t('map.vehicleDetails.previousTripDescription')}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
-                                <div
-                                    className="absolute inset-0 opacity-10"
-                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
-                                />
-                                <div
-                                    className="w-14 h-14 md:w-20 md:h-20 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
-                                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
-                                    onClick={() => setIsFollowing(!isFollowing)}
-                                >
-                                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}</span>
-                                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
-                                        <MapPin size={isFollowing ? 10 : 12} className="text-white" />
-                                    </div>
-                                </div>
-                                <div className="z-10 flex-1 min-w-0 md:w-full">
-                                    <h3 className="text-lg md:text-xl font-bold text-white mb-1 truncate">
-                                        {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
-                                    </h3>
-                                    <div className="flex items-center md:justify-center gap-2">
-                                        <StatusPill
-                                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30 ? 'danger' : 'success'}
-                                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30
-                                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60) })
-                                                : t('map.vehicleDetails.onTime')}
-                                        />
-                                        {vehicleDetail?.vehicle_descriptor?.is_air_conditioned && (
-                                            <StatusPill
-                                                variant="info"
-                                                label={t('map.vehicleDetails.ac')}
-                                                icon={<Snowflake size={10} />}
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Operator & Vehicle Info - Compact on mobile */}
-                            {vehicleDetail?.vehicle_descriptor?.operator && (
-                                <div className="flex flex-row items-center justify-between md:p-4 p-1 md:bg-white/5 md:border md:border-white/5 rounded-2xl">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-white/5 rounded-xl text-zinc-400 hidden md:block">
-                                            <Info size={16} />
-                                        </div>
-                                        <div className="flex flex-col md:block">
-                                            <div className="text-white text-sm font-semibold hidden md:block">
-                                                {vehicleDetail.vehicle_descriptor.operator}
-                                            </div>
-                                            <div className="text-zinc-500 text-[10px]">
-                                                <span className="md:hidden font-bold text-zinc-400">{t('map.vehicleDetails.operator', { operator: vehicleDetail.vehicle_descriptor.operator })}</span>
-                                                {vehicleDetail.vehicle_descriptor.vehicle_type || t('map.vehicleDetails.vehicle')}
-                                                {vehicleDetail.vehicle_descriptor.vehicle_registration_number ? ` • #${vehicleDetail.vehicle_descriptor.vehicle_registration_number}` : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {vehicleDetail.vehicle_descriptor.is_wheelchair_accessible && (
-                                        <div className="text-emerald-500 shrink-0">
-                                            <Accessibility size={16} />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Itinerary - ONLY if available */}
-                            {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between px-1">
-                                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                                    </div>
-                                    <div className="space-y-0.5 relative pl-4">
-                                        <div className="absolute left-1 top-2 bottom-6 w-0.5 bg-white/10" />
-
-                                        {vehicleDetail.stop_times.features
-                                            .filter(s => s.properties.stop_sequence > (vehicleDetail.last_stop_sequence || 0))
-                                            .slice(0, 3)
-                                            .map((stop, idx) => (
-                                                <div key={idx} className="relative py-2 flex items-center justify-between">
-                                                    <div className="absolute -left-3.5 w-1.5 h-1.5 rounded-full bg-white/30 border border-black" />
-                                                    <span className="text-zinc-200 text-sm font-medium truncate pr-4">{stop.properties.stop_name}</span>
-                                                    <span className="text-zinc-500 text-xs font-mono shrink-0">{stop.properties.arrival_time?.slice(0, 5)}</span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Basic Metadata - Desktop only to save space on mobile */}
-                            <div className="hidden md:grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">{t('map.vehicleDetails.vehicleId')}</div>
-                                    <div className="text-white font-mono text-xs truncate">{selectedVehicle.vehicle_id || selectedVehicle.id || t('map.vehicleDetails.notAvailable')}</div>
-                                </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-1">{t('map.vehicleDetails.status')}</div>
-                                    <div className="text-white text-xs capitalize">{selectedVehicle.state_position?.replace(/_/g, ' ') || t('map.vehicleDetails.inTransit')}</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <VehicleDetail
+                        selectedVehicle={selectedVehicle}
+                        vehicleDetail={vehicleDetail}
+                        loadingDetail={loadingDetail}
+                        isFollowing={isFollowing}
+                        onToggleFollow={() => setIsFollowing(!isFollowing)}
+                    />
 
                     {selectedStop && groupedDepartures.map((group, index) => {
                         const isExpanded = expandedGroups.includes(group.groupId);

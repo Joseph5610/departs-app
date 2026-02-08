@@ -33,6 +33,17 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
         const data = await response.json();
 
+        // SCALPEL OPTIMIZATION 🔪
+        // The Golemio API returns `shapes` as a FeatureCollection with thousands of Point features.
+        // This is huge and slow. We extract just the coordinates into a simple array.
+        if (data.shapes && data.shapes.features) {
+            data.shapes = data.shapes.features
+                .filter((f: any) => f.geometry.type === 'Point')
+                .map((f: any) => f.geometry.coordinates);
+        } else {
+            data.shapes = [];
+        }
+
         return new Response(JSON.stringify(data), {
             headers: {
                 "Content-Type": "application/json",

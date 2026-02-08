@@ -38,4 +38,15 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', '@tanstack/react-query'],
+          'vendor-map': ['maplibre-gl'],
+          'vendor-ui': ['framer-motion', 'lucide-react']
+        }
+      }
+    }
+  }
 })
