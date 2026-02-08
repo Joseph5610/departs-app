@@ -64,7 +64,6 @@ export const Map: React.FC = () => {
         onMove,
         onMoveEnd,
         onLoad,
-        mapLoaded,
         onDragStart,
         handleDepartureClick,
         toggleGroup,
@@ -80,7 +79,9 @@ export const Map: React.FC = () => {
         fetchingVehicles,
         dataUpdatedAt,
         departureSort,
-        setDepartureSort
+        setDepartureSort,
+        userLocation,
+        mapLoaded
     } = useMapLogic(mapRef);
 
     const handleZoomIn = () => {
@@ -196,7 +197,7 @@ export const Map: React.FC = () => {
                     }}
                 >
                     <button
-                        onClick={handleLocate}
+                        onClick={(e) => handleLocate(e)}
                         className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                         title={t('map.controls.myLocation')}
                     >
@@ -228,6 +229,37 @@ export const Map: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
+                {mapLoaded && userLocation && (
+                    <Source id="user-location" type="geojson" data={{
+                        type: 'FeatureCollection',
+                        features: [{
+                            type: 'Feature',
+                            geometry: { type: 'Point', coordinates: userLocation },
+                            properties: {}
+                        }]
+                    }}>
+                        <Layer
+                            id="user-location-pulse"
+                            type="circle"
+                            paint={{
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
+                                'circle-color': '#3b82f6',
+                                'circle-opacity': 0.15,
+                            }}
+                        />
+                        <Layer
+                            id="user-location-point"
+                            type="circle"
+                            paint={{
+                                'circle-radius': 7,
+                                'circle-color': '#3b82f6',
+                                'circle-stroke-width': 2,
+                                'circle-stroke-color': '#FFFFFF'
+                            }}
+                        />
+                    </Source>
+                )}
 
                 {mapLoaded && stopsData && (
                     <Source id="pid-stops" type="geojson" data={stopsData} cluster={true} clusterMaxZoom={13} clusterRadius={30}>

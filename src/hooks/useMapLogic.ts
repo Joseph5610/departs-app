@@ -14,6 +14,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
     const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -34,6 +35,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         return 'line';
     });
     const debounceRef = useRef<any>(null);
+    const isLocating = useRef(false);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
     const trackedId = useMemo(() => {
@@ -224,17 +226,28 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [isFollowing]);
 
-    const handleLocate = () => {
-        console.log('🛰️ Starting manual geolocation...');
-        if (!navigator.geolocation) {
-            showToast(t('toasts.geoNotSupported'), 'error');
+    const performGeolocation = useCallback((isManual: boolean = true) => {
+        if (isLocating.current) {
+            console.log(`⏳ Geolocation already in progress (requested as ${isManual ? 'manual' : 'auto'}), skipping...`);
             return;
         }
 
+        const mode = isManual ? 'manual' : 'auto';
+        console.log(`🛰️ Starting ${mode} geolocation...`);
+
+        if (!navigator.geolocation) {
+            console.error('❌ Geolocation is not supported by this browser.');
+            if (isManual) showToast(t('toasts.geoNotSupported'), 'error');
+            return;
+        }
+
+        isLocating.current = true;
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const { latitude, longitude } = pos.coords;
-                console.log('✅ Position found:', latitude, longitude);
+                isLocating.current = false;
+                const { latitude, longitude, accuracy } = pos.coords;
+                console.log(`✅ Position found: ${latitude}, ${longitude} (accuracy: ${Math.round(accuracy)}m)`);
+                setUserLocation([longitude, latitude]);
                 mapRef.current?.getMap().flyTo({
                     center: [longitude, latitude],
                     zoom: 15,
@@ -242,11 +255,35 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                 });
             },
             (err) => {
-                console.error('Geolocation error:', err);
-                showToast(t('toasts.geoError'), 'error');
+                isLocating.current = false;
+                // Detailed logging for GeolocationPositionError
+                const errorTypes = {
+                    [err.PERMISSION_DENIED]: 'PERMISSION_DENIED',
+                    [err.POSITION_UNAVAILABLE]: 'POSITION_UNAVAILABLE',
+                    [err.TIMEOUT]: 'TIMEOUT'
+                };
+                const errorType = (errorTypes as any)[err.code] || 'UNKNOWN_ERROR';
+                console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
+
+                if (isManual) {
+                    showToast(t('toasts.geoError'), 'error');
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
             }
         );
-    };
+    }, [mapRef, showToast, t]);
+
+    const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        performGeolocation(true);
+    }, [performGeolocation]);
 
     const onDragStart = useCallback(() => {
         if (isFollowing) {
@@ -357,20 +394,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         // Auto-locate if no params in URL
         const p = new URLSearchParams(window.location.search);
         if (!p.has('lat') && !p.has('lng') && !p.has('z') && !p.has('stopId') && !p.has('tripId')) {
-            // We can't call handleLocate directly easily because it depends on mapRef which is ready here,
-            // but we can inline the logic or use a timeout to ensure everything is settled.
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    map.flyTo({
-                        center: [longitude, latitude],
-                        zoom: 15,
-                        duration: 2000
-                    });
-                });
-            }
+            performGeolocation(false);
         }
-    }, []);
+    }, [performGeolocation]);
 
     const groupedDepartures = useMemo(() => {
         if (!departures?.departures) return [];
@@ -454,6 +480,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         debouncedBounds,
         selectedStop,
         selectedVehicle,
+        userLocation,
         isFollowing,
         showVehicles,
         isSettingsOpen,
@@ -475,7 +502,6 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         toggleGroup,
         setExpandedGroups,
         // Data
-        mapLoaded,
         displayVehicles,
         vehicleDetail,
         loadingDetail,
@@ -485,6 +511,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         loadingDeps,
         routeShapeData,
         fetchingVehicles,
-        dataUpdatedAt
+        dataUpdatedAt,
+        mapLoaded
     };
 };
