@@ -27,9 +27,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const { data: incidents } = useRSS('incidents');
     const { data: exclusions } = useRSS('exclusions');
 
-    if (!selectedVehicle) return null;
-
-    const routeName = selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n;
+    const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n;
 
     const relevantAlerts = useMemo(() => {
         const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
@@ -39,6 +37,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             isAlertActive(item)
         );
     }, [incidents, exclusions, routeName]);
+
+    if (!selectedVehicle) return null;
 
     return (
         <div className="space-y-4">
