@@ -23,12 +23,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         className="absolute inset-0 bg-black/80 backdrop-blur-md"
                     />
 
-                    {/* Modal Box */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                        className="relative w-full max-w-lg h-[80vh] bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="px-6 py-5 flex items-center justify-between border-b border-white/5">
@@ -42,8 +41,10 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
-                            {children}
+                        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar flex flex-col min-h-0">
+                                {children}
+                            </div>
                         </div>
                     </motion.div>
                 </div>

@@ -40,7 +40,8 @@
       "myLocation": "My Location",
       "settings": "Settings",
       "zoomIn": "Zoom In",
-      "zoomOut": "Zoom Out"
+      "zoomOut": "Zoom Out",
+      "resetBearing": "Reset bearing to north"
     },
     "vehicleDetails": {
       "fetching": "Fetching live details...",
@@ -84,5 +85,15 @@
     "geoNotSupported": "Your browser does not support geolocation.",
     "geoError": "Could not retrieve location. Please check browser permissions.",
     "vehicleNotFound": "Vehicle not found. It probably has not started yet."
+  },
+  "alerts": {
+    "title": "Incidents and Exclusions",
+    "incidents": "Incidents",
+    "exclusions": "Exclusions",
+    "noAlerts": "No active alerts",
+    "error": "Error loading alerts",
+    "moreInfo": "More info",
+    "planned": "Planned",
+    "active": "Active now"
   }
 }

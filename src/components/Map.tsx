@@ -14,13 +14,13 @@ const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ d
 import { Search } from './Search';
 import {
     clusterLayer,
-    clusterCoreLayer,
     clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
     stopLabelLayer,
     platformLabelLayer,
-    entranceLayer
+    entranceLayer,
+    stopPointGlowLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
 import { format, parseISO } from 'date-fns';
@@ -30,7 +30,7 @@ import { MapControls } from './MapControls';
 import { VehicleDetail } from './VehicleDetail';
 import { ArrowDownAz, Clock } from 'lucide-react';
 
-const EMPTY_GEOJSON = {
+const EMPTY_GEOJSON: any = {
     type: 'FeatureCollection',
     features: []
 };
@@ -80,6 +80,7 @@ export const Map: React.FC = () => {
         vehicleDetail,
         loadingDetail,
         stopsData,
+        labelData,
         groupedDepartures,
         stops,
         loadingDeps,
@@ -98,6 +99,14 @@ export const Map: React.FC = () => {
 
     const handleZoomOut = () => {
         mapRef.current?.zoomOut();
+    };
+
+    const handleResetBearing = () => {
+        mapRef.current?.easeTo({
+            bearing: 0,
+            duration: 1000,
+            pitch: 0
+        });
     };
 
     return (
@@ -201,153 +210,155 @@ export const Map: React.FC = () => {
                     onSettings={() => setIsSettingsOpen(true)}
                     onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
+                    onResetBearing={handleResetBearing}
                 />
 
-                {mapLoaded && userLocation && (
-                    <Source id="user-location" type="geojson" data={{
-                        type: 'FeatureCollection',
-                        features: [{
-                            type: 'Feature',
-                            geometry: { type: 'Point', coordinates: userLocation },
-                            properties: {}
-                        }]
-                    }}>
-                        <Layer
-                            id="user-location-pulse"
-                            type="circle"
-                            paint={{
-                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
-                                'circle-color': '#3b82f6',
-                                'circle-opacity': 0.15,
-                            }}
-                        />
-                        <Layer
-                            id="user-location-point"
-                            type="circle"
-                            paint={{
-                                'circle-radius': 7,
-                                'circle-color': '#3b82f6',
-                                'circle-stroke-width': 2,
-                                'circle-stroke-color': '#FFFFFF'
-                            }}
-                        />
-                    </Source>
-                )}
-
-                {mapLoaded && stopsData && (
-                    <Source
-                        id="pid-stops"
-                        type="geojson"
-                        data={stopsData}
-                        cluster={true}
-                        clusterMaxZoom={13}
-                        clusterRadius={40}
-                        clusterProperties={{
-                            has_metro_a: ['max', ['get', 'metro_a']],
-                            has_metro_b: ['max', ['get', 'metro_b']],
-                            has_metro_c: ['max', ['get', 'metro_c']],
-                            cluster_seed: ['max', ['get', 'variant_seed']]
+                <Source id="user-location" type="geojson" data={(mapLoaded && userLocation ? {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: userLocation },
+                        properties: {}
+                    }]
+                } : EMPTY_GEOJSON) as any}>
+                    <Layer
+                        id="user-location-pulse"
+                        type="circle"
+                        paint={{
+                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
+                            'circle-color': '#3b82f6',
+                            'circle-opacity': 0.15,
                         }}
-                    >
-                        <Layer {...clusterLayer} />
-                        <Layer {...clusterCoreLayer} />
-                        <Layer {...clusterCountLayer} />
-                        <Layer {...stopPointLayer} />
-                        <Layer {...platformLabelLayer} />
-                        <Layer {...transferStationLayer} />
-                        <Layer {...stopLabelLayer} />
-                        <Layer {...entranceLayer} />
-                    </Source>
-                )}
+                    />
+                    <Layer
+                        id="user-location-point"
+                        type="circle"
+                        paint={{
+                            'circle-radius': 7,
+                            'circle-color': '#3b82f6',
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': '#FFFFFF'
+                        }}
+                    />
+                </Source>
 
-                {mapLoaded && showVehicles && displayVehicles && (
-                    <Source id="pid-vehicles" type="geojson" data={displayVehicles}>
-                        {/* Pulse Effect for selected vehicle */}
-                        <Layer
-                            id="vehicles-pulse"
-                            type="circle"
-                            filter={['all', ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle?.vehicle_id || selectedVehicle?.id || 'NONE'], ['literal', isFollowing]]}
-                            paint={{
-                                'circle-radius': 0,
-                                'circle-color': vehicleColorExpression,
-                                'circle-opacity': 0,
-                                'circle-blur': 0.4
-                            }}
-                        />
-                        <Layer
-                            id="vehicles-point"
-                            type="circle"
-                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
-                            paint={{
-                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-                                'circle-color': vehicleColorExpression,
-                                'circle-stroke-width': 2,
-                                'circle-stroke-color': '#FFFFFF'
-                            }}
-                        />
+                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
+                    {/* Pulse Effect for selected vehicle */}
+                    <Layer
+                        id="vehicles-pulse"
+                        type="circle"
+                        minzoom={12}
+                        filter={['all', ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle?.vehicle_id || selectedVehicle?.id || 'NONE'], ['literal', isFollowing]]}
+                        paint={{
+                            'circle-radius': 0,
+                            'circle-color': vehicleColorExpression,
+                            'circle-opacity': 0,
+                            'circle-blur': 0.4
+                        }}
+                    />
+                    <Layer
+                        id="vehicles-point"
+                        type="circle"
+                        minzoom={12}
+                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
+                        paint={{
+                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
+                            'circle-color': vehicleColorExpression,
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': '#FFFFFF'
+                        }}
+                    />
 
-                        {/* BORDER LAYER - Solid white arrow shadow */}
-                        <Layer
-                            id="vehicles-direction-bg"
-                            type="symbol"
-                            minzoom={11}
-                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
-                            layout={{
-                                'icon-image': 'v-arrow-centered',
-                                'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.3, 16, 0.5],
-                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
-                                'icon-rotation-alignment': 'map',
-                                'icon-allow-overlap': true,
-                                'icon-ignore-placement': true,
-                                'icon-offset': [0, -48],
-                                'icon-anchor': 'center'
-                            }}
-                            paint={{
-                                'icon-color': '#FFFFFF'
-                            }}
-                        />
+                    {/* BORDER LAYER - Solid white arrow shadow */}
+                    <Layer
+                        id="vehicles-direction-bg"
+                        type="symbol"
+                        minzoom={12}
+                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
+                        layout={{
+                            'icon-image': 'v-arrow-centered',
+                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.3, 16, 0.5],
+                            'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+                            'icon-rotation-alignment': 'map',
+                            'icon-allow-overlap': true,
+                            'icon-ignore-placement': true,
+                            'icon-offset': [0, -48],
+                            'icon-anchor': 'center'
+                        }}
+                        paint={{
+                            'icon-color': '#FFFFFF'
+                        }}
+                    />
 
-                        {/* FOREGROUND LAYER - Colored arrow */}
-                        <Layer
-                            id="vehicles-direction-fg"
-                            type="symbol"
-                            minzoom={11}
-                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
-                            layout={{
-                                'icon-image': 'v-arrow-centered',
-                                'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.25, 16, 0.45],
-                                'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
-                                'icon-rotation-alignment': 'map',
-                                'icon-allow-overlap': true,
-                                'icon-ignore-placement': true,
-                                'icon-offset': [0, -48],
-                                'icon-anchor': 'center'
-                            }}
-                            paint={{
-                                'icon-color': vehicleColorExpression
-                            }}
-                        />
+                    {/* FOREGROUND LAYER - Colored arrow */}
+                    <Layer
+                        id="vehicles-direction-fg"
+                        type="symbol"
+                        minzoom={12}
+                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
+                        layout={{
+                            'icon-image': 'v-arrow-centered',
+                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.25, 16, 0.45],
+                            'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+                            'icon-rotation-alignment': 'map',
+                            'icon-allow-overlap': true,
+                            'icon-ignore-placement': true,
+                            'icon-offset': [0, -48],
+                            'icon-anchor': 'center'
+                        }}
+                        paint={{
+                            'icon-color': vehicleColorExpression
+                        }}
+                    />
 
-                        <Layer
-                            id="vehicles-label"
-                            type="symbol"
-                            minzoom={10}
-                            filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
-                            layout={{
-                                'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
-                                'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
-                                'text-allow-overlap': true,
-                                'text-ignore-placement': true,
-                                'text-anchor': 'center'
-                            }}
-                            paint={{
-                                'text-color': '#FFFFFF',
-                                'text-halo-color': '#000000',
-                                'text-halo-width': 1
-                            }}
-                        />
-                    </Source>
-                )}
+                    <Layer
+                        id="vehicles-label"
+                        type="symbol"
+                        minzoom={12}
+                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
+                        layout={{
+                            'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+                            'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+                            'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
+                            'text-allow-overlap': true,
+                            'text-ignore-placement': true,
+                            'text-anchor': 'center'
+                        }}
+                        paint={{
+                            'text-color': '#f8fafc',
+                            'text-halo-color': '#000000',
+                            'text-halo-width': 1.2,
+                            'text-halo-blur': 0.4
+                        }}
+                    />
+                </Source>
+
+                <Source
+                    id="pid-stops"
+                    type="geojson"
+                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON) as any}
+                    cluster={true}
+                    clusterMaxZoom={13}
+                    clusterRadius={40}
+                    clusterProperties={{
+                        has_metro_a: ['max', ['get', 'metro_a']],
+                        has_metro_b: ['max', ['get', 'metro_b']],
+                        has_metro_c: ['max', ['get', 'metro_c']],
+                        cluster_seed: ['max', ['get', 'variant_seed']]
+                    }}
+                >
+                    <Layer {...clusterLayer} />
+                    <Layer {...clusterCountLayer} />
+                    <Layer {...stopPointGlowLayer} />
+                    <Layer {...stopPointLayer} />
+                    <Layer {...transferStationLayer} />
+                    <Layer {...platformLabelLayer} />
+                    <Layer {...entranceLayer} />
+                </Source>
+
+                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON) as any}>
+                    <Layer {...stopLabelLayer} />
+                </Source>
             </MapGL>
 
             <React.Suspense fallback={null}>

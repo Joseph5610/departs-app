@@ -2,6 +2,21 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.2.0] - 2026-02-09
+
+### Added
+- **RSS Alerts Integration**: Comprehensive integration of PID RSS feeds for real-time incidents and exclusions.
+- **Alerts UI**: New tabbed modal interface (Incidents vs. Exclusions) with live search and color-coded line badges for quick orientation.
+- **Vehicle Detail Highlights**: Alerts are now intelligently displayed directly in the vehicle detail panel if they affect the active line.
+- **Performance Optimization**: Switched to native `DOMParser` for RSS processing, reducing bundle size and improving reliability.
+- **CORS Proxy**: Implemented a dedicated Cloudflare Function (`/api/rss`) for secure and reliable fetching of PID feeds.
+
+### Fixed
+- **UI Stability**: Standardized modal heights and implemented sticky headers to prevent "jumping" behavior during scrolling or filtering.
+- **String Sanitization**: Automatically decodes HTML entities (like `&nbsp;`) and strips unnecessary tags from RSS descriptions.
+
+---
+
 ## [0.1.5] - 2026-02-08
 
 ### Fixed

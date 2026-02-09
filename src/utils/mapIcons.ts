@@ -33,7 +33,7 @@ export const addSplitIcon = (map: any, id: string, c1: string, c2: string) => {
     if (ctx) {
         const cx = size / 2;
         const cy = size / 2;
-        const r = size / 2 - 4;
+        const r = size / 2 - 2;
         ctx.beginPath();
         ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
         ctx.fillStyle = 'white';

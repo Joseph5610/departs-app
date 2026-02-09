@@ -1,20 +1,23 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LocateFixed, Settings, Plus, Minus } from 'lucide-react';
+import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
+import { Alerts } from './Alerts';
 
 interface MapControlsProps {
     onLocate: (e: React.MouseEvent | React.TouchEvent) => void;
     onSettings: () => void;
     onZoomIn: () => void;
     onZoomOut: () => void;
+    onResetBearing: () => void;
 }
 
 export const MapControls = React.memo<MapControlsProps>(({
     onLocate,
     onSettings,
     onZoomIn,
-    onZoomOut
+    onZoomOut,
+    onResetBearing
 }) => {
     const { t } = useTranslation();
 
@@ -39,6 +42,14 @@ export const MapControls = React.memo<MapControlsProps>(({
                 title={t('map.controls.settings')}
             >
                 <Settings size={20} className="group-hover:rotate-45 transition-transform" />
+            </button>
+            <Alerts />
+            <button
+                onClick={onResetBearing}
+                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                title={t('map.controls.resetBearing')}
+            >
+                <Compass size={20} className="group-hover:rotate-12 transition-transform" />
             </button>
 
             <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">

@@ -40,7 +40,8 @@
       "myLocation": "Moje poloha",
       "settings": "Nastavení",
       "zoomIn": "Přiblížit",
-      "zoomOut": "Oddálit"
+      "zoomOut": "Oddálit",
+      "resetBearing": "Vycentrovat na sever"
     },
     "vehicleDetails": {
       "fetching": "Načítání podrobností...",
@@ -84,5 +85,15 @@
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",
     "geoError": "Nepodařilo se získat polohu. Zkontrolujte prosím oprávnění prohlížeče.",
     "vehicleNotFound": "Vozidlo nebylo nalezeno. Pravděpodobně ještě nevyjelo."
+  },
+  "alerts": {
+    "title": "Mimořádnosti a výluky",
+    "incidents": "Mimořádnosti",
+    "exclusions": "Výluky",
+    "noAlerts": "Žádné aktuální upozornění",
+    "error": "Chyba při načítání upozornění",
+    "moreInfo": "Více informací",
+    "planned": "Plánováno",
+    "active": "Právě probíhá"
   }
 }

@@ -28,26 +28,25 @@ export const clusterLayer: any = {
 
             // Default Bus (Blue)
             ['interpolate', ['linear'], ['get', 'point_count'],
-                0, '#e0f2fe',    // < 10: White/Cyan
-                20, '#38bdf8',   // 20: Sky Blue
-                100, '#0284c7'   // 100+: Ocean Blue
+                0, 'rgba(59, 130, 246, 0.4)',   // Very soft blue for small clusters
+                100, 'rgba(37, 99, 235, 0.9)'  // Stronger blue for large clusters
             ]
         ],
 
-        // Radius scaling - smoother growth + Organic random factor
+        // Radius scaling - tighter bubbles
         'circle-radius': [
             '+',
-            ['interpolate', ['linear'], ['get', 'point_count'], 0, 20, 100, 50],
-            ['*', ['get', 'cluster_seed'], 15] // Add 0-15px random "wobble"
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, 12, 100, 30],
+            ['*', ['get', 'cluster_seed'], 8] // Reduced wobble
         ],
 
-        // Opacity - Random flicker effect
+        // Opacity - Subtle flicker
         'circle-opacity': [
             '+',
-            0.5,
-            ['*', ['get', 'cluster_seed'], 0.3] // 0.5 - 0.8 opacity range
+            0.4,
+            ['*', ['get', 'cluster_seed'], 0.3] // 0.4 - 0.7 range
         ],
-        'circle-blur': 0.6     // Less blur for better definition (neon style)
+        'circle-blur': 0.5     // Back to a slightly softer blur for premium feel
     }
 };
 
@@ -94,8 +93,8 @@ export const stopPointLayer: any = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 6],
-            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 15, 11]
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 8],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 24, 18]
         ],
         'circle-color': ['case',
             // Only apply custom colors for Stations (Type 1)
@@ -108,7 +107,7 @@ export const stopPointLayer: any = {
             // Default for Stops (Type 0 or null)
             LINE_COLORS.Default
         ],
-        'circle-stroke-width': 2,
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
             // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
             ['all',
@@ -122,10 +121,49 @@ export const stopPointLayer: any = {
             '#ffffff',
 
             // 3. Regular Stops (Type 0) -> BLUE stroke
-            '#38bdf8'
-        ]
+            '#3b82f6'
+        ],
+        'circle-opacity': [
+            'case',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            0.7, // Semi-transparent "glassy" look for stations
+            0.9  // Solid for regular stops
+        ],
+        'circle-stroke-opacity': 1
     }
 };
+
+// 3a. ATMOSPHERIC GLOW for Stations
+export const stopPointGlowLayer: any = {
+    id: 'unclustered-point-glow',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 20, 12],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 40, 24]
+        ],
+        'circle-color': [
+            'case',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            ['match', ['get', 'stop_name'],
+                ...getStationColorMatchPairs(),
+                LINE_COLORS.Unknown
+            ],
+            '#000000' // Shadow for regular stops
+        ],
+        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.35, 0.2]
+        ],
+        'circle-blur': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.8, 1]
+    }
+};
+
 
 export const transferStationLayer: any = {
     id: 'transfer-stations',
@@ -143,39 +181,46 @@ export const transferStationLayer: any = {
             'Florenc', 'transfer-B-C',
             ''
         ],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 15, 0.9],
+        'icon-size': ['interpolate', ['linear'], ['zoom'],
+            13, 0.875, // (14*2)/64 * 2 (pixelRatio)
+            17, 1.5    // (24*2)/64 * 2 (pixelRatio)
+        ],
         'icon-allow-overlap': true,
         'icon-offset': ['match', ['get', 'stop_name'],
             'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
             ['literal', [0, 0]]
         ]
+    },
+    paint: {
+        'icon-opacity': 0.7 // Unified semi-transparency
     }
 };
 
 export const stopLabelLayer: any = {
     id: 'stop-labels',
     type: 'symbol',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
-    ],
-    minzoom: 10,
+    minzoom: 14, // Only show when clustering is off
     layout: {
         'text-field': ['get', 'stop_name'],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 8, 16, 12],
-        'text-offset': [0, 1.5],
-        'text-anchor': 'top',
-        'text-max-width': 10,
+        'text-font': ['Montserrat Regular', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'],
+            10, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 8],
+            16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
+        ],
+        'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 3],
+        'text-justify': 'auto',
+        'text-max-width': 7,
+        'text-letter-spacing': 0.15, // Matched to map style
+        'text-padding': 20, // Aggressive padding to avoid overlaps
         'text-allow-overlap': false,
-        'text-ignore-placement': false,
-        'text-padding': 20
+        'text-ignore-placement': false
     },
     paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': '#000000',
-        'text-halo-width': 1
+        'text-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, '#ffffff', '#bdbdbd'],
+        'text-halo-color': '#111111',
+        'text-halo-width': 1, // Sharper halo like map labels
+        'text-halo-blur': 0.5
     }
 };
 
@@ -192,16 +237,18 @@ export const platformLabelLayer: any = {
     minzoom: 14,
     layout: {
         'text-field': ['get', 'platform_code'],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 14, 9, 18, 13],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 14, 11, 18, 15],
         'text-anchor': 'center',
+        'text-padding': 25, // Large invisible box to push stop names away
         'text-allow-overlap': true,
-        'text-ignore-placement': true
+        'text-ignore-placement': false
     },
     paint: {
-        'text-color': '#ffffff',
+        'text-color': '#f8fafc',
         'text-halo-color': '#000000',
-        'text-halo-width': 0.5
+        'text-halo-width': 0.8,
+        'text-halo-blur': 0.2
     }
 };
 
@@ -213,17 +260,21 @@ export const entranceLayer: any = {
         ['!', ['has', 'point_count']],
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
     ],
-    minzoom: 16,
+    minzoom: 17.5, // Only show when very zoomed in
     layout: {
         'text-field': ['get', 'stop_name'],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': 11,
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': 10,
+        'text-letter-spacing': 0.1,
+        'text-transform': 'uppercase',
+        'text-padding': 40, // Deduplicate via padding
+        'text-allow-overlap': false,
+        'text-ignore-placement': false
     },
     paint: {
-        'text-color': '#e2e8f0',
-        'text-halo-color': '#0f172a',
-        'text-halo-width': 1
+        'text-color': '#94a3b8', // Slate-400 (Greyish)
+        'text-halo-color': '#000000',
+        'text-halo-width': 1,
+        'text-halo-blur': 0.2
     }
 };

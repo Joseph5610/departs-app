@@ -391,6 +391,51 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         return { type: 'FeatureCollection' as const, features: (stops as any).features };
     }, [stops]);
 
+    const labelData = useMemo(() => {
+        if (!stopsData) return null;
+
+        const groups: Record<string, any[]> = {};
+        stopsData.features.forEach((f: any) => {
+            if (f.properties.location_type === 2) return; // Skip entrances
+            const name = f.properties.stop_name;
+            if (!groups[name]) groups[name] = [];
+            groups[name].push(f);
+        });
+
+        const labelFeatures = Object.entries(groups).map(([_name, features]) => {
+            // Prefer location_type 1 (Station) if explicitly available in the data
+            const stationSource = features.find(f => f.properties.location_type === 1);
+            if (stationSource) return stationSource;
+
+            // Otherwise calculate the geographic centroid (average position)
+            let sumLng = 0;
+            let sumLat = 0;
+            features.forEach(f => {
+                sumLng += f.geometry.coordinates[0];
+                sumLat += f.geometry.coordinates[1];
+            });
+            const avgLng = sumLng / features.length;
+            const avgLat = sumLat / features.length;
+
+            return {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [avgLng, avgLat]
+                },
+                properties: {
+                    ...features[0].properties,
+                    is_centroid: true
+                }
+            };
+        });
+
+        return {
+            type: 'FeatureCollection',
+            features: labelFeatures
+        } as any;
+    }, [stopsData]);
+
     const toggleGroup = (groupId: string) => {
         setExpandedGroups(prev =>
             prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
@@ -428,6 +473,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         vehicleDetail,
         loadingDetail,
         stopsData,
+        labelData,
         groupedDepartures,
         stops,
         loadingDeps,

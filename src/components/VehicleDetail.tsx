@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { getVehicleColor } from '../utils/vehicleColors';
+import { useRSS } from '../hooks/useRSS';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { isAlertActive } from '../utils/dateUtils';
 
 interface VehicleDetailProps {
     selectedVehicle: any;
@@ -21,8 +24,21 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     onToggleFollow
 }) => {
     const { t } = useTranslation();
+    const { data: incidents } = useRSS('incidents');
+    const { data: exclusions } = useRSS('exclusions');
 
     if (!selectedVehicle) return null;
+
+    const routeName = selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n;
+
+    const relevantAlerts = useMemo(() => {
+        const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
+        if (!routeName) return [];
+        return allItems.filter(item =>
+            item.lines?.some(l => l.toUpperCase() === routeName.toString().toUpperCase()) &&
+            isAlertActive(item)
+        );
+    }, [incidents, exclusions, routeName]);
 
     return (
         <div className="space-y-4">
@@ -33,6 +49,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t('map.vehicleDetails.fetching')}</span>
                 </div>
             )}
+
 
             {/* Warning: Before Track / Previous Trip */}
             {(['before_track', 'before_track_delayed'].includes(selectedVehicle.state_position) || ['before_track', 'before_track_delayed'].includes(vehicleDetail?.state_position || '')) && (
@@ -86,6 +103,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             </div>
 
+
             {/* Operator & Vehicle Info - Compact on mobile */}
             {vehicleDetail?.vehicle_descriptor?.operator && (
                 <div className="flex flex-row items-center justify-between md:p-4 p-1 md:bg-white/5 md:border md:border-white/5 rounded-2xl">
@@ -132,6 +150,40 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 </div>
                             ))}
                     </div>
+                </div>
+            )}
+
+            {/* RSS Alerts Integration */}
+            {relevantAlerts.length > 0 && (
+                <div className="space-y-2">
+                    {relevantAlerts.map((alert, idx) => (
+                        <a
+                            key={alert.guid || idx}
+                            href={alert.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group
+                                ${alert.priority === '1'
+                                    ? 'bg-rose-500/10 border-rose-500/20'
+                                    : 'bg-amber-500/10 border-amber-500/20'}
+                            `}
+                        >
+                            <div className={`p-2 rounded-full shrink-0 ${alert.priority === '1' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                                <AlertTriangle size={20} className={alert.priority === '1' ? 'animate-pulse' : ''} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start gap-2">
+                                    <h4 className={`font-bold text-sm leading-tight ${alert.priority === '1' ? 'text-rose-500' : 'text-amber-500'}`}>
+                                        {alert.title}
+                                    </h4>
+                                    <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />
+                                </div>
+                                <p className="text-zinc-400 text-[10px] mt-1 line-clamp-2">
+                                    {alert.contentSnippet || alert.date}
+                                </p>
+                            </div>
+                        </a>
+                    ))}
                 </div>
             )}
 
