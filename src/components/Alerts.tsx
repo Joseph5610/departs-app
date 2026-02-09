@@ -20,7 +20,6 @@ export const Alerts: React.FC = () => {
 
     const incidentsCount = incidents?.items?.length || 0;
     const exclusionsCount = exclusions?.items?.length || 0;
-    const totalCount = incidentsCount + exclusionsCount;
 
     const currentItems = useMemo(() => {
         const items = activeTab === 'incidents' ? incidents?.items : exclusions?.items;
