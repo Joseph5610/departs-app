@@ -47,8 +47,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
 
     const variants = {
         hidden: isMobile ? { y: '100%' } : { x: '-110%' },
-        peek: isMobile ? { y: '45vh' } : { x: 0 }, // Approx half screen
-        full: isMobile ? { y: 'calc(env(safe-area-inset-top, 0px) + 12px)' } : { x: 0 },  // Respect Dynamic Island
+        peek: isMobile ? { y: '45vh' } : { x: 0 },
+        full: isMobile ? { y: '64px' } : { x: 0 }, // Safe margin below Dynamic Island
     };
 
     return (
