@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { X } from 'lucide-react';
 
 interface BottomSheetProps {
@@ -11,6 +11,45 @@ interface BottomSheetProps {
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, children }) => {
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+    const controls = useAnimation();
+    const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
+
+    // Reset state to peek when opening
+    useEffect(() => {
+        if (isOpen) {
+            setSheetState('peek');
+            controls.start('peek');
+        }
+    }, [isOpen, controls]);
+
+    const handleDragEnd = (_: any, info: any) => {
+        const velocity = info.velocity.y;
+        const offset = info.offset.y;
+
+        if (sheetState === 'peek') {
+            if (offset > 100 || velocity > 500) {
+                onClose();
+            } else if (offset < -100 || velocity < -500) {
+                setSheetState('full');
+                controls.start('full');
+            } else {
+                controls.start('peek');
+            }
+        } else {
+            if (offset > 100 || velocity > 500) {
+                setSheetState('peek');
+                controls.start('peek');
+            } else {
+                controls.start('full');
+            }
+        }
+    };
+
+    const variants = {
+        hidden: isMobile ? { y: '100%' } : { x: '-110%' },
+        peek: isMobile ? { y: '45%' } : { x: 0 }, // Approx half screen
+        full: isMobile ? { y: '10%' } : { x: 0 },  // Near top
+    };
 
     return (
         <AnimatePresence>
@@ -27,28 +66,38 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
 
                     {/* Sheet / Sidebar */}
                     <motion.div
-                        initial={isMobile ? { y: '100%', x: 0 } : { x: '-110%', y: 0 }}
-                        animate={{ y: 0, x: 0 }}
-                        exit={isMobile ? { y: '100%' } : { x: '-110%' }}
-                        transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+                        initial="hidden"
+                        animate={controls}
+                        exit="hidden"
+                        variants={variants}
+                        transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
                         {...(isMobile ? {
                             drag: "y",
                             dragConstraints: { top: 0 },
-                            dragElastic: 0.2,
-                            onDragEnd: (_, info) => {
-                                if (info.offset.y > 100) onClose();
-                            }
+                            dragElastic: 0.1,
+                            onDragEnd: handleDragEnd
                         } : {})}
-                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-black/95 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl max-h-[85vh] md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
+                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-zinc-900/95 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl h-[100vh] md:h-auto md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
                     >
                         {/* Handle Bar - Mobile only */}
-                        <div className="flex justify-center p-2.5 md:hidden cursor-grab active:cursor-grabbing">
-                            <div className="w-12 h-1 bg-white/10 rounded-full" />
+                        <div
+                            className="flex justify-center p-4 md:hidden cursor-grab active:cursor-grabbing group"
+                            onClick={() => {
+                                if (sheetState === 'peek') {
+                                    setSheetState('full');
+                                    controls.start('full');
+                                } else {
+                                    setSheetState('peek');
+                                    controls.start('peek');
+                                }
+                            }}
+                        >
+                            <div className="w-12 h-1.5 bg-white/20 group-hover:bg-white/40 rounded-full transition-colors" />
                         </div>
 
                         {/* Header */}
                         {title && (
-                            <div className="px-6 py-4 md:pt-8 flex items-center justify-between">
+                            <div className="px-6 py-2 md:pt-8 flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-white pr-4 truncate tracking-tight">
                                     {title}
                                 </h2>
@@ -70,9 +119,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                         >
                             {children}
                         </div>
+
                     </motion.div>
                 </>
             )}
         </AnimatePresence>
     );
 };
+

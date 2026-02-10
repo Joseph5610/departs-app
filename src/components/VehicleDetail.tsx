@@ -101,7 +101,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             )}
 
-            <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
+            <div className="flex flex-row md:flex-col items-center md:text-center p-3 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
                 <div
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}

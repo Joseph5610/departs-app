@@ -51,7 +51,7 @@ export const Alerts: React.FC = () => {
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={t('alerts.title')}>
                 <div className="flex flex-col min-h-0">
                     {/* Sticky Header Section */}
-                    <div className="sticky -top-6 z-10 bg-black pt-6 pb-4 space-y-4 -mx-6 px-6 border-b border-white/5">
+                    <div className="sticky -top-4 z-10 bg-black pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-white/5">
                         {/* Tabs */}
                         <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
                             <TabButton
@@ -91,7 +91,7 @@ export const Alerts: React.FC = () => {
                     </div>
 
                     {/* List */}
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-3 pt-0">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab + searchQuery}

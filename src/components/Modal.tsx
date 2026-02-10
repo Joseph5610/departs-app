@@ -30,7 +30,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         className="relative w-full max-w-lg h-[80vh] bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
-                        <div className="px-6 py-5 flex items-center justify-between border-b border-white/5">
+                        <div className="px-6 py-4 flex items-center justify-between border-b border-white/5">
                             <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
                             <button
                                 onClick={onClose}
@@ -42,7 +42,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
 
                         {/* Content */}
                         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar flex flex-col min-h-0">
+                            <div className="p-4 overflow-y-auto flex-1 custom-scrollbar flex flex-col min-h-0">
                                 {children}
                             </div>
                         </div>
