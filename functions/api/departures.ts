@@ -82,7 +82,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 directionId: String(directionId),
                 headsign: item.trip?.headsign || 'Unknown',
                 isCanceled: item.trip?.is_canceled || false,
-                tripId: item.trip?.id
+                tripId: item.trip?.id,
+                vehicleId: item.vehicle?.id
             };
         });
 

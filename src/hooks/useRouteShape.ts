@@ -2,8 +2,11 @@
 import { useMemo } from 'react';
 
 export const useRouteShape = (selectedVehicle: any, vehicleDetail: any) => {
+    const vId = selectedVehicle?.vehicle_id || selectedVehicle?.id;
+    const tId = vehicleDetail?.gtfs_trip_id || vehicleDetail?.trip_id || selectedVehicle?.gtfs_trip_id;
+
     return useMemo(() => {
-        if (!selectedVehicle || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
+        if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
 
         const coordinates = vehicleDetail.shapes;
 
@@ -20,5 +23,5 @@ export const useRouteShape = (selectedVehicle: any, vehicleDetail: any) => {
                 properties: {}
             }]
         };
-    }, [selectedVehicle, vehicleDetail]);
+    }, [vId, tId, vehicleDetail?.shapes]);
 };

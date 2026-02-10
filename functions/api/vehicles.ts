@@ -46,17 +46,6 @@ interface PublicVehicleProperties {
     vehicle_registration_number?: number;
 }
 
-// Optimization: Lite structure for map rendering
-// Maps 1:1 to essential data needed for display, heavily abbreviated keys
-interface LiteVehicleProperties {
-    id: string;       // vehicle_id
-    tId?: string;     // gtfs_trip_id
-    n?: string;       // route_short_name (Number)
-    t?: string;       // route_type (Type)
-    b?: number;       // bearing
-    d?: number;       // delay
-}
-
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { request, env } = context;
     const url = new URL(request.url);
@@ -64,90 +53,136 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const routeType = url.searchParams.get("routeType");
     const tripId = url.searchParams.get("tripId");
 
-    let golemioUrl: URL;
-
-    if (tripId) {
-        // Use the gtfsTripId endpoint - returns a single Feature
-        golemioUrl = new URL(`https://api.golemio.cz/v2/vehiclepositions/${tripId}`);
-    } else if (bounds) {
-        // Use the public bounding box endpoint - returns FeatureCollection
-        golemioUrl = new URL("https://api.golemio.cz/v2/public/vehiclepositions");
-        golemioUrl.searchParams.set("boundingBox", bounds);
-
-        if (routeType) {
-            golemioUrl.searchParams.set("routeType", routeType);
-        }
-    } else {
-        return new Response("Missing 'bounds' or 'tripId' parameter.", { status: 400 });
-    }
+    let normalizedData: any = null;
 
     try {
-        const response = await fetch(golemioUrl.toString(), {
-            headers: {
-                "X-Access-Token": env.GOLEMIO_API_KEY,
-                "Content-Type": "application/json",
-            },
-            cf: {
-                cacheTtl: 10,
-                cacheEverything: true,
+        if (tripId && bounds) {
+            // COMBINED: Fetch both and merge
+            const tripUrlString = `https://api.golemio.cz/v2/vehiclepositions/${tripId}`;
+            const boundsUrl = new URL("https://api.golemio.cz/v2/public/vehiclepositions");
+            boundsUrl.searchParams.set("boundingBox", bounds);
+            if (routeType) boundsUrl.searchParams.set("routeType", routeType);
+
+            const [tripRes, boundsRes] = await Promise.all([
+                fetch(tripUrlString, {
+                    headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
+                    cf: { cacheTtl: 10, cacheEverything: true }
+                }),
+                fetch(boundsUrl.toString(), {
+                    headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
+                    cf: { cacheTtl: 10, cacheEverything: true }
+                })
+            ]);
+
+            const tripData: any = tripRes.ok ? await tripRes.json() : null;
+            const boundsData: any = boundsRes.ok ? await boundsRes.json() : { features: [] };
+
+            let tripFeatures: any[] = [];
+            if (tripData) {
+                if (tripData.type === 'FeatureCollection') {
+                    tripFeatures = tripData.features || [];
+                } else if (tripData.type === 'Feature') {
+                    tripFeatures = [tripData];
+                }
             }
-        });
 
-        if (!response.ok) {
-            return new Response(`Golemio API Error: ${response.status} ${response.statusText}`, { status: response.status });
-        }
+            const boundsFeatures = boundsData.features || [];
+            const mergedFeatures = [...boundsFeatures];
+            const seenIds = new Set(boundsFeatures.map((f: any) => f.properties.vehicle_id));
 
-        const data: any = await response.json();
-
-        let normalizedData;
-
-        // Handle single vehicle lookup (filtering by ID returns FeatureCollection)
-        if (tripId) {
-            let feature = null;
-
-            if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
-                feature = data.features[0] as GolemioVehicleFeature;
-            } else if (data.type === 'Feature') {
-                feature = data as GolemioVehicleFeature;
-            }
-
-            if (feature) {
-                // Full details for single vehicle lookup
-                const flatProperties: PublicVehicleProperties = {
-                    vehicle_id: feature.properties.vehicle_id || `trip-${feature.properties.trip?.gtfs?.trip_id || tripId || 'unknown'}`,
-                    gtfs_trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
-                    trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
-                    route_short_name: feature.properties.trip?.gtfs?.route_short_name,
-                    gtfs_route_short_name: feature.properties.trip?.gtfs?.route_short_name,
-                    route_type: feature.properties.trip?.gtfs?.route_type,
-                    trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
-                    gtfs_trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
-                    bearing: feature.properties.last_position?.bearing,
-                    delay: feature.properties.last_position?.delay?.actual || 0,
-                    state_position: feature.properties.last_position?.state_position,
-                    next_stop_name: feature.properties.last_position?.next_stop?.id,
-                    is_wheelchair_accessible: feature.properties.trip?.wheelchair_accessible,
-                    is_air_conditioned: feature.properties.trip?.air_conditioned,
-                    vehicle_registration_number: feature.properties.trip?.vehicle_registration_number,
-                };
-
-                normalizedData = {
-                    type: 'FeatureCollection',
-                    features: [{
+            tripFeatures.forEach((feature: any) => {
+                const vid = feature.properties.vehicle_id || feature.properties.id;
+                if (!vid || !seenIds.has(vid)) {
+                    const flatProperties: PublicVehicleProperties = {
+                        vehicle_id: feature.properties.vehicle_id || `trip-${feature.properties.trip?.gtfs?.trip_id || tripId || 'unknown'}`,
+                        gtfs_trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
+                        trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
+                        route_short_name: feature.properties.trip?.gtfs?.route_short_name,
+                        gtfs_route_short_name: feature.properties.trip?.gtfs?.route_short_name,
+                        route_type: feature.properties.trip?.gtfs?.route_type,
+                        trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
+                        gtfs_trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
+                        bearing: feature.properties.last_position?.bearing,
+                        delay: feature.properties.last_position?.delay?.actual || 0,
+                        state_position: feature.properties.last_position?.state_position,
+                        next_stop_name: feature.properties.last_position?.next_stop?.id,
+                        is_wheelchair_accessible: feature.properties.trip?.wheelchair_accessible,
+                        is_air_conditioned: feature.properties.trip?.air_conditioned,
+                        vehicle_registration_number: feature.properties.trip?.vehicle_registration_number,
+                    };
+                    mergedFeatures.push({
                         type: 'Feature',
                         geometry: feature.geometry,
                         properties: flatProperties
-                    }]
-                };
+                    });
+                }
+            });
+
+            normalizedData = { type: 'FeatureCollection', features: mergedFeatures };
+        } else if (tripId || bounds) {
+            // SINGLE MODE
+            let golemioUrl: string;
+            if (tripId) {
+                golemioUrl = `https://api.golemio.cz/v2/vehiclepositions/${tripId}`;
             } else {
-                // Return empty collection if not found
-                normalizedData = { type: 'FeatureCollection', features: [] };
+                const bUrl = new URL("https://api.golemio.cz/v2/public/vehiclepositions");
+                bUrl.searchParams.set("boundingBox", bounds!);
+                if (routeType) bUrl.searchParams.set("routeType", routeType);
+                golemioUrl = bUrl.toString();
             }
-        } else if (bounds) {
-            // Pass the data directly intact as received from Golemio
-            normalizedData = data;
+
+            const response = await fetch(golemioUrl, {
+                headers: {
+                    "X-Access-Token": env.GOLEMIO_API_KEY,
+                    "Content-Type": "application/json",
+                },
+                cf: { cacheTtl: 10, cacheEverything: true }
+            });
+
+            if (!response.ok) {
+                return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
+            }
+
+            const data: any = await response.json();
+
+            if (tripId) {
+                let feature = null;
+                if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
+                    feature = data.features[0];
+                } else if (data.type === 'Feature') {
+                    feature = data;
+                }
+
+                if (feature) {
+                    const flatProperties: PublicVehicleProperties = {
+                        vehicle_id: feature.properties.vehicle_id || `trip-${feature.properties.trip?.gtfs?.trip_id || tripId || 'unknown'}`,
+                        gtfs_trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
+                        trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
+                        route_short_name: feature.properties.trip?.gtfs?.route_short_name,
+                        gtfs_route_short_name: feature.properties.trip?.gtfs?.route_short_name,
+                        route_type: feature.properties.trip?.gtfs?.route_type,
+                        trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
+                        gtfs_trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
+                        bearing: feature.properties.last_position?.bearing,
+                        delay: feature.properties.last_position?.delay?.actual || 0,
+                        state_position: feature.properties.last_position?.state_position,
+                        next_stop_name: feature.properties.last_position?.next_stop?.id,
+                        is_wheelchair_accessible: feature.properties.trip?.wheelchair_accessible,
+                        is_air_conditioned: feature.properties.trip?.air_conditioned,
+                        vehicle_registration_number: feature.properties.trip?.vehicle_registration_number,
+                    };
+                    normalizedData = {
+                        type: 'FeatureCollection',
+                        features: [{ type: 'Feature', geometry: feature.geometry, properties: flatProperties }]
+                    };
+                } else {
+                    normalizedData = { type: 'FeatureCollection', features: [] };
+                }
+            } else {
+                normalizedData = data;
+            }
         } else {
-            normalizedData = data;
+            return new Response("Missing parameters", { status: 400 });
         }
 
         return new Response(JSON.stringify(normalizedData), {

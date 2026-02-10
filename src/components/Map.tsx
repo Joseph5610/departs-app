@@ -7,7 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
 import { Countdown } from './Countdown';
 import { LiveStatus } from './LiveStatus';
-import { vehicleColorExpression, getVehicleColor } from '../utils/vehicleColors';
+import { vehicleColorExpression, getVehicleColor, isNightRouteExpression, isNightRoute } from '../utils/vehicleColors';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
@@ -90,7 +90,10 @@ export const Map: React.FC = () => {
         departureSort,
         setDepartureSort,
         userLocation,
-        mapLoaded
+        mapLoaded,
+        selectedVehicleFeature,
+        labelLayerId,
+        selectedId
     } = useMapLogic(mapRef);
 
     const handleZoomIn = () => {
@@ -169,20 +172,22 @@ export const Map: React.FC = () => {
             >
 
                 {/* Route Shape Layer - PERSISTENT SOURCE (Optimization) */}
+                {/* Placed UNDER labels thanks to beforeId */}
                 {mapLoaded && (
                     <Source id="route-shape" type="geojson" data={routeShapeData || (EMPTY_GEOJSON as any)}>
                         <Layer
                             id="route-line"
                             type="line"
+                            beforeId={labelLayerId} // Put under labels!
                             layout={{
                                 'line-join': 'round',
                                 'line-cap': 'round'
                             }}
                             paint={{
-                                'line-color': getVehicleColor(selectedVehicle?.route_type || selectedVehicle?.t, selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n),
+                                'line-color': isNightRoute(selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n) ? '#ffffff' : getVehicleColor(selectedVehicle?.route_type || selectedVehicle?.t, selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n),
                                 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
-                                'line-opacity': 0.6,
-                                'line-blur': 1
+                                'line-opacity': 0.8,
+                                'line-blur': 0.5
                             }}
                         />
                     </Source>
@@ -242,42 +247,37 @@ export const Map: React.FC = () => {
                     />
                 </Source>
 
-                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
-                    {/* Pulse Effect for selected vehicle */}
+
+                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as any}>
+                    {/* 1. PULSE (Bottom) */}
                     <Layer
-                        id="vehicles-pulse"
+                        id="selected-vehicle-pulse"
                         type="circle"
-                        minzoom={12}
-                        filter={['all', ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle?.vehicle_id || selectedVehicle?.id || 'NONE'], ['literal', isFollowing]]}
                         paint={{
-                            'circle-radius': 0,
-                            'circle-color': vehicleColorExpression,
-                            'circle-opacity': 0,
-                            'circle-blur': 0.4
+                            'circle-radius': 0, // Animated
+                            'circle-opacity': 0, // Animated
+                            'circle-color': vehicleColorExpression
                         }}
                     />
+                    {/* 2. BODY */}
                     <Layer
-                        id="vehicles-point"
+                        id="selected-vehicle-point"
                         type="circle"
-                        minzoom={12}
-                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                         paint={{
                             'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
                             'circle-color': vehicleColorExpression,
-                            'circle-stroke-width': 2,
-                            'circle-stroke-color': '#FFFFFF'
+                            'circle-stroke-width': 1.5,
+                            'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+                            'circle-opacity': 1
                         }}
                     />
-
-                    {/* BORDER LAYER - Solid white arrow shadow */}
+                    {/* 3. DIRECTION */}
                     <Layer
-                        id="vehicles-direction-bg"
+                        id="selected-vehicle-direction"
                         type="symbol"
-                        minzoom={12}
-                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                         layout={{
                             'icon-image': 'v-arrow-centered',
-                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.3, 16, 0.5],
+                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
                             'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
                             'icon-rotation-alignment': 'map',
                             'icon-allow-overlap': true,
@@ -286,36 +286,14 @@ export const Map: React.FC = () => {
                             'icon-anchor': 'center'
                         }}
                         paint={{
-                            'icon-color': '#FFFFFF'
+                            'icon-color': vehicleColorExpression,
+                            'icon-opacity': 1
                         }}
                     />
-
-                    {/* FOREGROUND LAYER - Colored arrow */}
+                    {/* 4. LABEL */}
                     <Layer
-                        id="vehicles-direction-fg"
+                        id="selected-vehicle-label"
                         type="symbol"
-                        minzoom={12}
-                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
-                        layout={{
-                            'icon-image': 'v-arrow-centered',
-                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.25, 16, 0.45],
-                            'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
-                            'icon-rotation-alignment': 'map',
-                            'icon-allow-overlap': true,
-                            'icon-ignore-placement': true,
-                            'icon-offset': [0, -48],
-                            'icon-anchor': 'center'
-                        }}
-                        paint={{
-                            'icon-color': vehicleColorExpression
-                        }}
-                    />
-
-                    <Layer
-                        id="vehicles-label"
-                        type="symbol"
-                        minzoom={12}
-                        filter={isFollowing && selectedVehicle ? ['==', ['coalesce', ['get', 'vehicle_id'], ['get', 'id']], selectedVehicle.vehicle_id || selectedVehicle.id] : ['all']}
                         layout={{
                             'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
                             'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
@@ -328,7 +306,79 @@ export const Map: React.FC = () => {
                             'text-color': '#f8fafc',
                             'text-halo-color': '#000000',
                             'text-halo-width': 1.2,
-                            'text-halo-blur': 0.4
+                            'text-halo-blur': 0.4,
+                            'text-opacity': 1
+                        }}
+                    />
+                </Source>
+
+                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
+                    {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
+                    <Layer
+                        id="vehicles-point"
+                        type="circle"
+                        minzoom={12}
+                        filter={['!', ['any',
+                            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
+                            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
+                        ]]}
+                        paint={{
+                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
+                            'circle-color': vehicleColorExpression,
+                            'circle-stroke-width': 1.5,
+                            'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+                            'circle-opacity': 1
+                        }}
+                    />
+
+                    {/* DIRECTION ARROWS - EXCLUDE SELECTED */}
+                    <Layer
+                        id="vehicles-direction-all"
+                        type="symbol"
+                        minzoom={12}
+                        filter={['!', ['any',
+                            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
+                            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
+                        ]]}
+                        layout={{
+                            'icon-image': 'v-arrow-centered',
+                            'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
+                            'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+                            'icon-rotation-alignment': 'map',
+                            'icon-allow-overlap': true,
+                            'icon-ignore-placement': true,
+                            'icon-offset': [0, -48],
+                            'icon-anchor': 'center'
+                        }}
+                        paint={{
+                            'icon-color': vehicleColorExpression,
+                            'icon-opacity': 1
+                        }}
+                    />
+
+                    {/* LABELS - EXCLUDE SELECTED */}
+                    <Layer
+                        id="vehicles-label-all"
+                        type="symbol"
+                        minzoom={12}
+                        filter={['!', ['any',
+                            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
+                            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
+                        ]]}
+                        layout={{
+                            'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+                            'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+                            'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
+                            'text-allow-overlap': true,
+                            'text-ignore-placement': true,
+                            'text-anchor': 'center'
+                        }}
+                        paint={{
+                            'text-color': '#f8fafc',
+                            'text-halo-color': '#000000',
+                            'text-halo-width': 1.2,
+                            'text-halo-blur': 0.4,
+                            'text-opacity': 1
                         }}
                     />
                 </Source>
@@ -434,7 +484,7 @@ export const Map: React.FC = () => {
                                     {visibleDepartures.map((dep: any, idx: number) => (
                                         <div
                                             key={idx}
-                                            onClick={() => dep.tripId && handleDepartureClick(dep.tripId)}
+                                            onClick={() => dep.tripId && handleDepartureClick(dep.tripId, dep.vehicleId, dep)}
                                             className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
                                                 ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
                                             `}

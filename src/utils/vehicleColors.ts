@@ -1,3 +1,10 @@
+export const isNightRoute = (routeName: string | number): boolean => {
+    const nameStr = String(routeName);
+    const nameNum = parseInt(nameStr, 10);
+    if (isNaN(nameNum)) return false;
+    return (nameNum >= 90 && nameNum <= 99) || nameNum >= 900;
+};
+
 export const getVehicleColor = (routeType: string | number, routeName: string): string => {
     const type = String(routeType).toLowerCase();
     const nameStr = String(routeName);
@@ -12,11 +19,8 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
     }
 
     // 2. Night Routes (Trams 90-99, Buses 900+)
-    const nameNum = parseInt(nameStr, 10);
-    if (!isNaN(nameNum)) {
-        if ((nameNum >= 90 && nameNum <= 99) || nameNum >= 900) {
-            return '#111827'; // Dark Night
-        }
+    if (isNightRoute(nameStr)) {
+        return '#111827'; // Dark Night
     }
 
     // 3. Fallback by Type
@@ -41,6 +45,18 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
     }
 };
 
+// MapLibre expression to detect night routes
+export const isNightRouteExpression: any = [
+    'any',
+    // Trams 90-99
+    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
+    // Buses 9xx (Length 3, Starts with 9)
+    ['all',
+        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], 3],
+        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], '9']
+    ]
+];
+
 // MapLibre expression for the Same Logic
 export const vehicleColorExpression: any = [
     'case',
@@ -62,16 +78,7 @@ export const vehicleColorExpression: any = [
     ], '#E31E24',
 
     // 2. Night Routes Detection (90-99 or 9xx)
-    [
-        'any',
-        // Trams 90-99
-        ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
-        // Buses 9xx (Length 3, Starts with 9)
-        ['all',
-            ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], 3],
-            ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], '9']
-        ]
-    ], '#111827',
+    isNightRouteExpression, '#111827',
 
     // 3. Type-based fallback (Ensure 't' is treated as string)
     ['match', ['to-string', ['coalesce', ['get', 'route_type'], ['get', 't'], '']],

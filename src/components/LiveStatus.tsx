@@ -10,13 +10,13 @@ interface LiveStatusProps {
 
 export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUpdate }) => {
     const { t } = useTranslation();
-    const [nextRefreshIn, setNextRefreshIn] = useState(15);
+    const [nextRefreshIn, setNextRefreshIn] = useState(10);
 
     useEffect(() => {
         const calculateRemaining = () => {
             const now = Date.now();
             const elapsed = Math.floor((now - lastUpdate) / 1000);
-            const remaining = Math.max(0, 15 - elapsed);
+            const remaining = Math.max(0, 10 - elapsed);
             setNextRefreshIn(remaining);
         };
 

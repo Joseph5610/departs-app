@@ -58,7 +58,14 @@
       "lineLabel": "Linka {{line}}",
       "operator": "{{operator}} • ",
       "vehicle": "Vozidlo",
-      "ac": "Klima"
+      "ac": "Klima",
+      "runNumber": "Pořadí",
+      "liveDataAge": "{{seconds}}s",
+      "currentStop": "Právě proběhlo / Aktuální",
+      "nextStop": "Následující zastávka",
+      "showPastStops": "Zobrazit předchozí zastávky",
+      "hidePastStops": "Skrýt předchozí zastávky",
+      "scheduledTime": "plán."
     },
     "departures": {
       "upcoming": "Nadcházející odjezdy",

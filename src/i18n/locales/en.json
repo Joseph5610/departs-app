@@ -58,7 +58,14 @@
       "lineLabel": "Line {{line}}",
       "operator": "{{operator}} • ",
       "vehicle": "Vehicle",
-      "ac": "AC"
+      "ac": "AC",
+      "runNumber": "Run",
+      "liveDataAge": "{{seconds}}s ago",
+      "currentStop": "Current / Just passed",
+      "nextStop": "Next stop",
+      "showPastStops": "Show past stops",
+      "hidePastStops": "Hide past stops",
+      "scheduledTime": "sched."
     },
     "departures": {
       "upcoming": "Upcoming Departures",
