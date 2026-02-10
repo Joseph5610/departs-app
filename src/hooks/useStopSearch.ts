@@ -1,5 +1,4 @@
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useDeferredValue } from 'react';
 import { normalizeString } from '../utils/stringUtils';
 
 // Define the Stop interface internally or import it if shared
@@ -19,15 +18,13 @@ export interface Stop {
 
 export const useStopSearch = (stops: { features: Stop[] } | null) => {
     const [query, setQuery] = useState('');
+    const deferredQuery = useDeferredValue(query);
 
-    const results = useMemo(() => {
-        if (!stops?.features || query.length < 2) return [];
+    // 1. Pre-calculate search index (run only once when stops load)
+    const searchIndex = useMemo(() => {
+        if (!stops?.features) return [];
 
-        const normalizedQuery = normalizeString(query).trim();
-        const queryTokens = normalizedQuery.split(/[-\s/]+/);
-
-        // 1. Filter and score matches
-        const matches = (stops.features as Stop[])
+        return stops.features
             .filter(stop => stop.properties.location_type !== 2)
             .map(stop => {
                 const normalizedName = normalizeString(stop.properties.stop_name);
@@ -36,7 +33,17 @@ export const useStopSearch = (stops: { features: Stop[] } | null) => {
                     normalizedName,
                     nameTokens: normalizedName.split(/[-\s/]+/)
                 };
-            })
+            });
+    }, [stops]);
+
+    // 2. Search logic (runs when query changes, but using pre-calculated index)
+    const results = useMemo(() => {
+        if (deferredQuery.length < 2) return [];
+
+        const normalizedQuery = normalizeString(deferredQuery).trim();
+        const queryTokens = normalizedQuery.split(/[-\s/]+/);
+
+        const matches = searchIndex
             .filter(item => {
                 // Every query token must match at least one name token (as prefix)
                 return queryTokens.every(qToken =>
@@ -50,11 +57,11 @@ export const useStopSearch = (stops: { features: Stop[] } | null) => {
                 if (item.normalizedName === normalizedQuery) {
                     score += 1000;
                 }
-                // Starts with the full query string (e.g., "sidliste c" matches "sidliste cakovice")
+                // Starts with the full query string
                 else if (item.normalizedName.startsWith(normalizedQuery)) {
                     score += 500;
                 }
-                // Sequential token prefix match (e.g., "sidl cak" matches "sidliste cakovice")
+                // Sequential token prefix match
                 else {
                     let matchesSequentially = true;
                     for (let i = 0; i < queryTokens.length; i++) {
@@ -74,13 +81,13 @@ export const useStopSearch = (stops: { features: Stop[] } | null) => {
                 return { stop: item.stop, score };
             });
 
-        // 2. Sort by score and name
+        // Sort by score and name
         matches.sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score;
             return a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name);
         });
 
-        // 3. Deduplicate by name (keeping the first occurrence)
+        // Deduplicate
         const seen = new Set<string>();
         const uniqueMatches: Stop[] = [];
         for (const match of matches) {
@@ -92,7 +99,7 @@ export const useStopSearch = (stops: { features: Stop[] } | null) => {
         }
 
         return uniqueMatches;
-    }, [query, stops]);
+    }, [searchIndex, deferredQuery]);
 
     return {
         query,

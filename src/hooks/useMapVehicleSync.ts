@@ -19,7 +19,7 @@ export const useMapVehicleSync = (
     vehicleDetail?: VehicleDetail | null
 ) => {
     useEffect(() => {
-        if (!selectedId || !isFollowing || !selectedVehicle) return;
+        if (!selectedId || !selectedVehicle) return;
 
         const sid = String(selectedId);
         const stid = String(selectedVehicle.gtfs_trip_id || 'NONE');
@@ -60,5 +60,5 @@ export const useMapVehicleSync = (
         if (updated) {
             setSelectedVehicle({ ...selectedVehicle, ...newProps, _geometry: newCoords });
         }
-    }, [rawVehicles, vehicleDetail, isFollowing, selectedId]);
+    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle]);
 };

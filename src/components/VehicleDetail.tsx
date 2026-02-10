@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StatusPill } from './StatusPill';
@@ -69,6 +69,31 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         );
     }, [incidents, exclusions, routeName]);
 
+    // Memoize next stop sequence calculation to avoid O(n²) complexity
+    const nextStopSequence = useMemo(() => {
+        if (!vehicleDetail?.stop_times?.features || !vehicleDetail.last_stop_sequence) return null;
+
+        const futureStops = vehicleDetail.stop_times.features
+            .filter((s: any) => s.properties.stop_sequence > vehicleDetail.last_stop_sequence!)
+            .sort((a: any, b: any) => a.properties.stop_sequence - b.properties.stop_sequence);
+
+        return futureStops[0]?.properties.stop_sequence ?? null;
+    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence]);
+
+    // Memoize filtered stops to prevent re-filtering on every render
+    const filteredStops = useMemo(() => {
+        if (!vehicleDetail?.stop_times?.features) return [];
+
+        return vehicleDetail.stop_times.features.filter((stop: any) =>
+            showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0)
+        );
+    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence, showPastStops]);
+
+    // Memoize toggle handler to prevent unnecessary re-renders
+    const handleTogglePastStops = useCallback(() => {
+        setShowPastStops(prev => !prev);
+    }, []);
+
     if (!selectedVehicle) return null;
 
     return (
@@ -96,13 +121,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             )}
 
-            <div className="flex flex-row md:flex-col items-center md:text-center p-3 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
+            <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-6 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-3 md:gap-4">
                 <div
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
                 />
                 <div
-                    className="w-14 h-14 md:w-20 md:h-20 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
+                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
                     onClick={onToggleFollow}
                 >
@@ -122,20 +147,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60) })
                                 : t('map.vehicleDetails.onTime')}
                         />
-                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.is_air_conditioned) && (
-                            <StatusPill
-                                variant="info"
-                                label={t('map.vehicleDetails.ac')}
-                                icon={<Snowflake size={10} />}
-                            />
-                        )}
-                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.usb_chargers) && (
-                            <StatusPill
-                                variant="info"
-                                label="USB"
-                                icon={<Zap size={10} />}
-                            />
-                        )}
+
                         {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-full border border-white/5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -162,9 +174,17 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 </span>
                             </div>
                         </div>
-                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.is_wheelchair_accessible) && (
-                            <Accessibility size={14} className="text-emerald-500 shrink-0" />
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                            {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.is_air_conditioned) && (
+                                <Snowflake size={14} className="text-cyan-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.usb_chargers) && (
+                                <Zap size={14} className="text-yellow-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.is_wheelchair_accessible) && (
+                                <Accessibility size={14} className="text-emerald-500" />
+                            )}
+                        </div>
                     </div>
                     {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
                         <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-2">
@@ -216,7 +236,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <div className="flex items-center justify-between px-1">
                         <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
                         <button
-                            onClick={() => setShowPastStops(!showPastStops)}
+                            onClick={handleTogglePastStops}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors"
                         >
                             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
@@ -228,56 +248,50 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <div className="relative pl-6 space-y-0">
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 
-                        {vehicleDetail.stop_times.features
-                            .filter((stop: any) => showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0))
-                            .map((stop: any, idx: number) => {
-                                const isPast = stop.properties.stop_sequence < (vehicleDetail.last_stop_sequence || 0);
-                                const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
-                                const isNext = stop.properties.stop_sequence > (vehicleDetail.last_stop_sequence || 0) &&
-                                    !vehicleDetail.stop_times?.features.some((s: any) =>
-                                        s.properties.stop_sequence > (vehicleDetail.last_stop_sequence || 0) &&
-                                        s.properties.stop_sequence < stop.properties.stop_sequence
-                                    );
+                        {filteredStops.map((stop: any, idx: number) => {
+                            const isPast = stop.properties.stop_sequence < (vehicleDetail.last_stop_sequence || 0);
+                            const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
+                            const isNext = stop.properties.stop_sequence === nextStopSequence;
 
-                                return (
-                                    <div key={idx} className={`relative py-2.5 flex items-center justify-between transition-opacity ${isPast ? 'opacity-40' : 'opacity-100'}`}>
-                                        <div className={`absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10 
-                                            ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
-                                        />
+                            return (
+                                <div key={idx} className={`relative py-2.5 flex items-center justify-between transition-opacity ${isPast ? 'opacity-40' : 'opacity-100'}`}>
+                                    <div className={`absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10 
+                                        ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
+                                    />
 
-                                        <div className="flex flex-col min-w-0 pr-4">
-                                            <span className={`text-sm truncate ${isNext ? 'text-emerald-400 font-bold' : isPast ? 'text-zinc-400' : 'text-zinc-100 font-medium'}`}>
-                                                {stop.properties.stop_name}
-                                            </span>
-                                            {isCurrent && <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
-                                            {isNext && <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
-                                        </div>
-
-                                        <div className="flex flex-col items-end shrink-0">
-                                            {(() => {
-                                                const realtimeTime = stop.properties.realtime_arrival_time || stop.properties.arrival_time;
-                                                const scheduledTime = stop.properties.arrival_time;
-                                                const hasRealtime = stop.properties.realtime_arrival_time && stop.properties.realtime_arrival_time !== stop.properties.arrival_time;
-                                                const isEarly = hasRealtime && stop.properties.realtime_arrival_time < stop.properties.arrival_time;
-                                                const isLate = hasRealtime && stop.properties.realtime_arrival_time > stop.properties.arrival_time;
-
-                                                return (
-                                                    <React.Fragment>
-                                                        <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
-                                                            {realtimeTime?.slice(0, 8)}
-                                                        </span>
-                                                        {hasRealtime && (
-                                                            <span className="text-[9px] text-zinc-500 font-mono">
-                                                                {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
-                                                            </span>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })()}
-                                        </div>
+                                    <div className="flex flex-col min-w-0 pr-4">
+                                        <span className={`text-sm truncate ${isNext ? 'text-emerald-400 font-bold' : isPast ? 'text-zinc-400' : 'text-zinc-100 font-medium'}`}>
+                                            {stop.properties.stop_name}
+                                        </span>
+                                        {isCurrent && <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
+                                        {isNext && <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
                                     </div>
-                                );
-                            })}
+
+                                    <div className="flex flex-col items-end shrink-0">
+                                        {(() => {
+                                            const realtimeTime = stop.properties.realtime_arrival_time || stop.properties.arrival_time;
+                                            const scheduledTime = stop.properties.arrival_time;
+                                            const hasRealtime = stop.properties.realtime_arrival_time && stop.properties.realtime_arrival_time !== stop.properties.arrival_time;
+                                            const isEarly = hasRealtime && stop.properties.realtime_arrival_time < stop.properties.arrival_time;
+                                            const isLate = hasRealtime && stop.properties.realtime_arrival_time > stop.properties.arrival_time;
+
+                                            return (
+                                                <React.Fragment>
+                                                    <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
+                                                        {realtimeTime?.slice(0, 8)}
+                                                    </span>
+                                                    {hasRealtime && (
+                                                        <span className="text-[9px] text-zinc-500 font-mono">
+                                                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
+                                                        </span>
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}

@@ -12,7 +12,7 @@ export const useVehicleDetail = (vehicleId: string | null, tripId: string | null
         queryKey: ['vehicle-detail', vehicleId, tripId],
         queryFn: () => fetchVehicleDetail(vehicleId!, tripId!),
         enabled: !!vehicleId && !!tripId,
-        staleTime: 0,
+        staleTime: 10000,
         refetchInterval: 10000, // 10s - matches vehicle update frequency
         gcTime: 60000,
     });

@@ -1,10 +1,7 @@
 
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 export const useGroupedDepartures = (departures: any, departureSort: 'line' | 'departure') => {
-    const { i18n } = useTranslation();
-
     return useMemo(() => {
         if (!departures?.departures) return [];
         const groups: Record<string, any[]> = {};
@@ -42,5 +39,5 @@ export const useGroupedDepartures = (departures: any, departureSort: 'line' | 'd
             result.sort((a, b) => a.firstTime - b.firstTime);
         }
         return result;
-    }, [departures, departureSort, i18n.language]);
+    }, [departures, departureSort]);
 };

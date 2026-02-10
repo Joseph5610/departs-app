@@ -1,7 +1,9 @@
 {
   "search": {
-    "placeholder": "Search stops...",
-    "platform": "Platform {{code}}"
+    "placeholder": "Search stops or lines...",
+    "platform": "Platform {{code}}",
+    "lineFilter": "Filter line {{line}}",
+    "clearFilter": "Clear filter"
   },
   "settings": {
     "title": "Settings",

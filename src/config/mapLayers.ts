@@ -199,10 +199,11 @@ export const transferStationLayer: any = {
 export const stopLabelLayer: any = {
     id: 'stop-labels',
     type: 'symbol',
+    source: 'stop-labels-centroids',
     minzoom: 14, // Only show when clustering is off
     layout: {
         'text-field': ['get', 'stop_name'],
-        'text-font': ['Montserrat Regular', 'Arial Unicode MS Regular'],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'],
             10, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 8],
             16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
@@ -213,8 +214,8 @@ export const stopLabelLayer: any = {
         'text-max-width': 7,
         'text-letter-spacing': 0.15, // Matched to map style
         'text-padding': 20, // Aggressive padding to avoid overlaps
-        'text-allow-overlap': false,
-        'text-ignore-placement': false
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
     },
     paint: {
         'text-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, '#ffffff', '#bdbdbd'],
@@ -276,5 +277,126 @@ export const entranceLayer: any = {
         'text-halo-color': '#000000',
         'text-halo-width': 1,
         'text-halo-blur': 0.2
+    }
+};
+
+// 4. Vehicle Layers
+import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
+
+export const selectedVehiclePulseLayer: any = {
+    id: 'selected-vehicle-pulse',
+    type: 'circle',
+    paint: {
+        'circle-radius': 0, // Animated in component
+        'circle-opacity': 0, // Animated in component
+        'circle-color': vehicleColorExpression
+    }
+};
+
+export const selectedVehiclePointLayer: any = {
+    id: 'selected-vehicle-point',
+    type: 'circle',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
+        'circle-color': vehicleColorExpression,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-opacity': 1
+    }
+};
+
+export const selectedVehicleDirectionLayer: any = {
+    id: 'selected-vehicle-direction',
+    type: 'symbol',
+    layout: {
+        'icon-image': 'v-arrow-centered',
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
+        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+        'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-offset': [0, -48],
+        'icon-anchor': 'center'
+    },
+    paint: {
+        'icon-color': vehicleColorExpression,
+        'icon-opacity': 1
+    }
+};
+
+export const selectedVehicleLabelLayer: any = {
+    id: 'selected-vehicle-label',
+    type: 'symbol',
+    layout: {
+        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+        'text-anchor': 'center'
+    },
+    paint: {
+        'text-color': '#f8fafc',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.2,
+        'text-halo-blur': 0.4,
+        'text-opacity': 1
+    }
+};
+
+export const vehiclesPointLayer: any = {
+    id: 'vehicles-point',
+    type: 'circle',
+    minzoom: 12,
+    // Filter handled dynamically in component to exclude selected
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
+        'circle-color': vehicleColorExpression,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-opacity': 1
+    }
+};
+
+export const vehiclesDirectionLayer: any = {
+    id: 'vehicles-direction-all',
+    type: 'symbol',
+    minzoom: 12,
+    // Filter handled dynamically in component
+    layout: {
+        'icon-image': 'v-arrow-centered',
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
+        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+        'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-offset': [0, -48],
+        'icon-anchor': 'center'
+    },
+    paint: {
+        'icon-color': vehicleColorExpression,
+        'icon-opacity': 1
+    }
+};
+
+export const vehiclesLabelLayer: any = {
+    id: 'vehicles-label-all',
+    type: 'symbol',
+    minzoom: 12,
+    // Filter handled dynamically in component
+    layout: {
+        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+        'text-anchor': 'center'
+    },
+    paint: {
+        'text-color': '#f8fafc',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1.2,
+        'text-halo-blur': 0.4,
+        'text-opacity': 1
     }
 };

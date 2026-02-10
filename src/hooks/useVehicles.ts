@@ -2,21 +2,19 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
 
-const fetchRawVehicles = async (bounds: string | null, trackedId: string | null): Promise<VehicleFeature[]> => {
+const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null): Promise<VehicleFeature[]> => {
     try {
-        let url = '';
+        const url = new URL('/api/vehicles', window.location.origin);
 
-        if (bounds && trackedId) {
-            url = `/api/vehicles?bounds=${bounds}&tripId=${trackedId}`;
-        } else if (bounds) {
-            url = `/api/vehicles?bounds=${bounds}`;
-        } else if (trackedId) {
-            url = `/api/vehicles?tripId=${trackedId}`;
+        if (bounds) url.searchParams.set('bounds', bounds);
+        if (trackedId) url.searchParams.set('tripId', trackedId);
+        if (routeFilter && routeFilter.length > 0) {
+            routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
         }
 
-        if (!url) return [];
+        if (url.searchParams.toString() === '') return [];
 
-        const response = await fetch(url);
+        const response = await fetch(url.toString());
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const json = await response.json();
@@ -26,7 +24,7 @@ const fetchRawVehicles = async (bounds: string | null, trackedId: string | null)
     }
 };
 
-export const useVehicles = (bounds: string | null, trackedId: string | null = null) => {
+export const useVehicles = (bounds: string | null, trackedId: string | null = null, routeFilter: string[] | null = null) => {
     /**
      * Consumes "map-ready" data from the backend.
      * Deduplication and jittering are now handled in /api/vehicles.
@@ -39,10 +37,10 @@ export const useVehicles = (bounds: string | null, trackedId: string | null = nu
     }, []);
 
     return useQuery<VehicleFeature[], Error, VehicleCollection>({
-        queryKey: ['vehicles', bounds, trackedId],
-        queryFn: () => fetchRawVehicles(bounds, trackedId),
+        queryKey: ['vehicles', bounds, trackedId, routeFilter],
+        queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter),
         select: selectFn,
-        enabled: !!bounds || !!trackedId,
+        enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0),
         refetchInterval: 10000,
         staleTime: 5000,
         gcTime: 60000,

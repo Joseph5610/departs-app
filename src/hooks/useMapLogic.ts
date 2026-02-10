@@ -1,5 +1,6 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useVehicles } from './useVehicles';
 import { useVehicleDetail } from './useVehicleDetail';
 import { useStops } from './useStops';
@@ -21,6 +22,7 @@ const EMPTY_GEOJSON: VehicleCollection = {
 };
 
 export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
+    const queryClient = useQueryClient();
     const [mapLoaded, setMapLoaded] = useState(false);
     const [bounds, setBounds] = useState<string | null>(null);
     const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
@@ -43,16 +45,17 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
         return 'line';
     });
+    const [routeFilter, setRouteFilter] = useState<string[] | null>(null);
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
     const trackedId = useMemo(() => {
-        if (!isFollowing || !selectedVehicle) return null;
+        if (!selectedVehicle) return null;
         return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || selectedVehicle.tId || null;
-    }, [isFollowing, selectedVehicle]);
+    }, [selectedVehicle]);
 
-    const { data: rawVehicles, isFetching: fetchingVehicles, dataUpdatedAt } = useVehicles(debouncedBounds, trackedId);
+    const { data: rawVehicles, isFetching: fetchingVehicles, dataUpdatedAt } = useVehicles(debouncedBounds, trackedId, routeFilter);
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail(
         selectedVehicle?.vehicle_id || selectedVehicle?.id || null,
         selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || null
@@ -99,9 +102,16 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         };
     }, [selectedVehicle]);
 
-    // Centroids for cleaner labels
-    const stopsData = useMemo(() => stops || null, [stops]);
-    const labelData = useMapCentroids(stopsData);
+    // Split data: platforms (no centroids) and labels (only centroids)
+    const stopsData = useMemo(() => {
+        if (!stops) return null;
+        return {
+            type: 'FeatureCollection',
+            features: stops.features.filter(f => !f.properties.is_centroid)
+        } as typeof stops;
+    }, [stops]);
+
+    const labelData = useMapCentroids(stops || null);
 
     // Auto-following logic: Smooth map movement
     useEffect(() => {
@@ -174,11 +184,11 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [isFollowing]);
 
-    const handleDepartureClick = async (tripId: string, vehicleId?: string, initialData?: any) => {
+    const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: any) => {
         console.log('🚋 Departure click. Prefetching coords for instant flyTo...');
         const activeVehId = vehicleId || `trip-${tripId}`;
 
-        setSelectedStop(null);
+        // Initialize with 0,0 coords - map won't move until isFollowing is true
         setSelectedVehicle({
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
@@ -188,19 +198,25 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             gtfs_trip_headsign: initialData?.headsign,
             delay: initialData?.delay || 0,
             state_position: 'on_track',
-            _geometry: [14.4378, 50.0755],
+            _geometry: [0, 0],
             bearing: null
         });
-        setIsFollowing(true);
+        // Do NOT set isFollowing(true) here - wait for real coords
 
         try {
             const res = await fetch(`/api/vehicle-detail?tripId=${encodeURIComponent(tripId)}&vehicleId=${encodeURIComponent(activeVehId)}`);
             if (res.ok) {
                 const data = await res.json();
+
+                // Set data to cache to avoid refetch in useVehicleDetail
+                queryClient.setQueryData(['vehicle-detail', activeVehId, tripId], data);
+
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
                     const { shapes, stop_times, ...liteData } = data;
                     setSelectedVehicle((prev: any) => prev ? { ...prev, _geometry: coords, ...liteData } : null);
+
+                    setIsFollowing(true);
 
                     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
                     mapRef.current?.flyTo({
@@ -217,7 +233,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         } catch (err) {
             console.error('Prefetch failed:', err);
         }
-    };
+    }, [mapRef]);
 
     // Persist settings
     useEffect(() => {
@@ -255,20 +271,20 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [performGeolocation]);
 
-    const toggleGroup = (groupId: string) => {
+    const toggleGroup = useCallback((groupId: string) => {
         setExpandedGroups(prev => prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]);
-    };
+    }, []);
 
     return useMemo(() => ({
         bounds, debouncedBounds, selectedStop, selectedVehicle, userLocation, isFollowing,
-        showVehicles, isSettingsOpen, expandedGroups, departureSort,
+        showVehicles, isSettingsOpen, expandedGroups, departureSort, routeFilter,
         setSelectedStop, setSelectedVehicle, setIsFollowing, setShowVehicles, setIsSettingsOpen,
         setDepartureSort, handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick, toggleGroup, setExpandedGroups,
-        displayVehicles, selectedVehicleFeature, vehicleDetail, loadingDetail, stopsData, labelData, groupedDepartures,
+        setRouteFilter, displayVehicles, selectedVehicleFeature, vehicleDetail, loadingDetail, stopsData, labelData, groupedDepartures,
         stops, loadingDeps, routeShapeData, fetchingVehicles, dataUpdatedAt, mapLoaded, selectedId, labelLayerId
     }), [
         bounds, debouncedBounds, selectedStop, selectedVehicle, userLocation, isFollowing,
-        showVehicles, isSettingsOpen, expandedGroups, departureSort,
+        showVehicles, isSettingsOpen, expandedGroups, departureSort, routeFilter,
         handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick,
         displayVehicles, selectedVehicleFeature, vehicleDetail, loadingDetail, stopsData, labelData, groupedDepartures,
         stops, loadingDeps, routeShapeData, fetchingVehicles, dataUpdatedAt, mapLoaded, selectedId, labelLayerId

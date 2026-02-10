@@ -1,7 +1,9 @@
 {
   "search": {
-    "placeholder": "Hledat zastávky...",
-    "platform": "Nástupiště {{code}}"
+    "placeholder": "Hledat zastávky nebo linky...",
+    "platform": "Nástupiště {{code}}",
+    "lineFilter": "Filtrovat linku {{line}}",
+    "clearFilter": "Zrušit filtr"
   },
   "settings": {
     "title": "Nastavení",

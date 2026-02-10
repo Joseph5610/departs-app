@@ -116,6 +116,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const routeType = url.searchParams.get("routeType");
     const tripId = url.searchParams.get("tripId");
 
+    const routeShortNames = url.searchParams.getAll("routeShortName");
+
     let allFeatures: any[] = [];
 
     try {
@@ -125,6 +127,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             const boundsUrl = new URL("https://api.golemio.cz/v2/public/vehiclepositions");
             boundsUrl.searchParams.set("boundingBox", bounds);
             if (routeType) boundsUrl.searchParams.set("routeType", routeType);
+            routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
 
             const [tripRes, boundsRes] = await Promise.all([
                 fetch(tripUrlString, {
@@ -173,15 +176,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }));
 
             allFeatures = [...(boundsData.features || []), ...normalizedTripFeatures];
-        } else if (tripId || bounds) {
+        } else if (tripId || bounds || routeShortNames.length > 0) {
             // SINGLE MODE
             let golemioUrl: string;
             if (tripId) {
                 golemioUrl = `https://api.golemio.cz/v2/vehiclepositions/${tripId}`;
             } else {
                 const bUrl = new URL("https://api.golemio.cz/v2/public/vehiclepositions");
-                bUrl.searchParams.set("boundingBox", bounds!);
+                if (bounds) bUrl.searchParams.set("boundingBox", bounds);
                 if (routeType) bUrl.searchParams.set("routeType", routeType);
+                routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName", rsn));
                 golemioUrl = bUrl.toString();
             }
 
