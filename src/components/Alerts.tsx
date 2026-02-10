@@ -7,7 +7,6 @@ import type { RSSItem } from '../hooks/useRSS';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
-import { isAlertFuture, isAlertActive } from '../utils/dateUtils';
 
 export const Alerts: React.FC = () => {
     const { t } = useTranslation();
@@ -137,8 +136,8 @@ const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string,
 
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     const { t } = useTranslation();
-    const isFuture = isAlertFuture(item);
-    const isActive = !isFuture && isAlertActive(item);
+    const isFuture = item.isFuture;
+    const isActive = item.isActive;
 
     // Simple heuristic for transport type to get colors
     const guessType = (line: string) => {

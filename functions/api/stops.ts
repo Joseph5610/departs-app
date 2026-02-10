@@ -119,13 +119,64 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
-        const features = Object.values(groups).map((f: any) => {
+        // 2. Generate final features including centroids
+        const features: any[] = [];
+
+        // Add platform/station groups
+        Object.values(groups).forEach((f: any) => {
             const finalId = f.properties.all_ids ? f.properties.all_ids.join(',') : f.properties.stop_id;
-            return {
+            features.push({
                 type: "Feature",
                 geometry: f.geometry,
                 properties: { ...f.properties, stop_id: finalId }
-            };
+            });
+        });
+
+        // 3. Calculate Centroids for ALL stop names (for cleaner map labeling)
+        const nameGroups: Record<string, any[]> = {};
+        all.forEach(f => {
+            if (f.properties.location_type === 2) return; // Skip entrances
+            const name = f.properties.stop_name;
+            if (!name) return;
+            if (!nameGroups[name]) nameGroups[name] = [];
+            nameGroups[name].push(f);
+        });
+
+        Object.entries(nameGroups).forEach(([name, groupFeatures]) => {
+            // 1. Prefer existing Station (Type 1) as anchor
+            const station = groupFeatures.find(f => f.properties.location_type === 1);
+            if (station) {
+                features.push({
+                    type: "Feature",
+                    geometry: station.geometry,
+                    properties: {
+                        ...station.properties,
+                        is_centroid: true,
+                        stop_id: `centroid-${station.properties.stop_id}`
+                    }
+                });
+                return;
+            }
+
+            // 2. Otherwise calculate geo-average
+            let sumLng = 0;
+            let sumLat = 0;
+            groupFeatures.forEach(f => {
+                sumLng += f.geometry.coordinates[0];
+                sumLat += f.geometry.coordinates[1];
+            });
+            const avgLng = sumLng / groupFeatures.length;
+            const avgLat = sumLat / groupFeatures.length;
+
+            features.push({
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [avgLng, avgLat] },
+                properties: {
+                    ...groupFeatures[0].properties,
+                    is_centroid: true,
+                    stop_id: `centroid-${groupFeatures[0].properties.stop_id}`
+                }
+            });
         });
 
         return new Response(JSON.stringify({ type: "FeatureCollection", features }), {

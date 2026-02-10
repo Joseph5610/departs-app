@@ -1,0 +1,3 @@
+# Golemio API Key (Required for departures and vehicle tracking)
+# Get yours at https://api.golemio.cz/
+GOLEMIO_API_KEY=your_api_key_here

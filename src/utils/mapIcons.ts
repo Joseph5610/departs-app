@@ -1,6 +1,7 @@
+import type { Map } from 'maplibre-gl';
 import { LINE_COLORS } from '../config/stations';
 
-export const addArrowIcon = (map: any) => {
+export const addArrowIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -24,7 +25,7 @@ export const addArrowIcon = (map: any) => {
     }
 };
 
-export const addSplitIcon = (map: any, id: string, c1: string, c2: string) => {
+export const addSplitIcon = (map: Map, id: string, c1: string, c2: string) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -52,7 +53,7 @@ export const addSplitIcon = (map: any, id: string, c1: string, c2: string) => {
     }
 };
 
-export const addAllIcons = (map: any) => {
+export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
     addSplitIcon(map, 'transfer-A-B', LINE_COLORS.A, LINE_COLORS.B);
     addSplitIcon(map, 'transfer-A-C', LINE_COLORS.A, LINE_COLORS.C);

@@ -18,6 +18,7 @@
       "en": "English",
       "cs": "Čeština"
     },
+    "viewSource": "Zdrojový kód na GitHubu",
     "version": "Verze {{version}}"
   },
   "welcome": {

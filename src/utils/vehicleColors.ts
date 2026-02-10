@@ -1,3 +1,9 @@
+import type { ExpressionSpecification } from 'maplibre-gl';
+
+/**
+ * Determines if a route is a night route based on its number.
+ * Trams 90-99 and Buses 900+ are considered night routes.
+ */
 export const isNightRoute = (routeName: string | number): boolean => {
     const nameStr = String(routeName);
     const nameNum = parseInt(nameStr, 10);
@@ -5,6 +11,10 @@ export const isNightRoute = (routeName: string | number): boolean => {
     return (nameNum >= 90 && nameNum <= 99) || nameNum >= 900;
 };
 
+/**
+ * Returns a hex color string for a given route type and name.
+ * Uses PID official branding colors for Metro, Trams, and Buses.
+ */
 export const getVehicleColor = (routeType: string | number, routeName: string): string => {
     const type = String(routeType).toLowerCase();
     const nameStr = String(routeName);
@@ -12,9 +22,9 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
     // 1. Metro Specifics (Priority)
     if (type === '1' || type === 'metro') {
         switch (nameStr.toUpperCase()) {
-            case 'A': return '#00A651'; // Zelená
-            case 'B': return '#F9B233'; // Žltá
-            case 'C': return '#E31E24'; // Červená
+            case 'A': return '#00A651'; // Green
+            case 'B': return '#F9B233'; // Yellow
+            case 'C': return '#E31E24'; // Red
         }
     }
 
@@ -27,26 +37,29 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
     switch (type) {
         case '0':
         case 'tram':
-            return '#930019'; // Bordová (Tram)
+            return '#930019'; // Tram Red/Bordeaux
         case '1':
         case 'metro':
-            return '#AD0B00'; // Default Metro
+            return '#AD0B00'; // Default Metro Red
         case '11':
         case 'trolleybus':
-            return '#A21CAF'; // Fialová (Trolleybus)
+            return '#A21CAF'; // Trolleybus Purple
         case '3':
         case 'bus':
-            return '#005CBF'; // Svetlejšia modrá (Bus)
+            return '#005CBF'; // Bus Blue
         case '109':
         case 'train':
-            return '#002D5A'; // Tmavo modrá (Vlaky)
+            return '#002D5A'; // Train Navy Blue
         default:
-            return '#5A5A5A'; // Šedá pre ostatné
+            return '#5A5A5A'; // Grey fallback
     }
 };
 
-// MapLibre expression to detect night routes
-export const isNightRouteExpression: any = [
+/**
+ * MapLibre expression to detect night routes in vector layers.
+ * Synchronized with isNightRoute logic.
+ */
+export const isNightRouteExpression: ExpressionSpecification = [
     'any',
     // Trams 90-99
     ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
@@ -57,8 +70,11 @@ export const isNightRouteExpression: any = [
     ]
 ];
 
-// MapLibre expression for the Same Logic
-export const vehicleColorExpression: any = [
+/**
+ * MapLibre expression for dynamic vehicle coloring based on route type and name.
+ * Used for styling 'pid-vehicles' and 'selected-vehicle' sources.
+ */
+export const vehicleColorExpression: ExpressionSpecification = [
     'case',
     // 1. Metro Specifics (Priority)
     ['any',

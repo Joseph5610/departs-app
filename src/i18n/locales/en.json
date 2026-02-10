@@ -18,6 +18,7 @@
       "en": "English",
       "cs": "Čeština"
     },
+    "viewSource": "View source on GitHub",
     "version": "Version {{version}}"
   },
   "welcome": {

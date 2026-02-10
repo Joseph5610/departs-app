@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.3.0] - 2026-02-10
+
+### Added
+- **UI Enhancement**: Added "View source on GitHub" link in Settings modal with bi-lingual support.
+- **Type Safety**: Refactored backend API and frontend utilities to use proper TypeScript interfaces instead of `any`.
+
 ## [0.2.0] - 2026-02-09
 
 ### Added

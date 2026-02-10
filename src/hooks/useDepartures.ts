@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import type { Departure } from '../types/transit';
 
 export const useDepartures = (stopId: string | null) => {
-    return useQuery({
+    return useQuery<{ departures: Departure[] }>({
         queryKey: ['departures', stopId],
         queryFn: async () => {
             if (!stopId) return null;

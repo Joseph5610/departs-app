@@ -1,7 +1,27 @@
 {
-  "name": "pid",
+  "name": "departs-app",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
+  "description": "Lightweight real-time Prague public transport departures app",
+  "author": "departs.app",
+  "license": "MIT",
+  "homepage": "https://departs.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joseph5610/departs-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joseph5610/departs-app/issues"
+  },
+  "keywords": [
+    "pid",
+    "prague",
+    "transport",
+    "departures",
+    "real-time",
+    "pwa",
+    "maplibre"
+  ],
   "type": "module",
   "scripts": {
     "dev": "wrangler pages dev --proxy 5173 -- npm run dev:vite",

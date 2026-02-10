@@ -23,6 +23,7 @@ import {
     stopPointGlowLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
+import type { TrackedVehicle } from '../types/transit';
 import { format, parseISO } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -154,7 +155,12 @@ export const Map: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
-                        setSelectedVehicle(f.properties);
+                        const props = f.properties;
+                        setSelectedVehicle({
+                            ...props,
+                            vehicle_id: String(props.vehicle_id || props.id),
+                            _geometry: (f.geometry as any).coordinates as [number, number]
+                        } as TrackedVehicle);
                         setSelectedStop(null);
                         setIsFollowing(true);
                         return;
@@ -184,7 +190,7 @@ export const Map: React.FC = () => {
                                 'line-cap': 'round'
                             }}
                             paint={{
-                                'line-color': isNightRoute(selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n) ? '#ffffff' : getVehicleColor(selectedVehicle?.route_type || selectedVehicle?.t, selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n),
+                                'line-color': isNightRoute(selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n || '') ? '#ffffff' : getVehicleColor(selectedVehicle?.route_type || selectedVehicle?.t || 0, selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n || ''),
                                 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
                                 'line-opacity': 0.8,
                                 'line-blur': 0.5
@@ -452,7 +458,7 @@ export const Map: React.FC = () => {
 
                     <VehicleDetail
                         selectedVehicle={selectedVehicle}
-                        vehicleDetail={vehicleDetail}
+                        vehicleDetail={vehicleDetail || null}
                         loadingDetail={loadingDetail}
                         isFollowing={isFollowing}
                         onToggleFollow={() => setIsFollowing(!isFollowing)}

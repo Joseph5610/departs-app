@@ -52,11 +52,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <button
                                 key={lang}
                                 onClick={() => i18n.changeLanguage(lang)}
-                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${
-                                    (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
-                                        : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
-                                }`}
+                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${(i18n.resolvedLanguage || i18n.language).startsWith(lang)
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
+                                    : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
+                                    }`}
                             >
                                 {t(`settings.language.${lang}`)}
                             </button>
@@ -70,7 +69,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                 </div>
 
-                <div className="pt-4 flex justify-center">
+                <div className="pt-4 flex flex-col items-center gap-3">
+                    <a
+                        href="https://github.com/joseph5610/departs-app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest flex items-center gap-2"
+                    >
+                        {t('settings.viewSource')}
+                    </a>
                     <span className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">
                         {t('settings.version', { version })}
                     </span>

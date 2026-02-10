@@ -1,17 +1,17 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
-import { AlertTriangle, ExternalLink } from 'lucide-react';
-import { isAlertActive } from '../utils/dateUtils';
 import { parseISO } from 'date-fns';
 
+import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
+
 interface VehicleDetailProps {
-    selectedVehicle: any;
-    vehicleDetail: any;
+    selectedVehicle: TrackedVehicle | null;
+    vehicleDetail: VehicleDetailType | null;
     loadingDetail: boolean;
     isFollowing: boolean;
     onToggleFollow: () => void;
@@ -32,7 +32,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     // Live-updating ticker for data age in seconds
     React.useEffect(() => {
-        if (!vehicleDetail?.origin_timestamp) {
+        if (!vehicleDetail?.origin_timestamp && !selectedVehicle?.origin_timestamp) {
             setLiveDataAgeSeconds(null);
             return;
         }
@@ -53,14 +53,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             }
         };
 
-        // Update immediately
         updateAge();
-
-        // Then update every second
         const interval = setInterval(updateAge, 1000);
-
         return () => clearInterval(interval);
-    }, [vehicleDetail?.origin_timestamp]);
+    }, [vehicleDetail?.origin_timestamp, selectedVehicle?.origin_timestamp]);
 
     const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n;
 
@@ -69,7 +65,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         if (!routeName) return [];
         return allItems.filter(item =>
             item.lines?.some(l => l.toUpperCase() === routeName.toString().toUpperCase()) &&
-            isAlertActive(item)
+            item.isActive
         );
     }, [incidents, exclusions, routeName]);
 
@@ -85,9 +81,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             )}
 
-
             {/* Warning: Before Track / Previous Trip */}
-            {(['before_track', 'before_track_delayed'].includes(selectedVehicle.state_position) || ['before_track', 'before_track_delayed'].includes(vehicleDetail?.state_position || '')) && (
+            {((['before_track', 'before_track_delayed'] as string[]).includes(selectedVehicle.state_position || '') || (['before_track', 'before_track_delayed'] as string[]).includes(vehicleDetail?.state_position || '')) && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4">
                     <div className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                         <Info size={20} />
@@ -104,11 +99,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             <div className="flex flex-row md:flex-col items-center md:text-center p-3 md:p-8 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-4 md:gap-6">
                 <div
                     className="absolute inset-0 opacity-10"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
                 />
                 <div
                     className="w-14 h-14 md:w-20 md:h-20 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n) }}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
                     onClick={onToggleFollow}
                 >
                     <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}</span>
@@ -153,8 +148,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             </div>
 
-
-            {/* Operator & Vehicle Info - Compact on mobile */}
             {(vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator) && (
                 <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
@@ -185,8 +178,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             )}
 
-
-            {/* RSS Alerts Integration */}
             {relevantAlerts.length > 0 && (
                 <div className="space-y-2">
                     {relevantAlerts.map((alert, idx) => (
@@ -220,7 +211,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 </div>
             )}
 
-            {/* Itinerary - FULL LIST */}
             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between px-1">
@@ -236,7 +226,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         </button>
                     </div>
                     <div className="relative pl-6 space-y-0">
-                        {/* Connection Line */}
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 
                         {vehicleDetail.stop_times.features
@@ -245,16 +234,15 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 const isPast = stop.properties.stop_sequence < (vehicleDetail.last_stop_sequence || 0);
                                 const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
                                 const isNext = stop.properties.stop_sequence > (vehicleDetail.last_stop_sequence || 0) &&
-                                    !vehicleDetail.stop_times.features.some((s: any) =>
+                                    !vehicleDetail.stop_times?.features.some((s: any) =>
                                         s.properties.stop_sequence > (vehicleDetail.last_stop_sequence || 0) &&
                                         s.properties.stop_sequence < stop.properties.stop_sequence
                                     );
 
                                 return (
                                     <div key={idx} className={`relative py-2.5 flex items-center justify-between transition-opacity ${isPast ? 'opacity-40' : 'opacity-100'}`}>
-                                        {/* Indicator Dot */}
                                         <div className={`absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10 
-                                        ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
+                                            ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
                                         />
 
                                         <div className="flex flex-col min-w-0 pr-4">
@@ -274,7 +262,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                                 const isLate = hasRealtime && stop.properties.realtime_arrival_time > stop.properties.arrival_time;
 
                                                 return (
-                                                    <>
+                                                    <React.Fragment>
                                                         <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
                                                             {realtimeTime?.slice(0, 8)}
                                                         </span>
@@ -283,7 +271,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                                                 {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
                                                             </span>
                                                         )}
-                                                    </>
+                                                    </React.Fragment>
                                                 );
                                             })()}
                                         </div>

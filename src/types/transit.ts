@@ -1,0 +1,161 @@
+export interface VehicleProperties {
+    vehicle_id: string;
+    route_type: string;
+    gtfs_route_short_name: string;
+    gtfs_route_type?: string;
+    gtfs_trip_id: string;
+    gtfs_trip_headsign?: string;
+    route_short_name?: string;
+    trip_headsign?: string;
+    bearing: number | null;
+    delay: number | null;
+    state_position: string;
+    last_stop_name?: string;
+    next_stop_name?: string;
+    last_updated?: string;
+    // Temp fields used during sync
+    tId?: string;
+    n?: string;
+    t?: string;
+    b?: number;
+    d?: number;
+}
+
+export interface LiteVehicleProperties {
+    id: string;       // vehicle_id
+    tId?: string;     // gtfs_trip_id
+    n?: string;       // route_short_name (Number)
+    t?: string;       // route_type (Type)
+    b?: number;       // bearing
+    d?: number;       // delay
+}
+
+export interface VehicleFeature {
+    type: "Feature";
+    geometry: {
+        type: "Point";
+        coordinates: [number, number]; // [lon, lat]
+    };
+    properties: VehicleProperties | LiteVehicleProperties;
+}
+
+export interface VehicleCollection {
+    type: "FeatureCollection";
+    features: VehicleFeature[];
+}
+
+export interface StopFeature {
+    type: "Feature";
+    geometry: {
+        type: "Point";
+        coordinates: [number, number];
+    };
+    properties: {
+        stop_id: string;
+        stop_name: string;
+        platform_code?: string;
+        location_type: number;
+        parent_station?: string;
+        zone_id?: string;
+        is_centroid?: boolean;
+    };
+}
+
+export interface StopCollection {
+    type: "FeatureCollection";
+    features: StopFeature[];
+}
+
+export interface Departure {
+    timestamp: string;
+    scheduled: string;
+    delay: number;
+    line: string;
+    type: string;
+    directionId: string;
+    headsign: string;
+    isCanceled: boolean;
+    tripId?: string;
+    vehicleId?: string;
+}
+
+export interface Alert {
+    id: string;
+    title: string;
+    description: string;
+    startTime: string;
+    endTime: string;
+    isPlanned: boolean;
+    isActive: boolean;
+    url?: string;
+    type: 'incident' | 'exclusion' | 'incidents' | 'exclusions';
+}
+
+export interface VehicleDetail {
+    gtfs_trip_id: string;
+    route_short_name: string;
+    trip_headsign: string;
+    delay: number;
+    state_position: string;
+    last_stop_sequence?: number;
+    origin_timestamp?: string;
+    run_number?: number;
+    vehicle_id?: string;
+    vehicle_descriptor?: {
+        operator?: string;
+        vehicle_type?: string;
+        is_wheelchair_accessible?: boolean;
+        is_air_conditioned?: boolean;
+        has_usb_chargers?: boolean;
+        vehicle_registration_number?: string;
+    };
+    stop_times?: {
+        features: Array<{
+            properties: {
+                stop_name: string;
+                stop_sequence: number;
+                arrival_time: string;
+                realtime_arrival_time?: string;
+                departure_time?: string;
+                realtime_departure_time?: string;
+            };
+        }>;
+    };
+    shapes?: number[][];
+}
+
+export interface TrackedVehicle {
+    vehicle_id: string;
+    _geometry: [number, number];
+    gtfs_trip_id?: string;
+    route_short_name?: string;
+    gtfs_route_short_name?: string;
+    trip_headsign?: string;
+    gtfs_trip_headsign?: string;
+    delay?: number;
+    bearing?: number | null;
+    route_type?: string | number;
+    state_position?: string;
+    origin_timestamp?: string;
+    next_stop_name?: string;
+    d?: number;
+    is_air_conditioned?: boolean;
+    is_wheelchair_accessible?: boolean;
+    usb_chargers?: boolean;
+    vehicle_registration_number?: string;
+    run_number?: number | string;
+    vehicle_descriptor?: {
+        operator?: string;
+        vehicle_type?: string;
+        is_wheelchair_accessible?: boolean;
+        is_air_conditioned?: boolean;
+        has_usb_chargers?: boolean;
+        vehicle_registration_number?: string;
+    };
+    // Legacy/Sync compatibility
+    trip_id?: string;
+    id?: string;
+    tId?: string;
+    t?: string | number;
+    n?: string;
+}
