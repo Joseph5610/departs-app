@@ -235,7 +235,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             {showPastStops ? <ChevronUp size={12} className="text-zinc-400" /> : <ChevronDown size={12} className="text-zinc-400" />}
                         </button>
                     </div>
-                    <div className="max-h-72 overflow-y-auto pr-2 custom-scrollbar relative pl-6 space-y-0">
+                    <div className="relative pl-6 space-y-0">
                         {/* Connection Line */}
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 

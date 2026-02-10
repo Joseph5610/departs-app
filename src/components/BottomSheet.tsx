@@ -47,8 +47,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
 
     const variants = {
         hidden: isMobile ? { y: '100%' } : { x: '-110%' },
-        peek: isMobile ? { y: '45%' } : { x: 0 }, // Approx half screen
-        full: isMobile ? { y: '10%' } : { x: 0 },  // Near top
+        peek: isMobile ? { y: '45vh' } : { x: 0 }, // Approx half screen
+        full: isMobile ? { y: 'calc(env(safe-area-inset-top, 0px) + 12px)' } : { x: 0 },  // Respect Dynamic Island
     };
 
     return (
@@ -77,11 +77,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                             dragElastic: 0.1,
                             onDragEnd: handleDragEnd
                         } : {})}
-                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-zinc-900/95 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl h-[100vh] md:h-auto md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
+                        className="fixed bottom-0 left-0 right-0 md:top-4 md:left-4 md:bottom-4 md:right-auto z-50 bg-black/95 backdrop-blur-2xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[32px] shadow-2xl h-[100vh] md:h-auto md:max-h-none md:w-[420px] flex flex-col overflow-hidden"
                     >
                         {/* Handle Bar - Mobile only */}
                         <div
-                            className="flex justify-center p-4 md:hidden cursor-grab active:cursor-grabbing group"
+                            className="flex justify-center p-2.5 md:hidden cursor-grab active:cursor-grabbing group"
                             onClick={() => {
                                 if (sheetState === 'peek') {
                                     setSheetState('full');
@@ -92,8 +92,9 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                                 }
                             }}
                         >
-                            <div className="w-12 h-1.5 bg-white/20 group-hover:bg-white/40 rounded-full transition-colors" />
+                            <div className="w-12 h-1 bg-white/10 group-hover:bg-white/20 rounded-full transition-colors" />
                         </div>
+
 
                         {/* Header */}
                         {title && (
