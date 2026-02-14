@@ -253,6 +253,8 @@ export const Map: React.FC = () => {
                 />
 
                 <MapControls
+                    mapRef={mapRef}
+                    mapLoaded={mapLoaded}
                     onLocate={handleLocate}
                     onSettings={handleSettingsOpen}
                     onZoomIn={handleZoomIn}
