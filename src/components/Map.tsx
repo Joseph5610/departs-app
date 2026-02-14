@@ -356,7 +356,13 @@ export const Map: React.FC = () => {
             <BottomSheet
                 isOpen={!!selectedStop || !!selectedVehicle}
                 onClose={() => { setSelectedStop(null); setSelectedVehicle(null); setIsFollowing(false); }}
-                title={selectedStop ? selectedStop.name : (selectedVehicle && window.innerWidth >= 768 ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n }) : '')}
+                onBack={(selectedVehicle && selectedStop) ? () => {
+                    setSelectedVehicle(null);
+                    setIsFollowing(false);
+                } : undefined}
+                title={selectedVehicle
+                    ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n })
+                    : (selectedStop ? selectedStop.name : '')}
             >
                 <BottomSheetContent
                     selectedStop={selectedStop}

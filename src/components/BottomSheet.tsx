@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 
 interface BottomSheetProps {
     isOpen: boolean;
     onClose: () => void;
+    onBack?: () => void;
     title?: string;
     children: React.ReactNode;
 }
 
-export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, children }) => {
+export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
     const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
 
@@ -82,14 +83,26 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
                             </div>
 
                             {/* Header */}
-                            {title && (
-                                <div className="px-6 py-2 md:pt-6 flex items-center justify-between">
-                                    <h2 className="text-xl font-bold text-white pr-4 truncate tracking-tight">
-                                        {title}
-                                    </h2>
+                            {(title || onBack) && (
+                                <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        {onBack && (
+                                            <button
+                                                onClick={onBack}
+                                                className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                            >
+                                                <ArrowLeft size={20} />
+                                            </button>
+                                        )}
+                                        {title && (
+                                            <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                                                {title}
+                                            </h2>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={onClose}
-                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95"
+                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
                                     >
                                         <X size={20} />
                                     </button>
