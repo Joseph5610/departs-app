@@ -141,6 +141,7 @@ export const Map: React.FC = () => {
         });
     };
 
+
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
         const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n || '';

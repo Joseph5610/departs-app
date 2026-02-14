@@ -83,31 +83,27 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                             </div>
 
                             {/* Header */}
-                            {(title || onBack) && (
-                                <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        {onBack && (
-                                            <button
-                                                onClick={onBack}
-                                                className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
-                                            >
-                                                <ArrowLeft size={20} />
-                                            </button>
-                                        )}
-                                        {title && (
-                                            <h2 className="text-xl font-bold text-white truncate tracking-tight">
-                                                {title}
-                                            </h2>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={onClose}
-                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
-                                    >
-                                        <X size={20} />
-                                    </button>
+                            <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {onBack && (
+                                        <button
+                                            onClick={onBack}
+                                            className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                        >
+                                            <ArrowLeft size={20} />
+                                        </button>
+                                    )}
+                                    <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                                        {title || ''}
+                                    </h2>
                                 </div>
-                            )}
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
