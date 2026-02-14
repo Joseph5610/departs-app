@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
