@@ -73,15 +73,6 @@ export const MapControls = React.memo<MapControlsProps>(({
                 <Settings size={20} className="group-hover:rotate-45 transition-transform" />
             </button>
             <Alerts />
-            {showCompass && (
-                <button
-                    onClick={onResetBearing}
-                    className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                    title={t('map.controls.resetBearing')}
-                >
-                    <Compass size={20} className="group-hover:rotate-12 transition-transform" />
-                </button>
-            )}
 
             <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
                 <button
@@ -100,6 +91,15 @@ export const MapControls = React.memo<MapControlsProps>(({
                     <Minus size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
             </div>
+            {showCompass && (
+                <button
+                    onClick={onResetBearing}
+                    className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                    title={t('map.controls.resetBearing')}
+                >
+                    <Compass size={20} className="group-hover:rotate-12 transition-transform" />
+                </button>
+            )}
         </div>
     );
 });
