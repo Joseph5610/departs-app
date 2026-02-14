@@ -279,20 +279,20 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                                     <div className="flex flex-col items-end shrink-0">
                                         {(() => {
-                                            const realtimeTime = stop.properties.realtime_arrival_time || stop.properties.arrival_time;
-                                            const scheduledTime = stop.properties.arrival_time;
-                                            const hasRealtime = stop.properties.realtime_arrival_time && stop.properties.realtime_arrival_time !== stop.properties.arrival_time;
-                                            const isEarly = hasRealtime && stop.properties.realtime_arrival_time < stop.properties.arrival_time;
-                                            const isLate = hasRealtime && stop.properties.realtime_arrival_time > stop.properties.arrival_time;
+                                            const { realtime_arrival_time, arrival_time } = stop.properties;
+                                            const realtimeTime = realtime_arrival_time || arrival_time;
+                                            const hasRealtime = !!(realtime_arrival_time && realtime_arrival_time !== arrival_time);
+                                            const isEarly = !!(hasRealtime && realtime_arrival_time && realtime_arrival_time < arrival_time);
+                                            const isLate = !!(hasRealtime && realtime_arrival_time && realtime_arrival_time > arrival_time);
 
                                             return (
                                                 <React.Fragment>
                                                     <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
-                                                        {realtimeTime?.slice(0, 8)}
+                                                        {realtimeTime.slice(0, 8)}
                                                     </span>
                                                     {hasRealtime && (
                                                         <span className="text-[9px] text-zinc-500 font-mono">
-                                                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
+                                                            {t('map.vehicleDetails.scheduledTime')} {arrival_time.slice(0, 8)}
                                                         </span>
                                                     )}
                                                 </React.Fragment>
