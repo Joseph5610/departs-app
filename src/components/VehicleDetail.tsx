@@ -161,8 +161,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             </div>
 
             {(vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator) && (
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                <div className="flex gap-2">
+                    <div className="flex-1 min-w-0 p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0">
                             <Info size={14} className="text-zinc-500 shrink-0" />
                             <div className="flex flex-col min-w-0">
@@ -174,7 +174,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.is_air_conditioned) && (
                                 <Snowflake size={14} className="text-cyan-400" />
                             )}
@@ -187,10 +187,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         </div>
                     </div>
                     {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                        <div className="p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-2">
+                        <div className="flex-initial min-w-[70px] p-3 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-2">
                             <Navigation size={14} className="text-zinc-500 shrink-0" />
-                            <div className="flex flex-col">
-                                <span className="text-zinc-500 text-[9px] uppercase font-bold tracking-wider">{t('map.vehicleDetails.runNumber')}</span>
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-zinc-500 text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>
                                 <span className="text-white text-[11px] font-bold">{vehicleDetail?.run_number || selectedVehicle?.run_number}</span>
                             </div>
                         </div>
@@ -233,13 +233,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
                 <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
+                    <div className="flex items-center justify-between px-1 gap-2">
+                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest truncate">{t('map.vehicleDetails.routeSchedule')}</span>
                         <button
                             onClick={handleTogglePastStops}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors"
+                            className="flex items-center gap-1.5 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors shrink-0"
                         >
-                            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider whitespace-nowrap">
                                 {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
                             </span>
                             {showPastStops ? <ChevronUp size={12} className="text-zinc-400" /> : <ChevronDown size={12} className="text-zinc-400" />}

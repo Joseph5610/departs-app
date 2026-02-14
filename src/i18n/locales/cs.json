@@ -53,7 +53,7 @@
       "headingToDestination": "Směr konečná zastávka",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
-      "routeSchedule": "Jízdní řád linky",
+      "routeSchedule": "Jízdní řád",
       "vehicleId": "ID vozidla",
       "status": "Stav",
       "inTransit": "Na cestě",
