@@ -185,7 +185,6 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     }, [isFollowing]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: any) => {
-        console.log('🚋 Departure click. Prefetching coords for instant flyTo...');
         const activeVehId = vehicleId || `trip-${tripId}`;
 
         // Initialize with 0,0 coords - map won't move until isFollowing is true

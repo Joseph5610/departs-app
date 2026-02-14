@@ -48,9 +48,11 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
 }) => {
     const { t, i18n } = useTranslation();
 
+    const showDepartureBoard = selectedStop && !selectedVehicle;
+
     return (
         <div className="space-y-4 pt-1">
-            {selectedStop && (
+            {showDepartureBoard && (
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                     <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
@@ -80,7 +82,7 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                 onToggleFollow={onToggleFollow}
             />
 
-            {selectedStop && groupedDepartures.map((group, index) => {
+            {showDepartureBoard && groupedDepartures.map((group, index) => {
                 const isExpanded = expandedGroups.includes(group.groupId);
                 const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
                 const hasMore = group.departures.length > 1;
@@ -145,7 +147,7 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                 );
             })}
 
-            {selectedStop && groupedDepartures.length === 0 && !loadingDeps && (
+            {showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
                 <div className="py-12 text-center text-zinc-500">{t('map.departures.noUpcoming')}</div>
             )}
         </div>
