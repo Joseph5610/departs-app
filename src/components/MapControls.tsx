@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
+import type { MapRef } from 'react-map-gl/maplibre';
 
 interface MapControlsProps {
+    mapRef: React.RefObject<MapRef | null>;
+    mapLoaded?: boolean;
     onLocate: (e: React.MouseEvent | React.TouchEvent) => void;
     onSettings: () => void;
     onZoomIn: () => void;
@@ -13,6 +16,8 @@ interface MapControlsProps {
 }
 
 export const MapControls = React.memo<MapControlsProps>(({
+    mapRef,
+    mapLoaded,
     onLocate,
     onSettings,
     onZoomIn,
@@ -20,6 +25,30 @@ export const MapControls = React.memo<MapControlsProps>(({
     onResetBearing
 }) => {
     const { t } = useTranslation();
+    const [showCompass, setShowCompass] = useState(false);
+
+    useEffect(() => {
+        const map = mapRef.current?.getMap();
+        if (!map) return;
+
+        const updateCompass = () => {
+            const bearing = map.getBearing();
+            const pitch = map.getPitch();
+            // Show compass if bearing or pitch is more than 0.5 degrees
+            setShowCompass(Math.abs(bearing) > 0.5 || Math.abs(pitch) > 0.5);
+        };
+
+        map.on('rotate', updateCompass);
+        map.on('pitch', updateCompass);
+
+        // Initial check
+        updateCompass();
+
+        return () => {
+            map.off('rotate', updateCompass);
+            map.off('pitch', updateCompass);
+        };
+    }, [mapRef, mapLoaded]);
 
     return (
         <div
@@ -44,13 +73,6 @@ export const MapControls = React.memo<MapControlsProps>(({
                 <Settings size={20} className="group-hover:rotate-45 transition-transform" />
             </button>
             <Alerts />
-            <button
-                onClick={onResetBearing}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                title={t('map.controls.resetBearing')}
-            >
-                <Compass size={20} className="group-hover:rotate-12 transition-transform" />
-            </button>
 
             <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
                 <button
@@ -69,6 +91,15 @@ export const MapControls = React.memo<MapControlsProps>(({
                     <Minus size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
             </div>
+            {showCompass && (
+                <button
+                    onClick={onResetBearing}
+                    className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                    title={t('map.controls.resetBearing')}
+                >
+                    <Compass size={20} className="group-hover:rotate-12 transition-transform" />
+                </button>
+            )}
         </div>
     );
 });
