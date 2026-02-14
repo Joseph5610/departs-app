@@ -234,7 +234,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between px-1 gap-2">
-                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest truncate shrink-0">{t('map.vehicleDetails.routeSchedule')}</span>
+                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest truncate">{t('map.vehicleDetails.routeSchedule')}</span>
                         <button
                             onClick={handleTogglePastStops}
                             className="flex items-center gap-1.5 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors shrink-0"
