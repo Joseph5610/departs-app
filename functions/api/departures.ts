@@ -18,7 +18,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const idsToFetch = finalIds.length > 0 ? finalIds : rawIds;
 
         // Using public endpoint which is more robust for multi-stop departure boards
-        const golemioUrl = new URL(`${GOLEMIO_API.BASE_URL}/public/departureboards`);
+        const golemioUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public/departureboards`);
 
         // DOCUMENTATION FORMAT: stopIds[]={"0": ["ID1", "ID2"]}
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
@@ -30,7 +30,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 "Content-Type": "application/json",
             },
             cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
-        } as any);
+        });
 
         if (!response.ok) {
             return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
@@ -50,6 +50,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             },
         });
     } catch (err) {
+        console.error('Departures API Error:', err);
         return new Response("Internal Server Error", { status: 500 });
     }
 };

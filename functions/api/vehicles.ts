@@ -5,51 +5,6 @@ interface Env {
     GOLEMIO_API_KEY: string;
 }
 
-interface GolemioVehicleFeature {
-    type: 'Feature';
-    geometry: any;
-    properties: {
-        vehicle_id?: string;
-        trip?: {
-            gtfs?: {
-                trip_id?: string;
-                route_short_name?: string;
-                route_type?: string;
-                trip_headsign?: string;
-            };
-            wheelchair_accessible?: boolean;
-            air_conditioned?: boolean;
-            vehicle_registration_number?: number;
-        };
-        last_position?: {
-            bearing?: number;
-            delay?: { actual?: number };
-            state_position?: string;
-            next_stop?: { id?: string };
-        };
-    };
-}
-
-// Flat structure used by the public endpoint and our app
-interface PublicVehicleProperties {
-    vehicle_id: string;
-    gtfs_trip_id?: string;
-    trip_id?: string;
-    route_short_name?: string;
-    gtfs_route_short_name?: string;
-    route_type?: string;
-    trip_headsign?: string;
-    gtfs_trip_headsign?: string;
-    bearing?: number;
-    delay: number;
-    state_position?: string;
-    next_stop_name?: string;
-    is_wheelchair_accessible?: boolean;
-    is_air_conditioned?: boolean;
-    vehicle_registration_number?: number;
-}
-
-
 /**
  * Cloudflare Pages Function to fetch and normalize Golemio vehicle data.
  * Supports fetching by bounding box, specific trip ID, or both combined.
@@ -63,7 +18,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
-    let allFeatures: any[] = [];
+    let allFeatures: Record<string, unknown>[] = [];
 
     try {
         const headers = {
@@ -74,21 +29,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         if (tripId && bounds) {
             // COMBINED: Fetch both and merge
             // Use standard endpoint for Trip ID (more reliable)
-            const tripUrlString = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+            const tripUrlString = `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
 
             // Use public endpoint for bounding box (often faster for high volume)
-            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
             boundsUrl.searchParams.set("boundingBox", bounds);
             if (routeType) boundsUrl.searchParams.set("routeType", routeType);
             routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
 
             const [tripRes, boundsRes] = await Promise.all([
-                fetch(tripUrlString, { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } } as any),
-                fetch(boundsUrl.toString(), { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } } as any)
+                fetch(tripUrlString, { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } }),
+                fetch(boundsUrl.toString(), { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } })
             ]);
 
-            const tripData: any = tripRes.ok ? await tripRes.json() : null;
-            const boundsData: any = boundsRes.ok ? await boundsRes.json() : { features: [] };
+            const tripData = tripRes.ok ? await tripRes.json() as { type: string; features?: any[] } : null;
+            const boundsData = boundsRes.ok ? await boundsRes.json() as { features: any[] } : { features: [] };
 
             let tripFeaturesFromData: any[] = [];
             if (tripData) {
@@ -104,8 +59,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 .map(feature => normalizeVehicleFeature(feature, tripId));
 
             const normalizedBoundsFeatures = (boundsData.features || [])
-                .filter((f: any) => f.geometry && f.geometry.coordinates)
-                .map((feature: any) => normalizeVehicleFeature(feature));
+                .filter((f) => f.geometry && f.geometry.coordinates)
+                .map((feature) => normalizeVehicleFeature(feature));
 
             allFeatures = [...normalizedBoundsFeatures, ...normalizedTripFeatures];
         } else if (tripId || bounds || routeShortNames.length > 0) {
@@ -113,10 +68,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             let golemioUrl: string;
             if (tripId) {
                 // Trip ID lookup is better on the standard endpoint
-                golemioUrl = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+                golemioUrl = `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
             } else {
                 // Multiple route/bounds filtering
-                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
                 if (bounds) bUrl.searchParams.set("boundingBox", bounds);
                 if (routeType) bUrl.searchParams.set("routeType", routeType);
                 routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName", rsn));
@@ -126,13 +81,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             const response = await fetch(golemioUrl, {
                 headers,
                 cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
-            } as any);
+            });
 
             if (!response.ok) {
                 return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
             }
 
-            const data: any = await response.json();
+            const data = await response.json() as { type: string; features?: any[] };
 
             if (tripId) {
                 let featuresFromData: any[] = [];
@@ -146,8 +101,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                     .map(f => normalizeVehicleFeature(f, tripId));
             } else {
                 allFeatures = (data.features || [])
-                    .filter((f: any) => f.geometry && f.geometry.coordinates)
-                    .map((feature: any) => normalizeVehicleFeature(feature));
+                    .filter((f) => f.geometry && f.geometry.coordinates)
+                    .map((feature) => normalizeVehicleFeature(feature));
             }
         } else {
             return new Response("Missing parameters", { status: 400 });

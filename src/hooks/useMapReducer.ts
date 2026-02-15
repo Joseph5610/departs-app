@@ -44,7 +44,7 @@ const initialState: MapState = {
     showVehicles: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false' : true,
     isSettingsOpen: false,
     expandedGroups: [],
-    departureSort: typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as any) || 'line' : 'line',
+    departureSort: typeof window !== 'undefined' ? (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure') || 'line' : 'line',
     routeFilter: null,
     labelLayerId: undefined,
 };

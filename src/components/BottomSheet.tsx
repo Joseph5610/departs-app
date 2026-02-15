@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
+import { MAP_DEFAULTS } from '../config/constants';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -11,7 +12,7 @@ interface BottomSheetProps {
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
-    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MAP_DEFAULTS.MOBILE_BREAKPOINT : false;
     const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
 
     // Reset snap point when opening

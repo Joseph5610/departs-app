@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { VehicleCollection, TrackedVehicle, VehicleDetail } from '../types/transit';
+import type { VehicleCollection, TrackedVehicle, VehicleDetail, VehicleProperties, LiteVehicleProperties } from '../types/transit';
 
 /**
  * The 'Motor' of the map tracking system.
@@ -33,21 +33,22 @@ export const useMapVehicleSync = (
         // We match by vehicle_id (preferred) or gtfs_trip_id as a fallback.
         if (rawVehicles?.features) {
             const match = rawVehicles.features.find(f => {
-                const props = f.properties as any; // properties can be VehicleProperties or LiteVehicleProperties
-                const fid = String(props.vehicle_id || props.id || '');
-                const ftid = String(props.gtfs_trip_id || props.tId || '');
+                const props = f.properties as (VehicleProperties | LiteVehicleProperties);
+                const fid = String('vehicle_id' in props ? props.vehicle_id : (props as LiteVehicleProperties).id || '');
+                const ftid = String('gtfs_trip_id' in props ? props.gtfs_trip_id : (props as LiteVehicleProperties).tId || '');
                 if (sid !== 'NONE' && !sid.startsWith('trip-')) return fid === sid;
                 return ftid === stid && stid !== 'NONE';
             });
 
             if (match) {
-                const p = match.properties as any;
+                const p = match.properties as (VehicleProperties | LiteVehicleProperties);
                 const coords = match.geometry.coordinates;
-                const matchId = String(p.vehicle_id || p.id);
+                const matchId = String('vehicle_id' in p ? p.vehicle_id : (p as LiteVehicleProperties).id);
 
-                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
+                const currentDelay = 'delay' in p ? p.delay : (p as LiteVehicleProperties).d;
+                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== currentDelay) {
                     updated = true;
-                    newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
+                    newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid } as Partial<TrackedVehicle>;
                     newCoords = coords;
                 }
             }

@@ -5,17 +5,21 @@
 /**
  * Normalizes vehicle ID and ensures it's a string.
  */
-export const normalizeVehicleId = (f: any): string => {
+export const normalizeVehicleId = (f: { properties: Record<string, unknown> }): string => {
     return String(f.properties.vehicle_id || f.properties.id || '');
 };
 
 /**
  * Applies circular jittering to coordinates that are exactly the same.
  * This prevents vehicles from perfectly overlapping on the map.
+ *
+ * When multiple vehicles are at the same location (e.g. at a depot or a busy terminal),
+ * they are distributed in a small circle around the original point so they are
+ * individually clickable and visible on the map.
  */
-export const applyJitter = (allFeatures: any[]): any[] => {
+export const applyJitter = (allFeatures: Array<{ geometry: { coordinates: number[] }, properties: Record<string, unknown> }>): any[] => {
     const seen = new Set<string>();
-    const uniqueFeatures: any[] = [];
+    const uniqueFeatures: Array<{ geometry: { coordinates: number[] }, properties: Record<string, unknown> }> = [];
 
     for (const f of allFeatures) {
         const id = normalizeVehicleId(f);
@@ -25,7 +29,8 @@ export const applyJitter = (allFeatures: any[]): any[] => {
         }
     }
 
-    const groups: Record<string, any[]> = {};
+    // Group features by their exact coordinates
+    const groups: Record<string, Array<{ geometry: { coordinates: number[] }, properties: Record<string, unknown> }>> = {};
     uniqueFeatures.forEach((f) => {
         const key = f.geometry.coordinates.join(',');
         if (!groups[key]) groups[key] = [];
@@ -70,8 +75,11 @@ export const applyJitter = (allFeatures: any[]): any[] => {
 /**
  * Normalizes a Golemio vehicle feature into our internal flat format.
  * Handles both Full and Lite Golemio formats.
+ *
+ * This ensures the frontend receives a consistent set of properties
+ * regardless of which Golemio API endpoint was used (Public vs Standard).
  */
-export const normalizeVehicleFeature = (feature: any, tripId?: string | null): any => {
+export const normalizeVehicleFeature = (feature: { geometry: unknown, properties: any }, tripId?: string | null): any => {
     const p = feature.properties;
 
     // Detect if it's Lite format (has 'n' instead of deep structures)
@@ -83,7 +91,10 @@ export const normalizeVehicleFeature = (feature: any, tripId?: string | null): a
         id: vehicle_id,
         geometry: feature.geometry,
         properties: {
+            ...p, // Comprehensive: include all original Golemio properties
             vehicle_id: vehicle_id,
+            // Maintain common flat keys for backward compatibility and MapLibre expression ease
+            // These keys are used in src/config/mapLayers.ts and src/utils/vehicleColors.ts
             gtfs_trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
             trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
             route_short_name: p.trip?.gtfs?.route_short_name ?? p.n ?? undefined,
@@ -93,17 +104,15 @@ export const normalizeVehicleFeature = (feature: any, tripId?: string | null): a
             gtfs_trip_headsign: p.trip?.gtfs?.trip_headsign ?? p.headsign ?? undefined,
             bearing: isLite ? p.b : p.last_position?.bearing,
             delay: isLite ? p.d : (p.last_position?.delay?.actual || 0),
-            state_position: p.last_position?.state_position,
-            next_stop_name: p.last_position?.next_stop?.id,
-            is_wheelchair_accessible: p.trip?.wheelchair_accessible,
-            is_air_conditioned: p.trip?.air_conditioned,
-            vehicle_registration_number: p.trip?.vehicle_registration_number,
         }
     };
 };
 
 /**
  * Normalizes a Golemio departure item into our internal format.
+ *
+ * Handles Metro-specific grouping logic by using platform IDs as direction indicators,
+ * ensuring that all departures from the same platform group together in the UI.
  */
 export const normalizeDepartureItem = (item: any): any => {
     const line = String(item.route?.short_name || '?').toUpperCase();

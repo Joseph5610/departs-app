@@ -14,7 +14,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const limit = LIMITS.STOPS_FETCH_LIMIT;
 
         while (offset < LIMITS.STOPS_MAX_OFFSET) {
-            const url = new URL(`${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.STOPS}`);
+            const url = new URL(`${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.STOPS}`);
             url.searchParams.set("limit", limit.toString());
             url.searchParams.set("offset", offset.toString());
 
@@ -101,6 +101,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         });
 
         // 4. Calculate Centroids for map labeling
+        // This ensures that stop labels appear at a balanced center point even for
+        // spread-out stops with multiple platforms.
         const nameGroups: Record<string, any[]> = {};
         all.forEach(f => {
             if (f.properties.location_type === 2 || !f.properties.stop_name) return;
@@ -108,7 +110,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             nameGroups[f.properties.stop_name].push(f);
         });
 
-        Object.entries(nameGroups).forEach(([name, groupFeatures]) => {
+        Object.values(nameGroups).forEach((groupFeatures) => {
             const station = groupFeatures.find(f => f.properties.location_type === 1);
             const anchorFeature = station || groupFeatures[0];
             const coords = station ? station.geometry.coordinates : calculateCentroid(groupFeatures);
@@ -131,6 +133,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         });
     } catch (err) {
-        return new Response("Error: " + (err instanceof Error ? err.message : "unknown"), { status: 500 });
+        const message = err instanceof Error ? err.message : String(err);
+        return new Response(`Error: ${message}`, { status: 500 });
     }
 };

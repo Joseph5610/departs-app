@@ -135,7 +135,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         if (!isFollowing || !selectedVehicle?._geometry || !mapRef.current) return;
 
         const [lng, lat] = selectedVehicle._geometry;
-        const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+        const isMobile = typeof window !== 'undefined' ? window.innerWidth < MAP_DEFAULTS.MOBILE_BREAKPOINT : false;
 
         mapRef.current.easeTo({
             center: [lng, lat],
@@ -143,7 +143,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             essential: true,
             padding: isMobile
                 ? { bottom: window.innerHeight / 2.2, top: 0, left: 0, right: 0 }
-                : { bottom: 0, top: 0, left: 450, right: 0 }
+                : { bottom: 0, top: 0, left: MAP_DEFAULTS.SIDEBAR_WIDTH + 30, right: 0 }
         });
     }, [selectedVehicle?._geometry, isFollowing, mapRef]);
 
@@ -156,7 +156,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             : null;
     };
 
-    const onMove = useCallback((evt: { viewState: { zoom: number }, target: maplibregl.Map, originalEvent?: any }) => {
+    const onMove = useCallback((evt: { viewState: { zoom: number }, target: maplibregl.Map, originalEvent?: unknown }) => {
         if (isFollowing) return;
 
         const { zoom } = evt.viewState;
@@ -175,7 +175,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
     }, [bounds, isFollowing, setBounds, setDebouncedBounds]);
 
-    const onMoveEnd = useCallback((evt: { viewState: { latitude: number, longitude: number, zoom: number }, target: maplibregl.Map, originalEvent?: any }) => {
+    const onMoveEnd = useCallback((evt: { viewState: { latitude: number, longitude: number, zoom: number }, target: maplibregl.Map, originalEvent?: unknown }) => {
         if (isFollowing) return;
 
         const { latitude, longitude, zoom } = evt.viewState;
@@ -229,14 +229,14 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    // Extract only the fields we need to sync to the vehicle marker
                     const { shapes, stop_times, ...liteData } = data;
+                    console.debug(`Fetched detail for ${activeVehId}: ${shapes?.length || 0} shape points, ${stop_times?.features?.length || 0} stops`);
                     setSelectedVehicle((prev) => prev ? { ...prev, _geometry: coords, ...liteData } : null);
 
                     setIsFollowing(true);
 
-                    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+                    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MAP_DEFAULTS.MOBILE_BREAKPOINT : false;
                     mapRef.current?.flyTo({
                         center: coords,
                         zoom: 15,
@@ -244,7 +244,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                         essential: true,
                         padding: isMobile
                             ? { bottom: window.innerHeight / 2.2, top: 0, left: 0, right: 0 }
-                            : { bottom: 0, top: 0, left: 450, right: 0 }
+                            : { bottom: 0, top: 0, left: MAP_DEFAULTS.SIDEBAR_WIDTH + 30, right: 0 }
                     });
                 }
             }
@@ -257,7 +257,11 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         const map = evt.target;
         const layers = map.getStyle().layers;
         if (layers) {
-            const firstLabelLayer = layers.find((layer) => layer.type === 'symbol' && (layer as any).layout?.['text-field']);
+            // Find the first symbol layer with text to use as an anchor for our transit layers
+            const firstLabelLayer = layers.find((layer) =>
+                layer.type === 'symbol' &&
+                (layer as maplibregl.SymbolLayer).layout?.['text-field']
+            );
             if (firstLabelLayer) {
                 setLabelLayerId(firstLabelLayer.id);
             }

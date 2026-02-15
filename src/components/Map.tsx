@@ -41,8 +41,6 @@ const EMPTY_GEOJSON: FeatureCollection = {
     features: []
 };
 
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-
 export const Map: React.FC = () => {
     const { t } = useTranslation();
     const mapRef = useRef<MapRef>(null);
@@ -203,7 +201,7 @@ export const Map: React.FC = () => {
                 onMoveEnd={onMoveEnd}
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle={MAP_STYLE}
+                mapStyle={MAP_DEFAULTS.STYLE_URL}
                 mapLib={maplibregl}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {

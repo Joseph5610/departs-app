@@ -4,7 +4,7 @@ interface Env {
     GOLEMIO_API_KEY: string;
 }
 
-export const onRequest: PagesFunction<Env> = async (context: any) => {
+export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
     const vehicleId = searchParams.get("vehicleId");
@@ -20,8 +20,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
     // Standard endpoints are much better for detailed info
     const golemioUrl = isPlaceholder
-        ? `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
-        : `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
+        ? `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
+        : `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
 
     try {
         const response = await fetch(golemioUrl, {
@@ -33,7 +33,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
                 cacheTtl: CACHE_CONFIG.DEFAULT_TTL,
                 cacheEverything: true,
             }
-        } as any);
+        });
 
         if (!response.ok) {
             return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
@@ -65,6 +65,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             },
         });
     } catch (err) {
+        console.error('Vehicle Detail API Error:', err);
         return new Response("Internal Server Error", { status: 500 });
     }
 };

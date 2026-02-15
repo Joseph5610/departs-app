@@ -17,7 +17,10 @@ export const MAP_DEFAULTS = {
     ZOOM: 13,
     USER_LOCATION_ZOOM: 15,
     MIN_ZOOM_BOUNDS: 11,
-    MAX_ZOOM_BOUNDS: 13
+    MAX_ZOOM_BOUNDS: 13,
+    SIDEBAR_WIDTH: 420,
+    MOBILE_BREAKPOINT: 768,
+    STYLE_URL: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 };
 
 /**

@@ -65,7 +65,7 @@ export const onRequest: PagesFunction = async (context) => {
         if (!response.ok) return new Response(`Upstream error: ${response.status}`, { status: response.status });
 
         const xmlString = await response.text();
-        const items: any[] = [];
+        const items: Record<string, unknown>[] = [];
         const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
         let match;
 

@@ -2,7 +2,7 @@
  * Golemio API configuration and endpoints.
  */
 export const GOLEMIO_API = {
-    BASE_URL: 'https://api.golemio.cz/v2',
+    BASE_URL: 'https://api.golemio.cz',
     ENDPOINTS: {
         STOPS: '/gtfs/stops',
         DEPARTURES: '/departureboards',
