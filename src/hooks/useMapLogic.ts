@@ -260,7 +260,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             // Find the first symbol layer with text to use as an anchor for our transit layers
             const firstLabelLayer = layers.find((layer) =>
                 layer.type === 'symbol' &&
-                (layer as maplibregl.SymbolLayer).layout?.['text-field']
+                (layer as maplibregl.SymbolLayerSpecification).layout?.['text-field']
             );
             if (firstLabelLayer) {
                 setLabelLayerId(firstLabelLayer.id);

@@ -1,10 +1,14 @@
-import type { LayerSpecification, CircleLayerSpecification, SymbolLayerSpecification } from 'maplibre-gl';
+import type { CircleLayerSpecification, SymbolLayerSpecification } from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
+
+// Helper types to make source optional for use with react-map-gl <Source>
+type CircleLayer = Omit<CircleLayerSpecification, 'source'> & { source?: string };
+type SymbolLayer = Omit<SymbolLayerSpecification, 'source'> & { source?: string };
 
 // 1. The GLOW Layer (Background)
 // This layer provides a soft glow effect behind clusters,
 // colored according to the predominant transport type in the cluster.
-export const clusterLayer: CircleLayerSpecification = {
+export const clusterLayer: CircleLayer = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
@@ -55,7 +59,7 @@ export const clusterLayer: CircleLayerSpecification = {
 
 // 2. The CORE Layer (Foreground - Bright Center)
 // A sharp, bright center for clusters to ensure they are visible against the dark map.
-export const clusterCoreLayer: CircleLayerSpecification = {
+export const clusterCoreLayer: CircleLayer = {
     id: 'cluster-core',
     type: 'circle',
     source: 'pid-stops',
@@ -68,7 +72,7 @@ export const clusterCoreLayer: CircleLayerSpecification = {
     }
 };
 
-export const clusterCountLayer: SymbolLayerSpecification = {
+export const clusterCountLayer: SymbolLayer = {
     id: 'cluster-count',
     type: 'symbol',
     source: 'pid-stops',
@@ -82,7 +86,7 @@ export const clusterCountLayer: SymbolLayerSpecification = {
     }
 };
 
-export const stopPointLayer: CircleLayerSpecification = {
+export const stopPointLayer: CircleLayer = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
@@ -139,7 +143,7 @@ export const stopPointLayer: CircleLayerSpecification = {
 
 // 3a. ATMOSPHERIC GLOW for Stations
 // Provides a subtle aura around stations to highlight them as major transit hubs.
-export const stopPointGlowLayer: CircleLayerSpecification = {
+export const stopPointGlowLayer: CircleLayer = {
     id: 'unclustered-point-glow',
     type: 'circle',
     source: 'pid-stops',
@@ -170,7 +174,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
 };
 
 
-export const transferStationLayer: SymbolLayerSpecification = {
+export const transferStationLayer: SymbolLayer = {
     id: 'transfer-stations',
     type: 'symbol',
     source: 'pid-stops',
@@ -201,7 +205,7 @@ export const transferStationLayer: SymbolLayerSpecification = {
     }
 };
 
-export const stopLabelLayer: SymbolLayerSpecification = {
+export const stopLabelLayer: SymbolLayer = {
     id: 'stop-labels',
     type: 'symbol',
     source: 'stop-labels-centroids',
@@ -230,7 +234,7 @@ export const stopLabelLayer: SymbolLayerSpecification = {
     }
 };
 
-export const platformLabelLayer: SymbolLayerSpecification = {
+export const platformLabelLayer: SymbolLayer = {
     id: 'platform-labels',
     type: 'symbol',
     source: 'pid-stops',
@@ -258,7 +262,7 @@ export const platformLabelLayer: SymbolLayerSpecification = {
     }
 };
 
-export const entranceLayer: SymbolLayerSpecification = {
+export const entranceLayer: SymbolLayer = {
     id: 'entrance-layer',
     type: 'symbol',
     source: 'pid-stops',
@@ -288,7 +292,7 @@ export const entranceLayer: SymbolLayerSpecification = {
 // 4. Vehicle Layers
 import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
-export const selectedVehiclePulseLayer: CircleLayerSpecification = {
+export const selectedVehiclePulseLayer: CircleLayer = {
     id: 'selected-vehicle-pulse',
     type: 'circle',
     paint: {
@@ -298,7 +302,7 @@ export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     }
 };
 
-export const selectedVehiclePointLayer: CircleLayerSpecification = {
+export const selectedVehiclePointLayer: CircleLayer = {
     id: 'selected-vehicle-point',
     type: 'circle',
     paint: {
@@ -310,7 +314,7 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
     }
 };
 
-export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
+export const selectedVehicleDirectionLayer: SymbolLayer = {
     id: 'selected-vehicle-direction',
     type: 'symbol',
     layout: {
@@ -329,7 +333,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
     }
 };
 
-export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
+export const selectedVehicleLabelLayer: SymbolLayer = {
     id: 'selected-vehicle-label',
     type: 'symbol',
     layout: {
@@ -349,7 +353,7 @@ export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
     }
 };
 
-export const vehiclesPointLayer: CircleLayerSpecification = {
+export const vehiclesPointLayer: CircleLayer = {
     id: 'vehicles-point',
     type: 'circle',
     minzoom: 12,
@@ -363,7 +367,7 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     }
 };
 
-export const vehiclesDirectionLayer: SymbolLayerSpecification = {
+export const vehiclesDirectionLayer: SymbolLayer = {
     id: 'vehicles-direction-all',
     type: 'symbol',
     minzoom: 12,
@@ -384,7 +388,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
     }
 };
 
-export const vehiclesLabelLayer: SymbolLayerSpecification = {
+export const vehiclesLabelLayer: SymbolLayer = {
     id: 'vehicles-label-all',
     type: 'symbol',
     minzoom: 12,

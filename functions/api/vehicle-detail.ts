@@ -20,8 +20,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // Standard endpoints are much better for detailed info
     const golemioUrl = isPlaceholder
-        ? `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
-        : `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
+        ? `${GOLEMIO_API.BASE_URL}/v2/gtfs/trips/${tripId}?${scopes}`
+        : `${GOLEMIO_API.BASE_URL}/v2/vehiclepositions/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
 
     try {
         const response = await fetch(golemioUrl, {

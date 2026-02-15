@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { VehicleCollection, TrackedVehicle, VehicleDetail, VehicleProperties, LiteVehicleProperties } from '../types/transit';
+import type { VehicleCollection, TrackedVehicle, VehicleDetail, VehicleProperties } from '../types/transit';
 
 /**
  * The 'Motor' of the map tracking system.
@@ -33,20 +33,19 @@ export const useMapVehicleSync = (
         // We match by vehicle_id (preferred) or gtfs_trip_id as a fallback.
         if (rawVehicles?.features) {
             const match = rawVehicles.features.find(f => {
-                const props = f.properties as (VehicleProperties | LiteVehicleProperties);
-                const fid = String('vehicle_id' in props ? props.vehicle_id : (props as LiteVehicleProperties).id || '');
-                const ftid = String('gtfs_trip_id' in props ? props.gtfs_trip_id : (props as LiteVehicleProperties).tId || '');
+                const props = f.properties as VehicleProperties;
+                const fid = props.vehicle_id || '';
+                const ftid = props.gtfs_trip_id || '';
                 if (sid !== 'NONE' && !sid.startsWith('trip-')) return fid === sid;
                 return ftid === stid && stid !== 'NONE';
             });
 
             if (match) {
-                const p = match.properties as (VehicleProperties | LiteVehicleProperties);
+                const p = match.properties as VehicleProperties;
                 const coords = match.geometry.coordinates;
-                const matchId = String('vehicle_id' in p ? p.vehicle_id : (p as LiteVehicleProperties).id);
+                const matchId = p.vehicle_id;
 
-                const currentDelay = 'delay' in p ? p.delay : (p as LiteVehicleProperties).d;
-                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== currentDelay) {
+                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;
                     newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid } as Partial<TrackedVehicle>;
                     newCoords = coords;

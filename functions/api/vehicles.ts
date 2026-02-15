@@ -18,7 +18,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
-    let allFeatures: Record<string, unknown>[] = [];
+    let allFeatures: any[] = [];
 
     try {
         const headers = {
@@ -29,10 +29,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         if (tripId && bounds) {
             // COMBINED: Fetch both and merge
             // Use standard endpoint for Trip ID (more reliable)
-            const tripUrlString = `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+            const tripUrlString = `${GOLEMIO_API.BASE_URL}/v2/vehiclepositions?tripId=${tripId}`;
 
             // Use public endpoint for bounding box (often faster for high volume)
-            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public/vehiclepositions`);
             boundsUrl.searchParams.set("boundingBox", bounds);
             if (routeType) boundsUrl.searchParams.set("routeType", routeType);
             routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
@@ -68,10 +68,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             let golemioUrl: string;
             if (tripId) {
                 // Trip ID lookup is better on the standard endpoint
-                golemioUrl = `${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+                golemioUrl = `${GOLEMIO_API.BASE_URL}/v2/vehiclepositions?tripId=${tripId}`;
             } else {
                 // Multiple route/bounds filtering
-                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}/v2/public/vehiclepositions`);
                 if (bounds) bUrl.searchParams.set("boundingBox", bounds);
                 if (routeType) bUrl.searchParams.set("routeType", routeType);
                 routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName", rsn));

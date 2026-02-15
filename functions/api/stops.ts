@@ -14,7 +14,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const limit = LIMITS.STOPS_FETCH_LIMIT;
 
         while (offset < LIMITS.STOPS_MAX_OFFSET) {
-            const url = new URL(`${GOLEMIO_API.BASE_URL}/v2${GOLEMIO_API.ENDPOINTS.STOPS}`);
+            const url = new URL(`${GOLEMIO_API.BASE_URL}/v2/gtfs/stops`);
             url.searchParams.set("limit", limit.toString());
             url.searchParams.set("offset", offset.toString());
 

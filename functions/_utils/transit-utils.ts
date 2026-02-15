@@ -74,7 +74,6 @@ export const applyJitter = (allFeatures: Array<{ geometry: { coordinates: number
 
 /**
  * Normalizes a Golemio vehicle feature into our internal flat format.
- * Handles both Full and Lite Golemio formats.
  *
  * This ensures the frontend receives a consistent set of properties
  * regardless of which Golemio API endpoint was used (Public vs Standard).
@@ -82,9 +81,7 @@ export const applyJitter = (allFeatures: Array<{ geometry: { coordinates: number
 export const normalizeVehicleFeature = (feature: { geometry: unknown, properties: any }, tripId?: string | null): any => {
     const p = feature.properties;
 
-    // Detect if it's Lite format (has 'n' instead of deep structures)
-    const isLite = 'n' in p && !('trip' in p);
-    const vehicle_id = String(p.vehicle_id || p.id || (tripId ? `trip-${tripId}` : `trip-${p.trip?.gtfs?.trip_id || p.tId || 'unknown'}`));
+    const vehicle_id = String(p.vehicle_id || p.id || (tripId ? `trip-${tripId}` : `trip-${p.trip?.gtfs?.trip_id || 'unknown'}`));
 
     return {
         type: 'Feature',
@@ -95,15 +92,15 @@ export const normalizeVehicleFeature = (feature: { geometry: unknown, properties
             vehicle_id: vehicle_id,
             // Maintain common flat keys for backward compatibility and MapLibre expression ease
             // These keys are used in src/config/mapLayers.ts and src/utils/vehicleColors.ts
-            gtfs_trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
-            trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
-            route_short_name: p.trip?.gtfs?.route_short_name ?? p.n ?? undefined,
-            gtfs_route_short_name: p.trip?.gtfs?.route_short_name ?? p.n ?? undefined,
-            route_type: p.trip?.gtfs?.route_type ?? p.t ?? undefined,
-            trip_headsign: p.trip?.gtfs?.trip_headsign ?? p.headsign ?? undefined,
-            gtfs_trip_headsign: p.trip?.gtfs?.trip_headsign ?? p.headsign ?? undefined,
-            bearing: isLite ? p.b : p.last_position?.bearing,
-            delay: isLite ? p.d : (p.last_position?.delay?.actual || 0),
+            gtfs_trip_id: p.trip?.gtfs?.trip_id ?? tripId ?? undefined,
+            trip_id: p.trip?.gtfs?.trip_id ?? tripId ?? undefined,
+            route_short_name: p.trip?.gtfs?.route_short_name ?? undefined,
+            gtfs_route_short_name: p.trip?.gtfs?.route_short_name ?? undefined,
+            route_type: p.trip?.gtfs?.route_type ?? undefined,
+            trip_headsign: p.trip?.gtfs?.trip_headsign ?? undefined,
+            gtfs_trip_headsign: p.trip?.gtfs?.trip_headsign ?? undefined,
+            bearing: p.last_position?.bearing,
+            delay: p.last_position?.delay?.actual || 0,
         }
     };
 };

@@ -13,21 +13,6 @@ export interface VehicleProperties {
     last_stop_name?: string;
     next_stop_name?: string;
     last_updated?: string;
-    // Temp fields used during sync
-    tId?: string;
-    n?: string;
-    t?: string;
-    b?: number;
-    d?: number;
-}
-
-export interface LiteVehicleProperties {
-    id: string;       // vehicle_id
-    tId?: string;     // gtfs_trip_id
-    n?: string;       // route_short_name (Number)
-    t?: string;       // route_type (Type)
-    b?: number;       // bearing
-    d?: number;       // delay
 }
 
 export interface VehicleFeature {
@@ -36,7 +21,7 @@ export interface VehicleFeature {
         type: "Point";
         coordinates: [number, number]; // [lon, lat]
     };
-    properties: VehicleProperties | LiteVehicleProperties;
+    properties: VehicleProperties;
 }
 
 export interface VehicleCollection {
