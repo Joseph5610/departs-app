@@ -94,7 +94,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
     const displayVehicles = useMemo((): VehicleCollection => {
         if (!rawVehicles?.features) return EMPTY_GEOJSON;
-        return rawVehicles as VehicleCollection;
+        return rawVehicles;
     }, [rawVehicles]);
 
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
@@ -230,8 +230,9 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { shapes, stop_times, ...liteData } = data;
-                    setSelectedVehicle((prev: any) => prev ? { ...prev, _geometry: coords, ...liteData } : null);
+                    setSelectedVehicle((prev) => prev ? { ...prev, _geometry: coords, ...liteData } : null);
 
                     setIsFollowing(true);
 

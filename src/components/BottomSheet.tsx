@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 
 interface BottomSheetProps {
@@ -15,11 +15,13 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
     const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
 
     // Reset snap point when opening
-    useEffect(() => {
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    if (isOpen !== prevIsOpen) {
+        setPrevIsOpen(isOpen);
         if (isOpen) {
             setSheetState(isMobile ? 'peek' : 'full');
         }
-    }, [isOpen, isMobile]);
+    }
 
     const variants = {
         hidden: isMobile
@@ -37,7 +39,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         },
     };
 
-    const handleDragEnd = (_: any, info: any) => {
+    const handleDragEnd = (_: unknown, info: PanInfo) => {
         if (!isMobile) return;
         const velocity = info.velocity.y;
         const offset = info.offset.y;

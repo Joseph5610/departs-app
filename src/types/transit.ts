@@ -132,7 +132,7 @@ export interface TrackedVehicle {
     gtfs_route_short_name?: string;
     trip_headsign?: string;
     gtfs_trip_headsign?: string;
-    delay?: number;
+    delay?: number | null;
     bearing?: number | null;
     route_type?: string | number;
     state_position?: string;

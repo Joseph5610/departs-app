@@ -34,8 +34,9 @@ import type { TrackedVehicle } from '../types/transit';
 import { MapControls } from './MapControls';
 import { STORAGE_KEYS, MAP_DEFAULTS } from '../config/constants';
 import { BottomSheetContent } from './BottomSheetContent';
+import type { FeatureCollection } from 'geojson';
 
-const EMPTY_GEOJSON: any = {
+const EMPTY_GEOJSON: FeatureCollection = {
     type: 'FeatureCollection',
     features: []
 };
@@ -174,10 +175,10 @@ export const Map: React.FC = () => {
     // Memoize route line paint object
     const routeLinePaint = useMemo(() => ({
         'line-color': routeLineColor,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8] as any,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5
-    }), [routeLineColor]);
+    } as any), [routeLineColor]);
 
     // Memoize route line layout object
     const routeLineLayout = useMemo(() => ({
@@ -189,7 +190,7 @@ export const Map: React.FC = () => {
     const vehiclesFilter = useMemo(() => ['!', ['any',
         ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
         ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
-    ]], [selectedId, selectedVehicle?.gtfs_trip_id, selectedVehicle?.trip_id]);
+    ]] as any, [selectedId, selectedVehicle?.gtfs_trip_id, selectedVehicle?.trip_id]);
 
     return (
         <div className="w-full h-full bg-black relative">
@@ -203,7 +204,7 @@ export const Map: React.FC = () => {
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
-                mapLib={maplibregl as any}
+                mapLib={maplibregl}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
@@ -220,15 +221,15 @@ export const Map: React.FC = () => {
 
                     if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
-                        const source = (mapRef.current!.getMap() as any).getSource('pid-stops');
-                        source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-                            if (err) return;
+                        const map = mapRef.current?.getMap();
+                        const source = map?.getSource('pid-stops') as maplibregl.GeoJSONSource;
+                        source?.getClusterExpansionZoom(clusterId).then((zoom) => {
                             mapRef.current?.easeTo({
-                                center: (f.geometry as any).coordinates,
-                                zoom,
+                                center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
+                                zoom: zoom || 15,
                                 duration: 500
                             });
-                        });
+                        }).catch(err => console.error(err));
                         return;
                     }
 
@@ -257,7 +258,7 @@ export const Map: React.FC = () => {
 
                 {/* Route Shape Layer - UNDER labels */}
                 {mapLoaded && (
-                    <Source id="route-shape" type="geojson" data={routeShapeData || (EMPTY_GEOJSON as any)}>
+                    <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                         <Layer
                             id="route-line"
                             type="line"
@@ -269,7 +270,7 @@ export const Map: React.FC = () => {
                 )}
 
                 <Search
-                    stops={stops as any}
+                    stops={stops || (EMPTY_GEOJSON as StopCollection)}
                     onSelect={handleStopSelect}
                     onLineSelect={handleLineSelect}
                     activeFilter={routeFilter}
@@ -286,13 +287,13 @@ export const Map: React.FC = () => {
                 />
 
                 <Source id="user-location" type="geojson" data={(mapLoaded && userLocation ? {
-                    type: 'FeatureCollection',
+                    type: 'FeatureCollection' as const,
                     features: [{
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: userLocation },
+                        type: 'Feature' as const,
+                        geometry: { type: 'Point' as const, coordinates: userLocation },
                         properties: {}
                     }]
-                } : EMPTY_GEOJSON) as any}>
+                } : EMPTY_GEOJSON) as FeatureCollection}>
                     <Layer
                         id="user-location-pulse"
                         type="circle"
@@ -315,7 +316,7 @@ export const Map: React.FC = () => {
                 </Source>
 
 
-                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as any}>
+                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as VehicleCollection}>
                     {/* 1. PULSE (Bottom) */}
                     <Layer {...selectedVehiclePulseLayer} />
                     {/* 2. BODY */}
@@ -326,7 +327,7 @@ export const Map: React.FC = () => {
                     <Layer {...selectedVehicleLabelLayer} />
                 </Source>
 
-                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
+                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as VehicleCollection}>
                     {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
                     <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
 
@@ -337,14 +338,14 @@ export const Map: React.FC = () => {
                     <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
                 </Source>
 
-                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON) as any}>
+                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON) as StopCollection}>
                     <Layer {...stopLabelLayer} />
                 </Source>
 
                 <Source
                     id="pid-stops"
                     type="geojson"
-                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON) as any}
+                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON) as StopCollection}
                     cluster={true}
                     clusterMaxZoom={13}
                     clusterRadius={40}

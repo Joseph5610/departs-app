@@ -100,9 +100,9 @@ export const stopPointLayer: any = {
             // Only apply custom colors for Stations (Type 1)
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
-                ...getStationColorMatchPairs(),
+                ...(getStationColorMatchPairs() as any),
                 LINE_COLORS.Unknown // Default for unknown stations
-            ],
+            ] as any,
 
             // Default for Stops (Type 0 or null)
             LINE_COLORS.Default
@@ -151,9 +151,9 @@ export const stopPointGlowLayer: any = {
             'case',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
-                ...getStationColorMatchPairs(),
+                ...(getStationColorMatchPairs() as any),
                 LINE_COLORS.Unknown
-            ],
+            ] as any,
             '#000000' // Shadow for regular stops
         ],
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
