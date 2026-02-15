@@ -30,7 +30,7 @@ import {
     vehiclesLabelLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
-import type { TrackedVehicle } from '../types/transit';
+import type { TrackedVehicle, StopCollection, VehicleCollection } from '../types/transit';
 import { MapControls } from './MapControls';
 import { STORAGE_KEYS, MAP_DEFAULTS } from '../config/constants';
 import { BottomSheetContent } from './BottomSheetContent';
