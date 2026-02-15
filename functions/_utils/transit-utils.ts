@@ -76,12 +76,14 @@ export const normalizeVehicleFeature = (feature: any, tripId?: string | null): a
 
     // Detect if it's Lite format (has 'n' instead of deep structures)
     const isLite = 'n' in p && !('trip' in p);
+    const vehicle_id = String(p.vehicle_id || p.id || (tripId ? `trip-${tripId}` : `trip-${p.trip?.gtfs?.trip_id || p.tId || 'unknown'}`));
 
     return {
         type: 'Feature',
+        id: vehicle_id,
         geometry: feature.geometry,
         properties: {
-            vehicle_id: p.vehicle_id || p.id || (tripId ? `trip-${tripId}` : `trip-${p.trip?.gtfs?.trip_id || p.tId || 'unknown'}`),
+            vehicle_id: vehicle_id,
             gtfs_trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
             trip_id: p.trip?.gtfs?.trip_id ?? p.tId ?? tripId ?? undefined,
             route_short_name: p.trip?.gtfs?.route_short_name ?? p.n ?? undefined,

@@ -17,15 +17,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const finalIds = rawIds.filter(isValidStopId);
         const idsToFetch = finalIds.length > 0 ? finalIds : rawIds;
 
-        // Using the most stable Golemio endpoint
-        const golemioUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/departureboards`);
+        // Using public endpoint which is more robust for multi-stop departure boards
+        const golemioUrl = new URL(`${GOLEMIO_API.BASE_URL}/public/departureboards`);
 
         // DOCUMENTATION FORMAT: stopIds[]={"0": ["ID1", "ID2"]}
-        // We put all IDs into a single group "0" to get a combined result.
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
-
-        // Limit data to prevent excessive requests, 16 items / 60 mins is plenty for grouped view
-        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=${LIMITS.DEPARTURES_LIMIT}&minutesAfter=${LIMITS.DEPARTURES_MINUTES_AFTER}`;
+        const finalUrl = `${golemioUrl.toString()}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=${LIMITS.DEPARTURES_LIMIT}&minutesAfter=${LIMITS.DEPARTURES_MINUTES_AFTER}`;
 
         const response = await fetch(finalUrl, {
             headers: {
@@ -40,16 +37,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const data = await response.json();
-
-        // Golemio returns an array of groups: [ group0, group1, ... ]
-        // Each group is an array of departure items.
-        // We flatten all groups into one list.
         const allGroups = Array.isArray(data) ? data : [];
         const flattened = allGroups.flat();
 
         const departures = flattened.map(normalizeDepartureItem);
-
-        // Sort by time
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         return new Response(JSON.stringify({ departures }), {

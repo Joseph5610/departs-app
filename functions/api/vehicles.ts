@@ -63,32 +63,34 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
-    let allFeatures: GolemioVehicleFeature[] | PublicVehicleProperties[] | any[] = [];
+    let allFeatures: any[] = [];
 
     try {
+        const headers = {
+            "X-Access-Token": env.GOLEMIO_API_KEY,
+            "Content-Type": "application/json"
+        };
+
         if (tripId && bounds) {
             // COMBINED: Fetch both and merge
-            const tripUrlString = `${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions?tripId=${tripId}`;
-            const boundsUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions`);
+            // Use standard endpoint for Trip ID (more reliable)
+            const tripUrlString = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+
+            // Use public endpoint for bounding box (often faster for high volume)
+            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
             boundsUrl.searchParams.set("boundingBox", bounds);
             if (routeType) boundsUrl.searchParams.set("routeType", routeType);
             routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
 
             const [tripRes, boundsRes] = await Promise.all([
-                fetch(tripUrlString, {
-                    headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
-                    cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
-                }),
-                fetch(boundsUrl.toString(), {
-                    headers: { "X-Access-Token": env.GOLEMIO_API_KEY, "Content-Type": "application/json" },
-                    cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
-                })
+                fetch(tripUrlString, { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } }),
+                fetch(boundsUrl.toString(), { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } })
             ]);
 
             const tripData: any = tripRes.ok ? await tripRes.json() : null;
             const boundsData: any = boundsRes.ok ? await boundsRes.json() : { features: [] };
 
-            let tripFeaturesFromData: GolemioVehicleFeature[] = [];
+            let tripFeaturesFromData: any[] = [];
             if (tripData) {
                 if (tripData.type === 'FeatureCollection') {
                     tripFeaturesFromData = tripData.features || [];
@@ -97,7 +99,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 }
             }
 
-            // Normalize ALL features
             const normalizedTripFeatures = tripFeaturesFromData
                 .filter(f => f.geometry && f.geometry.coordinates)
                 .map(feature => normalizeVehicleFeature(feature, tripId));
@@ -111,9 +112,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             // SINGLE MODE
             let golemioUrl: string;
             if (tripId) {
-                golemioUrl = `${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions?tripId=${tripId}`;
+                // Trip ID lookup is better on the standard endpoint
+                golemioUrl = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
             } else {
-                const bUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions`);
+                // Multiple route/bounds filtering
+                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}/public${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
                 if (bounds) bUrl.searchParams.set("boundingBox", bounds);
                 if (routeType) bUrl.searchParams.set("routeType", routeType);
                 routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName", rsn));
@@ -121,10 +124,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
 
             const response = await fetch(golemioUrl, {
-                headers: {
-                    "X-Access-Token": env.GOLEMIO_API_KEY,
-                    "Content-Type": "application/json",
-                },
+                headers,
                 cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
             });
 
@@ -135,16 +135,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             const data: any = await response.json();
 
             if (tripId) {
-                let feature: GolemioVehicleFeature | null = null;
-                if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
-                    feature = data.features[0];
+                let featuresFromData: any[] = [];
+                if (data.type === 'FeatureCollection') {
+                    featuresFromData = data.features || [];
                 } else if (data.type === 'Feature') {
-                    feature = data;
+                    featuresFromData = [data];
                 }
-
-                if (feature && feature.geometry) {
-                    allFeatures = [normalizeVehicleFeature(feature, tripId)];
-                }
+                allFeatures = featuresFromData
+                    .filter(f => f.geometry && f.geometry.coordinates)
+                    .map(f => normalizeVehicleFeature(f, tripId));
             } else {
                 allFeatures = (data.features || [])
                     .filter((f: any) => f.geometry && f.geometry.coordinates)
@@ -154,7 +153,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return new Response("Missing parameters", { status: 400 });
         }
 
-        // Apply deduplication and jittering
         const features = applyJitter(allFeatures);
 
         return new Response(JSON.stringify({ type: 'FeatureCollection', features }), {

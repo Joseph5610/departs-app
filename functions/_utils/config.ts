@@ -3,7 +3,6 @@
  */
 export const GOLEMIO_API = {
     BASE_URL: 'https://api.golemio.cz/v2',
-    PUBLIC_BASE_URL: 'https://api.golemio.cz/v2/public',
     ENDPOINTS: {
         STOPS: '/gtfs/stops',
         DEPARTURES: '/departureboards',

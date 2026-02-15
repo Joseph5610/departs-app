@@ -87,7 +87,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         return vehicleDetail.stop_times.features.filter((stop: any) =>
             showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0)
         );
-    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence, showPastStops]);
+    }, [vehicleDetail, showPastStops]);
 
     // Memoize toggle handler to prevent unnecessary re-renders
     const handleTogglePastStops = useCallback(() => {
