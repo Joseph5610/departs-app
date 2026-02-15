@@ -21,8 +21,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
     const scopes = 'scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor';
     const golemioUrl = isPlaceholder
-        ? `${GOLEMIO_API.PUBLIC_BASE_URL}${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
-        : `${GOLEMIO_API.PUBLIC_BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
+        ? `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
+        : `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
 
     try {
         const response = await fetch(golemioUrl, {

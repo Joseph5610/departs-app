@@ -69,27 +69,33 @@ export const applyJitter = (allFeatures: any[]): any[] => {
 
 /**
  * Normalizes a Golemio vehicle feature into our internal flat format.
+ * Handles both Full and Lite Golemio formats.
  */
 export const normalizeVehicleFeature = (feature: any, tripId?: string | null): any => {
+    const p = feature.properties;
+
+    // Detect if it's Lite format (has 'n' instead of deep structures)
+    const isLite = 'n' in p && !('trip' in p);
+
     return {
         type: 'Feature',
         geometry: feature.geometry,
         properties: {
-            vehicle_id: feature.properties.vehicle_id || (tripId ? `trip-${tripId}` : `trip-${feature.properties.trip?.gtfs?.trip_id || 'unknown'}`),
-            gtfs_trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
-            trip_id: feature.properties.trip?.gtfs?.trip_id || tripId,
-            route_short_name: feature.properties.trip?.gtfs?.route_short_name,
-            gtfs_route_short_name: feature.properties.trip?.gtfs?.route_short_name,
-            route_type: feature.properties.trip?.gtfs?.route_type,
-            trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
-            gtfs_trip_headsign: feature.properties.trip?.gtfs?.trip_headsign,
-            bearing: feature.properties.last_position?.bearing,
-            delay: feature.properties.last_position?.delay?.actual || 0,
-            state_position: feature.properties.last_position?.state_position,
-            next_stop_name: feature.properties.last_position?.next_stop?.id,
-            is_wheelchair_accessible: feature.properties.trip?.wheelchair_accessible,
-            is_air_conditioned: feature.properties.trip?.air_conditioned,
-            vehicle_registration_number: feature.properties.trip?.vehicle_registration_number,
+            vehicle_id: p.vehicle_id || p.id || (tripId ? `trip-${tripId}` : `trip-${p.trip?.gtfs?.trip_id || p.tId || 'unknown'}`),
+            gtfs_trip_id: p.trip?.gtfs?.trip_id || p.tId || tripId,
+            trip_id: p.trip?.gtfs?.trip_id || p.tId || tripId,
+            route_short_name: p.trip?.gtfs?.route_short_name || p.n,
+            gtfs_route_short_name: p.trip?.gtfs?.route_short_name || p.n,
+            route_type: p.trip?.gtfs?.route_type || p.t,
+            trip_headsign: p.trip?.gtfs?.trip_headsign || p.headsign,
+            gtfs_trip_headsign: p.trip?.gtfs?.trip_headsign || p.headsign,
+            bearing: isLite ? p.b : p.last_position?.bearing,
+            delay: isLite ? p.d : (p.last_position?.delay?.actual || 0),
+            state_position: p.last_position?.state_position,
+            next_stop_name: p.last_position?.next_stop?.id,
+            is_wheelchair_accessible: p.trip?.wheelchair_accessible,
+            is_air_conditioned: p.trip?.air_conditioned,
+            vehicle_registration_number: p.trip?.vehicle_registration_number,
         }
     };
 };
