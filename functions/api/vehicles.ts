@@ -68,11 +68,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     try {
         if (tripId && bounds) {
             // COMBINED: Fetch both and merge
-            const tripUrlString = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
-            const boundsUrl = new URL(`${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+            const tripUrlString = `${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions?tripId=${tripId}`;
+            const boundsUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions`);
             boundsUrl.searchParams.set("boundingBox", bounds);
             if (routeType) boundsUrl.searchParams.set("routeType", routeType);
-            routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName[]", rsn));
+            routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
 
             const [tripRes, boundsRes] = await Promise.all([
                 fetch(tripUrlString, {
@@ -98,20 +98,25 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
 
             // Normalize ALL features
-            const normalizedTripFeatures = tripFeaturesFromData.map(feature => normalizeVehicleFeature(feature, tripId));
-            const normalizedBoundsFeatures = (boundsData.features || []).map((feature: any) => normalizeVehicleFeature(feature));
+            const normalizedTripFeatures = tripFeaturesFromData
+                .filter(f => f.geometry && f.geometry.coordinates)
+                .map(feature => normalizeVehicleFeature(feature, tripId));
+
+            const normalizedBoundsFeatures = (boundsData.features || [])
+                .filter((f: any) => f.geometry && f.geometry.coordinates)
+                .map((feature: any) => normalizeVehicleFeature(feature));
 
             allFeatures = [...normalizedBoundsFeatures, ...normalizedTripFeatures];
         } else if (tripId || bounds || routeShortNames.length > 0) {
             // SINGLE MODE
             let golemioUrl: string;
             if (tripId) {
-                golemioUrl = `${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}?tripId=${tripId}`;
+                golemioUrl = `${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions?tripId=${tripId}`;
             } else {
-                const bUrl = new URL(`${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}`);
+                const bUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/vehiclepositions`);
                 if (bounds) bUrl.searchParams.set("boundingBox", bounds);
                 if (routeType) bUrl.searchParams.set("routeType", routeType);
-                routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName[]", rsn));
+                routeShortNames.forEach(rsn => bUrl.searchParams.append("routeShortName", rsn));
                 golemioUrl = bUrl.toString();
             }
 
@@ -137,11 +142,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                     feature = data;
                 }
 
-                if (feature) {
+                if (feature && feature.geometry) {
                     allFeatures = [normalizeVehicleFeature(feature, tripId)];
                 }
             } else {
-                allFeatures = (data.features || []).map((feature: any) => normalizeVehicleFeature(feature));
+                allFeatures = (data.features || [])
+                    .filter((f: any) => f.geometry && f.geometry.coordinates)
+                    .map((feature: any) => normalizeVehicleFeature(feature));
             }
         } else {
             return new Response("Missing parameters", { status: 400 });

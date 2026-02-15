@@ -18,7 +18,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const idsToFetch = finalIds.length > 0 ? finalIds : rawIds;
 
         // Using the most stable Golemio endpoint
-        const golemioUrl = new URL(`${GOLEMIO_API.BASE_URL}${GOLEMIO_API.ENDPOINTS.DEPARTURES}`);
+        const golemioUrl = new URL(`${GOLEMIO_API.PUBLIC_BASE_URL}/departureboards`);
 
         // DOCUMENTATION FORMAT: stopIds[]={"0": ["ID1", "ID2"]}
         // We put all IDs into a single group "0" to get a combined result.
