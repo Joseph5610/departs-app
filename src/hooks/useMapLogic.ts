@@ -264,10 +264,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             setDebouncedBounds(initialBounds);
         }
 
-        const p = new URLSearchParams(window.location.search);
-        if (!p.has('lat') && !p.has('lng') && !p.has('z') && !p.has('stopId') && !p.has('tripId')) {
-            performGeolocation(false);
-        }
+        performGeolocation(false);
     }, [performGeolocation]);
 
     const toggleGroup = useCallback((groupId: string) => {
