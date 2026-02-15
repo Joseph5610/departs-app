@@ -83,8 +83,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             routeShortNames.forEach(rsn => boundsUrl.searchParams.append("routeShortName", rsn));
 
             const [tripRes, boundsRes] = await Promise.all([
-                fetch(tripUrlString, { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } }),
-                fetch(boundsUrl.toString(), { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } })
+                fetch(tripUrlString, { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } } as any),
+                fetch(boundsUrl.toString(), { headers, cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true } } as any)
             ]);
 
             const tripData: any = tripRes.ok ? await tripRes.json() : null;
@@ -126,7 +126,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             const response = await fetch(golemioUrl, {
                 headers,
                 cf: { cacheTtl: CACHE_CONFIG.DEFAULT_TTL, cacheEverything: true }
-            });
+            } as any);
 
             if (!response.ok) {
                 return new Response(`Golemio API Error: ${response.status}`, { status: response.status });

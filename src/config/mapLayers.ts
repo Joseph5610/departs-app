@@ -1,8 +1,7 @@
-import type { LayerSpecification } from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
 // 1. The GLOW Layer (Background)
-export const clusterLayer: LayerSpecification = {
+export const clusterLayer: any = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
@@ -52,7 +51,7 @@ export const clusterLayer: LayerSpecification = {
 };
 
 // 2. The CORE Layer (Foreground - Bright Center)
-export const clusterCoreLayer: LayerSpecification = {
+export const clusterCoreLayer: any = {
     id: 'cluster-core',
     type: 'circle',
     source: 'pid-stops',
@@ -65,7 +64,7 @@ export const clusterCoreLayer: LayerSpecification = {
     }
 };
 
-export const clusterCountLayer: LayerSpecification = {
+export const clusterCountLayer: any = {
     id: 'cluster-count',
     type: 'symbol',
     source: 'pid-stops',
@@ -79,7 +78,7 @@ export const clusterCountLayer: LayerSpecification = {
     }
 };
 
-export const stopPointLayer: LayerSpecification = {
+export const stopPointLayer: any = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
@@ -135,7 +134,7 @@ export const stopPointLayer: LayerSpecification = {
 };
 
 // 3a. ATMOSPHERIC GLOW for Stations
-export const stopPointGlowLayer: LayerSpecification = {
+export const stopPointGlowLayer: any = {
     id: 'unclustered-point-glow',
     type: 'circle',
     source: 'pid-stops',
@@ -166,7 +165,7 @@ export const stopPointGlowLayer: LayerSpecification = {
 };
 
 
-export const transferStationLayer: LayerSpecification = {
+export const transferStationLayer: any = {
     id: 'transfer-stations',
     type: 'symbol',
     source: 'pid-stops',
@@ -197,7 +196,7 @@ export const transferStationLayer: LayerSpecification = {
     }
 };
 
-export const stopLabelLayer: LayerSpecification = {
+export const stopLabelLayer: any = {
     id: 'stop-labels',
     type: 'symbol',
     source: 'stop-labels-centroids',
@@ -226,7 +225,7 @@ export const stopLabelLayer: LayerSpecification = {
     }
 };
 
-export const platformLabelLayer: LayerSpecification = {
+export const platformLabelLayer: any = {
     id: 'platform-labels',
     type: 'symbol',
     source: 'pid-stops',
@@ -254,7 +253,7 @@ export const platformLabelLayer: LayerSpecification = {
     }
 };
 
-export const entranceLayer: LayerSpecification = {
+export const entranceLayer: any = {
     id: 'entrance-layer',
     type: 'symbol',
     source: 'pid-stops',
@@ -284,7 +283,7 @@ export const entranceLayer: LayerSpecification = {
 // 4. Vehicle Layers
 import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
-export const selectedVehiclePulseLayer: LayerSpecification = {
+export const selectedVehiclePulseLayer: any = {
     id: 'selected-vehicle-pulse',
     type: 'circle',
     paint: {
@@ -294,7 +293,7 @@ export const selectedVehiclePulseLayer: LayerSpecification = {
     }
 };
 
-export const selectedVehiclePointLayer: LayerSpecification = {
+export const selectedVehiclePointLayer: any = {
     id: 'selected-vehicle-point',
     type: 'circle',
     paint: {
@@ -306,7 +305,7 @@ export const selectedVehiclePointLayer: LayerSpecification = {
     }
 };
 
-export const selectedVehicleDirectionLayer: LayerSpecification = {
+export const selectedVehicleDirectionLayer: any = {
     id: 'selected-vehicle-direction',
     type: 'symbol',
     layout: {
@@ -325,7 +324,7 @@ export const selectedVehicleDirectionLayer: LayerSpecification = {
     }
 };
 
-export const selectedVehicleLabelLayer: LayerSpecification = {
+export const selectedVehicleLabelLayer: any = {
     id: 'selected-vehicle-label',
     type: 'symbol',
     layout: {
@@ -345,7 +344,7 @@ export const selectedVehicleLabelLayer: LayerSpecification = {
     }
 };
 
-export const vehiclesPointLayer: LayerSpecification = {
+export const vehiclesPointLayer: any = {
     id: 'vehicles-point',
     type: 'circle',
     minzoom: 12,
@@ -359,7 +358,7 @@ export const vehiclesPointLayer: LayerSpecification = {
     }
 };
 
-export const vehiclesDirectionLayer: LayerSpecification = {
+export const vehiclesDirectionLayer: any = {
     id: 'vehicles-direction-all',
     type: 'symbol',
     minzoom: 12,
@@ -380,7 +379,7 @@ export const vehiclesDirectionLayer: LayerSpecification = {
     }
 };
 
-export const vehiclesLabelLayer: LayerSpecification = {
+export const vehiclesLabelLayer: any = {
     id: 'vehicles-label-all',
     type: 'symbol',
     minzoom: 12,
