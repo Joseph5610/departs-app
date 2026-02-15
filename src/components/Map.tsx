@@ -32,6 +32,7 @@ import {
 import { useMapLogic } from '../hooks/useMapLogic';
 import type { TrackedVehicle } from '../types/transit';
 import { MapControls } from './MapControls';
+import { STORAGE_KEYS, MAP_DEFAULTS } from '../config/constants';
 import { BottomSheetContent } from './BottomSheetContent';
 
 const EMPTY_GEOJSON: any = {
@@ -49,20 +50,20 @@ export const Map: React.FC = () => {
         const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 
         // Default Prague coordinates
-        let lat = 50.0755;
-        let lng = 14.4378;
-        let z = 13;
+        let lat = MAP_DEFAULTS.LAT;
+        let lng = MAP_DEFAULTS.LNG;
+        let z = MAP_DEFAULTS.ZOOM;
 
         // Try to get from localStorage if no URL params
         if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
-            const saved = localStorage.getItem('lastUserLocation');
+            const saved = localStorage.getItem(STORAGE_KEYS.LAST_USER_LOCATION);
             if (saved) {
                 try {
                     const { lat: sLat, lng: sLng } = JSON.parse(saved);
                     if (typeof sLat === 'number' && typeof sLng === 'number') {
                         lat = sLat;
                         lng = sLng;
-                        z = 15; // Zoom in more if we have a user location
+                        z = MAP_DEFAULTS.USER_LOCATION_ZOOM; // Zoom in more if we have a user location
                     }
                 } catch (e) {
                     console.error('Failed to parse lastUserLocation', e);
@@ -133,8 +134,8 @@ export const Map: React.FC = () => {
     }, [setIsSettingsOpen]);
 
     const handleToggleFollow = useCallback(() => {
-        setIsFollowing(prev => !prev);
-    }, [setIsFollowing]);
+        setIsFollowing(!isFollowing);
+    }, [isFollowing, setIsFollowing]);
 
     const handleStopSelect = useCallback((stop: any) => {
         const [lng, lat] = stop.geometry.coordinates;

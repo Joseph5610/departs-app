@@ -1,3 +1,5 @@
+import { GOLEMIO_API, CACHE_CONFIG } from '../_utils/config';
+
 interface Env {
     GOLEMIO_API_KEY: string;
 }
@@ -17,9 +19,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     // 'service-' IDs are valid live vehicle IDs from Golemio
     const isPlaceholder = vehicleId.startsWith('trip-');
 
+    const scopes = 'scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor';
     const golemioUrl = isPlaceholder
-        ? `https://api.golemio.cz/v2/public/gtfs/trips/${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`
-        : `https://api.golemio.cz/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`;
+        ? `${GOLEMIO_API.PUBLIC_BASE_URL}${GOLEMIO_API.ENDPOINTS.TRIPS}/${tripId}?${scopes}`
+        : `${GOLEMIO_API.PUBLIC_BASE_URL}${GOLEMIO_API.ENDPOINTS.VEHICLE_POSITIONS}/${vehicleId};gtfsTripId=${tripId}?${scopes}`;
 
     try {
         const response = await fetch(golemioUrl, {
@@ -28,7 +31,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
                 "Content-Type": "application/json",
             },
             cf: {
-                cacheTtl: 10,
+                cacheTtl: CACHE_CONFIG.DEFAULT_TTL,
                 cacheEverything: true,
             }
         } as any);
@@ -64,7 +67,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         return new Response(JSON.stringify(vehicleData), {
             headers: {
                 "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=10",
+                "Cache-Control": `public, max-age=${CACHE_CONFIG.DEFAULT_TTL}`,
             },
         });
     } catch (err) {

@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../components/Toast';
 import type { MapRef } from 'react-map-gl/maplibre';
+import { STORAGE_KEYS, MAP_DEFAULTS } from '../config/constants';
 
 export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
@@ -39,7 +40,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 console.log('🎯 Manual locate: Flying to current known location');
                 mapRef.current?.getMap().flyTo({
                     center: userLocationRef.current,
-                    zoom: 15,
+                    zoom: MAP_DEFAULTS.USER_LOCATION_ZOOM,
                     duration: 2000
                 });
             } else {
@@ -64,7 +65,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 setUserLocation(newLocation);
 
                 // Persist to localStorage
-                localStorage.setItem('lastUserLocation', JSON.stringify({ lat: latitude, lng: longitude }));
+                localStorage.setItem(STORAGE_KEYS.LAST_USER_LOCATION, JSON.stringify({ lat: latitude, lng: longitude }));
 
                 // Handle initial positioning
                 if (!isInitialSet.current) {
@@ -75,7 +76,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                         console.log('🚀 Initial lock: Snapping map to user location');
                         mapRef.current?.getMap().jumpTo({
                             center: newLocation,
-                            zoom: 15
+                            zoom: MAP_DEFAULTS.USER_LOCATION_ZOOM
                         });
                     }
                     isInitialSet.current = true;
@@ -86,7 +87,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                     console.log('🎯 Position acquired: Executing pending flyTo');
                     mapRef.current?.getMap().flyTo({
                         center: newLocation,
-                        zoom: 15,
+                        zoom: MAP_DEFAULTS.USER_LOCATION_ZOOM,
                         duration: 2000
                     });
                     pendingManualFly.current = false;

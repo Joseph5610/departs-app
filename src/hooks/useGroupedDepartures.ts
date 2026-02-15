@@ -1,11 +1,20 @@
 
 import { useMemo } from 'react';
+import type { Departure } from '../types/transit';
 
-export const useGroupedDepartures = (departures: any, departureSort: 'line' | 'departure') => {
+interface DepartureGroup {
+    groupId: string;
+    line: string;
+    type: string;
+    departures: Departure[];
+    firstTime: number;
+}
+
+export const useGroupedDepartures = (departures: { departures: Departure[] } | null | undefined, departureSort: 'line' | 'departure') => {
     return useMemo(() => {
         if (!departures?.departures) return [];
-        const groups: Record<string, any[]> = {};
-        departures.departures.forEach((dep: any) => {
+        const groups: Record<string, Departure[]> = {};
+        departures.departures.forEach((dep) => {
             // Metro (type 1) is grouped by line AND direction
             const lineName = String(dep.line).toUpperCase();
             const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
@@ -14,7 +23,7 @@ export const useGroupedDepartures = (departures: any, departureSort: 'line' | 'd
             groups[key].push(dep);
         });
 
-        const result = Object.entries(groups).map(([key, deps]) => ({
+        const result: DepartureGroup[] = Object.entries(groups).map(([key, deps]) => ({
             groupId: key,
             line: deps[0].line,
             type: deps[0].type,

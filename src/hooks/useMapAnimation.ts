@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
+import type { TrackedVehicle } from '../types/transit';
 
 /**
  * Handles the pulsing animation for a selected vehicle on the map.
@@ -10,7 +11,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
  */
 export const useMapAnimation = (
     mapRef: React.RefObject<MapRef | null>,
-    selectedVehicle: any, // Will be typed strictly in next step
+    selectedVehicle: TrackedVehicle | null,
     isFollowing: boolean
 ) => {
     useEffect(() => {
@@ -28,7 +29,7 @@ export const useMapAnimation = (
                         map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', radius);
                         map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', Math.max(0.1, opacity));
                     }
-                } catch (e) {
+                } catch {
                     // Layer might not be ready yet
                 }
             }
@@ -46,7 +47,7 @@ export const useMapAnimation = (
                 try {
                     map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', 0);
                     map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', 0);
-                } catch (e) {
+                } catch {
                     // Silently fail
                 }
             }

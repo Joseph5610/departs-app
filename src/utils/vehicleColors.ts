@@ -1,4 +1,5 @@
 import type { ExpressionSpecification } from 'maplibre-gl';
+import { TRANSIT_CONFIG } from '../config/constants';
 
 /**
  * Determines if a route is a night route based on its number.
@@ -8,7 +9,7 @@ export const isNightRoute = (routeName: string | number): boolean => {
     const nameStr = String(routeName);
     const nameNum = parseInt(nameStr, 10);
     if (isNaN(nameNum)) return false;
-    return (nameNum >= 90 && nameNum <= 99) || nameNum >= 900;
+    return (nameNum >= TRANSIT_CONFIG.NIGHT_TRAM_MIN && nameNum <= TRANSIT_CONFIG.NIGHT_TRAM_MAX) || nameNum >= TRANSIT_CONFIG.NIGHT_BUS_MIN;
 };
 
 /**
@@ -62,11 +63,11 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
 export const isNightRouteExpression: ExpressionSpecification = [
     'any',
     // Trams 90-99
-    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
+    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], Array.from({ length: TRANSIT_CONFIG.NIGHT_TRAM_MAX - TRANSIT_CONFIG.NIGHT_TRAM_MIN + 1 }, (_, i) => String(TRANSIT_CONFIG.NIGHT_TRAM_MIN + i)), true, false],
     // Buses 9xx (Length 3, Starts with 9)
     ['all',
-        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], 3],
-        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], '9']
+        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], TRANSIT_CONFIG.NIGHT_BUS_LENGTH],
+        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], TRANSIT_CONFIG.NIGHT_BUS_PREFIX]
     ]
 ];
 

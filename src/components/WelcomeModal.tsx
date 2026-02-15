@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Info, ArrowRight } from 'lucide-react';
+import { STORAGE_KEYS } from '../config/constants';
 
 export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
     const { t } = useTranslation();
-    const [isOpen, setIsOpen] = useState(false);
-
-    useEffect(() => {
-        const hasSeenWelcome = localStorage.getItem('departs_welcome_seen');
-        if (!hasSeenWelcome) {
-            setIsOpen(true);
-        }
-    }, []);
+    const [isOpen, setIsOpen] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
+    });
 
     const handleClose = () => {
-        localStorage.setItem('departs_welcome_seen', 'true');
+        localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
         setIsOpen(false);
         onGetStarted();
     };

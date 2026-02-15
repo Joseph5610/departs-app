@@ -1,6 +1,7 @@
 
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useCallback, useRef, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useMapReducer } from './useMapReducer';
 import { useVehicles } from './useVehicles';
 import { useVehicleDetail } from './useVehicleDetail';
 import { useStops } from './useStops';
@@ -14,39 +15,55 @@ import { useMapUrlSync } from './useMapUrlSync';
 import { useMapVehicleSync } from './useMapVehicleSync';
 import { addAllIcons } from '../utils/mapIcons';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { VehicleFeature, VehicleCollection, TrackedVehicle } from '../types/transit';
+import type { VehicleFeature, VehicleCollection } from '../types/transit';
+import { MAP_DEFAULTS } from '../config/constants';
+import { API_ENDPOINTS } from '../config/api';
+import type maplibregl from 'maplibre-gl';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
     features: []
 };
 
+/**
+ * Main hook for orchestrating map state, data fetching, and user interactions.
+ * Uses useMapReducer for centralized state management.
+ *
+ * @param mapRef Reference to the MapLibre Map instance
+ */
 export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     const queryClient = useQueryClient();
-    const [mapLoaded, setMapLoaded] = useState(false);
-    const [bounds, setBounds] = useState<string | null>(null);
-    const [debouncedBounds, setDebouncedBounds] = useState<string | null>(null);
-    const [selectedStop, setSelectedStop] = useState<{ id: string; name: string } | null>(null);
-    const [selectedVehicle, setSelectedVehicle] = useState<TrackedVehicle | null>(null);
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [showVehicles, setShowVehicles] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('showVehicles');
-            return saved !== null ? saved === 'true' : true;
-        }
-        return true;
-    });
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
-    const [departureSort, setDepartureSort] = useState<'line' | 'departure'>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('departureSort');
-            return (saved === 'line' || saved === 'departure') ? saved : 'line';
-        }
-        return 'line';
-    });
-    const [routeFilter, setRouteFilter] = useState<string[] | null>(null);
-    const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
+    const {
+        state,
+        setMapLoaded,
+        setBounds,
+        setDebouncedBounds,
+        setSelectedStop,
+        setSelectedVehicle,
+        setIsFollowing,
+        setShowVehicles,
+        setIsSettingsOpen,
+        setExpandedGroups,
+        setDepartureSort,
+        setRouteFilter,
+        setLabelLayerId
+    } = useMapReducer();
+
+    const {
+        mapLoaded,
+        bounds,
+        debouncedBounds,
+        selectedStop,
+        selectedVehicle,
+        isFollowing,
+        showVehicles,
+        isSettingsOpen,
+        expandedGroups,
+        departureSort,
+        routeFilter,
+        labelLayerId
+    } = state;
+
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Identify the trip ID of the vehicle we are tracking (if any)
@@ -130,16 +147,16 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         });
     }, [selectedVehicle?._geometry, isFollowing, mapRef]);
 
-    const getRoundedBounds = (map: any) => {
+    const getRoundedBounds = (map: maplibregl.Map) => {
         const b = map.getBounds();
         const zoom = map.getZoom();
         const round = (num: number) => Math.round(num * 1000) / 1000;
-        return b && zoom >= 11
+        return b && zoom >= MAP_DEFAULTS.MIN_ZOOM_BOUNDS
             ? `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`
             : null;
     };
 
-    const onMove = useCallback((evt: any) => {
+    const onMove = useCallback((evt: { viewState: { zoom: number }, target: maplibregl.Map, originalEvent?: any }) => {
         if (isFollowing) return;
 
         const { zoom } = evt.viewState;
@@ -153,12 +170,12 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             setBounds(currentBounds);
         }, 800);
 
-        if (zoom < 11 && bounds !== null) {
+        if (zoom < MAP_DEFAULTS.MIN_ZOOM_BOUNDS && bounds !== null) {
             setBounds(null);
         }
-    }, [bounds, isFollowing]);
+    }, [bounds, isFollowing, setBounds, setDebouncedBounds]);
 
-    const onMoveEnd = useCallback((evt: any) => {
+    const onMoveEnd = useCallback((evt: { viewState: { latitude: number, longitude: number, zoom: number }, target: maplibregl.Map, originalEvent?: any }) => {
         if (isFollowing) return;
 
         const { latitude, longitude, zoom } = evt.viewState;
@@ -175,16 +192,16 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             setBounds(currentBounds);
             setDebouncedBounds(currentBounds);
         }
-    }, [isFollowing]);
+    }, [isFollowing, setBounds, setDebouncedBounds]);
 
     const onDragStart = useCallback(() => {
         if (isFollowing) {
             console.log('👆 Drag detected, disabling auto-follow');
             setIsFollowing(false);
         }
-    }, [isFollowing]);
+    }, [isFollowing, setIsFollowing]);
 
-    const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: any) => {
+    const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: { line?: string, type?: string, headsign?: string, delay?: number }) => {
         const activeVehId = vehicleId || `trip-${tripId}`;
 
         // Initialize with 0,0 coords - map won't move until isFollowing is true
@@ -203,7 +220,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         // Do NOT set isFollowing(true) here - wait for real coords
 
         try {
-            const res = await fetch(`/api/vehicle-detail?tripId=${encodeURIComponent(tripId)}&vehicleId=${encodeURIComponent(activeVehId)}`);
+            const res = await fetch(API_ENDPOINTS.VEHICLE_DETAIL(activeVehId, tripId));
             if (res.ok) {
                 const data = await res.json();
 
@@ -212,6 +229,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { shapes, stop_times, ...liteData } = data;
                     setSelectedVehicle((prev: any) => prev ? { ...prev, _geometry: coords, ...liteData } : null);
 
@@ -232,22 +250,13 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         } catch (err) {
             console.error('Prefetch failed:', err);
         }
-    }, [mapRef]);
+    }, [mapRef, queryClient, setIsFollowing, setSelectedVehicle]);
 
-    // Persist settings
-    useEffect(() => {
-        localStorage.setItem('showVehicles', String(showVehicles));
-    }, [showVehicles]);
-
-    useEffect(() => {
-        localStorage.setItem('departureSort', departureSort);
-    }, [departureSort]);
-
-    const onLoad = useCallback((evt: any) => {
+    const onLoad = useCallback((evt: { target: maplibregl.Map }) => {
         const map = evt.target;
         const layers = map.getStyle().layers;
         if (layers) {
-            const firstLabelLayer = layers.find((layer: any) => layer.type === 'symbol' && layer.layout?.['text-field']);
+            const firstLabelLayer = layers.find((layer) => layer.type === 'symbol' && (layer as any).layout?.['text-field']);
             if (firstLabelLayer) {
                 setLabelLayerId(firstLabelLayer.id);
             }
@@ -257,7 +266,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
 
         const b = map.getBounds();
         const z = map.getZoom();
-        if (b && z >= 11) {
+        if (b && z >= MAP_DEFAULTS.MIN_ZOOM_BOUNDS) {
             const round = (num: number) => Math.round(num * 1000) / 1000;
             const initialBounds = `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`;
             setBounds(initialBounds);
@@ -265,24 +274,25 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         }
 
         performGeolocation(false);
-    }, [performGeolocation]);
+    }, [performGeolocation, setBounds, setDebouncedBounds, setLabelLayerId, setMapLoaded]);
 
-    const toggleGroup = useCallback((groupId: string) => {
-        setExpandedGroups(prev => prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]);
-    }, []);
+    const toggleGroupInternal = useCallback((groupId: string) => {
+        setExpandedGroups((prev: string[]) => prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]);
+    }, [setExpandedGroups]);
 
     return useMemo(() => ({
         bounds, debouncedBounds, selectedStop, selectedVehicle, userLocation, isFollowing,
         showVehicles, isSettingsOpen, expandedGroups, departureSort, routeFilter,
         setSelectedStop, setSelectedVehicle, setIsFollowing, setShowVehicles, setIsSettingsOpen,
-        setDepartureSort, handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick, toggleGroup, setExpandedGroups,
+        setDepartureSort, handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick, toggleGroup: toggleGroupInternal, setExpandedGroups,
         setRouteFilter, displayVehicles, selectedVehicleFeature, vehicleDetail, loadingDetail, stopsData, labelData, groupedDepartures,
         stops, loadingDeps, routeShapeData, fetchingVehicles, dataUpdatedAt, mapLoaded, selectedId, labelLayerId
     }), [
         bounds, debouncedBounds, selectedStop, selectedVehicle, userLocation, isFollowing,
         showVehicles, isSettingsOpen, expandedGroups, departureSort, routeFilter,
-        handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick,
+        handleLocate, onMove, onMoveEnd, onLoad, onDragStart, handleDepartureClick, toggleGroupInternal,
         displayVehicles, selectedVehicleFeature, vehicleDetail, loadingDetail, stopsData, labelData, groupedDepartures,
-        stops, loadingDeps, routeShapeData, fetchingVehicles, dataUpdatedAt, mapLoaded, selectedId, labelLayerId
+        stops, loadingDeps, routeShapeData, fetchingVehicles, dataUpdatedAt, mapLoaded, selectedId, labelLayerId,
+        setDepartureSort, setExpandedGroups, setIsFollowing, setIsSettingsOpen, setRouteFilter, setSelectedStop, setSelectedVehicle, setShowVehicles
     ]);
 };

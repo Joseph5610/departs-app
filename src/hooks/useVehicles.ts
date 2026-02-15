@@ -1,20 +1,14 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
+import { API_ENDPOINTS } from '../config/api';
 
 const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null): Promise<VehicleFeature[]> => {
     try {
-        const url = new URL('/api/vehicles', window.location.origin);
+        if (!bounds && !trackedId && (!routeFilter || routeFilter.length === 0)) return [];
 
-        if (bounds) url.searchParams.set('bounds', bounds);
-        if (trackedId) url.searchParams.set('tripId', trackedId);
-        if (routeFilter && routeFilter.length > 0) {
-            routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
-        }
-
-        if (url.searchParams.toString() === '') return [];
-
-        const response = await fetch(url.toString());
+        const url = API_ENDPOINTS.VEHICLES(bounds, trackedId, routeFilter);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const json = await response.json();
