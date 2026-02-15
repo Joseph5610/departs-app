@@ -11,6 +11,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const watchId = useRef<number | null>(null);
     const isInitialSet = useRef(false);
     const userLocationRef = useRef<[number, number] | null>(null);
+    const pendingManualFly = useRef(false);
 
     // Keep ref in sync for use in callbacks without triggering re-renders
     useEffect(() => {
@@ -33,19 +34,21 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
             return;
         }
 
-        // If manual click and we already have a location, fly there immediately
-        if (isManual && userLocationRef.current) {
-            console.log('🎯 Manual locate: Flying to current known location');
-            mapRef.current?.getMap().flyTo({
-                center: userLocationRef.current,
-                zoom: 15,
-                duration: 2000
-            });
-            // We still continue to ensure the watch is active if it somehow wasn't
+        if (isManual) {
+            if (userLocationRef.current) {
+                console.log('🎯 Manual locate: Flying to current known location');
+                mapRef.current?.getMap().flyTo({
+                    center: userLocationRef.current,
+                    zoom: 15,
+                    duration: 2000
+                });
+            } else {
+                console.log('⏳ Manual locate: Pending position fix...');
+                pendingManualFly.current = true;
+            }
         }
 
         if (watchId.current !== null) {
-            console.log('📡 Already watching position.');
             return;
         }
 
@@ -78,13 +81,15 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                     isInitialSet.current = true;
                 }
 
-                // If this was a manual request and we didn't have a location before, fly now
-                if (isManual && !userLocationRef.current) {
+                // If there was a pending manual request, fly now
+                if (pendingManualFly.current) {
+                    console.log('🎯 Position acquired: Executing pending flyTo');
                     mapRef.current?.getMap().flyTo({
                         center: newLocation,
                         zoom: 15,
                         duration: 2000
                     });
+                    pendingManualFly.current = false;
                 }
             },
             (err) => {
@@ -97,8 +102,15 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 const errorType = errorTypes[err.code] || 'UNKNOWN_ERROR';
                 console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
 
-                if (isManual) {
+                // Clear watch on error so subsequent manual attempts can try again
+                if (watchId.current !== null) {
+                    navigator.geolocation.clearWatch(watchId.current);
+                    watchId.current = null;
+                }
+
+                if (isManual || pendingManualFly.current) {
                     showToast(t('toasts.geoError'), 'error');
+                    pendingManualFly.current = false;
                 }
             },
             {

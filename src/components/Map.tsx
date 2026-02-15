@@ -41,43 +41,41 @@ const EMPTY_GEOJSON: any = {
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
-const INITIAL = (() => {
-    const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-
-    // Default Prague coordinates
-    let lat = 50.0755;
-    let lng = 14.4378;
-    let z = 13;
-
-    // Try to get from localStorage if no URL params
-    if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
-        const saved = localStorage.getItem('lastUserLocation');
-        if (saved) {
-            try {
-                const { lat: sLat, lng: sLng } = JSON.parse(saved);
-                if (typeof sLat === 'number' && typeof sLng === 'number') {
-                    lat = sLat;
-                    lng = sLng;
-                    z = 15; // Zoom in more if we have a user location
-                }
-            } catch (e) {
-                console.error('Failed to parse lastUserLocation', e);
-            }
-        }
-    }
-
-    return {
-        lat: parseFloat(p.get('lat') || lat.toString()),
-        lng: parseFloat(p.get('lng') || lng.toString()),
-        z: parseFloat(p.get('z') || z.toString())
-    };
-})();
-
-
-
 export const Map: React.FC = () => {
     const { t } = useTranslation();
     const mapRef = useRef<MapRef>(null);
+
+    const initialViewState = useMemo(() => {
+        const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+
+        // Default Prague coordinates
+        let lat = 50.0755;
+        let lng = 14.4378;
+        let z = 13;
+
+        // Try to get from localStorage if no URL params
+        if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
+            const saved = localStorage.getItem('lastUserLocation');
+            if (saved) {
+                try {
+                    const { lat: sLat, lng: sLng } = JSON.parse(saved);
+                    if (typeof sLat === 'number' && typeof sLng === 'number') {
+                        lat = sLat;
+                        lng = sLng;
+                        z = 15; // Zoom in more if we have a user location
+                    }
+                } catch (e) {
+                    console.error('Failed to parse lastUserLocation', e);
+                }
+            }
+        }
+
+        return {
+            latitude: parseFloat(p.get('lat') || lat.toString()),
+            longitude: parseFloat(p.get('lng') || lng.toString()),
+            zoom: parseFloat(p.get('z') || z.toString())
+        };
+    }, []);
 
     const {
         bounds,
@@ -198,7 +196,7 @@ export const Map: React.FC = () => {
 
             <MapGL
                 ref={mapRef}
-                initialViewState={{ latitude: INITIAL.lat, longitude: INITIAL.lng, zoom: INITIAL.z }}
+                initialViewState={initialViewState}
                 onMove={onMove}
                 onMoveEnd={onMoveEnd}
                 onLoad={onLoad}
