@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -13,16 +13,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const idsToFetch = filterStopIdsForDepartures(stopId);
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
 
-        // Note: Manual construction of URL for complex Golemio nested search params
-        const finalUrl = `${GOLEMIO_BASE_URL}/v2/public/departureboards?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=${TRANSIT_CONFIG.DEPARTURE_LIMIT}&minutesAfter=${TRANSIT_CONFIG.DEPARTURE_MINUTES_AFTER}`;
-
-        const response = await fetch(finalUrl, {
-            headers: {
-                "X-Access-Token": env.GOLEMIO_API_KEY,
-                "Content-Type": "application/json",
-            },
-            cf: { cacheTtl: CACHE_TTL.DEPARTURES, cacheEverything: true }
-        } as any);
+        const response = await golemioFetch("/v2/public/departureboards", env, {
+            cacheTtl: CACHE_TTL.DEPARTURES,
+            searchParams: {
+                "stopIds[]": stopIdsParam,
+                limit: TRANSIT_CONFIG.DEPARTURE_LIMIT.toString(),
+                minutesAfter: TRANSIT_CONFIG.DEPARTURE_MINUTES_AFTER.toString()
+            }
+        });
 
         if (!response.ok) {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);

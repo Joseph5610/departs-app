@@ -1,7 +1,7 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 
-export const onRequest: PagesFunction<Env> = async (context: any) => {
+export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
     const vehicleId = searchParams.get("vehicleId");
@@ -12,22 +12,17 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     }
 
     const isPlaceholder = vehicleId.startsWith('trip-');
-
-    const golemioUrl = isPlaceholder
-        ? `${GOLEMIO_BASE_URL}/v2/public/gtfs/trips/${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`
-        : `${GOLEMIO_BASE_URL}/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`;
+    const path = isPlaceholder
+        ? `/v2/public/gtfs/trips/${tripId}`
+        : `/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`;
 
     try {
-        const response = await fetch(golemioUrl, {
-            headers: {
-                "X-Access-Token": env.GOLEMIO_API_KEY,
-                "Content-Type": "application/json",
-            },
-            cf: {
-                cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                cacheEverything: true,
+        const response = await golemioFetch(path, env, {
+            cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
+            searchParams: {
+                scopes: ['info', 'stop_times', 'shapes', 'vehicle_descriptor']
             }
-        } as any);
+        });
 
         if (!response.ok) {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
