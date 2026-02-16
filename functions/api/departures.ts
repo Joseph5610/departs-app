@@ -1,102 +1,42 @@
-interface Env {
-    GOLEMIO_API_KEY: string;
-}
+import { Env } from "../_utils/types";
+import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
+import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
     const stopId = searchParams.get("stopId");
 
-    if (!stopId) return new Response("Missing stopId", { status: 400 });
+    if (!stopId) return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
 
     try {
-        const rawIds = stopId.split(',');
-        // Filter out station IDs (Type 1), only platforms work in departures.
-        // Also filter out 'N' IDs (Internal nodes?) and 'E' (Entrances) which cause bloat and 400 errors.
-        // We generally only want IDs containing 'Z' (Zastávka/Stop) which are the actual boarding platforms.
-        const finalIds = rawIds.filter(id => {
-            if (id.includes('S')) return false; // Stations/Entrances
-            // Check for 'Z' as indicator of a Stop identifier.
-            // PID IDs usually look like U123Z1 or U123Z1P. 
-            // The problematic ones are U1072N1, U1072N2 etc.
-            if (!id.includes('Z')) return false;
-            return true;
-        });
-        const idsToFetch = finalIds.length > 0 ? finalIds : rawIds;
-
-        // Using the most stable Golemio endpoint
-        const golemioUrl = new URL("https://api.golemio.cz/v2/public/departureboards");
-
-        // DOCUMENTATION FORMAT: stopIds[]={"0": ["ID1", "ID2"]}
-        // We put all IDs into a single group "0" to get a combined result.
+        const idsToFetch = filterStopIdsForDepartures(stopId);
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
-        golemioUrl.searchParams.append("stopIds", stopIdsParam); // Note: some versions don't need [] in searchParams.append if already in key
 
-        // Limit data to prevent excessive requests, 16 items / 60 mins is plenty for grouped view
-        const finalUrl = `${golemioUrl.origin}${golemioUrl.pathname}?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=16&minutesAfter=60`;
-
-        const response = await fetch(finalUrl, {
-            headers: {
-                "X-Access-Token": env.GOLEMIO_API_KEY,
-                "Content-Type": "application/json",
-            },
-            cf: { cacheTtl: 10, cacheEverything: true }
-        } as any);
+        const response = await golemioFetch("/v2/public/departureboards", env, {
+            cacheTtl: CACHE_TTL.DEPARTURES,
+            searchParams: {
+                "stopIds[]": stopIdsParam,
+                limit: TRANSIT_CONFIG.DEPARTURE_LIMIT.toString(),
+                minutesAfter: TRANSIT_CONFIG.DEPARTURE_MINUTES_AFTER.toString()
+            }
+        });
 
         if (!response.ok) {
-            return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
+            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
         const data = await response.json();
-
-        // Golemio returns an array of groups: [ group0, group1, ... ]
-        // Each group is an array of departure items.
-        // We flatten all groups into one list.
         const allGroups = Array.isArray(data) ? data : [];
         const flattened = allGroups.flat();
 
-        const departures = flattened.map((item: any) => {
-            const line = String(item.route?.short_name || '?').toUpperCase();
-            const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
-            const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
-
-            let directionId: string | number | null | undefined = item.trip?.direction_id;
-
-            // For Metro, we use the specific Stop ID (platform ID) as the primary direction indicator.
-            // This ensures all trips from the same platform (full or shortened) group together.
-            if (isMetro && item.stop?.id) {
-                directionId = item.stop.id;
-            }
-
-            // Fallback for missing data
-            if (directionId === undefined || directionId === null) {
-                directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
-            }
-
-            return {
-                timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
-                scheduled: item.departure.timestamp_scheduled,
-                delay: item.departure.delay_seconds || 0,
-                line,
-                type,
-                directionId: String(directionId),
-                headsign: item.trip?.headsign || 'Unknown',
-                isCanceled: item.trip?.is_canceled || false,
-                tripId: item.trip?.id,
-                vehicleId: item.vehicle?.id
-            };
-        });
+        const departures = flattened.map(normalizeDeparture);
 
         // Sort by time
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-        return new Response(JSON.stringify({ departures }), {
-            headers: {
-                "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=10",
-            },
-        });
-    } catch (err) {
-        return new Response("Internal Server Error", { status: 500 });
+        return createSuccessResponse({ departures }, CACHE_TTL.DEPARTURES);
+    } catch {
+        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };

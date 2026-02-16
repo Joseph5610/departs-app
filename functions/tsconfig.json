@@ -10,7 +10,8 @@
             "@cloudflare/workers-types"
         ],
         "strict": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "noEmit": true
     },
     "include": [
         "**/*.ts"

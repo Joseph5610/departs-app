@@ -52,7 +52,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     // Identify the trip ID of the vehicle we are tracking (if any)
     const trackedId = useMemo(() => {
         if (!selectedVehicle) return null;
-        return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || selectedVehicle.tId || null;
+        return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || null;
     }, [selectedVehicle]);
 
     const { data: rawVehicles, isFetching: fetchingVehicles, dataUpdatedAt } = useVehicles(debouncedBounds, trackedId, routeFilter);
@@ -94,8 +94,8 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
                     },
                     properties: {
                         ...selectedVehicle,
-                        route_type: selectedVehicle.route_type || selectedVehicle.t,
-                        gtfs_route_short_name: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n
+                        route_type: selectedVehicle.route_type,
+                        gtfs_route_short_name: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name
                     }
                 } as VehicleFeature
             ]

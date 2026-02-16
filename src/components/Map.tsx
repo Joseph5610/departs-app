@@ -165,10 +165,10 @@ export const Map: React.FC = () => {
 
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
-        const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n || '';
-        const routeType = selectedVehicle?.route_type || selectedVehicle?.t || 0;
+        const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || '';
+        const routeType = selectedVehicle?.route_type || 0;
         return isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
-    }, [selectedVehicle?.gtfs_route_short_name, selectedVehicle?.route_short_name, selectedVehicle?.n, selectedVehicle?.route_type, selectedVehicle?.t]);
+    }, [selectedVehicle?.gtfs_route_short_name, selectedVehicle?.route_short_name, selectedVehicle?.route_type]);
 
     // Memoize route line paint object
     const routeLinePaint = useMemo(() => ({
@@ -383,7 +383,7 @@ export const Map: React.FC = () => {
                     setIsFollowing(false);
                 } : undefined}
                 title={selectedVehicle
-                    ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n })
+                    ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name })
                     : (selectedStop ? selectedStop.name : '')}
             >
                 <BottomSheetContent

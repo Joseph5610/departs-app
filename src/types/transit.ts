@@ -7,27 +7,12 @@ export interface VehicleProperties {
     gtfs_trip_headsign?: string;
     route_short_name?: string;
     trip_headsign?: string;
-    bearing: number | null;
-    delay: number | null;
+    bearing: number | null | undefined;
+    delay: number;
     state_position: string;
     last_stop_name?: string;
     next_stop_name?: string;
     last_updated?: string;
-    // Temp fields used during sync
-    tId?: string;
-    n?: string;
-    t?: string;
-    b?: number;
-    d?: number;
-}
-
-export interface LiteVehicleProperties {
-    id: string;       // vehicle_id
-    tId?: string;     // gtfs_trip_id
-    n?: string;       // route_short_name (Number)
-    t?: string;       // route_type (Type)
-    b?: number;       // bearing
-    d?: number;       // delay
 }
 
 export interface VehicleFeature {
@@ -36,7 +21,7 @@ export interface VehicleFeature {
         type: "Point";
         coordinates: [number, number]; // [lon, lat]
     };
-    properties: VehicleProperties | LiteVehicleProperties;
+    properties: VehicleProperties;
 }
 
 export interface VehicleCollection {
@@ -138,7 +123,6 @@ export interface TrackedVehicle {
     state_position?: string;
     origin_timestamp?: string;
     next_stop_name?: string;
-    d?: number;
     is_air_conditioned?: boolean;
     is_wheelchair_accessible?: boolean;
     usb_chargers?: boolean;
@@ -155,7 +139,4 @@ export interface TrackedVehicle {
     // Legacy/Sync compatibility
     trip_id?: string;
     id?: string;
-    tId?: string;
-    t?: string | number;
-    n?: string;
 }
