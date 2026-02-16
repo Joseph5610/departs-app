@@ -157,10 +157,22 @@ export function normalizeDeparture(item: any): AppDeparture {
  * Groups and processes stops for the map
  */
 export function processStops(allStops: any[]): any[] {
+    // 1. Filter out internal technical stops that have neither a zone nor a parent station
+    const publicStops = allStops.filter(f => {
+        const p = f.properties;
+        const type = Number(p.location_type);
+
+        // Keep entrances (2) as they are typically handled separately and have parents
+        if (type === 2) return true;
+
+        // Public stops/stations MUST have a zone_id or belong to a parent station
+        return !!(p.zone_id || p.parent_station);
+    });
+
     const stationAnchors = new Map();
     const stationChildren = new Map();
 
-    for (const f of allStops) {
+    for (const f of publicStops) {
         const p = f.properties;
         const type = Number(p.location_type);
         if (type === 1) {
@@ -176,7 +188,7 @@ export function processStops(allStops: any[]): any[] {
 
     const groups: Record<string, any> = {};
 
-    for (const f of allStops) {
+    for (const f of publicStops) {
         const p = f.properties;
         const type = Number(p.location_type);
         const stopId = p.stop_id;
@@ -209,7 +221,6 @@ export function processStops(allStops: any[]): any[] {
         if (type === 0 || isNaN(type)) {
             if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
             if (!p.stop_name) continue;
-            if (!p.zone_id && !p.parent_station) continue;
 
             const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}`;
             if (!groups[key]) {
@@ -235,7 +246,7 @@ export function processStops(allStops: any[]): any[] {
 
     // Centroids
     const nameGroups: Record<string, any[]> = {};
-    allStops.forEach(f => {
+    publicStops.forEach(f => {
         if (f.properties.location_type === 2) return;
         const name = f.properties.stop_name;
         if (!name) return;
