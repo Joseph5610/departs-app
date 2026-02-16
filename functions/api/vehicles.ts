@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { normalizeVehicleFeature, processVehicleFeatures } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -46,7 +46,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             // SINGLE MODE
             if (tripId) {
                 const response = await golemioFetch(`/v2/vehiclepositions/${tripId}`, env);
-                if (!response.ok) return createErrorResponse(`Golemio API Error: ${response.status}`, response.status);
+                if (!response.ok) return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
 
                 const data: any = await response.json();
                 const feature = (data.type === 'FeatureCollection' && data.features?.length > 0)
@@ -63,20 +63,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
                 const response = await golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params });
-                if (!response.ok) return createErrorResponse(`Golemio API Error: ${response.status}`, response.status);
+                if (!response.ok) return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
 
                 const data: any = await response.json();
                 const rawFeatures = data.features || [];
                 allFeatures = rawFeatures.map((f: any) => normalizeVehicleFeature(f));
             }
         } else {
-            return createErrorResponse("Missing parameters", 400);
+            return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
         const features = processVehicleFeatures(allFeatures);
         return createSuccessResponse({ type: 'FeatureCollection', features }, CACHE_TTL.VEHICLES);
 
-    } catch (err) {
-        return createErrorResponse(`Internal Server Error: ${err instanceof Error ? err.message : String(err)}`);
+    } catch {
+        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };

@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, TRANSIT_CONFIG, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { processStops } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -32,12 +32,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     try {
         const all = await fetchAllStops();
-        if (all.length === 0) return createErrorResponse("Golemio error or no data", 502);
+        if (all.length === 0) return createErrorResponse(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
 
         const features = processStops(all);
 
         return createSuccessResponse({ type: "FeatureCollection", features }, CACHE_TTL.STOPS);
-    } catch (err) {
-        return createErrorResponse("Error: " + (err instanceof Error ? err.message : "unknown"));
+    } catch {
+        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };

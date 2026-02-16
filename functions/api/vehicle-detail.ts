@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 
 export const onRequest: PagesFunction<Env> = async (context: any) => {
     const { env } = context;
@@ -8,7 +8,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     const tripId = searchParams.get("tripId");
 
     if (!vehicleId || !tripId) {
-        return createErrorResponse("Missing parameters", 400);
+        return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
     const isPlaceholder = vehicleId.startsWith('trip-');
@@ -30,7 +30,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         } as any);
 
         if (!response.ok) {
-            return createErrorResponse(`Golemio API Error: ${response.status}`, response.status);
+            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
         const data: any = await response.json();
@@ -54,6 +54,6 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
         return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
     } catch {
-        return createErrorResponse("Internal Server Error");
+        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };

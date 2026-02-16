@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, TRANSIT_CONFIG, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -7,7 +7,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const { searchParams } = new URL(context.request.url);
     const stopId = searchParams.get("stopId");
 
-    if (!stopId) return createErrorResponse("Missing stopId", 400);
+    if (!stopId) return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
 
     try {
         const idsToFetch = filterStopIdsForDepartures(stopId);
@@ -21,11 +21,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 "X-Access-Token": env.GOLEMIO_API_KEY,
                 "Content-Type": "application/json",
             },
-            cf: { cacheTtl: 10, cacheEverything: true }
+            cf: { cacheTtl: CACHE_TTL.DEPARTURES, cacheEverything: true }
         } as any);
 
         if (!response.ok) {
-            return createErrorResponse(`Golemio API Error: ${response.status}`, response.status);
+            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
         const data = await response.json();
@@ -39,6 +39,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         return createSuccessResponse({ departures }, CACHE_TTL.DEPARTURES);
     } catch {
-        return createErrorResponse("Internal Server Error");
+        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };

@@ -1,4 +1,4 @@
-import { CACHE_TTL, createErrorResponse } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse } from "../_utils/api-utils";
 
 /**
  * Normalizes a date string from PID RSS format.
@@ -51,7 +51,7 @@ export const onRequest: PagesFunction = async (context) => {
     };
 
     const targetUrl = FEEDS[type];
-    if (!targetUrl) return createErrorResponse('Missing or invalid type parameter', 400);
+    if (!targetUrl) return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
 
     try {
         const response = await fetch(targetUrl, {
@@ -61,7 +61,7 @@ export const onRequest: PagesFunction = async (context) => {
             }
         });
 
-        if (!response.ok) return createErrorResponse(`Upstream error: ${response.status}`, response.status);
+        if (!response.ok) return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
 
         const xmlString = await response.text();
         const items: any[] = [];
@@ -147,7 +147,7 @@ export const onRequest: PagesFunction = async (context) => {
                 'Cache-Control': `public, max-age=${cacheMaxAge}`
             }
         });
-    } catch (error) {
-        return createErrorResponse(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } catch {
+        return createErrorResponse(ERROR_MESSAGES.RSS_FEED_ERROR);
     }
 };

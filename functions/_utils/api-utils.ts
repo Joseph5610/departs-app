@@ -23,6 +23,20 @@ export const TRANSIT_CONFIG = {
     JITTER_RADIUS: 0.00012,
 };
 
+/**
+ * Standardized Error Messages (Public Facing)
+ * Do not mention Golemio directly.
+ */
+export const ERROR_MESSAGES = {
+    GENERIC_INTERNAL: "An unexpected error occurred. Please try again later.",
+    UPSTREAM_ERROR: (status: number) => `The data provider returned an error (HTTP ${status}).`,
+    MISSING_PARAMS: "Request is missing required parameters.",
+    INVALID_STOP_ID: "Provided stop ID is invalid or not found.",
+    VEHICLE_NOT_FOUND: "Vehicle information is currently unavailable.",
+    RSS_FEED_ERROR: "Could not retrieve transit alerts from the source feed.",
+    STOPS_DATA_UNAVAILABLE: "Stop data is currently unavailable.",
+};
+
 export interface GolemioFetchOptions {
     cacheTtl?: number;
     searchParams?: Record<string, string | string[]>;
