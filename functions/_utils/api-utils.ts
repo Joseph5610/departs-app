@@ -12,7 +12,7 @@ export const CACHE_TTL = {
     STOPS: 86400, // 24h
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h
-    OFFLINE_STOPS_FETCH: 3600, // 1h for the fetch process itself
+    GTFS_DATA: 3600, // 1h for the static data fetch process
 };
 
 export const TRANSIT_CONFIG = {

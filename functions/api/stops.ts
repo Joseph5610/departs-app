@@ -12,7 +12,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         while (offset < TRANSIT_CONFIG.STOPS_MAX_OFFSET) {
             const res = await golemioFetch("/v2/gtfs/stops", env, {
-                cacheTtl: CACHE_TTL.OFFLINE_STOPS_FETCH,
+                cacheTtl: CACHE_TTL.GTFS_DATA,
                 searchParams: {
                     limit: limit.toString(),
                     offset: offset.toString()
