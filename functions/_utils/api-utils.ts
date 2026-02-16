@@ -1,9 +1,12 @@
 import { Env } from "./types";
 
+/**
+ * Base URL for the Golemio API.
+ */
 export const GOLEMIO_BASE_URL = "https://api.golemio.cz";
 
 /**
- * Centralized Backend Configuration
+ * Centralized Cache TTL Configuration (in seconds).
  */
 export const CACHE_TTL = {
     DEPARTURES: 10,
@@ -15,6 +18,9 @@ export const CACHE_TTL = {
     GTFS_DATA: 3600, // 1h for the static data fetch process
 };
 
+/**
+ * Transit-related magic constants and configuration.
+ */
 export const TRANSIT_CONFIG = {
     DEPARTURE_LIMIT: 16,
     DEPARTURE_MINUTES_AFTER: 60,
@@ -28,8 +34,9 @@ export const TRANSIT_CONFIG = {
 };
 
 /**
- * Standardized Error Messages (Public Facing)
- * Do not mention Golemio directly.
+ * Standardized Error Messages (Public Facing).
+ * These messages are shown to the user when things go wrong.
+ * Note: We avoid mentioning "Golemio" directly in public errors.
  */
 export const ERROR_MESSAGES = {
     GENERIC_INTERNAL: "An unexpected error occurred. Please try again later.",
@@ -41,15 +48,29 @@ export const ERROR_MESSAGES = {
     STOPS_DATA_UNAVAILABLE: "Stop data is currently unavailable.",
 };
 
+/**
+ * Options for the golemioFetch utility.
+ */
 export interface GolemioFetchOptions {
+    /** Custom TTL for Cloudflare cache */
     cacheTtl?: number;
+    /** Query parameters to append to the request */
     searchParams?: Record<string, string | string[]>;
 }
 
 /**
- * Standardized fetch for Golemio API.
- * Always appends the provided path to the base Golemio URL.
- * Handles bracket encoding for legacy-compatible query parameters.
+ * Standardized fetch wrapper for the Golemio API.
+ * Automatically handles:
+ * - Base URL prepending
+ * - API Key injection via headers
+ * - Query parameter serialization (including array support)
+ * - Cloudflare Cache configuration
+ * - Bracket encoding fix for legacy-compatible query parameters
+ *
+ * @param path API endpoint path (e.g., '/v2/vehiclepositions')
+ * @param env Environment variables containing the API key
+ * @param options Additional fetch options
+ * @returns Promise resolving to a Response object
  */
 export async function golemioFetch(
     path: string,
@@ -82,11 +103,15 @@ export async function golemioFetch(
             cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
             cacheEverything: true,
         }
-    } as any);
+    });
 }
 
 /**
- * Standardized error response
+ * Creates a standardized JSON error response.
+ *
+ * @param message Error message to display
+ * @param status HTTP status code (default: 500)
+ * @returns Response object
  */
 export function createErrorResponse(message: string, status: number = 500): Response {
     return new Response(JSON.stringify({
@@ -103,9 +128,13 @@ export function createErrorResponse(message: string, status: number = 500): Resp
 }
 
 /**
- * Standardized success response with cache
+ * Creates a standardized JSON success response with appropriate Cache-Control headers.
+ *
+ * @param data Data to return in the response body
+ * @param maxAge Cache max-age in seconds (default: 10)
+ * @returns Response object
  */
-export function createSuccessResponse(data: any, maxAge: number = 10): Response {
+export function createSuccessResponse(data: unknown, maxAge: number = 10): Response {
     // For short cache durations, we also set s-maxage for Cloudflare CDN
     const cacheControl = maxAge <= 60
         ? `public, max-age=${maxAge}, s-maxage=${maxAge}`

@@ -1,12 +1,16 @@
-import { AppDeparture } from "./types";
+import { AppDeparture, GolemioDepartureItem, GolemioStopFeature, GolemioVehicleFeature } from "./types";
 import { METRO_STATIONS } from "./metro-data";
 import { TRANSIT_CONFIG } from "./api-utils";
 
 /**
  * Normalizes Golemio vehicle feature to application-specific flat properties.
  * Handles both "Public" (already flat) and "Private/V2" (nested) formats.
+ *
+ * @param feature Raw feature from Golemio API
+ * @param tripIdFallback Optional fallback trip ID
+ * @returns Normalized GeoJSON Feature
  */
-export function normalizeVehicleFeature(feature: any, tripIdFallback?: string): { type: string, geometry: any, properties: any } {
+export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFallback?: string): GolemioVehicleFeature {
     const p = feature.properties;
 
     // Identify format and extract core fields
@@ -20,7 +24,7 @@ export function normalizeVehicleFeature(feature: any, tripIdFallback?: string): 
     const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
     const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual || 0);
     const state_position = p.state_position || p.last_position?.state_position;
-    const next_stop_name = p.next_stop_name || p.last_position?.next_stop?.id;
+    const next_stop_name = p.next_stop_name || (p.last_position?.next_stop?.id as string | undefined);
 
     // Metadata / Amenities
     const is_wheelchair_accessible = p.is_wheelchair_accessible ?? p.trip?.wheelchair_accessible;
@@ -52,12 +56,17 @@ export function normalizeVehicleFeature(feature: any, tripIdFallback?: string): 
 }
 
 /**
- * Deduplicates and applies circular jittering to stacked vehicles
+ * Deduplicates and applies circular jittering to stacked vehicles.
+ * When multiple vehicles are at the exact same coordinates, they are spread out in a circle.
+ *
+ * @param allFeatures List of normalized vehicle features
+ * @returns Deduplicated and jittered features
  */
-export function processVehicleFeatures(allFeatures: any[]): any[] {
+export function processVehicleFeatures(allFeatures: GolemioVehicleFeature[]): GolemioVehicleFeature[] {
     const seen = new Set<string>();
-    const uniqueFeatures: any[] = [];
+    const uniqueFeatures: GolemioVehicleFeature[] = [];
 
+    // Deduplicate by vehicle_id
     for (const f of allFeatures) {
         const id = String(f.properties.vehicle_id || f.properties.id || '');
         if (id && !seen.has(id)) {
@@ -66,14 +75,15 @@ export function processVehicleFeatures(allFeatures: any[]): any[] {
         }
     }
 
-    const groups: Record<string, any[]> = {};
+    // Group by coordinates
+    const groups: Record<string, GolemioVehicleFeature[]> = {};
     uniqueFeatures.forEach((f) => {
         const key = f.geometry.coordinates.join(',');
         if (!groups[key]) groups[key] = [];
         groups[key].push(f);
     });
 
-    const jitteredFeatures: any[] = [];
+    const jitteredFeatures: GolemioVehicleFeature[] = [];
     const BASE_JITTER_RADIUS = TRANSIT_CONFIG.JITTER_RADIUS;
 
     Object.values(groups).forEach(group => {
@@ -86,6 +96,8 @@ export function processVehicleFeatures(allFeatures: any[]): any[] {
             group.forEach((f, index) => {
                 const [lng, lat] = f.geometry.coordinates;
                 const angle = index * angleStep;
+
+                // For many vehicles, use two concentric circles for better visibility
                 let currentRadius = BASE_JITTER_RADIUS;
                 if (count > 4) {
                     currentRadius = index % 2 === 0 ? BASE_JITTER_RADIUS * 0.8 : BASE_JITTER_RADIUS * 1.35;
@@ -96,7 +108,7 @@ export function processVehicleFeatures(allFeatures: any[]): any[] {
                     geometry: {
                         ...f.geometry,
                         coordinates: [
-                            lng + currentRadius * Math.cos(angle) * 1.3,
+                            lng + currentRadius * Math.cos(angle) * 1.3, // Aspect ratio compensation
                             lat + currentRadius * Math.sin(angle)
                         ]
                     }
@@ -109,28 +121,36 @@ export function processVehicleFeatures(allFeatures: any[]): any[] {
 }
 
 /**
- * Filters stop IDs for departures to avoid 400 errors from Golemio
+ * Filters stop IDs for departures to avoid 400 errors from Golemio.
+ * Removes parent stations and entrances if they would cause issues.
+ *
+ * @param stopId Comma separated stop IDs
+ * @returns Array of filtered stop IDs
  */
 export function filterStopIdsForDepartures(stopId: string): string[] {
     const rawIds = stopId.split(',');
     const finalIds = rawIds.filter(id => {
-        if (id.includes('S')) return false; // Stations/Entrances
-        if (!id.includes('Z')) return false;
+        if (id.includes('S')) return false; // Filter out stations (parent stations)
+        if (!id.includes('Z')) return false; // Keep only platform-level stops
         return true;
     });
     return finalIds.length > 0 ? finalIds : rawIds;
 }
 
 /**
- * Normalizes departure items
+ * Normalizes departure items from Golemio API to a consistent application format.
+ *
+ * @param item Raw departure item
+ * @returns Normalized departure object
  */
-export function normalizeDeparture(item: any): AppDeparture {
+export function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
     const line = String(item.route?.short_name || '?').toUpperCase();
     const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
     const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
 
     let directionId: string | number | null | undefined = item.trip?.direction_id;
 
+    // For Metro, we use stop ID (platform) as directionId to group by platform
     if (isMetro && item.stop?.id) {
         directionId = item.stop.id;
     }
@@ -154,62 +174,66 @@ export function normalizeDeparture(item: any): AppDeparture {
 }
 
 /**
- * Groups and processes stops for the map
+ * Groups and processes raw GTFS stops for map display.
+ * Handles metro stations, stop grouping by name/platform, and centroid calculation.
+ *
+ * @param allStops List of all raw stop features from GTFS
+ * @returns Processed features for the map
  */
-export function processStops(allStops: any[]): any[] {
-    // 1. Filter out internal technical stops that have neither a zone nor a parent station
-    const publicStops = allStops.filter(f => {
+export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature[] {
+    // 1. Filter out internal technical stops and prepare data structures
+    const stationAnchors = new Map<string, GolemioStopFeature>();
+    const stationChildren = new Map<string, string[]>();
+    const publicStops: GolemioStopFeature[] = [];
+
+    for (const f of allStops) {
         const p = f.properties;
         const type = Number(p.location_type);
 
-        // Keep entrances (2) as they are typically handled separately and have parents
-        if (type === 2) return true;
+        // Filter: Public stops/stations MUST have a zone_id or belong to a parent station (except entrances)
+        if (type !== 2 && !p.zone_id && !p.parent_station) continue;
 
-        // Public stops/stations MUST have a zone_id or belong to a parent station
-        return !!(p.zone_id || p.parent_station);
-    });
+        publicStops.push(f);
 
-    const stationAnchors = new Map();
-    const stationChildren = new Map();
-
-    for (const f of publicStops) {
-        const p = f.properties;
-        const type = Number(p.location_type);
         if (type === 1) {
             stationAnchors.set(p.stop_id, f);
-        }
-        if (p.parent_station) {
-            if (type !== 2) {
-                if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
-                stationChildren.get(p.parent_station).push(p.stop_id);
-            }
+        } else if (p.parent_station && type !== 2) {
+            if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
+            stationChildren.get(p.parent_station)!.push(p.stop_id);
         }
     }
 
-    const groups: Record<string, any> = {};
+    const groups: Record<string, GolemioStopFeature> = {};
+    const nameGroups = new Map<string, GolemioStopFeature[]>();
 
+    // 2. Group stops and build name groups for centroids in a single pass
     for (const f of publicStops) {
         const p = f.properties;
         const type = Number(p.location_type);
         const stopId = p.stop_id;
 
+        // Collect for centroid calculation
+        if (type !== 2 && p.stop_name) {
+            if (!nameGroups.has(p.stop_name)) nameGroups.set(p.stop_name, []);
+            nameGroups.get(p.stop_name)!.push(f);
+        }
+
+        // Handle Metro Stations (Type 1)
         if (type === 1) {
             const children = stationChildren.get(stopId) || [];
-            const lines = METRO_STATIONS[p.stop_name] || [];
-
-            const key = `metro_station_${stopId}`;
-            groups[key] = {
+            groups[`metro_station_${stopId}`] = {
                 ...f,
                 properties: {
                     ...p,
                     location_type: 1,
                     stop_id: children.length > 0 ? children.join(',') : stopId,
-                    metro_lines: lines
+                    metro_lines: METRO_STATIONS[p.stop_name] || []
                 }
             };
             continue;
         }
 
+        // Handle Entrances (Type 2)
         if (type === 2) {
             groups[`entrance_${stopId}`] = {
                 ...f,
@@ -218,10 +242,13 @@ export function processStops(allStops: any[]): any[] {
             continue;
         }
 
+        // Handle Regular Stops (Type 0)
         if (type === 0 || isNaN(type)) {
+            // Skip if it belongs to a known metro station anchor (handled above)
             if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
             if (!p.stop_name) continue;
 
+            // Group by name and platform code
             const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}`;
             if (!groups[key]) {
                 groups[key] = {
@@ -229,33 +256,30 @@ export function processStops(allStops: any[]): any[] {
                     properties: { ...p, location_type: 0, all_ids: [stopId] }
                 };
             } else {
-                groups[key].properties.all_ids.push(stopId);
+                const currentIds = groups[key].properties.all_ids || [];
+                groups[key].properties.all_ids = [...currentIds, stopId];
             }
         }
     }
 
-    const features: any[] = [];
-    Object.values(groups).forEach((f: any) => {
+    // 3. Prepare final features list
+    const features: GolemioStopFeature[] = [];
+
+    // Add grouped stops
+    for (const f of Object.values(groups)) {
         const finalId = f.properties.all_ids ? f.properties.all_ids.join(',') : f.properties.stop_id;
         features.push({
             type: "Feature",
             geometry: f.geometry,
             properties: { ...f.properties, stop_id: finalId }
         });
-    });
+    }
 
-    // Centroids
-    const nameGroups: Record<string, any[]> = {};
-    publicStops.forEach(f => {
-        if (f.properties.location_type === 2) return;
-        const name = f.properties.stop_name;
-        if (!name) return;
-        if (!nameGroups[name]) nameGroups[name] = [];
-        nameGroups[name].push(f);
-    });
+    // 4. Calculate centroids for each stop name group
+    for (const [, groupFeatures] of nameGroups) {
+        // Preference: If there's a station (type 1) in the group, use it as the centroid anchor
+        const station = groupFeatures.find(f => Number(f.properties.location_type) === 1);
 
-    Object.entries(nameGroups).forEach(([, groupFeatures]) => {
-        const station = groupFeatures.find(f => f.properties.location_type === 1);
         if (station) {
             features.push({
                 type: "Feature",
@@ -266,28 +290,28 @@ export function processStops(allStops: any[]): any[] {
                     stop_id: `centroid-${station.properties.stop_id}`
                 }
             });
-            return;
-        }
-
-        let sumLng = 0;
-        let sumLat = 0;
-        groupFeatures.forEach(f => {
-            sumLng += f.geometry.coordinates[0];
-            sumLat += f.geometry.coordinates[1];
-        });
-        const avgLng = sumLng / groupFeatures.length;
-        const avgLat = sumLat / groupFeatures.length;
-
-        features.push({
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [avgLng, avgLat] },
-            properties: {
-                ...groupFeatures[0].properties,
-                is_centroid: true,
-                stop_id: `centroid-${groupFeatures[0].properties.stop_id}`
+        } else {
+            // Otherwise, calculate average coordinates
+            let sumLng = 0;
+            let sumLat = 0;
+            for (const f of groupFeatures) {
+                sumLng += f.geometry.coordinates[0];
+                sumLat += f.geometry.coordinates[1];
             }
-        });
-    });
+            const avgLng = sumLng / groupFeatures.length;
+            const avgLat = sumLat / groupFeatures.length;
+
+            features.push({
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [avgLng, avgLat] },
+                properties: {
+                    ...groupFeatures[0].properties,
+                    is_centroid: true,
+                    stop_id: `centroid-${groupFeatures[0].properties.stop_id}`
+                }
+            });
+        }
+    }
 
     return features;
 }
