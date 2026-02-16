@@ -9,12 +9,18 @@ export const onRequest: PagesFunction = async (context) => {
     if (!targetUrl) return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
 
     try {
+        const cacheMaxAge = type === 'incidents' ? CACHE_TTL.RSS_INCIDENTS : CACHE_TTL.RSS_EXCLUSIONS;
+
         const response = await fetch(targetUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; departs-app/0.1; +https://departs.app)',
                 'Accept': 'application/rss+xml, application/xml, text/xml'
+            },
+            cf: {
+                cacheTtl: cacheMaxAge,
+                cacheEverything: true
             }
-        });
+        } as any);
 
         if (!response.ok) return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
 
@@ -89,7 +95,6 @@ export const onRequest: PagesFunction = async (context) => {
         }
 
         const channelTitle = xmlString.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/i)?.[1] || "";
-        const cacheMaxAge = type === 'incidents' ? CACHE_TTL.RSS_INCIDENTS : CACHE_TTL.RSS_EXCLUSIONS;
 
         return new Response(JSON.stringify({
             title: channelTitle.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim(),
