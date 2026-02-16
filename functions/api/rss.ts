@@ -1,4 +1,4 @@
-import { createErrorResponse } from "../_utils/api-utils";
+import { CACHE_TTL, createErrorResponse } from "../_utils/api-utils";
 
 /**
  * Normalizes a date string from PID RSS format.
@@ -135,6 +135,8 @@ export const onRequest: PagesFunction = async (context) => {
 
         const channelTitle = xmlString.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/i)?.[1] || "";
 
+        const cacheMaxAge = type === 'incidents' ? CACHE_TTL.RSS_INCIDENTS : CACHE_TTL.RSS_EXCLUSIONS;
+
         return new Response(JSON.stringify({
             title: channelTitle.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim(),
             items
@@ -142,7 +144,7 @@ export const onRequest: PagesFunction = async (context) => {
             headers: {
                 'Content-Type': 'application/json; charset=UTF-8',
                 'Access-Control-Allow-Origin': '*',
-                'Cache-Control': type === 'incidents' ? 'public, max-age=300' : 'public, max-age=3600'
+                'Cache-Control': `public, max-age=${cacheMaxAge}`
             }
         });
     } catch (error) {

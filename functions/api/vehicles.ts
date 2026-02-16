@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { normalizeVehicleFeature, processVehicleFeatures } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -74,7 +74,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const features = processVehicleFeatures(allFeatures);
-        return createSuccessResponse({ type: 'FeatureCollection', features });
+        return createSuccessResponse({ type: 'FeatureCollection', features }, CACHE_TTL.VEHICLES);
 
     } catch (err) {
         return createErrorResponse(`Internal Server Error: ${err instanceof Error ? err.message : String(err)}`);

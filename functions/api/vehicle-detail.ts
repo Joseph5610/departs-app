@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 
 export const onRequest: PagesFunction<Env> = async (context: any) => {
     const { env } = context;
@@ -24,7 +24,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
                 "Content-Type": "application/json",
             },
             cf: {
-                cacheTtl: 10,
+                cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
                 cacheEverything: true,
             }
         } as any);
@@ -52,7 +52,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             vehicleData.shapes = [];
         }
 
-        return createSuccessResponse(vehicleData);
+        return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
     } catch {
         return createErrorResponse("Internal Server Error");
     }

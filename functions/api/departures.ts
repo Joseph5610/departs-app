@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -14,7 +14,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const stopIdsParam = JSON.stringify({ "0": idsToFetch });
 
         // Note: Manual construction of URL for complex Golemio nested search params
-        const finalUrl = `${GOLEMIO_BASE_URL}/v2/public/departureboards?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=16&minutesAfter=60`;
+        const finalUrl = `${GOLEMIO_BASE_URL}/v2/public/departureboards?stopIds[]=${encodeURIComponent(stopIdsParam)}&limit=${TRANSIT_CONFIG.DEPARTURE_LIMIT}&minutesAfter=${TRANSIT_CONFIG.DEPARTURE_MINUTES_AFTER}`;
 
         const response = await fetch(finalUrl, {
             headers: {
@@ -37,7 +37,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         // Sort by time
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-        return createSuccessResponse({ departures });
+        return createSuccessResponse({ departures }, CACHE_TTL.DEPARTURES);
     } catch {
         return createErrorResponse("Internal Server Error");
     }

@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { processStops } from "../_utils/transit-utils";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -8,11 +8,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const fetchAllStops = async () => {
         let allFeatures: any[] = [];
         let offset = 0;
-        const limit = 10000;
+        const limit = TRANSIT_CONFIG.STOPS_FETCH_LIMIT;
 
-        while (offset < 40000) {
+        while (offset < TRANSIT_CONFIG.STOPS_MAX_OFFSET) {
             const res = await golemioFetch("/v2/gtfs/stops", env, {
-                cacheTtl: 3600,
+                cacheTtl: CACHE_TTL.OFFLINE_STOPS_FETCH,
                 searchParams: {
                     limit: limit.toString(),
                     offset: offset.toString()
@@ -36,7 +36,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         const features = processStops(all);
 
-        return createSuccessResponse({ type: "FeatureCollection", features }, 86400);
+        return createSuccessResponse({ type: "FeatureCollection", features }, CACHE_TTL.STOPS);
     } catch (err) {
         return createErrorResponse("Error: " + (err instanceof Error ? err.message : "unknown"));
     }

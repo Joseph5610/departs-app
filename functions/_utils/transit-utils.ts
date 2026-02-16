@@ -1,5 +1,6 @@
-import { AppDeparture, GolemioVehicleFeature } from "./types";
+import { AppDeparture } from "./types";
 import { METRO_STATIONS } from "./metro-data";
+import { TRANSIT_CONFIG } from "./api-utils";
 
 /**
  * Normalizes Golemio vehicle feature to application-specific flat properties.
@@ -73,7 +74,7 @@ export function processVehicleFeatures(allFeatures: any[]): any[] {
     });
 
     const jitteredFeatures: any[] = [];
-    const BASE_JITTER_RADIUS = 0.00012;
+    const BASE_JITTER_RADIUS = TRANSIT_CONFIG.JITTER_RADIUS;
 
     Object.values(groups).forEach(group => {
         if (group.length === 1) {

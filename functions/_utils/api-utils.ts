@@ -2,20 +2,42 @@ import { Env } from "./types";
 
 export const GOLEMIO_BASE_URL = "https://api.golemio.cz";
 
+/**
+ * Centralized Backend Configuration
+ */
+export const CACHE_TTL = {
+    DEPARTURES: 10,
+    VEHICLES: 10,
+    VEHICLE_DETAIL: 10,
+    STOPS: 86400, // 24h
+    RSS_INCIDENTS: 300, // 5m
+    RSS_EXCLUSIONS: 3600, // 1h
+    OFFLINE_STOPS_FETCH: 3600, // 1h for the fetch process itself
+};
+
+export const TRANSIT_CONFIG = {
+    DEPARTURE_LIMIT: 16,
+    DEPARTURE_MINUTES_AFTER: 60,
+    STOPS_FETCH_LIMIT: 10000,
+    STOPS_MAX_OFFSET: 40000,
+    JITTER_RADIUS: 0.00012,
+};
+
 export interface GolemioFetchOptions {
     cacheTtl?: number;
     searchParams?: Record<string, string | string[]>;
 }
 
 /**
- * Standardized fetch for Golemio API
+ * Standardized fetch for Golemio API.
+ * Always appends the provided path to the base Golemio URL.
  */
 export async function golemioFetch(
-    endpoint: string,
+    path: string,
     env: Env,
     options: GolemioFetchOptions = {}
 ): Promise<Response> {
-    const url = new URL(endpoint.startsWith('http') ? endpoint : `${GOLEMIO_BASE_URL}${endpoint}`);
+    const url = new URL(`${GOLEMIO_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`);
 
     if (options.searchParams) {
         Object.entries(options.searchParams).forEach(([key, value]) => {
@@ -33,7 +55,7 @@ export async function golemioFetch(
             "Content-Type": "application/json",
         },
         cf: {
-            cacheTtl: options.cacheTtl ?? 10,
+            cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
             cacheEverything: true,
         }
     } as any);
