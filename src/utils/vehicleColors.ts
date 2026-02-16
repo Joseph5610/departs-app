@@ -62,11 +62,11 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
 export const isNightRouteExpression: ExpressionSpecification = [
     'any',
     // Trams 90-99
-    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
+    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
     // Buses 9xx (Length 3, Starts with 9)
     ['all',
-        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']]], 3],
-        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']], 0, 1], '9']
+        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']]], 3],
+        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], 0, 1], '9']
     ]
 ];
 
@@ -96,8 +96,8 @@ export const vehicleColorExpression: ExpressionSpecification = [
     // 2. Night Routes Detection (90-99 or 9xx)
     isNightRouteExpression, '#111827',
 
-    // 3. Type-based fallback (Ensure 't' is treated as string)
-    ['match', ['to-string', ['coalesce', ['get', 'route_type'], ['get', 't'], '']],
+    // 3. Type-based fallback
+    ['match', ['to-string', ['coalesce', ['get', 'route_type'], '']],
         '0', '#930019', 'tram', '#930019',
         '1', '#AD0B00', 'metro', '#AD0B00',
         '3', '#005CBF', 'bus', '#005CBF',

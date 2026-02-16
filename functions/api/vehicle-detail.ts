@@ -1,6 +1,5 @@
-interface Env {
-    GOLEMIO_API_KEY: string;
-}
+import { Env } from "../_utils/types";
+import { GOLEMIO_BASE_URL, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 
 export const onRequest: PagesFunction<Env> = async (context: any) => {
     const { env } = context;
@@ -9,17 +8,14 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     const tripId = searchParams.get("tripId");
 
     if (!vehicleId || !tripId) {
-        return new Response("Missing parameters", { status: 400 });
+        return createErrorResponse("Missing parameters", 400);
     }
 
-    // Golemio matrix parameter syntax with multiple scopes
-    // If vehicleId is a synthetic placeholder (only starts with "trip-"), we fall back to Static lookup
-    // 'service-' IDs are valid live vehicle IDs from Golemio
     const isPlaceholder = vehicleId.startsWith('trip-');
 
     const golemioUrl = isPlaceholder
-        ? `https://api.golemio.cz/v2/public/gtfs/trips/${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`
-        : `https://api.golemio.cz/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`;
+        ? `${GOLEMIO_BASE_URL}/v2/public/gtfs/trips/${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`
+        : `${GOLEMIO_BASE_URL}/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}?scopes=info&scopes=stop_times&scopes=shapes&scopes=vehicle_descriptor`;
 
     try {
         const response = await fetch(golemioUrl, {
@@ -34,25 +30,20 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         } as any);
 
         if (!response.ok) {
-            return new Response(`Golemio API Error: ${response.status}`, { status: response.status });
+            return createErrorResponse(`Golemio API Error: ${response.status}`, response.status);
         }
 
         const data: any = await response.json();
 
-        // When querying by gtfsTripId only (placeholder case), the API returns a FeatureCollection
-        // We need to extract the first matching vehicle
         let vehicleData = data;
         if (isPlaceholder && data.features && Array.isArray(data.features) && data.features.length > 0) {
             vehicleData = data.features[0].properties || data.features[0];
-            // Preserve shapes if they exist at the collection level
             if (data.shapes) {
                 vehicleData.shapes = data.shapes;
             }
         }
 
-        // SCALPEL OPTIMIZATION 🔪
-        // The Golemio API returns `shapes` as a FeatureCollection with thousands of Point features.
-        // This is huge and slow. We extract just the coordinates into a simple array.
+        // Shape optimization
         if (vehicleData.shapes && vehicleData.shapes.features) {
             vehicleData.shapes = vehicleData.shapes.features
                 .filter((f: any) => f.geometry.type === 'Point')
@@ -61,13 +52,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             vehicleData.shapes = [];
         }
 
-        return new Response(JSON.stringify(vehicleData), {
-            headers: {
-                "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=10",
-            },
-        });
-    } catch (err) {
-        return new Response("Internal Server Error", { status: 500 });
+        return createSuccessResponse(vehicleData);
+    } catch {
+        return createErrorResponse("Internal Server Error");
     }
 };

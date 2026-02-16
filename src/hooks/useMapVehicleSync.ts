@@ -33,17 +33,17 @@ export const useMapVehicleSync = (
         // We match by vehicle_id (preferred) or gtfs_trip_id as a fallback.
         if (rawVehicles?.features) {
             const match = rawVehicles.features.find(f => {
-                const props = f.properties as any; // properties can be VehicleProperties or LiteVehicleProperties
-                const fid = String(props.vehicle_id || props.id || '');
-                const ftid = String(props.gtfs_trip_id || props.tId || '');
+                const props = f.properties;
+                const fid = String(props.vehicle_id);
+                const ftid = String(props.gtfs_trip_id || '');
                 if (sid !== 'NONE' && !sid.startsWith('trip-')) return fid === sid;
                 return ftid === stid && stid !== 'NONE';
             });
 
             if (match) {
-                const p = match.properties as any;
+                const p = match.properties;
                 const coords = match.geometry.coordinates;
-                const matchId = String(p.vehicle_id || p.id);
+                const matchId = String(p.vehicle_id);
 
                 if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;

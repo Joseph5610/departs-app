@@ -311,7 +311,7 @@ export const selectedVehicleDirectionLayer: any = {
     layout: {
         'icon-image': 'v-arrow-centered',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
-        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
         'icon-rotation-alignment': 'map',
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
@@ -328,7 +328,7 @@ export const selectedVehicleLabelLayer: any = {
     id: 'selected-vehicle-label',
     type: 'symbol',
     layout: {
-        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
         'text-allow-overlap': true,
@@ -366,7 +366,7 @@ export const vehiclesDirectionLayer: any = {
     layout: {
         'icon-image': 'v-arrow-centered',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
-        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], ['get', 'b'], 0]],
+        'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
         'icon-rotation-alignment': 'map',
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
@@ -385,7 +385,7 @@ export const vehiclesLabelLayer: any = {
     minzoom: 12,
     // Filter handled dynamically in component
     layout: {
-        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], ['get', 'n'], '']],
+        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
         'text-allow-overlap': true,

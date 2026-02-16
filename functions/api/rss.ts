@@ -1,3 +1,4 @@
+import { createErrorResponse } from "../_utils/api-utils";
 
 /**
  * Normalizes a date string from PID RSS format.
@@ -50,7 +51,7 @@ export const onRequest: PagesFunction = async (context) => {
     };
 
     const targetUrl = FEEDS[type];
-    if (!targetUrl) return new Response('Missing or invalid type parameter', { status: 400 });
+    if (!targetUrl) return createErrorResponse('Missing or invalid type parameter', 400);
 
     try {
         const response = await fetch(targetUrl, {
@@ -60,7 +61,7 @@ export const onRequest: PagesFunction = async (context) => {
             }
         });
 
-        if (!response.ok) return new Response(`Upstream error: ${response.status}`, { status: response.status });
+        if (!response.ok) return createErrorResponse(`Upstream error: ${response.status}`, response.status);
 
         const xmlString = await response.text();
         const items: any[] = [];
@@ -79,7 +80,6 @@ export const onRequest: PagesFunction = async (context) => {
             const dateFrom = getTag(itemXml, 'dateFrom');
             const dateTo = getTag(itemXml, 'dateTo');
 
-            // Extraction of lines
             let lines: string[] = [];
             const linesMatch = itemXml.match(/<lines>([\s\S]*?)<\/lines>/i);
             if (linesMatch) {
@@ -109,7 +109,6 @@ export const onRequest: PagesFunction = async (context) => {
                 type
             };
 
-            // Calculate status
             let isActive = true;
             let isFuture = false;
 
@@ -147,6 +146,6 @@ export const onRequest: PagesFunction = async (context) => {
             }
         });
     } catch (error) {
-        return new Response(`Error: ${error instanceof Error ? error.message : String(error)}`, { status: 500 });
+        return createErrorResponse(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
 };

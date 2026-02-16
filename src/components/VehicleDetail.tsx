@@ -58,7 +58,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         return () => clearInterval(interval);
     }, [vehicleDetail?.origin_timestamp, selectedVehicle?.origin_timestamp]);
 
-    const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || selectedVehicle?.n;
+    const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
 
     const relevantAlerts = useMemo(() => {
         const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
@@ -124,14 +124,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-6 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-3 md:gap-4">
                 <div
                     className="absolute inset-0 opacity-10"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                 />
                 <div
                     className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || selectedVehicle.t || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n || '') }}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                     onClick={onToggleFollow}
                 >
-                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || selectedVehicle.n}</span>
+                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}</span>
                     <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
                         <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                     </div>
@@ -142,9 +142,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     </h3>
                     <div className="flex items-center md:justify-center gap-2 flex-wrap">
                         <StatusPill
-                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30 ? 'danger' : 'success'}
-                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) > 30
-                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? selectedVehicle.d ?? 0) / 60) })
+                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30 ? 'danger' : 'success'}
+                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30
+                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) / 60) })
                                 : t('map.vehicleDetails.onTime')}
                         />
 
