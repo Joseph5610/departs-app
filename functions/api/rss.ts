@@ -1,56 +1,11 @@
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse } from "../_utils/api-utils";
-
-/**
- * Normalizes a date string from PID RSS format.
- */
-const normalizeDate = (dateStr: string, referenceDate: Date = new Date(), pubDate?: string): Date | null => {
-    const normalized = dateStr.trim();
-    if (!normalized || normalized.toLowerCase().includes('do odvolání')) return null;
-
-    if (normalized.match(/^\d{10,}$/)) {
-        const d = new Date(parseInt(normalized) * 1000);
-        return isNaN(d.getTime()) ? null : d;
-    }
-
-    try {
-        const refYear = pubDate ? new Date(pubDate).getFullYear() : referenceDate.getFullYear();
-
-        const partialMatch = normalized.match(/^(\d{1,2})\.(\d{1,2})\. (\d{1,2}):(\d{2})$/);
-        if (partialMatch) {
-            const [, d, m, hh, mm] = partialMatch;
-            const date = new Date(refYear, parseInt(m) - 1, parseInt(d), parseInt(hh), parseInt(mm));
-            return isNaN(date.getTime()) ? null : date;
-        }
-
-        const fullMatch = normalized.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4}) (\d{1,2}):(\d{2})$/);
-        if (fullMatch) {
-            const [, d, m, y, hh, mm] = fullMatch;
-            const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), parseInt(hh), parseInt(mm));
-            return isNaN(date.getTime()) ? null : date;
-        }
-
-        const d = new Date(normalized.includes(' ') ? normalized.replace(' ', 'T') : normalized);
-        return isNaN(d.getTime()) ? null : d;
-    } catch {
-        return null;
-    }
-};
-
-const getTag = (xml: string, tag: string): string => {
-    const match = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
-    return (match ? match[1] : "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/&nbsp;/g, ' ').trim();
-};
+import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse } from "../_utils/api-utils";
+import { getXMLTagContent, normalizeRSSDate } from "../_utils/rss-utils";
 
 export const onRequest: PagesFunction = async (context) => {
     const { searchParams } = new URL(context.request.url);
     const type = searchParams.get('type') as 'incidents' | 'exclusions';
 
-    const FEEDS = {
-        incidents: 'https://pid.cz/feed/rss-mimoradnosti/',
-        exclusions: 'https://pid.cz/feed/rss-vyluky/'
-    };
-
-    const targetUrl = FEEDS[type];
+    const targetUrl = type ? TRANSIT_CONFIG.RSS_FEEDS[type] : null;
     if (!targetUrl) return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
 
     try {
@@ -72,13 +27,13 @@ export const onRequest: PagesFunction = async (context) => {
 
         while ((match = itemRegex.exec(xmlString)) !== null) {
             const itemXml = match[1];
-            const title = getTag(itemXml, 'title');
-            const description = getTag(itemXml, 'description');
-            const pubDate = getTag(itemXml, 'pubDate');
-            const dateRange = getTag(itemXml, 'date') || description.split(';')[0]?.trim();
+            const title = getXMLTagContent(itemXml, 'title');
+            const description = getXMLTagContent(itemXml, 'description');
+            const pubDate = getXMLTagContent(itemXml, 'pubDate');
+            const dateRange = getXMLTagContent(itemXml, 'date') || description.split(';')[0]?.trim();
 
-            const dateFrom = getTag(itemXml, 'dateFrom');
-            const dateTo = getTag(itemXml, 'dateTo');
+            const dateFrom = getXMLTagContent(itemXml, 'dateFrom');
+            const dateTo = getXMLTagContent(itemXml, 'dateTo');
 
             let lines: string[] = [];
             const linesMatch = itemXml.match(/<lines>([\s\S]*?)<\/lines>/i);
@@ -96,15 +51,15 @@ export const onRequest: PagesFunction = async (context) => {
 
             const alert = {
                 title,
-                link: getTag(itemXml, 'link'),
+                link: getXMLTagContent(itemXml, 'link'),
                 pubDate,
                 isoDate: pubDate ? new Date(pubDate).toISOString() : now.toISOString(),
                 contentSnippet: description.replace(/<[^>]*>?/gm, ''),
-                guid: getTag(itemXml, 'guid'),
+                guid: getXMLTagContent(itemXml, 'guid'),
                 date: dateRange,
                 dateFrom,
                 dateTo,
-                priority: getTag(itemXml, 'priority'),
+                priority: getXMLTagContent(itemXml, 'priority'),
                 lines,
                 type
             };
@@ -113,13 +68,13 @@ export const onRequest: PagesFunction = async (context) => {
             let isFuture = false;
 
             if (type === 'exclusions') {
-                let start = normalizeDate(dateFrom || '', now, alert.isoDate);
-                let end = normalizeDate(dateTo || '', now, alert.isoDate);
+                let start = normalizeRSSDate(dateFrom || '', now, alert.isoDate);
+                let end = normalizeRSSDate(dateTo || '', now, alert.isoDate);
 
                 if (!start && dateRange) {
                     const parts = dateRange.split('-');
-                    if (parts.length >= 1) start = normalizeDate(parts[0], now, alert.isoDate);
-                    if (!end && parts.length >= 2) end = normalizeDate(parts[1], now, alert.isoDate);
+                    if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, alert.isoDate);
+                    if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, alert.isoDate);
                 }
 
                 if (start && start > now) {
@@ -134,7 +89,6 @@ export const onRequest: PagesFunction = async (context) => {
         }
 
         const channelTitle = xmlString.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/i)?.[1] || "";
-
         const cacheMaxAge = type === 'incidents' ? CACHE_TTL.RSS_INCIDENTS : CACHE_TTL.RSS_EXCLUSIONS;
 
         return new Response(JSON.stringify({

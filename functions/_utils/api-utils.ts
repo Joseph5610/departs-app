@@ -21,6 +21,10 @@ export const TRANSIT_CONFIG = {
     STOPS_FETCH_LIMIT: 10000,
     STOPS_MAX_OFFSET: 40000,
     JITTER_RADIUS: 0.00012,
+    RSS_FEEDS: {
+        incidents: 'https://pid.cz/feed/rss-mimoradnosti/',
+        exclusions: 'https://pid.cz/feed/rss-vyluky/'
+    }
 };
 
 /**
@@ -45,6 +49,7 @@ export interface GolemioFetchOptions {
 /**
  * Standardized fetch for Golemio API.
  * Always appends the provided path to the base Golemio URL.
+ * Handles bracket encoding for legacy-compatible query parameters.
  */
 export async function golemioFetch(
     path: string,
@@ -63,7 +68,12 @@ export async function golemioFetch(
         });
     }
 
-    return fetch(url.toString(), {
+    // Some providers expect literal brackets in keys (e.g. stopIds[]).
+    // URLSearchParams automatically encodes them as %5B and %5D.
+    // We convert back to literal brackets ONLY for the keys/params to ensure compatibility.
+    const finalUrl = url.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
+
+    return fetch(finalUrl, {
         headers: {
             "X-Access-Token": env.GOLEMIO_API_KEY,
             "Content-Type": "application/json",
