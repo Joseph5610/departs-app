@@ -28,10 +28,10 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-lg h-[80vh] bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                        className="relative w-full max-w-lg max-h-[85dvh] bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
-                        <div className="px-6 py-4 flex items-center justify-between border-b border-white/5">
+                        <div className="px-6 py-5 flex items-center justify-between border-b border-white/5 shrink-0">
                             <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
                             <button
                                 onClick={onClose}

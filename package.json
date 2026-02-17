@@ -1,7 +1,7 @@
 {
   "name": "departs-app",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Lightweight real-time Prague public transport departures app",
   "author": "departs.app",
   "license": "MIT",
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260127.0",
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^24.10.1",

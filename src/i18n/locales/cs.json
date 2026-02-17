@@ -21,7 +21,14 @@
       "cs": "Čeština"
     },
     "viewSource": "Zdrojový kód na GitHubu",
-    "version": "Verze {{version}}"
+    "version": "Verze {{version}}",
+    "versionBadge": "v{{version}}",
+    "updates": {
+      "check": "Zkontrolovat aktualizace",
+      "checking": "Kontrola aktualizací...",
+      "upToDate": "Máte aktuální verzi!",
+      "available": "Nová verze k dispozici!"
+    }
   },
   "welcome": {
     "title": "Vítejte v departs.app",
