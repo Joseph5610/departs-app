@@ -20,14 +20,14 @@ export const onRequest: PagesFunction = async (context) => {
                 cacheTtl: cacheMaxAge,
                 cacheEverything: true
             }
-        } as any);
+        });
 
         if (!response.ok) return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
 
         const xmlString = await response.text();
-        const items: any[] = [];
+        const items: unknown[] = [];
         const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-        let match;
+        let match: RegExpExecArray | null;
 
         const now = new Date();
 
@@ -94,7 +94,8 @@ export const onRequest: PagesFunction = async (context) => {
             items.push({ ...alert, isActive, isFuture });
         }
 
-        const channelTitle = xmlString.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/i)?.[1] || "";
+        const channelTitleMatch = xmlString.match(/<channel>[\s\S]*?<title>([\s\S]*?)<\/title>/i);
+        const channelTitle = channelTitleMatch ? channelTitleMatch[1] : "";
 
         return new Response(JSON.stringify({
             title: channelTitle.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim(),

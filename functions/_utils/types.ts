@@ -11,8 +11,22 @@ export interface GolemioVehicleFeature {
         coordinates: [number, number];
     };
     properties: {
-        vehicle_id?: string;
-        id?: string;
+        vehicle_id?: string | number;
+        id?: string | number;
+        gtfs_trip_id?: string;
+        gtfs_route_short_name?: string;
+        gtfs_route_type?: string;
+        gtfs_trip_headsign?: string;
+        route_short_name?: string;
+        route_type?: string;
+        trip_headsign?: string;
+        bearing?: number;
+        delay?: number;
+        state_position?: string;
+        next_stop_name?: string;
+        is_wheelchair_accessible?: boolean;
+        is_air_conditioned?: boolean;
+        vehicle_registration_number?: number;
         trip?: {
             gtfs?: {
                 trip_id?: string;
@@ -30,6 +44,7 @@ export interface GolemioVehicleFeature {
             state_position?: string;
             next_stop?: { id?: string };
         };
+        [key: string]: unknown;
     };
 }
 
@@ -71,6 +86,10 @@ export interface GolemioStopFeature {
         location_type: number | string;
         parent_station: string | null;
         zone_id: string | null;
+        all_ids?: string[];
+        metro_lines?: string[];
+        is_centroid?: boolean;
+        [key: string]: unknown;
     };
 }
 
@@ -116,4 +135,5 @@ export interface AppStopProperties {
     zone_id?: string;
     is_centroid?: boolean;
     metro_lines?: string[];
+    all_ids?: string[];
 }
