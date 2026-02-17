@@ -7,6 +7,10 @@
   },
   "settings": {
     "title": "Settings",
+    "sections": {
+      "display": "Display",
+      "language": "Language"
+    },
     "liveVehicles": {
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
