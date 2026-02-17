@@ -2,6 +2,16 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.4.0] - 2026-02-12
+
+### Added
+- **PWA Manual Update**: Added a "Check for updates" button in the Settings modal to allow users to manually trigger a version check.
+- **UX Enhancements**: Redesigned the Settings modal for better clarity and visual consistency.
+- **Improved Modals**: Modals now have dynamic height based on content for a more native-like feel.
+
+### Changed
+- **Service Worker**: Enhanced the update detection logic to provide immediate feedback via toasts.
+
 ## [0.3.0] - 2026-02-10
 
 ### Added

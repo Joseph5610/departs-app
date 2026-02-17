@@ -21,7 +21,14 @@
       "cs": "Čeština"
     },
     "viewSource": "View source on GitHub",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "versionBadge": "v{{version}}",
+    "updates": {
+      "check": "Check for updates",
+      "checking": "Checking for updates...",
+      "upToDate": "You are up to date!",
+      "available": "New version available!"
+    }
   },
   "welcome": {
     "title": "Welcome to departs.app",
