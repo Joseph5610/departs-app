@@ -30,7 +30,6 @@ import {
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
 import { useMapStyles } from '../hooks/useMapStyles';
-import { useMapClickHandlers } from '../hooks/useMapClickHandlers';
 import type { StopFeature } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
@@ -118,7 +117,8 @@ export const Map: React.FC = () => {
         labelLayerId,
         selectedId,
         routeFilter,
-        setRouteFilter
+        setRouteFilter,
+        onMapClick
     } = useMapLogic(mapRef);
 
     const {
@@ -126,14 +126,6 @@ export const Map: React.FC = () => {
         routeLineLayout,
         vehiclesFilter
     } = useMapStyles(selectedVehicle, selectedId);
-
-    const onMapClick = useMapClickHandlers(
-        mapRef,
-        setSelectedVehicle,
-        setSelectedStop,
-        setIsFollowing,
-        setExpandedGroups
-    );
 
     const handleZoomIn = useCallback(() => {
         mapRef.current?.zoomIn();

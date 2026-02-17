@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { getVehicleColor } from '../utils/vehicleColors';
-import { useRSS } from '../hooks/useRSS';
+import { useRSS, type RSSItem } from '../hooks/useTransitData';
 import { parseISO } from 'date-fns';
 
 import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
@@ -63,8 +63,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const relevantAlerts = useMemo(() => {
         const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
         if (!routeName) return [];
-        return allItems.filter(item =>
-            item.lines?.some(l => l.toUpperCase() === routeName.toString().toUpperCase()) &&
+        return allItems.filter((item: RSSItem) =>
+            item.lines?.some((l: string) => l.toUpperCase() === routeName.toString().toUpperCase()) &&
             item.isActive
         );
     }, [incidents, exclusions, routeName]);

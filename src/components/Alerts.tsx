@@ -2,8 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink, Search as SearchIcon, X } from 'lucide-react';
-import { useRSS } from '../hooks/useRSS';
-import type { RSSItem } from '../hooks/useRSS';
+import { useRSS } from '../hooks/useTransitData';
+import type { RSSItem } from '../hooks/useTransitData';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
@@ -26,9 +26,9 @@ export const Alerts: React.FC = () => {
         if (!searchQuery.trim()) return items;
 
         const q = searchQuery.toLowerCase();
-        return items.filter(item =>
+        return items.filter((item: RSSItem) =>
             item.title.toLowerCase().includes(q) ||
-            item.lines?.some(l => l.toLowerCase().includes(q))
+            item.lines?.some((l: string) => l.toLowerCase().includes(q))
         );
     }, [activeTab, incidents, exclusions, searchQuery]);
 
@@ -100,7 +100,7 @@ export const Alerts: React.FC = () => {
                                 transition={{ duration: 0.2 }}
                                 className="space-y-3"
                             >
-                                {currentItems.map((item, idx) => (
+                                {currentItems.map((item: RSSItem, idx: number) => (
                                     <AlertCard key={item.guid || idx} item={item} />
                                 ))}
 
