@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useRef } from 'react';
-import type { Map, MapLayerMouseEvent, ViewStateChangeEvent, SymbolLayerSpecification } from 'maplibre-gl';
+import type { SymbolLayerSpecification, Map as MapLibreMap, MapLibreEvent, LayerSpecification } from 'maplibre-gl';
+import type { ViewStateChangeEvent } from 'react-map-gl/maplibre';
 import { addAllIcons } from '../utils/mapIcons';
 import {
     BOUNDS_DEBOUNCE_MS,
@@ -25,7 +26,7 @@ export const useMapView = (
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const getRoundedBounds = useCallback((map: Map) => {
+    const getRoundedBounds = useCallback((map: MapLibreMap) => {
         const b = map.getBounds();
         const zoom = map.getZoom();
         const round = (num: number) => Math.round(num * 1000) / 1000;
@@ -72,11 +73,11 @@ export const useMapView = (
         }
     }, [isFollowing, getRoundedBounds]);
 
-    const onLoad = useCallback((evt: MapLayerMouseEvent) => {
+    const onLoad = useCallback((evt: MapLibreEvent<undefined>) => {
         const map = evt.target;
         const layers = map.getStyle().layers;
         if (layers) {
-            const firstLabelLayer = layers.find((layer) =>
+            const firstLabelLayer = layers.find((layer: LayerSpecification) =>
                 layer.type === 'symbol' && (layer as SymbolLayerSpecification).layout?.['text-field']
             );
             if (firstLabelLayer) {

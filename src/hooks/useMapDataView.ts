@@ -66,12 +66,12 @@ export const useMapDataView = (
     const routeShapeData = useRouteShape(selectedVehicle, vehicleDetail);
 
     const displayVehicles = useMemo((): VehicleCollection => {
-        if (!rawVehicles?.features) return EMPTY_GEOJSON;
+        if (!rawVehicles?.features) return EMPTY_GEOJSON as VehicleCollection;
         return rawVehicles as VehicleCollection;
     }, [rawVehicles]);
 
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
-        if (!selectedVehicle || !selectedVehicle._geometry) return EMPTY_GEOJSON;
+        if (!selectedVehicle || !selectedVehicle._geometry) return EMPTY_GEOJSON as VehicleCollection;
 
         return {
             type: 'FeatureCollection',

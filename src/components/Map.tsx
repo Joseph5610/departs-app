@@ -186,10 +186,12 @@ export const Map: React.FC = () => {
                 initialViewState={initialViewState}
                 onMove={onMove}
                 onMoveEnd={onMoveEnd}
-                onLoad={onLoad}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onLoad={onLoad as any}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE_URL}
-                mapLib={maplibregl}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                mapLib={maplibregl as any}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
@@ -218,7 +220,7 @@ export const Map: React.FC = () => {
                 )}
 
                 <Search
-                    stops={stops}
+                    stops={stops || null}
                     onSelect={handleStopSelect}
                     onLineSelect={handleLineSelect}
                     activeFilter={routeFilter}
@@ -277,13 +279,16 @@ export const Map: React.FC = () => {
 
                 <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
                     {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
-                    <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <Layer {...(vehiclesPointLayer as any)} filter={vehiclesFilter as any} />
 
                     {/* DIRECTION ARROWS - EXCLUDE SELECTED */}
-                    <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <Layer {...(vehiclesDirectionLayer as any)} filter={vehiclesFilter as any} />
 
                     {/* LABELS - EXCLUDE SELECTED */}
-                    <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <Layer {...(vehiclesLabelLayer as any)} filter={vehiclesFilter as any} />
                 </Source>
 
                 <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON)}>

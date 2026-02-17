@@ -50,7 +50,6 @@ export const useMapInteraction = (
 
     const onDragStart = useCallback(() => {
         if (isFollowing) {
-            console.log('👆 Drag detected, disabling auto-follow');
             setIsFollowing(false);
         }
     }, [isFollowing, setIsFollowing]);

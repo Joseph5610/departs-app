@@ -11,7 +11,7 @@ export const MOBILE_BREAKPOINT = 768;
 export const MAP_DEFAULT_COORDS = {
     lat: 50.0755,
     lng: 14.4378
-} as const;
+};
 
 export const MAP_DEFAULT_ZOOM = 13;
 export const MAP_USER_LOCATION_ZOOM = 15;
@@ -29,12 +29,14 @@ export const LS_KEYS = {
     WELCOME_SEEN: 'departs_welcome_seen'
 } as const;
 
+import type { FeatureCollection } from 'geojson';
+
 /**
  * Common GeoJSON structures
  */
-export const EMPTY_GEOJSON = {
-    type: 'FeatureCollection' as const,
-    features: [] as unknown[]
+export const EMPTY_GEOJSON: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: []
 };
 
 /**

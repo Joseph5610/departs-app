@@ -62,6 +62,7 @@ export const MapControls = React.memo<MapControlsProps>(({
                 onClick={(e) => onLocate(e)}
                 className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.myLocation')}
+                aria-label={t('map.controls.myLocation')}
             >
                 <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
             </button>
@@ -69,6 +70,7 @@ export const MapControls = React.memo<MapControlsProps>(({
                 onClick={onSettings}
                 className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.settings')}
+                aria-label={t('map.controls.settings')}
             >
                 <Settings size={20} className="group-hover:rotate-45 transition-transform" />
             </button>
