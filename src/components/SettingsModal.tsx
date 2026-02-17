@@ -22,7 +22,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const { t, i18n } = useTranslation();
     const { showToast } = useToast();
     const [isChecking, setIsChecking] = useState(false);
-    const checkTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const {
         needRefresh: [needRefresh],
