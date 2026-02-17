@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.4.1] - 2026-02-14
+
+### Changed
+- **Backend Security Hardening**: Refactored API middleware to implement a restrictive CORS policy, blocking unauthorized origins with 403 Forbidden.
+- **Middleware Cleanup**: Removed unused `X-Access-Token` from allowed headers and restricted API methods to `GET` and `OPTIONS` only.
+- **Security Headers**: Added standard defense-in-depth headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`) to all API responses.
+- **API Consolidation**: Centralized CORS management by removing redundant manual header overrides in individual API handlers.
+
 ## [0.4.0] - 2026-02-12
 
 ### Added
