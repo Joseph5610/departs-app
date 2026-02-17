@@ -98,7 +98,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="text-white font-semibold truncate">
-                                    {showVehicles ? t('liveStatus.live') : t('settings.liveVehicles.title')}
+                                    {t('settings.liveVehicles.title')}
                                 </div>
                                 <div className="text-zinc-500 text-xs mt-0.5 leading-tight">
                                     {t('settings.liveVehicles.description')}
@@ -156,8 +156,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
                         >
                             <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg bg-zinc-500/10 text-zinc-400 ${isChecking ? 'animate-spin' : ''}`}>
-                                    <RefreshCw size={18} />
+                                <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-400">
+                                    <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
                                 </div>
                                 <span className="text-zinc-300 text-sm font-medium">{t('settings.updates.check')}</span>
                             </div>
