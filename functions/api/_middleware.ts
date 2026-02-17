@@ -29,7 +29,10 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
                 "Access-Control-Allow-Methods": "GET, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type",
                 "Access-Control-Max-Age": "86400",
-                "Vary": "Origin"
+                "Vary": "Origin",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "Referrer-Policy": "strict-origin-when-cross-origin"
             },
         });
     }
@@ -41,13 +44,19 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
 
     const response = await next();
 
-    // 4. Add CORS headers to the actual response for allowed origins
+    // 4. Create new response to add headers (responses are immutable)
+    const newResponse = new Response(response.body, response);
+
+    // Add standard security headers
+    newResponse.headers.set("X-Content-Type-Options", "nosniff");
+    newResponse.headers.set("X-Frame-Options", "DENY");
+    newResponse.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    // Add CORS headers for allowed origins
     if (origin && allowed) {
-        const newResponse = new Response(response.body, response);
         newResponse.headers.set("Access-Control-Allow-Origin", origin);
         newResponse.headers.set("Vary", "Origin");
-        return newResponse;
     }
 
-    return response;
+    return newResponse;
 };
