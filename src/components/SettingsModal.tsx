@@ -86,28 +86,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Live Vehicles Toggle */}
                 <section className="space-y-3">
                     <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
-                        {t('settings.liveVehicles.title')}
+                        {t('settings.sections.display')}
                     </div>
                     <button
                         onClick={() => setShowVehicles(!showVehicles)}
-                        className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
+                        className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
                     >
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'}`}>
+                        <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
                                 {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="text-white font-semibold truncate">
+                                <div className="text-white font-semibold leading-snug">
                                     {t('settings.liveVehicles.title')}
                                 </div>
-                                <div className="text-zinc-500 text-xs mt-0.5 leading-tight">
+                                <div className="text-zinc-500 text-xs mt-1 leading-tight">
                                     {t('settings.liveVehicles.description')}
                                 </div>
                             </div>
                         </div>
 
                         <div
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
                         >
                             <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
@@ -119,7 +119,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Language Selection */}
                 <section className="space-y-3">
                     <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
-                        {t('settings.language.title')}
+                        {t('settings.sections.language')}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         {(['en', 'cs'] as const).map((lang) => (
@@ -138,7 +138,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </section>
 
                 {/* Tip Box */}
-                <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 flex gap-3">
+                <div className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 flex gap-2.5 sm:gap-3">
                     <div className="shrink-0 text-amber-500/50 mt-0.5">
                         <Info size={16} />
                     </div>
@@ -153,7 +153,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <button
                             onClick={handleCheckUpdate}
                             disabled={isChecking}
-                            className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
+                            className="flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-400">

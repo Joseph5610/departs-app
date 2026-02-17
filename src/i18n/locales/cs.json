@@ -7,6 +7,10 @@
   },
   "settings": {
     "title": "Nastavení",
+    "sections": {
+      "display": "Zobrazení",
+      "language": "Jazyk"
+    },
     "liveVehicles": {
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"

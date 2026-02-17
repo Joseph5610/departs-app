@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.4.2] - 2026-02-15
+
+### Changed
+- **Mobile UX Optimization**: Optimized the Settings modal for mobile devices by allowing long toggle titles to wrap and hiding decorative icons to maximize horizontal space.
+- **Improved Translations**: Introduced more concise section headers in Settings ("Display", "Language") to reduce redundancy.
+
 ## [0.4.1] - 2026-02-14
 
 ### Changed
