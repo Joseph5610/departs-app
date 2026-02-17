@@ -13,11 +13,14 @@ i18n
       cs: { translation: cs },
     },
     fallbackLng: 'en',
+    supportedLngs: ['en', 'cs'],
+    nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
+      order: ['localStorage', 'querystring', 'navigator'],
+      lookupLocalStorage: 'i18nextLng',
       caches: ['localStorage'],
     },
   });

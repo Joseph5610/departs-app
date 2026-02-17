@@ -8,6 +8,7 @@ All notable changes to the **Departs.app** project will be documented in this fi
 - **PWA Manual Update**: Added a "Check for updates" button in the Settings modal to allow users to manually trigger a version check.
 - **UX Enhancements**: Redesigned the Settings modal for better clarity and visual consistency.
 - **Improved Modals**: Modals now have dynamic height based on content for a more native-like feel.
+- **Language Persistence**: Fixed an issue where the selected language would not persist after a page refresh.
 
 ### Changed
 - **Service Worker**: Enhanced the update detection logic to provide immediate feedback via toasts.
