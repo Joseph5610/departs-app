@@ -116,5 +116,9 @@
     "moreInfo": "Více informací",
     "planned": "Plánováno",
     "active": "Právě probíhá"
+  },
+  "common": {
+    "close": "Zavřít",
+    "back": "Zpět"
   }
 }

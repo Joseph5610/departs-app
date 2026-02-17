@@ -116,5 +116,9 @@
     "moreInfo": "More info",
     "planned": "Planned",
     "active": "Active now"
+  },
+  "common": {
+    "close": "Close",
+    "back": "Back"
   }
 }

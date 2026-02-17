@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface BottomSheetProps {
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
+    const { t } = useTranslation();
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
     const [sheetState, setSheetState] = useState<'peek' | 'full'>(isMobile ? 'peek' : 'full');
 
@@ -76,6 +78,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                         dragConstraints={{ top: 0, bottom: 0 }}
                         dragElastic={0.05}
                         onDragEnd={handleDragEnd}
+                        data-testid="bottom-sheet"
                         className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border"
                     >
                         {/* Drag Handle: Explicitly for dragging the whole sheet */}
@@ -91,6 +94,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                                         <button
                                             onClick={onBack}
                                             className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                            aria-label={t('common.back')}
                                         >
                                             <ArrowLeft size={20} />
                                         </button>
@@ -102,6 +106,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                                 <button
                                     onClick={onClose}
                                     className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                    aria-label={t('common.close')}
                                 >
                                     <X size={20} />
                                 </button>

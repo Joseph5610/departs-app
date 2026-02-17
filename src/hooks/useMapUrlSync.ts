@@ -13,10 +13,12 @@ export const useMapUrlSync = (
         const p = new URLSearchParams(window.location.search);
         const id = p.get('stopId');
         const name = p.get('stopName');
-        if (id && name && !selectedStop) {
+        if (id && name) {
             setSelectedStop({ id, name });
         }
-    }, [setSelectedStop, selectedStop]);
+        // Only run on mount
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // 2. State Change: Write to URL
     useEffect(() => {
