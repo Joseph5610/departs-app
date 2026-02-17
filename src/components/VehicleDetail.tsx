@@ -73,21 +73,27 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const nextStopSequence = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features || !vehicleDetail.last_stop_sequence) return null;
 
-        const futureStops = vehicleDetail.stop_times.features
-            .filter((s: any) => s.properties.stop_sequence > vehicleDetail.last_stop_sequence!)
-            .sort((a: any, b: any) => a.properties.stop_sequence - b.properties.stop_sequence);
+        const features = vehicleDetail.stop_times.features;
+        const lastSequence = vehicleDetail.last_stop_sequence;
+
+        const futureStops = features
+            .filter((s) => s.properties.stop_sequence > lastSequence)
+            .sort((a, b) => a.properties.stop_sequence - b.properties.stop_sequence);
 
         return futureStops[0]?.properties.stop_sequence ?? null;
-    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence]);
+    }, [vehicleDetail]);
 
     // Memoize filtered stops to prevent re-filtering on every render
     const filteredStops = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features) return [];
 
-        return vehicleDetail.stop_times.features.filter((stop: any) =>
-            showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0)
+        const features = vehicleDetail.stop_times.features;
+        const lastSequence = vehicleDetail.last_stop_sequence || 0;
+
+        return features.filter((stop) =>
+            showPastStops || stop.properties.stop_sequence >= lastSequence
         );
-    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence, showPastStops]);
+    }, [vehicleDetail, showPastStops]);
 
     // Memoize toggle handler to prevent unnecessary re-renders
     const handleTogglePastStops = useCallback(() => {
@@ -248,7 +254,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <div className="relative pl-6 space-y-0">
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 
-                        {filteredStops.map((stop: any, idx: number) => {
+                        {filteredStops.map((stop, idx: number) => {
                             const isPast = stop.properties.stop_sequence < (vehicleDetail.last_stop_sequence || 0);
                             const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
                             const isNext = stop.properties.stop_sequence === nextStopSequence;

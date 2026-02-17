@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
 import type { StopCollection, StopFeature } from '../types/transit';
 import { METRO_STATIONS } from '../config/stations';
+import { API_ENDPOINTS, REFRESH_INTERVALS } from '../config/api';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -11,7 +12,6 @@ localforage.config({
 
 const CACHE_KEY = 'pid_stops_geojson_v17';
 const CACHE_TS_KEY = 'pid_stops_updated_at_v17';
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 export const useStops = () => {
     return useQuery<StopCollection>({
@@ -26,13 +26,13 @@ export const useStops = () => {
                     const name = f.properties.stop_name;
                     const lines = METRO_STATIONS[name] || [];
 
-                    // @ts-expect-error - Adding runtime properties for styling
+                    // @ts-expect-error - Dynamic metro line property for map clustering
                     f.properties.metro_a = lines.includes('A') ? 1 : 0;
-                    // @ts-expect-error
+                    // @ts-expect-error - Dynamic metro line property for map clustering
                     f.properties.metro_b = lines.includes('B') ? 1 : 0;
-                    // @ts-expect-error
+                    // @ts-expect-error - Dynamic metro line property for map clustering
                     f.properties.metro_c = lines.includes('C') ? 1 : 0;
-                    // @ts-expect-error
+                    // @ts-expect-error - Random seed for cluster animation
                     f.properties.variant_seed = Math.random();
                 });
                 return data;
@@ -41,11 +41,11 @@ export const useStops = () => {
             const cached = await localforage.getItem<StopCollection>(CACHE_KEY);
             const lastUpdate = await localforage.getItem<number>(CACHE_TS_KEY);
 
-            if (cached && lastUpdate && (now - lastUpdate < TWENTY_FOUR_HOURS)) {
+            if (cached && lastUpdate && (now - lastUpdate < REFRESH_INTERVALS.STOPS)) {
                 return enrichData(cached);
             }
 
-            const res = await fetch('/api/stops');
+            const res = await fetch(API_ENDPOINTS.STOPS);
             if (!res.ok) {
                 if (cached) return enrichData(cached);
                 throw new Error('Failed to fetch stops');

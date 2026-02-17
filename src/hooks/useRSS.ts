@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { API_ENDPOINTS } from '../config/api';
 
 export interface RSSItem {
     title: string;
@@ -32,7 +33,7 @@ const FEEDS = {
 };
 
 const fetchFeed = async (url: string): Promise<RSSFeed> => {
-    const res = await fetch(`/api/rss?type=${url}`);
+    const res = await fetch(`${API_ENDPOINTS.RSS}?type=${url}`);
     if (!res.ok) throw new Error(`Failed to fetch feed: ${res.statusText}`);
     return await res.json();
 };

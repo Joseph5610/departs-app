@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 
@@ -12,14 +12,16 @@ interface BottomSheetProps {
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-    const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
+    const [sheetState, setSheetState] = useState<'peek' | 'full'>(isMobile ? 'peek' : 'full');
 
-    // Reset snap point when opening
-    useEffect(() => {
+    // Sync sheet state when opening or when mobile/desktop mode toggles
+    const [prevProps, setPrevProps] = useState({ isOpen, isMobile });
+    if (isOpen !== prevProps.isOpen || isMobile !== prevProps.isMobile) {
+        setPrevProps({ isOpen, isMobile });
         if (isOpen) {
             setSheetState(isMobile ? 'peek' : 'full');
         }
-    }, [isOpen, isMobile]);
+    }
 
     const variants = {
         hidden: isMobile
@@ -37,7 +39,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         },
     };
 
-    const handleDragEnd = (_: any, info: any) => {
+    const handleDragEnd = (_: unknown, info: { velocity: { y: number }, offset: { y: number } }) => {
         if (!isMobile) return;
         const velocity = info.velocity.y;
         const offset = info.offset.y;

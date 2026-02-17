@@ -1,10 +1,11 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
+import { API_ENDPOINTS, REFRESH_INTERVALS } from '../config/api';
 
 const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null): Promise<VehicleFeature[]> => {
     try {
-        const url = new URL('/api/vehicles', window.location.origin);
+        const url = new URL(API_ENDPOINTS.VEHICLES, window.location.origin);
 
         if (bounds) url.searchParams.set('bounds', bounds);
         if (trackedId) url.searchParams.set('tripId', trackedId);
@@ -41,7 +42,7 @@ export const useVehicles = (bounds: string | null, trackedId: string | null = nu
         queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter),
         select: selectFn,
         enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0),
-        refetchInterval: 10000,
+        refetchInterval: REFRESH_INTERVALS.VEHICLES,
         staleTime: 5000,
         gcTime: 60000,
         placeholderData: keepPreviousData,

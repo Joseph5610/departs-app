@@ -60,5 +60,5 @@ export const useMapVehicleSync = (
         if (updated) {
             setSelectedVehicle({ ...selectedVehicle, ...newProps, _geometry: newCoords });
         }
-    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle]);
+    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle, setSelectedVehicle]);
 };

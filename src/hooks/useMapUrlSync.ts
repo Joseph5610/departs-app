@@ -16,7 +16,7 @@ export const useMapUrlSync = (
         if (id && name && !selectedStop) {
             setSelectedStop({ id, name });
         }
-    }, [setSelectedStop]);
+    }, [setSelectedStop, selectedStop]);
 
     // 2. State Change: Write to URL
     useEffect(() => {

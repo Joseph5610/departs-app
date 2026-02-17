@@ -7,7 +7,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
 
 import { LiveStatus } from './LiveStatus';
-import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
@@ -30,16 +29,20 @@ import {
     vehiclesLabelLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
-import type { TrackedVehicle } from '../types/transit';
+import { useMapStyles } from '../hooks/useMapStyles';
+import { useMapClickHandlers } from '../hooks/useMapClickHandlers';
+import type { StopFeature } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
-
-const EMPTY_GEOJSON: any = {
-    type: 'FeatureCollection',
-    features: []
-};
-
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+import {
+    EMPTY_GEOJSON,
+    MAP_STYLE_URL,
+    MAP_DEFAULT_COORDS,
+    MAP_DEFAULT_ZOOM,
+    MAP_USER_LOCATION_ZOOM,
+    LS_KEYS,
+    MAP_FLY_DURATION_MS
+} from '../config/constants';
 
 export const Map: React.FC = () => {
     const { t } = useTranslation();
@@ -48,24 +51,22 @@ export const Map: React.FC = () => {
     const initialViewState = useMemo(() => {
         const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 
-        // Default Prague coordinates
-        let lat = 50.0755;
-        let lng = 14.4378;
-        let z = 13;
+        let lat = MAP_DEFAULT_COORDS.lat;
+        let lng = MAP_DEFAULT_COORDS.lng;
+        let z = MAP_DEFAULT_ZOOM;
 
-        // Try to get from localStorage if no URL params
         if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
-            const saved = localStorage.getItem('lastUserLocation');
+            const saved = localStorage.getItem(LS_KEYS.LAST_USER_LOCATION);
             if (saved) {
                 try {
                     const { lat: sLat, lng: sLng } = JSON.parse(saved);
                     if (typeof sLat === 'number' && typeof sLng === 'number') {
                         lat = sLat;
                         lng = sLng;
-                        z = 15; // Zoom in more if we have a user location
+                        z = MAP_USER_LOCATION_ZOOM;
                     }
                 } catch (e) {
-                    console.error('Failed to parse lastUserLocation', e);
+                    console.error(`Failed to parse ${LS_KEYS.LAST_USER_LOCATION}`, e);
                 }
             }
         }
@@ -120,6 +121,20 @@ export const Map: React.FC = () => {
         setRouteFilter
     } = useMapLogic(mapRef);
 
+    const {
+        routeLinePaint,
+        routeLineLayout,
+        vehiclesFilter
+    } = useMapStyles(selectedVehicle, selectedId);
+
+    const onMapClick = useMapClickHandlers(
+        mapRef,
+        setSelectedVehicle,
+        setSelectedStop,
+        setIsFollowing,
+        setExpandedGroups
+    );
+
     const handleZoomIn = useCallback(() => {
         mapRef.current?.zoomIn();
     }, []);
@@ -136,12 +151,12 @@ export const Map: React.FC = () => {
         setIsFollowing(prev => !prev);
     }, [setIsFollowing]);
 
-    const handleStopSelect = useCallback((stop: any) => {
+    const handleStopSelect = useCallback((stop: StopFeature) => {
         const [lng, lat] = stop.geometry.coordinates;
         mapRef.current?.flyTo({
             center: [lng, lat],
             zoom: 16,
-            duration: 2000
+            duration: MAP_FLY_DURATION_MS
         });
         const pc = stop.properties.platform_code;
         const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
@@ -162,34 +177,6 @@ export const Map: React.FC = () => {
         });
     };
 
-
-    // Memoize route line color to prevent re-computation on every render
-    const routeLineColor = useMemo(() => {
-        const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || '';
-        const routeType = selectedVehicle?.route_type || 0;
-        return isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
-    }, [selectedVehicle?.gtfs_route_short_name, selectedVehicle?.route_short_name, selectedVehicle?.route_type]);
-
-    // Memoize route line paint object
-    const routeLinePaint = useMemo(() => ({
-        'line-color': routeLineColor,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8] as any,
-        'line-opacity': 0.8,
-        'line-blur': 0.5
-    }), [routeLineColor]);
-
-    // Memoize route line layout object
-    const routeLineLayout = useMemo(() => ({
-        'line-join': 'round' as const,
-        'line-cap': 'round' as const
-    }), []);
-
-    // Memoize vehicle filter to exclude selected vehicle
-    const vehiclesFilter = useMemo(() => ['!', ['any',
-        ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
-        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
-    ]], [selectedId, selectedVehicle?.gtfs_trip_id, selectedVehicle?.trip_id]);
-
     return (
         <div className="w-full h-full bg-black relative">
             <LiveStatus fetching={fetchingVehicles} bounds={bounds} lastUpdate={dataUpdatedAt} />
@@ -201,8 +188,8 @@ export const Map: React.FC = () => {
                 onMoveEnd={onMoveEnd}
                 onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle={MAP_STYLE}
-                mapLib={maplibregl as any}
+                mapStyle={MAP_STYLE_URL}
+                mapLib={maplibregl}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
@@ -213,50 +200,13 @@ export const Map: React.FC = () => {
                 onMouseLeave={(evt) => {
                     evt.target.getCanvas().style.cursor = '';
                 }}
-                onClick={(evt) => {
-                    const f = evt.features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') return;
-
-                    if (f.layer.id === 'clusters') {
-                        const clusterId = f.properties.cluster_id;
-                        const source = (mapRef.current!.getMap() as any).getSource('pid-stops');
-                        source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-                            if (err) return;
-                            mapRef.current?.easeTo({
-                                center: (f.geometry as any).coordinates,
-                                zoom,
-                                duration: 500
-                            });
-                        });
-                        return;
-                    }
-
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
-                        const props = f.properties;
-                        setSelectedVehicle({
-                            ...props,
-                            vehicle_id: String(props.vehicle_id || props.id),
-                            _geometry: (f.geometry as any).coordinates as [number, number]
-                        } as TrackedVehicle);
-                        setSelectedStop(null);
-                        setIsFollowing(true);
-                        return;
-                    }
-
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
-                        const pc = f.properties.platform_code;
-                        const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                        setSelectedStop({ id: f.properties.stop_id, name });
-                        setSelectedVehicle(null);
-                        setExpandedGroups([]);
-                    }
-                }}
+                onClick={onMapClick}
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
             >
 
                 {/* Route Shape Layer - UNDER labels */}
                 {mapLoaded && (
-                    <Source id="route-shape" type="geojson" data={routeShapeData || (EMPTY_GEOJSON as any)}>
+                    <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                         <Layer
                             id="route-line"
                             type="line"
@@ -268,7 +218,7 @@ export const Map: React.FC = () => {
                 )}
 
                 <Search
-                    stops={stops as any}
+                    stops={stops}
                     onSelect={handleStopSelect}
                     onLineSelect={handleLineSelect}
                     activeFilter={routeFilter}
@@ -291,7 +241,7 @@ export const Map: React.FC = () => {
                         geometry: { type: 'Point', coordinates: userLocation },
                         properties: {}
                     }]
-                } : EMPTY_GEOJSON) as any}>
+                } : EMPTY_GEOJSON)}>
                     <Layer
                         id="user-location-pulse"
                         type="circle"
@@ -314,7 +264,7 @@ export const Map: React.FC = () => {
                 </Source>
 
 
-                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as any}>
+                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
                     {/* 1. PULSE (Bottom) */}
                     <Layer {...selectedVehiclePulseLayer} />
                     {/* 2. BODY */}
@@ -325,7 +275,7 @@ export const Map: React.FC = () => {
                     <Layer {...selectedVehicleLabelLayer} />
                 </Source>
 
-                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
+                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
                     {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
                     <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
 
@@ -336,14 +286,14 @@ export const Map: React.FC = () => {
                     <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
                 </Source>
 
-                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON) as any}>
+                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON)}>
                     <Layer {...stopLabelLayer} />
                 </Source>
 
                 <Source
                     id="pid-stops"
                     type="geojson"
-                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON) as any}
+                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON)}
                     cluster={true}
                     clusterMaxZoom={13}
                     clusterRadius={40}

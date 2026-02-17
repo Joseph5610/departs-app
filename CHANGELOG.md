@@ -2,6 +2,18 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.0] - 2026-02-17
+
+### Added
+- **Architecture Overhaul**: Decomposed the monolithic `useMapLogic` hook into specialized, modular hooks (`useMapState`, `useMapView`, `useMapDataView`, `useMapInteraction`) for better maintainability and code clarity.
+- **Centralized Configuration**: Unified magic strings, coordinates, API endpoints, and timers into `src/config/constants.ts` and `src/config/api.ts`.
+- **Strict Type Safety**: Eliminated almost all `any` types across the frontend, implementing robust interfaces for MapLibre events, GeoJSON sources, and transit data structures.
+- **Improved Documentation**: Added comprehensive JSDoc to all major hooks and utility functions to facilitate easier contribution from the open-source community.
+
+### Fixed
+- **React Performance**: Resolved several "cascading render" warnings by refactoring state updates in `WelcomeModal`, `BottomSheet`, and `Countdown`.
+- **UI State Sync**: Improved sheet state synchronization between mobile and desktop viewports.
+
 ## [0.4.2] - 2026-02-15
 
 ### Changed

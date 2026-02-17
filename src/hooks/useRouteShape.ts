@@ -1,10 +1,9 @@
 
 import { useMemo } from 'react';
-import type { VehicleDetail } from '../types/transit';
+import type { VehicleDetail, TrackedVehicle } from '../types/transit';
 
-export const useRouteShape = (selectedVehicle: any, vehicleDetail: VehicleDetail | undefined) => {
+export const useRouteShape = (selectedVehicle: TrackedVehicle | null, vehicleDetail: VehicleDetail | undefined) => {
     const vId = selectedVehicle?.vehicle_id || selectedVehicle?.id;
-    const tId = vehicleDetail?.gtfs_trip_id || selectedVehicle?.gtfs_trip_id;
 
     return useMemo(() => {
         if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
@@ -24,5 +23,5 @@ export const useRouteShape = (selectedVehicle: any, vehicleDetail: VehicleDetail
                 properties: {}
             }]
         };
-    }, [vId, tId, vehicleDetail?.shapes]);
+    }, [vId, vehicleDetail?.shapes]);
 };

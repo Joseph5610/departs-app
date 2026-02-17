@@ -8,12 +8,20 @@ import { enUS } from 'date-fns/locale/en-US';
 import { VehicleDetail } from './VehicleDetail';
 import { Countdown } from './Countdown';
 import { getVehicleColor } from '../utils/vehicleColors';
-import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
+import type { TrackedVehicle, Departure, VehicleDetail as VehicleDetailType } from '../types/transit';
 
-const dateLocales: Record<string, any> = {
+const dateLocales: Record<string, typeof cs | typeof enUS> = {
     cs: cs,
     en: enUS
 };
+
+interface GroupedDeparture {
+    groupId: string;
+    line: string;
+    type: string | number;
+    departures: Departure[];
+    firstTime: number;
+}
 
 interface BottomSheetContentProps {
     selectedStop: { id: string; name: string } | null;
@@ -22,10 +30,15 @@ interface BottomSheetContentProps {
     loadingDetail: boolean;
     isFollowing: boolean;
     onToggleFollow: () => void;
-    groupedDepartures: any[];
+    groupedDepartures: GroupedDeparture[];
     expandedGroups: string[];
     onToggleGroup: (groupId: string) => void;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: any) => void;
+    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: {
+        line?: string;
+        type?: string | number;
+        headsign?: string;
+        delay?: number;
+    }) => void;
     departureSort: 'line' | 'departure';
     setDepartureSort: (sort: 'line' | 'departure') => void;
     loadingDeps: boolean;
@@ -105,7 +118,7 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                         )}
 
                         <div className="space-y-2">
-                            {visibleDepartures.map((dep: any, idx: number) => (
+                            {visibleDepartures.map((dep: Departure, idx: number) => (
                                 <div
                                     key={idx}
                                     onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}

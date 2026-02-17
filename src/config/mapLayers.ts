@@ -1,7 +1,8 @@
+import type { CircleLayer, SymbolLayer } from 'react-map-gl/maplibre';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
 // 1. The GLOW Layer (Background)
-export const clusterLayer: any = {
+export const clusterLayer: CircleLayer = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
@@ -51,7 +52,7 @@ export const clusterLayer: any = {
 };
 
 // 2. The CORE Layer (Foreground - Bright Center)
-export const clusterCoreLayer: any = {
+export const clusterCoreLayer: CircleLayer = {
     id: 'cluster-core',
     type: 'circle',
     source: 'pid-stops',
@@ -64,7 +65,7 @@ export const clusterCoreLayer: any = {
     }
 };
 
-export const clusterCountLayer: any = {
+export const clusterCountLayer: SymbolLayer = {
     id: 'cluster-count',
     type: 'symbol',
     source: 'pid-stops',
@@ -78,7 +79,7 @@ export const clusterCountLayer: any = {
     }
 };
 
-export const stopPointLayer: any = {
+export const stopPointLayer: CircleLayer = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
@@ -134,7 +135,7 @@ export const stopPointLayer: any = {
 };
 
 // 3a. ATMOSPHERIC GLOW for Stations
-export const stopPointGlowLayer: any = {
+export const stopPointGlowLayer: CircleLayer = {
     id: 'unclustered-point-glow',
     type: 'circle',
     source: 'pid-stops',
@@ -165,7 +166,7 @@ export const stopPointGlowLayer: any = {
 };
 
 
-export const transferStationLayer: any = {
+export const transferStationLayer: SymbolLayer = {
     id: 'transfer-stations',
     type: 'symbol',
     source: 'pid-stops',
@@ -196,7 +197,7 @@ export const transferStationLayer: any = {
     }
 };
 
-export const stopLabelLayer: any = {
+export const stopLabelLayer: SymbolLayer = {
     id: 'stop-labels',
     type: 'symbol',
     source: 'stop-labels-centroids',
@@ -225,7 +226,7 @@ export const stopLabelLayer: any = {
     }
 };
 
-export const platformLabelLayer: any = {
+export const platformLabelLayer: SymbolLayer = {
     id: 'platform-labels',
     type: 'symbol',
     source: 'pid-stops',
@@ -253,7 +254,7 @@ export const platformLabelLayer: any = {
     }
 };
 
-export const entranceLayer: any = {
+export const entranceLayer: SymbolLayer = {
     id: 'entrance-layer',
     type: 'symbol',
     source: 'pid-stops',
@@ -283,7 +284,7 @@ export const entranceLayer: any = {
 // 4. Vehicle Layers
 import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
-export const selectedVehiclePulseLayer: any = {
+export const selectedVehiclePulseLayer: CircleLayer = {
     id: 'selected-vehicle-pulse',
     type: 'circle',
     paint: {
@@ -293,7 +294,7 @@ export const selectedVehiclePulseLayer: any = {
     }
 };
 
-export const selectedVehiclePointLayer: any = {
+export const selectedVehiclePointLayer: CircleLayer = {
     id: 'selected-vehicle-point',
     type: 'circle',
     paint: {
@@ -305,7 +306,7 @@ export const selectedVehiclePointLayer: any = {
     }
 };
 
-export const selectedVehicleDirectionLayer: any = {
+export const selectedVehicleDirectionLayer: SymbolLayer = {
     id: 'selected-vehicle-direction',
     type: 'symbol',
     layout: {
@@ -324,7 +325,7 @@ export const selectedVehicleDirectionLayer: any = {
     }
 };
 
-export const selectedVehicleLabelLayer: any = {
+export const selectedVehicleLabelLayer: SymbolLayer = {
     id: 'selected-vehicle-label',
     type: 'symbol',
     layout: {
@@ -344,7 +345,7 @@ export const selectedVehicleLabelLayer: any = {
     }
 };
 
-export const vehiclesPointLayer: any = {
+export const vehiclesPointLayer: CircleLayer = {
     id: 'vehicles-point',
     type: 'circle',
     minzoom: 12,
@@ -358,7 +359,7 @@ export const vehiclesPointLayer: any = {
     }
 };
 
-export const vehiclesDirectionLayer: any = {
+export const vehiclesDirectionLayer: SymbolLayer = {
     id: 'vehicles-direction-all',
     type: 'symbol',
     minzoom: 12,
@@ -379,7 +380,7 @@ export const vehiclesDirectionLayer: any = {
     }
 };
 
-export const vehiclesLabelLayer: any = {
+export const vehiclesLabelLayer: SymbolLayer = {
     id: 'vehicles-label-all',
     type: 'symbol',
     minzoom: 12,

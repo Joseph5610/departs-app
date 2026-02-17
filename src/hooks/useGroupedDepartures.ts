@@ -1,11 +1,21 @@
 
 import { useMemo } from 'react';
+import type { Departure } from '../types/transit';
 
-export const useGroupedDepartures = (departures: any, departureSort: 'line' | 'departure') => {
+/**
+ * Hook to group raw departures into logical sections for the UI.
+ * Metro lines are grouped by both line and direction, while others are grouped by line only.
+ * Supports sorting by line type/number or by next departure time.
+ *
+ * @param departures - The raw departures object from the API.
+ * @param departureSort - The preferred sorting method ('line' or 'departure').
+ * @returns An array of grouped departure objects.
+ */
+export const useGroupedDepartures = (departures: { departures: Departure[] } | null | undefined, departureSort: 'line' | 'departure') => {
     return useMemo(() => {
         if (!departures?.departures) return [];
-        const groups: Record<string, any[]> = {};
-        departures.departures.forEach((dep: any) => {
+        const groups: Record<string, Departure[]> = {};
+        departures.departures.forEach((dep) => {
             // Metro (type 1) is grouped by line AND direction
             const lineName = String(dep.line).toUpperCase();
             const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);

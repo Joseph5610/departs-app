@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../types/transit';
+import { API_ENDPOINTS, REFRESH_INTERVALS } from '../config/api';
 
 const fetchVehicleDetail = async (vehicleId: string, tripId: string): Promise<VehicleDetail> => {
-    const res = await fetch(`/api/vehicle-detail?vehicleId=${vehicleId}&tripId=${tripId}`);
+    const res = await fetch(`${API_ENDPOINTS.VEHICLE_DETAIL}?vehicleId=${vehicleId}&tripId=${tripId}`);
     if (!res.ok) throw new Error('Failed to fetch vehicle detail');
     return res.json();
 };
@@ -12,8 +13,8 @@ export const useVehicleDetail = (vehicleId: string | null, tripId: string | null
         queryKey: ['vehicle-detail', vehicleId, tripId],
         queryFn: () => fetchVehicleDetail(vehicleId!, tripId!),
         enabled: !!vehicleId && !!tripId,
-        staleTime: 10000,
-        refetchInterval: 10000, // 10s - matches vehicle update frequency
+        staleTime: REFRESH_INTERVALS.VEHICLE_DETAIL,
+        refetchInterval: REFRESH_INTERVALS.VEHICLE_DETAIL,
         gcTime: 60000,
     });
 };
