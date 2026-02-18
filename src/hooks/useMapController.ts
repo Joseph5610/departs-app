@@ -1,8 +1,7 @@
-
 import { useCallback, useEffect } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { MapLayerMouseEvent, MapGeoJSONFeature } from 'maplibre-gl';
+import type { MapLayerMouseEvent, MapGeoJSONFeature, GeoJSONSource } from 'maplibre-gl';
 import type { Point } from 'geojson';
 import {
     MOBILE_BREAKPOINT,
@@ -25,7 +24,11 @@ export const useMapController = (
     isFollowing: boolean,
     queryClient: QueryClient
 ) => {
-    // 1. Auto-following logic: Smooth map movement when vehicle moves
+
+    /**
+     * Auto-following logic: Smoothly eases the map camera to the vehicle's
+     * current position whenever it updates.
+     */
     useEffect(() => {
         if (!isFollowing || !selectedVehicle?._geometry || !mapRef.current) return;
 
@@ -42,32 +45,34 @@ export const useMapController = (
         });
     }, [selectedVehicle?._geometry, isFollowing, mapRef]);
 
-    // 2. Map Click Handler (Combined from useMapClickHandlers)
+    /**
+     * Primary Map Click Handler
+     */
     const onMapClick = useCallback((evt: MapLayerMouseEvent) => {
         const features = evt.features as MapGeoJSONFeature[] | undefined;
         const f = features?.[0];
         if (!f || f.layer.id === 'entrance-layer') return;
 
-        // Handle Clusters
+        // 1. Handle Clusters Expansion
         if (f.layer.id === 'clusters') {
             const clusterId = f.properties?.cluster_id;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const source = mapRef.current?.getMap().getSource('pid-stops') as any;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            source?.getClusterExpansionZoom(clusterId, (err: any, zoom: any) => {
-                if (err || !zoom) return;
+            const source = mapRef.current?.getMap().getSource('pid-stops') as GeoJSONSource | undefined;
+
+            source?.getClusterExpansionZoom(clusterId).then((zoom) => {
+                if (zoom === undefined || zoom === null) return;
                 mapRef.current?.easeTo({
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    center: (f.geometry as any).coordinates as [number, number],
+                    center: (f.geometry as Point).coordinates as [number, number],
                     zoom,
                     duration: 500
                 });
+            }).catch(err => {
+                console.error('Failed to get cluster expansion zoom:', err);
             });
             return;
         }
 
-        // Handle Vehicles
-        if (['vehicles-point', 'vehicles-direction-fg', 'vehicles-label'].includes(f.layer.id)) {
+        // 2. Handle Vehicle Selection
+        if (['vehicles-point', 'vehicles-direction-all', 'vehicles-label-all'].includes(f.layer.id)) {
             const props = f.properties;
             dispatch({
                 type: 'SET_VEHICLE',
@@ -80,7 +85,7 @@ export const useMapController = (
             return;
         }
 
-        // Handle Stops
+        // 3. Handle Stop Selection
         if (['unclustered-point', 'transfer-stations'].includes(f.layer.id)) {
             const props = f.properties;
             const pc = props?.platform_code;
@@ -92,12 +97,18 @@ export const useMapController = (
         }
     }, [mapRef, dispatch]);
 
+    /**
+     * Disables auto-follow if the user manually drags the map.
+     */
     const onDragStart = useCallback(() => {
         if (isFollowing) {
             dispatch({ type: 'SET_FOLLOWING', following: false });
         }
     }, [isFollowing, dispatch]);
 
+    /**
+     * Handles clicks on departures in the list, triggering vehicle tracking and prefetching details.
+     */
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: {
         line?: string;
         type?: string | number;
@@ -106,6 +117,7 @@ export const useMapController = (
     }) => {
         const activeVehId = vehicleId || `trip-${tripId}`;
 
+        // Set initial state based on available departure info while prefetching
         dispatch({
             type: 'SET_VEHICLE',
             vehicle: {
@@ -152,7 +164,7 @@ export const useMapController = (
                 }
             }
         } catch (err) {
-            console.error('Prefetch failed:', err);
+            console.error('Vehicle prefetch failed:', err);
         }
     }, [mapRef, queryClient, dispatch]);
 

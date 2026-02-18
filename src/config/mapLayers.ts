@@ -1,57 +1,52 @@
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 import type { LayerProps } from 'react-map-gl/maplibre';
 
-// 1. The GLOW Layer (Background)
+/**
+ * Cluster Layers - Visual grouping of stops at lower zoom levels
+ */
+
+// 1. The GLOW Layer (Background) - Represents the density and type of stops
 export const clusterLayer: LayerProps = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     paint: {
-        // Glowing Color - Smooth Gradient (City Lights)
-        // Glowing Color - Smart Clustering (Metro/Bus)
         'circle-color': [
             'case',
             // Metro C (Red)
             ['==', ['get', 'has_metro_c'], 1],
-            ['interpolate', ['linear'], ['get', 'point_count'],
-                0, '#fca5a5', 100, '#dc2626'],
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, '#fca5a5', 100, '#dc2626'],
 
             // Metro B (Yellow)
             ['==', ['get', 'has_metro_b'], 1],
-            ['interpolate', ['linear'], ['get', 'point_count'],
-                0, '#fde047', 100, '#ca8a04'],
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, '#fde047', 100, '#ca8a04'],
 
             // Metro A (Green)
             ['==', ['get', 'has_metro_a'], 1],
-            ['interpolate', ['linear'], ['get', 'point_count'],
-                0, '#86efac', 100, '#16a34a'],
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, '#86efac', 100, '#16a34a'],
 
-            // Default Bus (Blue)
+            // Default Bus/Tram (Blue-ish)
             ['interpolate', ['linear'], ['get', 'point_count'],
-                0, 'rgba(59, 130, 246, 0.4)',   // Very soft blue for small clusters
-                100, 'rgba(37, 99, 235, 0.9)'  // Stronger blue for large clusters
+                0, 'rgba(59, 130, 246, 0.5)',
+                100, 'rgba(37, 99, 235, 0.9)'
             ]
         ],
-
-        // Radius scaling - tighter bubbles
         'circle-radius': [
             '+',
-            ['interpolate', ['linear'], ['get', 'point_count'], 0, 12, 100, 30],
-            ['*', ['get', 'cluster_seed'], 8] // Reduced wobble
+            ['interpolate', ['linear'], ['get', 'point_count'], 0, 14, 100, 35],
+            ['*', ['coalesce', ['get', 'cluster_seed'], 0.5], 10] // Wobble based on seed
         ],
-
-        // Opacity - Subtle flicker
         'circle-opacity': [
             '+',
-            0.4,
-            ['*', ['get', 'cluster_seed'], 0.3] // 0.4 - 0.7 range
+            0.3,
+            ['*', ['coalesce', ['get', 'cluster_seed'], 0.5], 0.3] // 0.3 - 0.6 range
         ],
-        'circle-blur': 0.5     // Back to a slightly softer blur for premium feel
+        'circle-blur': 0.6
     }
 };
 
-// 2. The CORE Layer (Foreground - Bright Center)
+// 2. The CORE Layer - A bright center for the cluster
 export const clusterCoreLayer: LayerProps = {
     id: 'cluster-core',
     type: 'circle',
@@ -59,35 +54,44 @@ export const clusterCoreLayer: LayerProps = {
     filter: ['has', 'point_count'],
     paint: {
         'circle-color': '#ffffff',
-        'circle-radius': 2.5, // Smaller (was 4)
-        'circle-opacity': 0.8, // Less harsh (was 1.0)
-        'circle-blur': 0.4     // Softened edges (was 0)
+        'circle-radius': 3,
+        'circle-opacity': 0.7,
+        'circle-blur': 0.2
     }
 };
 
+// 3. The COUNT Layer - Shows the number of items in the cluster
 export const clusterCountLayer: LayerProps = {
     id: 'cluster-count',
     type: 'symbol',
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     layout: {
-        'text-field': '', // Empty text - we just want the circle
-        'text-size': 0
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': 12,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
     },
     paint: {
-        'text-color': 'transparent'
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1
     }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const stopPointLayer: any = {
+/**
+ * Unclustered Stop Layers
+ */
+
+export const stopPointLayer: LayerProps = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2], // Not an entrance
+        // Exclude major transfer stations that have custom icons
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
@@ -98,46 +102,29 @@ export const stopPointLayer: any = {
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 8],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 24, 18]
         ],
-        'circle-color': ['case',
-            // Only apply custom colors for Stations (Type 1)
+        'circle-color': [
+            'case',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
                 ...getStationColorMatchPairs(),
-                LINE_COLORS.Unknown // Default for unknown stations
-            ],
-
-            // Default for Stops (Type 0 or null)
-            LINE_COLORS.Default
-        ],
-        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
-        'circle-stroke-color': ['case',
-            // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
-            ['all',
-                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
-            ],
-            '#000000',
-
-            // 2. Other Stations (Type 1) -> WHITE stroke
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            '#ffffff',
-
-            // 3. Regular Stops (Type 0) -> BLUE stroke
-            '#3b82f6'
+                LINE_COLORS.Unknown
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ] as any,
+            '#ffffff' // Regular stops are white
         ],
         'circle-opacity': [
             'case',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            0.7, // Semi-transparent "glassy" look for stations
+            0.7, // Semi-transparent glassy look for stations
             0.9  // Solid for regular stops
         ],
-        'circle-stroke-opacity': 1
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#000000',
+        'circle-stroke-opacity': 0.5
     }
 };
 
-// 3a. ATMOSPHERIC GLOW for Stations
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const stopPointGlowLayer: any = {
+export const stopPointGlowLayer: LayerProps = {
     id: 'unclustered-point-glow',
     type: 'circle',
     source: 'pid-stops',
@@ -156,8 +143,9 @@ export const stopPointGlowLayer: any = {
             ['match', ['get', 'stop_name'],
                 ...getStationColorMatchPairs(),
                 LINE_COLORS.Unknown
-            ],
-            '#000000' // Shadow for regular stops
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ] as any,
+            '#000000'
         ],
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
@@ -166,7 +154,6 @@ export const stopPointGlowLayer: any = {
         'circle-blur': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.8, 1]
     }
 };
-
 
 export const transferStationLayer: LayerProps = {
     id: 'transfer-stations',
@@ -185,17 +172,17 @@ export const transferStationLayer: LayerProps = {
             ''
         ],
         'icon-size': ['interpolate', ['linear'], ['zoom'],
-            13, 0.875, // (14*2)/64 * 2 (pixelRatio)
-            17, 1.5    // (24*2)/64 * 2 (pixelRatio)
+            13, 0.875,
+            17, 1.5
         ],
         'icon-allow-overlap': true,
         'icon-offset': ['match', ['get', 'stop_name'],
-            'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
+            'Muzeum', ['literal', [0, -15]],
             ['literal', [0, 0]]
         ]
     },
     paint: {
-        'icon-opacity': 0.7 // Unified semi-transparency
+        'icon-opacity': 0.7
     }
 };
 
@@ -203,7 +190,7 @@ export const stopLabelLayer: LayerProps = {
     id: 'stop-labels',
     type: 'symbol',
     source: 'stop-labels-centroids',
-    minzoom: 14, // Only show when clustering is off
+    minzoom: 14,
     layout: {
         'text-field': ['get', 'stop_name'],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
@@ -215,15 +202,15 @@ export const stopLabelLayer: LayerProps = {
         'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 3],
         'text-justify': 'auto',
         'text-max-width': 7,
-        'text-letter-spacing': 0.15, // Matched to map style
-        'text-padding': 20, // Aggressive padding to avoid overlaps
+        'text-letter-spacing': 0.15,
+        'text-padding': 20,
         'text-allow-overlap': true,
         'text-ignore-placement': true
     },
     paint: {
         'text-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, '#ffffff', '#bdbdbd'],
         'text-halo-color': '#111111',
-        'text-halo-width': 1, // Sharper halo like map labels
+        'text-halo-width': 1,
         'text-halo-blur': 0.5
     }
 };
@@ -244,7 +231,7 @@ export const platformLabelLayer: LayerProps = {
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 14, 11, 18, 15],
         'text-anchor': 'center',
-        'text-padding': 25, // Large invisible box to push stop names away
+        'text-padding': 25,
         'text-allow-overlap': true,
         'text-ignore-placement': false
     },
@@ -264,34 +251,36 @@ export const entranceLayer: LayerProps = {
         ['!', ['has', 'point_count']],
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
     ],
-    minzoom: 17.5, // Only show when very zoomed in
+    minzoom: 17.5,
     layout: {
         'text-field': ['get', 'stop_name'],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': 10,
         'text-letter-spacing': 0.1,
         'text-transform': 'uppercase',
-        'text-padding': 40, // Deduplicate via padding
+        'text-padding': 40,
         'text-allow-overlap': false,
         'text-ignore-placement': false
     },
     paint: {
-        'text-color': '#94a3b8', // Slate-400 (Greyish)
+        'text-color': '#94a3b8',
         'text-halo-color': '#000000',
         'text-halo-width': 1,
         'text-halo-blur': 0.2
     }
 };
 
-// 4. Vehicle Layers
+/**
+ * Vehicle Layers
+ */
 import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
 export const selectedVehiclePulseLayer: LayerProps = {
     id: 'selected-vehicle-pulse',
     type: 'circle',
     paint: {
-        'circle-radius': 0, // Animated in component
-        'circle-opacity': 0, // Animated in component
+        'circle-radius': 0,
+        'circle-opacity': 0,
         'circle-color': vehicleColorExpression
     }
 };
@@ -351,7 +340,6 @@ export const vehiclesPointLayer: LayerProps = {
     id: 'vehicles-point',
     type: 'circle',
     minzoom: 12,
-    // Filter handled dynamically in component to exclude selected
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
         'circle-color': vehicleColorExpression,
@@ -365,7 +353,6 @@ export const vehiclesDirectionLayer: LayerProps = {
     id: 'vehicles-direction-all',
     type: 'symbol',
     minzoom: 12,
-    // Filter handled dynamically in component
     layout: {
         'icon-image': 'v-arrow-centered',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
@@ -386,7 +373,6 @@ export const vehiclesLabelLayer: LayerProps = {
     id: 'vehicles-label-all',
     type: 'symbol',
     minzoom: 12,
-    // Filter handled dynamically in component
     layout: {
         'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],

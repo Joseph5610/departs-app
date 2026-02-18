@@ -73,7 +73,7 @@ export const useMapView = (
         }
     }, [isFollowing, getRoundedBounds]);
 
-    const onLoad = useCallback((evt: MapLibreEvent<undefined>) => {
+    const onLoad = useCallback((evt: MapLibreEvent) => {
         const map = evt.target;
         const layers = map.getStyle().layers;
         if (layers) {

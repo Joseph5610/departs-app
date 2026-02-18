@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { API_ENDPOINTS, REFRESH_INTERVALS } from '../config/api';
@@ -8,8 +7,20 @@ import type {
     VehicleCollection,
     VehicleFeature,
     StopCollection,
-    VehicleDetail
+    VehicleDetail,
+    Departure
 } from '../types/transit';
+
+/**
+ * Interface for a group of departures, typically by line or line-direction.
+ */
+export interface GroupedDeparture {
+    groupId: string;
+    line: string;
+    type: string | number;
+    departures: Departure[];
+    firstTime: number;
+}
 
 /**
  * Hook to aggregate all transit-related data queries and compute derived views.
@@ -22,7 +33,7 @@ export const useTransitData = (
     departureSort: 'line' | 'departure',
     routeFilter: string[] | null
 ) => {
-    // 1. Derived IDs
+    // 1. Derived IDs for query stability
     const trackedId = useMemo(() => {
         if (!selectedVehicle) return null;
         return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || null;
@@ -34,7 +45,9 @@ export const useTransitData = (
 
     // 2. Data Queries
 
-    // Vehicles Query
+    /**
+     * Vehicles Query: Fetches live vehicle positions based on viewport bounds or tracked ID.
+     */
     const { data: rawVehicles, isFetching: fetchingVehicles, dataUpdatedAt } = useQuery<VehicleFeature[]>({
         queryKey: ['vehicles', bounds, trackedId, routeFilter],
         queryFn: async () => {
@@ -45,8 +58,11 @@ export const useTransitData = (
                 routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
             }
             if (url.searchParams.toString() === '') return [];
+
             const response = await fetch(url.toString());
-            return (await response.json()).features || [];
+            if (!response.ok) return [];
+            const data = await response.json();
+            return data.features || [];
         },
         enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0),
         refetchInterval: REFRESH_INTERVALS.VEHICLES,
@@ -54,7 +70,9 @@ export const useTransitData = (
         placeholderData: keepPreviousData,
     });
 
-    // Vehicle Detail Query
+    /**
+     * Vehicle Detail Query: Fetches rich information (stop times, shapes) for a specific vehicle.
+     */
     const { data: vehicleDetail, isFetching: loadingDetail } = useQuery<VehicleDetail>({
         queryKey: ['vehicle-detail', selectedId, trackedId],
         queryFn: async () => {
@@ -68,7 +86,9 @@ export const useTransitData = (
         staleTime: 30000,
     });
 
-    // Stops Query
+    /**
+     * Stops Query: Fetches static stop data (GTFS).
+     */
     const { data: stops } = useQuery<StopCollection>({
         queryKey: ['stops'],
         queryFn: async () => {
@@ -78,7 +98,9 @@ export const useTransitData = (
         staleTime: 24 * 60 * 60 * 1000, // 24h
     });
 
-    // Departures Query
+    /**
+     * Departures Query: Fetches live departures for the selected stop.
+     */
     const { data: departures, isLoading: loadingDeps } = useQuery({
         queryKey: ['departures', selectedStopId],
         queryFn: async () => {
@@ -91,6 +113,9 @@ export const useTransitData = (
 
     // 3. Derived Map Data Views (GeoJSON)
 
+    /**
+     * GeoJSON view for all vehicles currently in the viewport.
+     */
     const displayVehicles = useMemo((): VehicleCollection => {
         return {
             type: 'FeatureCollection',
@@ -98,6 +123,9 @@ export const useTransitData = (
         };
     }, [rawVehicles]);
 
+    /**
+     * GeoJSON view for the currently selected vehicle, ensuring it remains on map even if out of bounds.
+     */
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
         if (!selectedVehicle?._geometry) return EMPTY_GEOJSON as VehicleCollection;
         return {
@@ -113,6 +141,9 @@ export const useTransitData = (
         };
     }, [selectedVehicle]);
 
+    /**
+     * Filtered stops for the map icons (excluding labels/centroids).
+     */
     const stopsData = useMemo(() => {
         if (!stops?.features) return null;
         return {
@@ -121,6 +152,9 @@ export const useTransitData = (
         } as StopCollection;
     }, [stops]);
 
+    /**
+     * Filtered stops for the map labels (only centroids).
+     */
     const labelData = useMemo(() => {
         if (!stops?.features) return null;
         return {
@@ -129,6 +163,9 @@ export const useTransitData = (
         } as StopCollection;
     }, [stops]);
 
+    /**
+     * GeoJSON for the route shape (LineString) of the selected vehicle.
+     */
     const routeShapeData = useMemo(() => {
         if (!selectedId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
         if (vehicleDetail.shapes.length < 2) return null;
@@ -143,22 +180,26 @@ export const useTransitData = (
     }, [selectedId, vehicleDetail]);
 
     // 4. Grouped Departures logic
-    const groupedDepartures = useMemo(() => {
-        if (!departures?.departures) return [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const groups: Record<string, any[]> = {};
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        departures.departures.forEach((dep: any) => {
-            // Metro (type 1) is grouped by line AND direction
+    /**
+     * Processes raw departures into logical groups (by line/direction) and applies sorting.
+     */
+    const groupedDepartures = useMemo((): GroupedDeparture[] => {
+        if (!departures?.departures) return [];
+
+        const groups: Record<string, Departure[]> = {};
+
+        departures.departures.forEach((dep: Departure) => {
+            // Metro (type 1) is grouped by line AND direction to distinguish platforms
             const lineName = String(dep.line).toUpperCase();
             const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
             const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
+
             if (!groups[key]) groups[key] = [];
             groups[key].push(dep);
         });
 
-        const result = Object.entries(groups).map(([key, deps]) => ({
+        const result: GroupedDeparture[] = Object.entries(groups).map(([key, deps]) => ({
             groupId: key,
             line: deps[0].line,
             type: deps[0].type,
@@ -166,19 +207,24 @@ export const useTransitData = (
             firstTime: new Date(deps[0].timestamp).getTime()
         }));
 
+        // Apply selected sorting strategy
         if (departureSort === 'line') {
             result.sort((a, b) => {
+                // Primary: Route Type (Bus < Tram < Metro etc based on GTFS values)
                 const typeA = Number(a.type) || 0;
                 const typeB = Number(b.type) || 0;
                 if (typeA !== typeB) return typeA - typeB;
 
+                // Secondary: Line name (Natural alphanumeric sort)
                 const lineA = String(a.line);
                 const lineB = String(b.line);
                 if (lineA !== lineB) return lineA.localeCompare(lineB, undefined, { numeric: true, sensitivity: 'base' });
 
+                // Tertiary: Arrival time
                 return a.firstTime - b.firstTime;
             });
         } else {
+            // Sort strictly by the first upcoming departure in the group
             result.sort((a, b) => a.firstTime - b.firstTime);
         }
         return result;
@@ -199,37 +245,4 @@ export const useTransitData = (
         labelData,
         selectedId
     };
-};
-
-export interface RSSItem {
-    title: string;
-    link: string;
-    pubDate: string;
-    content: string;
-    contentSnippet: string;
-    guid: string;
-    isoDate: string;
-    date?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    priority?: string;
-    lines?: string[];
-    type?: 'incidents' | 'exclusions';
-    isActive?: boolean;
-    isFuture?: boolean;
-}
-
-/**
- * Hook for RSS feeds (incidents/exclusions).
- */
-export const useRSS = (type: 'incidents' | 'exclusions') => {
-    return useQuery({
-        queryKey: ['rss', type],
-        queryFn: async () => {
-            const res = await fetch(`${API_ENDPOINTS.RSS}?type=${type}`);
-            return await res.json();
-        },
-        refetchInterval: type === 'incidents' ? 5 * 60 * 1000 : 60 * 60 * 1000,
-        staleTime: type === 'incidents' ? 5 * 60 * 1000 : 60 * 60 * 1000,
-    });
 };

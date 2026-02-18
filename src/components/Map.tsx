@@ -1,4 +1,3 @@
-
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
@@ -13,6 +12,7 @@ const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ d
 import { Search } from './Search';
 import {
     clusterLayer,
+    clusterCoreLayer,
     clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
@@ -43,10 +43,18 @@ import {
     MAP_FLY_DURATION_MS
 } from '../config/constants';
 
+/**
+ * Main Map component that orchestrates the entire map-based UI.
+ * Integrates MapLibre, BottomSheets, Modals, and all Transit-related layers.
+ */
 export const Map: React.FC = () => {
     const { t } = useTranslation();
     const mapRef = useRef<MapRef>(null);
 
+    /**
+     * Determine the initial view state (lat/lng/zoom) based on URL params
+     * or stored user location from previous sessions.
+     */
     const initialViewState = useMemo(() => {
         const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 
@@ -77,6 +85,7 @@ export const Map: React.FC = () => {
         };
     }, []);
 
+    // Encapsulated map logic, state, and data fetching
     const {
         bounds,
         selectedStop,
@@ -98,6 +107,7 @@ export const Map: React.FC = () => {
         handleDepartureClick,
         toggleGroup,
         setExpandedGroups,
+        resetSelection,
         displayVehicles,
         vehicleDetail,
         loadingDetail,
@@ -121,6 +131,7 @@ export const Map: React.FC = () => {
         onMapClick
     } = useMapLogic(mapRef);
 
+    // Dynamic styles and filters for map layers
     const {
         routeLinePaint,
         routeLineLayout,
@@ -143,6 +154,9 @@ export const Map: React.FC = () => {
         setIsFollowing(prev => !prev);
     }, [setIsFollowing]);
 
+    /**
+     * Centers the map on a specific stop and selects it.
+     */
     const handleStopSelect = useCallback((stop: StopFeature) => {
         const [lng, lat] = stop.geometry.coordinates;
         mapRef.current?.flyTo({
@@ -171,6 +185,7 @@ export const Map: React.FC = () => {
 
     return (
         <div className="w-full h-full bg-black relative">
+            {/* Live Data Status Indicator (Top Left) */}
             <LiveStatus fetching={fetchingVehicles} bounds={bounds} lastUpdate={dataUpdatedAt} />
 
             <MapGL
@@ -178,12 +193,10 @@ export const Map: React.FC = () => {
                 initialViewState={initialViewState}
                 onMove={onMove}
                 onMoveEnd={onMoveEnd}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onLoad={onLoad as any}
+                onLoad={onLoad}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE_URL}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                mapLib={maplibregl as any}
+                mapLib={maplibregl}
                 onDragStart={onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
@@ -195,10 +208,10 @@ export const Map: React.FC = () => {
                     evt.target.getCanvas().style.cursor = '';
                 }}
                 onClick={onMapClick}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
 
-                {/* Route Shape Layer - UNDER labels */}
+                {/* Route Shape Layer - Renders the planned path of the selected vehicle */}
                 {mapLoaded && (
                     <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                         <Layer
@@ -228,6 +241,7 @@ export const Map: React.FC = () => {
                     onResetBearing={handleResetBearing}
                 />
 
+                {/* User Location Indicator */}
                 <Source id="user-location" type="geojson" data={(mapLoaded && userLocation ? {
                     type: 'FeatureCollection',
                     features: [{
@@ -258,35 +272,30 @@ export const Map: React.FC = () => {
                 </Source>
 
 
+                {/* Highlighted Selected Vehicle */}
                 <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
-                    {/* 1. PULSE (Bottom) */}
                     <Layer {...selectedVehiclePulseLayer} />
-                    {/* 2. BODY */}
                     <Layer {...selectedVehiclePointLayer} />
-                    {/* 3. DIRECTION */}
                     <Layer {...selectedVehicleDirectionLayer} />
-                    {/* 4. LABEL */}
                     <Layer {...selectedVehicleLabelLayer} />
                 </Source>
 
+                {/* Global Vehicle Positions */}
                 <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
-                    {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesPointLayer as any)} filter={vehiclesFilter as any} />
-
-                    {/* DIRECTION ARROWS - EXCLUDE SELECTED */}
+                    <Layer {...(vehiclesPointLayer as any)} filter={vehiclesFilter} />
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesDirectionLayer as any)} filter={vehiclesFilter as any} />
-
-                    {/* LABELS - EXCLUDE SELECTED */}
+                    <Layer {...(vehiclesDirectionLayer as any)} filter={vehiclesFilter} />
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesLabelLayer as any)} filter={vehiclesFilter as any} />
+                    <Layer {...(vehiclesLabelLayer as any)} filter={vehiclesFilter} />
                 </Source>
 
+                {/* Stop Centroids (Labels only) */}
                 <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON)}>
                     <Layer {...stopLabelLayer} />
                 </Source>
 
+                {/* Main Stops Source (Clustered) */}
                 <Source
                     id="pid-stops"
                     type="geojson"
@@ -302,6 +311,7 @@ export const Map: React.FC = () => {
                     }}
                 >
                     <Layer {...clusterLayer} />
+                    <Layer {...clusterCoreLayer} />
                     <Layer {...clusterCountLayer} />
                     <Layer {...stopPointGlowLayer} />
                     <Layer {...stopPointLayer} />
@@ -311,6 +321,7 @@ export const Map: React.FC = () => {
                 </Source>
             </MapGL>
 
+            {/* Lazy-loaded Modals and Popups */}
             <React.Suspense fallback={null}>
                 <WelcomeModal onGetStarted={handleLocate} />
                 <SettingsModal
@@ -322,9 +333,10 @@ export const Map: React.FC = () => {
                 <UpdatePopup />
             </React.Suspense>
 
+            {/* Side/Bottom Sheet for Information Display */}
             <BottomSheet
                 isOpen={!!selectedStop || !!selectedVehicle}
-                onClose={() => { setSelectedStop(null); setSelectedVehicle(null); setIsFollowing(false); }}
+                onClose={resetSelection}
                 onBack={(selectedVehicle && selectedStop) ? () => {
                     setSelectedVehicle(null);
                     setIsFollowing(false);

@@ -248,30 +248,42 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
             if (!p.stop_name) continue;
 
-            // Group by name and platform code
-            const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}`;
-            if (!groups[key]) {
-                groups[key] = {
-                    ...f,
-                    properties: { ...p, location_type: 0, all_ids: [stopId] }
-                };
-            } else {
-                const currentIds = groups[key].properties.all_ids || [];
-                groups[key].properties.all_ids = [...currentIds, stopId];
-            }
+            // Individual stops are preserved to allow map-side clustering
+            groups[`stop_${stopId}`] = {
+                ...f,
+                properties: { ...p, location_type: 0 }
+            };
         }
     }
 
     // 3. Prepare final features list
     const features: GolemioStopFeature[] = [];
 
-    // Add grouped stops
+    // Simple deterministic seed from stop ID
+    const getSeed = (id: string) => {
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) {
+            hash = (hash << 5) - hash + id.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash % 100) / 100;
+    };
+
+    // Add processed stops with cluster properties
     for (const f of Object.values(groups)) {
-        const finalId = f.properties.all_ids ? f.properties.all_ids.join(',') : f.properties.stop_id;
+        const p = f.properties;
+        const metroLines = p.metro_lines || METRO_STATIONS[p.stop_name || ''] || [];
+
         features.push({
             type: "Feature",
             geometry: f.geometry,
-            properties: { ...f.properties, stop_id: finalId }
+            properties: {
+                ...p,
+                metro_a: metroLines.includes('A') ? 1 : 0,
+                metro_b: metroLines.includes('B') ? 1 : 0,
+                metro_c: metroLines.includes('C') ? 1 : 0,
+                variant_seed: getSeed(p.stop_id)
+            }
         });
     }
 

@@ -113,6 +113,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
         setDepartureSort: (sort: 'line' | 'departure') => dispatch({ type: 'SET_SORT', sort }),
         setRouteFilter: (routes: string[] | null) => dispatch({ type: 'SET_ROUTE_FILTER', routes }),
         setExpandedGroups: (groups: string[]) => dispatch({ type: 'SET_EXPANDED_GROUPS', groups }),
+        resetSelection: () => dispatch({ type: 'RESET_SELECTION' }),
         toggleGroup,
         handleLocate,
         dispatch,

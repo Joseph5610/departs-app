@@ -2,6 +2,18 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.6.0] - 2026-02-17
+
+### Added
+- **Premium Visuals**: Redesigned map clusters with "anonymous dots" replaced by informative glowing orbs that display item counts and color-coded themes for metro lines.
+- **Strict Typing**: Finalized the removal of all `any` types from the frontend, ensuring robust type safety for map layers, interactions, and transit data orchestration.
+- **Centralized Models**: Consolidated all transit-related TypeScript interfaces into a single source of truth (`src/types/transit.ts`).
+- **Enhanced Documentation**: Added detailed JSDoc to every major component and hook, preparing the codebase for public open-source release.
+
+### Changed
+- **Optimized UI**: Refactored `VehicleDetail` to use a more efficient data age ticker and simplified stop-sequence filtering logic.
+- **Code Quality**: Cleaned up React imports and standardized component patterns across the entire application.
+
 ## [0.5.0] - 2026-02-17
 
 ### Added

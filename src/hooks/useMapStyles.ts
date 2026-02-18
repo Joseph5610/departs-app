@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import type { LineLayerSpecification } from 'maplibre-gl';
+import type { LineLayerSpecification, FilterSpecification } from 'maplibre-gl';
 import { isNightRoute, getVehicleColor } from '../utils/vehicleColors';
 import type { TrackedVehicle } from '../types/transit';
 
@@ -31,7 +31,7 @@ export const useMapStyles = (selectedVehicle: TrackedVehicle | null, selectedId:
     }), []);
 
     // Memoize vehicle filter to exclude selected vehicle from the main vehicles layer
-    const vehiclesFilter = useMemo(() => ['!', ['any',
+    const vehiclesFilter = useMemo((): FilterSpecification => ['!', ['any',
         ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
         ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
     ]], [selectedId, selectedVehicle?.gtfs_trip_id, selectedVehicle?.trip_id]);

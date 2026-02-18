@@ -2,8 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink, Search as SearchIcon, X } from 'lucide-react';
-import { useRSS } from '../hooks/useTransitData';
-import type { RSSItem } from '../hooks/useTransitData';
+import { useRSS } from '../hooks/useRSS';
+import type { RSSItem } from '../types/transit';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';

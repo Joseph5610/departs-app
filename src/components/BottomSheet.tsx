@@ -16,14 +16,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
     const [sheetState, setSheetState] = useState<'peek' | 'full'>(isMobile ? 'peek' : 'full');
 
-    // Sync sheet state when opening or when mobile/desktop mode toggles
-    const [prevProps, setPrevProps] = useState({ isOpen, isMobile });
-    if (isOpen !== prevProps.isOpen || isMobile !== prevProps.isMobile) {
-        setPrevProps({ isOpen, isMobile });
+    // Reset sheet state to peek when opening on mobile
+    React.useEffect(() => {
         if (isOpen) {
             setSheetState(isMobile ? 'peek' : 'full');
         }
-    }
+    }, [isOpen, isMobile]);
 
     const variants = {
         hidden: isMobile
