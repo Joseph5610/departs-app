@@ -1,18 +1,20 @@
+
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
-import maplibregl from 'maplibre-gl';
+import maplibregl, { type Map as MapLibreInstance } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
 
 import { LiveStatus } from './LiveStatus';
+import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
+import { getInitialViewState } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
 import {
     clusterLayer,
-    clusterCoreLayer,
     clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
@@ -29,114 +31,30 @@ import {
     vehiclesLabelLayer
 } from '../config/mapLayers';
 import { useMapLogic } from '../hooks/useMapLogic';
-import { useMapStyles } from '../hooks/useMapStyles';
-import type { StopFeature } from '../types/transit';
+import type { TrackedVehicle, VehicleCollection, StopFeature } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
-import {
-    EMPTY_GEOJSON,
-    MAP_STYLE_URL,
-    MAP_DEFAULT_COORDS,
-    MAP_DEFAULT_ZOOM,
-    MAP_USER_LOCATION_ZOOM,
-    LS_KEYS,
-    MAP_FLY_DURATION_MS
-} from '../config/constants';
+import { MAP_FLY_DURATION, MAP_STOP_SELECT_ZOOM } from '../config/constants';
 
-/**
- * Main Map component that orchestrates the entire map-based UI.
- * Integrates MapLibre, BottomSheets, Modals, and all Transit-related layers.
- */
+const EMPTY_GEOJSON: VehicleCollection = {
+    type: 'FeatureCollection',
+    features: []
+};
+
+const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
 export const Map: React.FC = () => {
     const { t } = useTranslation();
     const mapRef = useRef<MapRef>(null);
 
-    /**
-     * Determine the initial view state (lat/lng/zoom) based on URL params
-     * or stored user location from previous sessions.
-     */
-    const initialViewState = useMemo(() => {
-        const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const initialViewState = useMemo(() => getInitialViewState(), []);
 
-        let lat = MAP_DEFAULT_COORDS.lat;
-        let lng = MAP_DEFAULT_COORDS.lng;
-        let z = MAP_DEFAULT_ZOOM;
-
-        if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
-            const saved = localStorage.getItem(LS_KEYS.LAST_USER_LOCATION);
-            if (saved) {
-                try {
-                    const { lat: sLat, lng: sLng } = JSON.parse(saved);
-                    if (typeof sLat === 'number' && typeof sLng === 'number') {
-                        lat = sLat;
-                        lng = sLng;
-                        z = MAP_USER_LOCATION_ZOOM;
-                    }
-                } catch (e) {
-                    console.error(`Failed to parse ${LS_KEYS.LAST_USER_LOCATION}`, e);
-                }
-            }
-        }
-
-        return {
-            latitude: parseFloat(p.get('lat') || lat.toString()),
-            longitude: parseFloat(p.get('lng') || lng.toString()),
-            zoom: parseFloat(p.get('z') || z.toString())
-        };
-    }, []);
-
-    // Encapsulated map logic, state, and data fetching
     const {
-        bounds,
-        selectedStop,
-        selectedVehicle,
-        isFollowing,
-        showVehicles,
-        isSettingsOpen,
-        expandedGroups,
-        setSelectedStop,
-        setSelectedVehicle,
-        setIsFollowing,
-        setShowVehicles,
-        setIsSettingsOpen,
-        handleLocate,
-        onMove,
-        onMoveEnd,
-        onLoad,
-        onDragStart,
-        handleDepartureClick,
-        toggleGroup,
-        setExpandedGroups,
-        resetSelection,
-        displayVehicles,
-        vehicleDetail,
-        loadingDetail,
-        stopsData,
-        labelData,
-        groupedDepartures,
-        stops,
-        loadingDeps,
-        routeShapeData,
-        fetchingVehicles,
-        dataUpdatedAt,
-        departureSort,
-        setDepartureSort,
-        userLocation,
-        mapLoaded,
-        selectedVehicleFeature,
-        labelLayerId,
-        selectedId,
-        routeFilter,
-        setRouteFilter,
-        onMapClick
+        state,
+        actions,
+        data,
+        mapEvents
     } = useMapLogic(mapRef);
-
-    // Dynamic styles and filters for map layers
-    const {
-        routeLinePaint,
-        routeLineLayout,
-        vehiclesFilter
-    } = useMapStyles(selectedVehicle, selectedId);
 
     const handleZoomIn = useCallback(() => {
         mapRef.current?.zoomIn();
@@ -147,33 +65,30 @@ export const Map: React.FC = () => {
     }, []);
 
     const handleSettingsOpen = useCallback(() => {
-        setIsSettingsOpen(true);
-    }, [setIsSettingsOpen]);
+        actions.setIsSettingsOpen(true);
+    }, [actions]);
 
     const handleToggleFollow = useCallback(() => {
-        setIsFollowing(prev => !prev);
-    }, [setIsFollowing]);
+        actions.setIsFollowing(!state.isFollowing);
+    }, [state.isFollowing, actions]);
 
-    /**
-     * Centers the map on a specific stop and selects it.
-     */
     const handleStopSelect = useCallback((stop: StopFeature) => {
         const [lng, lat] = stop.geometry.coordinates;
         mapRef.current?.flyTo({
             center: [lng, lat],
-            zoom: 16,
-            duration: MAP_FLY_DURATION_MS
+            zoom: MAP_STOP_SELECT_ZOOM,
+            duration: MAP_FLY_DURATION
         });
         const pc = stop.properties.platform_code;
         const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
-        setSelectedStop({ id: stop.properties.stop_id, name });
-        setSelectedVehicle(null);
-        setExpandedGroups([]);
-    }, [setSelectedStop, setSelectedVehicle, setExpandedGroups]);
+        actions.setSelectedStop({ id: stop.properties.stop_id, name });
+        actions.setSelectedVehicle(null);
+        actions.setExpandedGroups([]);
+    }, [actions]);
 
     const handleLineSelect = useCallback((line: string[] | null) => {
-        setRouteFilter(line);
-    }, [setRouteFilter]);
+        actions.setRouteFilter(line);
+    }, [actions]);
 
     const handleResetBearing = () => {
         mapRef.current?.easeTo({
@@ -183,41 +98,107 @@ export const Map: React.FC = () => {
         });
     };
 
+
+    // Memoize route line color to prevent re-computation on every render
+    const routeLineColor = useMemo(() => {
+        const routeName = state.selectedVehicle?.gtfs_route_short_name || state.selectedVehicle?.route_short_name || '';
+        const routeType = state.selectedVehicle?.route_type || 0;
+        return isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
+    }, [state.selectedVehicle?.gtfs_route_short_name, state.selectedVehicle?.route_short_name, state.selectedVehicle?.route_type]);
+
+    // Memoize route line paint object
+    const routeLinePaint = useMemo(() => ({
+        'line-color': routeLineColor,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8] as any,
+        'line-opacity': 0.8,
+        'line-blur': 0.5
+    }), [routeLineColor]);
+
+    // Memoize route line layout object
+    const routeLineLayout = useMemo(() => ({
+        'line-join': 'round' as const,
+        'line-cap': 'round' as const
+    }), []);
+
+    // Memoize vehicle filter to exclude selected vehicle
+    const vehiclesFilter = useMemo(() => ['!', ['any',
+        ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(state.selectedId || 'NOMATCH')],
+        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(state.selectedVehicle?.gtfs_trip_id || state.selectedVehicle?.trip_id || 'NOMATCH')]
+    ]] as any, [state.selectedId, state.selectedVehicle?.gtfs_trip_id, state.selectedVehicle?.trip_id]);
+
     return (
         <div className="w-full h-full bg-black relative">
-            {/* Live Data Status Indicator (Top Left) */}
-            <LiveStatus fetching={fetchingVehicles} bounds={bounds} lastUpdate={dataUpdatedAt} />
+            <LiveStatus fetching={data.fetchingVehicles} bounds={state.bounds} lastUpdate={data.dataUpdatedAt} />
 
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
-                onMove={onMove}
-                onMoveEnd={onMoveEnd}
-                onLoad={onLoad}
+                onMove={mapEvents.onMove}
+                onMoveEnd={mapEvents.onMoveEnd}
+                onLoad={mapEvents.onLoad}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle={MAP_STYLE_URL}
-                mapLib={maplibregl}
-                onDragStart={onDragStart}
+                mapStyle={MAP_STYLE}
+                mapLib={maplibregl as unknown as typeof maplibregl}
+                onDragStart={mapEvents.onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
                     if (features?.length && features[0].layer.id !== 'entrance-layer') {
-                        evt.target.getCanvas().style.cursor = 'pointer';
+                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
                     }
                 }}
                 onMouseLeave={(evt) => {
-                    evt.target.getCanvas().style.cursor = '';
+                    (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
                 }}
-                onClick={onMapClick}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
+                onClick={(evt) => {
+                    const f = evt.features?.[0];
+                    if (!f || f.layer.id === 'entrance-layer') return;
+
+                    if (f.layer.id === 'clusters') {
+                        const clusterId = f.properties.cluster_id;
+                        const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
+                        const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
+                        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+                            mapRef.current?.easeTo({
+                                center: (f.geometry as any).coordinates,
+                                zoom,
+                                duration: 500
+                            });
+                        }).catch(() => {
+                            // Silent fail
+                        });
+                        return;
+                    }
+
+                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
+                        const props = f.properties;
+                        actions.setSelectedVehicle({
+                            ...props,
+                            vehicle_id: String(props.vehicle_id || props.id),
+                            _geometry: (f.geometry as any).coordinates as [number, number]
+                        } as TrackedVehicle);
+                        actions.setSelectedStop(null);
+                        actions.setIsFollowing(true);
+                        return;
+                    }
+
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                        const pc = f.properties.platform_code;
+                        const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
+                        actions.setSelectedStop({ id: f.properties.stop_id, name });
+                        actions.setSelectedVehicle(null);
+                        actions.setExpandedGroups([]);
+                    }
+                }}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
             >
 
-                {/* Route Shape Layer - Renders the planned path of the selected vehicle */}
-                {mapLoaded && (
-                    <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
+                {/* Route Shape Layer - UNDER labels */}
+                {state.mapLoaded && (
+                    <Source id="route-shape" type="geojson" data={data.routeShapeData || EMPTY_GEOJSON}>
                         <Layer
                             id="route-line"
                             type="line"
-                            beforeId={labelLayerId}
+                            beforeId={state.labelLayerId}
                             layout={routeLineLayout}
                             paint={routeLinePaint}
                         />
@@ -225,31 +206,30 @@ export const Map: React.FC = () => {
                 )}
 
                 <Search
-                    stops={stops || null}
+                    stops={data.stops || null}
                     onSelect={handleStopSelect}
                     onLineSelect={handleLineSelect}
-                    activeFilter={routeFilter}
+                    activeFilter={state.routeFilter}
                 />
 
                 <MapControls
                     mapRef={mapRef}
-                    mapLoaded={mapLoaded}
-                    onLocate={handleLocate}
+                    mapLoaded={state.mapLoaded}
+                    onLocate={actions.handleLocate}
                     onSettings={handleSettingsOpen}
                     onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
                     onResetBearing={handleResetBearing}
                 />
 
-                {/* User Location Indicator */}
-                <Source id="user-location" type="geojson" data={(mapLoaded && userLocation ? {
+                <Source id="user-location" type="geojson" data={(state.mapLoaded && state.userLocation ? {
                     type: 'FeatureCollection',
                     features: [{
                         type: 'Feature',
-                        geometry: { type: 'Point', coordinates: userLocation },
+                        geometry: { type: 'Point', coordinates: state.userLocation },
                         properties: {}
                     }]
-                } : EMPTY_GEOJSON)}>
+                } : EMPTY_GEOJSON) as VehicleCollection}>
                     <Layer
                         id="user-location-pulse"
                         type="circle"
@@ -272,34 +252,36 @@ export const Map: React.FC = () => {
                 </Source>
 
 
-                {/* Highlighted Selected Vehicle */}
-                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
+                <Source id="selected-vehicle" type="geojson" data={data.selectedVehicleFeature}>
+                    {/* 1. PULSE (Bottom) */}
                     <Layer {...selectedVehiclePulseLayer} />
+                    {/* 2. BODY */}
                     <Layer {...selectedVehiclePointLayer} />
+                    {/* 3. DIRECTION */}
                     <Layer {...selectedVehicleDirectionLayer} />
+                    {/* 4. LABEL */}
                     <Layer {...selectedVehicleLabelLayer} />
                 </Source>
 
-                {/* Global Vehicle Positions */}
-                <Source id="pid-vehicles" type="geojson" data={(mapLoaded && showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesPointLayer as any)} filter={vehiclesFilter} />
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesDirectionLayer as any)} filter={vehiclesFilter} />
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <Layer {...(vehiclesLabelLayer as any)} filter={vehiclesFilter} />
+                <Source id="pid-vehicles" type="geojson" data={state.mapLoaded && state.showVehicles && data.displayVehicles ? data.displayVehicles : EMPTY_GEOJSON}>
+                    {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
+                    <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
+
+                    {/* DIRECTION ARROWS - EXCLUDE SELECTED */}
+                    <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
+
+                    {/* LABELS - EXCLUDE SELECTED */}
+                    <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
                 </Source>
 
-                {/* Stop Centroids (Labels only) */}
-                <Source id="stop-labels-centroids" type="geojson" data={(mapLoaded && labelData ? labelData : EMPTY_GEOJSON)}>
+                <Source id="stop-labels-centroids" type="geojson" data={state.mapLoaded && data.labelData ? data.labelData : EMPTY_GEOJSON}>
                     <Layer {...stopLabelLayer} />
                 </Source>
 
-                {/* Main Stops Source (Clustered) */}
                 <Source
                     id="pid-stops"
                     type="geojson"
-                    data={(mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON)}
+                    data={state.mapLoaded && data.stopsData ? data.stopsData : EMPTY_GEOJSON}
                     cluster={true}
                     clusterMaxZoom={13}
                     clusterRadius={40}
@@ -311,7 +293,6 @@ export const Map: React.FC = () => {
                     }}
                 >
                     <Layer {...clusterLayer} />
-                    <Layer {...clusterCoreLayer} />
                     <Layer {...clusterCountLayer} />
                     <Layer {...stopPointGlowLayer} />
                     <Layer {...stopPointLayer} />
@@ -321,44 +302,42 @@ export const Map: React.FC = () => {
                 </Source>
             </MapGL>
 
-            {/* Lazy-loaded Modals and Popups */}
             <React.Suspense fallback={null}>
-                <WelcomeModal onGetStarted={handleLocate} />
+                <WelcomeModal onGetStarted={actions.handleLocate} />
                 <SettingsModal
-                    isOpen={isSettingsOpen}
-                    onClose={() => setIsSettingsOpen(false)}
-                    showVehicles={showVehicles}
-                    setShowVehicles={setShowVehicles}
+                    isOpen={state.isSettingsOpen}
+                    onClose={() => actions.setIsSettingsOpen(false)}
+                    showVehicles={state.showVehicles}
+                    setShowVehicles={actions.setShowVehicles}
                 />
                 <UpdatePopup />
             </React.Suspense>
 
-            {/* Side/Bottom Sheet for Information Display */}
             <BottomSheet
-                isOpen={!!selectedStop || !!selectedVehicle}
-                onClose={resetSelection}
-                onBack={(selectedVehicle && selectedStop) ? () => {
-                    setSelectedVehicle(null);
-                    setIsFollowing(false);
+                isOpen={!!state.selectedStop || !!state.selectedVehicle}
+                onClose={() => { actions.setSelectedStop(null); actions.setSelectedVehicle(null); actions.setIsFollowing(false); }}
+                onBack={(state.selectedVehicle && state.selectedStop) ? () => {
+                    actions.setSelectedVehicle(null);
+                    actions.setIsFollowing(false);
                 } : undefined}
-                title={selectedVehicle
-                    ? t('map.vehicleDetails.lineLabel', { line: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name })
-                    : (selectedStop ? selectedStop.name : '')}
+                title={state.selectedVehicle
+                    ? t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name })
+                    : (state.selectedStop ? state.selectedStop.name : '')}
             >
                 <BottomSheetContent
-                    selectedStop={selectedStop}
-                    selectedVehicle={selectedVehicle}
-                    vehicleDetail={vehicleDetail || null}
-                    loadingDetail={loadingDetail}
-                    isFollowing={isFollowing}
+                    selectedStop={state.selectedStop}
+                    selectedVehicle={state.selectedVehicle}
+                    vehicleDetail={data.vehicleDetail || null}
+                    loadingDetail={data.loadingDetail}
+                    isFollowing={state.isFollowing}
                     onToggleFollow={handleToggleFollow}
-                    groupedDepartures={groupedDepartures}
-                    expandedGroups={expandedGroups}
-                    onToggleGroup={toggleGroup}
-                    onDepartureClick={handleDepartureClick}
-                    departureSort={departureSort}
-                    setDepartureSort={setDepartureSort}
-                    loadingDeps={loadingDeps}
+                    groupedDepartures={data.groupedDepartures}
+                    expandedGroups={state.expandedGroups}
+                    onToggleGroup={actions.toggleGroup}
+                    onDepartureClick={actions.handleDepartureClick}
+                    departureSort={state.departureSort}
+                    setDepartureSort={actions.setDepartureSort}
+                    loadingDeps={data.loadingDeps}
                 />
             </BottomSheet>
         </div>

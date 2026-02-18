@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Syncs the selected stop and map camera position with browser URL search parameters.
@@ -8,17 +8,21 @@ export const useMapUrlSync = (
     selectedStop: { id: string; name: string } | null,
     setSelectedStop: (stop: { id: string; name: string } | null) => void
 ) => {
+    const initialized = useRef(false);
+
     // 1. Initial Load: Read from URL
     useEffect(() => {
+        if (initialized.current) return;
+
         const p = new URLSearchParams(window.location.search);
         const id = p.get('stopId');
         const name = p.get('stopName');
-        if (id && name) {
+
+        if (id && name && !selectedStop) {
             setSelectedStop({ id, name });
         }
-        // Only run on mount
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        initialized.current = true;
+    }, [setSelectedStop, selectedStop]);
 
     // 2. State Change: Write to URL
     useEffect(() => {

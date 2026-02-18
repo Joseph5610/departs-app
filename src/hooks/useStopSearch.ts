@@ -1,8 +1,8 @@
 import { useState, useMemo, useDeferredValue } from 'react';
 import { normalizeString } from '../utils/stringUtils';
-import type { StopFeature, StopCollection } from '../types/transit';
+import type { StopFeature } from '../types/transit';
 
-export const useStopSearch = (stops: StopCollection | null) => {
+export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
     const [query, setQuery] = useState('');
     const deferredQuery = useDeferredValue(query);
 

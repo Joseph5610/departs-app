@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Info, ArrowRight } from 'lucide-react';
-import { LS_KEYS } from '../config/constants';
+import { STORAGE_KEYS } from '../config/constants';
 
 export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
-        return !localStorage.getItem(LS_KEYS.WELCOME_SEEN);
+        return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });
 
     const handleClose = () => {
-        localStorage.setItem(LS_KEYS.WELCOME_SEEN, 'true');
+        localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
         setIsOpen(false);
         onGetStarted();
     };

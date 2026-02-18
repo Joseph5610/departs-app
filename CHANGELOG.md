@@ -2,29 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.6.0] - 2026-02-17
-
-### Added
-- **Premium Visuals**: Redesigned map clusters with "anonymous dots" replaced by informative glowing orbs that display item counts and color-coded themes for metro lines.
-- **Strict Typing**: Finalized the removal of all `any` types from the frontend, ensuring robust type safety for map layers, interactions, and transit data orchestration.
-- **Centralized Models**: Consolidated all transit-related TypeScript interfaces into a single source of truth (`src/types/transit.ts`).
-- **Enhanced Documentation**: Added detailed JSDoc to every major component and hook, preparing the codebase for public open-source release.
+## [0.5.0] - 2026-02-18
 
 ### Changed
-- **Optimized UI**: Refactored `VehicleDetail` to use a more efficient data age ticker and simplified stop-sequence filtering logic.
-- **Code Quality**: Cleaned up React imports and standardized component patterns across the entire application.
-
-## [0.5.0] - 2026-02-17
-
-### Added
-- **Architecture Overhaul**: Decomposed the monolithic `useMapLogic` hook into specialized, modular hooks (`useMapState`, `useMapView`, `useMapDataView`, `useMapInteraction`) for better maintainability and code clarity.
-- **Centralized Configuration**: Unified magic strings, coordinates, API endpoints, and timers into `src/config/constants.ts` and `src/config/api.ts`.
-- **Strict Type Safety**: Eliminated almost all `any` types across the frontend, implementing robust interfaces for MapLibre events, GeoJSON sources, and transit data structures.
-- **Improved Documentation**: Added comprehensive JSDoc to all major hooks and utility functions to facilitate easier contribution from the open-source community.
-
-### Fixed
-- **React Performance**: Resolved several "cascading render" warnings by refactoring state updates in `WelcomeModal`, `BottomSheet`, and `Countdown`.
-- **UI State Sync**: Improved sheet state synchronization between mobile and desktop viewports.
+- **State Management Consolidation**: Implemented a centralized React reducer (`useMapReducer`) to manage all map and UI state, improving predictability and reducing fragmented `useState` calls.
+- **Hook Refactoring**: Grouped the massive return values of `useMapLogic` into logical sub-objects (`state`, `actions`, `data`, `mapEvents`), significantly improving codebase readability and maintainability.
+- **Type Hardening**: Conducted a major sweep to eliminate `any` types across the frontend, ensuring better developer experience and more robust builds.
+- **Performance Optimization**: Resolved multiple "cascading render" and "unnecessary effect" issues in core components like `BottomSheet`, `WelcomeModal`, and `Countdown`.
+- **Architecture**: Centralized magic numbers, zoom levels, and timing constants in `src/config/constants.ts`.
 
 ## [0.4.2] - 2026-02-15
 

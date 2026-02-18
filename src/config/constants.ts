@@ -2,46 +2,43 @@
 /**
  * UI and Layout constants
  */
-export const SIDEBAR_WIDTH = 420;
+export const SIDEBAR_WIDTH = 450;
 export const MOBILE_BREAKPOINT = 768;
+export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
 
 /**
- * Map defaults and configuration
+ * Map configuration defaults
  */
 export const MAP_DEFAULT_COORDS = {
     lat: 50.0755,
-    lng: 14.4378
+    lng: 14.4378,
+    zoom: 13,
+    userZoom: 15
 };
 
-export const MAP_DEFAULT_ZOOM = 13;
-export const MAP_USER_LOCATION_ZOOM = 15;
-export const MAP_MIN_ZOOM_FOR_VEHICLES = 11;
-
-export const MAP_STYLE_URL = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+export const MAP_BOUNDS_DEBOUNCE = 800;
+export const MAP_MIN_ZOOM_FOR_DATA = 11;
 
 /**
- * Local Storage keys
+ * Animation and interaction constants
  */
-export const LS_KEYS = {
-    LAST_USER_LOCATION: 'lastUserLocation',
+export const MAP_ANIMATION_DURATION = 1500;
+export const MAP_FLY_DURATION = 2000;
+export const MAP_STOP_SELECT_ZOOM = 16;
+export const MAP_VEHICLE_SELECT_ZOOM = 15;
+
+/**
+ * Local Storage Keys
+ */
+export const STORAGE_KEYS = {
     SHOW_VEHICLES: 'showVehicles',
     DEPARTURE_SORT: 'departureSort',
+    LAST_LOCATION: 'lastUserLocation',
     WELCOME_SEEN: 'departs_welcome_seen'
-} as const;
-
-import type { FeatureCollection } from 'geojson';
-
-/**
- * Common GeoJSON structures
- */
-export const EMPTY_GEOJSON: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: []
 };
 
 /**
- * Interaction and Timers
+ * API and Transit constants
  */
-export const BOUNDS_DEBOUNCE_MS = 800;
-export const MAP_MOVE_DURATION_MS = 1000;
-export const MAP_FLY_DURATION_MS = 2000;
+export const VEHICLE_REFETCH_INTERVAL = 10000;
+export const VEHICLE_STALE_TIME = 5000;

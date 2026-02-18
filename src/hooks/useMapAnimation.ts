@@ -19,7 +19,7 @@ export const useMapAnimation = (
         const currentMapRef = mapRef.current;
 
         const animate = () => {
-            const map = currentMapRef?.getMap();
+            const map = mapRef.current?.getMap();
             if (map && selectedVehicle && isFollowing) {
                 const time = Date.now() / 350;
                 const radius = 20 + Math.sin(time) * 15; // Base 20, pulse +/- 15

@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from './useToast';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { LS_KEYS, MAP_USER_LOCATION_ZOOM, MAP_FLY_DURATION_MS } from '../config/constants';
+import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../config/constants';
 
 export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
@@ -40,8 +40,8 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 console.log('🎯 Manual locate: Flying to current known location');
                 mapRef.current?.getMap().flyTo({
                     center: userLocationRef.current,
-                    zoom: MAP_USER_LOCATION_ZOOM,
-                    duration: MAP_FLY_DURATION_MS
+                    zoom: MAP_VEHICLE_SELECT_ZOOM,
+                    duration: MAP_FLY_DURATION
                 });
             } else {
                 console.log('⏳ Manual locate: Pending position fix...');
@@ -65,7 +65,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 setUserLocation(newLocation);
 
                 // Persist to localStorage
-                localStorage.setItem(LS_KEYS.LAST_USER_LOCATION, JSON.stringify({ lat: latitude, lng: longitude }));
+                localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: latitude, lng: longitude }));
 
                 // Handle initial positioning
                 if (!isInitialSet.current) {
@@ -76,7 +76,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                         console.log('🚀 Initial lock: Snapping map to user location');
                         mapRef.current?.getMap().jumpTo({
                             center: newLocation,
-                            zoom: MAP_USER_LOCATION_ZOOM
+                            zoom: MAP_VEHICLE_SELECT_ZOOM
                         });
                     }
                     isInitialSet.current = true;
@@ -87,8 +87,8 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                     console.log('🎯 Position acquired: Executing pending flyTo');
                     mapRef.current?.getMap().flyTo({
                         center: newLocation,
-                        zoom: MAP_USER_LOCATION_ZOOM,
-                        duration: MAP_FLY_DURATION_MS
+                        zoom: MAP_VEHICLE_SELECT_ZOOM,
+                        duration: MAP_FLY_DURATION
                     });
                     pendingManualFly.current = false;
                 }

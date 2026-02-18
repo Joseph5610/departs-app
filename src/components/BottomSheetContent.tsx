@@ -2,26 +2,19 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
 import { VehicleDetail } from './VehicleDetail';
 import { Countdown } from './Countdown';
 import { getVehicleColor } from '../utils/vehicleColors';
-import type { TrackedVehicle, Departure, VehicleDetail as VehicleDetailType } from '../types/transit';
+import type { TrackedVehicle, VehicleDetail as VehicleDetailType, Departure } from '../types/transit';
+import type { DepartureGroup } from '../hooks/useGroupedDepartures';
 
-const dateLocales: Record<string, typeof cs | typeof enUS> = {
+const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
 };
-
-interface GroupedDeparture {
-    groupId: string;
-    line: string;
-    type: string | number;
-    departures: Departure[];
-    firstTime: number;
-}
 
 interface BottomSheetContentProps {
     selectedStop: { id: string; name: string } | null;
@@ -30,15 +23,10 @@ interface BottomSheetContentProps {
     loadingDetail: boolean;
     isFollowing: boolean;
     onToggleFollow: () => void;
-    groupedDepartures: GroupedDeparture[];
+    groupedDepartures: DepartureGroup[];
     expandedGroups: string[];
     onToggleGroup: (groupId: string) => void;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: {
-        line?: string;
-        type?: string | number;
-        headsign?: string;
-        delay?: number;
-    }) => void;
+    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Departure) => void;
     departureSort: 'line' | 'departure';
     setDepartureSort: (sort: 'line' | 'departure') => void;
     loadingDeps: boolean;

@@ -1,10 +1,9 @@
-
-import { useReducer, useCallback, useEffect } from 'react';
-import { LS_KEYS } from '../config/constants';
+import { useReducer, useCallback } from 'react';
+import { STORAGE_KEYS } from '../config/constants';
 import type { TrackedVehicle } from '../types/transit';
 
 /**
- * State structure for the entire Map application UI.
+ * State managed by the map reducer
  */
 export interface MapState {
     selectedStop: { id: string; name: string } | null;
@@ -15,117 +14,145 @@ export interface MapState {
     expandedGroups: string[];
     departureSort: 'line' | 'departure';
     routeFilter: string[] | null;
+    bounds: string | null;
+    debouncedBounds: string | null;
 }
 
 /**
- * Action types for the Map Reducer.
+ * Available actions for the map reducer
  */
 export type MapAction =
-    | { type: 'SET_STOP'; stop: { id: string; name: string } | null }
-    | { type: 'SET_VEHICLE'; vehicle: TrackedVehicle | null; follow?: boolean }
-    | { type: 'UPDATE_SELECTED_VEHICLE'; vehicle: TrackedVehicle }
-    | { type: 'SET_FOLLOWING'; following: boolean }
-    | { type: 'TOGGLE_VEHICLES'; show: boolean }
-    | { type: 'TOGGLE_SETTINGS'; open: boolean }
-    | { type: 'SET_SORT'; sort: 'line' | 'departure' }
-    | { type: 'TOGGLE_GROUP'; groupId: string }
-    | { type: 'SET_EXPANDED_GROUPS'; groups: string[] }
-    | { type: 'SET_ROUTE_FILTER'; routes: string[] | null }
-    | { type: 'RESET_SELECTION' };
+    | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string } | null | ((prev: { id: string; name: string } | null) => { id: string; name: string } | null) }
+    | { type: 'SET_SELECTED_VEHICLE'; payload: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null) }
+    | { type: 'SET_IS_FOLLOWING'; payload: boolean }
+    | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
+    | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
+    | { type: 'SET_EXPANDED_GROUPS'; payload: string[] }
+    | { type: 'TOGGLE_GROUP'; payload: string }
+    | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
+    | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
+    | { type: 'SET_BOUNDS'; payload: string | null }
+    | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null };
 
-const initialState: MapState = {
+/**
+ * Initial state factory
+ */
+const getInitialState = (): MapState => ({
     selectedStop: null,
     selectedVehicle: null,
     isFollowing: false,
     showVehicles: typeof window !== 'undefined'
-        ? (localStorage.getItem(LS_KEYS.SHOW_VEHICLES) !== 'false')
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false'
         : true,
     isSettingsOpen: false,
     expandedGroups: [],
-    departureSort: typeof window !== 'undefined'
-        ? (localStorage.getItem(LS_KEYS.DEPARTURE_SORT) as 'line' | 'departure' || 'line')
-        : 'line',
+    departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeFilter: null,
-};
+    bounds: null,
+    debouncedBounds: null
+});
 
+/**
+ * Map Reducer function
+ */
 function mapReducer(state: MapState, action: MapAction): MapState {
     switch (action.type) {
-        case 'SET_STOP':
+        case 'SET_SELECTED_STOP':
             return {
                 ...state,
-                selectedStop: action.stop,
-                selectedVehicle: action.stop ? null : state.selectedVehicle,
-                isFollowing: action.stop ? false : state.isFollowing,
-                expandedGroups: []
+                selectedStop: typeof action.payload === 'function'
+                    ? action.payload(state.selectedStop)
+                    : action.payload
             };
-        case 'SET_VEHICLE':
+        case 'SET_SELECTED_VEHICLE':
             return {
                 ...state,
-                selectedVehicle: action.vehicle,
-                selectedStop: action.vehicle ? null : state.selectedStop,
-                isFollowing: action.vehicle ? (action.follow ?? true) : false,
+                selectedVehicle: typeof action.payload === 'function'
+                    ? action.payload(state.selectedVehicle)
+                    : action.payload
             };
-        case 'UPDATE_SELECTED_VEHICLE':
-            if (!state.selectedVehicle) return state;
-            return {
-                ...state,
-                selectedVehicle: action.vehicle
-            };
-        case 'SET_FOLLOWING':
-            return { ...state, isFollowing: action.following };
-        case 'TOGGLE_VEHICLES':
-            return { ...state, showVehicles: action.show };
-        case 'TOGGLE_SETTINGS':
-            return { ...state, isSettingsOpen: action.open };
-        case 'SET_SORT':
-            return { ...state, departureSort: action.sort };
+        case 'SET_IS_FOLLOWING':
+            return { ...state, isFollowing: action.payload };
+        case 'SET_SHOW_VEHICLES':
+            localStorage.setItem(STORAGE_KEYS.SHOW_VEHICLES, String(action.payload));
+            return { ...state, showVehicles: action.payload };
+        case 'SET_IS_SETTINGS_OPEN':
+            return { ...state, isSettingsOpen: action.payload };
+        case 'SET_EXPANDED_GROUPS':
+            return { ...state, expandedGroups: action.payload };
         case 'TOGGLE_GROUP':
             return {
                 ...state,
-                expandedGroups: state.expandedGroups.includes(action.groupId)
-                    ? state.expandedGroups.filter(g => g !== action.groupId)
-                    : [...state.expandedGroups, action.groupId]
+                expandedGroups: state.expandedGroups.includes(action.payload)
+                    ? state.expandedGroups.filter(g => g !== action.payload)
+                    : [...state.expandedGroups, action.payload]
             };
-        case 'SET_EXPANDED_GROUPS':
-            return { ...state, expandedGroups: action.groups };
+        case 'SET_DEPARTURE_SORT':
+            localStorage.setItem(STORAGE_KEYS.DEPARTURE_SORT, action.payload);
+            return { ...state, departureSort: action.payload };
         case 'SET_ROUTE_FILTER':
-            return { ...state, routeFilter: action.routes };
-        case 'RESET_SELECTION':
-            return {
-                ...state,
-                selectedStop: null,
-                selectedVehicle: null,
-                isFollowing: false,
-                expandedGroups: []
-            };
+            return { ...state, routeFilter: action.payload };
+        case 'SET_BOUNDS':
+            return { ...state, bounds: action.payload };
+        case 'SET_DEBOUNCED_BOUNDS':
+            return { ...state, debouncedBounds: action.payload };
         default:
             return state;
     }
 }
 
 /**
- * Hook to manage Map state using a reducer.
- * Consolidates UI and selection logic into a single predictable state machine.
+ * Hook to use the map state reducer
  */
 export const useMapReducer = () => {
-    const [state, dispatch] = useReducer(mapReducer, initialState);
+    const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    // Persist settings on change
-    useEffect(() => {
-        localStorage.setItem(LS_KEYS.SHOW_VEHICLES, String(state.showVehicles));
-    }, [state.showVehicles]);
+    const setSelectedStop = useCallback((stop: { id: string; name: string } | null | ((prev: { id: string; name: string } | null) => { id: string; name: string } | null)) =>
+        dispatch({ type: 'SET_SELECTED_STOP', payload: stop }), []);
 
-    useEffect(() => {
-        localStorage.setItem(LS_KEYS.DEPARTURE_SORT, state.departureSort);
-    }, [state.departureSort]);
+    const setSelectedVehicle = useCallback((vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) =>
+        dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
 
-    const toggleGroup = useCallback((groupId: string) => {
-        dispatch({ type: 'TOGGLE_GROUP', groupId });
-    }, []);
+    const setIsFollowing = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_IS_FOLLOWING', payload: val }), []);
+
+    const setShowVehicles = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_VEHICLES', payload: val }), []);
+
+    const setIsSettingsOpen = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val }), []);
+
+    const setExpandedGroups = useCallback((groups: string[]) =>
+        dispatch({ type: 'SET_EXPANDED_GROUPS', payload: groups }), []);
+
+    const toggleGroup = useCallback((groupId: string) =>
+        dispatch({ type: 'TOGGLE_GROUP', payload: groupId }), []);
+
+    const setDepartureSort = useCallback((sort: 'line' | 'departure') =>
+        dispatch({ type: 'SET_DEPARTURE_SORT', payload: sort }), []);
+
+    const setRouteFilter = useCallback((filter: string[] | null) =>
+        dispatch({ type: 'SET_ROUTE_FILTER', payload: filter }), []);
+
+    const setBounds = useCallback((bounds: string | null) =>
+        dispatch({ type: 'SET_BOUNDS', payload: bounds }), []);
+
+    const setDebouncedBounds = useCallback((bounds: string | null) =>
+        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds }), []);
 
     return {
         state,
         dispatch,
-        toggleGroup
+        setSelectedStop,
+        setSelectedVehicle,
+        setIsFollowing,
+        setShowVehicles,
+        setIsSettingsOpen,
+        setExpandedGroups,
+        toggleGroup,
+        setDepartureSort,
+        setRouteFilter,
+        setBounds,
+        setDebouncedBounds
     };
 };

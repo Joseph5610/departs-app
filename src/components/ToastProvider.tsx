@@ -9,6 +9,10 @@ interface Toast {
     type: ToastType;
 }
 
+/**
+ * Provides toast notification functionality to the application.
+ * Centrally manages toast state and rendering with Framer Motion animations.
+ */
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -21,9 +25,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }, 4000);
     }, []);
 
-    const removeToast = (id: string) => {
+    const removeToast = useCallback((id: string) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+    }, []);
 
     return (
         <ToastContext.Provider value={{ showToast }}>

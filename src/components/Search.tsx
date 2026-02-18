@@ -3,10 +3,10 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
 import { useStopSearch } from '../hooks/useStopSearch';
-import type { StopFeature, StopCollection } from '../types/transit';
+import type { StopFeature } from '../types/transit';
 
 interface SearchProps {
-    stops: StopCollection | null;
+    stops: { features: StopFeature[] } | null;
     onSelect: (stop: StopFeature) => void;
     onLineSelect: (line: string[] | null) => void;
     activeFilter: string[] | null;
