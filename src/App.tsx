@@ -1,5 +1,5 @@
 import { Map } from './components/Map';
-import { ToastProvider } from './components/Toast';
+import { ToastProvider } from './components/ToastProvider';
 
 function App() {
   return (

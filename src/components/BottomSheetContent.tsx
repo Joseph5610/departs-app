@@ -2,51 +2,40 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
 import { VehicleDetail } from './VehicleDetail';
 import { Countdown } from './Countdown';
 import { getVehicleColor } from '../utils/vehicleColors';
-import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
+import type { Departure } from '../types/transit';
+import { useMap } from '../hooks/useMap';
+import { useVehicleDetail } from '../hooks/useVehicleDetail';
+import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
+import { useDepartures } from '../hooks/useDepartures';
 
-const dateLocales: Record<string, any> = {
+const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
 };
 
 interface BottomSheetContentProps {
-    selectedStop: { id: string; name: string } | null;
-    selectedVehicle: TrackedVehicle | null;
-    vehicleDetail: VehicleDetailType | null;
-    loadingDetail: boolean;
-    isFollowing: boolean;
     onToggleFollow: () => void;
-    groupedDepartures: any[];
-    expandedGroups: string[];
-    onToggleGroup: (groupId: string) => void;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: any) => void;
-    departureSort: 'line' | 'departure';
-    setDepartureSort: (sort: 'line' | 'departure') => void;
-    loadingDeps: boolean;
 }
 
 export const BottomSheetContent = memo<BottomSheetContentProps>(({
-    selectedStop,
-    selectedVehicle,
-    vehicleDetail,
-    loadingDetail,
-    isFollowing,
-    onToggleFollow,
-    groupedDepartures,
-    expandedGroups,
-    onToggleGroup,
-    onDepartureClick,
-    departureSort,
-    setDepartureSort,
-    loadingDeps
+    onToggleFollow
 }) => {
     const { t, i18n } = useTranslation();
+    const { state, actions } = useMap();
+
+    // Data Hooks
+    const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
+    const { isLoading: loadingDeps } = useDepartures();
+    const groupedDepartures = useGroupedDepartures();
+
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort } = state;
+    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
@@ -105,7 +94,7 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                         )}
 
                         <div className="space-y-2">
-                            {visibleDepartures.map((dep: any, idx: number) => (
+                            {visibleDepartures.map((dep: Departure, idx: number) => (
                                 <div
                                     key={idx}
                                     onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}

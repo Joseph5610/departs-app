@@ -3,28 +3,36 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
-import type { MapRef } from 'react-map-gl/maplibre';
+import { useMap } from '../hooks/useMap';
 
-interface MapControlsProps {
-    mapRef: React.RefObject<MapRef | null>;
-    mapLoaded?: boolean;
-    onLocate: (e: React.MouseEvent | React.TouchEvent) => void;
-    onSettings: () => void;
-    onZoomIn: () => void;
-    onZoomOut: () => void;
-    onResetBearing: () => void;
-}
 
-export const MapControls = React.memo<MapControlsProps>(({
-    mapRef,
-    mapLoaded,
-    onLocate,
-    onSettings,
-    onZoomIn,
-    onZoomOut,
-    onResetBearing
-}) => {
+
+export const MapControls = React.memo(() => {
     const { t } = useTranslation();
+    const { state, actions, mapRef } = useMap();
+
+    const { mapLoaded } = state;
+    const { handleLocate: onLocate, setIsSettingsOpen } = actions;
+
+    const onSettings = React.useCallback(() => {
+        setIsSettingsOpen(true);
+    }, [setIsSettingsOpen]);
+
+    const onZoomIn = React.useCallback(() => {
+        mapRef.current?.zoomIn();
+    }, [mapRef]);
+
+    const onZoomOut = React.useCallback(() => {
+        mapRef.current?.zoomOut();
+    }, [mapRef]);
+
+    const onResetBearing = React.useCallback(() => {
+        mapRef.current?.easeTo({
+            bearing: 0,
+            duration: 1000,
+            pitch: 0
+        });
+    }, [mapRef]);
     const [showCompass, setShowCompass] = useState(false);
 
     useEffect(() => {

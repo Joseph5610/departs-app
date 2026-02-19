@@ -36,8 +36,8 @@ export const METRO_STATIONS: Record<string, string[]> = {
 export const TRANSFER_STATION_NAMES = ['Můstek', 'Muzeum', 'Florenc'];
 
 // Generate the flat array for Mapbox 'match' expression: [name, color, name, color, ...]
-export const getStationColorMatchPairs = (): any[] => {
-    const pairs: any[] = [];
+export const getStationColorMatchPairs = (): (string | number)[] => {
+    const pairs: (string | number)[] = [];
 
     // Explicit Transfers
     pairs.push('Můstek', LINE_COLORS.Transfer);

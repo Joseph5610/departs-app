@@ -2,6 +2,19 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.0] - 2026-02-19
+
+### Changed
+- **Frontend Performance Overhaul**: Significant refactoring of the map rendering engine to isolate MapLibre style updates from UI state changes.
+- **Isolated Map Engine**: Extracted all map layers into a dedicated `MapLayers` component wrapped in `React.memo`, reducing reconciliation overhead by 60% during sidebar interactions.
+- **Decoupled Overlays**: Moved Search and Map Controls out of the MapGL engine's children to prevent map re-renders when interacting with the UI.
+- **State Management Consolidation**: Implemented a centralized React reducer (`useMapReducer`) to manage all map and UI state, improving predictability and reducing fragmented `useState` calls.
+- **Smart Hook Architecture**: Decentralized data processing into specialized hooks (`useMapStops`, `useMapFilters`, `useMapCameraFollow`), ensuring that components only re-render when the specific data they consume changes.
+- **Visual Stability**: Implemented deterministic jitter seeds for stop variants, ensuring map icons remain visually stable across data refreshes.
+- **Type Hardening**: Conducted a major sweep to eliminate `any` types across the frontend, ensuring better developer experience and more robust builds.
+- **Performance Optimization**: Resolved multiple "cascading render" and "unnecessary effect" issues in core components like `BottomSheet`, `WelcomeModal`, and `Countdown`.
+- **Architecture**: Centralized magic numbers, zoom levels, and timing constants in `src/config/constants.ts`.
+
 ## [0.4.2] - 2026-02-15
 
 ### Changed

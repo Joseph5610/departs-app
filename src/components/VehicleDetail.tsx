@@ -74,20 +74,20 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         if (!vehicleDetail?.stop_times?.features || !vehicleDetail.last_stop_sequence) return null;
 
         const futureStops = vehicleDetail.stop_times.features
-            .filter((s: any) => s.properties.stop_sequence > vehicleDetail.last_stop_sequence!)
-            .sort((a: any, b: any) => a.properties.stop_sequence - b.properties.stop_sequence);
+            .filter((s) => s.properties.stop_sequence > vehicleDetail.last_stop_sequence!)
+            .sort((a, b) => a.properties.stop_sequence - b.properties.stop_sequence);
 
         return futureStops[0]?.properties.stop_sequence ?? null;
-    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence]);
+    }, [vehicleDetail]);
 
     // Memoize filtered stops to prevent re-filtering on every render
     const filteredStops = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features) return [];
 
-        return vehicleDetail.stop_times.features.filter((stop: any) =>
+        return vehicleDetail.stop_times.features.filter((stop) =>
             showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0)
         );
-    }, [vehicleDetail?.stop_times?.features, vehicleDetail?.last_stop_sequence, showPastStops]);
+    }, [vehicleDetail, showPastStops]);
 
     // Memoize toggle handler to prevent unnecessary re-renders
     const handleTogglePastStops = useCallback(() => {
@@ -248,8 +248,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <div className="relative pl-6 space-y-0">
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 
-                        {filteredStops.map((stop: any, idx: number) => {
-                            const isPast = stop.properties.stop_sequence < (vehicleDetail.last_stop_sequence || 0);
+                        {filteredStops.map((stop, idx: number) => {
+                            const isPast = stop.properties.stop_sequence < (vehicleDetail?.last_stop_sequence || 0);
                             const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
                             const isNext = stop.properties.stop_sequence === nextStopSequence;
 
@@ -269,20 +269,21 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                                     <div className="flex flex-col items-end shrink-0">
                                         {(() => {
-                                            const realtimeTime = stop.properties.realtime_arrival_time || stop.properties.arrival_time;
-                                            const scheduledTime = stop.properties.arrival_time;
-                                            const hasRealtime = stop.properties.realtime_arrival_time && stop.properties.realtime_arrival_time !== stop.properties.arrival_time;
-                                            const isEarly = hasRealtime && stop.properties.realtime_arrival_time < stop.properties.arrival_time;
-                                            const isLate = hasRealtime && stop.properties.realtime_arrival_time > stop.properties.arrival_time;
+                                            const { realtime_arrival_time, arrival_time } = stop.properties;
+                                            const realtimeTime = realtime_arrival_time || arrival_time;
+                                            const scheduledTime = arrival_time;
+                                            const hasRealtime = !!realtime_arrival_time && realtime_arrival_time !== arrival_time;
+                                            const isEarly = hasRealtime && realtime_arrival_time < arrival_time;
+                                            const isLate = hasRealtime && realtime_arrival_time > arrival_time;
 
                                             return (
                                                 <React.Fragment>
                                                     <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
-                                                        {realtimeTime?.slice(0, 8)}
+                                                        {realtimeTime?.slice(0, 8) || ''}
                                                     </span>
                                                     {hasRealtime && (
                                                         <span className="text-[9px] text-zinc-500 font-mono">
-                                                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
+                                                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8) || ''}
                                                         </span>
                                                     )}
                                                 </React.Fragment>

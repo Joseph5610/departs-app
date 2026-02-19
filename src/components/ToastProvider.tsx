@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, { useState, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
-
-export type ToastType = 'success' | 'error' | 'info';
+import { ToastContext, type ToastType } from '../hooks/useToast';
 
 interface Toast {
     id: string;
@@ -10,20 +9,10 @@ interface Toast {
     type: ToastType;
 }
 
-interface ToastContextType {
-    showToast: (message: string, type?: ToastType) => void;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-export const useToast = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within a ToastProvider');
-    }
-    return context;
-};
-
+/**
+ * Provides toast notification functionality to the application.
+ * Centrally manages toast state and rendering with Framer Motion animations.
+ */
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -36,9 +25,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }, 4000);
     }, []);
 
-    const removeToast = (id: string) => {
+    const removeToast = useCallback((id: string) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+    }, []);
 
     return (
         <ToastContext.Provider value={{ showToast }}>

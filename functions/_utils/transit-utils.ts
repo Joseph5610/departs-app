@@ -212,22 +212,33 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         const type = Number(p.location_type);
         const stopId = p.stop_id;
 
+        const metroLines = p.stop_name ? (METRO_STATIONS[p.stop_name] || []) : [];
+        const enrichedProperties = {
+            ...p,
+            metro_lines: metroLines,
+            metro_a: metroLines.includes('A') ? 1 : 0,
+            metro_b: metroLines.includes('B') ? 1 : 0,
+            metro_c: metroLines.includes('C') ? 1 : 0,
+            variant_seed: Math.random()
+        };
+
+        const enrichedFeature = { ...f, properties: enrichedProperties };
+
         // Collect for centroid calculation
         if (type !== 2 && p.stop_name) {
             if (!nameGroups.has(p.stop_name)) nameGroups.set(p.stop_name, []);
-            nameGroups.get(p.stop_name)!.push(f);
+            nameGroups.get(p.stop_name)!.push(enrichedFeature);
         }
 
         // Handle Metro Stations (Type 1)
         if (type === 1) {
             const children = stationChildren.get(stopId) || [];
             groups[`metro_station_${stopId}`] = {
-                ...f,
+                ...enrichedFeature,
                 properties: {
-                    ...p,
+                    ...enrichedProperties,
                     location_type: 1,
-                    stop_id: children.length > 0 ? children.join(',') : stopId,
-                    metro_lines: METRO_STATIONS[p.stop_name] || []
+                    stop_id: children.length > 0 ? children.join(',') : stopId
                 }
             };
             continue;
@@ -252,8 +263,12 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}`;
             if (!groups[key]) {
                 groups[key] = {
-                    ...f,
-                    properties: { ...p, location_type: 0, all_ids: [stopId] }
+                    ...enrichedFeature,
+                    properties: {
+                        ...enrichedProperties,
+                        location_type: 0,
+                        all_ids: [stopId]
+                    }
                 };
             } else {
                 const currentIds = groups[key].properties.all_ids || [];

@@ -3,20 +3,17 @@ import type { StopCollection } from '../types/transit';
 import { useStops } from './useStops';
 
 /**
- * Groups raw stops into geographic centroids for cleaner map labeling.
- * Consumes pre-calculated centroids from the backend (is_centroid: true).
+ * Returns stops filtered for map display (excluding labels/centroids).
  */
-export const useMapCentroids = () => {
+export const useMapStops = () => {
     const { data: stopsData } = useStops();
 
     return useMemo(() => {
         if (!stopsData) return null;
 
-        const labelFeatures = stopsData.features.filter(f => f.properties.is_centroid);
-
         return {
             type: 'FeatureCollection',
-            features: labelFeatures
+            features: stopsData.features.filter(f => !f.properties.is_centroid)
         } as StopCollection;
     }, [stopsData]);
 };

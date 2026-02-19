@@ -1,22 +1,8 @@
 import { useState, useMemo, useDeferredValue } from 'react';
 import { normalizeString } from '../utils/stringUtils';
+import type { StopFeature } from '../types/transit';
 
-// Define the Stop interface internally or import it if shared
-export interface Stop {
-    type: 'Feature';
-    properties: {
-        stop_id: string;
-        stop_name: string;
-        platform_code?: string;
-        location_type?: number;
-    };
-    geometry: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-}
-
-export const useStopSearch = (stops: { features: Stop[] } | null) => {
+export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
     const [query, setQuery] = useState('');
     const deferredQuery = useDeferredValue(query);
 
@@ -89,7 +75,7 @@ export const useStopSearch = (stops: { features: Stop[] } | null) => {
 
         // Deduplicate
         const seen = new Set<string>();
-        const uniqueMatches: Stop[] = [];
+        const uniqueMatches: StopFeature[] = [];
         for (const match of matches) {
             if (!seen.has(match.stop.properties.stop_name)) {
                 seen.add(match.stop.properties.stop_name);

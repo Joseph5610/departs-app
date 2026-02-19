@@ -1,13 +1,18 @@
+import type {
+    CircleLayerSpecification,
+    SymbolLayerSpecification,
+    LineLayerSpecification,
+    ExpressionSpecification
+} from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
 // 1. The GLOW Layer (Background)
-export const clusterLayer: any = {
+export const clusterLayer: CircleLayerSpecification = {
     id: 'clusters',
     type: 'circle',
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     paint: {
-        // Glowing Color - Smooth Gradient (City Lights)
         // Glowing Color - Smart Clustering (Metro/Bus)
         'circle-color': [
             'case',
@@ -51,7 +56,7 @@ export const clusterLayer: any = {
 };
 
 // 2. The CORE Layer (Foreground - Bright Center)
-export const clusterCoreLayer: any = {
+export const clusterCoreLayer: CircleLayerSpecification = {
     id: 'cluster-core',
     type: 'circle',
     source: 'pid-stops',
@@ -64,7 +69,7 @@ export const clusterCoreLayer: any = {
     }
 };
 
-export const clusterCountLayer: any = {
+export const clusterCountLayer: SymbolLayerSpecification = {
     id: 'cluster-count',
     type: 'symbol',
     source: 'pid-stops',
@@ -78,7 +83,7 @@ export const clusterCountLayer: any = {
     }
 };
 
-export const stopPointLayer: any = {
+export const stopPointLayer: CircleLayerSpecification = {
     id: 'unclustered-point',
     type: 'circle',
     source: 'pid-stops',
@@ -106,7 +111,7 @@ export const stopPointLayer: any = {
 
             // Default for Stops (Type 0 or null)
             LINE_COLORS.Default
-        ],
+        ] as unknown as ExpressionSpecification,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
             // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
@@ -134,7 +139,7 @@ export const stopPointLayer: any = {
 };
 
 // 3a. ATMOSPHERIC GLOW for Stations
-export const stopPointGlowLayer: any = {
+export const stopPointGlowLayer: CircleLayerSpecification = {
     id: 'unclustered-point-glow',
     type: 'circle',
     source: 'pid-stops',
@@ -155,7 +160,7 @@ export const stopPointGlowLayer: any = {
                 LINE_COLORS.Unknown
             ],
             '#000000' // Shadow for regular stops
-        ],
+        ] as unknown as ExpressionSpecification,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.35, 0.2]
@@ -165,7 +170,7 @@ export const stopPointGlowLayer: any = {
 };
 
 
-export const transferStationLayer: any = {
+export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
     type: 'symbol',
     source: 'pid-stops',
@@ -182,8 +187,8 @@ export const transferStationLayer: any = {
             ''
         ],
         'icon-size': ['interpolate', ['linear'], ['zoom'],
-            13, 0.875, // (14*2)/64 * 2 (pixelRatio)
-            17, 1.5    // (24*2)/64 * 2 (pixelRatio)
+            13, 0.875,
+            17, 1.5
         ],
         'icon-allow-overlap': true,
         'icon-offset': ['match', ['get', 'stop_name'],
@@ -196,7 +201,7 @@ export const transferStationLayer: any = {
     }
 };
 
-export const stopLabelLayer: any = {
+export const stopLabelLayer: SymbolLayerSpecification = {
     id: 'stop-labels',
     type: 'symbol',
     source: 'stop-labels-centroids',
@@ -225,7 +230,7 @@ export const stopLabelLayer: any = {
     }
 };
 
-export const platformLabelLayer: any = {
+export const platformLabelLayer: SymbolLayerSpecification = {
     id: 'platform-labels',
     type: 'symbol',
     source: 'pid-stops',
@@ -253,7 +258,7 @@ export const platformLabelLayer: any = {
     }
 };
 
-export const entranceLayer: any = {
+export const entranceLayer: SymbolLayerSpecification = {
     id: 'entrance-layer',
     type: 'symbol',
     source: 'pid-stops',
@@ -283,9 +288,10 @@ export const entranceLayer: any = {
 // 4. Vehicle Layers
 import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
-export const selectedVehiclePulseLayer: any = {
+export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     id: 'selected-vehicle-pulse',
     type: 'circle',
+    source: 'selected-vehicle',
     paint: {
         'circle-radius': 0, // Animated in component
         'circle-opacity': 0, // Animated in component
@@ -293,9 +299,10 @@ export const selectedVehiclePulseLayer: any = {
     }
 };
 
-export const selectedVehiclePointLayer: any = {
+export const selectedVehiclePointLayer: CircleLayerSpecification = {
     id: 'selected-vehicle-point',
     type: 'circle',
+    source: 'selected-vehicle',
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
         'circle-color': vehicleColorExpression,
@@ -305,9 +312,10 @@ export const selectedVehiclePointLayer: any = {
     }
 };
 
-export const selectedVehicleDirectionLayer: any = {
+export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
     id: 'selected-vehicle-direction',
     type: 'symbol',
+    source: 'selected-vehicle',
     layout: {
         'icon-image': 'v-arrow-centered',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
@@ -319,14 +327,15 @@ export const selectedVehicleDirectionLayer: any = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression,
+        'icon-color': vehicleColorExpression as ExpressionSpecification,
         'icon-opacity': 1
     }
 };
 
-export const selectedVehicleLabelLayer: any = {
+export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
     id: 'selected-vehicle-label',
     type: 'symbol',
+    source: 'selected-vehicle',
     layout: {
         'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
@@ -344,9 +353,10 @@ export const selectedVehicleLabelLayer: any = {
     }
 };
 
-export const vehiclesPointLayer: any = {
+export const vehiclesPointLayer: CircleLayerSpecification = {
     id: 'vehicles-point',
     type: 'circle',
+    source: 'pid-vehicles',
     minzoom: 12,
     // Filter handled dynamically in component to exclude selected
     paint: {
@@ -358,9 +368,10 @@ export const vehiclesPointLayer: any = {
     }
 };
 
-export const vehiclesDirectionLayer: any = {
+export const vehiclesDirectionLayer: SymbolLayerSpecification = {
     id: 'vehicles-direction-all',
     type: 'symbol',
+    source: 'pid-vehicles',
     minzoom: 12,
     // Filter handled dynamically in component
     layout: {
@@ -374,14 +385,15 @@ export const vehiclesDirectionLayer: any = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression,
+        'icon-color': vehicleColorExpression as ExpressionSpecification,
         'icon-opacity': 1
     }
 };
 
-export const vehiclesLabelLayer: any = {
+export const vehiclesLabelLayer: SymbolLayerSpecification = {
     id: 'vehicles-label-all',
     type: 'symbol',
+    source: 'pid-vehicles',
     minzoom: 12,
     // Filter handled dynamically in component
     layout: {
@@ -398,5 +410,20 @@ export const vehiclesLabelLayer: any = {
         'text-halo-width': 1.2,
         'text-halo-blur': 0.4,
         'text-opacity': 1
+    }
+};
+
+export const routeLineLayer: LineLayerSpecification = {
+    id: 'route-line',
+    type: 'line',
+    source: 'route-shape',
+    layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+    },
+    paint: {
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
+        'line-opacity': 0.8,
+        'line-blur': 0.5
     }
 };

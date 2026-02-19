@@ -1,10 +1,12 @@
 
 import { useMemo } from 'react';
-import type { VehicleDetail } from '../types/transit';
+import { useMap } from '../hooks/useMap';
+import { useVehicleDetail } from './useVehicleDetail';
 
-export const useRouteShape = (selectedVehicle: any, vehicleDetail: VehicleDetail | undefined) => {
-    const vId = selectedVehicle?.vehicle_id || selectedVehicle?.id;
-    const tId = vehicleDetail?.gtfs_trip_id || selectedVehicle?.gtfs_trip_id;
+export const useRouteShape = () => {
+    const { state } = useMap();
+    const { data: vehicleDetail } = useVehicleDetail();
+    const vId = state.selectedId;
 
     return useMemo(() => {
         if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
@@ -24,5 +26,5 @@ export const useRouteShape = (selectedVehicle: any, vehicleDetail: VehicleDetail
                 properties: {}
             }]
         };
-    }, [vId, tId, vehicleDetail?.shapes]);
+    }, [vId, vehicleDetail]);
 };

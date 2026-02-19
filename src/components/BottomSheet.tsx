@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
+import { MOBILE_BREAKPOINT } from '../config/constants';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -10,16 +11,28 @@ interface BottomSheetProps {
     children: React.ReactNode;
 }
 
-export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
-    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-    const [sheetState, setSheetState] = useState<'peek' | 'full'>('peek');
+type SheetState = 'peek' | 'full';
 
-    // Reset snap point when opening
+export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
+    // Use a reactive window size
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
     useEffect(() => {
-        if (isOpen) {
-            setSheetState(isMobile ? 'peek' : 'full');
-        }
-    }, [isOpen, isMobile]);
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isMobile = windowWidth < MOBILE_BREAKPOINT;
+
+    const [sheetState, setSheetState] = useState<SheetState>(isMobile ? 'peek' : 'full');
+    const [prevIsMobile, setPrevIsMobile] = useState(isMobile);
+
+    // Derived state update during render to avoid useEffect cascading renders
+    if (isMobile !== prevIsMobile) {
+        setPrevIsMobile(isMobile);
+        setSheetState(isMobile ? 'peek' : 'full');
+    }
 
     const variants = {
         hidden: isMobile
@@ -37,7 +50,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         },
     };
 
-    const handleDragEnd = (_: any, info: any) => {
+    const handleDragEnd = (_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
         if (!isMobile) return;
         const velocity = info.velocity.y;
         const offset = info.offset.y;
