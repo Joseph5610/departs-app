@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMap } from '../contexts/MapContext';
 
-interface LiveStatusProps {
-    fetching: boolean;
-    bounds: string | null;
-    lastUpdate: number;
-}
+interface LiveStatusProps {}
 
-export const LiveStatus: React.FC<LiveStatusProps> = ({ fetching, bounds, lastUpdate }) => {
+export const LiveStatus: React.FC<LiveStatusProps> = () => {
     const { t } = useTranslation();
+    const { state, data } = useMap();
+
+    const { bounds } = state;
+    const { fetchingVehicles: fetching, dataUpdatedAt: lastUpdate } = data;
     const [nextRefreshIn, setNextRefreshIn] = useState(10);
 
     useEffect(() => {

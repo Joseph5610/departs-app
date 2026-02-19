@@ -5,21 +5,20 @@ import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
+import { useMap } from '../contexts/MapContext';
 
-interface SettingsModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    showVehicles: boolean;
-    setShowVehicles: (val: boolean) => void;
-}
+interface SettingsModalProps {}
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
-    isOpen,
-    onClose,
-    showVehicles,
-    setShowVehicles
-}) => {
+export const SettingsModal: React.FC<SettingsModalProps> = () => {
     const { t, i18n } = useTranslation();
+    const { state, actions } = useMap();
+
+    const { isSettingsOpen: isOpen, showVehicles } = state;
+    const { setIsSettingsOpen, setShowVehicles } = actions;
+
+    const onClose = React.useCallback(() => {
+        setIsSettingsOpen(false);
+    }, [setIsSettingsOpen]);
     const { showToast } = useToast();
     const [isChecking, setIsChecking] = useState(false);
     const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

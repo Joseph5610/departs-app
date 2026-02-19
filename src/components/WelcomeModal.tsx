@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../config/constants';
+import { useMap } from '../contexts/MapContext';
 
-export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStarted }) => {
+export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();
+    const { actions } = useMap();
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
@@ -14,7 +16,7 @@ export const WelcomeModal: React.FC<{ onGetStarted: () => void }> = ({ onGetStar
     const handleClose = () => {
         localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
         setIsOpen(false);
-        onGetStarted();
+        actions.handleLocate();
     };
 
     return (

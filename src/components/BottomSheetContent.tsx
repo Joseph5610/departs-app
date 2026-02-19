@@ -8,8 +8,8 @@ import { enUS } from 'date-fns/locale/en-US';
 import { VehicleDetail } from './VehicleDetail';
 import { Countdown } from './Countdown';
 import { getVehicleColor } from '../utils/vehicleColors';
-import type { TrackedVehicle, VehicleDetail as VehicleDetailType, Departure } from '../types/transit';
-import type { DepartureGroup } from '../hooks/useGroupedDepartures';
+import type { Departure } from '../types/transit';
+import { useMap } from '../contexts/MapContext';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -17,37 +17,18 @@ const dateLocales: Record<string, Locale> = {
 };
 
 interface BottomSheetContentProps {
-    selectedStop: { id: string; name: string } | null;
-    selectedVehicle: TrackedVehicle | null;
-    vehicleDetail: VehicleDetailType | null;
-    loadingDetail: boolean;
-    isFollowing: boolean;
     onToggleFollow: () => void;
-    groupedDepartures: DepartureGroup[];
-    expandedGroups: string[];
-    onToggleGroup: (groupId: string) => void;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Departure) => void;
-    departureSort: 'line' | 'departure';
-    setDepartureSort: (sort: 'line' | 'departure') => void;
-    loadingDeps: boolean;
 }
 
 export const BottomSheetContent = memo<BottomSheetContentProps>(({
-    selectedStop,
-    selectedVehicle,
-    vehicleDetail,
-    loadingDetail,
-    isFollowing,
-    onToggleFollow,
-    groupedDepartures,
-    expandedGroups,
-    onToggleGroup,
-    onDepartureClick,
-    departureSort,
-    setDepartureSort,
-    loadingDeps
+    onToggleFollow
 }) => {
     const { t, i18n } = useTranslation();
+    const { state, actions, data } = useMap();
+
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort } = state;
+    const { vehicleDetail, loadingDetail, groupedDepartures, loadingDeps } = data;
+    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 

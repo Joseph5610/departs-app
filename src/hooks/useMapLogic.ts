@@ -278,6 +278,8 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
     }, [performGeolocation, setBounds, setDebouncedBounds]);
 
     return useMemo(() => ({
+        /** Direct reference to the MapLibre instance */
+        mapRef,
         /** Current UI and Interaction state */
         state: {
             ...state,
@@ -325,7 +327,7 @@ export const useMapLogic = (mapRef: React.RefObject<MapRef | null>) => {
             onDragStart
         }
     }), [
-        state, mapLoaded, selectedId, labelLayerId, userLocation,
+        mapRef, state, mapLoaded, selectedId, labelLayerId, userLocation,
         setSelectedStop, setSelectedVehicle, setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
         setRouteFilter, setBounds, setDebouncedBounds, handleLocate, handleDepartureClick,

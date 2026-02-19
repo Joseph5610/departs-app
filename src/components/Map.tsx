@@ -30,11 +30,10 @@ import {
     vehiclesDirectionLayer,
     vehiclesLabelLayer
 } from '../config/mapLayers';
-import { useMapLogic } from '../hooks/useMapLogic';
-import type { TrackedVehicle, VehicleCollection, StopFeature } from '../types/transit';
+import { MapProvider, useMap } from '../contexts/MapContext';
+import type { TrackedVehicle, VehicleCollection } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
-import { MAP_FLY_DURATION, MAP_STOP_SELECT_ZOOM } from '../config/constants';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
@@ -43,61 +42,19 @@ const EMPTY_GEOJSON: VehicleCollection = {
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
-export const Map: React.FC = () => {
+/**
+ * Inner map component that consumes the MapContext.
+ * This keeps the logic cleanly separated from the provider wrapper.
+ */
+const MapInner: React.FC = () => {
     const { t } = useTranslation();
-    const mapRef = useRef<MapRef>(null);
+    const { state, actions, data, mapEvents, mapRef } = useMap();
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
-
-    const {
-        state,
-        actions,
-        data,
-        mapEvents
-    } = useMapLogic(mapRef);
-
-    const handleZoomIn = useCallback(() => {
-        mapRef.current?.zoomIn();
-    }, []);
-
-    const handleZoomOut = useCallback(() => {
-        mapRef.current?.zoomOut();
-    }, []);
-
-    const handleSettingsOpen = useCallback(() => {
-        actions.setIsSettingsOpen(true);
-    }, [actions]);
 
     const handleToggleFollow = useCallback(() => {
         actions.setIsFollowing(!state.isFollowing);
     }, [state.isFollowing, actions]);
-
-    const handleStopSelect = useCallback((stop: StopFeature) => {
-        const [lng, lat] = stop.geometry.coordinates;
-        mapRef.current?.flyTo({
-            center: [lng, lat],
-            zoom: MAP_STOP_SELECT_ZOOM,
-            duration: MAP_FLY_DURATION
-        });
-        const pc = stop.properties.platform_code;
-        const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
-        actions.setSelectedStop({ id: stop.properties.stop_id, name });
-        actions.setSelectedVehicle(null);
-        actions.setExpandedGroups([]);
-    }, [actions]);
-
-    const handleLineSelect = useCallback((line: string[] | null) => {
-        actions.setRouteFilter(line);
-    }, [actions]);
-
-    const handleResetBearing = () => {
-        mapRef.current?.easeTo({
-            bearing: 0,
-            duration: 1000,
-            pitch: 0
-        });
-    };
-
 
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
@@ -128,7 +85,7 @@ export const Map: React.FC = () => {
 
     return (
         <div className="w-full h-full bg-black relative">
-            <LiveStatus fetching={data.fetchingVehicles} bounds={state.bounds} lastUpdate={data.dataUpdatedAt} />
+            <LiveStatus />
 
             <MapGL
                 ref={mapRef}
@@ -205,22 +162,9 @@ export const Map: React.FC = () => {
                     </Source>
                 )}
 
-                <Search
-                    stops={data.stops || null}
-                    onSelect={handleStopSelect}
-                    onLineSelect={handleLineSelect}
-                    activeFilter={state.routeFilter}
-                />
+                <Search />
 
-                <MapControls
-                    mapRef={mapRef}
-                    mapLoaded={state.mapLoaded}
-                    onLocate={actions.handleLocate}
-                    onSettings={handleSettingsOpen}
-                    onZoomIn={handleZoomIn}
-                    onZoomOut={handleZoomOut}
-                    onResetBearing={handleResetBearing}
-                />
+                <MapControls />
 
                 <Source id="user-location" type="geojson" data={(state.mapLoaded && state.userLocation ? {
                     type: 'FeatureCollection',
@@ -303,13 +247,8 @@ export const Map: React.FC = () => {
             </MapGL>
 
             <React.Suspense fallback={null}>
-                <WelcomeModal onGetStarted={actions.handleLocate} />
-                <SettingsModal
-                    isOpen={state.isSettingsOpen}
-                    onClose={() => actions.setIsSettingsOpen(false)}
-                    showVehicles={state.showVehicles}
-                    setShowVehicles={actions.setShowVehicles}
-                />
+                <WelcomeModal />
+                <SettingsModal />
                 <UpdatePopup />
             </React.Suspense>
 
@@ -325,21 +264,22 @@ export const Map: React.FC = () => {
                     : (state.selectedStop ? state.selectedStop.name : '')}
             >
                 <BottomSheetContent
-                    selectedStop={state.selectedStop}
-                    selectedVehicle={state.selectedVehicle}
-                    vehicleDetail={data.vehicleDetail || null}
-                    loadingDetail={data.loadingDetail}
-                    isFollowing={state.isFollowing}
                     onToggleFollow={handleToggleFollow}
-                    groupedDepartures={data.groupedDepartures}
-                    expandedGroups={state.expandedGroups}
-                    onToggleGroup={actions.toggleGroup}
-                    onDepartureClick={actions.handleDepartureClick}
-                    departureSort={state.departureSort}
-                    setDepartureSort={actions.setDepartureSort}
-                    loadingDeps={data.loadingDeps}
                 />
             </BottomSheet>
         </div>
+    );
+};
+
+/**
+ * Main Map component that initializes the Provider.
+ */
+export const Map: React.FC = () => {
+    const mapRef = useRef<MapRef>(null);
+
+    return (
+        <MapProvider mapRef={mapRef}>
+            <MapInner />
+        </MapProvider>
     );
 };

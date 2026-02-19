@@ -3,21 +3,22 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
 import { useStopSearch } from '../hooks/useStopSearch';
-import type { StopFeature } from '../types/transit';
+import { useMap } from '../contexts/MapContext';
+import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
 
-interface SearchProps {
-    stops: { features: StopFeature[] } | null;
-    onSelect: (stop: StopFeature) => void;
-    onLineSelect: (line: string[] | null) => void;
-    activeFilter: string[] | null;
-}
+interface SearchProps {}
 
-export const Search: React.FC<SearchProps> = React.memo(({ stops, onSelect, onLineSelect, activeFilter }) => {
+export const Search: React.FC<SearchProps> = React.memo(() => {
     const { t } = useTranslation();
+    const { state, actions, data, mapRef } = useMap();
+
+    const { routeFilter: activeFilter } = state;
+    const { stops } = data;
+    const { setRouteFilter: onLineSelect, setSelectedStop, setSelectedVehicle, setExpandedGroups } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const { query, setQuery, results } = useStopSearch(stops);
+    const { query, setQuery, results } = useStopSearch(stops || null);
 
     const linesFromQuery = React.useMemo(() => {
         return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 4);
@@ -111,7 +112,18 @@ export const Search: React.FC<SearchProps> = React.memo(({ stops, onSelect, onLi
                         <button
                             key={stop.properties.stop_id}
                             onClick={() => {
-                                onSelect(stop);
+                                // Handle selection logic internally
+                                const [lng, lat] = stop.geometry.coordinates;
+                                mapRef.current?.flyTo({
+                                    center: [lng, lat],
+                                    zoom: MAP_STOP_SELECT_ZOOM,
+                                    duration: MAP_FLY_DURATION
+                                });
+                                const pc = stop.properties.platform_code;
+                                const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
+                                setSelectedStop({ id: stop.properties.stop_id, name });
+                                setSelectedVehicle(null);
+                                setExpandedGroups([]);
                                 setQuery('');
                                 setIsOpen(false);
                             }}
