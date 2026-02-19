@@ -177,10 +177,17 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 const data = await res.json();
                 queryClient.setQueryData(['vehicle-detail', activeVehId, tripId], data);
 
+                // Update selected vehicle state with detailed info
+                // Even if geometry is missing (placeholder), we need other data (stop_times, metadata)
+                setSelectedVehicle((prev: TrackedVehicle | null) => {
+                    if (!prev) return null;
+                    const coords = data.geometry?.coordinates || prev._geometry;
+                    return { ...prev, ...data, _geometry: coords } as TrackedVehicle;
+                });
+
+                // Handle camera movement if we got valid coordinates
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
-                    setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, _geometry: coords, ...data } as TrackedVehicle : null);
-
                     // Only fly if coordinates are valid (not 0, 0)
                     if (coords[0] !== 0 || coords[1] !== 0) {
                         const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;

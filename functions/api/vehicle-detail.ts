@@ -1,13 +1,17 @@
 import { Env } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 
-interface ShapeFeature {
-    geometry: {
+interface FeatureCollection {
+    type: string;
+    features: Array<{
         type: string;
-        coordinates: [number, number];
-    };
+        geometry?: {
+            type: string;
+            coordinates: [number, number];
+        };
+        properties?: Record<string, unknown>;
+    }>;
 }
-
 
 /**
  * Retrieves detailed information about a specific vehicle and its current trip.
@@ -47,49 +51,52 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const data = await response.json() as Record<string, unknown>;
 
         // Standardize output structure
-        let vehicleData: Record<string, unknown> = data;
+        const vehicleData = data;
 
-        // If coming from static GTFS trips, handle flattening from Feature/FeatureCollection
+        // If coming from static GTFS trips, the Public API returns a plain object
+        // but we ensure it matches the real-time property names for the UI.
         if (isPlaceholder) {
-            const features = data.features as Array<{ properties?: Record<string, unknown> }> | undefined;
-            if (features && Array.isArray(features) && features.length > 0) {
-                vehicleData = features[0].properties || (features[0] as unknown as Record<string, unknown>);
-                if (data.shapes) vehicleData.shapes = data.shapes;
-            } else if (data.type === 'Feature' && data.properties) {
-                vehicleData = data.properties as Record<string, unknown>;
-                if (data.shapes) vehicleData.shapes = data.shapes;
-            }
-
             // Ensure static trip properties match expected real-time property names
-            if (vehicleData.trip_headsign && !vehicleData.gtfs_trip_headsign) {
-                vehicleData.gtfs_trip_headsign = vehicleData.trip_headsign;
-            }
-            if (vehicleData.route_short_name && !vehicleData.gtfs_route_short_name) {
-                vehicleData.gtfs_route_short_name = vehicleData.route_short_name;
-            }
+            vehicleData.gtfs_trip_id = vehicleData.gtfs_trip_id || vehicleData.trip_id || tripId;
+            vehicleData.gtfs_trip_headsign = vehicleData.gtfs_trip_headsign || vehicleData.trip_headsign;
+            vehicleData.gtfs_route_short_name = vehicleData.gtfs_route_short_name || vehicleData.route_short_name;
         }
 
         // Normalize stop_times: The frontend expects { features: [ { properties: { ... } }, ... ] }
-        // Golemio's public API might return a plain array for stop_times, especially for static trips.
-        const stopTimes = vehicleData.stop_times;
+        // Golemio's public API returns a FeatureCollection for stop_times.
+        // If it's already a FeatureCollection, we just ensure it's there.
+        // If it's a plain array (fallback for other API versions), we wrap it.
+        const stopTimes = vehicleData.stop_times as Record<string, unknown> | unknown[];
         if (stopTimes && Array.isArray(stopTimes)) {
             vehicleData.stop_times = {
-                features: stopTimes.map((st: unknown) => ({
+                type: 'FeatureCollection',
+                features: stopTimes.map((st) => ({
+                    type: 'Feature',
                     properties: st
+                }))
+            };
+        } else if (stopTimes && typeof stopTimes === 'object' && 'features' in stopTimes && Array.isArray((stopTimes as unknown as FeatureCollection).features)) {
+            // It's already a FeatureCollection, ensure it's in the correct format
+            const fc = stopTimes as unknown as FeatureCollection;
+            vehicleData.stop_times = {
+                type: 'FeatureCollection',
+                features: fc.features.map((f) => ({
+                    type: 'Feature',
+                    geometry: f.geometry,
+                    properties: f.properties || f
                 }))
             };
         }
 
         // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates
         // to reduce payload size and simplify frontend processing.
-        if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
-            const shapesObj = vehicleData.shapes as { features?: ShapeFeature[] };
-            if (shapesObj.features) {
-                vehicleData.shapes = shapesObj.features
-                    .filter((f: ShapeFeature) => f.geometry.type === 'Point')
-                    .map((f: ShapeFeature) => f.geometry.coordinates);
-            }
-        } else if (!vehicleData.shapes) {
+        const shapes = vehicleData.shapes as Record<string, unknown> | unknown[];
+        if (shapes && typeof shapes === 'object' && 'features' in shapes && Array.isArray((shapes as unknown as FeatureCollection).features)) {
+            const fc = shapes as unknown as FeatureCollection;
+            vehicleData.shapes = fc.features
+                .filter((f) => f.geometry?.type === 'Point')
+                .map((f) => f.geometry?.coordinates);
+        } else if (!Array.isArray(vehicleData.shapes)) {
             vehicleData.shapes = [];
         }
 
