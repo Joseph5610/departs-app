@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Departure } from '../types/transit';
+import { useMap } from '../hooks/useMap';
 
-export const useDepartures = (stopId: string | null) => {
+export const useDepartures = () => {
+    const { state } = useMap();
+    const stopId = state.selectedStop?.id || null;
+
     return useQuery<{ departures: Departure[] }>({
         queryKey: ['departures', stopId],
         queryFn: async () => {

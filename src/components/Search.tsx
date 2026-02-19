@@ -3,17 +3,18 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X, MapPin } from 'lucide-react';
 import { useStopSearch } from '../hooks/useStopSearch';
-import { useMap } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
+import { useStops } from '../hooks/useStops';
 
-interface SearchProps {}
 
-export const Search: React.FC<SearchProps> = React.memo(() => {
+
+export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const { state, actions, data, mapRef } = useMap();
+    const { state, actions, mapRef } = useMap();
+    const { data: stops } = useStops();
 
     const { routeFilter: activeFilter } = state;
-    const { stops } = data;
     const { setRouteFilter: onLineSelect, setSelectedStop, setSelectedVehicle, setExpandedGroups } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);

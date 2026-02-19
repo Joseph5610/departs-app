@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
-import { useMap } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
 
-interface MapControlsProps {}
 
-export const MapControls = React.memo<MapControlsProps>(() => {
+
+export const MapControls = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions, mapRef } = useMap();
 

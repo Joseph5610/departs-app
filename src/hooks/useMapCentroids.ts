@@ -1,11 +1,14 @@
 import { useMemo } from 'react';
 import type { StopCollection } from '../types/transit';
+import { useStops } from './useStops';
 
 /**
  * Groups raw stops into geographic centroids for cleaner map labeling.
  * Consumes pre-calculated centroids from the backend (is_centroid: true).
  */
-export const useMapCentroids = (stopsData: StopCollection | null) => {
+export const useMapCentroids = () => {
+    const { data: stopsData } = useStops();
+
     return useMemo(() => {
         if (!stopsData) return null;
 

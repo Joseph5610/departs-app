@@ -9,7 +9,10 @@ import { VehicleDetail } from './VehicleDetail';
 import { Countdown } from './Countdown';
 import { getVehicleColor } from '../utils/vehicleColors';
 import type { Departure } from '../types/transit';
-import { useMap } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
+import { useVehicleDetail } from '../hooks/useVehicleDetail';
+import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
+import { useDepartures } from '../hooks/useDepartures';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -24,10 +27,14 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
     onToggleFollow
 }) => {
     const { t, i18n } = useTranslation();
-    const { state, actions, data } = useMap();
+    const { state, actions } = useMap();
+
+    // Data Hooks
+    const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
+    const { isLoading: loadingDeps } = useDepartures();
+    const groupedDepartures = useGroupedDepartures();
 
     const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort } = state;
-    const { vehicleDetail, loadingDetail, groupedDepartures, loadingDeps } = data;
     const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;

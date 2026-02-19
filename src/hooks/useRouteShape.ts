@@ -1,9 +1,12 @@
 
 import { useMemo } from 'react';
-import type { VehicleDetail, TrackedVehicle } from '../types/transit';
+import { useMap } from '../hooks/useMap';
+import { useVehicleDetail } from './useVehicleDetail';
 
-export const useRouteShape = (selectedVehicle: TrackedVehicle | null, vehicleDetail: VehicleDetail | null | undefined) => {
-    const vId = selectedVehicle?.vehicle_id || selectedVehicle?.id;
+export const useRouteShape = () => {
+    const { state } = useMap();
+    const { data: vehicleDetail } = useVehicleDetail();
+    const vId = state.selectedId;
 
     return useMemo(() => {
         if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;

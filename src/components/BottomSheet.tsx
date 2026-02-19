@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
+import { MOBILE_BREAKPOINT } from '../config/constants';
 
 interface BottomSheetProps {
     isOpen: boolean;
@@ -10,19 +11,28 @@ interface BottomSheetProps {
     children: React.ReactNode;
 }
 
-import { MOBILE_BREAKPOINT } from '../config/constants';
+type SheetState = 'peek' | 'full';
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
-    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
-    const [sheetState, setSheetState] = useState<'peek' | 'full'>(isMobile ? 'peek' : 'full');
+    // Use a reactive window size
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
-    // Sync state when isMobile changes
     useEffect(() => {
-        const targetState = isMobile ? 'peek' : 'full';
-        if (sheetState !== targetState) {
-            setSheetState(targetState);
-        }
-    }, [isMobile, sheetState]);
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const isMobile = windowWidth < MOBILE_BREAKPOINT;
+
+    const [sheetState, setSheetState] = useState<SheetState>(isMobile ? 'peek' : 'full');
+    const [prevIsMobile, setPrevIsMobile] = useState(isMobile);
+
+    // Derived state update during render to avoid useEffect cascading renders
+    if (isMobile !== prevIsMobile) {
+        setPrevIsMobile(isMobile);
+        setSheetState(isMobile ? 'peek' : 'full');
+    }
 
     const variants = {
         hidden: isMobile

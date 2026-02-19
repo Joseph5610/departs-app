@@ -1,6 +1,7 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
+import { useMap } from '../hooks/useMap';
 
 const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null): Promise<VehicleFeature[]> => {
     try {
@@ -24,11 +25,15 @@ const fetchRawVehicles = async (bounds: string | null, trackedId: string | null,
     }
 };
 
-export const useVehicles = (bounds: string | null, trackedId: string | null = null, routeFilter: string[] | null = null) => {
-    /**
-     * Consumes "map-ready" data from the backend.
-     * Deduplication and jittering are now handled in /api/vehicles.
-     */
+export const useVehicles = () => {
+    const { state } = useMap();
+    const { debouncedBounds: bounds, selectedVehicle, routeFilter } = state;
+
+    const trackedId = useMemo(() => {
+        if (!selectedVehicle) return null;
+        return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || null;
+    }, [selectedVehicle]);
+
     const selectFn = useCallback((allFeatures: VehicleFeature[]): VehicleCollection => {
         return {
             type: 'FeatureCollection',
@@ -36,7 +41,7 @@ export const useVehicles = (bounds: string | null, trackedId: string | null = nu
         };
     }, []);
 
-    return useQuery<VehicleFeature[], Error, VehicleCollection>({
+    const query = useQuery<VehicleFeature[], Error, VehicleCollection>({
         queryKey: ['vehicles', bounds, trackedId, routeFilter],
         queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter),
         select: selectFn,
@@ -48,4 +53,10 @@ export const useVehicles = (bounds: string | null, trackedId: string | null = nu
         refetchOnMount: false,
         refetchOnReconnect: false,
     });
+
+    return {
+        vehicles: query.data,
+        isFetching: query.isFetching,
+        dataUpdatedAt: query.dataUpdatedAt
+    };
 };

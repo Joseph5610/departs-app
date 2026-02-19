@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../config/constants';
-import { useMap } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
 
 export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();

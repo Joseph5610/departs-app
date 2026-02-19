@@ -5,11 +5,11 @@ import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
-import { useMap } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
 
-interface SettingsModalProps {}
 
-export const SettingsModal: React.FC<SettingsModalProps> = () => {
+
+export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 

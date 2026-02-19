@@ -30,10 +30,15 @@ import {
     vehiclesDirectionLayer,
     vehiclesLabelLayer
 } from '../config/mapLayers';
-import { MapProvider, useMap } from '../contexts/MapContext';
-import type { TrackedVehicle, VehicleCollection } from '../types/transit';
+import { MapProvider } from '../contexts/MapContext';
+import { useMap } from '../hooks/useMap';
+import type { TrackedVehicle, VehicleCollection, VehicleFeature } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
+import { useVehicles } from '../hooks/useVehicles';
+import { useStops } from '../hooks/useStops';
+import { useMapCentroids } from '../hooks/useMapCentroids';
+import { useRouteShape } from '../hooks/useRouteShape';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
@@ -48,13 +53,49 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.j
  */
 const MapInner: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions, data, mapEvents, mapRef } = useMap();
+    const { state, actions, mapEvents, mapRef } = useMap();
+
+    // Data Hooks
+    const { vehicles: displayVehicles } = useVehicles();
+    const { data: stops } = useStops();
+    const labelData = useMapCentroids();
+    const routeShapeData = useRouteShape();
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
     const handleToggleFollow = useCallback(() => {
         actions.setIsFollowing(!state.isFollowing);
     }, [state.isFollowing, actions]);
+
+    const stopsData = useMemo(() => {
+        if (!stops) return null;
+        return {
+            type: 'FeatureCollection' as const,
+            features: stops.features.filter(f => !f.properties.is_centroid)
+        };
+    }, [stops]);
+
+    const selectedVehicleFeature = useMemo((): VehicleCollection => {
+        if (!state.selectedVehicle || !state.selectedVehicle._geometry) return EMPTY_GEOJSON;
+
+        return {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: state.selectedVehicle._geometry
+                    },
+                    properties: {
+                        ...state.selectedVehicle,
+                        route_type: state.selectedVehicle.route_type,
+                        gtfs_route_short_name: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name
+                    }
+                } as unknown as VehicleFeature
+            ]
+        };
+    }, [state.selectedVehicle]);
 
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
@@ -66,16 +107,16 @@ const MapInner: React.FC = () => {
     // Memoize route line paint object
     const routeLinePaint = useMemo(() => ({
         'line-color': routeLineColor,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8] as any,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5
-    }), [routeLineColor]);
+    } as any), [routeLineColor]);
 
     // Memoize route line layout object
     const routeLineLayout = useMemo(() => ({
-        'line-join': 'round' as const,
-        'line-cap': 'round' as const
-    }), []);
+        'line-join': 'round',
+        'line-cap': 'round'
+    } as any), []);
 
     // Memoize vehicle filter to exclude selected vehicle
     const vehiclesFilter = useMemo(() => ['!', ['any',
@@ -116,7 +157,7 @@ const MapInner: React.FC = () => {
                         const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
                         source.getClusterExpansionZoom(clusterId).then((zoom) => {
                             mapRef.current?.easeTo({
-                                center: (f.geometry as any).coordinates,
+                                center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
                                 zoom,
                                 duration: 500
                             });
@@ -131,7 +172,7 @@ const MapInner: React.FC = () => {
                         actions.setSelectedVehicle({
                             ...props,
                             vehicle_id: String(props.vehicle_id || props.id),
-                            _geometry: (f.geometry as any).coordinates as [number, number]
+                            _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         } as TrackedVehicle);
                         actions.setSelectedStop(null);
                         actions.setIsFollowing(true);
@@ -151,7 +192,7 @@ const MapInner: React.FC = () => {
 
                 {/* Route Shape Layer - UNDER labels */}
                 {state.mapLoaded && (
-                    <Source id="route-shape" type="geojson" data={data.routeShapeData || EMPTY_GEOJSON}>
+                    <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                         <Layer
                             id="route-line"
                             type="line"
@@ -196,7 +237,7 @@ const MapInner: React.FC = () => {
                 </Source>
 
 
-                <Source id="selected-vehicle" type="geojson" data={data.selectedVehicleFeature}>
+                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
                     {/* 1. PULSE (Bottom) */}
                     <Layer {...selectedVehiclePulseLayer} />
                     {/* 2. BODY */}
@@ -207,7 +248,7 @@ const MapInner: React.FC = () => {
                     <Layer {...selectedVehicleLabelLayer} />
                 </Source>
 
-                <Source id="pid-vehicles" type="geojson" data={state.mapLoaded && state.showVehicles && data.displayVehicles ? data.displayVehicles : EMPTY_GEOJSON}>
+                <Source id="pid-vehicles" type="geojson" data={state.mapLoaded && state.showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
                     {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
                     <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
 
@@ -218,14 +259,14 @@ const MapInner: React.FC = () => {
                     <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
                 </Source>
 
-                <Source id="stop-labels-centroids" type="geojson" data={state.mapLoaded && data.labelData ? data.labelData : EMPTY_GEOJSON}>
+                <Source id="stop-labels-centroids" type="geojson" data={state.mapLoaded && labelData ? labelData : EMPTY_GEOJSON}>
                     <Layer {...stopLabelLayer} />
                 </Source>
 
                 <Source
                     id="pid-stops"
                     type="geojson"
-                    data={state.mapLoaded && data.stopsData ? data.stopsData : EMPTY_GEOJSON}
+                    data={state.mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON}
                     cluster={true}
                     clusterMaxZoom={13}
                     clusterRadius={40}

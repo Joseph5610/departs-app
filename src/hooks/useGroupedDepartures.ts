@@ -1,6 +1,8 @@
 
 import { useMemo } from 'react';
 import type { Departure } from '../types/transit';
+import { useMap } from '../hooks/useMap';
+import { useDepartures } from './useDepartures';
 
 export interface DepartureGroup {
     groupId: string;
@@ -10,7 +12,11 @@ export interface DepartureGroup {
     firstTime: number;
 }
 
-export const useGroupedDepartures = (departures: { departures: Departure[] } | null | undefined, departureSort: 'line' | 'departure') => {
+export const useGroupedDepartures = () => {
+    const { state } = useMap();
+    const { data: departures } = useDepartures();
+    const departureSort = state.departureSort;
+
     return useMemo(() => {
         if (!departures?.departures) return [];
         const groups: Record<string, Departure[]> = {};
