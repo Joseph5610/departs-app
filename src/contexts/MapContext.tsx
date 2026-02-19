@@ -154,6 +154,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
         const activeVehId = vehicleId || `trip-${tripId}`;
+        const isPlaceholder = !vehicleId;
 
         // Use the current stop's coordinates as a fallback to prevent flying to [0, 0]
         const fallbackCoords = state.selectedStop?.coordinates || [0, 0];
@@ -171,6 +172,10 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             bearing: null
         }, true); // keep stop
 
+        if (isPlaceholder) {
+            setIsFollowing(false);
+        }
+
         try {
             const res = await fetch(`/api/vehicle-detail?tripId=${encodeURIComponent(tripId)}&vehicleId=${encodeURIComponent(activeVehId)}`);
             if (res.ok) {
@@ -186,7 +191,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 });
 
                 // Handle camera movement if we got valid coordinates
-                if (data.geometry?.coordinates) {
+                if (!isPlaceholder && data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
                     // Only fly if coordinates are valid (not 0, 0)
                     if (coords[0] !== 0 || coords[1] !== 0) {
@@ -206,7 +211,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         } catch (err) {
             console.error('Prefetch failed:', err);
         }
-    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle, state.selectedStop]);
+    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle, state.selectedStop, setIsFollowing]);
 
     const value = useMemo(() => ({
         mapRef,
