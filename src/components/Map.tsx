@@ -121,22 +121,18 @@ const MapInner: React.FC = () => {
 
                         if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
                             const props = f.properties;
-                            actions.setSelectedVehicle({
+                            actions.selectVehicle({
                                 ...props,
                                 vehicle_id: String(props.vehicle_id || props.id),
                                 _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                            } as TrackedVehicle);
-                            actions.setSelectedStop(null);
-                            actions.setIsFollowing(true);
+                            } as TrackedVehicle, false); // clear stop
                             return;
                         }
 
                         if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
                             const pc = f.properties.platform_code;
                             const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                            actions.setSelectedStop({ id: f.properties.stop_id, name });
-                            actions.setSelectedVehicle(null);
-                            actions.setExpandedGroups([]);
+                            actions.selectStop({ id: f.properties.stop_id, name });
                         }
                     }}
                     interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
@@ -169,7 +165,7 @@ const MapInner: React.FC = () => {
 
             <BottomSheet
                 isOpen={!!state.selectedStop || !!state.selectedVehicle}
-                onClose={() => { actions.setSelectedStop(null); actions.setSelectedVehicle(null); actions.setIsFollowing(false); }}
+                onClose={() => actions.clearSelection()}
                 onBack={(state.selectedVehicle && state.selectedStop) ? () => {
                     actions.setSelectedVehicle(null);
                     actions.setIsFollowing(false);

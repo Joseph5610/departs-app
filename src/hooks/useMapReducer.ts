@@ -24,6 +24,9 @@ export interface MapState {
 export type MapAction =
     | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string } | null | ((prev: { id: string; name: string } | null) => { id: string; name: string } | null) }
     | { type: 'SET_SELECTED_VEHICLE'; payload: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null) }
+    | { type: 'SELECT_STOP'; payload: { id: string; name: string } | null }
+    | { type: 'SELECT_VEHICLE'; payload: TrackedVehicle | null; keepStop?: boolean }
+    | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
     | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
@@ -71,6 +74,28 @@ function mapReducer(state: MapState, action: MapAction): MapState {
                     ? action.payload(state.selectedVehicle)
                     : action.payload
             };
+        case 'SELECT_STOP':
+            return {
+                ...state,
+                selectedStop: action.payload,
+                selectedVehicle: null,
+                isFollowing: false,
+                expandedGroups: []
+            };
+        case 'SELECT_VEHICLE':
+            return {
+                ...state,
+                selectedVehicle: action.payload,
+                selectedStop: action.keepStop ? state.selectedStop : null,
+                isFollowing: true
+            };
+        case 'CLEAR_SELECTION':
+            return {
+                ...state,
+                selectedStop: null,
+                selectedVehicle: null,
+                isFollowing: false
+            };
         case 'SET_IS_FOLLOWING':
             return { ...state, isFollowing: action.payload };
         case 'SET_SHOW_VEHICLES':
@@ -113,6 +138,15 @@ export const useMapReducer = () => {
     const setSelectedVehicle = useCallback((vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) =>
         dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
 
+    const selectStop = useCallback((stop: { id: string; name: string } | null) =>
+        dispatch({ type: 'SELECT_STOP', payload: stop }), []);
+
+    const selectVehicle = useCallback((vehicle: TrackedVehicle | null, keepStop = false) =>
+        dispatch({ type: 'SELECT_VEHICLE', payload: vehicle, keepStop }), []);
+
+    const clearSelection = useCallback(() =>
+        dispatch({ type: 'CLEAR_SELECTION' }), []);
+
     const setIsFollowing = useCallback((val: boolean) =>
         dispatch({ type: 'SET_IS_FOLLOWING', payload: val }), []);
 
@@ -145,6 +179,9 @@ export const useMapReducer = () => {
         dispatch,
         setSelectedStop,
         setSelectedVehicle,
+        selectStop,
+        selectVehicle,
+        clearSelection,
         setIsFollowing,
         setShowVehicles,
         setIsSettingsOpen,

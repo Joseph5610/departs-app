@@ -55,6 +55,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         state,
         setSelectedStop,
         setSelectedVehicle,
+        selectStop,
+        selectVehicle,
+        clearSelection,
         setIsFollowing,
         setShowVehicles,
         setIsSettingsOpen,
@@ -152,7 +155,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
         const activeVehId = vehicleId || `trip-${tripId}`;
 
-        setSelectedVehicle({
+        selectVehicle({
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
             trip_id: tripId,
@@ -163,7 +166,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             state_position: 'on_track',
             _geometry: [0, 0],
             bearing: null
-        });
+        }, true); // keep stop
 
         try {
             const res = await fetch(`/api/vehicle-detail?tripId=${encodeURIComponent(tripId)}&vehicleId=${encodeURIComponent(activeVehId)}`);
@@ -174,7 +177,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
                     setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, _geometry: coords, ...data } as TrackedVehicle : null);
-                    setIsFollowing(true);
 
                     const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
                     mapRef.current?.flyTo({
@@ -191,7 +193,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         } catch (err) {
             console.error('Prefetch failed:', err);
         }
-    }, [mapRef, queryClient, setSelectedVehicle, setIsFollowing]);
+    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle]);
 
     const value = useMemo(() => ({
         mapRef,
@@ -205,6 +207,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         actions: {
             setSelectedStop,
             setSelectedVehicle,
+            selectStop,
+            selectVehicle,
+            clearSelection,
             setIsFollowing,
             setShowVehicles,
             setIsSettingsOpen,
@@ -228,7 +233,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         }
     }), [
         mapRef, state, mapLoaded, labelLayerId, userLocation,
-        setSelectedStop, setSelectedVehicle, setIsFollowing, setShowVehicles,
+        setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
+        setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
         setRouteFilter, setBounds, setDebouncedBounds, handleLocate,
         handleDepartureClick, performGeolocation,

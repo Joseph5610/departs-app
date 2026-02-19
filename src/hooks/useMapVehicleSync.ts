@@ -13,7 +13,7 @@ import type { VehicleCollection, TrackedVehicle, VehicleDetail } from '../types/
 export const useMapVehicleSync = (
     selectedId: string | number | null,
     selectedVehicle: TrackedVehicle | null,
-    setSelectedVehicle: (vehicle: TrackedVehicle | null) => void,
+    setSelectedVehicle: (vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) => void,
     isFollowing: boolean,
     rawVehicles?: VehicleCollection | null,
     vehicleDetail?: VehicleDetail | null
@@ -73,7 +73,7 @@ export const useMapVehicleSync = (
         }
 
         if (updated) {
-            setSelectedVehicle({ ...selectedVehicle, ...newProps, _geometry: newCoords });
+            setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle : null);
         }
     }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle, setSelectedVehicle]);
 };
