@@ -15,7 +15,7 @@ export const Search: React.FC = React.memo(() => {
     const { data: stops } = useStops();
 
     const { routeFilter: activeFilter } = state;
-    const { setRouteFilter: onLineSelect, setSelectedStop, setSelectedVehicle, setExpandedGroups } = actions;
+    const { setRouteFilter: onLineSelect, selectStop } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -122,9 +122,7 @@ export const Search: React.FC = React.memo(() => {
                                 });
                                 const pc = stop.properties.platform_code;
                                 const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
-                                setSelectedStop({ id: stop.properties.stop_id, name });
-                                setSelectedVehicle(null);
-                                setExpandedGroups([]);
+                                selectStop({ id: stop.properties.stop_id, name });
                                 setQuery('');
                                 setIsOpen(false);
                             }}

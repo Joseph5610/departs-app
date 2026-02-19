@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.3] - 2026-02-19
+
+### Fixed
+- **Map Interaction Logic**: Resolved a race condition where vehicle tracking would persist after selecting a stop on the map. Implemented atomic selection actions (`SELECT_STOP`, `SELECT_VEHICLE`) in the map reducer to ensure consistent state transitions.
+- **Tracking Synchronization**: Hardened the vehicle sync hook to prevent "selection revival" by using functional state updates, ensuring that background data refreshes never restore a selection that the user has intentionally cleared.
+
 ## [0.5.2] - 2026-02-19
 
 ### Added
