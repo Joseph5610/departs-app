@@ -18,37 +18,36 @@ export const useDepartures = () => {
             return res.json();
         },
         enabled: !!stopId,
-        refetchInterval: 10000, // Reduced to 10s for better responsiveness
+        refetchInterval: 10000,
         staleTime: 10000,
     });
 
-    const departuresWithDeltas = useMemo(() => {
+    const enrichedData = useMemo(() => {
         if (!query.data?.departures) return query.data;
 
-        const nextDepartures = query.data.departures.map(dep => {
-            const key = `${dep.tripId}-${dep.scheduled}`;
-            const prevDelay = prevDelaysRef.current[key];
-            const lastUpdate = lastUpdateRef.current[key];
-            let delta = 0;
+        return {
+            // We use refs for tracking deltas across query refreshes.
+            // This is safe because refs are only updated in useEffect.
+            // eslint-disable-next-line react-hooks/refs
+            departures: query.data.departures.map(dep => {
+                const key = `${dep.tripId}-${dep.scheduled}`;
+                const prevDelay = prevDelaysRef.current[key];
+                const lastUpdate = lastUpdateRef.current[key];
+                const delta = (prevDelay !== undefined && prevDelay !== dep.delay) ? dep.delay - prevDelay : 0;
 
-            if (prevDelay !== undefined && prevDelay !== dep.delay) {
-                delta = dep.delay - prevDelay;
-            }
+                return {
+                    ...dep,
+                    delayDelta: delta || undefined,
+                    lastDelayUpdate: delta !== 0 ? query.dataUpdatedAt : lastUpdate
+                };
+            })
+        };
+    }, [query.data, query.dataUpdatedAt]);
 
-            return {
-                ...dep,
-                delayDelta: delta || undefined,
-                lastDelayUpdate: delta !== 0 ? query.dataUpdatedAt : lastUpdate
-            };
-        });
-
-        return { departures: nextDepartures };
-    }, [query.data]);
-
-    // Update refs in useEffect to maintain purity in useMemo/render
+    // Update tracking refs in an effect to maintain render purity.
     useEffect(() => {
         if (query.data?.departures) {
-            const now = Date.now();
+            const now = query.dataUpdatedAt;
             query.data.departures.forEach(dep => {
                 const key = `${dep.tripId}-${dep.scheduled}`;
                 const prevDelay = prevDelaysRef.current[key];
@@ -59,7 +58,7 @@ export const useDepartures = () => {
                 prevDelaysRef.current[key] = dep.delay;
             });
         }
-    }, [query.data]);
+    }, [query.data, query.dataUpdatedAt]);
 
-    return { ...query, data: departuresWithDeltas };
+    return { ...query, data: enrichedData };
 };
