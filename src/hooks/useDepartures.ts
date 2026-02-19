@@ -38,7 +38,7 @@ export const useDepartures = () => {
             return {
                 ...dep,
                 delayDelta: delta || undefined,
-                lastDelayUpdate: delta !== 0 ? Date.now() : lastUpdate
+                lastDelayUpdate: delta !== 0 ? query.dataUpdatedAt : lastUpdate
             };
         });
 
