@@ -1,8 +1,11 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/maplibre';
-import maplibregl, { type Map as MapLibreInstance } from 'maplibre-gl';
+import MapGL, { type MapRef } from 'react-map-gl/maplibre';
+import maplibregl, {
+    type Map as MapLibreInstance,
+    type LineLayerSpecification
+} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { BottomSheet } from './BottomSheet';
 
@@ -13,43 +16,25 @@ const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => 
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
-import {
-    clusterLayer,
-    clusterCountLayer,
-    stopPointLayer,
-    transferStationLayer,
-    stopLabelLayer,
-    platformLabelLayer,
-    entranceLayer,
-    stopPointGlowLayer,
-    selectedVehiclePulseLayer,
-    selectedVehiclePointLayer,
-    selectedVehicleDirectionLayer,
-    selectedVehicleLabelLayer,
-    vehiclesPointLayer,
-    vehiclesDirectionLayer,
-    vehiclesLabelLayer
-} from '../config/mapLayers';
+import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
-import type { TrackedVehicle, VehicleCollection, VehicleFeature } from '../types/transit';
+import type { TrackedVehicle } from '../types/transit';
 import { MapControls } from './MapControls';
 import { BottomSheetContent } from './BottomSheetContent';
 import { useVehicles } from '../hooks/useVehicles';
-import { useStops } from '../hooks/useStops';
+import { useMapStops } from '../hooks/useMapStops';
 import { useMapCentroids } from '../hooks/useMapCentroids';
 import { useRouteShape } from '../hooks/useRouteShape';
-
-const EMPTY_GEOJSON: VehicleCollection = {
-    type: 'FeatureCollection',
-    features: []
-};
+import { useMapFilters } from '../hooks/useMapFilters';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 /**
- * Inner map component that consumes the MapContext.
- * This keeps the logic cleanly separated from the provider wrapper.
+ * MapInner Component
+ *
+ * Consumes MapContext and manages the layout of the map and its overlays.
+ * It separates data fetching and UI state from the actual MapLibre rendering (MapLayers).
  */
 const MapInner: React.FC = () => {
     const { t } = useTranslation();
@@ -57,7 +42,7 @@ const MapInner: React.FC = () => {
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
-    const { data: stops } = useStops();
+    const stopsData = useMapStops();
     const labelData = useMapCentroids();
     const routeShapeData = useRouteShape();
 
@@ -67,35 +52,7 @@ const MapInner: React.FC = () => {
         actions.setIsFollowing(!state.isFollowing);
     }, [state.isFollowing, actions]);
 
-    const stopsData = useMemo(() => {
-        if (!stops) return null;
-        return {
-            type: 'FeatureCollection' as const,
-            features: stops.features.filter(f => !f.properties.is_centroid)
-        };
-    }, [stops]);
-
-    const selectedVehicleFeature = useMemo((): VehicleCollection => {
-        if (!state.selectedVehicle || !state.selectedVehicle._geometry) return EMPTY_GEOJSON;
-
-        return {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: state.selectedVehicle._geometry
-                    },
-                    properties: {
-                        ...state.selectedVehicle,
-                        route_type: state.selectedVehicle.route_type,
-                        gtfs_route_short_name: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name
-                    }
-                } as unknown as VehicleFeature
-            ]
-        };
-    }, [state.selectedVehicle]);
+    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId ? String(state.selectedId) : null);
 
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
@@ -105,187 +62,104 @@ const MapInner: React.FC = () => {
     }, [state.selectedVehicle?.gtfs_route_short_name, state.selectedVehicle?.route_short_name, state.selectedVehicle?.route_type]);
 
     // Memoize route line paint object
-    const routeLinePaint = useMemo(() => ({
+    const routeLinePaint = useMemo<NonNullable<LineLayerSpecification['paint']>>(() => ({
         'line-color': routeLineColor,
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5
-    } as any), [routeLineColor]);
+    }), [routeLineColor]);
 
     // Memoize route line layout object
-    const routeLineLayout = useMemo(() => ({
+    const routeLineLayout = useMemo<NonNullable<LineLayerSpecification['layout']>>(() => ({
         'line-join': 'round',
         'line-cap': 'round'
-    } as any), []);
-
-    // Memoize vehicle filter to exclude selected vehicle
-    const vehiclesFilter = useMemo(() => ['!', ['any',
-        ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(state.selectedId || 'NOMATCH')],
-        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(state.selectedVehicle?.gtfs_trip_id || state.selectedVehicle?.trip_id || 'NOMATCH')]
-    ]] as any, [state.selectedId, state.selectedVehicle?.gtfs_trip_id, state.selectedVehicle?.trip_id]);
+    }), []);
 
     return (
         <div className="w-full h-full bg-black relative">
             <LiveStatus />
 
-            <MapGL
-                ref={mapRef}
-                initialViewState={initialViewState}
-                onMove={mapEvents.onMove}
-                onMoveEnd={mapEvents.onMoveEnd}
-                onLoad={mapEvents.onLoad}
-                style={{ width: '100%', height: '100%' }}
-                mapStyle={MAP_STYLE}
-                mapLib={maplibregl as unknown as typeof maplibregl}
-                onDragStart={mapEvents.onDragStart}
-                onMouseEnter={(evt) => {
-                    const features = evt.features;
-                    if (features?.length && features[0].layer.id !== 'entrance-layer') {
-                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
-                    }
-                }}
-                onMouseLeave={(evt) => {
-                    (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
-                }}
-                onClick={(evt) => {
-                    const f = evt.features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') return;
-
-                    if (f.layer.id === 'clusters') {
-                        const clusterId = f.properties.cluster_id;
-                        const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
-                        const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
-                        source.getClusterExpansionZoom(clusterId).then((zoom) => {
-                            mapRef.current?.easeTo({
-                                center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
-                                zoom,
-                                duration: 500
-                            });
-                        }).catch(() => {
-                            // Silent fail
-                        });
-                        return;
-                    }
-
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
-                        const props = f.properties;
-                        actions.setSelectedVehicle({
-                            ...props,
-                            vehicle_id: String(props.vehicle_id || props.id),
-                            _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                        } as TrackedVehicle);
-                        actions.setSelectedStop(null);
-                        actions.setIsFollowing(true);
-                        return;
-                    }
-
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
-                        const pc = f.properties.platform_code;
-                        const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                        actions.setSelectedStop({ id: f.properties.stop_id, name });
-                        actions.setSelectedVehicle(null);
-                        actions.setExpandedGroups([]);
-                    }
-                }}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
-            >
-
-                {/* Route Shape Layer - UNDER labels */}
-                {state.mapLoaded && (
-                    <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
-                        <Layer
-                            id="route-line"
-                            type="line"
-                            beforeId={state.labelLayerId}
-                            layout={routeLineLayout}
-                            paint={routeLinePaint}
-                        />
-                    </Source>
-                )}
-
-                <Search />
-
-                <MapControls />
-
-                <Source id="user-location" type="geojson" data={(state.mapLoaded && state.userLocation ? {
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: state.userLocation },
-                        properties: {}
-                    }]
-                } : EMPTY_GEOJSON) as VehicleCollection}>
-                    <Layer
-                        id="user-location-pulse"
-                        type="circle"
-                        paint={{
-                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
-                            'circle-color': '#3b82f6',
-                            'circle-opacity': 0.15,
-                        }}
-                    />
-                    <Layer
-                        id="user-location-point"
-                        type="circle"
-                        paint={{
-                            'circle-radius': 7,
-                            'circle-color': '#3b82f6',
-                            'circle-stroke-width': 2,
-                            'circle-stroke-color': '#FFFFFF'
-                        }}
-                    />
-                </Source>
-
-
-                <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
-                    {/* 1. PULSE (Bottom) */}
-                    <Layer {...selectedVehiclePulseLayer} />
-                    {/* 2. BODY */}
-                    <Layer {...selectedVehiclePointLayer} />
-                    {/* 3. DIRECTION */}
-                    <Layer {...selectedVehicleDirectionLayer} />
-                    {/* 4. LABEL */}
-                    <Layer {...selectedVehicleLabelLayer} />
-                </Source>
-
-                <Source id="pid-vehicles" type="geojson" data={state.mapLoaded && state.showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
-                    {/* Main Vehicles Layer - EXCLUDE SELECTED (By Vehicle ID OR Trip ID) */}
-                    <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
-
-                    {/* DIRECTION ARROWS - EXCLUDE SELECTED */}
-                    <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
-
-                    {/* LABELS - EXCLUDE SELECTED */}
-                    <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
-                </Source>
-
-                <Source id="stop-labels-centroids" type="geojson" data={state.mapLoaded && labelData ? labelData : EMPTY_GEOJSON}>
-                    <Layer {...stopLabelLayer} />
-                </Source>
-
-                <Source
-                    id="pid-stops"
-                    type="geojson"
-                    data={state.mapLoaded && stopsData ? stopsData : EMPTY_GEOJSON}
-                    cluster={true}
-                    clusterMaxZoom={13}
-                    clusterRadius={40}
-                    clusterProperties={{
-                        has_metro_a: ['max', ['get', 'metro_a']],
-                        has_metro_b: ['max', ['get', 'metro_b']],
-                        has_metro_c: ['max', ['get', 'metro_c']],
-                        cluster_seed: ['max', ['get', 'variant_seed']]
+            <div className="absolute inset-0">
+                <MapGL
+                    ref={mapRef}
+                    initialViewState={initialViewState}
+                    onMove={mapEvents.onMove}
+                    onMoveEnd={mapEvents.onMoveEnd}
+                    onLoad={mapEvents.onLoad}
+                    style={{ width: '100%', height: '100%' }}
+                    mapStyle={MAP_STYLE}
+                    mapLib={maplibregl as unknown as typeof maplibregl}
+                    onDragStart={mapEvents.onDragStart}
+                    onMouseEnter={(evt) => {
+                        const features = evt.features;
+                        if (features?.length && features[0].layer.id !== 'entrance-layer') {
+                            (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
+                        }
                     }}
+                    onMouseLeave={(evt) => {
+                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
+                    }}
+                    onClick={(evt) => {
+                        const f = evt.features?.[0];
+                        if (!f || f.layer.id === 'entrance-layer') return;
+
+                        if (f.layer.id === 'clusters') {
+                            const clusterId = f.properties.cluster_id;
+                            const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
+                            const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
+                            source.getClusterExpansionZoom(clusterId).then((zoom) => {
+                                mapRef.current?.easeTo({
+                                    center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
+                                    zoom,
+                                    duration: 500
+                                });
+                            }).catch(() => {
+                                // Silent fail
+                            });
+                            return;
+                        }
+
+                        if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
+                            const props = f.properties;
+                            actions.setSelectedVehicle({
+                                ...props,
+                                vehicle_id: String(props.vehicle_id || props.id),
+                                _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                            } as TrackedVehicle);
+                            actions.setSelectedStop(null);
+                            actions.setIsFollowing(true);
+                            return;
+                        }
+
+                        if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                            const pc = f.properties.platform_code;
+                            const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
+                            actions.setSelectedStop({ id: f.properties.stop_id, name });
+                            actions.setSelectedVehicle(null);
+                            actions.setExpandedGroups([]);
+                        }
+                    }}
+                    interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
                 >
-                    <Layer {...clusterLayer} />
-                    <Layer {...clusterCountLayer} />
-                    <Layer {...stopPointGlowLayer} />
-                    <Layer {...stopPointLayer} />
-                    <Layer {...transferStationLayer} />
-                    <Layer {...platformLabelLayer} />
-                    <Layer {...entranceLayer} />
-                </Source>
-            </MapGL>
+                    <MapLayers
+                        mapLoaded={state.mapLoaded}
+                        showVehicles={state.showVehicles}
+                        displayVehicles={displayVehicles || null}
+                        stopsData={stopsData}
+                        labelData={labelData}
+                        routeShapeData={routeShapeData}
+                        userLocation={state.userLocation}
+                        selectedVehicleFeature={selectedVehicleFeature}
+                        routeLinePaint={routeLinePaint}
+                        routeLineLayout={routeLineLayout}
+                        vehiclesFilter={vehiclesFilter}
+                        labelLayerId={state.labelLayerId}
+                    />
+                </MapGL>
+            </div>
+
+            <Search />
+            <MapControls />
 
             <React.Suspense fallback={null}>
                 <WelcomeModal />
@@ -313,7 +187,10 @@ const MapInner: React.FC = () => {
 };
 
 /**
- * Main Map component that initializes the Provider.
+ * Map Component (Entry Point)
+ *
+ * Initializes the MapProvider and sets up the map reference.
+ * This is the root component for the map view.
  */
 export const Map: React.FC = () => {
     const mapRef = useRef<MapRef>(null);

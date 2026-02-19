@@ -1,4 +1,9 @@
-import type { CircleLayerSpecification, SymbolLayerSpecification, LineLayerSpecification } from 'maplibre-gl';
+import type {
+    CircleLayerSpecification,
+    SymbolLayerSpecification,
+    LineLayerSpecification,
+    ExpressionSpecification
+} from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
 // 1. The GLOW Layer (Background)
@@ -100,13 +105,13 @@ export const stopPointLayer: CircleLayerSpecification = {
             // Only apply custom colors for Stations (Type 1)
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
-                ...(getStationColorMatchPairs() as any),
+                ...getStationColorMatchPairs(),
                 LINE_COLORS.Unknown // Default for unknown stations
             ],
 
             // Default for Stops (Type 0 or null)
             LINE_COLORS.Default
-        ] as any,
+        ] as unknown as ExpressionSpecification,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
             // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
@@ -151,11 +156,11 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
             'case',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
-                ...(getStationColorMatchPairs() as any),
+                ...getStationColorMatchPairs(),
                 LINE_COLORS.Unknown
             ],
             '#000000' // Shadow for regular stops
-        ] as any,
+        ] as unknown as ExpressionSpecification,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.35, 0.2]
@@ -290,7 +295,7 @@ export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     paint: {
         'circle-radius': 0, // Animated in component
         'circle-opacity': 0, // Animated in component
-        'circle-color': vehicleColorExpression as any
+        'circle-color': vehicleColorExpression
     }
 };
 
@@ -300,9 +305,9 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
     source: 'selected-vehicle',
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression as any,
+        'circle-color': vehicleColorExpression,
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression as any, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -322,7 +327,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': vehicleColorExpression as ExpressionSpecification,
         'icon-opacity': 1
     }
 };
@@ -356,9 +361,9 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     // Filter handled dynamically in component to exclude selected
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression as any,
+        'circle-color': vehicleColorExpression,
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression as any, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -380,7 +385,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': vehicleColorExpression as ExpressionSpecification,
         'icon-opacity': 1
     }
 };

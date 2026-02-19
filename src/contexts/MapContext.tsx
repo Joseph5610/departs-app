@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
@@ -6,6 +6,7 @@ import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useMapUrlSync } from '../hooks/useMapUrlSync';
 import { useMapAnimation } from '../hooks/useMapAnimation';
+import { useMapCameraFollow } from '../hooks/useMapCameraFollow';
 import { useMapVehicleSync } from '../hooks/useMapVehicleSync';
 import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
@@ -38,24 +39,8 @@ const MapEngine: React.FC = () => {
     // Sync Background Logic
     useMapUrlSync(selectedStop, setSelectedStop);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
+    useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
     useMapVehicleSync(selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
-
-    // Camera following logic
-    useEffect(() => {
-        if (!isFollowing || !selectedVehicle?._geometry || !mapRef.current) return;
-
-        const [lng, lat] = selectedVehicle._geometry;
-        const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
-
-        mapRef.current.easeTo({
-            center: [lng, lat],
-            duration: 1000,
-            essential: true,
-            padding: isMobile
-                ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-                : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
-        });
-    }, [selectedVehicle?._geometry, isFollowing, mapRef]);
 
     return null;
 };

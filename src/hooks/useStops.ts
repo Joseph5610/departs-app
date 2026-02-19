@@ -24,7 +24,16 @@ export const useStops = () => {
 
                 data.features.forEach((f: StopFeature) => {
                     const name = f.properties.stop_name;
+                    const stopId = String(f.properties.stop_id || '');
                     const lines = METRO_STATIONS[name] || [];
+
+                    // Use a deterministic seed based on stop ID to keep variant styles stable
+                    let hash = 0;
+                    for (let i = 0; i < stopId.length; i++) {
+                        hash = ((hash << 5) - hash) + stopId.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    const seed = Math.abs(hash % 1000) / 1000;
 
                     // @ts-expect-error: Adding dynamic properties for MapLibre clustering and styling
                     f.properties.metro_a = lines.includes('A') ? 1 : 0;
@@ -33,7 +42,7 @@ export const useStops = () => {
                     // @ts-expect-error: Adding dynamic properties for MapLibre clustering and styling
                     f.properties.metro_c = lines.includes('C') ? 1 : 0;
                     // @ts-expect-error: Adding dynamic properties for MapLibre clustering and styling
-                    f.properties.variant_seed = Math.random();
+                    f.properties.variant_seed = seed;
                 });
                 return data;
             };

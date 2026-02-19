@@ -54,9 +54,9 @@ export const useVehicles = () => {
         refetchOnReconnect: false,
     });
 
-    return {
+    return useMemo(() => ({
         vehicles: query.data,
         isFetching: query.isFetching,
         dataUpdatedAt: query.dataUpdatedAt
-    };
+    }), [query.data, query.isFetching, query.dataUpdatedAt]);
 };
