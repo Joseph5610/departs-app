@@ -24,18 +24,17 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
         return <span className="text-emerald-400 animate-pulse">{t('map.departures.now')}</span>;
     }
 
-    const mins = Math.floor(secondsLeft / 60);
+    const hrs = Math.floor(secondsLeft / 3600);
+    const mins = Math.floor((secondsLeft % 3600) / 60);
     const secs = secondsLeft % 60;
 
-    // We show MM:SS for everything under 20 minutes
-    if (mins < 20) {
-        return (
-            <span className={mins < 2 ? 'text-emerald-400' : 'text-white'}>
-                {mins}:{secs.toString().padStart(2, '0')}
-            </span>
-        );
-    }
+    const formatted = hrs > 0
+        ? `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+        : `${mins}:${secs.toString().padStart(2, '0')}`;
 
-    // Over 20 minutes, just show minutes to keep it clean
-    return <span className="text-white">{t('map.departures.minutes', { count: mins })}</span>;
+    return (
+        <span className={secondsLeft < 120 ? 'text-emerald-400' : 'text-white'}>
+            {formatted}
+        </span>
+    );
 };

@@ -54,8 +54,23 @@ export const useMapVehicleSync = (
         }
 
         // 2. Sync from Direct Detail API
-        // For now, only syncing from stream. 
-        // Detail sync can be added here if needed for extra info like operator.
+        // If we have detailed info for the selected vehicle, use it to update position and properties.
+        if (vehicleDetail?.geometry?.coordinates) {
+            const detailCoords = vehicleDetail.geometry.coordinates;
+            const detailDelay = vehicleDetail.delay;
+
+            // Update if coordinates or delay changed in the detail API
+            if (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1] || (newProps.delay !== undefined && newProps.delay !== detailDelay)) {
+                updated = true;
+                newCoords = detailCoords;
+                newProps = {
+                    ...newProps,
+                    delay: detailDelay,
+                    state_position: vehicleDetail.state_position || newProps.state_position,
+                    vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
+                };
+            }
+        }
 
         if (updated) {
             setSelectedVehicle({ ...selectedVehicle, ...newProps, _geometry: newCoords });

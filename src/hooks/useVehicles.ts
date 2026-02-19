@@ -50,8 +50,6 @@ export const useVehicles = () => {
         staleTime: 5000,
         gcTime: 60000,
         placeholderData: keepPreviousData,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
     });
 
     return useMemo(() => ({

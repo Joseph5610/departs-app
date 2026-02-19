@@ -1,7 +1,8 @@
 
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -17,6 +18,45 @@ import { useDepartures } from '../hooks/useDepartures';
 const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
+};
+
+const formatDelay = (seconds: number) => {
+    if (seconds <= 30) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins === 0) return `+${secs}s`;
+    return `+${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (delta !== 0 && lastUpdate) {
+            const age = Date.now() - lastUpdate;
+            if (age < 5000) {
+                setVisible(true);
+                const hideTimer = setTimeout(() => setVisible(false), 5000 - age);
+                return () => clearTimeout(hideTimer);
+            }
+        }
+        setVisible(false);
+    }, [delta, lastUpdate]);
+
+    return (
+        <AnimatePresence>
+            {visible && delta !== 0 && (
+                <motion.span
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 5 }}
+                    className={`px-1 rounded text-[9px] font-bold tabular-nums ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
+                >
+                    {delta > 0 ? `+${delta}s` : `${delta}s`}
+                </motion.span>
+            )}
+        </AnimatePresence>
+    );
 };
 
 interface BottomSheetContentProps {
@@ -106,15 +146,22 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                                         <div className="flex flex-col">
                                             <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
                                             <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                <span>{format(parseISO(dep.scheduled), 'HH:mm', {
+                                                <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
                                                     locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
                                                 })}</span>
-                                                {dep.delay > 30 && <span className="text-rose-400">{t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}</span>}
+                                                <div className="flex items-center">
+                                                    {dep.delay > 30 && (
+                                                        <span className="text-rose-400 font-bold tabular-nums">
+                                                            {formatDelay(dep.delay)}
+                                                        </span>
+                                                    )}
+                                                    <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={dep.delay > 30} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-lg font-mono font-bold text-emerald-400">
+                                        <div className="text-lg font-bold text-emerald-400 tabular-nums">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
                                     </div>

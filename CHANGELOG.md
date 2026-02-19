@@ -2,6 +2,24 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.2] - 2026-02-19
+
+### Added
+- **Enhanced Delay Display**: Total delay in departure boards now shows minutes and seconds (e.g., "+2:15") and blends seamlessly with the delay change indicators for a more precise and elegant UI.
+
+### Changed
+- **Unified Countdown Timer**: Simplified the countdown display to always show the full `[H:]MM:SS` format, removing the simplified "minutes only" view for better precision on longer departures.
+
+## [0.5.1] - 2026-02-19
+
+### Added
+- **Delay Change Indicators**: Implemented real-time visual feedback for delay changes in the departure board (e.g., "+25s", "-10s"). Indicators automatically fade out after 5 seconds to keep the UI clean.
+
+### Changed
+- **Synchronization Fixes**: Enabled `refetchOnWindowFocus` and removed restrictive query overrides to ensure the app automatically refreshes when returning to the tab.
+- **Improved Vehicle Tracking**: Integrated high-frequency position data from the detail API into the map marker synchronization, preventing "stuck" positions when tracking a specific vehicle.
+- **Typography Standardization**: Replaced fixed-width `font-mono` with standard app font and `tabular-nums` for all countdowns and departure times, providing a more consistent and modern look while maintaining numerical alignment.
+
 ## [0.5.0] - 2026-02-19
 
 ### Changed

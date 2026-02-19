@@ -46,7 +46,7 @@ export const LiveStatus: React.FC = () => {
                     ) : (
                         <>
                             {t('liveStatus.live')}
-                            <span className="text-zinc-500 font-mono tabular-nums">{nextRefreshIn}s</span>
+                            <span className="text-zinc-500 tabular-nums">{nextRefreshIn}s</span>
                         </>
                     )}
                 </span>
