@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.2] - 2026-02-19
+
+### Added
+- **Enhanced Delay Display**: Total delay in departure boards now shows minutes and seconds (e.g., "+2:15") and blends seamlessly with the delay change indicators for a more precise and elegant UI.
+
+### Changed
+- **Unified Countdown Timer**: Simplified the countdown display to always show the full `[H:]MM:SS` format, removing the simplified "minutes only" view for better precision on longer departures.
+
 ## [0.5.1] - 2026-02-19
 
 ### Added

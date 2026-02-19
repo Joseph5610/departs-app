@@ -20,7 +20,15 @@ const dateLocales: Record<string, Locale> = {
     en: enUS
 };
 
-const DelayDelta = ({ delta, lastUpdate }: { delta: number; lastUpdate?: number }) => {
+const formatDelay = (seconds: number) => {
+    if (seconds <= 30) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins === 0) return `+${secs}s`;
+    return `+${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -39,10 +47,10 @@ const DelayDelta = ({ delta, lastUpdate }: { delta: number; lastUpdate?: number 
         <AnimatePresence>
             {visible && delta !== 0 && (
                 <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className={`ml-1.5 px-1 rounded text-[9px] font-bold ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 5 }}
+                    className={`px-1 rounded text-[9px] font-bold tabular-nums ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
                 >
                     {delta > 0 ? `+${delta}s` : `${delta}s`}
                 </motion.span>
@@ -138,18 +146,17 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                                         <div className="flex flex-col">
                                             <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
                                             <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                <span>{format(parseISO(dep.scheduled), 'HH:mm', {
+                                                <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
                                                     locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
                                                 })}</span>
-                                                {dep.delay > 30 && (
-                                                    <span className="text-rose-400 flex items-center">
-                                                        {t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}
-                                                        <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} />
-                                                    </span>
-                                                )}
-                                                {dep.delay <= 30 && dep.delayDelta !== undefined && dep.delayDelta !== 0 && (
-                                                    <DelayDelta delta={dep.delayDelta} lastUpdate={dep.lastDelayUpdate} />
-                                                )}
+                                                <div className="flex items-center">
+                                                    {dep.delay > 30 && (
+                                                        <span className="text-rose-400 font-bold tabular-nums">
+                                                            {formatDelay(dep.delay)}
+                                                        </span>
+                                                    )}
+                                                    <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={dep.delay > 30} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
