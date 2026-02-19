@@ -1,7 +1,8 @@
 
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -17,6 +18,37 @@ import { useDepartures } from '../hooks/useDepartures';
 const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
+};
+
+const DelayDelta = ({ delta, lastUpdate }: { delta: number; lastUpdate?: number }) => {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (delta !== 0 && lastUpdate) {
+            const age = Date.now() - lastUpdate;
+            if (age < 5000) {
+                setVisible(true);
+                const hideTimer = setTimeout(() => setVisible(false), 5000 - age);
+                return () => clearTimeout(hideTimer);
+            }
+        }
+        setVisible(false);
+    }, [delta, lastUpdate]);
+
+    return (
+        <AnimatePresence>
+            {visible && delta !== 0 && (
+                <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={`ml-1.5 px-1 rounded text-[9px] font-bold ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
+                >
+                    {delta > 0 ? `+${delta}s` : `${delta}s`}
+                </motion.span>
+            )}
+        </AnimatePresence>
+    );
 };
 
 interface BottomSheetContentProps {
@@ -109,12 +141,20 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                                                 <span>{format(parseISO(dep.scheduled), 'HH:mm', {
                                                     locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
                                                 })}</span>
-                                                {dep.delay > 30 && <span className="text-rose-400">{t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}</span>}
+                                                {dep.delay > 30 && (
+                                                    <span className="text-rose-400 flex items-center">
+                                                        {t('map.departures.delay', { minutes: Math.round(dep.delay / 60) })}
+                                                        <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} />
+                                                    </span>
+                                                )}
+                                                {dep.delay <= 30 && dep.delayDelta !== undefined && dep.delayDelta !== 0 && (
+                                                    <DelayDelta delta={dep.delayDelta} lastUpdate={dep.lastDelayUpdate} />
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-lg font-mono font-bold text-emerald-400">
+                                        <div className="text-lg font-bold text-emerald-400 tabular-nums">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
                                     </div>

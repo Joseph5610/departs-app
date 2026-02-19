@@ -278,11 +278,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                                             return (
                                                 <React.Fragment>
-                                                    <span className={`text-xs font-mono ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
+                                                    <span className={`text-xs tabular-nums ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
                                                         {realtimeTime?.slice(0, 8) || ''}
                                                     </span>
                                                     {hasRealtime && (
-                                                        <span className="text-[9px] text-zinc-500 font-mono">
+                                                        <span className="text-[9px] text-zinc-500 tabular-nums">
                                                             {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8) || ''}
                                                         </span>
                                                     )}

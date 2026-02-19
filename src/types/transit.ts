@@ -55,6 +55,8 @@ export interface Departure {
     timestamp: string;
     scheduled: string;
     delay: number;
+    delayDelta?: number;
+    lastDelayUpdate?: number;
     line: string;
     type: string;
     directionId: string;
@@ -107,6 +109,10 @@ export interface VehicleDetail {
         }>;
     };
     shapes?: number[][];
+    geometry?: {
+        type: "Point";
+        coordinates: [number, number];
+    };
 }
 
 export interface TrackedVehicle {

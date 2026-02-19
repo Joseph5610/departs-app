@@ -160,7 +160,7 @@ export const SettingsModal: React.FC = () => {
                                 </div>
                                 <span className="text-zinc-300 text-sm font-medium">{t('settings.updates.check')}</span>
                             </div>
-                            <span className="text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
+                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
                                 {t('settings.versionBadge', { version })}
                             </span>
                         </button>
