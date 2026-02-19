@@ -8,13 +8,6 @@ interface ShapeFeature {
     };
 }
 
-interface VehicleData {
-    features?: Array<{ properties: Record<string, unknown> }>;
-    shapes?: {
-        features: ShapeFeature[];
-    } | Array<[number, number]>;
-    [key: string]: unknown;
-}
 
 /**
  * Retrieves detailed information about a specific vehicle and its current trip.
@@ -51,17 +44,40 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = await response.json() as VehicleData;
+        const data = await response.json() as Record<string, unknown>;
 
         // Standardize output structure
         let vehicleData: Record<string, unknown> = data;
 
-        // If coming from static GTFS trips, we need to flatten the response to match vehiclepositions format
-        if (isPlaceholder && data.features && Array.isArray(data.features) && data.features.length > 0) {
-            vehicleData = data.features[0].properties || (data.features[0] as unknown as Record<string, unknown>);
-            if (data.shapes) {
-                vehicleData.shapes = data.shapes;
+        // If coming from static GTFS trips, handle flattening from Feature/FeatureCollection
+        if (isPlaceholder) {
+            const features = data.features as Array<{ properties?: Record<string, unknown> }> | undefined;
+            if (features && Array.isArray(features) && features.length > 0) {
+                vehicleData = features[0].properties || (features[0] as unknown as Record<string, unknown>);
+                if (data.shapes) vehicleData.shapes = data.shapes;
+            } else if (data.type === 'Feature' && data.properties) {
+                vehicleData = data.properties as Record<string, unknown>;
+                if (data.shapes) vehicleData.shapes = data.shapes;
             }
+
+            // Ensure static trip properties match expected real-time property names
+            if (vehicleData.trip_headsign && !vehicleData.gtfs_trip_headsign) {
+                vehicleData.gtfs_trip_headsign = vehicleData.trip_headsign;
+            }
+            if (vehicleData.route_short_name && !vehicleData.gtfs_route_short_name) {
+                vehicleData.gtfs_route_short_name = vehicleData.route_short_name;
+            }
+        }
+
+        // Normalize stop_times: The frontend expects { features: [ { properties: { ... } }, ... ] }
+        // Golemio's public API might return a plain array for stop_times, especially for static trips.
+        const stopTimes = vehicleData.stop_times;
+        if (stopTimes && Array.isArray(stopTimes)) {
+            vehicleData.stop_times = {
+                features: stopTimes.map((st: unknown) => ({
+                    properties: st
+                }))
+            };
         }
 
         // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates

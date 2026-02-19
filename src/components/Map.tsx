@@ -132,7 +132,11 @@ const MapInner: React.FC = () => {
                         if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
                             const pc = f.properties.platform_code;
                             const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                            actions.selectStop({ id: f.properties.stop_id, name });
+                            actions.selectStop({
+                                id: f.properties.stop_id,
+                                name,
+                                coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                            });
                         }
                     }}
                     interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}

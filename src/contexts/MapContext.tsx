@@ -155,6 +155,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
         const activeVehId = vehicleId || `trip-${tripId}`;
 
+        // Use the current stop's coordinates as a fallback to prevent flying to [0, 0]
+        const fallbackCoords = state.selectedStop?.coordinates || [0, 0];
+
         selectVehicle({
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
@@ -163,8 +166,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             route_type: initialData?.type,
             gtfs_trip_headsign: initialData?.headsign,
             delay: initialData?.delay || 0,
-            state_position: 'on_track',
-            _geometry: [0, 0],
+            state_position: vehicleId ? 'on_track' : 'before_track',
+            _geometry: fallbackCoords,
             bearing: null
         }, true); // keep stop
 
@@ -178,22 +181,25 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                     const coords = data.geometry.coordinates;
                     setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, _geometry: coords, ...data } as TrackedVehicle : null);
 
-                    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
-                    mapRef.current?.flyTo({
-                        center: coords,
-                        zoom: MAP_VEHICLE_SELECT_ZOOM,
-                        duration: MAP_ANIMATION_DURATION,
-                        essential: true,
-                        padding: isMobile
-                            ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-                            : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
-                    });
+                    // Only fly if coordinates are valid (not 0, 0)
+                    if (coords[0] !== 0 || coords[1] !== 0) {
+                        const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
+                        mapRef.current?.flyTo({
+                            center: coords,
+                            zoom: MAP_VEHICLE_SELECT_ZOOM,
+                            duration: MAP_ANIMATION_DURATION,
+                            essential: true,
+                            padding: isMobile
+                                ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+                                : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
+                        });
+                    }
                 }
             }
         } catch (err) {
             console.error('Prefetch failed:', err);
         }
-    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle]);
+    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle, state.selectedStop]);
 
     const value = useMemo(() => ({
         mapRef,

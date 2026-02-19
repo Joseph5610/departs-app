@@ -6,7 +6,7 @@ import type { TrackedVehicle } from '../types/transit';
  * State managed by the map reducer
  */
 export interface MapState {
-    selectedStop: { id: string; name: string } | null;
+    selectedStop: { id: string; name: string; coordinates?: [number, number] } | null;
     selectedVehicle: TrackedVehicle | null;
     isFollowing: boolean;
     showVehicles: boolean;
@@ -22,9 +22,9 @@ export interface MapState {
  * Available actions for the map reducer
  */
 export type MapAction =
-    | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string } | null | ((prev: { id: string; name: string } | null) => { id: string; name: string } | null) }
+    | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string; coordinates?: [number, number] } | null | ((prev: { id: string; name: string; coordinates?: [number, number] } | null) => { id: string; name: string; coordinates?: [number, number] } | null) }
     | { type: 'SET_SELECTED_VEHICLE'; payload: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null) }
-    | { type: 'SELECT_STOP'; payload: { id: string; name: string } | null }
+    | { type: 'SELECT_STOP'; payload: { id: string; name: string; coordinates?: [number, number] } | null }
     | { type: 'SELECT_VEHICLE'; payload: TrackedVehicle | null; keepStop?: boolean }
     | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
@@ -132,13 +132,13 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 export const useMapReducer = () => {
     const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    const setSelectedStop = useCallback((stop: { id: string; name: string } | null | ((prev: { id: string; name: string } | null) => { id: string; name: string } | null)) =>
+    const setSelectedStop = useCallback((stop: { id: string; name: string; coordinates?: [number, number] } | null | ((prev: { id: string; name: string; coordinates?: [number, number] } | null) => { id: string; name: string; coordinates?: [number, number] } | null)) =>
         dispatch({ type: 'SET_SELECTED_STOP', payload: stop }), []);
 
     const setSelectedVehicle = useCallback((vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) =>
         dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
 
-    const selectStop = useCallback((stop: { id: string; name: string } | null) =>
+    const selectStop = useCallback((stop: { id: string; name: string; coordinates?: [number, number] } | null) =>
         dispatch({ type: 'SELECT_STOP', payload: stop }), []);
 
     const selectVehicle = useCallback((vehicle: TrackedVehicle | null, keepStop = false) =>

@@ -122,7 +122,11 @@ export const Search: React.FC = React.memo(() => {
                                 });
                                 const pc = stop.properties.platform_code;
                                 const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
-                                selectStop({ id: stop.properties.stop_id, name });
+                                selectStop({
+                                    id: stop.properties.stop_id,
+                                    name,
+                                    coordinates: [lng, lat]
+                                });
                                 setQuery('');
                                 setIsOpen(false);
                             }}

@@ -19,6 +19,10 @@ export const useMapCameraFollow = (
         if (!isFollowing || !selectedVehicle?._geometry || !mapRef.current) return;
 
         const [lng, lat] = selectedVehicle._geometry;
+
+        // Skip if coordinates are [0, 0] (unset/placeholder)
+        if (lng === 0 && lat === 0) return;
+
         const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
 
         mapRef.current.easeTo({
