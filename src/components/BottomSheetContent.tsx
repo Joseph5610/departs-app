@@ -29,19 +29,27 @@ const formatDelay = (seconds: number) => {
 };
 
 const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
-    const [visible, setVisible] = useState(false);
+    const [isTimedOut, setIsTimedOut] = useState(false);
+    const [lastHandledUpdate, setLastHandledUpdate] = useState<number | undefined>(undefined);
+
+    // Reset timeout state when the update timestamp changes.
+    // This uses the pattern of updating state during render to synchronize with props.
+    if (lastUpdate !== lastHandledUpdate) {
+        setLastHandledUpdate(lastUpdate);
+        setIsTimedOut(false);
+    }
+
+    // eslint-disable-next-line react-hooks/purity
+    const isFresh = delta !== 0 && !!lastUpdate && (Date.now() - lastUpdate < 5000);
+    const visible = isFresh && !isTimedOut;
 
     useEffect(() => {
-        if (delta !== 0 && lastUpdate) {
+        if (visible && lastUpdate) {
             const age = Date.now() - lastUpdate;
-            if (age < 5000) {
-                setVisible(true);
-                const hideTimer = setTimeout(() => setVisible(false), 5000 - age);
-                return () => clearTimeout(hideTimer);
-            }
+            const timer = setTimeout(() => setIsTimedOut(true), 5000 - age);
+            return () => clearTimeout(timer);
         }
-        setVisible(false);
-    }, [delta, lastUpdate]);
+    }, [visible, lastUpdate]);
 
     return (
         <AnimatePresence>

@@ -36,17 +36,17 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
     const variants = {
         hidden: isMobile
-            ? { y: '100dvh', height: '50dvh' }
+            ? { y: '100%', height: '50%' }
             : { x: '-110%', y: 0, height: 'auto' },
         peek: {
             y: 0,
             x: 0,
-            height: isMobile ? '50dvh' : 'auto'
+            height: isMobile ? '50%' : 'auto'
         },
         full: {
             y: 0,
             x: 0,
-            height: isMobile ? '92dvh' : 'auto'
+            height: isMobile ? '92%' : 'auto'
         },
     };
 
@@ -121,10 +121,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
                         <div
-                            className="flex-1 overflow-y-auto px-6 pb-20 custom-scrollbar overscroll-contain touch-pan-y"
-                            style={{
-                                paddingBottom: isMobile ? 'calc(5rem + env(safe-area-inset-bottom, 0px))' : '2rem'
-                            }}
+                            className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,1.5rem)]"
                         >
                             {children}
                         </div>
