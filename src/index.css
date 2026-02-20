@@ -21,40 +21,38 @@
 
 /*
   Vylepšená stratégia pre iOS PWA - zabránenie čiernym medzerám
+  Používame position: fixed a inset: 0 pre všetky kľúčové kontajnery.
 */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   height: -webkit-fill-available;
   overflow: hidden;
   background-color: #000000;
+  position: fixed;
+  inset: 0;
 }
 
 body {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   color: #f8fafc;
   overscroll-behavior: none;
   display: flex;
 }
 
 #root {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: #000000;
 }
 
 /* Zabezpečenie správneho scrollingu bez viditeľného baru */

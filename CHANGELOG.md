@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.10] - 2026-02-21
+
+### Fixed
+- **iOS PWA Layout (Hardened Fullscreen)**: Eliminated persistent black viewport gaps on iOS 18 in standalone mode by implementing a strict fixed-fill strategy. Centralized all global styles in `index.css` using `100dvh`, `-webkit-fill-available`, and `position: fixed` to force the application to occupy the entire physical screen area, including the home indicator/safe area region. Removed redundant boilerplate styles to prevent layout conflicts.
+
 ## [0.5.9] - 2026-02-21
 
 ### Fixed
