@@ -4,14 +4,9 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-/* 
-  Kritická oprava scrollbaru - Úplné skrytie pre čistý vzhľad.
-*/
+/* Skrytie scrollbaru */
 ::-webkit-scrollbar {
   display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
 }
 
 * {
@@ -20,46 +15,32 @@
 }
 
 /*
-  Vylepšená stratégia pre iOS PWA - zabránenie čiernym medzerám
-  Používame position: fixed a inset: 0 pre všetky kľúčové kontajnery.
+  Kritická oprava pre iOS PWA - zabránenie čiernym medzerám
+  Podľa odporúčania používame čistý height: 100% pre html/body a 100dvh pre root.
 */
 html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  height: 100dvh;
-  height: -webkit-fill-available;
+  background: black;
   overflow: hidden;
-  background-color: #000000;
-  position: fixed;
-  inset: 0;
-}
-
-body {
-  color: #f8fafc;
-  overscroll-behavior: none;
-  display: flex;
 }
 
 #root {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   height: 100dvh;
-  height: -webkit-fill-available;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-color: #000000;
+  width: 100%;
 }
 
-/* Zabezpečenie správneho scrollingu bez viditeľného baru */
+.map-wrapper {
+  height: 100dvh;
+  width: 100%;
+  position: relative;
+}
+
+/* Zabezpečenie správneho scrollingu */
 .custom-scrollbar {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
 }
 
 button,
@@ -68,12 +49,7 @@ button,
   cursor: pointer !important;
 }
 
-/* MapLibre Navigation Control - Positioned above safe area on mobile */
-.maplibregl-ctrl-bottom-right {
-  margin-bottom: 0.5rem !important;
-  margin-right: 0.5rem !important;
-}
-
+/* MapLibre Navigation Control - Odsadenie od safe area */
 @media (max-width: 768px) {
   .maplibregl-ctrl-bottom-right {
     margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
