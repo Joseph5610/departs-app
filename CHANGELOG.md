@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.7] - 2026-02-21
+
+### Fixed
+- **iOS PWA Fullscreen (Improved)**: Flattened the DOM hierarchy and simplified the layout strategy to resolve resolution-dependent black bar issues on iOS. Used `position: fixed` on the body and anchored main containers with `inset-0` to ensure consistent rendering across different window sizes and orientations.
+
 ## [0.5.6] - 2026-02-21
 
 ### Fixed
