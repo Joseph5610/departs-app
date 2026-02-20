@@ -28,6 +28,7 @@ export const useDepartures = () => {
         return {
             // We use refs for tracking deltas across query refreshes.
             // This is safe because refs are only updated in useEffect.
+            // eslint-disable-next-line react-hooks/refs
             departures: query.data.departures.map(dep => {
                 const key = `${dep.tripId}-${dep.scheduled}`;
                 const prevDelay = prevDelaysRef.current[key];
