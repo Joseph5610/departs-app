@@ -34,7 +34,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }
 
-        // 2. Prepare fetch for specific Trip ID (Internal API for higher precision/specific trip tracking)
+        // 2. Prepare fetch for specific Trip ID (Non-public v2 API lookup by trip ID path)
         if (tripId) {
             fetchPromises.push(golemioFetch(`/v2/vehiclepositions/${tripId}`, env));
         }
@@ -44,16 +44,30 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         let allFeatures: GolemioVehicleFeature[] = [];
 
         for (const res of responses) {
-            if (!res.ok) continue; // Skip failed fetches gracefully if we have multiple
+            if (!res.ok) continue;
 
-            const data = await res.json() as { type: string, features?: GolemioVehicleFeature[] } | GolemioVehicleFeature;
+            try {
+                const data = await res.json() as Record<string, unknown> | Array<unknown>;
+                if (!data) continue;
 
-            // Normalize differently based on response structure
-            if ('type' in data && data.type === 'FeatureCollection' && 'features' in data) {
-                const features = (data.features || []).map((f) => normalizeVehicleFeature(f, tripId || undefined));
-                allFeatures = [...allFeatures, ...features];
-            } else if ('type' in data && data.type === 'Feature') {
-                allFeatures.push(normalizeVehicleFeature(data as GolemioVehicleFeature, tripId || undefined));
+                // Normalize differently based on response structure
+                if (!Array.isArray(data) && data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+                    const features = data.features.map((f: unknown) => normalizeVehicleFeature(f as GolemioVehicleFeature, tripId || undefined));
+                    allFeatures = [...allFeatures, ...features];
+                } else if (!Array.isArray(data) && data.type === 'Feature') {
+                    allFeatures.push(normalizeVehicleFeature(data as unknown as GolemioVehicleFeature, tripId || undefined));
+                } else if (Array.isArray(data)) {
+                    // Some internal endpoints might return a plain array
+                    const features = data.map((f: unknown) => {
+                        const item = f as Record<string, unknown>;
+                        const feature = (item.type === 'Feature' ? item : { type: 'Feature', geometry: item.geometry, properties: item.properties || item }) as unknown as GolemioVehicleFeature;
+                        return normalizeVehicleFeature(feature, tripId || undefined);
+                    });
+                    allFeatures = [...allFeatures, ...features];
+                }
+            } catch (e) {
+                console.warn("Failed to parse vehicle response:", e);
+                continue;
             }
         }
 
