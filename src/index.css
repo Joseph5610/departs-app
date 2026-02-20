@@ -28,27 +28,29 @@
 }
 
 html,
-body,
-#root {
+body {
   height: 100%;
+  height: -webkit-fill-available;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
   width: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
   background-color: #000000;
   color: #f8fafc;
-
-  /* Robust fix for iOS PWA viewport - force full screen and prevent bounce */
-  position: fixed;
-  left: 0;
-  top: 0;
-  min-height: -webkit-fill-available;
-}
-
-body {
   /* Prevent pull-to-refresh and bounce effects that break map gestures */
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+  position: fixed; /* Force body to be fixed to viewport */
+}
+
+#root {
+  /* Robust fix for iOS PWA viewport - force full screen using absolute anchoring */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 

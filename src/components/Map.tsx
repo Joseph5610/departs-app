@@ -76,7 +76,7 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="fixed inset-0 bg-black">
+        <div className="absolute inset-0 bg-black overflow-hidden">
             <LiveStatus />
 
             <div className="absolute inset-0">

@@ -2,12 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.5.5] - 2026-02-21
+## [0.5.7] - 2026-02-21
 
 ### Fixed
-- **iOS PWA Layout**: Eliminated the persistent black bar at the bottom of the screen on iOS PWA by implementing a "fixed root" layout strategy. This prevents the viewport from shifting and ensures the background map correctly fills the entire safe area.
-- **Component Stability**: Converted Bottom Sheet and Modal height calculations from `dvh` to percentage-based units within the fixed container, ensuring consistent rendering during keyboard interactions and system UI changes.
-- **Visual Consistency**: Optimized Bottom Sheet content padding to respect `env(safe-area-inset-bottom)` while allowing the background to extend to the bottom edge.
+- **iOS PWA Fullscreen (Improved)**: Flattened the DOM hierarchy and simplified the layout strategy to resolve resolution-dependent black bar issues on iOS. Used `position: fixed` on the body and anchored main containers with `inset-0` to ensure consistent rendering across different window sizes and orientations.
+
+## [0.5.6] - 2026-02-21
+
+### Fixed
+- **iOS PWA Fullscreen**: Re-implemented the fullscreen layout to resolve the persistent black bar issue on iOS. Removed `100dvh` constraints in favor of absolute anchoring (`top/bottom: 0`) and `-webkit-fill-available` on the body to ensure the app occupies the entire screen area, including the safe area at the bottom.
 
 ## [0.5.4] - 2026-02-19
 
