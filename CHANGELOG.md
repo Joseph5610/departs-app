@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.8] - 2026-02-21
+
+### Fixed
+- **iOS PWA Layout (Final Refinement)**: Hardened the viewport anchoring strategy by applying the app's theme color to the HTML root and removing redundant layout wrappers. This ensures visual continuity and eliminates "black box" artifacts during safe-area transitions on iPhone 15/16 devices.
+
 ## [0.5.7] - 2026-02-21
 
 ### Fixed

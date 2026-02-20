@@ -27,7 +27,14 @@
   -ms-overflow-style: none !important;
 }
 
-html,
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+  margin: 0;
+  padding: 0;
+  background-color: #000000;
+}
+
 body {
   height: 100%;
   height: -webkit-fill-available;
@@ -42,6 +49,7 @@ body {
   /* Prevent pull-to-refresh and bounce effects that break map gestures */
   overscroll-behavior: none;
   position: fixed; /* Force body to be fixed to viewport */
+  inset: 0; /* Anchor to all edges of the physical viewport */
 }
 
 #root {
