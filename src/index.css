@@ -15,26 +15,33 @@
 }
 
 /*
-  Kritická oprava pre iOS PWA - zabránenie čiernym medzerám
-  Podľa odporúčania používame čistý height: 100% pre html/body a 100dvh pre root.
+  Hardened Viewport Strategy for iOS 18 PWA
+  Zabezpečuje, aby root kontajner vypĺňal celú obrazovku vrátane safe area.
 */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: black;
+  background-color: #000000;
   overflow: hidden;
+  color: #f8fafc;
 }
 
 #root {
-  height: 100dvh;
+  /* Fixné pozicionovanie na celú plochu priezoru */
+  position: fixed;
+  inset: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
 }
 
 .map-wrapper {
-  height: 100dvh;
+  flex: 1;
   width: 100%;
-  position: relative;
+  height: 100%;
 }
 
 /* Zabezpečenie správneho scrollingu */

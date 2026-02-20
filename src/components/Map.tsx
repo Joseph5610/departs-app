@@ -76,7 +76,7 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="map-wrapper bg-black overflow-hidden">
+        <div className="map-wrapper w-full h-full bg-black overflow-hidden relative">
             <LiveStatus />
 
             <MapGL
@@ -85,7 +85,7 @@ const MapInner: React.FC = () => {
                 onMove={mapEvents.onMove}
                 onMoveEnd={mapEvents.onMoveEnd}
                 onLoad={mapEvents.onLoad}
-                style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+                style={{ width: '100%', height: '100%' }}
                 mapStyle={MAP_STYLE}
                 mapLib={maplibregl as unknown as typeof maplibregl}
                 onDragStart={mapEvents.onDragStart}
