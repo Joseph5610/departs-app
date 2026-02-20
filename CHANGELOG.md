@@ -2,10 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.9] - 2026-02-21
+
+### Fixed
+- **iOS PWA Layout (Absolute Anchoring)**: Resolved persistent black gaps in standalone mode by switching to a strict absolute-fill strategy for the React root. Forced the container to match the body's `-webkit-fill-available` height and standardized all background theme colors to black to ensure seamless visual transitions.
+
 ## [0.5.8] - 2026-02-21
 
 ### Fixed
-- **iOS PWA Layout (Final Refinement)**: Hardened the viewport anchoring strategy by applying the app's theme color to the HTML root and removing redundant layout wrappers. This ensures visual continuity and eliminates "black box" artifacts during safe-area transitions on iPhone 15/16 devices.
+- **iOS PWA Layout (Refinement)**: Hardened the viewport anchoring strategy by applying the app's theme color to the HTML root and removing redundant layout wrappers.
 
 ## [0.5.7] - 2026-02-21
 

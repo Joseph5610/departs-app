@@ -6,10 +6,7 @@
 
 /* 
   Kritická oprava scrollbaru - Úplné skrytie pre čistý vzhľad.
-  Keďže systémové štýly ignorujú transparentnosť, scrollbar úplne skryjeme.
 */
-
-/* Skrytie scrollbaru pre Chrome, Safari a Operu */
 ::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
@@ -17,54 +14,48 @@
   background: transparent !important;
 }
 
-/* Skrytie pre Firefox */
 * {
   scrollbar-width: none !important;
-}
-
-/* Skrytie pre IE, Edge a ostatné */
-* {
   -ms-overflow-style: none !important;
 }
 
-html {
-  height: 100%;
-  height: -webkit-fill-available;
+/*
+  Vylepšená stratégia pre iOS PWA - zabránenie čiernym medzerám
+*/
+html, body {
   margin: 0;
   padding: 0;
-  background-color: #ff0000 !important; /* RED - DIAGNOSTIC */
+  width: 100%;
+  height: 100%;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  background-color: #000000;
 }
 
 body {
-  height: 100%;
-  height: -webkit-fill-available;
-  min-height: 100%;
-  min-height: -webkit-fill-available;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #00ff00 !important; /* GREEN - DIAGNOSTIC */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   color: #f8fafc;
-  /* Prevent pull-to-refresh and bounce effects that break map gestures */
   overscroll-behavior: none;
-  position: fixed; /* Force body to be fixed to viewport */
-  inset: 0; /* Anchor to all edges of the physical viewport */
+  display: flex;
 }
 
 #root {
-  /* Robust fix for iOS PWA viewport - force full screen using absolute anchoring */
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
+  height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  background-color: #0000ff !important; /* BLUE - DIAGNOSTIC */
 }
-
-
-
-
 
 /* Zabezpečenie správneho scrollingu bez viditeľného baru */
 .custom-scrollbar {
@@ -73,10 +64,6 @@ body {
   touch-action: pan-y;
 }
 
-
-/* 
-  Global interactivity - Ensure all buttons show pointer cursor 
-*/
 button,
 [role="button"],
 .cursor-pointer {
