@@ -4,7 +4,7 @@ import { ToastProvider } from './components/ToastProvider';
 function App() {
   return (
     <ToastProvider>
-      <div className="w-full h-full overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden">
         <Map />
       </div>
     </ToastProvider>
