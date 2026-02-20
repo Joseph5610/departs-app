@@ -2,20 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.11] - 2026-02-21
+
+### Changed
+- **Debug: Removed all CSS**: Completely removed all global and component CSS files and imports to isolate the PWA layout issue.
+
 ## [0.5.10] - 2026-02-21
 
 ### Fixed
-- **iOS PWA Layout (Hardened Fullscreen)**: Resolved persistent black viewport gaps on iOS 18 in standalone mode by implementing a multi-layered fixed-fill strategy. Centralized all global layout styles in `index.css` using `-webkit-fill-available` and `position: fixed` to force the application to occupy the entire physical screen area, bypassing dynamic viewport calculation issues on taller devices. Translated all Slovak source code comments to English for consistent documentation.
-
-## [0.5.9] - 2026-02-21
-
-### Fixed
-- **iOS PWA Layout (Absolute Anchoring)**: Resolved persistent black gaps in standalone mode by switching to a strict absolute-fill strategy for the React root. Forced the container to match the body's `-webkit-fill-available` height and standardized all background theme colors to black to ensure seamless visual transitions.
-
-## [0.5.8] - 2026-02-21
-
-### Fixed
-- **iOS PWA Layout (Refinement)**: Hardened the viewport anchoring strategy by applying the app's theme color to the HTML root and removing redundant layout wrappers.
+- **iOS PWA Layout (Simplified 100dvh Strategy)**: Resolved persistent black viewport gaps on iOS 18 in standalone mode by implementing a simplified viewport strategy. Centralized global styles in `styles.css` using `100dvh` for the root container and removed restrictive boilerplate styles. Ensured full-screen coverage while maintaining essential PWA features like safe-area offsets and overscroll prevention.
 
 ## [0.5.7] - 2026-02-21
 
