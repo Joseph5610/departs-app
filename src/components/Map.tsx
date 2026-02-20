@@ -76,10 +76,10 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="fixed inset-0 bg-black h-[100dvh]">
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black">
             <LiveStatus />
 
-            <div className="absolute inset-0 h-full w-full">
+            <div className="absolute top-0 left-0 right-0 bottom-0 h-full w-full">
                 <MapGL
                     ref={mapRef}
                     initialViewState={initialViewState}
