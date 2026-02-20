@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.12] - 2026-02-21
+
+### Changed
+- **Debug: Restored minimal CSS**: Added back index.css with only the Tailwind import to test if the layout issue persists with just base styles.
+
 ## [0.5.11] - 2026-02-21
 
 ### Changed
