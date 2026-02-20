@@ -41,11 +41,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         });
 
         // 2. If it's a real vehicle, fetch real-time position and delay
+        // We use the semicolon suffix for the public vehiclepositions endpoint to ensure we get the right trip.
         const rtPromise = !isPlaceholder
-            ? golemioFetch(`/v2/public/vehiclepositions/${vehicleId}`, env, {
+            ? golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
                 searchParams: {
-                    scopes: 'info,vehicle_descriptor'
+                    // We also include stop_times and shapes in RT as a fallback/enrichment
+                    scopes: 'info,vehicle_descriptor,stop_times,shapes'
                 }
             })
             : Promise.resolve(null);
@@ -66,38 +68,45 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         // Standardize output structure.
         // Golemio Public GTFS API sometimes returns a FeatureCollection or a single Feature instead of a flat object.
         const normalize = (data: GolemioResponse) => {
+            let normalized: Record<string, unknown> = {};
+
             if (data.features && Array.isArray(data.features) && data.features.length > 0) {
-                return {
-                    ...(data.features[0].properties || {}),
-                    shapes: data.shapes || data.features[0].properties?.shapes,
-                    stop_times: data.stop_times || data.features[0].properties?.stop_times,
-                    geometry: data.features[0].geometry
-                };
+                normalized = { ...(data.features[0].properties || {}) };
+                if (data.shapes || data.features[0].properties?.shapes) normalized.shapes = data.shapes || data.features[0].properties?.shapes;
+                if (data.stop_times || data.features[0].properties?.stop_times) normalized.stop_times = data.stop_times || data.features[0].properties?.stop_times;
+                if (data.features[0].geometry) normalized.geometry = data.features[0].geometry;
             } else if (data.type === 'Feature') {
-                return {
-                    ...(data.properties || {}),
-                    shapes: data.shapes || data.properties?.shapes,
-                    stop_times: data.stop_times || data.properties?.stop_times,
-                    geometry: data.geometry
-                };
+                normalized = { ...(data.properties || {}) };
+                if (data.shapes || data.properties?.shapes) normalized.shapes = data.shapes || data.properties?.shapes;
+                if (data.stop_times || data.properties?.stop_times) normalized.stop_times = data.stop_times || data.properties?.stop_times;
+                if (data.geometry) normalized.geometry = data.geometry;
+            } else {
+                normalized = { ...data };
             }
-            return { ...data };
+            return normalized;
         };
 
         const staticNormalized = normalize(staticData);
         const rtNormalized = rtData ? normalize(rtData) : null;
 
         // Merge RT data into Static base
+        // IMPORTANT: We only merge RT data if it's NOT an empty collection
+        const isRtValid = rtData && (!rtData.features || (Array.isArray(rtData.features) && rtData.features.length > 0) || rtData.type === 'Feature');
+
         const vehicleData: Record<string, unknown> = {
             ...staticNormalized,
-            // Ensure static trip properties match expected real-time property names for the UI
-            gtfs_trip_id: staticNormalized.gtfs_trip_id || staticNormalized.trip_id || tripId,
-            gtfs_trip_headsign: staticNormalized.gtfs_trip_headsign || staticNormalized.trip_headsign,
-            gtfs_route_short_name: staticNormalized.gtfs_route_short_name || staticNormalized.route_short_name,
-            gtfs_route_type: staticNormalized.gtfs_route_type || staticNormalized.route_type,
             // Add RT properties if available
-            ...(rtNormalized || {})
+            ...(isRtValid ? rtNormalized : {}),
+            // Ensure core properties are present (fallbacks to static or params)
+            gtfs_trip_id: (isRtValid ? rtNormalized?.gtfs_trip_id : null) || staticNormalized.gtfs_trip_id || staticNormalized.trip_id || tripId,
+            gtfs_trip_headsign: (isRtValid ? (rtNormalized?.gtfs_trip_headsign || rtNormalized?.trip_headsign) : null) || staticNormalized.gtfs_trip_headsign || staticNormalized.trip_headsign,
+            gtfs_route_short_name: (isRtValid ? (rtNormalized?.gtfs_route_short_name || rtNormalized?.route_short_name) : null) || staticNormalized.gtfs_route_short_name || staticNormalized.route_short_name,
+            gtfs_route_type: (isRtValid ? (rtNormalized?.gtfs_route_type || rtNormalized?.route_type) : null) || staticNormalized.gtfs_route_type || staticNormalized.route_type,
         };
+
+        // Ensure trip_headsign and route_short_name are also present for components using them
+        if (!vehicleData.trip_headsign) vehicleData.trip_headsign = vehicleData.gtfs_trip_headsign;
+        if (!vehicleData.route_short_name) vehicleData.route_short_name = vehicleData.gtfs_route_short_name;
 
         // If RT data exists but is for a DIFFERENT trip (vehicle still on previous run),
         // we might want to keep the geometry/delay but mark the state.
