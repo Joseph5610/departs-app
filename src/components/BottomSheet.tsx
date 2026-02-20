@@ -121,10 +121,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
                         <div
-                            className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y"
-                            style={{
-                                paddingBottom: isMobile ? 'calc(2rem + env(safe-area-inset-bottom, 0px))' : '2rem'
-                            }}
+                            className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y pb-8"
                         >
                             {children}
                         </div>

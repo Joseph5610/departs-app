@@ -78,12 +78,3 @@ button,
   margin-bottom: 0.5rem !important;
   margin-right: 0.5rem !important;
 }
-
-/* Mobile Safe Area Fix (Safari browser bar & Home indicator) */
-@media (max-width: 768px) {
-  .maplibregl-ctrl-bottom-right {
-    /* Reduced from 1.5rem to 0.5rem to sit closer to safe area but not under it */
-    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
-    margin-right: calc(env(safe-area-inset-right, 0px) + 0.5rem) !important;
-  }
-}

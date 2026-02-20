@@ -2,7 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.5.3] - 2026-02-19
+## [0.5.5] - 2026-02-21
+
+### Fixed
+- **iOS PWA Layout**: Eliminated the persistent black bar at the bottom of the screen on iOS PWA by removing explicit `env(safe-area-inset-bottom)` handling and allowing the map to fill the entire viewport.
+- **Visual Consistency**: Standardized Bottom Sheet padding on mobile to ensure a native look and feel across different device safe-area configurations.
+
+## [0.5.4] - 2026-02-19
 
 ### Fixed
 - **Map Interaction Logic**: Resolved a race condition where vehicle tracking would persist after selecting a stop on the map. Implemented atomic selection actions (`SELECT_STOP`, `SELECT_VEHICLE`) in the map reducer to ensure consistent state transitions.
