@@ -5,8 +5,9 @@ All notable changes to the **Departs.app** project will be documented in this fi
 ## [0.5.5] - 2026-02-21
 
 ### Fixed
-- **iOS PWA Layout**: Eliminated the persistent black bar at the bottom of the screen on iOS PWA by removing explicit `env(safe-area-inset-bottom)` handling and allowing the map to fill the entire viewport.
-- **Visual Consistency**: Standardized Bottom Sheet padding on mobile to ensure a native look and feel across different device safe-area configurations.
+- **iOS PWA Layout**: Eliminated the persistent black bar at the bottom of the screen on iOS PWA by implementing a "fixed root" layout strategy. This prevents the viewport from shifting and ensures the background map correctly fills the entire safe area.
+- **Component Stability**: Converted Bottom Sheet and Modal height calculations from `dvh` to percentage-based units within the fixed container, ensuring consistent rendering during keyboard interactions and system UI changes.
+- **Visual Consistency**: Optimized Bottom Sheet content padding to respect `env(safe-area-inset-bottom)` while allowing the background to extend to the bottom edge.
 
 ## [0.5.4] - 2026-02-19
 

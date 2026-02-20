@@ -39,7 +39,6 @@ const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; la
         setIsTimedOut(false);
     }
 
-    // eslint-disable-next-line react-hooks/purity
     const isFresh = delta !== 0 && !!lastUpdate && (Date.now() - lastUpdate < 5000);
     const visible = isFresh && !isTimedOut;
 

@@ -37,19 +37,18 @@ body,
   overflow: hidden;
   background-color: #000000;
   color: #f8fafc;
-}
 
-@supports (height: 100dvh) {
-  html,
-  body,
-  #root {
-    height: 100dvh;
-  }
+  /* Robust fix for iOS PWA viewport - force full screen and prevent bounce */
+  position: fixed;
+  left: 0;
+  top: 0;
+  min-height: -webkit-fill-available;
 }
 
 body {
   /* Prevent pull-to-refresh and bounce effects that break map gestures */
   overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 
@@ -73,8 +72,14 @@ button,
   cursor: pointer !important;
 }
 
-/* MapLibre Navigation Control - Standard Desktop Position */
+/* MapLibre Navigation Control - Positioned above safe area on mobile */
 .maplibregl-ctrl-bottom-right {
   margin-bottom: 0.5rem !important;
   margin-right: 0.5rem !important;
+}
+
+@media (max-width: 768px) {
+  .maplibregl-ctrl-bottom-right {
+    margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
