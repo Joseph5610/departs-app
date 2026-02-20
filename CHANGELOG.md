@@ -2,11 +2,18 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.5] - 2026-02-21
+
+### Fixed
+- **Vehicle Detail Hybrid Fetching**: Refactored the backend to always fetch static trip data as a base, merging real-time telemetry only when available. This ensures the route schedule is always visible, even for vehicles assigned to future trips.
+- **Enhanced Coordinate Safety**: Hardened both backend and frontend to strictly ignore `[0, 0]` coordinates. The frontend now remains anchored to the stop location or current map center as a fallback, preventing "flight to ocean" regressions.
+- **Deep URL Integration**: Improved stop selection from URL parameters; the app now automatically enriches URL-based stops with coordinates from the local stop database to ensure consistent spatial fallbacks.
+
 ## [0.5.4] - 2026-02-21
 
 ### Fixed
-- **Vehicle Detail Synchronization**: Overhauled the vehicle detail backend to robustly handle both real-time and static GTFS data. Implemented a normalization layer that standardizes varied Golemio API response formats, ensuring "Route schedule" (stop times) and shapes are correctly populated even for future departures (placeholders).
-- **Map Camera Logic**: Resolved the "fly to ocean" bug when selecting future departures from the board. The map now correctly stays focused on the current stop when real-time vehicle telemetry is not yet available, preventing jumps to `[0, 0]` coordinates.
+- **Vehicle Detail Synchronization**: Overhauled the vehicle detail backend to robustly handle both real-time and static GTFS data. Implemented a normalization layer that standardizes varied Golemio API response formats.
+- **Map Camera Logic**: Initial fix for the "fly to ocean" bug when selecting future departures from the board.
 
 ## [0.5.3] - 2026-02-19
 

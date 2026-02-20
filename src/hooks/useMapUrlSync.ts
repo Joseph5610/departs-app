@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
 
+import { useStops } from './useStops';
+
 /**
  * Syncs the selected stop and map camera position with browser URL search parameters.
  * Allows for shareable links and state persistence on refresh.
  */
 export const useMapUrlSync = (
-    selectedStop: { id: string; name: string } | null,
-    setSelectedStop: (stop: { id: string; name: string } | null) => void
+    selectedStop: { id: string; name: string; coordinates?: [number, number] } | null,
+    setSelectedStop: (stop: { id: string; name: string; coordinates?: [number, number] } | null | ((prev: { id: string; name: string; coordinates?: [number, number] } | null) => { id: string; name: string; coordinates?: [number, number] } | null)) => void
 ) => {
     const initialized = useRef(false);
+    const { data: stops } = useStops();
 
     // 1. Initial Load: Read from URL
     useEffect(() => {
@@ -23,6 +26,16 @@ export const useMapUrlSync = (
         }
         initialized.current = true;
     }, [setSelectedStop, selectedStop]);
+
+    // 2. Data Enrichment: Find coordinates once stops are loaded
+    useEffect(() => {
+        if (selectedStop && !selectedStop.coordinates && stops?.features) {
+            const match = stops.features.find(f => f.properties.stop_id === selectedStop.id || f.properties.all_ids?.includes(selectedStop.id));
+            if (match) {
+                setSelectedStop(prev => prev ? { ...prev, coordinates: match.geometry.coordinates } : null);
+            }
+        }
+    }, [selectedStop, stops, setSelectedStop]);
 
     // 2. State Change: Write to URL
     useEffect(() => {

@@ -28,57 +28,91 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
-    // Determine API path:
-    // - If it's a placeholder (no real-time vehicle ID yet), fetch from static GTFS trips
-    // - Otherwise, fetch from real-time vehicle positions
     const isPlaceholder = vehicleId.startsWith('trip-');
-    const path = isPlaceholder
-        ? `/v2/public/gtfs/trips/${tripId}`
-        : `/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`;
 
     try {
-        const response = await golemioFetch(path, env, {
+        // 1. Always fetch static GTFS trip data (schedule and shape)
+        // This is the source of truth for the "Route schedule" tab.
+        const staticPromise = golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
             cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
             searchParams: {
-                // Request detailed scopes for the UI.
-                // NOTE: Use comma-separated string for compatibility across all Golemio endpoints.
-                scopes: 'info,stop_times,shapes,vehicle_descriptor'
+                scopes: 'info,stop_times,shapes'
             }
         });
 
-        if (!response.ok) {
-            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
+        // 2. If it's a real vehicle, fetch real-time position and delay
+        const rtPromise = !isPlaceholder
+            ? golemioFetch(`/v2/public/vehiclepositions/${vehicleId}`, env, {
+                cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
+                searchParams: {
+                    scopes: 'info,vehicle_descriptor'
+                }
+            })
+            : Promise.resolve(null);
+
+        const [staticRes, rtRes] = await Promise.all([staticPromise, rtPromise]);
+
+        if (!staticRes.ok) {
+            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(staticRes.status), staticRes.status);
         }
 
-        const data = await response.json() as GolemioResponse;
+        const staticData = await staticRes.json() as GolemioResponse;
+        let rtData: GolemioResponse | null = null;
+
+        if (rtRes && rtRes.ok) {
+            rtData = await rtRes.json() as GolemioResponse;
+        }
 
         // Standardize output structure.
         // Golemio Public GTFS API sometimes returns a FeatureCollection or a single Feature instead of a flat object.
-        const vehicleData: Record<string, unknown> = (data.features && Array.isArray(data.features) && data.features.length > 0)
-            ? {
-                ...(data.features[0].properties || {}),
-                shapes: data.shapes || data.features[0].properties?.shapes,
-                stop_times: data.stop_times || data.features[0].properties?.stop_times,
-                geometry: data.features[0].geometry
-            }
-            : (data.type === 'Feature'
-                ? {
+        const normalize = (data: GolemioResponse) => {
+            if (data.features && Array.isArray(data.features) && data.features.length > 0) {
+                return {
+                    ...(data.features[0].properties || {}),
+                    shapes: data.shapes || data.features[0].properties?.shapes,
+                    stop_times: data.stop_times || data.features[0].properties?.stop_times,
+                    geometry: data.features[0].geometry
+                };
+            } else if (data.type === 'Feature') {
+                return {
                     ...(data.properties || {}),
                     shapes: data.shapes || data.properties?.shapes,
                     stop_times: data.stop_times || data.properties?.stop_times,
                     geometry: data.geometry
-                }
-                : { ...data }
-            );
+                };
+            }
+            return { ...data };
+        };
 
-        // If coming from static GTFS trips, the Public API returns a plain object
-        // but we ensure it matches the real-time property names for the UI.
-        if (isPlaceholder) {
-            // Ensure static trip properties match expected real-time property names
-            vehicleData.gtfs_trip_id = vehicleData.gtfs_trip_id || vehicleData.trip_id || tripId;
-            vehicleData.gtfs_trip_headsign = vehicleData.gtfs_trip_headsign || vehicleData.trip_headsign;
-            vehicleData.gtfs_route_short_name = vehicleData.gtfs_route_short_name || vehicleData.route_short_name;
-            vehicleData.gtfs_route_type = vehicleData.gtfs_route_type || vehicleData.route_type;
+        const staticNormalized = normalize(staticData);
+        const rtNormalized = rtData ? normalize(rtData) : null;
+
+        // Merge RT data into Static base
+        const vehicleData: Record<string, unknown> = {
+            ...staticNormalized,
+            // Ensure static trip properties match expected real-time property names for the UI
+            gtfs_trip_id: staticNormalized.gtfs_trip_id || staticNormalized.trip_id || tripId,
+            gtfs_trip_headsign: staticNormalized.gtfs_trip_headsign || staticNormalized.trip_headsign,
+            gtfs_route_short_name: staticNormalized.gtfs_route_short_name || staticNormalized.route_short_name,
+            gtfs_route_type: staticNormalized.gtfs_route_type || staticNormalized.route_type,
+            // Add RT properties if available
+            ...(rtNormalized || {})
+        };
+
+        // If RT data exists but is for a DIFFERENT trip (vehicle still on previous run),
+        // we might want to keep the geometry/delay but mark the state.
+        if (rtNormalized && rtNormalized.gtfs_trip_id && rtNormalized.gtfs_trip_id !== tripId) {
+            // Add a flag that it's the previous trip's position
+            vehicleData.state_position = 'before_track';
+        }
+
+        // Coordinate Validation: Prevent "fly to ocean" by removing [0, 0] or invalid coordinates
+        if (vehicleData.geometry && typeof vehicleData.geometry === 'object') {
+            const geom = vehicleData.geometry as { type?: string; coordinates?: unknown };
+            if (Array.isArray(geom.coordinates) &&
+               (geom.coordinates.length < 2 || (geom.coordinates[0] === 0 && geom.coordinates[1] === 0))) {
+                delete vehicleData.geometry;
+            }
         }
 
         // Normalize stop_times: The frontend expects { features: [ { properties: { ... } }, ... ] }

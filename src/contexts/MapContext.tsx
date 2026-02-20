@@ -156,8 +156,12 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         const activeVehId = vehicleId || `trip-${tripId}`;
         const isPlaceholder = !vehicleId;
 
-        // Use the current stop's coordinates as a fallback to prevent flying to [0, 0]
-        const fallbackCoords = state.selectedStop?.coordinates || [0, 0];
+        // Use the current stop's coordinates or current map center as a fallback to prevent flying to [0, 0]
+        let fallbackCoords = state.selectedStop?.coordinates;
+        if (!fallbackCoords || (fallbackCoords[0] === 0 && fallbackCoords[1] === 0)) {
+            const center = mapRef.current?.getMap().getCenter();
+            fallbackCoords = center ? [center.lng, center.lat] : [0, 0];
+        }
 
         selectVehicle({
             vehicle_id: activeVehId,
@@ -191,10 +195,11 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 });
 
                 // Handle camera movement if we got valid coordinates
-                if (!isPlaceholder && data.geometry?.coordinates) {
+                if (data.geometry?.coordinates) {
                     const coords = data.geometry.coordinates;
-                    // Only fly if coordinates are valid (not 0, 0)
-                    if (coords[0] !== 0 || coords[1] !== 0) {
+                    // Only fly if coordinates are valid (not 0, 0) AND it's not a placeholder
+                    // For placeholders/future trips, we stay at the stop location
+                    if (!isPlaceholder && (coords[0] !== 0 || coords[1] !== 0)) {
                         const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
                         mapRef.current?.flyTo({
                             center: coords,
