@@ -13,7 +13,21 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body {
+html,
+body,
+#root {
+  height: 100%;
+  height: -webkit-fill-available;
+  width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
 }

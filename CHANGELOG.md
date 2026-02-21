@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.10] - 2026-02-21
+
+### Fixed
+- **iOS PWA Full-Screen Stability**: Reverted the problematic manual style injection in React that caused UI breakdown and "no styles" issues. Implemented a robust CSS-based "fixed body" layout in `index.css` using `-webkit-fill-available` and `absolute inset-0` anchoring. This ensures the app correctly spans the entire viewport and safe areas on iOS PWAs without interfering with interaction or causing layout collapses.
+
 ## [0.5.9] - 2026-02-21
 
 ### Fixed

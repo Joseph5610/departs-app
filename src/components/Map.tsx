@@ -40,24 +40,6 @@ const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const { state, actions, mapEvents, mapRef } = useMap();
 
-    // Ensure full-screen and prevent bouncing on iOS
-    React.useEffect(() => {
-        const html = document.documentElement;
-        const body = document.body;
-        const root = document.getElementById('root');
-
-        html.classList.add('h-full', 'overflow-hidden');
-        body.classList.add('h-full', 'overflow-hidden', 'bg-black', 'm-0', 'p-0');
-        if (root) root.classList.add('h-full');
-
-        // iOS specific position fix for PWA standalone mode
-        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-            body.style.height = '-webkit-fill-available';
-            body.style.position = 'fixed';
-            body.style.width = '100%';
-        }
-    }, []);
-
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
     const stopsData = useMapStops();
@@ -94,7 +76,7 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="fixed inset-0 bg-black overflow-hidden select-none h-[100dvh] w-screen">
+        <div className="absolute inset-0 bg-black overflow-hidden select-none h-full w-full">
             <div className="absolute inset-0 h-full w-full">
                 <MapGL
                     ref={mapRef}
