@@ -58,9 +58,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                     allFeatures.push(normalizeVehicleFeature(data as unknown as GolemioVehicleFeature, tripId || undefined));
                 } else if (Array.isArray(data)) {
                     // Some internal endpoints might return a plain array
-                    const features = data.map((f: unknown) => {
-                        const item = f as Record<string, unknown>;
-                        const feature = (item.type === 'Feature' ? item : { type: 'Feature', geometry: item.geometry, properties: item.properties || item }) as unknown as GolemioVehicleFeature;
+                    const features = data.map((item: unknown) => {
+                        const obj = item as Record<string, unknown>;
+                        const feature = (obj.type === 'Feature' ? obj : { type: 'Feature', geometry: obj.geometry, properties: obj.properties || obj }) as unknown as GolemioVehicleFeature;
                         return normalizeVehicleFeature(feature, tripId || undefined);
                     });
                     allFeatures = [...allFeatures, ...features];

@@ -24,106 +24,119 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const vehicleId = searchParams.get("vehicleId");
     const tripId = searchParams.get("tripId");
 
-    if (!vehicleId || !tripId) {
+    if (!tripId) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
-    const isPlaceholder = vehicleId.startsWith('trip-');
+    const isPlaceholder = vehicleId?.startsWith('trip-') || !vehicleId;
 
     try {
-        // 1. Fetch static GTFS trip data (schedule and shape)
-        // Public GTFS Trips API uses the 'scopes' parameter.
-        const staticPromise = golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
-            cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-            searchParams: {
-                scopes: 'info,stop_times,shapes'
-            }
-        }).catch(() => null);
+        // We try multiple combinations to be extremely resilient to Golemio API changes/versions.
 
-        // 2. Fetch real-time position and metadata
-        // Public vehiclepositions endpoint by vehicle ID also uses 'scopes'.
-        const rtPromise = !isPlaceholder
-            ? golemioFetch(`/v2/public/vehiclepositions/${vehicleId}`, env, {
+        // 1. Fetch static GTFS trip data. We try both non-public and public versions.
+        const staticPaths = [`/v2/gtfs/trips/${tripId}`, `/v2/public/gtfs/trips/${tripId}`];
+        let staticData: GolemioResponse | null = null;
+
+        for (const path of staticPaths) {
+            const isPublic = path.includes('/public/');
+            const res = await golemioFetch(path, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                searchParams: {
-                    scopes: 'info,vehicle_descriptor'
-                }
-            }).catch(() => null)
-            : Promise.resolve(null);
+                searchParams: isPublic
+                    ? { scopes: 'info,stop_times,shapes' }
+                    : { includeStopTimes: 'true', includeShapes: 'true' }
+            }).catch(() => null);
 
-        const [staticRes, rtRes] = await Promise.all([staticPromise, rtPromise]);
-
-        // Resilience: We need at least one source to succeed.
-        if ((!staticRes || !staticRes.ok) && (!rtRes || !rtRes.ok)) {
-            const status = staticRes?.status || rtRes?.status || 404;
-            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(status), status);
+            if (res && res.ok) {
+                staticData = await res.json() as GolemioResponse;
+                break;
+            }
         }
 
-        const staticData = (staticRes && staticRes.ok) ? await staticRes.json() as GolemioResponse : null;
-        const rtData = (rtRes && rtRes.ok) ? await rtRes.json() as GolemioResponse : null;
+        // 2. Fetch real-time position.
+        let rtData: GolemioResponse | null = null;
+        if (!isPlaceholder) {
+            // Priority 1: Non-public by tripId (most accurate for the active run)
+            // Priority 2: Public by vehicleId
+            const rtPaths = [
+                { path: `/v2/vehiclepositions/${tripId}`, params: {} },
+                { path: `/v2/public/vehiclepositions/${vehicleId}`, params: { scopes: 'info,vehicle_descriptor' } }
+            ];
 
-        /**
-         * Normalizes various Golemio response formats (FeatureCollection, Feature, or flat object).
-         */
+            for (const { path, params } of rtPaths) {
+                const res = await golemioFetch(path, env, {
+                    cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
+                    searchParams: params
+                }).catch(() => null);
+
+                if (res && res.ok) {
+                    rtData = await res.json() as GolemioResponse;
+                    // If it's a collection, make sure it has data
+                    if (rtData.type === 'FeatureCollection' && (!rtData.features || rtData.features.length === 0)) {
+                        rtData = null;
+                        continue;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 3. Normalize and Merge
         const normalize = (data: GolemioResponse | null) => {
             if (!data) return {};
             let normalized: Record<string, unknown> = {};
 
-            if (data.features && Array.isArray(data.features) && data.features.length > 0) {
-                normalized = { ...(data.features[0].properties || {}) };
-                if (data.shapes || data.features[0].properties?.shapes) normalized.shapes = data.shapes || data.features[0].properties?.shapes;
-                if (data.stop_times || data.features[0].properties?.stop_times) normalized.stop_times = data.stop_times || data.features[0].properties?.stop_times;
-                if (data.features[0].geometry) normalized.geometry = data.features[0].geometry;
+            if (data.type === 'FeatureCollection' && data.features && data.features.length > 0) {
+                const firstFeature = data.features[0];
+                normalized = { ...(firstFeature.properties || {}) };
+                if (firstFeature.geometry) normalized.geometry = firstFeature.geometry;
+
+                // Use type casting to access potential nested properties safely
+                const props = (firstFeature.properties || {}) as Record<string, unknown>;
+                if (!normalized.shapes && props.shapes) normalized.shapes = props.shapes;
+                if (!normalized.stop_times && props.stop_times) normalized.stop_times = props.stop_times;
             } else if (data.type === 'Feature') {
                 normalized = { ...(data.properties || {}) };
-                if (data.shapes || data.properties?.shapes) normalized.shapes = data.shapes || data.properties?.shapes;
-                if (data.stop_times || data.properties?.stop_times) normalized.stop_times = data.stop_times || data.properties?.stop_times;
                 if (data.geometry) normalized.geometry = data.geometry;
             } else {
                 normalized = { ...data };
             }
+
+            // Ensure nested shapes/stop_times from root are preserved if not in properties
+            if (data.shapes && !normalized.shapes) normalized.shapes = data.shapes;
+            if (data.stop_times && !normalized.stop_times) normalized.stop_times = data.stop_times;
+
             return normalized;
         };
 
         const staticNormalized = normalize(staticData);
         const rtNormalized = normalize(rtData);
 
-        // RT is considered valid if we have at least some properties or a Feature
-        const isRtValid = !!rtData && (
-            (rtData.features && Array.isArray(rtData.features) && rtData.features.length > 0) ||
-            rtData.type === 'Feature' ||
-            !!(rtNormalized.vehicle_id || rtNormalized.trip_id)
-        );
-
-        // Merge logic: Start with static as base, override with RT for real-time fields.
         const vehicleData: Record<string, unknown> = {
             ...staticNormalized,
+            // Override with RT data
+            ...rtNormalized,
         };
 
-        if (isRtValid) {
-            Object.entries(rtNormalized).forEach(([key, value]) => {
-                // Avoid overwriting valid static schedule/shapes with empty RT data
-                if (key === 'stop_times' || key === 'shapes') {
-                    const hasItems = Array.isArray(value) ? value.length > 0 : (value && typeof value === 'object' && 'features' in value && Array.isArray(value.features) && value.features.length > 0);
-                    if (hasItems) {
-                        vehicleData[key] = value;
-                    }
-                } else if (value !== undefined && value !== null) {
-                    vehicleData[key] = value;
-                }
-            });
+        // Resiliency: Always ensure we have the core IDs even if fetches failed
+        vehicleData.gtfs_trip_id = (rtNormalized.gtfs_trip_id as string) || (staticNormalized.gtfs_trip_id as string) || (staticNormalized.trip_id as string) || tripId;
+        vehicleData.vehicle_id = vehicleId || (rtNormalized.vehicle_id as string) || (rtNormalized.id as string) || (staticNormalized.vehicle_id as string);
+
+        // Ensure headsign and route name are present
+        vehicleData.gtfs_trip_headsign = (rtNormalized.gtfs_trip_headsign as string) || (rtNormalized.trip_headsign as string) || (staticNormalized.gtfs_trip_headsign as string) || (staticNormalized.trip_headsign as string) || (staticNormalized.headsign as string);
+        vehicleData.gtfs_route_short_name = (rtNormalized.gtfs_route_short_name as string) || (rtNormalized.route_short_name as string) || (staticNormalized.gtfs_route_short_name as string) || (staticNormalized.route_short_name as string) || (staticNormalized.route_id as string);
+
+        vehicleData.trip_headsign = vehicleData.gtfs_trip_headsign;
+        vehicleData.route_short_name = vehicleData.gtfs_route_short_name;
+
+        // Restore static schedule/shapes if RT data "overwrote" them with empty values
+        if (staticNormalized.stop_times && (!vehicleData.stop_times || (Array.isArray(vehicleData.stop_times) && vehicleData.stop_times.length === 0))) {
+            vehicleData.stop_times = staticNormalized.stop_times;
+        }
+        if (staticNormalized.shapes && (!vehicleData.shapes || (Array.isArray(vehicleData.shapes) && vehicleData.shapes.length === 0))) {
+            vehicleData.shapes = staticNormalized.shapes;
         }
 
-        // Ensure core properties are present with robust fallbacks
-        vehicleData.gtfs_trip_id = rtNormalized.gtfs_trip_id || staticNormalized.gtfs_trip_id || staticNormalized.trip_id || tripId;
-        vehicleData.gtfs_trip_headsign = rtNormalized.gtfs_trip_headsign || rtNormalized.trip_headsign || staticNormalized.gtfs_trip_headsign || staticNormalized.trip_headsign;
-        vehicleData.gtfs_route_short_name = rtNormalized.gtfs_route_short_name || rtNormalized.route_short_name || staticNormalized.gtfs_route_short_name || staticNormalized.route_short_name;
-        vehicleData.gtfs_route_type = rtNormalized.gtfs_route_type || rtNormalized.route_type || staticNormalized.gtfs_route_type || staticNormalized.route_type;
-
-        if (!vehicleData.trip_headsign) vehicleData.trip_headsign = vehicleData.gtfs_trip_headsign;
-        if (!vehicleData.route_short_name) vehicleData.route_short_name = vehicleData.gtfs_route_short_name;
-
-        // Fly-to-ocean prevention: Filter out invalid [0,0] coordinates
+        // 4. Fly-to-ocean prevention: Filter out invalid [0,0] coordinates
         if (vehicleData.geometry && typeof vehicleData.geometry === 'object') {
             const geom = vehicleData.geometry as { type?: string; coordinates?: unknown };
             if (Array.isArray(geom.coordinates) &&
@@ -132,50 +145,72 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
-        // Normalize stop_times to FeatureCollection format for the frontend
-        const stopTimes = vehicleData.stop_times;
-        if (stopTimes && Array.isArray(stopTimes)) {
-            const stopTimesArray = stopTimes as Array<Record<string, unknown>>;
-            vehicleData.stop_times = {
-                type: 'FeatureCollection',
-                features: stopTimesArray.map((st) => ({
-                    type: 'Feature',
-                    properties: st.properties || st
-                }))
-            };
-        } else if (stopTimes && typeof stopTimes === 'object' && 'features' in (stopTimes as Record<string, unknown>) && Array.isArray((stopTimes as Record<string, unknown>).features)) {
-            const stopTimesObj = stopTimes as Record<string, unknown>;
-            const features = stopTimesObj.features as Array<Record<string, unknown>>;
-            vehicleData.stop_times = {
-                type: 'FeatureCollection',
-                features: features.map((f) => ({
-                    type: 'Feature',
-                    geometry: f.geometry,
-                    properties: f.properties || f
-                }))
-            };
+        // 5. Format for Frontend
+
+        // Format stop_times as FeatureCollection
+        const rawStopTimes = vehicleData.stop_times;
+        if (rawStopTimes) {
+            let features: unknown[] = [];
+            if (Array.isArray(rawStopTimes)) {
+                features = rawStopTimes.map(st => {
+                    const item = st as Record<string, unknown>;
+                    return { type: 'Feature', properties: item.properties || item };
+                });
+            } else if (typeof rawStopTimes === 'object' && (rawStopTimes as Record<string, unknown>).features) {
+                features = (rawStopTimes as Record<string, unknown>).features as unknown[];
+            }
+            vehicleData.stop_times = { type: 'FeatureCollection', features };
         }
 
-        // Normalize shapes to a flat coordinate array
-        const shapes = vehicleData.shapes;
-        if (shapes && typeof shapes === 'object' && 'features' in (shapes as Record<string, unknown>) && Array.isArray((shapes as Record<string, unknown>).features)) {
-            const shapesObj = shapes as Record<string, unknown>;
-            const features = shapesObj.features as Array<Record<string, unknown>>;
-            vehicleData.shapes = features
-                .filter((f) => {
-                    const geom = f.geometry as Record<string, unknown> | undefined;
-                    return geom?.type === 'Point' || geom?.type === 'point';
-                })
-                .map((f) => (f.geometry as Record<string, unknown>)?.coordinates);
-        } else if (shapes && (shapes as Record<string, unknown>).type === 'LineString' && Array.isArray((shapes as Record<string, unknown>).coordinates)) {
-            vehicleData.shapes = (shapes as Record<string, unknown>).coordinates;
-        } else if (!Array.isArray(vehicleData.shapes)) {
-            vehicleData.shapes = [];
+        // Format shapes as flat coordinate array
+        const rawShapes = vehicleData.shapes;
+        if (rawShapes) {
+            if (Array.isArray(rawShapes)) {
+                if (rawShapes.length > 0 && Array.isArray(rawShapes[0])) {
+                    // Already coordinates array
+                    vehicleData.shapes = rawShapes;
+                } else {
+                    // Probably array of features
+                    vehicleData.shapes = (rawShapes as unknown[])
+                        .map(s => {
+                            const item = s as Record<string, unknown>;
+                            const geom = item.geometry as Record<string, unknown> | undefined;
+                            return geom?.coordinates || item.coordinates;
+                        })
+                        .filter(Boolean);
+                }
+            } else if (typeof rawShapes === 'object') {
+                const sObj = rawShapes as Record<string, unknown>;
+                if (sObj.type === 'FeatureCollection' && sObj.features) {
+                    const features = sObj.features as Array<Record<string, unknown>>;
+                    vehicleData.shapes = features.map(f => {
+                        const geom = f.geometry as Record<string, unknown> | undefined;
+                        return geom?.coordinates;
+                    }).filter(Boolean);
+                } else if (sObj.type === 'LineString' && sObj.coordinates) {
+                    vehicleData.shapes = sObj.coordinates;
+                }
+            }
+        }
+
+        // Ensure vehicle_descriptor for the UI
+        if (!vehicleData.vehicle_descriptor) {
+            vehicleData.vehicle_descriptor = {
+                is_wheelchair_accessible: vehicleData.is_wheelchair_accessible,
+                is_air_conditioned: vehicleData.is_air_conditioned,
+                vehicle_registration_number: vehicleData.vehicle_registration_number,
+            };
         }
 
         return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
     } catch (error) {
         console.error("Vehicle Detail API Error:", error);
-        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
+        // Last resort: return at least the ID so the UI doesn't crash
+        return createSuccessResponse({
+            gtfs_trip_id: tripId,
+            vehicle_id: vehicleId,
+            state_position: 'unknown',
+            delay: 0
+        }, CACHE_TTL.VEHICLE_DETAIL);
     }
 };
