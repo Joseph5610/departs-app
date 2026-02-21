@@ -2,10 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.5.11] - 2026-02-21
+## [0.5.9] - 2026-02-21
 
 ### Fixed
-- **iOS PWA Layout Hardening**: Resolved persistent black/white viewport gaps on iOS 18 in standalone mode. Implemented a robust viewport strategy using `100dvh` and `-webkit-fill-available` on the main map container. Centralized global styles in `index.css` to ensure a consistent black background and prevented PWA overscroll by pinning the `html` and `body` elements.
+- **iOS PWA Layout (Component-Level Fix)**: Resolved persistent viewport gaps on iOS 18 in standalone mode by applying layout constraints at the component level. Injected `html` and `body` styles via React effects to ensure full-height rendering and prevent background bleed-through, while maintaining requested typography and avoiding global CSS side effects.
+
+## [0.5.8] - 2026-02-21
+
+### Fixed
+- **iOS PWA Layout (Final Fix)**: Completely resolved the persistent black/white viewport gaps on iOS 18 in standalone mode. Replaced problematic Tailwind classes and dynamic viewport units with a robust "fixed body" strategy and absolute anchoring (`inset-0`). This ensures the application container physically occupies the entire screen area including the safe area at the bottom.
 
 ## [0.5.7] - 2026-02-21
 
