@@ -76,7 +76,10 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="absolute inset-0 bg-black overflow-hidden">
+        <div
+            className="fixed inset-0 bg-black overflow-hidden h-full w-full"
+            style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
+        >
             <LiveStatus />
 
             <MapGL
