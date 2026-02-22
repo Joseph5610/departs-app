@@ -31,11 +31,18 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
     const [sheetState, setSheetState] = useState<SheetState>(isMobile ? 'peek' : 'full');
     const [prevIsMobile, setPrevIsMobile] = useState(isMobile);
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-    // Derived state update during render to avoid useEffect cascading renders
-    if (isMobile !== prevIsMobile) {
+    // Derived state updates during render to avoid useEffect cascading renders
+    if (isMobile !== prevIsMobile || isOpen !== prevIsOpen) {
         setPrevIsMobile(isMobile);
-        setSheetState(isMobile ? 'peek' : 'full');
+        setPrevIsOpen(isOpen);
+
+        if (isOpen !== prevIsOpen && isOpen && isMobile) {
+            setSheetState('peek');
+        } else if (isMobile !== prevIsMobile) {
+            setSheetState(isMobile ? 'peek' : 'full');
+        }
     }
 
     const variants = {
@@ -63,20 +70,23 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         if (!isMobile) return;
         const velocity = info.velocity.y;
         const offset = info.offset.y;
+      
+        // Better snapping logic: use travel distance + velocity projection
+        const travel = offset + (velocity * 0.1);
+        const threshold = 100;
 
-        const isSwipeDown = velocity > 500;
-        const isSwipeUp = velocity < -500;
-        const isMajorDragDown = offset > 150;
-        const isMajorDragUp = offset < -150;
-
-        if (isSwipeDown || isMajorDragDown) {
+        if (travel > threshold) {
+            // Moving DOWN
             if (sheetState === 'full') setSheetState('peek');
             else if (sheetState === 'peek') setSheetState('collapsed');
             else onClose();
-        } else if (isSwipeUp || isMajorDragUp) {
+        } else if (travel < -threshold) {
+            // Moving UP
             if (sheetState === 'collapsed') setSheetState('peek');
             else if (sheetState === 'peek') setSheetState('full');
         }
+        // If travel is within threshold, Framer Motion will automatically
+        // snap back to the current 'animate' state.
     };
 
     return (
@@ -89,12 +99,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                         animate={isMobile ? sheetState : "full"}
                         exit="hidden"
                         variants={variants}
-                        transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 220, mass: 0.5 }}
                         drag={isMobile ? "y" : false}
                         dragControls={dragControls}
                         dragListener={false}
-                        dragConstraints={{ top: 0, bottom: 1000 }}
-                        dragElastic={0.1}
+                        dragConstraints={{ top: 0, bottom: window.innerHeight * 0.8 }}
+                        dragElastic={0.05}
                         onDragEnd={handleDragEnd}
                         className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border"
                     >

@@ -149,8 +149,8 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                                     tabIndex={0}
                                     onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep);
+                                        if ((e.key === 'Enter' || e.key === ' ') && dep.tripId) {
+                                            onDepartureClick(dep.tripId, dep.vehicleId, dep);
                                         }
                                     }}
                                     className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all

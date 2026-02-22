@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.11] - 2026-02-22
+
+### Fixed
+- **BottomSheet State Management**: Refined the state synchronization logic to ensure the sheet always resets to the 'peek' position when a new stop is selected, even if it was previously collapsed. This eliminates the "hidden sheet" bug on sequential selections.
+- **Linting & Code Quality**: Resolved ESLint warnings regarding synchronous state updates in effects and unused expressions, ensuring a cleaner build process.
+
 ## [0.5.10] - 2026-02-22
 
 ### Changed
