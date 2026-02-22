@@ -2,6 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.8] - 2026-02-21
+
+### Changed
+- **Codebase Simplification**: Significantly reduced DOM depth and CSS complexity by removing unused `App.css`, redundant wrapper `div` elements, and unnecessary classes across all major components.
+- **Global Layout Refactor**: Consolidated full-screen layout logic into `index.css`. Standardized iOS safe-area inset management using centralized CSS utility classes (`.safe-top`, `.safe-bottom`, etc.), replacing repetitive inline JavaScript calculations.
+- **Component Cleanup**: Streamlined `App`, `Map`, `BottomSheet`, `Modal`, `Search`, and `MapControls` components for better maintainability and performance.
+
 ## [0.5.7] - 2026-02-21
 
 ### Fixed

@@ -76,84 +76,81 @@ const MapInner: React.FC = () => {
     }), []);
 
     return (
-        <div className="absolute inset-0 bg-black overflow-hidden">
-            <LiveStatus />
+        <>
+            <MapGL
+                ref={mapRef}
+                initialViewState={initialViewState}
+                onMove={mapEvents.onMove}
+                onMoveEnd={mapEvents.onMoveEnd}
+                onLoad={mapEvents.onLoad}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle={MAP_STYLE}
+                mapLib={maplibregl as unknown as typeof maplibregl}
+                onDragStart={mapEvents.onDragStart}
+                onMouseEnter={(evt) => {
+                    const features = evt.features;
+                    if (features?.length && features[0].layer.id !== 'entrance-layer') {
+                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
+                    }
+                }}
+                onMouseLeave={(evt) => {
+                    (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
+                }}
+                onClick={(evt) => {
+                    const f = evt.features?.[0];
+                    if (!f || f.layer.id === 'entrance-layer') return;
 
-            <div className="absolute inset-0">
-                <MapGL
-                    ref={mapRef}
-                    initialViewState={initialViewState}
-                    onMove={mapEvents.onMove}
-                    onMoveEnd={mapEvents.onMoveEnd}
-                    onLoad={mapEvents.onLoad}
-                    style={{ width: '100%', height: '100%' }}
-                    mapStyle={MAP_STYLE}
-                    mapLib={maplibregl as unknown as typeof maplibregl}
-                    onDragStart={mapEvents.onDragStart}
-                    onMouseEnter={(evt) => {
-                        const features = evt.features;
-                        if (features?.length && features[0].layer.id !== 'entrance-layer') {
-                            (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
-                        }
-                    }}
-                    onMouseLeave={(evt) => {
-                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
-                    }}
-                    onClick={(evt) => {
-                        const f = evt.features?.[0];
-                        if (!f || f.layer.id === 'entrance-layer') return;
-
-                        if (f.layer.id === 'clusters') {
-                            const clusterId = f.properties.cluster_id;
-                            const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
-                            const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
-                            source.getClusterExpansionZoom(clusterId).then((zoom) => {
-                                mapRef.current?.easeTo({
-                                    center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
-                                    zoom,
-                                    duration: 500
-                                });
-                            }).catch(() => {
-                                // Silent fail
+                    if (f.layer.id === 'clusters') {
+                        const clusterId = f.properties.cluster_id;
+                        const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
+                        const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
+                        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+                            mapRef.current?.easeTo({
+                                center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
+                                zoom,
+                                duration: 500
                             });
-                            return;
-                        }
+                        }).catch(() => {
+                            // Silent fail
+                        });
+                        return;
+                    }
 
-                        if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
-                            const props = f.properties;
-                            actions.selectVehicle({
-                                ...props,
-                                vehicle_id: String(props.vehicle_id || props.id),
-                                _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                            } as TrackedVehicle, false); // clear stop
-                            return;
-                        }
+                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
+                        const props = f.properties;
+                        actions.selectVehicle({
+                            ...props,
+                            vehicle_id: String(props.vehicle_id || props.id),
+                            _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                        } as TrackedVehicle, false); // clear stop
+                        return;
+                    }
 
-                        if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
-                            const pc = f.properties.platform_code;
-                            const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                            actions.selectStop({ id: f.properties.stop_id, name });
-                        }
-                    }}
-                    interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
-                >
-                    <MapLayers
-                        mapLoaded={state.mapLoaded}
-                        showVehicles={state.showVehicles}
-                        displayVehicles={displayVehicles || null}
-                        stopsData={stopsData}
-                        labelData={labelData}
-                        routeShapeData={routeShapeData}
-                        userLocation={state.userLocation}
-                        selectedVehicleFeature={selectedVehicleFeature}
-                        routeLinePaint={routeLinePaint}
-                        routeLineLayout={routeLineLayout}
-                        vehiclesFilter={vehiclesFilter}
-                        labelLayerId={state.labelLayerId}
-                    />
-                </MapGL>
-            </div>
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                        const pc = f.properties.platform_code;
+                        const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
+                        actions.selectStop({ id: f.properties.stop_id, name });
+                    }
+                }}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
+            >
+                <MapLayers
+                    mapLoaded={state.mapLoaded}
+                    showVehicles={state.showVehicles}
+                    displayVehicles={displayVehicles || null}
+                    stopsData={stopsData}
+                    labelData={labelData}
+                    routeShapeData={routeShapeData}
+                    userLocation={state.userLocation}
+                    selectedVehicleFeature={selectedVehicleFeature}
+                    routeLinePaint={routeLinePaint}
+                    routeLineLayout={routeLineLayout}
+                    vehiclesFilter={vehiclesFilter}
+                    labelLayerId={state.labelLayerId}
+                />
+            </MapGL>
 
+            <LiveStatus />
             <Search />
             <MapControls />
 
@@ -178,7 +175,7 @@ const MapInner: React.FC = () => {
                     onToggleFollow={handleToggleFollow}
                 />
             </BottomSheet>
-        </div>
+        </>
     );
 };
 
