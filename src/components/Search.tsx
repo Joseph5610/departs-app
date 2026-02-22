@@ -116,9 +116,11 @@ export const Search: React.FC = React.memo(() => {
                                     zoom: MAP_STOP_SELECT_ZOOM,
                                     duration: MAP_FLY_DURATION
                                 });
-                                const pc = stop.properties.platform_code;
-                                const name = (pc && pc.trim().length > 0) ? `${stop.properties.stop_name} (${pc})` : stop.properties.stop_name;
-                                selectStop({ id: stop.properties.stop_id, name });
+                                selectStop({
+                                    id: stop.properties.stop_id,
+                                    name: stop.properties.stop_name,
+                                    platformCode: stop.properties.platform_code
+                                });
                                 setQuery('');
                                 setIsOpen(false);
                             }}

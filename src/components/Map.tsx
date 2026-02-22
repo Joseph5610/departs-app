@@ -127,9 +127,11 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
-                        const pc = f.properties.platform_code;
-                        const name = (pc && pc.trim().length > 0) ? `${f.properties.stop_name} (${pc})` : f.properties.stop_name;
-                        actions.selectStop({ id: f.properties.stop_id, name });
+                        actions.selectStop({
+                            id: f.properties.stop_id,
+                            name: f.properties.stop_name,
+                            platformCode: f.properties.platform_code
+                        });
                     }
                 }}
                 interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
@@ -170,6 +172,7 @@ const MapInner: React.FC = () => {
                 title={state.selectedVehicle
                     ? t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name })
                     : (state.selectedStop ? state.selectedStop.name : '')}
+                platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
             >
                 <BottomSheetContent
                     onToggleFollow={handleToggleFollow}

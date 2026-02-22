@@ -8,12 +8,13 @@ interface BottomSheetProps {
     onClose: () => void;
     onBack?: () => void;
     title?: string;
+    platformCode?: string;
     children: React.ReactNode;
 }
 
 type SheetState = 'peek' | 'full';
 
-export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, children }) => {
+export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, platformCode, children }) => {
     // Use a reactive window size
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
@@ -88,7 +89,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
                             {/* Header */}
                             <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                                     {onBack && (
                                         <button
                                             onClick={onBack}
@@ -97,9 +98,16 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                                             <ArrowLeft size={20} />
                                         </button>
                                     )}
-                                    <h2 className="text-xl font-bold text-white truncate tracking-tight">
-                                        {title || ''}
-                                    </h2>
+                                    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                                        <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                                            {title || ''}
+                                        </h2>
+                                        {platformCode && (
+                                            <div className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 border border-white/5 text-zinc-400 text-[13px] font-black tabular-nums">
+                                                {platformCode}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <button
                                     onClick={onClose}
