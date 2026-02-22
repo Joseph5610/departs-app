@@ -36,7 +36,7 @@ export const Alerts: React.FC = () => {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group relative"
+                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group relative"
                 title={t('alerts.title')}
             >
                 <AlertTriangle size={20} className={incidentsCount > 0 ? "text-rose-500 animate-pulse" : "group-hover:scale-110 transition-transform"} />
@@ -121,7 +121,7 @@ export const Alerts: React.FC = () => {
 const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string, count: number, isIncident?: boolean }> = ({ active, onClick, label, count, isIncident }) => (
     <button
         onClick={onClick}
-        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2
+        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2
             ${active ? 'bg-white/10 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}
         `}
     >

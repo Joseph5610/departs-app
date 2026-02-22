@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 import { MOBILE_BREAKPOINT } from '../config/constants';
@@ -19,15 +19,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Use a reactive window size
-    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+    const [windowSize, setWindowSize] = useState({
+        width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+        height: typeof window !== 'undefined' ? window.innerHeight : 800
+    });
 
     useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
+        const handleResize = () => setWindowSize({
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const isMobile = windowWidth < MOBILE_BREAKPOINT;
+    const isMobile = windowSize.width < MOBILE_BREAKPOINT;
 
     const [sheetState, setSheetState] = useState<SheetState>(isMobile ? 'peek' : 'full');
     const [prevIsMobile, setPrevIsMobile] = useState(isMobile);
@@ -45,7 +51,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         }
     }
 
-    const variants = {
+    const variants = useMemo(() => ({
         hidden: isMobile
             ? { y: '100%', x: 0 }
             : { x: '-110%', y: 0 },
@@ -61,16 +67,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             y: '0%',
             x: 0
         },
-    };
+    }), [isMobile]);
 
-    const handleDragEnd = (_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
+    const handleDragEnd = useCallback((_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
         if (!isMobile) return;
-        const velocity = info.velocity.y;
-        const offset = info.offset.y;
+        const { velocity, offset } = info;
       
-        // Better snapping logic: use travel distance + velocity projection
-        const travel = offset + (velocity * 0.1);
-        const threshold = 100;
+        // Snapping logic with velocity projection
+        // We use a slightly more aggressive projection for better feel
+        const travel = offset.y + (velocity.y * 0.15);
+        const threshold = 75;
 
         if (travel > threshold) {
             // Moving DOWN
@@ -82,9 +88,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             if (sheetState === 'collapsed') setSheetState('peek');
             else if (sheetState === 'peek') setSheetState('full');
         }
-        // If travel is within threshold, Framer Motion will automatically
-        // snap back to the current 'animate' state.
-    };
+    }, [isMobile, sheetState, onClose]);
 
     return (
         <AnimatePresence>
@@ -100,7 +104,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         drag={isMobile ? "y" : false}
                         dragControls={dragControls}
                         dragListener={false}
-                        dragConstraints={{ top: 0, bottom: window.innerHeight * 0.8 }}
+                        dragConstraints={{ top: 0, bottom: windowSize.height }}
                         dragElastic={0.05}
                         onDragEnd={handleDragEnd}
                         className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-lg md:backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border will-change-transform h-[92%] md:h-auto"
@@ -152,11 +156,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
                         <div
                             ref={contentRef}
-                            onPointerDown={(e) => {
-                                if (contentRef.current && contentRef.current.scrollTop <= 0 && !(e.target as HTMLElement).closest('button')) {
-                                    dragControls.start(e);
-                                }
-                            }}
                             className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,1.5rem)]"
                         >
                             {children}

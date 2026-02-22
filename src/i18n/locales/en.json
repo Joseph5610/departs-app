@@ -88,7 +88,9 @@
       "moreConnections": "+ {{count}} more connections",
       "showLess": "Show less",
       "now": "Now",
-      "minutes": "{{count}} min"
+      "minutes": "{{count}} min",
+      "sortByLine": "Sort by line",
+      "sortByDeparture": "Sort by departure time"
     }
   },
   "update": {
