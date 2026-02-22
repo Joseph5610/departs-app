@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.9] - 2026-02-22
+
+### Added
+- **Platform Indicator UI**: Replaced parentheses-based platform codes in the departure board header with a dedicated, styled neutral circle badge.
+- **Isolated Platform Data**: Updated the application state and selection logic to store `platformCode` as a separate field, improving data structure and enabling independent UI rendering.
+- **Enhanced URL Synchronization**: Added support for a `stopPlatform` URL parameter for more robust deep-linking.
+- **Backward Compatibility**: Implemented automatic parsing of legacy URL stop names (e.g., "Stop Name (A)") to extract platform codes and maintain valid state from old links.
+
 ## [0.5.8] - 2026-02-21
 
 ### Changed
