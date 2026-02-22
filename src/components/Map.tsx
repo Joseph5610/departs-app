@@ -7,7 +7,7 @@ import maplibregl, {
     type LineLayerSpecification
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { BottomSheet } from './BottomSheet';
+import { DetailPanel } from './DetailPanel';
 
 import { LiveStatus } from './LiveStatus';
 import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
@@ -21,7 +21,7 @@ import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
 import type { TrackedVehicle } from '../types/transit';
 import { MapControls } from './MapControls';
-import { BottomSheetContent } from './BottomSheetContent';
+import { DetailPanelContent } from './DetailPanelContent';
 import { useVehicles } from '../hooks/useVehicles';
 import { useMapStops } from '../hooks/useMapStops';
 import { useMapCentroids } from '../hooks/useMapCentroids';
@@ -53,6 +53,18 @@ const MapInner: React.FC = () => {
     }, [state.isFollowing, actions]);
 
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId ? String(state.selectedId) : null);
+
+    const handleBack = useCallback(() => {
+        actions.setSelectedVehicle(null);
+        actions.setIsFollowing(false);
+    }, [actions]);
+
+    const panelTitle = useMemo(() => {
+        if (state.selectedVehicle) {
+            return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name });
+        }
+        return state.selectedStop ? state.selectedStop.name : '';
+    }, [state.selectedVehicle, state.selectedStop, t]);
 
     // Memoize route line color to prevent re-computation on every render
     const routeLineColor = useMemo(() => {
@@ -162,22 +174,17 @@ const MapInner: React.FC = () => {
                 <UpdatePopup />
             </React.Suspense>
 
-            <BottomSheet
+            <DetailPanel
                 isOpen={!!state.selectedStop || !!state.selectedVehicle}
-                onClose={() => actions.clearSelection()}
-                onBack={(state.selectedVehicle && state.selectedStop) ? () => {
-                    actions.setSelectedVehicle(null);
-                    actions.setIsFollowing(false);
-                } : undefined}
-                title={state.selectedVehicle
-                    ? t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name })
-                    : (state.selectedStop ? state.selectedStop.name : '')}
+                onClose={actions.clearSelection}
+                onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
+                title={panelTitle}
                 platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
             >
-                <BottomSheetContent
+                <DetailPanelContent
                     onToggleFollow={handleToggleFollow}
                 />
-            </BottomSheet>
+            </DetailPanel>
         </>
     );
 };

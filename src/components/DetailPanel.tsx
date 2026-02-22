@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 import { MOBILE_BREAKPOINT } from '../config/constants';
 
-interface BottomSheetProps {
+interface DetailPanelProps {
     isOpen: boolean;
     onClose: () => void;
     onBack?: () => void;
@@ -14,7 +14,7 @@ interface BottomSheetProps {
 
 type SheetState = 'collapsed' | 'peek' | 'full';
 
-export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, platformCode, children }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const dragControls = useDragControls();
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -47,22 +47,19 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
     const variants = {
         hidden: isMobile
-            ? { y: '100%', x: 0, height: '92%' }
-            : { x: '-110%', y: 0, height: 'auto' },
+            ? { y: '100%', x: 0 }
+            : { x: '-110%', y: 0 },
         collapsed: {
             y: '85%',
-            x: 0,
-            height: isMobile ? '92%' : 'auto'
+            x: 0
         },
         peek: {
             y: '45%',
-            x: 0,
-            height: isMobile ? '92%' : 'auto'
+            x: 0
         },
         full: {
             y: '0%',
-            x: 0,
-            height: isMobile ? '92%' : 'auto'
+            x: 0
         },
     };
 
@@ -106,7 +103,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                         dragConstraints={{ top: 0, bottom: window.innerHeight * 0.8 }}
                         dragElastic={0.05}
                         onDragEnd={handleDragEnd}
-                        className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border"
+                        className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-lg md:backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border will-change-transform h-[92%] md:h-auto"
                     >
                         {/* Drag Handle: Explicitly for dragging the whole sheet */}
                         <div
@@ -123,7 +120,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
                             {/* Header */}
                             <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                                <div className="flex items-center gap-2 min-w-0">
                                     {onBack && (
                                         <button
                                             onClick={onBack}
@@ -132,7 +129,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                                             <ArrowLeft size={20} />
                                         </button>
                                     )}
-                                    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <h2 className="text-xl font-bold text-white truncate tracking-tight">
                                             {title || ''}
                                         </h2>
@@ -169,4 +166,4 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
             )}
         </AnimatePresence>
     );
-};
+});

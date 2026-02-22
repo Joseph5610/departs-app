@@ -2,11 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.5.11] - 2026-02-22
+## [0.5.12] - 2026-02-22
+
+### Changed
+- **Component Renaming**: Renamed `BottomSheet` to `DetailPanel` to better reflect its responsive role as a sidebar on desktop and a bottom sheet on mobile.
+- **Performance Optimization**: Improved mobile (iOS) interaction smoothness by reducing `backdrop-blur`, adding `will-change-transform`, and switching to pure transform-based animations instead of layout-triggering height changes.
 
 ### Fixed
-- **BottomSheet State Management**: Refined the state synchronization logic to ensure the sheet always resets to the 'peek' position when a new stop is selected, even if it was previously collapsed. This eliminates the "hidden sheet" bug on sequential selections.
-- **Linting & Code Quality**: Resolved ESLint warnings regarding synchronous state updates in effects and unused expressions, ensuring a cleaner build process.
+- **UI Clipping**: Fixed an issue where the back button's circular background was partially cut off by removing `overflow-hidden` from the header containers and refining title truncation.
 
 ## [0.5.10] - 2026-02-22
 
