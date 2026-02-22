@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 import { MOBILE_BREAKPOINT } from '../config/constants';
 
@@ -12,9 +12,12 @@ interface BottomSheetProps {
     children: React.ReactNode;
 }
 
-type SheetState = 'peek' | 'full';
+type SheetState = 'collapsed' | 'peek' | 'full';
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, title, platformCode, children }) => {
+    const dragControls = useDragControls();
+    const contentRef = useRef<HTMLDivElement>(null);
+
     // Use a reactive window size
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
@@ -37,15 +40,20 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
     const variants = {
         hidden: isMobile
-            ? { y: '100%', height: '50%' }
+            ? { y: '100%', x: 0, height: '92%' }
             : { x: '-110%', y: 0, height: 'auto' },
-        peek: {
-            y: 0,
+        collapsed: {
+            y: '85%',
             x: 0,
-            height: isMobile ? '50%' : 'auto'
+            height: isMobile ? '92%' : 'auto'
+        },
+        peek: {
+            y: '45%',
+            x: 0,
+            height: isMobile ? '92%' : 'auto'
         },
         full: {
-            y: 0,
+            y: '0%',
             x: 0,
             height: isMobile ? '92%' : 'auto'
         },
@@ -56,11 +64,18 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         const velocity = info.velocity.y;
         const offset = info.offset.y;
 
-        if (sheetState === 'peek') {
-            if (offset > 150 || velocity > 500) onClose();
-            else if (offset < -150 || velocity < -500) setSheetState('full');
-        } else {
-            if (offset > 150 || velocity > 500) setSheetState('peek');
+        const isSwipeDown = velocity > 500;
+        const isSwipeUp = velocity < -500;
+        const isMajorDragDown = offset > 150;
+        const isMajorDragUp = offset < -150;
+
+        if (isSwipeDown || isMajorDragDown) {
+            if (sheetState === 'full') setSheetState('peek');
+            else if (sheetState === 'peek') setSheetState('collapsed');
+            else onClose();
+        } else if (isSwipeUp || isMajorDragUp) {
+            if (sheetState === 'collapsed') setSheetState('peek');
+            else if (sheetState === 'peek') setSheetState('full');
         }
     };
 
@@ -74,16 +89,25 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
                         animate={isMobile ? sheetState : "full"}
                         exit="hidden"
                         variants={variants}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200, mass: 0.8 }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
                         drag={isMobile ? "y" : false}
-                        dragConstraints={{ top: 0, bottom: 0 }}
-                        dragElastic={0.05}
+                        dragControls={dragControls}
+                        dragListener={false}
+                        dragConstraints={{ top: 0, bottom: 1000 }}
+                        dragElastic={0.1}
                         onDragEnd={handleDragEnd}
                         className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border"
                     >
                         {/* Drag Handle: Explicitly for dragging the whole sheet */}
-                        <div className="flex flex-col shrink-0 pt-2.5 pb-2">
-                            <div className="flex justify-center md:hidden cursor-grab active:cursor-grabbing group py-1">
+                        <div
+                            className="flex flex-col shrink-0 pt-2.5 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                            onPointerDown={(e) => {
+                                if (!(e.target as HTMLElement).closest('button')) {
+                                    dragControls.start(e);
+                                }
+                            }}
+                        >
+                            <div className="flex justify-center md:hidden group py-1">
                                 <div className="w-12 h-1 bg-white/10 group-hover:bg-white/20 rounded-full transition-colors" />
                             </div>
 
@@ -120,6 +144,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
 
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
                         <div
+                            ref={contentRef}
+                            onPointerDown={(e) => {
+                                if (contentRef.current && contentRef.current.scrollTop <= 0 && !(e.target as HTMLElement).closest('button')) {
+                                    dragControls.start(e);
+                                }
+                            }}
                             className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,1.5rem)]"
                         >
                             {children}
