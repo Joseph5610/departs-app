@@ -70,7 +70,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         if (!isMobile) return;
         const velocity = info.velocity.y;
         const offset = info.offset.y;
-
+      
         // Better snapping logic: use travel distance + velocity projection
         const travel = offset + (velocity * 0.1);
         const threshold = 100;
