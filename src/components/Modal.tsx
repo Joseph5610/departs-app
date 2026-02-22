@@ -42,10 +42,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                            <div className="p-4 overflow-y-auto flex-1 custom-scrollbar flex flex-col min-h-0">
-                                {children}
-                            </div>
+                        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar min-h-0">
+                            {children}
                         </div>
                     </motion.div>
                 </div>

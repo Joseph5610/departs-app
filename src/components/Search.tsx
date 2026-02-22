@@ -50,11 +50,7 @@ export const Search: React.FC = React.memo(() => {
     return (
         <div
             ref={containerRef}
-            className="absolute top-4 left-4 z-10 right-16 md:right-auto md:w-80"
-            style={{
-                top: 'calc(1rem + env(safe-area-inset-top, 0px))',
-                left: 'calc(1rem + env(safe-area-inset-left, 0px))'
-            }}
+            className="absolute z-10 right-16 md:right-auto md:w-80 safe-top safe-left"
         >
             <div className="relative h-11 flex items-center">
                 <input

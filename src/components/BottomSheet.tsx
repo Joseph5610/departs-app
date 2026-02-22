@@ -67,15 +67,6 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBac
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 z-40 md:hidden pointer-events-none"
-                    />
-
                     {/* Sheet / Sidebar */}
                     <motion.div
                         initial="hidden"
