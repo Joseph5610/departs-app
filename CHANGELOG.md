@@ -2,11 +2,16 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.5.12] - 2026-02-22
+## [0.5.13] - 2026-02-22
+
+### Added
+- **Visual Feedback**: Implemented tactile `active:` states (scale and background color transitions) for all map controls, search results, and alert components to provide immediate response to user taps.
 
 ### Changed
+- **Interaction Model**: Restricted `DetailPanel` dragging exclusively to the header/handle area. This prevents accidental sheet movement when scrolling through the content list.
+- **Snapping Logic**: Enhanced the bottom sheet snapping algorithm with velocity projection and tuned thresholds, providing a more "magnetic" and stable feel during transitions.
 - **Component Renaming**: Renamed `BottomSheet` to `DetailPanel` to better reflect its responsive role as a sidebar on desktop and a bottom sheet on mobile.
-- **Performance Optimization**: Improved mobile (iOS) interaction smoothness by reducing `backdrop-blur`, adding `will-change-transform`, and switching to pure transform-based animations instead of layout-triggering height changes.
+- **Performance Optimization**: Improved mobile (iOS) interaction smoothness by memoizing expensive components and switching to pure transform-based animations.
 
 ### Fixed
 - **UI Clipping**: Fixed an issue where the back button's circular background was partially cut off by removing `overflow-hidden` from the header containers and refining title truncation.

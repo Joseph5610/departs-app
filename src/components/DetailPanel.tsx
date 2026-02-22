@@ -75,7 +75,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
       
         // Snapping logic with velocity projection
         // We use a slightly more aggressive projection for better feel
-        const travel = offset + (velocity * 0.15);
+        const travel = offset.y + (velocity.y * 0.15);
         const threshold = 75;
 
         if (travel > threshold) {
