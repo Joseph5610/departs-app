@@ -96,14 +96,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                         <button
                             onClick={() => setDepartureSort('line')}
                             className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title="Sort by line"
+                            title={t('map.departures.sortByLine')}
                         >
                             <ArrowDownAz size={14} />
                         </button>
                         <button
                             onClick={() => setDepartureSort('departure')}
                             className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title="Sort by departure time"
+                            title={t('map.departures.sortByDeparture')}
                         >
                             <Clock size={14} />
                         </button>

@@ -88,7 +88,9 @@
       "moreConnections": "+ {{count}} další spoje",
       "showLess": "Zobrazit méně",
       "now": "Nyní",
-      "minutes": "{{count}} min"
+      "minutes": "{{count}} min",
+      "sortByLine": "Seřadit podle linky",
+      "sortByDeparture": "Seřadit podle času odjezdu"
     }
   },
   "update": {

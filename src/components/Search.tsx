@@ -79,7 +79,7 @@ export const Search: React.FC = React.memo(() => {
                             }
                             setQuery('');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all"
                     >
                         <X size={18} />
                     </button>
@@ -95,7 +95,7 @@ export const Search: React.FC = React.memo(() => {
                                 setQuery('');
                                 setIsOpen(false);
                             }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-500/10 transition-colors text-left border-b border-white/5"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-500/10 active:bg-emerald-500/20 transition-colors text-left border-b border-white/5"
                         >
                             <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
                                 <SearchIcon size={16} />
@@ -124,7 +124,7 @@ export const Search: React.FC = React.memo(() => {
                                 setQuery('');
                                 setIsOpen(false);
                             }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-none"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 transition-colors text-left border-b border-white/5 last:border-none"
                         >
                             <div className="p-2 bg-white/5 rounded-lg text-zinc-400">
                                 <MapPin size={16} />
