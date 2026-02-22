@@ -145,7 +145,14 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
                             {visibleDepartures.map((dep: Departure, idx: number) => (
                                 <div
                                     key={idx}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
+                                    onKeyDown={(e) => {
+                                        if ((e.key === 'Enter' || e.key === ' ') && dep.tripId) {
+                                            onDepartureClick(dep.tripId, dep.vehicleId, dep);
+                                        }
+                                    }}
                                     className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
                                         ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
                                     `}

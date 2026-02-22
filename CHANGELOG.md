@@ -2,6 +2,17 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.5.10] - 2026-02-22
+
+### Changed
+- **Performance Optimized BottomSheet**: Refactored the mobile bottom sheet to use hardware-accelerated `y` transforms instead of `height` animations, resolving UI lags during opening and interactions.
+- **Native-like Gestures**: Implemented a responsive dragging system using Framer Motion's `useDragControls` that allows the sheet to immediately follow the user's finger.
+- **Three-State Snapping**: Added a third "collapsed" state at the bottom of the screen, allowing users to keep the departure board title visible while maximizing map area.
+- **Interactive Scroll Integration**: Enhanced the touch logic to seamlessly switch between dragging the sheet and scrolling the connection list, mimicking native iOS/Android behavior.
+
+### Fixed
+- **Animation Smoothness**: Eliminated layout shifts by maintaining a constant 92% sheet height on mobile, regardless of its visual position.
+
 ## [0.5.9] - 2026-02-22
 
 ### Added
