@@ -67,11 +67,11 @@ const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; la
     );
 };
 
-interface BottomSheetContentProps {
+interface DetailPanelContentProps {
     onToggleFollow: () => void;
 }
 
-export const BottomSheetContent = memo<BottomSheetContentProps>(({
+export const DetailPanelContent = memo<DetailPanelContentProps>(({
     onToggleFollow
 }) => {
     const { t, i18n } = useTranslation();
@@ -205,4 +205,4 @@ export const BottomSheetContent = memo<BottomSheetContentProps>(({
     );
 });
 
-BottomSheetContent.displayName = 'BottomSheetContent';
+DetailPanelContent.displayName = 'DetailPanelContent';
