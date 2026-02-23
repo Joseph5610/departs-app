@@ -149,7 +149,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setDebouncedBounds(initialBounds);
         }
 
-        performGeolocation(false);
+        performGeolocation();
     }, [performGeolocation, setBounds, setDebouncedBounds]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
