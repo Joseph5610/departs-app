@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
  * Allows for shareable links and state persistence on refresh.
  */
 export const useMapUrlSync = (
-    selectedStop: { id: string; name: string; platformCode?: string } | null,
-    setSelectedStop: (stop: { id: string; name: string; platformCode?: string } | null) => void
+    selectedStop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null,
+    setSelectedStop: (stop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) => void
 ) => {
     const initialized = useRef(false);
 

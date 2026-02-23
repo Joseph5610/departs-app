@@ -128,7 +128,7 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
+                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
                         const props = f.properties;
                         actions.selectVehicle({
                             ...props,
@@ -147,7 +147,7 @@ const MapInner: React.FC = () => {
                         });
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
                 <MapLayers
                     mapLoaded={state.mapLoaded}
