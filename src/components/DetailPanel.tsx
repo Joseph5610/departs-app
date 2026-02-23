@@ -154,12 +154,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         </div>
 
                         {/* Content: ALWAYS scrollable since height is now constrained to screen */}
-                        <div
+                        <motion.div
                             ref={contentRef}
-                            className="flex-1 overflow-y-auto px-6 custom-scrollbar overscroll-contain touch-pan-y pb-[env(safe-area-inset-bottom,1.5rem)]"
+                            initial={false}
+                            animate={{
+                                paddingBottom: (isMobile && sheetState === 'peek') ? '41.4vh' : '0px'
+                            }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 220, mass: 0.5 }}
+                            className={`flex-1 px-6 custom-scrollbar overscroll-contain touch-pan-y ${
+                                (isMobile && sheetState === 'collapsed') ? 'overflow-hidden' : 'overflow-y-auto'
+                            }`}
                         >
-                            {children}
-                        </div>
+                            <div className="pb-[env(safe-area-inset-bottom,1.5rem)]">
+                                {children}
+                            </div>
+                        </motion.div>
                     </motion.div>
                 </>
             )}
