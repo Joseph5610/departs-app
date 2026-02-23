@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.2] - 2026-02-24
+
+### Fixed
+- **UI Alignment**: Unified the size of the favorite (star) button with the adjacent sort buttons in the `DetailPanel` for a more balanced and professional header.
+
 ## [0.7.1] - 2026-02-24
 
 ### Changed

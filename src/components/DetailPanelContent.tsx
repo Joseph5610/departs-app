@@ -125,7 +125,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
                                 className={`p-2 rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
                             >
-                                <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+                                <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                             </button>
                             <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
                                 <button
