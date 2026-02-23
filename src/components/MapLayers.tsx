@@ -6,6 +6,7 @@ import type { FeatureCollection } from 'geojson';
 import type { VehicleCollection, StopCollection } from '../types/transit';
 import {
     clusterLayer,
+    clusterCoreLayer,
     clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
@@ -143,8 +144,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                             ['linear'],
                             ['to-number', ['coalesce', ['get', 'delay'], 0]],
                             0, 0,
-                            300, 1,
-                            900, 3
+                            420, 1, // 7 minutes threshold
+                            1200, 3 // 20 minutes max weight
                         ],
                         'heatmap-intensity': [
                             'interpolate',
@@ -157,11 +158,11 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                             'interpolate',
                             ['linear'],
                             ['heatmap-density'],
-                            0, 'rgba(0, 255, 0, 0)',
-                            0.2, 'rgba(34, 197, 94, 0.2)',
-                            0.4, 'rgba(234, 179, 8, 0.4)',
-                            0.6, 'rgba(249, 115, 22, 0.6)',
-                            0.8, 'rgba(239, 68, 68, 0.8)'
+                            0, 'rgba(79, 70, 229, 0)',   // Indigo-600 transparent
+                            0.2, 'rgba(79, 70, 229, 0.4)', // Indigo-600
+                            0.4, 'rgba(147, 51, 234, 0.6)', // Purple-600
+                            0.7, 'rgba(236, 72, 153, 0.8)', // Pink-500
+                            1.0, 'rgba(255, 255, 255, 0.9)' // White/Hot
                         ],
                         'heatmap-radius': [
                             'interpolate',
@@ -194,7 +195,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 data={stopsData ? stopsData : EMPTY_GEOJSON}
                 cluster={true}
                 clusterMaxZoom={13}
-                clusterRadius={40}
+                clusterRadius={25}
                 clusterProperties={{
                     has_metro_a: ['max', ['get', 'metro_a']],
                     has_metro_b: ['max', ['get', 'metro_b']],
@@ -203,6 +204,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 }}
             >
                 <Layer {...clusterLayer} />
+                <Layer {...clusterCoreLayer} />
                 <Layer {...clusterCountLayer} />
                 {/* Favorite stop highlight */}
                 {favoriteStops.length > 0 && (

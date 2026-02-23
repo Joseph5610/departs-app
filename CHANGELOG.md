@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.3] - 2026-02-24
+
+### Added
+- **Delay Trend Tracking**: Introduced visual "Delay Delta" indicators (↑/↓) in departure boards, showing how zpoždění changed since the last update.
+- **Improved Heatmap Palette**: Updated the traffic heatmap to use a "Hot" palette (Indigo to White), making it easier to distinguish from transit lines.
+- **Enhanced Stop Clusters**: Refined map clusters with a blurred 'Tramoji-inspired' dot style for better legibility at lower zoom levels.
+- **Map Glow for Favorites**: Pinned stops now have a subtle gold glow effect on the map for easier identification.
+
 ## [0.7.2] - 2026-02-24
 
 ### Fixed

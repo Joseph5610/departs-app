@@ -98,9 +98,9 @@
       "sortByDeparture": "Sort by departure time",
       "distance": "{{distance}}m • {{time}} min walk",
       "catchStatus": {
-        "success": "You can catch it",
+        "success": "You'll catch it",
         "warning": "Maybe you'll catch it",
-        "error": "You won't catch it"
+        "error": "You'll miss it"
       }
     }
   },

@@ -60,9 +60,10 @@ const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; la
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 5 }}
-                    className={`px-1 rounded text-[9px] font-bold tabular-nums ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
+                    className={`px-1 rounded text-[9px] font-bold tabular-nums flex items-center gap-0.5 ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
                 >
-                    {delta > 0 ? `+${delta}s` : `${delta}s`}
+                    <span>{delta > 0 ? '↑' : '↓'}</span>
+                    <span>{Math.abs(delta)}s</span>
                 </motion.span>
             )}
         </AnimatePresence>
@@ -94,6 +95,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const stopDistanceInfo = useMemo(() => {
         if (!selectedStop?.coordinates || !userLocation) return null;
         const distance = calculateDistance(userLocation, selectedStop.coordinates);
+        // Only show proximity info if within 500m
+        if (distance > 500) return null;
+
         const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString());
         return { distance: Math.round(distance), time: walkingTimeMin };
     }, [selectedStop?.coordinates, userLocation]);
@@ -217,12 +221,22 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
                                         {stopDistanceInfo && (
-                                            <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight
-                                                ${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/20 text-amber-400' :
-                                                        'bg-rose-500/20 text-rose-400'}
-                                            `}>
-                                                {t(`map.departures.catchStatus.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                            <div className="flex flex-col items-end gap-1">
+                                                <div className="flex items-center gap-1 text-[9px] text-zinc-500 font-bold uppercase tracking-tighter">
+                                                    <span>🚶‍♂️</span>
+                                                    <span>{t('map.departures.minutes', { count: stopDistanceInfo.time })}</span>
+                                                </div>
+                                                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border
+                                                    ${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                                            'bg-rose-500/10 text-rose-400 border-rose-500/20'}
+                                                `}>
+                                                    <div className={`w-1 h-1 rounded-full ${
+                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-400' :
+                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-400' : 'bg-rose-400'
+                                                    }`} />
+                                                    {t(`map.departures.catchStatus.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                                </div>
                                             </div>
                                         )}
                                     </div>

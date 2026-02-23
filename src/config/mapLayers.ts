@@ -38,20 +38,24 @@ export const clusterLayer: CircleLayerSpecification = {
             ]
         ],
 
-        // Radius scaling - tighter bubbles
+        // Radius scaling - "Tramoji" style: tiny dots at low zoom, bubbles at high zoom
         'circle-radius': [
-            '+',
-            ['interpolate', ['linear'], ['get', 'point_count'], 0, 12, 100, 30],
-            ['*', ['get', 'cluster_seed'], 8] // Reduced wobble
+            'interpolate', ['linear'], ['zoom'],
+            8, ['+', 3, ['*', ['get', 'cluster_seed'], 3]],
+            13, ['+', 12, ['*', ['get', 'cluster_seed'], 8]]
         ],
 
         // Opacity - Subtle flicker
         'circle-opacity': [
-            '+',
-            0.4,
-            ['*', ['get', 'cluster_seed'], 0.3] // 0.4 - 0.7 range
+            'interpolate', ['linear'], ['zoom'],
+            8, 0.3,
+            13, ['+', 0.4, ['*', ['get', 'cluster_seed'], 0.3]]
         ],
-        'circle-blur': 0.5     // Back to a slightly softer blur for premium feel
+        'circle-blur': [
+            'interpolate', ['linear'], ['zoom'],
+            8, 1.2,  // High blur at low zoom for "glow" effect
+            13, 0.5  // Medium blur at high zoom
+        ]
     }
 };
 
@@ -63,9 +67,17 @@ export const clusterCoreLayer: CircleLayerSpecification = {
     filter: ['has', 'point_count'],
     paint: {
         'circle-color': '#ffffff',
-        'circle-radius': 2.5, // Smaller (was 4)
-        'circle-opacity': 0.8, // Less harsh (was 1.0)
-        'circle-blur': 0.4     // Softened edges (was 0)
+        'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            8, 1,
+            13, 2.5
+        ],
+        'circle-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            8, 0.4,
+            13, 0.8
+        ],
+        'circle-blur': 0.4
     }
 };
 
@@ -98,7 +110,7 @@ export const stopPointLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 8],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 8, 4],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 24, 18]
         ],
         'circle-color': ['case',
@@ -149,7 +161,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 20, 12],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 12, 8],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 40, 24]
         ],
         'circle-color': [

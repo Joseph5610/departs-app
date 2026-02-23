@@ -98,9 +98,9 @@
       "sortByDeparture": "Seřadit podle času odjezdu",
       "distance": "{{distance}}m • {{time}} min pěšky",
       "catchStatus": {
-        "success": "Stíháš",
+        "success": "Stíháš to",
         "warning": "Možná stíháš",
-        "error": "Asi nestíháš"
+        "error": "Nestíháš"
       }
     }
   },
