@@ -3,7 +3,8 @@
     "placeholder": "Hledat zastávky nebo linky...",
     "platform": "Nástupiště {{code}}",
     "lineFilter": "Filtrovat linku {{line}}",
-    "clearFilter": "Zrušit filtr"
+    "clearFilter": "Zrušit filtr",
+    "favorites": "Oblíbené zastávky"
   },
   "settings": {
     "title": "Nastavení",
@@ -94,7 +95,18 @@
       "now": "Nyní",
       "minutes": "{{count}} min",
       "sortByLine": "Seřadit podle linky",
-      "sortByDeparture": "Seřadit podle času odjezdu"
+      "sortByDeparture": "Seřadit podle času odjezdu",
+      "distance": "{{distance}}m • {{time}} min pěšky",
+      "catchStatus": {
+        "success": "Stíháš to",
+        "warning": "Možná stíháš",
+        "error": "Nestíháš"
+      },
+      "catchStatusCompact": {
+        "success": "Stíháš",
+        "warning": "Možná",
+        "error": "Nestíháš"
+      }
     }
   },
   "update": {

@@ -51,6 +51,13 @@ export interface StopCollection {
     features: StopFeature[];
 }
 
+export interface SelectedStop {
+    id: string;
+    name: string;
+    platformCode?: string;
+    coordinates?: [number, number];
+}
+
 export interface Departure {
     timestamp: string;
     scheduled: string;

@@ -20,7 +20,7 @@ export const useMapAnimation = (
 
         const animate = () => {
             const map = mapRef.current?.getMap();
-            if (map && selectedVehicle && isFollowing) {
+            if (map && selectedVehicle) {
                 const time = Date.now() / 350;
                 const radius = 20 + Math.sin(time) * 15; // Base 20, pulse +/- 15
                 const opacity = 0.6 - ((radius - 5) / 50); // Fade out as it expands
@@ -37,7 +37,7 @@ export const useMapAnimation = (
             frame = requestAnimationFrame(animate);
         };
 
-        if (selectedVehicle && isFollowing) {
+        if (selectedVehicle) {
             frame = requestAnimationFrame(animate);
         }
 

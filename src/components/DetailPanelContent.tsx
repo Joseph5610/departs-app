@@ -1,7 +1,9 @@
 
 import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
@@ -15,11 +17,16 @@ import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
 import { useDepartures } from '../hooks/useDepartures';
 import { METRO_STATIONS } from '../config/stations';
+import { calculateDistance, getCatchStatus } from '../utils/transitLogic';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
 };
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 
 const formatDelay = (seconds: number) => {
     if (seconds <= 30) return '';
@@ -59,9 +66,10 @@ const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; la
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 5 }}
-                    className={`px-1 rounded text-[9px] font-bold tabular-nums ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
+                    className={`px-1 rounded text-[9px] font-bold tabular-nums flex items-center gap-0.5 ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
                 >
-                    {delta > 0 ? `+${delta}s` : `${delta}s`}
+                    <span>{delta > 0 ? '↑' : '↓'}</span>
+                    <span>{Math.abs(delta)}s</span>
                 </motion.span>
             )}
         </AnimatePresence>
@@ -83,10 +91,24 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { isLoading: loadingDeps } = useDepartures();
     const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort } = state;
-    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, favoriteStops } = state;
+    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
+
+    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
+
+    const stopDistanceInfo = useMemo(() => {
+        if (!selectedStop?.coordinates || !userLocation) return null;
+        const distance = calculateDistance(userLocation, selectedStop.coordinates);
+
+        const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString());
+        return {
+            distance: Math.round(distance),
+            time: walkingTimeMin,
+            showCatchIndicator: distance < 750 // Show catch indicators for stops within ~15 min walk
+        };
+    }, [selectedStop?.coordinates, userLocation]);
 
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
@@ -101,23 +123,39 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     return (
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                    <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
-                        <button
-                            onClick={() => setDepartureSort('line')}
-                            className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title={t('map.departures.sortByLine')}
-                        >
-                            <ArrowDownAz size={14} />
-                        </button>
-                        <button
-                            onClick={() => setDepartureSort('departure')}
-                            className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title={t('map.departures.sortByDeparture')}
-                        >
-                            <Clock size={14} />
-                        </button>
+                <div className="space-y-4 mb-2">
+                    {stopDistanceInfo && (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
+                            <MapPin size={14} className="text-zinc-500" />
+                            <span className="font-medium">{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
+                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
+                            >
+                                <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
+                            </button>
+                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5">
+                                <button
+                                    onClick={() => setDepartureSort('line')}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title={t('map.departures.sortByLine')}
+                                >
+                                    <ArrowDownAz size={14} />
+                                </button>
+                                <button
+                                    onClick={() => setDepartureSort('departure')}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title={t('map.departures.sortByDeparture')}
+                                >
+                                    <Clock size={14} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -186,10 +224,28 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-lg font-bold text-emerald-400 tabular-nums">
+                                    <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
+                                        <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
+                                        {stopDistanceInfo?.showCatchIndicator && (
+                                            <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                <div className={cn(
+                                                    "px-1.5 py-0.5 rounded-md flex items-center gap-1",
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
+                                                    'bg-rose-500/10 text-rose-400'
+                                                )}>
+                                                    <span className="text-[8px] leading-none">
+                                                        {getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? '🟢' :
+                                                            getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? '🟡' : '🔴'}
+                                                    </span>
+                                                    <span className="uppercase tracking-tighter">
+                                                        {t(`map.departures.catchStatusCompact.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

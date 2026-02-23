@@ -39,6 +39,8 @@ interface MapLayersProps {
     userLocation: [number, number] | null;
     /** GeoJSON FeatureCollection containing only the currently selected vehicle */
     selectedVehicleFeature: VehicleCollection;
+    /** List of favorite stop IDs */
+    favoriteStops: string[];
     /** MapLibre paint properties for the route line */
     routeLinePaint: NonNullable<LineLayerSpecification['paint']>;
     /** MapLibre layout properties for the route line */
@@ -73,6 +75,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     routeShapeData,
     userLocation,
     selectedVehicleFeature,
+    favoriteStops,
     routeLinePaint,
     routeLineLayout,
     vehiclesFilter,
@@ -145,7 +148,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 data={stopsData ? stopsData : EMPTY_GEOJSON}
                 cluster={true}
                 clusterMaxZoom={13}
-                clusterRadius={40}
+                clusterRadius={25}
                 clusterProperties={{
                     has_metro_a: ['max', ['get', 'metro_a']],
                     has_metro_b: ['max', ['get', 'metro_b']],
@@ -155,6 +158,23 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             >
                 <Layer {...clusterLayer} />
                 <Layer {...clusterCountLayer} />
+                {/* Favorite stop highlight */}
+                {favoriteStops.length > 0 && (
+                    <Layer
+                        id="favorite-stops-glow"
+                        type="circle"
+                        filter={['all',
+                            ['!', ['has', 'point_count']],
+                            ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
+                        ]}
+                        paint={{
+                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
+                            'circle-color': '#f59e0b',
+                            'circle-opacity': 0.4,
+                            'circle-blur': 0.8
+                        }}
+                    />
+                )}
                 <Layer {...stopPointGlowLayer} />
                 <Layer {...stopPointLayer} />
                 <Layer {...transferStationLayer} />

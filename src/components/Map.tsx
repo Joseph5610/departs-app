@@ -112,10 +112,11 @@ const MapInner: React.FC = () => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') return;
 
-                    if (f.layer.id === 'clusters') {
+                    if (f.layer.id === 'clusters' || (f.layer.id === 'vehicles-delay-label' && f.properties.point_count)) {
                         const clusterId = f.properties.cluster_id;
                         const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
-                        const source = map.getSource('pid-stops') as maplibregl.GeoJSONSource;
+                        const sourceId = f.layer.id === 'clusters' ? 'pid-stops' : 'pid-vehicles';
+                        const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
                         source.getClusterExpansionZoom(clusterId).then((zoom) => {
                             mapRef.current?.easeTo({
                                 center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
@@ -128,7 +129,7 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-fg' || f.layer.id === 'vehicles-label') {
+                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all' || f.layer.id === 'vehicles-delay-label') {
                         const props = f.properties;
                         actions.selectVehicle({
                             ...props,
@@ -142,11 +143,12 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: f.properties.stop_id,
                             name: f.properties.stop_name,
-                            platformCode: f.properties.platform_code
+                            platformCode: f.properties.platform_code,
+                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-fg', 'vehicles-label']}
+                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
                 <MapLayers
                     mapLoaded={state.mapLoaded}
@@ -157,6 +159,7 @@ const MapInner: React.FC = () => {
                     routeShapeData={routeShapeData}
                     userLocation={state.userLocation}
                     selectedVehicleFeature={selectedVehicleFeature}
+                    favoriteStops={state.favoriteStops}
                     routeLinePaint={routeLinePaint}
                     routeLineLayout={routeLineLayout}
                     vehiclesFilter={vehiclesFilter}

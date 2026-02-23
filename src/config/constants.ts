@@ -34,7 +34,8 @@ export const STORAGE_KEYS = {
     SHOW_VEHICLES: 'showVehicles',
     DEPARTURE_SORT: 'departureSort',
     LAST_LOCATION: 'lastUserLocation',
-    WELCOME_SEEN: 'departs_welcome_seen'
+    WELCOME_SEEN: 'departs_welcome_seen',
+    FAVORITES: 'favoriteStops'
 };
 
 /**
