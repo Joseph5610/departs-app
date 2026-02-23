@@ -9,130 +9,122 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+    const [isGeoPending, setIsGeoPending] = useState(false);
+
     const watchId = useRef<number | null>(null);
+    const lastUpdatedAt = useRef<number>(0);
     const isInitialSet = useRef(false);
-    const userLocationRef = useRef<[number, number] | null>(null);
-    const pendingManualFly = useRef(false);
 
-    // Keep ref in sync for use in callbacks without triggering re-renders
-    useEffect(() => {
-        userLocationRef.current = userLocation;
-    }, [userLocation]);
+    // Helper to fly the map to a location
+    const flyToLocation = useCallback((location: [number, number], isJump: boolean = false) => {
+        const map = mapRef.current?.getMap();
+        if (!map) return;
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            if (watchId.current !== null) {
-                navigator.geolocation.clearWatch(watchId.current);
+        if (isJump) {
+            map.jumpTo({ center: location, zoom: MAP_VEHICLE_SELECT_ZOOM });
+        } else {
+            map.flyTo({
+                center: location,
+                zoom: MAP_VEHICLE_SELECT_ZOOM,
+                duration: MAP_FLY_DURATION
+            });
+        }
+    }, [mapRef]);
+
+    const updateLocation = useCallback((pos: GeolocationPosition) => {
+        const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+        setUserLocation(coords);
+        lastUpdatedAt.current = Date.now();
+        localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
+
+        // Initial map focus (only if no coordinates or specific stops/trips are in URL)
+        if (!isInitialSet.current) {
+            const p = new URLSearchParams(window.location.search);
+            const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
+            if (!hasExplicitLocation) {
+                console.log('🚀 Initial geolocation lock: Snapping map to user');
+                flyToLocation(coords, true);
             }
-        };
-    }, []);
-
-    const performGeolocation = useCallback((isManual: boolean = true) => {
-        if (!navigator.geolocation) {
-            console.error('❌ Geolocation is not supported by this browser.');
-            if (isManual) showToast(t('toasts.geoNotSupported'), 'error');
-            return;
+            isInitialSet.current = true;
         }
+    }, [flyToLocation]);
 
-        if (isManual) {
-            if (userLocationRef.current) {
-                console.log('🎯 Manual locate: Flying to current known location');
-                mapRef.current?.getMap().flyTo({
-                    center: userLocationRef.current,
-                    zoom: MAP_VEHICLE_SELECT_ZOOM,
-                    duration: MAP_FLY_DURATION
-                });
-            } else {
-                console.log('⏳ Manual locate: Pending position fix...');
-                pendingManualFly.current = true;
-            }
-        }
+    const startWatcher = useCallback(() => {
+        if (!navigator.geolocation || watchId.current !== null) return;
 
-        if (watchId.current !== null) {
-            return;
-        }
-
-        const mode = isManual ? 'manual' : 'auto';
-        console.log(`🛰️ Starting ${mode} geolocation watch...`);
-
+        console.log('🛰️ Starting geolocation watcher...');
         watchId.current = navigator.geolocation.watchPosition(
             (pos) => {
-                const { latitude, longitude, accuracy } = pos.coords;
-                console.log(`✅ Position updated: ${latitude}, ${longitude} (accuracy: ${Math.round(accuracy)}m)`);
-
-                const newLocation: [number, number] = [longitude, latitude];
-                setUserLocation(newLocation);
-
-                // Persist to localStorage
-                localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: latitude, lng: longitude }));
-
-                // Handle initial positioning
-                if (!isInitialSet.current) {
-                    const p = new URLSearchParams(window.location.search);
-                    const hasParams = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
-
-                    if (!hasParams && !isManual) {
-                        console.log('🚀 Initial lock: Snapping map to user location');
-                        mapRef.current?.getMap().jumpTo({
-                            center: newLocation,
-                            zoom: MAP_VEHICLE_SELECT_ZOOM
-                        });
-                    }
-                    isInitialSet.current = true;
-                }
-
-                // If there was a pending manual request, fly now
-                if (pendingManualFly.current) {
-                    console.log('🎯 Position acquired: Executing pending flyTo');
-                    mapRef.current?.getMap().flyTo({
-                        center: newLocation,
-                        zoom: MAP_VEHICLE_SELECT_ZOOM,
-                        duration: MAP_FLY_DURATION
-                    });
-                    pendingManualFly.current = false;
-                }
+                updateLocation(pos);
+                setIsGeoPending(false);
             },
             (err) => {
-                // Detailed logging for GeolocationPositionError
-                const errorTypes: Record<number, string> = {
-                    [err.PERMISSION_DENIED]: 'PERMISSION_DENIED',
-                    [err.POSITION_UNAVAILABLE]: 'POSITION_UNAVAILABLE',
-                    [err.TIMEOUT]: 'TIMEOUT'
-                };
-                const errorType = errorTypes[err.code] || 'UNKNOWN_ERROR';
-                console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
+                console.error(`❌ Geolocation error (${err.code}): ${err.message}`);
+                setIsGeoPending(false);
 
-                // Clear watch on error so subsequent manual attempts can try again
-                if (watchId.current !== null) {
+                // Only clear watch on permission denied. For other errors, keep it or let browser handle it.
+                if (err.code === err.PERMISSION_DENIED && watchId.current !== null) {
                     navigator.geolocation.clearWatch(watchId.current);
                     watchId.current = null;
-                }
-
-                if (isManual || pendingManualFly.current) {
-                    showToast(t('toasts.geoError'), 'error');
-                    pendingManualFly.current = false;
                 }
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 60000
+                timeout: 15000,
+                maximumAge: 10000
             }
         );
-    }, [mapRef, showToast, t]);
+    }, [updateLocation]);
+
+    // Auto-start watcher on mount
+    useEffect(() => {
+        startWatcher();
+        return () => {
+            if (watchId.current !== null) {
+                navigator.geolocation.clearWatch(watchId.current);
+                watchId.current = null;
+            }
+        };
+    }, [startWatcher]);
 
     const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+
+        const now = Date.now();
+        const isStale = now - lastUpdatedAt.current > 20000; // 20 seconds threshold
+
+        if (userLocation && !isStale) {
+            console.log('🎯 Manual locate: Flying to current known location');
+            flyToLocation(userLocation);
+        } else {
+            console.log('⏳ Manual locate: Requesting fresh position...');
+            setIsGeoPending(true);
+            showToast(t('toasts.geoSearching'), 'info');
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+                    updateLocation(pos);
+                    setIsGeoPending(false);
+                    flyToLocation(coords);
+                },
+                (err) => {
+                    console.error('❌ Manual location fix failed:', err);
+                    setIsGeoPending(false);
+                    showToast(t('toasts.geoError'), 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
         }
-        performGeolocation(true);
-    }, [performGeolocation]);
+
+        // Ensure watcher is still active
+        if (watchId.current === null) startWatcher();
+    }, [userLocation, flyToLocation, updateLocation, startWatcher, showToast, t]);
 
     return {
         userLocation,
-        performGeolocation,
-        handleLocate
+        isGeoPending,
+        handleLocate,
+        performGeolocation: startWatcher
     };
 };

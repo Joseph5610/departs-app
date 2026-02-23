@@ -111,6 +111,7 @@
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",
     "geoError": "Could not retrieve location. Please check browser permissions.",
+    "geoSearching": "Searching for your location...",
     "vehicleNotFound": "Vehicle not found. It probably has not started yet."
   },
   "alerts": {
