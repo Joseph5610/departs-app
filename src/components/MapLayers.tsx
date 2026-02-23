@@ -222,9 +222,9 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                     }}
                 />
 
-                <Layer {...vehiclesPointLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
-                <Layer {...vehiclesDirectionLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
-                <Layer {...vehiclesLabelLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
+                <Layer {...vehiclesPointLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
+                <Layer {...vehiclesDirectionLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
+                <Layer {...vehiclesLabelLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
             </Source>
 
             <Source id="stop-labels-centroids" type="geojson" data={labelData ? labelData : EMPTY_GEOJSON}>
