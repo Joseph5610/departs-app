@@ -47,8 +47,6 @@ interface MapLayersProps {
     routeLineLayout: NonNullable<LineLayerSpecification['layout']>;
     /** Filter expression to exclude selected vehicle from the main vehicle layer */
     vehiclesFilter: FilterSpecification;
-    /** Whether to show the delay heatmap and zones */
-    showHeatmap: boolean;
     /** ID of the first label layer in the style, used for correct layering (Z-index) */
     labelLayerId?: string;
 }
@@ -81,7 +79,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     routeLinePaint,
     routeLineLayout,
     vehiclesFilter,
-    showHeatmap,
     labelLayerId
 }) => {
     if (!mapLoaded) return null;
@@ -135,105 +132,10 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            {/* Separate Source for Unclustered Heatmap */}
-            <Source
-                id="pid-vehicles-heatmap"
-                type="geojson"
-                data={showVehicles && showHeatmap && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
-            >
-                <Layer
-                    id="vehicles-heatmap"
-                    type="heatmap"
-                    filter={vehiclesFilter}
-                    paint={{
-                        'heatmap-weight': [
-                            'interpolate',
-                            ['linear'],
-                            ['to-number', ['coalesce', ['get', 'delay'], 0]],
-                            0, 0,
-                            420, 1, // 7 minutes threshold
-                            1200, 3 // 20 minutes max weight
-                        ],
-                        'heatmap-intensity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            10, 1,
-                            20, 4
-                        ],
-                        'heatmap-color': [
-                            'interpolate',
-                            ['linear'],
-                            ['heatmap-density'],
-                            0, 'rgba(79, 70, 229, 0)',   // Indigo-600 transparent
-                            0.2, 'rgba(79, 70, 229, 0.4)', // Indigo-600
-                            0.4, 'rgba(147, 51, 234, 0.6)', // Purple-600
-                            0.7, 'rgba(236, 72, 153, 0.8)', // Pink-500
-                            1.0, 'rgba(255, 255, 255, 0.9)' // White/Hot
-                        ],
-                        'heatmap-radius': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            10, 15,
-                            20, 60
-                        ],
-                        'heatmap-opacity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            14, 0.6,
-                            20, 0.3
-                        ]
-                    }}
-                />
-            </Source>
-
-            <Source
-                id="pid-vehicles"
-                type="geojson"
-                data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
-                cluster={showHeatmap}
-                clusterMaxZoom={14}
-                clusterRadius={50}
-                clusterProperties={{
-                    sum_delay: ['+', ['to-number', ['coalesce', ['get', 'delay'], 0]]]
-                }}
-            >
-                {/* Delay Labels Layer */}
-                <Layer
-                    id="vehicles-delay-label"
-                    type="symbol"
-                    layout={{
-                        visibility: showHeatmap ? 'visible' : 'none',
-                        'text-field': [
-                            'case',
-                            ['has', 'point_count'],
-                            ['case',
-                                ['>=', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60],
-                                ['concat', '+', ['to-string', ['round', ['/', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60]]], 'm'],
-                                ''
-                            ],
-                            ['all', ['>=', ['get', 'delay'], 60], ['!', ['has', 'point_count']]],
-                            ['concat', '+', ['to-string', ['round', ['/', ['get', 'delay'], 60]]], 'm'],
-                            ''
-                        ],
-                        'text-font': ['Montserrat Bold', 'Arial Unicode MS Regular'],
-                        'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 16, 14],
-                        'text-offset': [0, 1.5],
-                        'text-anchor': 'top',
-                        'text-allow-overlap': false
-                    }}
-                    paint={{
-                        'text-color': '#ffffff',
-                        'text-halo-color': 'rgba(0,0,0,0.8)',
-                        'text-halo-width': 1.5
-                    }}
-                />
-
-                <Layer {...vehiclesPointLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
-                <Layer {...vehiclesDirectionLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
-                <Layer {...vehiclesLabelLayer} filter={showHeatmap ? (['all', vehiclesFilter, ['!', ['has', 'point_count']]] as any) : vehiclesFilter} />
+            <Source id="pid-vehicles" type="geojson" data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
+                <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
+                <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
+                <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
             </Source>
 
             <Source id="stop-labels-centroids" type="geojson" data={labelData ? labelData : EMPTY_GEOJSON}>

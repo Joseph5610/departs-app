@@ -17,7 +17,6 @@ export interface MapState {
     bounds: string | null;
     debouncedBounds: string | null;
     favoriteStops: string[];
-    showHeatmap: boolean;
 }
 
 /**
@@ -38,8 +37,7 @@ export type MapAction =
     | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
     | { type: 'SET_BOUNDS'; payload: string | null }
     | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
-    | { type: 'TOGGLE_FAVORITE'; payload: string }
-    | { type: 'SET_SHOW_HEATMAP'; payload: boolean };
+    | { type: 'TOGGLE_FAVORITE'; payload: string };
 
 /**
  * Initial state factory
@@ -59,10 +57,7 @@ const getInitialState = (): MapState => ({
     debouncedBounds: null,
     favoriteStops: typeof window !== 'undefined'
         ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[])
-        : [],
-    showHeatmap: typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.SHOW_HEATMAP) !== 'false'
-        : true
+        : []
 });
 
 /**
@@ -138,9 +133,6 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
             return { ...state, favoriteStops: newFavorites };
         }
-        case 'SET_SHOW_HEATMAP':
-            localStorage.setItem(STORAGE_KEYS.SHOW_HEATMAP, String(action.payload));
-            return { ...state, showHeatmap: action.payload };
         default:
             return state;
     }
@@ -197,9 +189,6 @@ export const useMapReducer = () => {
     const toggleFavorite = useCallback((stopId: string) =>
         dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId }), []);
 
-    const setShowHeatmap = useCallback((val: boolean) =>
-        dispatch({ type: 'SET_SHOW_HEATMAP', payload: val }), []);
-
     return {
         state,
         dispatch,
@@ -217,7 +206,6 @@ export const useMapReducer = () => {
         setRouteFilter,
         setBounds,
         setDebouncedBounds,
-        toggleFavorite,
-        setShowHeatmap
+        toggleFavorite
     };
 };

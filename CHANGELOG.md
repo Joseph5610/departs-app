@@ -2,6 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.6] - 2026-02-24
+
+### Changed
+- **Catch Indicator Refinement**: Tuned the "Can I catch it?" logic to be more conservative with a 1.0 m/s walking speed and a 90-second safety buffer.
+- **UI UX Boost**: Redesigned the catch status as compact, high-contrast pills and ensured the proximity header (distance/ETA) is always visible when location is available.
+- **Experimental Feature Removal**: Removed the experimental delay heatmap and map delay labels per user feedback to maintain a cleaner map interface.
+
 ## [0.7.5] - 2026-02-24
 
 ### Fixed

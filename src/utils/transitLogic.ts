@@ -19,14 +19,15 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
 };
 
 /**
- * Average walking speed in m/s (approx 4.3 km/h)
+ * Average walking speed in m/s (approx 3.6 km/h)
+ * Adjusted to be more conservative for urban environments with obstacles.
  */
-export const WALKING_SPEED = 1.2;
+export const WALKING_SPEED = 1.0;
 
 /**
  * Buffer time in seconds to account for platform navigation, etc.
  */
-export const CATCH_BUFFER = 60;
+export const CATCH_BUFFER = 90;
 
 export type CatchStatus = 'success' | 'warning' | 'error';
 

@@ -16,10 +16,6 @@
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
     },
-    "delayHeatmap": {
-      "title": "Delay heatmap",
-      "description": "Visualize traffic delays on the map"
-    },
     "tip": {
       "prefix": "Tip:",
       "text": "Hiding vehicles can speed up map loading in areas with poor connection."
@@ -105,6 +101,11 @@
         "success": "You'll catch it",
         "warning": "Maybe you'll catch it",
         "error": "You'll miss it"
+      },
+      "catchStatusCompact": {
+        "success": "Catchable",
+        "warning": "Maybe",
+        "error": "Too late"
       }
     }
   },

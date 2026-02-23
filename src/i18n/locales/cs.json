@@ -16,10 +16,6 @@
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"
     },
-    "delayHeatmap": {
-      "title": "Mapa zpoždění",
-      "description": "Zobrazit heat zones s největším meškáním"
-    },
     "tip": {
       "prefix": "Tip:",
       "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
@@ -105,6 +101,11 @@
         "success": "Stíháš to",
         "warning": "Možná stíháš",
         "error": "Nestíháš"
+      },
+      "catchStatusCompact": {
+        "success": "Stíháš",
+        "warning": "Možná",
+        "error": "Asi ne"
       }
     }
   },

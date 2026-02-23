@@ -163,7 +163,6 @@ const MapInner: React.FC = () => {
                     routeLinePaint={routeLinePaint}
                     routeLineLayout={routeLineLayout}
                     vehiclesFilter={vehiclesFilter}
-                    showHeatmap={state.showHeatmap}
                     labelLayerId={state.labelLayerId}
                 />
             </MapGL>

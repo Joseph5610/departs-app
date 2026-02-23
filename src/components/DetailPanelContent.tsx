@@ -2,6 +2,8 @@
 import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
@@ -21,6 +23,10 @@ const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
 };
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 
 const formatDelay = (seconds: number) => {
     if (seconds <= 30) return '';
@@ -95,11 +101,13 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const stopDistanceInfo = useMemo(() => {
         if (!selectedStop?.coordinates || !userLocation) return null;
         const distance = calculateDistance(userLocation, selectedStop.coordinates);
-        // Only show proximity info if within 500m
-        if (distance > 500) return null;
 
         const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString());
-        return { distance: Math.round(distance), time: walkingTimeMin };
+        return {
+            distance: Math.round(distance),
+            time: walkingTimeMin,
+            showCatchIndicator: distance < 1500 // Show catch indicators for stops within ~20 min walk
+        };
     }, [selectedStop?.coordinates, userLocation]);
 
     const showMetroNightMessage = useMemo(() => {
@@ -216,26 +224,29 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right flex flex-col items-end gap-1">
-                                        <div className="text-lg font-bold text-emerald-400 tabular-nums">
+                                    <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
+                                        <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
-                                        {stopDistanceInfo && (
-                                            <div className="flex flex-col items-end gap-1">
-                                                <div className="flex items-center gap-1 text-[9px] text-zinc-500 font-bold uppercase tracking-tighter">
+                                        {stopDistanceInfo?.showCatchIndicator && (
+                                            <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                <span className="text-zinc-500 opacity-80 flex items-center gap-0.5">
                                                     <span>🚶‍♂️</span>
-                                                    <span>{t('map.departures.minutes', { count: stopDistanceInfo.time })}</span>
-                                                </div>
-                                                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border
-                                                    ${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                                            'bg-rose-500/10 text-rose-400 border-rose-500/20'}
-                                                `}>
-                                                    <div className={`w-1 h-1 rounded-full ${
-                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-400' :
-                                                        getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-400' : 'bg-rose-400'
-                                                    }`} />
-                                                    {t(`map.departures.catchStatus.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                                    <span className="tabular-nums">{t('map.departures.minutes', { count: stopDistanceInfo.time })}</span>
+                                                </span>
+                                                <div className={cn(
+                                                    "px-1.5 py-0.5 rounded-md flex items-center gap-1",
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
+                                                    'bg-rose-500/10 text-rose-400'
+                                                )}>
+                                                    <span className="text-[8px] leading-none">
+                                                        {getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? '🟢' :
+                                                            getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? '🟡' : '🔴'}
+                                                    </span>
+                                                    <span className="uppercase tracking-tighter">
+                                                        {t(`map.departures.catchStatusCompact.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                                    </span>
                                                 </div>
                                             </div>
                                         )}
