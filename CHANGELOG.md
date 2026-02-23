@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.6.1] - 2026-02-23
+
+### Fixed
+- **Mobile Scrolling**: Fixed an issue where the connection list in the `DetailPanel` could not be scrolled to the very end when in the "peek" (half-open) state. Added a dynamic animated `padding-bottom` that compensates for the hidden portion of the sheet.
+- **Interaction Logic**: Disabled content scrolling when the `DetailPanel` is in the "collapsed" state to prevent accidental interactions and ensure focus on the main map.
+
 ## [0.6.0] - 2026-02-23
 
 ### Added
