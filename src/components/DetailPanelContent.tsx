@@ -1,7 +1,7 @@
 
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
@@ -14,6 +14,7 @@ import { useMap } from '../hooks/useMap';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
 import { useDepartures } from '../hooks/useDepartures';
+import { METRO_STATIONS } from '../config/stations';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -86,6 +87,16 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
+
+    const showMetroNightMessage = useMemo(() => {
+        if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
+
+        const isMetroStation = !!METRO_STATIONS[selectedStop.name];
+        const hour = new Date().getHours();
+        const isNightTime = hour >= 0 && hour < 5;
+
+        return isMetroStation && isNightTime;
+    }, [showDepartureBoard, selectedStop, groupedDepartures.length, loadingDeps]);
 
     return (
         <div className="space-y-4 pt-1">
@@ -198,7 +209,19 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 );
             })}
 
-            {showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
+            {showMetroNightMessage ? (
+                <div className="py-12 px-6 flex flex-col items-center text-center space-y-4 bg-white/5 rounded-3xl border border-white/5">
+                    <div className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                        <MoonStar size={32} className="text-indigo-400" />
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-white font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
+                        <p className="text-zinc-400 text-sm leading-relaxed">
+                            {t('map.departures.metroNight.description')}
+                        </p>
+                    </div>
+                </div>
+            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
                 <div className="py-12 text-center text-zinc-500">{t('map.departures.noUpcoming')}</div>
             )}
         </div>

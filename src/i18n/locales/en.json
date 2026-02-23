@@ -84,6 +84,10 @@
     "departures": {
       "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
+      "metroNight": {
+        "title": "The metro does not run at night",
+        "description": "Please use night trams and buses which provide transportation until the early morning hours."
+      },
       "delay": "+{{minutes}}min delay",
       "moreConnections": "+ {{count}} more connections",
       "showLess": "Show less",

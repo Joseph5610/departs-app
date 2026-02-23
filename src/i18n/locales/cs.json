@@ -84,6 +84,10 @@
     "departures": {
       "upcoming": "Nadcházející odjezdy",
       "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
+      "metroNight": {
+        "title": "Metro v noci nejezdí",
+        "description": "Využijte noční tramvaje a autobusy, které zajišťují dopravu až do ranních hodin."
+      },
       "delay": "+{{minutes}}min zpoždění",
       "moreConnections": "+ {{count}} další spoje",
       "showLess": "Zobrazit méně",

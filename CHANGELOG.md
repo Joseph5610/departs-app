@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.6.0] - 2026-02-23
+
+### Added
+- **Metro Night Message**: Implemented a custom "sleeping" state for metro stations during night hours (0:00 - 5:00). When there are no departures, users see a friendly message suggesting night trams and buses instead of a generic empty board.
+
 ## [0.5.13] - 2026-02-22
 
 ### Added
