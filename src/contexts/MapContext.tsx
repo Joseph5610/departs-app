@@ -71,7 +71,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setRouteFilter,
         setBounds,
         setDebouncedBounds,
-        toggleFavorite
+        toggleFavorite,
+        setShowHeatmap
     } = useMapReducer();
 
     const { userLocation, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef);
@@ -230,7 +231,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             handleDepartureClick,
             performGeolocation,
             setMapLoaded,
-            setLabelLayerId
+            setLabelLayerId,
+            setShowHeatmap
         },
         mapEvents: {
             onMove,

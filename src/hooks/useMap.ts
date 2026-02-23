@@ -23,6 +23,7 @@ export interface MapContextType {
         performGeolocation: () => void;
         setMapLoaded: (loaded: boolean) => void;
         setLabelLayerId: (id: string | undefined) => void;
+        setShowHeatmap: (val: boolean) => void;
     };
     mapEvents: {
         onMove: (evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => void;

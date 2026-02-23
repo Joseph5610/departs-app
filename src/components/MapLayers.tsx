@@ -135,23 +135,16 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
+            {/* Separate Source for Unclustered Heatmap */}
             <Source
-                id="pid-vehicles"
+                id="pid-vehicles-heatmap"
                 type="geojson"
-                data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
-                cluster={showHeatmap}
-                clusterMaxZoom={14}
-                clusterRadius={50}
-                clusterProperties={{
-                    sum_delay: ['+', ['to-number', ['coalesce', ['get', 'delay'], 0]]]
-                }}
+                data={showVehicles && showHeatmap && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
             >
                 <Layer
                     id="vehicles-heatmap"
                     type="heatmap"
-                    layout={{
-                        visibility: showHeatmap ? 'visible' : 'none'
-                    }}
+                    filter={vehiclesFilter}
                     paint={{
                         'heatmap-weight': [
                             'interpolate',
@@ -194,7 +187,19 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                         ]
                     }}
                 />
+            </Source>
 
+            <Source
+                id="pid-vehicles"
+                type="geojson"
+                data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
+                cluster={showHeatmap}
+                clusterMaxZoom={14}
+                clusterRadius={50}
+                clusterProperties={{
+                    sum_delay: ['+', ['to-number', ['coalesce', ['get', 'delay'], 0]]]
+                }}
+            >
                 {/* Delay Labels Layer */}
                 <Layer
                     id="vehicles-delay-label"
@@ -204,7 +209,11 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                         'text-field': [
                             'case',
                             ['has', 'point_count'],
-                            ['concat', '+', ['to-string', ['round', ['/', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60]]], 'm'],
+                            ['case',
+                                ['>=', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60],
+                                ['concat', '+', ['to-string', ['round', ['/', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60]]], 'm'],
+                                ''
+                            ],
                             ['all', ['>=', ['get', 'delay'], 60], ['!', ['has', 'point_count']]],
                             ['concat', '+', ['to-string', ['round', ['/', ['get', 'delay'], 60]]], 'm'],
                             ''

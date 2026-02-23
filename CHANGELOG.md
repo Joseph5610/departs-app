@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.5] - 2026-02-24
+
+### Fixed
+- **Heatmap Visibility**: Resolved an issue where the delay heatmap was hidden when clustering was enabled. Heatmap now uses a dedicated unclustered data source.
+- **Settings Interaction**: Fixed the delay heatmap toggle in the settings modal which was non-functional due to a missing context export.
+
 ## [0.7.4] - 2026-02-24
 
 ### Added
