@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.1] - 2026-02-24
+
+### Changed
+- **UX Refinement**: Tuned the walking speed from 1.4 m/s to a more realistic 1.2 m/s (approx 4.3 km/h).
+- **UI Refinement**: Redesigned the `DetailPanel` header for selected stops. Distance and ETA information is now displayed in a dedicated neutral pill, separating it from the "Upcoming Departures" title for better clarity.
+
 ## [0.7.0] - 2026-02-24
 
 ### Added

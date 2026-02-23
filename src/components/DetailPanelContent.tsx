@@ -112,16 +112,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                            {stopDistanceInfo && (
-                                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-                                    <MapPin size={12} />
-                                    <span>{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
-                                </div>
-                            )}
+                    {stopDistanceInfo && (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
+                            <MapPin size={14} className="text-zinc-500" />
+                            <span className="font-medium">{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
                         </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
