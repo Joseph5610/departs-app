@@ -53,31 +53,9 @@ export const clusterLayer: CircleLayerSpecification = {
         ],
         'circle-blur': [
             'interpolate', ['linear'], ['zoom'],
-            8, 1.2,  // High blur at low zoom for "glow" effect
-            13, 0.5  // Medium blur at high zoom
+            8, 0.8,  // Slightly less blur for better visibility without core
+            13, 0.3  // Sharper dot at higher zoom
         ]
-    }
-};
-
-// 2. The CORE Layer (Foreground - Bright Center)
-export const clusterCoreLayer: CircleLayerSpecification = {
-    id: 'cluster-core',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['has', 'point_count'],
-    paint: {
-        'circle-color': '#ffffff',
-        'circle-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            8, 1,
-            13, 2.5
-        ],
-        'circle-opacity': [
-            'interpolate', ['linear'], ['zoom'],
-            8, 0.4,
-            13, 0.8
-        ],
-        'circle-blur': 0.4
     }
 };
 
