@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
+import type { SelectedStop } from './useMapReducer';
 
 /**
  * Syncs the selected stop and map camera position with browser URL search parameters.
  * Allows for shareable links and state persistence on refresh.
  */
 export const useMapUrlSync = (
-    selectedStop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null,
-    setSelectedStop: (stop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) => void
+    selectedStop: SelectedStop | null,
+    setSelectedStop: (stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => void
 ) => {
     const initialized = useRef(false);
 
