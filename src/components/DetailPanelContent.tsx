@@ -106,7 +106,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         return {
             distance: Math.round(distance),
             time: walkingTimeMin,
-            showCatchIndicator: distance < 1500 // Show catch indicators for stops within ~20 min walk
+            showCatchIndicator: distance < 750 // Show catch indicators for stops within ~15 min walk
         };
     }, [selectedStop?.coordinates, userLocation]);
 

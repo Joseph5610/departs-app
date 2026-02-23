@@ -5,7 +5,7 @@ All notable changes to the **Departs.app** project will be documented in this fi
 ## [0.7.0] - 2026-02-24
 
 ### Added
-- **"Can I catch it?" Indicator**: Real-time 🟢/🟡/🔴 indicators in the departure board based on your walking distance to the stop and current vehicle delay. Logic is tuned to be highly conservative (0.8 m/s walking speed and 2-minute safety buffer).
+- **"Can I catch it?" Indicator**: Real-time 🟢/🟡/🔴 indicators in the departure board based on your walking distance to the stop and current vehicle delay. Indicators are limited to stops within 750m and the logic is tuned to be highly conservative (0.8 m/s walking speed and 2-minute safety buffer).
 - **Stop Proximity Info**: Displays current distance (meters) and walking ETA (minutes) in a dedicated pill at the top of the stop departure board.
 - **Favorite Stops**: Added a "Star" button to stops. Favorites are persisted to local storage, highlighted on the map with a gold glow, and appear in search results when the input is empty.
 - **Delay Trend Tracking**: Introduced visual "Delay Delta" indicators (↑/↓) in departure boards, showing how delay changed since the last update.

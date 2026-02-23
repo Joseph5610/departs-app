@@ -105,7 +105,7 @@
       "catchStatusCompact": {
         "success": "Stíháš",
         "warning": "Možná",
-        "error": "Asi ne"
+        "error": "Nestíháš"
       }
     }
   },
