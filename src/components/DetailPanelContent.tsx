@@ -1,7 +1,7 @@
 
 import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
@@ -15,6 +15,7 @@ import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
 import { useDepartures } from '../hooks/useDepartures';
 import { METRO_STATIONS } from '../config/stations';
+import { calculateDistance, getCatchStatus } from '../utils/transitLogic';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -83,10 +84,19 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { isLoading: loadingDeps } = useDepartures();
     const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort } = state;
-    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, favoriteStops } = state;
+    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
+
+    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
+
+    const stopDistanceInfo = useMemo(() => {
+        if (!selectedStop?.coordinates || !userLocation) return null;
+        const distance = calculateDistance(userLocation, selectedStop.coordinates);
+        const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString());
+        return { distance: Math.round(distance), time: walkingTimeMin };
+    }, [selectedStop?.coordinates, userLocation]);
 
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
@@ -101,23 +111,41 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     return (
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                    <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
-                        <button
-                            onClick={() => setDepartureSort('line')}
-                            className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title={t('map.departures.sortByLine')}
-                        >
-                            <ArrowDownAz size={14} />
-                        </button>
-                        <button
-                            onClick={() => setDepartureSort('departure')}
-                            className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                            title={t('map.departures.sortByDeparture')}
-                        >
-                            <Clock size={14} />
-                        </button>
+                <div className="space-y-4 mb-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
+                            {stopDistanceInfo && (
+                                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+                                    <MapPin size={12} />
+                                    <span>{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
+                                className={`p-2 rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
+                            >
+                                <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+                            </button>
+                            <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
+                                <button
+                                    onClick={() => setDepartureSort('line')}
+                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title={t('map.departures.sortByLine')}
+                                >
+                                    <ArrowDownAz size={14} />
+                                </button>
+                                <button
+                                    onClick={() => setDepartureSort('departure')}
+                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    title={t('map.departures.sortByDeparture')}
+                                >
+                                    <Clock size={14} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -186,10 +214,19 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right flex flex-col items-end gap-1">
                                         <div className="text-lg font-bold text-emerald-400 tabular-nums">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
+                                        {stopDistanceInfo && (
+                                            <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight
+                                                ${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+                                                        'bg-rose-500/20 text-rose-400'}
+                                            `}>
+                                                {t(`map.departures.catchStatus.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

@@ -3,7 +3,8 @@
     "placeholder": "Search stops or lines...",
     "platform": "Platform {{code}}",
     "lineFilter": "Filter line {{line}}",
-    "clearFilter": "Clear filter"
+    "clearFilter": "Clear filter",
+    "favorites": "Favorite Stops"
   },
   "settings": {
     "title": "Settings",
@@ -94,7 +95,13 @@
       "now": "Now",
       "minutes": "{{count}} min",
       "sortByLine": "Sort by line",
-      "sortByDeparture": "Sort by departure time"
+      "sortByDeparture": "Sort by departure time",
+      "distance": "{{distance}}m • {{time}} min walk",
+      "catchStatus": {
+        "success": "You can catch it",
+        "warning": "Maybe you'll catch it",
+        "error": "You won't catch it"
+      }
     }
   },
   "update": {

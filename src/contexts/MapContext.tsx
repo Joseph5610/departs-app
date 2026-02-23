@@ -10,6 +10,8 @@ import { useMapCameraFollow } from '../hooks/useMapCameraFollow';
 import { useMapVehicleSync } from '../hooks/useMapVehicleSync';
 import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
+import { useStops } from '../hooks/useStops';
+import { useMapStopEnrichment } from '../hooks/useMapStopEnrichment';
 import { addAllIcons } from '../utils/mapIcons';
 import type { TrackedVehicle, Departure, VehicleCollection } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
@@ -35,9 +37,11 @@ const MapEngine: React.FC = () => {
     // Data needed for sync hooks
     const { vehicles: rawVehicles } = useVehicles();
     const { data: vehicleDetail } = useVehicleDetail();
+    const { data: stopsData } = useStops();
 
     // Sync Background Logic
     useMapUrlSync(selectedStop, setSelectedStop);
+    useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
     useMapVehicleSync(selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
@@ -66,7 +70,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setDepartureSort,
         setRouteFilter,
         setBounds,
-        setDebouncedBounds
+        setDebouncedBounds,
+        toggleFavorite
     } = useMapReducer();
 
     const { userLocation, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef);
@@ -220,6 +225,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setRouteFilter,
             setBounds,
             setDebouncedBounds,
+            toggleFavorite,
             handleLocate,
             handleDepartureClick,
             performGeolocation,

@@ -142,7 +142,8 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: f.properties.stop_id,
                             name: f.properties.stop_name,
-                            platformCode: f.properties.platform_code
+                            platformCode: f.properties.platform_code,
+                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
                 }}
@@ -157,6 +158,7 @@ const MapInner: React.FC = () => {
                     routeShapeData={routeShapeData}
                     userLocation={state.userLocation}
                     selectedVehicleFeature={selectedVehicleFeature}
+                    favoriteStops={state.favoriteStops}
                     routeLinePaint={routeLinePaint}
                     routeLineLayout={routeLineLayout}
                     vehiclesFilter={vehiclesFilter}

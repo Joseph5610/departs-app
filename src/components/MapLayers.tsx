@@ -39,6 +39,8 @@ interface MapLayersProps {
     userLocation: [number, number] | null;
     /** GeoJSON FeatureCollection containing only the currently selected vehicle */
     selectedVehicleFeature: VehicleCollection;
+    /** List of favorite stop IDs */
+    favoriteStops: string[];
     /** MapLibre paint properties for the route line */
     routeLinePaint: NonNullable<LineLayerSpecification['paint']>;
     /** MapLibre layout properties for the route line */
@@ -73,6 +75,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     routeShapeData,
     userLocation,
     selectedVehicleFeature,
+    favoriteStops,
     routeLinePaint,
     routeLineLayout,
     vehiclesFilter,
@@ -130,6 +133,52 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             </Source>
 
             <Source id="pid-vehicles" type="geojson" data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
+                <Layer
+                    id="vehicles-heatmap"
+                    type="heatmap"
+                    maxzoom={15}
+                    paint={{
+                        'heatmap-weight': [
+                            'interpolate',
+                            ['linear'],
+                            ['to-number', ['coalesce', ['get', 'delay'], 0]],
+                            0, 0,
+                            300, 1,
+                            900, 3
+                        ],
+                        'heatmap-intensity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            10, 1,
+                            15, 3
+                        ],
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(0, 255, 0, 0)',
+                            0.2, 'rgba(34, 197, 94, 0.2)',
+                            0.4, 'rgba(234, 179, 8, 0.4)',
+                            0.6, 'rgba(249, 115, 22, 0.6)',
+                            0.8, 'rgba(239, 68, 68, 0.8)'
+                        ],
+                        'heatmap-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            10, 15,
+                            15, 40
+                        ],
+                        'heatmap-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            14, 0.6,
+                            15, 0
+                        ]
+                    }}
+                />
                 <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
@@ -155,6 +204,23 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             >
                 <Layer {...clusterLayer} />
                 <Layer {...clusterCountLayer} />
+                {/* Favorite stop highlight */}
+                {favoriteStops.length > 0 && (
+                    <Layer
+                        id="favorite-stops-glow"
+                        type="circle"
+                        filter={['all',
+                            ['!', ['has', 'point_count']],
+                            ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
+                        ]}
+                        paint={{
+                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
+                            'circle-color': '#f59e0b',
+                            'circle-opacity': 0.4,
+                            'circle-blur': 0.8
+                        }}
+                    />
+                )}
                 <Layer {...stopPointGlowLayer} />
                 <Layer {...stopPointLayer} />
                 <Layer {...transferStationLayer} />

@@ -14,12 +14,19 @@ export const Search: React.FC = React.memo(() => {
     const { state, actions, mapRef } = useMap();
     const { data: stops } = useStops();
 
-    const { routeFilter: activeFilter } = state;
+    const { routeFilter: activeFilter, favoriteStops } = state;
     const { setRouteFilter: onLineSelect, selectStop } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const { query, setQuery, results } = useStopSearch(stops || null);
+    const { query, setQuery, results: searchResults } = useStopSearch(stops || null);
+
+    const favoriteStopFeatures = React.useMemo(() => {
+        if (!stops?.features || favoriteStops.length === 0) return [];
+        return stops.features.filter(s => favoriteStops.includes(s.properties.stop_id));
+    }, [stops, favoriteStops]);
+
+    const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
 
     const linesFromQuery = React.useMemo(() => {
         return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 4);
@@ -88,6 +95,14 @@ export const Search: React.FC = React.memo(() => {
 
             {isOpen && (results.length > 0 || isLineLike) && (
                 <div className="mt-2 bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
+                    {query === '' && results.length > 0 && (
+                        <div className="px-4 py-2 bg-white/5 border-b border-white/5">
+                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
+                                <Star size={10} fill="currentColor" />
+                                {t('search.favorites')}
+                            </span>
+                        </div>
+                    )}
                     {isLineLike && (
                         <button
                             onClick={() => {
@@ -119,15 +134,16 @@ export const Search: React.FC = React.memo(() => {
                                 selectStop({
                                     id: stop.properties.stop_id,
                                     name: stop.properties.stop_name,
-                                    platformCode: stop.properties.platform_code
+                                    platformCode: stop.properties.platform_code,
+                                    coordinates: stop.geometry.coordinates as [number, number]
                                 });
                                 setQuery('');
                                 setIsOpen(false);
                             }}
                             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 transition-colors text-left border-b border-white/5 last:border-none"
                         >
-                            <div className="p-2 bg-white/5 rounded-lg text-zinc-400">
-                                <MapPin size={16} />
+                            <div className={`p-2 rounded-lg ${favoriteStops.includes(stop.properties.stop_id) ? 'bg-amber-500/10 text-amber-400' : 'bg-white/5 text-zinc-400'}`}>
+                                {favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-white font-medium">{stop.properties.stop_name}</span>

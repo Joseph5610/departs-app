@@ -6,7 +6,7 @@ import type { TrackedVehicle } from '../types/transit';
  * State managed by the map reducer
  */
 export interface MapState {
-    selectedStop: { id: string; name: string; platformCode?: string } | null;
+    selectedStop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null;
     selectedVehicle: TrackedVehicle | null;
     isFollowing: boolean;
     showVehicles: boolean;
@@ -16,15 +16,16 @@ export interface MapState {
     routeFilter: string[] | null;
     bounds: string | null;
     debouncedBounds: string | null;
+    favoriteStops: string[];
 }
 
 /**
  * Available actions for the map reducer
  */
 export type MapAction =
-    | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string; platformCode?: string } | null | ((prev: { id: string; name: string; platformCode?: string } | null) => { id: string; name: string; platformCode?: string } | null) }
+    | { type: 'SET_SELECTED_STOP'; payload: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null | ((prev: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) => { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) }
     | { type: 'SET_SELECTED_VEHICLE'; payload: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null) }
-    | { type: 'SELECT_STOP'; payload: { id: string; name: string; platformCode?: string } | null }
+    | { type: 'SELECT_STOP'; payload: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null }
     | { type: 'SELECT_VEHICLE'; payload: TrackedVehicle | null; keepStop?: boolean }
     | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
@@ -35,7 +36,8 @@ export type MapAction =
     | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
     | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
     | { type: 'SET_BOUNDS'; payload: string | null }
-    | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null };
+    | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
+    | { type: 'TOGGLE_FAVORITE'; payload: string };
 
 /**
  * Initial state factory
@@ -52,7 +54,10 @@ const getInitialState = (): MapState => ({
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeFilter: null,
     bounds: null,
-    debouncedBounds: null
+    debouncedBounds: null,
+    favoriteStops: typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]')
+        : []
 });
 
 /**
@@ -121,6 +126,13 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             return { ...state, bounds: action.payload };
         case 'SET_DEBOUNCED_BOUNDS':
             return { ...state, debouncedBounds: action.payload };
+        case 'TOGGLE_FAVORITE': {
+            const newFavorites = state.favoriteStops.includes(action.payload)
+                ? state.favoriteStops.filter(id => id !== action.payload)
+                : [...state.favoriteStops, action.payload];
+            localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
+            return { ...state, favoriteStops: newFavorites };
+        }
         default:
             return state;
     }
@@ -132,13 +144,13 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 export const useMapReducer = () => {
     const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    const setSelectedStop = useCallback((stop: { id: string; name: string; platformCode?: string } | null | ((prev: { id: string; name: string; platformCode?: string } | null) => { id: string; name: string; platformCode?: string } | null)) =>
+    const setSelectedStop = useCallback((stop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null | ((prev: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) => { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null)) =>
         dispatch({ type: 'SET_SELECTED_STOP', payload: stop }), []);
 
     const setSelectedVehicle = useCallback((vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) =>
         dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
 
-    const selectStop = useCallback((stop: { id: string; name: string; platformCode?: string } | null) =>
+    const selectStop = useCallback((stop: { id: string; name: string; platformCode?: string; coordinates?: [number, number] } | null) =>
         dispatch({ type: 'SELECT_STOP', payload: stop }), []);
 
     const selectVehicle = useCallback((vehicle: TrackedVehicle | null, keepStop = false) =>
@@ -174,6 +186,9 @@ export const useMapReducer = () => {
     const setDebouncedBounds = useCallback((bounds: string | null) =>
         dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds }), []);
 
+    const toggleFavorite = useCallback((stopId: string) =>
+        dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId }), []);
+
     return {
         state,
         dispatch,
@@ -190,6 +205,7 @@ export const useMapReducer = () => {
         setDepartureSort,
         setRouteFilter,
         setBounds,
-        setDebouncedBounds
+        setDebouncedBounds,
+        toggleFavorite
     };
 };
