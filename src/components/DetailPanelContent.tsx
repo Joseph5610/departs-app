@@ -135,21 +135,21 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={`p-2 rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
+                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
                             >
                                 <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                             </button>
-                            <div className="flex bg-white/5 p-0.5 rounded-xl border border-white/5">
+                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5">
                                 <button
                                     onClick={() => setDepartureSort('line')}
-                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                                     title={t('map.departures.sortByLine')}
                                 >
                                     <ArrowDownAz size={14} />
                                 </button>
                                 <button
                                     onClick={() => setDepartureSort('departure')}
-                                    className={`p-1.5 rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
                                     title={t('map.departures.sortByDeparture')}
                                 >
                                     <Clock size={14} />
@@ -230,10 +230,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                         </div>
                                         {stopDistanceInfo?.showCatchIndicator && (
                                             <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
-                                                <span className="text-zinc-500 opacity-80 flex items-center gap-0.5">
-                                                    <span>🚶‍♂️</span>
-                                                    <span className="tabular-nums">{t('map.departures.minutes', { count: stopDistanceInfo.time })}</span>
-                                                </span>
                                                 <div className={cn(
                                                     "px-1.5 py-0.5 rounded-md flex items-center gap-1",
                                                     getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :

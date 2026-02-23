@@ -2,57 +2,27 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
-## [0.7.6] - 2026-02-24
-
-### Changed
-- **Catch Indicator Refinement**: Tuned the "Can I catch it?" logic to be more conservative with a 1.0 m/s walking speed and a 90-second safety buffer.
-- **UI UX Boost**: Redesigned the catch status as compact, high-contrast pills and ensured the proximity header (distance/ETA) is always visible when location is available.
-- **Experimental Feature Removal**: Removed the experimental delay heatmap and map delay labels per user feedback to maintain a cleaner map interface.
-
-## [0.7.5] - 2026-02-24
-
-### Fixed
-- **Heatmap Visibility**: Resolved an issue where the delay heatmap was hidden when clustering was enabled. Heatmap now uses a dedicated unclustered data source.
-- **Settings Interaction**: Fixed the delay heatmap toggle in the settings modal which was non-functional due to a missing context export.
-
-## [0.7.4] - 2026-02-24
-
-### Added
-- **Smart Delay Labels**: Added real-time average delay labels for "heat zones" (clusters) and individual delay labels for vehicles directly on the map.
-- **Enhanced Heatmap**: The delay heatmap now remains visible even at high zoom levels, with dynamic intensity and radius scaling for better detail.
-- **Heatmap Toggle**: Added a new setting to turn the delay heatmap on or off according to user preference.
-
-## [0.7.3] - 2026-02-24
-
-### Added
-- **Delay Trend Tracking**: Introduced visual "Delay Delta" indicators (↑/↓) in departure boards, showing how zpoždění changed since the last update.
-- **Improved Heatmap Palette**: Updated the traffic heatmap to use a "Hot" palette (Indigo to White), making it easier to distinguish from transit lines.
-- **Enhanced Stop Clusters**: Refined map clusters with a blurred 'Tramoji-inspired' dot style for better legibility at lower zoom levels.
-- **Map Glow for Favorites**: Pinned stops now have a subtle gold glow effect on the map for easier identification.
-
-## [0.7.2] - 2026-02-24
-
-### Fixed
-- **UI Alignment**: Unified the size of the favorite (star) button with the adjacent sort buttons in the `DetailPanel` for a more balanced and professional header.
-
-## [0.7.1] - 2026-02-24
-
-### Changed
-- **UX Refinement**: Tuned the walking speed from 1.4 m/s to a more realistic 1.2 m/s (approx 4.3 km/h).
-- **UI Refinement**: Redesigned the `DetailPanel` header for selected stops. Distance and ETA information is now displayed in a dedicated neutral pill, separating it from the "Upcoming Departures" title for better clarity.
-
 ## [0.7.0] - 2026-02-24
 
 ### Added
-- **"Can I catch it?" Indicator**: Real-time 🟢/🟡/🔴 indicators in the departure board based on your walking distance to the stop and current vehicle delay.
-- **Stop Proximity Info**: Displays current distance (meters) and walking ETA (minutes) at the top of the stop departure board.
+- **"Can I catch it?" Indicator**: Real-time 🟢/🟡/🔴 indicators in the departure board based on your walking distance to the stop and current vehicle delay. Logic is tuned to be highly conservative (0.8 m/s walking speed and 2-minute safety buffer).
+- **Stop Proximity Info**: Displays current distance (meters) and walking ETA (minutes) in a dedicated pill at the top of the stop departure board.
 - **Favorite Stops**: Added a "Star" button to stops. Favorites are persisted to local storage, highlighted on the map with a gold glow, and appear in search results when the input is empty.
-- **Delay Heatmap**: Implemented a map visualization that shows "heat zones" of traffic/transit delays using a heatmap layer weighted by vehicle delay.
+- **Delay Trend Tracking**: Introduced visual "Delay Delta" indicators (↑/↓) in departure boards, showing how delay changed since the last update.
 - **Improved Search**: The search interface now features a "Favorites" section for quick access to pinned stops.
 
+### Fixed
+- **Vehicle Tracking Pulse**: Restored the missing pulse/glow effect for the selected vehicle, ensuring it remains visible even when the camera is not actively following the vehicle.
+
 ### Changed
+- **UI/UX Optimization**: Redesigned the catch status as compact, high-contrast pills. Removed redundant walking time labels from individual departure rows to keep the interface clean.
 - **Enriched State Management**: Enhanced the stop selection logic to store coordinates directly in the active state, enabling immediate distance calculations and better performance.
 - **Map Interaction**: Updated vehicle layer interaction IDs to match the latest engine specifications, ensuring reliable click detection for all vehicle types.
+- **Enhanced Stop Clusters**: Refined map clusters with a blurred 'Tramoji-inspired' dot style for better legibility at lower zoom levels.
+- **Visual Improvements**: Pinned stops now have a subtle gold glow effect on the map for easier identification.
+
+### Removed
+- **Experimental Delay Heatmap**: Completely removed the experimental delay heatmap and map delay labels per user feedback to ensure a cleaner and more focused map interface.
 
 ## [0.6.2] - 2026-02-24
 
