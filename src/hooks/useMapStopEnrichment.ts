@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { StopCollection } from '../types/transit';
-import type { SelectedStop } from './useMapReducer';
+import type { StopCollection, SelectedStop } from '../types/transit';
 
 /**
  * Enriches the selected stop with coordinates from the GeoJSON data if they are missing.

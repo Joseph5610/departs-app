@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { SelectedStop } from './useMapReducer';
+import type { SelectedStop } from '../types/transit';
 
 /**
  * Syncs the selected stop and map camera position with browser URL search parameters.

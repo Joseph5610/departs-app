@@ -1,12 +1,10 @@
 import { useReducer, useCallback } from 'react';
 import { STORAGE_KEYS } from '../config/constants';
-import type { TrackedVehicle } from '../types/transit';
+import type { TrackedVehicle, SelectedStop } from '../types/transit';
 
 /**
  * State managed by the map reducer
  */
-export type SelectedStop = { id: string; name: string; platformCode?: string; coordinates?: [number, number] };
-
 export interface MapState {
     selectedStop: SelectedStop | null;
     selectedVehicle: TrackedVehicle | null;
