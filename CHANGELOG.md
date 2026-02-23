@@ -2,6 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.4] - 2026-02-24
+
+### Added
+- **Smart Delay Labels**: Added real-time average delay labels for "heat zones" (clusters) and individual delay labels for vehicles directly on the map.
+- **Enhanced Heatmap**: The delay heatmap now remains visible even at high zoom levels, with dynamic intensity and radius scaling for better detail.
+- **Heatmap Toggle**: Added a new setting to turn the delay heatmap on or off according to user preference.
+
 ## [0.7.3] - 2026-02-24
 
 ### Added

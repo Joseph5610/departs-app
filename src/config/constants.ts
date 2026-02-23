@@ -35,7 +35,8 @@ export const STORAGE_KEYS = {
     DEPARTURE_SORT: 'departureSort',
     LAST_LOCATION: 'lastUserLocation',
     WELCOME_SEEN: 'departs_welcome_seen',
-    FAVORITES: 'favoriteStops'
+    FAVORITES: 'favoriteStops',
+    SHOW_HEATMAP: 'showHeatmap'
 };
 
 /**

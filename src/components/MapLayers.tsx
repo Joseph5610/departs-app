@@ -47,6 +47,8 @@ interface MapLayersProps {
     routeLineLayout: NonNullable<LineLayerSpecification['layout']>;
     /** Filter expression to exclude selected vehicle from the main vehicle layer */
     vehiclesFilter: FilterSpecification;
+    /** Whether to show the delay heatmap and zones */
+    showHeatmap: boolean;
     /** ID of the first label layer in the style, used for correct layering (Z-index) */
     labelLayerId?: string;
 }
@@ -79,6 +81,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     routeLinePaint,
     routeLineLayout,
     vehiclesFilter,
+    showHeatmap,
     labelLayerId
 }) => {
     if (!mapLoaded) return null;
@@ -132,11 +135,23 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            <Source id="pid-vehicles" type="geojson" data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
+            <Source
+                id="pid-vehicles"
+                type="geojson"
+                data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}
+                cluster={showHeatmap}
+                clusterMaxZoom={14}
+                clusterRadius={50}
+                clusterProperties={{
+                    sum_delay: ['+', ['to-number', ['coalesce', ['get', 'delay'], 0]]]
+                }}
+            >
                 <Layer
                     id="vehicles-heatmap"
                     type="heatmap"
-                    maxzoom={15}
+                    layout={{
+                        visibility: showHeatmap ? 'visible' : 'none'
+                    }}
                     paint={{
                         'heatmap-weight': [
                             'interpolate',
@@ -151,7 +166,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                             ['linear'],
                             ['zoom'],
                             10, 1,
-                            15, 3
+                            20, 4
                         ],
                         'heatmap-color': [
                             'interpolate',
@@ -168,20 +183,48 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                             ['linear'],
                             ['zoom'],
                             10, 15,
-                            15, 40
+                            20, 60
                         ],
                         'heatmap-opacity': [
                             'interpolate',
                             ['linear'],
                             ['zoom'],
                             14, 0.6,
-                            15, 0
+                            20, 0.3
                         ]
                     }}
                 />
-                <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
+
+                {/* Delay Labels Layer */}
+                <Layer
+                    id="vehicles-delay-label"
+                    type="symbol"
+                    layout={{
+                        visibility: showHeatmap ? 'visible' : 'none',
+                        'text-field': [
+                            'case',
+                            ['has', 'point_count'],
+                            ['concat', '+', ['to-string', ['round', ['/', ['/', ['get', 'sum_delay'], ['get', 'point_count']], 60]]], 'm'],
+                            ['all', ['>=', ['get', 'delay'], 60], ['!', ['has', 'point_count']]],
+                            ['concat', '+', ['to-string', ['round', ['/', ['get', 'delay'], 60]]], 'm'],
+                            ''
+                        ],
+                        'text-font': ['Montserrat Bold', 'Arial Unicode MS Regular'],
+                        'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 16, 14],
+                        'text-offset': [0, 1.5],
+                        'text-anchor': 'top',
+                        'text-allow-overlap': false
+                    }}
+                    paint={{
+                        'text-color': '#ffffff',
+                        'text-halo-color': 'rgba(0,0,0,0.8)',
+                        'text-halo-width': 1.5
+                    }}
+                />
+
+                <Layer {...vehiclesPointLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
+                <Layer {...vehiclesDirectionLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
+                <Layer {...vehiclesLabelLayer} filter={showHeatmap ? ['all', vehiclesFilter, ['!', ['has', 'point_count']]] : vehiclesFilter} />
             </Source>
 
             <Source id="stop-labels-centroids" type="geojson" data={labelData ? labelData : EMPTY_GEOJSON}>

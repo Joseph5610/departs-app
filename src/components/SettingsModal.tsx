@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
-import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
+import { Eye, EyeOff, Github, RefreshCw, Info, Flame } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
@@ -13,8 +13,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles } = state;
-    const { setIsSettingsOpen, setShowVehicles } = actions;
+    const { isSettingsOpen: isOpen, showVehicles, showHeatmap } = state;
+    const { setIsSettingsOpen, setShowVehicles, setShowHeatmap } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -110,6 +110,34 @@ export const SettingsModal: React.FC = () => {
                         >
                             <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
+                            />
+                        </div>
+                    </button>
+
+                    {/* Delay Heatmap Toggle */}
+                    <button
+                        onClick={() => setShowHeatmap(!showHeatmap)}
+                        className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group mt-3"
+                    >
+                        <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showHeatmap ? 'bg-orange-500/10 text-orange-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                <Flame size={22} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="text-white font-semibold leading-snug">
+                                    {t('settings.delayHeatmap.title')}
+                                </div>
+                                <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                    {t('settings.delayHeatmap.description')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showHeatmap ? 'bg-orange-500' : 'bg-zinc-700'}`}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showHeatmap ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                         </div>
                     </button>
