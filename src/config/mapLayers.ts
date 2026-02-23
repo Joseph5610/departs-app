@@ -38,7 +38,7 @@ export const clusterLayer: CircleLayerSpecification = {
             ]
         ],
 
-        // Radius scaling - "Tramoji" style: tiny dots at low zoom, bubbles at high zoom
+        // Radius scaling: tiny dots at low zoom, bubbles at high zoom
         'circle-radius': [
             'interpolate', ['linear'], ['zoom'],
             8, ['+', 3, ['*', ['get', 'cluster_seed'], 3]],

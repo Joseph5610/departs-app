@@ -18,7 +18,7 @@ All notable changes to the **Departs.app** project will be documented in this fi
 - **UI/UX Optimization**: Redesigned the catch status as compact, high-contrast pills. Removed redundant walking time labels from individual departure rows to keep the interface clean.
 - **Enriched State Management**: Enhanced the stop selection logic to store coordinates directly in the active state, enabling immediate distance calculations and better performance.
 - **Map Interaction**: Updated vehicle layer interaction IDs to match the latest engine specifications, ensuring reliable click detection for all vehicle types.
-- **Enhanced Stop Clusters**: Refined map clusters with a blurred 'Tramoji-inspired' dot style for better legibility at lower zoom levels.
+- **Enhanced Stop Clusters**: Refined map clusters with a blurred dot style for better legibility at lower zoom levels.
 - **Visual Improvements**: Pinned stops now have a subtle gold glow effect on the map for easier identification.
 
 ### Removed
