@@ -13,6 +13,7 @@ export interface MapContextType {
         mapLoaded: boolean;
         labelLayerId: string | undefined;
         userLocation: [number, number] | null;
+        isGeoPending: boolean;
         selectedId: string | number | null;
     };
     actions: Omit<ReturnType<typeof useMapReducer>, 'state' | 'dispatch'> & {

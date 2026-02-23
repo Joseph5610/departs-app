@@ -9,9 +9,11 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+    const [isGeoPending, setIsGeoPending] = useState(false);
     const watchId = useRef<number | null>(null);
     const isInitialSet = useRef(false);
     const userLocationRef = useRef<[number, number] | null>(null);
+    const lastUpdatedAt = useRef<number>(0);
     const pendingManualFly = useRef(false);
 
     // Keep ref in sync for use in callbacks without triggering re-renders
@@ -35,8 +37,11 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
             return;
         }
 
+        const now = Date.now();
+        const isStale = now - lastUpdatedAt.current > 30000; // 30 seconds
+
         if (isManual) {
-            if (userLocationRef.current) {
+            if (userLocationRef.current && !isStale) {
                 console.log('🎯 Manual locate: Flying to current known location');
                 mapRef.current?.getMap().flyTo({
                     center: userLocationRef.current,
@@ -44,8 +49,41 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                     duration: MAP_FLY_DURATION
                 });
             } else {
-                console.log('⏳ Manual locate: Pending position fix...');
+                console.log('⏳ Manual locate: Requesting fresh position...');
                 pendingManualFly.current = true;
+                setIsGeoPending(true);
+                showToast(t('toasts.geoSearching'), 'info');
+
+                // Force a fresh position check if we have an active watch but it's stale
+                if (watchId.current !== null) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const { latitude, longitude } = pos.coords;
+                            const newLocation: [number, number] = [longitude, latitude];
+                            setUserLocation(newLocation);
+                            setIsGeoPending(false);
+                            lastUpdatedAt.current = Date.now();
+
+                            if (pendingManualFly.current) {
+                                mapRef.current?.getMap().flyTo({
+                                    center: newLocation,
+                                    zoom: MAP_VEHICLE_SELECT_ZOOM,
+                                    duration: MAP_FLY_DURATION
+                                });
+                                pendingManualFly.current = false;
+                            }
+                        },
+                        (err) => {
+                            console.error('❌ Manual getCurrentPosition error:', err);
+                            setIsGeoPending(false);
+                            if (pendingManualFly.current) {
+                                showToast(t('toasts.geoError'), 'error');
+                                pendingManualFly.current = false;
+                            }
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                }
             }
         }
 
@@ -63,6 +101,8 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
 
                 const newLocation: [number, number] = [longitude, latitude];
                 setUserLocation(newLocation);
+                setIsGeoPending(false);
+                lastUpdatedAt.current = Date.now();
 
                 // Persist to localStorage
                 localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: latitude, lng: longitude }));
@@ -103,21 +143,23 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                 const errorType = errorTypes[err.code] || 'UNKNOWN_ERROR';
                 console.error(`❌ Geolocation error: ${errorType} (${err.code}) - ${err.message}`);
 
-                // Clear watch on error so subsequent manual attempts can try again
-                if (watchId.current !== null) {
+                setIsGeoPending(false);
+                // Only clear watch on permission denied.
+                // For timeouts/unavailable, we keep the watch alive to recover automatically.
+                if (err.code === err.PERMISSION_DENIED && watchId.current !== null) {
                     navigator.geolocation.clearWatch(watchId.current);
                     watchId.current = null;
                 }
 
                 if (isManual || pendingManualFly.current) {
                     showToast(t('toasts.geoError'), 'error');
-                    pendingManualFly.current = false;
                 }
+                pendingManualFly.current = false;
             },
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 60000
+                maximumAge: 10000 // Reduced from 60s to 10s for better responsiveness
             }
         );
     }, [mapRef, showToast, t]);
@@ -132,6 +174,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
 
     return {
         userLocation,
+        isGeoPending,
         performGeolocation,
         handleLocate
     };

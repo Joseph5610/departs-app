@@ -11,7 +11,7 @@ export const MapControls = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions, mapRef } = useMap();
 
-    const { mapLoaded } = state;
+    const { mapLoaded, isGeoPending } = state;
     const { handleLocate: onLocate, setIsSettingsOpen } = actions;
 
     const onSettings = React.useCallback(() => {
@@ -65,7 +65,10 @@ export const MapControls = React.memo(() => {
                 className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.myLocation')}
             >
-                <LocateFixed size={20} className="group-hover:scale-110 transition-transform" />
+                <LocateFixed
+                    size={20}
+                    className={`transition-all ${isGeoPending ? 'animate-spin text-blue-400' : 'group-hover:scale-110'}`}
+                />
             </button>
             <button
                 onClick={onSettings}

@@ -69,7 +69,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setDebouncedBounds
     } = useMapReducer();
 
-    const { userLocation, handleLocate, performGeolocation } = useGeolocation(mapRef);
+    const { userLocation, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef);
 
     // Map Event Handlers
     const getRoundedBounds = useCallback((map: Map) => {
@@ -202,6 +202,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             mapLoaded,
             labelLayerId,
             userLocation,
+            isGeoPending,
             selectedId: state.selectedVehicle?.vehicle_id || state.selectedVehicle?.id || null
         },
         actions: {

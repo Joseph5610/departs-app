@@ -2,6 +2,16 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.6.2] - 2026-02-24
+
+### Fixed
+- **Geolocation Reliability**: Hardened the geolocation watcher to persist through transient errors (like signal loss or timeouts). The watcher now only stops on explicit permission denial, ensuring automatic recovery when GPS signal returns.
+- **Location Updates**: Reduced the maximum location age from 60s to 10s to ensure the map shows a more accurate and frequent position while moving.
+- **Manual "Locate" Fix**: Enhanced the manual location button to force a fresh position request if the current known location is stale (older than 30s), resolving issues where clicking the button had no effect.
+
+### Added
+- **Visual Feedback**: Added a "Searching for your location..." toast and a spinning animation to the location button while a fresh position is being acquired, providing clear feedback during signal acquisition.
+
 ## [0.6.1] - 2026-02-23
 
 ### Fixed
