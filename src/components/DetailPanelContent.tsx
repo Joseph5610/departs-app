@@ -124,7 +124,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
-                    {stopDistanceInfo && (
+                    {stopDistanceInfo?.showCatchIndicator && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
                             <MapPin size={14} className="text-zinc-500" />
                             <span className="font-medium">{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
