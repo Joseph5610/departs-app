@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.7.1] - 2026-02-24
+
+### Changed
+- **Stop Proximity Info**: The distance and walking time panel is now hidden for stops further than 750 meters, matching the logic of the "Can I catch it?" indicator to reduce UI noise for distant locations.
+
 ## [0.7.0] - 2026-02-24
 
 ### Added
