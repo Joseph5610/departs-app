@@ -180,11 +180,10 @@ const MapInner: React.FC = () => {
                     vehiclesFilter={vehiclesFilter}
                     labelLayerId={state.labelLayerId}
                 />
+                <LiveStatus />
+                <Search />
+                <MapControls />
             </Mapcn>
-
-            <LiveStatus />
-            <Search />
-            <MapControls />
 
             <React.Suspense fallback={null}>
                 <WelcomeModal />
