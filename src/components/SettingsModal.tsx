@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal } from './Modal';
 import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
-
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -16,9 +22,6 @@ export const SettingsModal: React.FC = () => {
     const { isSettingsOpen: isOpen, showVehicles } = state;
     const { setIsSettingsOpen, setShowVehicles } = actions;
 
-    const onClose = React.useCallback(() => {
-        setIsSettingsOpen(false);
-    }, [setIsSettingsOpen]);
     const { showToast } = useToast();
     const [isChecking, setIsChecking] = useState(false);
     const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,103 +83,114 @@ export const SettingsModal: React.FC = () => {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
-            <div className="space-y-8 py-2">
-                {/* Live Vehicles Toggle */}
-                <section className="space-y-3">
-                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
-                        {t('settings.sections.display')}
-                    </div>
-                    <button
-                        onClick={() => setShowVehicles(!showVehicles)}
-                        className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
-                    >
-                        <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
-                                {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
+        <Dialog open={isOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogContent className="sm:max-w-[425px] bg-black/95 backdrop-blur-xl border-white/10 text-white rounded-[2rem] p-0 overflow-hidden">
+                <DialogHeader className="p-6 pb-0">
+                    <DialogTitle className="text-xl font-bold">{t('settings.title')}</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[80vh] px-6 pb-6 pt-2">
+                    <div className="space-y-8 py-2">
+                        {/* Live Vehicles Toggle */}
+                        <section className="space-y-3">
+                            <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
+                                {t('settings.sections.display')}
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="text-white font-semibold leading-snug">
-                                    {t('settings.liveVehicles.title')}
-                                </div>
-                                <div className="text-zinc-500 text-xs mt-1 leading-tight">
-                                    {t('settings.liveVehicles.description')}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
-                        >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                        </div>
-                    </button>
-                </section>
-
-                {/* Language Selection */}
-                <section className="space-y-3">
-                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
-                        {t('settings.sections.language')}
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        {(['en', 'cs'] as const).map((lang) => (
-                            <button
-                                key={lang}
-                                onClick={() => i18n.changeLanguage(lang)}
-                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${(i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
-                                    : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
-                                    }`}
+                            <Button
+                                variant="ghost"
+                                onClick={() => setShowVehicles(!showVehicles)}
+                                className="w-full h-auto flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group whitespace-normal"
                             >
-                                {t(`settings.language.${lang}`)}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Tip Box */}
-                <div className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 flex gap-2.5 sm:gap-3">
-                    <div className="shrink-0 text-amber-500/50 mt-0.5">
-                        <Info size={16} />
-                    </div>
-                    <div className="text-zinc-400 text-xs leading-relaxed">
-                        <span className="text-amber-200/80 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
-                    </div>
-                </div>
-
-                {/* Footer Actions & Info */}
-                <div className="pt-4 space-y-6 border-t border-white/5">
-                    <div className="flex flex-col gap-3">
-                        <button
-                            onClick={handleCheckUpdate}
-                            disabled={isChecking}
-                            className="flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-400">
-                                    <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
+                                <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                        {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-white font-semibold leading-snug">
+                                            {t('settings.liveVehicles.title')}
+                                        </div>
+                                        <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                            {t('settings.liveVehicles.description')}
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="text-zinc-300 text-sm font-medium">{t('settings.updates.check')}</span>
-                            </div>
-                            <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
-                                {t('settings.versionBadge', { version })}
-                            </span>
-                        </button>
 
-                        <a
-                            href="https://github.com/joseph5610/departs-app"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
-                        >
-                            <Github size={14} />
-                            {t('settings.viewSource')}
-                        </a>
+                                <div
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </div>
+                            </Button>
+                        </section>
+
+                        {/* Language Selection */}
+                        <section className="space-y-3">
+                            <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
+                                {t('settings.sections.language')}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {(['en', 'cs'] as const).map((lang) => (
+                                    <Button
+                                        key={lang}
+                                        variant="ghost"
+                                        onClick={() => i18n.changeLanguage(lang)}
+                                        className={`h-auto py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${(i18n.resolvedLanguage || i18n.language).startsWith(lang)
+                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
+                                            : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
+                                            }`}
+                                    >
+                                        {t(`settings.language.${lang}`)}
+                                    </Button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Tip Box */}
+                        <div className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 flex gap-2.5 sm:gap-3">
+                            <div className="shrink-0 text-amber-500/50 mt-0.5">
+                                <Info size={16} />
+                            </div>
+                            <div className="text-zinc-400 text-xs leading-relaxed">
+                                <span className="text-amber-200/80 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
+                            </div>
+                        </div>
+
+                        {/* Footer Actions & Info */}
+                        <div className="pt-4 space-y-6">
+                            <Separator className="bg-white/5" />
+                            <div className="flex flex-col gap-3">
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleCheckUpdate}
+                                    disabled={isChecking}
+                                    className="h-auto flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-400">
+                                            <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
+                                        </div>
+                                        <span className="text-zinc-300 text-sm font-medium">{t('settings.updates.check')}</span>
+                                    </div>
+                                    <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
+                                        {t('settings.versionBadge', { version })}
+                                    </span>
+                                </Button>
+
+                                <a
+                                    href="https://github.com/joseph5610/departs-app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
+                                >
+                                    <Github size={14} />
+                                    {t('settings.viewSource')}
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </Modal>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
     );
 };

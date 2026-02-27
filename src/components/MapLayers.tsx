@@ -1,9 +1,10 @@
 
-import React from 'react';
-import { Source, Layer } from 'react-map-gl/maplibre';
+import React, { useEffect, useCallback } from 'react';
+import { useMap as useMapcn } from '@/components/ui/map';
 import type { LineLayerSpecification, FilterSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
 import type { VehicleCollection, StopCollection } from '../types/transit';
+import { addAllIcons } from '../utils/mapIcons';
 import {
     clusterLayer,
     clusterCountLayer,
@@ -57,17 +58,10 @@ const EMPTY_GEOJSON: FeatureCollection = {
 };
 
 /**
- * MapLayers Component
- *
- * This component is responsible for rendering all MapLibre sources and layers.
- * It is isolated from the main Map UI to ensure that map style updates are decoupled
- * from UI state changes (like opening sidebars or settings).
- *
- * PERFORMANCE: This component is wrapped in React.memo to prevent expensive re-renders
- * unless the underlying GeoJSON data or styling properties actually change.
+ * MapLayers Component refactored for mapcn.
+ * It uses the map instance from mapcn's context to manage layers directly via MapLibre API.
  */
 export const MapLayers: React.FC<MapLayersProps> = React.memo(({
-    mapLoaded,
     showVehicles,
     displayVehicles,
     stopsData,
@@ -81,108 +75,161 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     vehiclesFilter,
     labelLayerId
 }) => {
-    if (!mapLoaded) return null;
+    const { map, isLoaded: mapcnLoaded } = useMapcn();
 
-    return (
-        <>
-            {/* Route Shape Layer - UNDER labels */}
-            <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
-                <Layer
-                    id="route-line"
-                    type="line"
-                    beforeId={labelLayerId}
-                    layout={routeLineLayout}
-                    paint={routeLinePaint}
-                />
-            </Source>
+    // Utility to safely add or update a GeoJSON source
+    const updateSource = useCallback((id: string, data: any, options: any = {}) => {
+        if (!map) return;
+        const source = map.getSource(id);
+        if (source) {
+            (source as any).setData(data);
+        } else {
+            map.addSource(id, {
+                type: 'geojson',
+                data,
+                ...options
+            });
+        }
+    }, [map]);
 
-            <Source id="user-location" type="geojson" data={userLocation ? {
-                type: 'FeatureCollection',
-                features: [{
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: userLocation },
-                    properties: {}
-                }]
-            } : EMPTY_GEOJSON}>
-                <Layer
-                    id="user-location-pulse"
-                    type="circle"
-                    paint={{
-                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
-                        'circle-color': '#3b82f6',
-                        'circle-opacity': 0.15,
-                    }}
-                />
-                <Layer
-                    id="user-location-point"
-                    type="circle"
-                    paint={{
-                        'circle-radius': 7,
-                        'circle-color': '#3b82f6',
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#FFFFFF'
-                    }}
-                />
-            </Source>
+    // Utility to safely add or update a layer
+    const updateLayer = useCallback((layerConfig: any, beforeId?: string, filter?: any) => {
+        if (!map) return;
+        if (map.getLayer(layerConfig.id)) {
+            if (filter !== undefined) {
+                map.setFilter(layerConfig.id, filter);
+            }
+            // Update paint and layout properties if needed
+            Object.entries(layerConfig.paint || {}).forEach(([key, value]) => {
+                map.setPaintProperty(layerConfig.id, key, value);
+            });
+            Object.entries(layerConfig.layout || {}).forEach(([key, value]) => {
+                map.setLayoutProperty(layerConfig.id, key, value);
+            });
+        } else {
+            map.addLayer({
+                ...layerConfig,
+                ...(filter !== undefined && { filter })
+            }, beforeId);
+        }
+    }, [map]);
 
-            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
-                <Layer {...selectedVehiclePulseLayer} />
-                <Layer {...selectedVehiclePointLayer} />
-                <Layer {...selectedVehicleDirectionLayer} />
-                <Layer {...selectedVehicleLabelLayer} />
-            </Source>
+    useEffect(() => {
+        if (!map || !mapcnLoaded) return;
 
-            <Source id="pid-vehicles" type="geojson" data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
-                <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
-            </Source>
+        // Initialize Icons
+        addAllIcons(map);
 
-            <Source id="stop-labels-centroids" type="geojson" data={labelData ? labelData : EMPTY_GEOJSON}>
-                <Layer {...stopLabelLayer} />
-            </Source>
+        // Sources
+        updateSource('route-shape', routeShapeData || EMPTY_GEOJSON);
+        updateSource('user-location', userLocation ? {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: userLocation },
+                properties: {}
+            }]
+        } : EMPTY_GEOJSON);
+        updateSource('selected-vehicle', selectedVehicleFeature);
+        updateSource('pid-vehicles', showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON);
+        updateSource('stop-labels-centroids', labelData || EMPTY_GEOJSON);
+        updateSource('pid-stops', stopsData || EMPTY_GEOJSON, {
+            cluster: true,
+            clusterMaxZoom: 13,
+            clusterRadius: 25,
+            clusterProperties: {
+                has_metro_a: ['max', ['get', 'metro_a']],
+                has_metro_b: ['max', ['get', 'metro_b']],
+                has_metro_c: ['max', ['get', 'metro_c']],
+                cluster_seed: ['max', ['get', 'variant_seed']]
+            }
+        });
 
-            <Source
-                id="pid-stops"
-                type="geojson"
-                data={stopsData ? stopsData : EMPTY_GEOJSON}
-                cluster={true}
-                clusterMaxZoom={13}
-                clusterRadius={25}
-                clusterProperties={{
-                    has_metro_a: ['max', ['get', 'metro_a']],
-                    has_metro_b: ['max', ['get', 'metro_b']],
-                    has_metro_c: ['max', ['get', 'metro_c']],
-                    cluster_seed: ['max', ['get', 'variant_seed']]
-                }}
-            >
-                <Layer {...clusterLayer} />
-                <Layer {...clusterCountLayer} />
-                {/* Favorite stop highlight */}
-                {favoriteStops.length > 0 && (
-                    <Layer
-                        id="favorite-stops-glow"
-                        type="circle"
-                        filter={['all',
-                            ['!', ['has', 'point_count']],
-                            ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
-                        ]}
-                        paint={{
-                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
-                            'circle-color': '#f59e0b',
-                            'circle-opacity': 0.4,
-                            'circle-blur': 0.8
-                        }}
-                    />
-                )}
-                <Layer {...stopPointGlowLayer} />
-                <Layer {...stopPointLayer} />
-                <Layer {...transferStationLayer} />
-                <Layer {...platformLabelLayer} />
-                <Layer {...entranceLayer} />
-            </Source>
-        </>
-    );
+        // Layers
+        // Route Line
+        updateLayer({
+            id: 'route-line',
+            type: 'line',
+            source: 'route-shape',
+            layout: routeLineLayout,
+            paint: routeLinePaint
+        }, labelLayerId);
+
+        // User Location
+        updateLayer({
+            id: 'user-location-pulse',
+            type: 'circle',
+            source: 'user-location',
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
+                'circle-color': '#3b82f6',
+                'circle-opacity': 0.15,
+            }
+        });
+        updateLayer({
+            id: 'user-location-point',
+            type: 'circle',
+            source: 'user-location',
+            paint: {
+                'circle-radius': 7,
+                'circle-color': '#3b82f6',
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#FFFFFF'
+            }
+        });
+
+        // Selected Vehicle
+        updateLayer(selectedVehiclePulseLayer);
+        updateLayer(selectedVehiclePointLayer);
+        updateLayer(selectedVehicleDirectionLayer);
+        updateLayer(selectedVehicleLabelLayer);
+
+        // All Vehicles
+        updateLayer(vehiclesPointLayer, undefined, vehiclesFilter);
+        updateLayer(vehiclesDirectionLayer, undefined, vehiclesFilter);
+        updateLayer(vehiclesLabelLayer, undefined, vehiclesFilter);
+
+        // Stop Labels
+        updateLayer(stopLabelLayer);
+
+        // Stops & Clusters
+        updateLayer(clusterLayer);
+        updateLayer(clusterCountLayer);
+
+        // Favorite stops
+        if (favoriteStops.length > 0) {
+            updateLayer({
+                id: 'favorite-stops-glow',
+                type: 'circle',
+                source: 'pid-stops',
+                paint: {
+                    'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
+                    'circle-color': '#f59e0b',
+                    'circle-opacity': 0.4,
+                    'circle-blur': 0.8
+                }
+            }, undefined, ['all',
+                ['!', ['has', 'point_count']],
+                ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
+            ]);
+        } else if (map.getLayer('favorite-stops-glow')) {
+            map.removeLayer('favorite-stops-glow');
+        }
+
+        updateLayer(stopPointGlowLayer);
+        updateLayer(stopPointLayer);
+        updateLayer(transferStationLayer);
+        updateLayer(platformLabelLayer);
+        updateLayer(entranceLayer);
+
+    }, [
+        map, mapcnLoaded, showVehicles, displayVehicles, stopsData, labelData,
+        routeShapeData, userLocation, selectedVehicleFeature, favoriteStops,
+        routeLinePaint, routeLineLayout, vehiclesFilter, labelLayerId,
+        updateSource, updateLayer
+    ]);
+
+    return null;
 });
 
 MapLayers.displayName = 'MapLayers';

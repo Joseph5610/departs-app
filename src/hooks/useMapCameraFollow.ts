@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { MapRef } from 'react-map-gl/maplibre';
+import type { Map } from 'maplibre-gl';
 import type { TrackedVehicle } from '../types/transit';
 import {
     MOBILE_BREAKPOINT,
@@ -11,7 +11,7 @@ import {
  * Handles smooth camera tracking for the selected vehicle.
  */
 export const useMapCameraFollow = (
-    mapRef: React.RefObject<MapRef | null>,
+    mapRef: React.RefObject<Map | null>,
     selectedVehicle: TrackedVehicle | null,
     isFollowing: boolean
 ) => {

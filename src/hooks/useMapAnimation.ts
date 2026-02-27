@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { MapRef } from 'react-map-gl/maplibre';
+import type { Map } from 'maplibre-gl';
 import type { TrackedVehicle } from '../types/transit';
 
 /**
@@ -10,7 +10,7 @@ import type { TrackedVehicle } from '../types/transit';
  * of vehicles on the map, avoiding expensive React re-renders triggered by state changes.
  */
 export const useMapAnimation = (
-    mapRef: React.RefObject<MapRef | null>,
+    mapRef: React.RefObject<Map | null>,
     selectedVehicle: TrackedVehicle | null,
     isFollowing: boolean
 ) => {
@@ -19,7 +19,7 @@ export const useMapAnimation = (
         const currentMapRef = mapRef.current;
 
         const animate = () => {
-            const map = mapRef.current?.getMap();
+            const map = mapRef.current;
             if (map && selectedVehicle) {
                 const time = Date.now() / 350;
                 const radius = 20 + Math.sin(time) * 15; // Base 20, pulse +/- 15
@@ -43,7 +43,7 @@ export const useMapAnimation = (
 
         return () => {
             if (frame) cancelAnimationFrame(frame);
-            const map = currentMapRef?.getMap();
+            const map = currentMapRef;
             if (map && map.getLayer('selected-vehicle-pulse')) {
                 try {
                     map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', 0);

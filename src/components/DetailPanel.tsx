@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
 import { MOBILE_BREAKPOINT } from '../config/constants';
+import { Button } from "@/components/ui/button";
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -74,7 +75,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         const { velocity, offset } = info;
       
         // Snapping logic with velocity projection
-        // We use a slightly more aggressive projection for better feel
         const travel = offset.y + (velocity.y * 0.15);
         const threshold = 75;
 
@@ -126,12 +126,14 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2 min-w-0">
                                     {onBack && (
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={onBack}
-                                            className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                            className="h-9 w-9 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
                                         >
                                             <ArrowLeft size={20} />
-                                        </button>
+                                        </Button>
                                     )}
                                     <div className="flex items-center gap-2 min-w-0">
                                         <h2 className="text-xl font-bold text-white truncate tracking-tight">
@@ -144,12 +146,14 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                                         )}
                                     </div>
                                 </div>
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={onClose}
-                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                    className="h-9 w-9 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
                                 >
                                     <X size={20} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
 

@@ -2,10 +2,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from './useToast';
-import type { MapRef } from 'react-map-gl/maplibre';
+import type { Map } from 'maplibre-gl';
 import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../config/constants';
 
-export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
+export const useGeolocation = (mapRef: React.RefObject<Map | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -17,7 +17,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
 
     // Helper to fly the map to a location
     const flyToLocation = useCallback((location: [number, number], isJump: boolean = false) => {
-        const map = mapRef.current?.getMap();
+        const map = mapRef.current;
         if (!map) return;
 
         if (isJump) {

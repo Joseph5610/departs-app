@@ -6,6 +6,8 @@ import { StatusPill } from './StatusPill';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
 import { parseISO } from 'date-fns';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
 
@@ -123,19 +125,22 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             <div className="flex flex-row md:flex-col items-center md:text-center p-4 md:p-6 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden gap-3 md:gap-4">
                 <div
-                    className="absolute inset-0 opacity-10"
+                    className="absolute inset-0 opacity-10 pointer-events-none"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                 />
-                <div
-                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
+                <Button
+                    variant="ghost"
                     onClick={onToggleFollow}
+                    className={cn(
+                        "w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group p-0",
+                    )}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                 >
                     <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}</span>
                     <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
                         <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                     </div>
-                </div>
+                </Button>
                 <div className="z-10 flex-1 min-w-0 md:w-full">
                     <h3 className="text-lg md:text-xl font-bold text-white mb-1 truncate">
                         {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
@@ -206,18 +211,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             href={alert.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group
-                                ${alert.priority === '1'
+                            className={cn(
+                                "p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group",
+                                alert.priority === '1'
                                     ? 'bg-rose-500/10 border-rose-500/20'
-                                    : 'bg-amber-500/10 border-amber-500/20'}
-                            `}
+                                    : 'bg-amber-500/10 border-amber-500/20'
+                            )}
                         >
-                            <div className={`p-2 rounded-full shrink-0 ${alert.priority === '1' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                            <div className={cn(
+                                "p-2 rounded-full shrink-0",
+                                alert.priority === '1' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'
+                            )}>
                                 <AlertTriangle size={20} className={alert.priority === '1' ? 'animate-pulse' : ''} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start gap-2">
-                                    <h4 className={`font-bold text-sm leading-tight ${alert.priority === '1' ? 'text-rose-500' : 'text-amber-500'}`}>
+                                    <h4 className={cn(
+                                        "font-bold text-sm leading-tight",
+                                        alert.priority === '1' ? 'text-rose-500' : 'text-amber-500'
+                                    )}>
                                         {alert.title}
                                     </h4>
                                     <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />
@@ -235,15 +247,16 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 <div className="space-y-3">
                     <div className="flex items-center justify-between px-1 gap-2">
                         <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest truncate">{t('map.vehicleDetails.routeSchedule')}</span>
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={handleTogglePastStops}
-                            className="flex items-center gap-1.5 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors shrink-0"
+                            className="h-auto flex items-center gap-1.5 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors shrink-0"
                         >
                             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider whitespace-nowrap">
                                 {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
                             </span>
                             {showPastStops ? <ChevronUp size={12} className="text-zinc-400" /> : <ChevronDown size={12} className="text-zinc-400" />}
-                        </button>
+                        </Button>
                     </div>
                     <div className="relative pl-6 space-y-0">
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
@@ -254,13 +267,20 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isNext = stop.properties.stop_sequence === nextStopSequence;
 
                             return (
-                                <div key={idx} className={`relative py-2.5 flex items-center justify-between transition-opacity ${isPast ? 'opacity-40' : 'opacity-100'}`}>
-                                    <div className={`absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10 
-                                        ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
-                                    />
+                                <div key={idx} className={cn(
+                                    "relative py-2.5 flex items-center justify-between transition-opacity",
+                                    isPast ? 'opacity-40' : 'opacity-100'
+                                )}>
+                                    <div className={cn(
+                                        "absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10",
+                                        isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'
+                                    )} />
 
                                     <div className="flex flex-col min-w-0 pr-4">
-                                        <span className={`text-sm truncate ${isNext ? 'text-emerald-400 font-bold' : isPast ? 'text-zinc-400' : 'text-zinc-100 font-medium'}`}>
+                                        <span className={cn(
+                                            "text-sm truncate",
+                                            isNext ? 'text-emerald-400 font-bold' : isPast ? 'text-zinc-400' : 'text-zinc-100 font-medium'
+                                        )}>
                                             {stop.properties.stop_name}
                                         </span>
                                         {isCurrent && <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
@@ -278,7 +298,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                                             return (
                                                 <React.Fragment>
-                                                    <span className={`text-xs tabular-nums ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
+                                                    <span className={cn(
+                                                        "text-xs tabular-nums",
+                                                        isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'
+                                                    )}>
                                                         {realtimeTime?.slice(0, 8) || ''}
                                                     </span>
                                                     {hasRealtime && (

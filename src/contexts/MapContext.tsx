@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -49,7 +48,7 @@ const MapEngine: React.FC = () => {
     return null;
 };
 
-export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<MapRef | null> }> = ({ children, mapRef }) => {
+export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<Map | null> }> = ({ children, mapRef }) => {
     const queryClient = useQueryClient();
     const [mapLoaded, setMapLoaded] = useState(false);
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);

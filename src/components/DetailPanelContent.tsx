@@ -2,8 +2,6 @@
 import { memo, useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
@@ -18,15 +16,14 @@ import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
 import { useDepartures } from '../hooks/useDepartures';
 import { METRO_STATIONS } from '../config/stations';
 import { calculateDistance, getCatchStatus } from '../utils/transitLogic';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
 };
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
 
 const formatDelay = (seconds: number) => {
     if (seconds <= 30) return '';
@@ -133,27 +130,42 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     <div className="flex items-center justify-between">
                         <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                         <div className="flex items-center gap-2">
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
+                                className={cn(
+                                    "h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90",
+                                    isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'
+                                )}
                             >
                                 <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
-                            </button>
-                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5">
-                                <button
+                            </Button>
+                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5 overflow-hidden">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setDepartureSort('line')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={cn(
+                                        "w-8 h-full rounded-lg transition-all",
+                                        departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                                    )}
                                     title={t('map.departures.sortByLine')}
                                 >
                                     <ArrowDownAz size={14} />
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setDepartureSort('departure')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={cn(
+                                        "w-8 h-full rounded-lg transition-all",
+                                        departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                                    )}
                                     title={t('map.departures.sortByDeparture')}
                                 >
                                     <Clock size={14} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -186,7 +198,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                 >
                                     {group.line}
                                 </div>
-                                <div className="h-[1px] flex-1 bg-white/10" />
+                                <Separator className="flex-1 bg-white/10" />
                             </div>
                         )}
 
@@ -202,20 +214,21 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             onDepartureClick(dep.tripId, dep.vehicleId, dep);
                                         }
                                     }}
-                                    className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
-                                        ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
-                                    `}
+                                    className={cn(
+                                        "flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all",
+                                        dep.tripId && 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]'
+                                    )}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex flex-col">
-                                            <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
+                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                        <div className="flex flex-col min-w-0">
+                                            <div className="text-white font-semibold leading-tight truncate">{dep.headsign}</div>
                                             <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
+                                                <span className="tabular-nums shrink-0">{format(parseISO(dep.scheduled), 'HH:mm', {
                                                     locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
                                                 })}</span>
-                                                <div className="flex items-center">
+                                                <div className="flex items-center overflow-hidden">
                                                     {dep.delay > 30 && (
-                                                        <span className="text-rose-400 font-bold tabular-nums">
+                                                        <span className="text-rose-400 font-bold tabular-nums shrink-0">
                                                             {formatDelay(dep.delay)}
                                                         </span>
                                                     )}
@@ -224,7 +237,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
+                                    <div className="text-right flex flex-col items-end justify-center min-w-[100px] shrink-0">
                                         <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
                                             <Countdown timestamp={dep.timestamp} />
                                         </div>
@@ -251,14 +264,15 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             ))}
 
                             {hasMore && (
-                                <button
+                                <Button
+                                    variant="ghost"
                                     onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
+                                    className="w-full h-auto py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 hover:bg-transparent transition-colors"
                                 >
-                                    <div className="h-[1px] flex-1 bg-white/5" />
+                                    <Separator className="flex-1 bg-white/5" />
                                     <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <div className="h-[1px] flex-1 bg-white/5" />
-                                </button>
+                                    <Separator className="flex-1 bg-white/5" />
+                                </Button>
                             )}
                         </div>
                     </div>

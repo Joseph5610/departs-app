@@ -1,8 +1,7 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import MapGL, { type MapRef } from 'react-map-gl/maplibre';
-import maplibregl, {
+import {
     type Map as MapLibreInstance,
     type LineLayerSpecification
 } from 'maplibre-gl';
@@ -27,6 +26,9 @@ import { useMapStops } from '../hooks/useMapStops';
 import { useMapCentroids } from '../hooks/useMapCentroids';
 import { useRouteShape } from '../hooks/useRouteShape';
 import { useMapFilters } from '../hooks/useMapFilters';
+
+// Import mapcn components
+import { Map as Mapcn } from '@/components/ui/map';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -87,38 +89,57 @@ const MapInner: React.FC = () => {
         'line-cap': 'round'
     }), []);
 
+    // Sync mapcn ref with our context's mapRef
+    const onMapInstance = useCallback((instance: MapLibreInstance | null) => {
+        (mapRef as any).current = instance;
+    }, [mapRef]);
+
     return (
         <>
-            <MapGL
-                ref={mapRef}
-                initialViewState={initialViewState}
-                onMove={mapEvents.onMove}
-                onMoveEnd={mapEvents.onMoveEnd}
-                onLoad={mapEvents.onLoad}
-                style={{ width: '100%', height: '100%' }}
-                mapStyle={MAP_STYLE}
-                mapLib={maplibregl as unknown as typeof maplibregl}
-                onDragStart={mapEvents.onDragStart}
-                onMouseEnter={(evt) => {
-                    const features = evt.features;
-                    if (features?.length && features[0].layer.id !== 'entrance-layer') {
-                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
-                    }
+            <Mapcn
+                ref={onMapInstance}
+                viewport={{
+                    center: [initialViewState.longitude, initialViewState.latitude],
+                    zoom: initialViewState.zoom,
+                    bearing: 0,
+                    pitch: 0
                 }}
-                onMouseLeave={(evt) => {
-                    (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
+                onViewportChange={(viewport) => {
+                    mapEvents.onMove({
+                        viewState: { zoom: viewport.zoom },
+                        target: mapRef.current as MapLibreInstance
+                    });
                 }}
-                onClick={(evt) => {
-                    const f = evt.features?.[0];
+                onMoveEnd={(viewport) => {
+                    mapEvents.onMoveEnd({
+                        viewState: {
+                            latitude: viewport.center[1],
+                            longitude: viewport.center[0],
+                            zoom: viewport.zoom
+                        },
+                        target: mapRef.current as MapLibreInstance
+                    });
+                }}
+                className="w-full h-full"
+                styles={{
+                    dark: MAP_STYLE,
+                    light: MAP_STYLE // Keep dark for now
+                }}
+                onClick={(evt: any) => {
+                    // Extract features from map instance as mapcn doesn't provide them in onClick directly
+                    const map = mapRef.current;
+                    if (!map) return;
+
+                    const features = map.queryRenderedFeatures(evt.point);
+                    const f = features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') return;
 
                     if (f.layer.id === 'clusters' || (f.layer.id === 'vehicles-delay-label' && f.properties.point_count)) {
                         const clusterId = f.properties.cluster_id;
-                        const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
                         const sourceId = f.layer.id === 'clusters' ? 'pid-stops' : 'pid-vehicles';
-                        const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
-                        source.getClusterExpansionZoom(clusterId).then((zoom) => {
-                            mapRef.current?.easeTo({
+                        const source = map.getSource(sourceId) as any;
+                        source.getClusterExpansionZoom(clusterId).then((zoom: number) => {
+                            map.easeTo({
                                 center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
                                 zoom,
                                 duration: 500
@@ -130,7 +151,7 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all' || f.layer.id === 'vehicles-delay-label') {
-                        const props = f.properties;
+                        const props = f.properties as any;
                         actions.selectVehicle({
                             ...props,
                             vehicle_id: String(props.vehicle_id || props.id),
@@ -140,15 +161,15 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                        const props = f.properties as any;
                         actions.selectStop({
-                            id: f.properties.stop_id,
-                            name: f.properties.stop_name,
-                            platformCode: f.properties.platform_code,
+                            id: props.stop_id,
+                            name: props.stop_name,
+                            platformCode: props.platform_code,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
                 <MapLayers
                     mapLoaded={state.mapLoaded}
@@ -165,7 +186,7 @@ const MapInner: React.FC = () => {
                     vehiclesFilter={vehiclesFilter}
                     labelLayerId={state.labelLayerId}
                 />
-            </MapGL>
+            </Mapcn>
 
             <LiveStatus />
             <Search />
@@ -199,7 +220,7 @@ const MapInner: React.FC = () => {
  * This is the root component for the map view.
  */
 export const Map: React.FC = () => {
-    const mapRef = useRef<MapRef>(null);
+    const mapRef = useRef<MapLibreInstance>(null);
 
     return (
         <MapProvider mapRef={mapRef}>
