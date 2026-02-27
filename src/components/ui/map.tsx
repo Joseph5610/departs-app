@@ -746,6 +746,8 @@ type MapControlsProps = {
   className?: string;
   /** Callback with user coordinates when located */
   onLocate?: (coords: { longitude: number; latitude: number }) => void;
+  /** Custom controls to add to the container */
+  children?: ReactNode;
 };
 
 const positionClasses = {
@@ -798,6 +800,7 @@ function MapControls({
   showFullscreen = false,
   className,
   onLocate,
+  children,
 }: MapControlsProps) {
   const { map } = useMap();
   const [waitingForLocation, setWaitingForLocation] = useState(false);
@@ -894,6 +897,7 @@ function MapControls({
           </ControlButton>
         </ControlGroup>
       )}
+      {children}
     </div>
   );
 }
@@ -1503,6 +1507,8 @@ export {
   MarkerLabel,
   MapPopup,
   MapControls,
+  ControlGroup,
+  ControlButton,
   MapRoute,
   MapClusterLayer,
 };

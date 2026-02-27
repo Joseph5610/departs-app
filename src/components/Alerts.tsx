@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ControlGroup, ControlButton } from "@/components/ui/map";
 
 export const Alerts: React.FC = () => {
     const { t } = useTranslation();
@@ -43,20 +46,21 @@ export const Alerts: React.FC = () => {
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(true)}
-                className="h-11 w-11 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group relative"
-                title={t('alerts.title')}
-            >
-                <AlertTriangle size={20} className={incidentsCount > 0 ? "text-rose-500 animate-pulse" : "group-hover:scale-110 transition-transform"} />
-                {incidentsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-black min-w-[20px] text-center">
-                        {incidentsCount}
-                    </span>
-                )}
-            </Button>
+            <ControlGroup>
+                <ControlButton
+                    onClick={() => setIsOpen(true)}
+                    label={t('alerts.title')}
+                >
+                    <div className="relative">
+                        <AlertTriangle size={16} className={incidentsCount > 0 ? "text-rose-500 animate-pulse" : ""} />
+                        {incidentsCount > 0 && (
+                            <Badge className="absolute -top-3 -right-3 bg-rose-600 text-white text-[9px] font-bold px-1 py-0 rounded-full border border-black min-w-[16px] h-4 flex items-center justify-center">
+                                {incidentsCount}
+                            </Badge>
+                        )}
+                    </div>
+                </ControlButton>
+            </ControlGroup>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="sm:max-w-[500px] bg-black/95 backdrop-blur-xl border-white/10 text-white rounded-[2rem] p-0 overflow-hidden">
@@ -64,111 +68,83 @@ export const Alerts: React.FC = () => {
                         <DialogTitle className="text-xl font-bold">{t('alerts.title')}</DialogTitle>
                     </DialogHeader>
 
-                    <div className="px-6 pb-4 space-y-4">
-                        {/* Tabs */}
-                        <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
-                            <TabButton
-                                active={activeTab === 'incidents'}
-                                onClick={() => setActiveTab('incidents')}
-                                label={t('alerts.incidents')}
-                                count={incidentsCount}
-                                isIncident={true}
-                            />
-                            <TabButton
-                                active={activeTab === 'exclusions'}
-                                onClick={() => setActiveTab('exclusions')}
-                                label={t('alerts.exclusions')}
-                                count={exclusionsCount}
-                            />
+                    <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as any)} className="w-full">
+                        <div className="px-6 pb-4 space-y-4">
+                            <TabsList className="grid grid-cols-2 bg-white/5 border border-white/5 rounded-2xl h-11 p-1">
+                                <TabsTrigger value="incidents" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-white gap-2 text-zinc-500 font-bold">
+                                    {t('alerts.incidents')}
+                                    {incidentsCount > 0 && <Badge variant="secondary" className="h-4 px-1 text-[10px] bg-rose-500 text-white border-none">{incidentsCount}</Badge>}
+                                </TabsTrigger>
+                                <TabsTrigger value="exclusions" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-white gap-2 text-zinc-500 font-bold">
+                                    {t('alerts.exclusions')}
+                                    {exclusionsCount > 0 && <Badge variant="secondary" className="h-4 px-1 text-[10px] bg-white/20 text-white border-none">{exclusionsCount}</Badge>}
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <div className="relative">
+                                <Input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t('search.placeholder')}
+                                    className="w-full h-10 bg-white/5 border-white/10 pl-9 pr-8 text-sm focus-visible:ring-emerald-500/50 rounded-xl"
+                                />
+                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+                                {searchQuery && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-zinc-500 hover:text-white"
+                                    >
+                                        <X size={14} />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Search */}
-                        <div className="relative">
-                            <Input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={t('search.placeholder')}
-                                className="w-full h-10 bg-white/5 border-white/10 pl-9 pr-8 text-sm focus-visible:ring-emerald-500/50 rounded-xl"
-                            />
-                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
-                            {searchQuery && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-zinc-500 hover:text-white"
-                                >
-                                    <X size={14} />
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                        <ScrollArea className="max-h-[60vh] px-6 pb-6">
+                            <div className="space-y-3">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={activeTab + searchQuery}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="space-y-3"
+                                    >
+                                        {currentItems.map((item, idx) => (
+                                            <AlertCard key={item.guid || idx} item={item} />
+                                        ))}
 
-                    <ScrollArea className="max-h-[60vh] px-6 pb-6">
-                        <div className="space-y-3">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeTab + searchQuery}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="space-y-3"
-                                >
-                                    {currentItems.map((item, idx) => (
-                                        <AlertCard key={item.guid || idx} item={item} />
-                                    ))}
-
-                                    {currentItems.length === 0 && !loadingIncidents && !loadingExclusions && (
-                                        <div className="flex flex-col items-center justify-center py-12 text-zinc-500 text-sm">
-                                            {t('alerts.noAlerts')}
-                                        </div>
-                                    )}
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-                    </ScrollArea>
+                                        {currentItems.length === 0 && !loadingIncidents && !loadingExclusions && (
+                                            <div className="flex flex-col items-center justify-center py-12 text-zinc-500 text-sm">
+                                                {t('alerts.noAlerts')}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </ScrollArea>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </>
     );
 };
 
-const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string, count: number, isIncident?: boolean }> = ({ active, onClick, label, count, isIncident }) => (
-    <Button
-        variant="ghost"
-        onClick={onClick}
-        className={cn(
-            "flex-1 h-9 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2",
-            active ? 'bg-white/10 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
-        )}
-    >
-        <span>{label}</span>
-        {count > 0 && (
-            <span className={cn(
-                "px-1.5 py-0.5 rounded-full text-[10px]",
-                active ? (isIncident ? 'bg-rose-500' : 'bg-white/20') : 'bg-white/5'
-            )}>
-                {count}
-            </span>
-        )}
-    </Button>
-);
-
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     const { t } = useTranslation();
     const isFuture = item.isFuture;
     const isActive = item.isActive;
 
-    // Simple heuristic for transport type to get colors
     const guessType = (line: string) => {
         if (['A', 'B', 'C'].includes(line.toUpperCase())) return 'metro';
         const n = parseInt(line);
         if (!isNaN(n)) {
             if (n < 40) return 'tram';
             if (n >= 100 && n < 900) return 'bus';
-            if (n >= 900) return 'bus';
         }
         return 'bus';
     };
@@ -212,13 +188,13 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
                 {item.lines && item.lines.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                         {item.lines.map(line => (
-                            <span
+                            <Badge
                                 key={line}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-sm"
+                                className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-sm border-none"
                                 style={{ backgroundColor: getVehicleColor(guessType(line), line) }}
                             >
                                 {line}
-                            </span>
+                            </Badge>
                         ))}
                     </div>
                 )}
