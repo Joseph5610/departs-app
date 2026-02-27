@@ -25,7 +25,7 @@ export interface MapContextType {
     };
     mapEvents: {
         onMove: (evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => void;
-        onMoveEnd: (evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => void;
+        onMoveEnd: (evt: { viewState: { latitude: number; longitude: number; zoom: number; bearing: number; pitch: number }; target: Map; originalEvent?: unknown }) => void;
         onLoad: (evt: { target: Map }) => void;
         onDragStart: () => void;
     };

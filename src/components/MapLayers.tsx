@@ -114,13 +114,16 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         }
     }, [map]);
 
+    // 1. Icons Initialization
+    useEffect(() => {
+        if (!map || !mapcnLoaded) return;
+        addAllIcons(map);
+    }, [map, mapcnLoaded]);
+
+    // 2. Sources Management
     useEffect(() => {
         if (!map || !mapcnLoaded) return;
 
-        // Initialize Icons
-        addAllIcons(map);
-
-        // Sources
         updateSource('route-shape', routeShapeData || EMPTY_GEOJSON);
         updateSource('user-location', userLocation ? {
             type: 'FeatureCollection',
@@ -144,8 +147,15 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 cluster_seed: ['max', ['get', 'variant_seed']]
             }
         });
+    }, [
+        map, mapcnLoaded, routeShapeData, userLocation, selectedVehicleFeature,
+        showVehicles, displayVehicles, labelData, stopsData, updateSource
+    ]);
 
-        // Layers
+    // 3. Layers Management
+    useEffect(() => {
+        if (!map || !mapcnLoaded) return;
+
         // Route Line
         updateLayer({
             id: 'route-line',
@@ -223,10 +233,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         updateLayer(entranceLayer);
 
     }, [
-        map, mapcnLoaded, showVehicles, displayVehicles, stopsData, labelData,
-        routeShapeData, userLocation, selectedVehicleFeature, favoriteStops,
-        routeLinePaint, routeLineLayout, vehiclesFilter, labelLayerId,
-        updateSource, updateLayer
+        map, mapcnLoaded, routeLinePaint, routeLineLayout, labelLayerId,
+        vehiclesFilter, favoriteStops, updateLayer
     ]);
 
     return null;

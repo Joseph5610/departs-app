@@ -17,6 +17,12 @@ export interface MapState {
     bounds: string | null;
     debouncedBounds: string | null;
     favoriteStops: string[];
+    viewport: {
+        center: [number, number];
+        zoom: number;
+        bearing: number;
+        pitch: number;
+    };
 }
 
 /**
@@ -37,28 +43,44 @@ export type MapAction =
     | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
     | { type: 'SET_BOUNDS'; payload: string | null }
     | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
+    | { type: 'SET_VIEWPORT'; payload: { center: [number, number]; zoom: number; bearing: number; pitch: number } }
     | { type: 'TOGGLE_FAVORITE'; payload: string };
 
 /**
  * Initial state factory
  */
-const getInitialState = (): MapState => ({
-    selectedStop: null,
-    selectedVehicle: null,
-    isFollowing: false,
-    showVehicles: typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false'
-        : true,
-    isSettingsOpen: false,
-    expandedGroups: [],
-    departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
-    routeFilter: null,
-    bounds: null,
-    debouncedBounds: null,
-    favoriteStops: typeof window !== 'undefined'
-        ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[])
-        : []
-});
+const getInitialState = (): MapState => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = parseFloat(urlParams.get('lat') || '50.087');
+    const lng = parseFloat(urlParams.get('lng') || '14.421');
+    const zoom = parseFloat(urlParams.get('z') || '12');
+    const bearing = parseFloat(urlParams.get('b') || '0');
+    const pitch = parseFloat(urlParams.get('p') || '0');
+
+    return {
+        selectedStop: null,
+        selectedVehicle: null,
+        isFollowing: false,
+        showVehicles: typeof window !== 'undefined'
+            ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false'
+            : true,
+        isSettingsOpen: false,
+        expandedGroups: [],
+        departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
+        routeFilter: null,
+        bounds: null,
+        debouncedBounds: null,
+        favoriteStops: typeof window !== 'undefined'
+            ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[])
+            : [],
+        viewport: {
+            center: [lng, lat],
+            zoom,
+            bearing,
+            pitch
+        }
+    };
+};
 
 /**
  * Map Reducer function
@@ -126,6 +148,8 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             return { ...state, bounds: action.payload };
         case 'SET_DEBOUNCED_BOUNDS':
             return { ...state, debouncedBounds: action.payload };
+        case 'SET_VIEWPORT':
+            return { ...state, viewport: action.payload };
         case 'TOGGLE_FAVORITE': {
             const newFavorites = state.favoriteStops.includes(action.payload)
                 ? state.favoriteStops.filter(id => id !== action.payload)
@@ -186,6 +210,9 @@ export const useMapReducer = () => {
     const setDebouncedBounds = useCallback((bounds: string | null) =>
         dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds }), []);
 
+    const setViewport = useCallback((viewport: { center: [number, number]; zoom: number; bearing: number; pitch: number }) =>
+        dispatch({ type: 'SET_VIEWPORT', payload: viewport }), []);
+
     const toggleFavorite = useCallback((stopId: string) =>
         dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId }), []);
 
@@ -206,6 +233,7 @@ export const useMapReducer = () => {
         setRouteFilter,
         setBounds,
         setDebouncedBounds,
+        setViewport,
         toggleFavorite
     };
 };

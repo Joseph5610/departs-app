@@ -94,7 +94,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Sheet / Sidebar */}
                     <motion.div
                         initial="hidden"
                         animate={isMobile ? sheetState : "full"}
@@ -107,40 +106,38 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         dragConstraints={{ top: 0, bottom: windowSize.height }}
                         dragElastic={0.05}
                         onDragEnd={handleDragEnd}
-                        className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-lg md:backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border will-change-transform h-[92%] md:h-auto"
+                        className="fixed inset-x-0 bottom-0 z-50 flex h-[92%] flex-col overflow-hidden rounded-t-3xl border-t border-white/10 bg-black/95 shadow-2xl backdrop-blur-lg will-change-transform md:top-4 md:left-4 md:bottom-4 md:right-auto md:h-auto md:w-[420px] md:rounded-3xl md:border md:backdrop-blur-2xl"
                     >
-                        {/* Drag Handle: Explicitly for dragging the whole sheet */}
                         <div
-                            className="flex flex-col shrink-0 pt-2.5 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                            className="flex shrink-0 cursor-grab flex-col pb-2 pt-2.5 touch-none active:cursor-grabbing"
                             onPointerDown={(e) => {
                                 if (!(e.target as HTMLElement).closest('button')) {
                                     dragControls.start(e);
                                 }
                             }}
                         >
-                            <div className="flex justify-center md:hidden group py-1">
-                                <div className="w-12 h-1 bg-white/10 group-hover:bg-white/20 rounded-full transition-colors" />
+                            <div className="group flex justify-center py-1 md:hidden">
+                                <div className="h-1 w-12 rounded-full bg-white/10 transition-colors group-hover:bg-white/20" />
                             </div>
 
-                            {/* Header */}
-                            <div className="px-6 py-2 md:pt-6 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center justify-between gap-4 px-6 py-2 md:pt-6">
+                                <div className="flex min-w-0 items-center gap-2">
                                     {onBack && (
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={onBack}
-                                            className="h-9 w-9 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                            className="h-9 w-9 -ml-2 rounded-full bg-white/5 text-zinc-400 transition-all hover:bg-white/10 hover:text-white active:scale-95"
                                         >
                                             <ArrowLeft size={20} />
                                         </Button>
                                     )}
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <h2 className="text-xl font-bold text-white truncate tracking-tight">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <h2 className="truncate text-xl font-bold tracking-tight text-white">
                                             {title || ''}
                                         </h2>
                                         {platformCode && (
-                                            <div className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 border border-white/5 text-zinc-400 text-[13px] font-black tabular-nums">
+                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/5 bg-white/10 font-black tabular-nums text-[13px] text-zinc-400">
                                                 {platformCode}
                                             </div>
                                         )}
@@ -150,7 +147,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                                     variant="ghost"
                                     size="icon"
                                     onClick={onClose}
-                                    className="h-9 w-9 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                    className="h-9 w-9 rounded-full bg-white/5 text-zinc-400 transition-all hover:bg-white/10 hover:text-white active:scale-95"
                                 >
                                     <X size={20} />
                                 </Button>

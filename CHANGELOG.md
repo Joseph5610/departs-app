@@ -2,6 +2,22 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.8.0] - 2026-02-25
+
+### Changed
+- **UI Architecture Migration**: Migrated the entire UI component library from custom implementations to **shadcn/ui**. This modernization improves accessibility, maintainability, and visual consistency using industry-standard primitives.
+- **Map Engine Refactor**: Replaced `react-map-gl` with `@mapcn/map`, a lightweight MapLibre wrapper designed for better React integration and performance.
+- **Dark Mode Standard**: Enforced a consistent dark-theme (zinc) aesthetic across the entire application using Tailwind v4 and shadcn variables.
+- **Map Performance**: Refactored `MapLayers` to use direct MapLibre mutations via the `mapcn` instance, significantly reducing React reconciliation overhead for complex transit layers.
+- **Camera Synchronization**: Improved camera state persistence (bearing, pitch, zoom) across React state updates to prevent the map from resetting its orientation during interactions.
+
+### Added
+- **Modern UI Components**: Integrated high-quality shadcn components for dialogs (Settings, Welcome, Alerts), inputs (Search), and feedback elements.
+- **Enhanced Mobile Sheets**: Rebuilt the `DetailPanel` using `vaul` (shadcn drawer) while retaining custom smooth-snapping and dragging logic optimized for transit boards.
+
+### Removed
+- **Legacy Dependencies**: Removed `react-map-gl` and the custom `Modal.tsx` component in favor of the new shadcn-based architecture.
+
 ## [0.7.1] - 2026-02-24
 
 ### Changed

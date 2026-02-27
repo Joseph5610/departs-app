@@ -10,7 +10,6 @@ import { DetailPanel } from './DetailPanel';
 
 import { LiveStatus } from './LiveStatus';
 import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
-import { getInitialViewState } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
@@ -47,8 +46,6 @@ const MapInner: React.FC = () => {
     const stopsData = useMapStops();
     const labelData = useMapCentroids();
     const routeShapeData = useRouteShape();
-
-    const initialViewState = useMemo(() => getInitialViewState(), []);
 
     const handleToggleFollow = useCallback(() => {
         actions.setIsFollowing(!state.isFollowing);
@@ -98,12 +95,7 @@ const MapInner: React.FC = () => {
         <>
             <Mapcn
                 ref={onMapInstance}
-                viewport={{
-                    center: [initialViewState.longitude, initialViewState.latitude],
-                    zoom: initialViewState.zoom,
-                    bearing: 0,
-                    pitch: 0
-                }}
+                viewport={state.viewport}
                 onViewportChange={(viewport) => {
                     mapEvents.onMove({
                         viewState: { zoom: viewport.zoom },
@@ -115,7 +107,9 @@ const MapInner: React.FC = () => {
                         viewState: {
                             latitude: viewport.center[1],
                             longitude: viewport.center[0],
-                            zoom: viewport.zoom
+                            zoom: viewport.zoom,
+                            bearing: viewport.bearing,
+                            pitch: viewport.pitch
                         },
                         target: mapRef.current as MapLibreInstance
                     });

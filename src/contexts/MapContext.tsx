@@ -70,6 +70,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setRouteFilter,
         setBounds,
         setDebouncedBounds,
+        setViewport,
         toggleFavorite
     } = useMapReducer();
 
@@ -103,16 +104,25 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         }
     }, [state.bounds, state.isFollowing, getRoundedBounds, setBounds, setDebouncedBounds]);
 
-    const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => {
+    const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number; bearing: number; pitch: number }; target: Map; originalEvent?: unknown }) => {
         if (state.isFollowing) return;
 
-        const { latitude, longitude, zoom } = evt.viewState;
+        const { latitude, longitude, zoom, bearing, pitch } = evt.viewState;
         const currentBounds = getRoundedBounds(evt.target);
+
+        setViewport({
+            center: [longitude, latitude],
+            zoom,
+            bearing,
+            pitch
+        });
 
         const url = new URL(window.location.href);
         url.searchParams.set('lat', latitude.toFixed(5));
         url.searchParams.set('lng', longitude.toFixed(5));
         url.searchParams.set('z', zoom.toFixed(2));
+        url.searchParams.set('b', bearing.toFixed(1));
+        url.searchParams.set('p', pitch.toFixed(1));
         window.history.replaceState({}, '', url.toString());
 
         if (evt.originalEvent) {
@@ -120,7 +130,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setBounds(currentBounds);
             setDebouncedBounds(currentBounds);
         }
-    }, [state.isFollowing, getRoundedBounds, setBounds, setDebouncedBounds]);
+    }, [state.isFollowing, getRoundedBounds, setBounds, setDebouncedBounds, setViewport]);
 
     const onDragStart = useCallback(() => {
         if (state.isFollowing) {
@@ -224,6 +234,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setRouteFilter,
             setBounds,
             setDebouncedBounds,
+            setViewport,
             toggleFavorite,
             handleLocate,
             handleDepartureClick,
