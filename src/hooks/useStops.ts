@@ -66,7 +66,7 @@ export const useStops = () => {
                         {
                             type: 'Feature',
                             geometry: { type: 'Point', coordinates: [14.4378, 50.0755] },
-                            properties: { stop_id: 'mock-1', stop_name: 'Hlavní nádraží', platform_code: 'A' }
+                            properties: { stop_id: 'mock-1', stop_name: 'Hlavní nádraží', platform_code: 'A', location_type: 0 }
                         }
                     ]
                 };

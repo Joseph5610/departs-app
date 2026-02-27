@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, MapPin, Star, X } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Star } from 'lucide-react';
 import { useStopSearch } from '../hooks/useStopSearch';
 import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
