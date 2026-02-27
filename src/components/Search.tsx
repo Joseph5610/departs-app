@@ -12,9 +12,7 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-    CommandSeparator,
 } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export const Search: React.FC = React.memo(() => {
@@ -86,7 +84,7 @@ export const Search: React.FC = React.memo(() => {
                     <CommandInput
                         placeholder={t('search.placeholder')}
                         value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
-                        onValueChange={(v) => {
+                        onValueChange={(v: string) => {
                             if (activeFilter) {
                                 onLineSelect(null);
                                 setQuery('');

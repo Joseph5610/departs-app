@@ -26,7 +26,7 @@ export const WelcomeModal: React.FC = () => {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+        <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
             <DialogContent className="sm:max-w-[425px] bg-black/95 backdrop-blur-xl border-white/10 text-white rounded-[2rem]">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-center">{t('welcome.title')}</DialogTitle>
