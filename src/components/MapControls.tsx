@@ -57,7 +57,7 @@ export const MapControls = React.memo(() => {
     }, [mapRef, mapLoaded]);
 
     return (
-        <MapControlsBase className="safe-top safe-right !top-0 !right-0 m-0 gap-2 flex flex-col items-end">
+        <MapControlsBase className="safe-top safe-right m-0 gap-2 flex flex-col items-end">
             <ControlGroup className="bg-black/90 backdrop-blur-md border-white/10 shadow-2xl rounded-2xl overflow-hidden">
                 <ControlButton
                     onClick={() => onLocate(null as any)}

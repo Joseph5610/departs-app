@@ -95,22 +95,31 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     // Utility to safely add or update a layer
     const updateLayer = useCallback((layerConfig: any, beforeId?: string, filter?: any) => {
         if (!map) return;
-        if (map.getLayer(layerConfig.id)) {
-            if (filter !== undefined) {
-                map.setFilter(layerConfig.id, filter);
+        try {
+            if (map.getLayer(layerConfig.id)) {
+                if (filter !== undefined) {
+                    map.setFilter(layerConfig.id, filter);
+                }
+                // Update paint and layout properties if needed
+                Object.entries(layerConfig.paint || {}).forEach(([key, value]) => {
+                    map.setPaintProperty(layerConfig.id, key, value);
+                });
+                Object.entries(layerConfig.layout || {}).forEach(([key, value]) => {
+                    map.setLayoutProperty(layerConfig.id, key, value);
+                });
+            } else {
+                // Check if source exists before adding layer
+                if (!map.getSource(layerConfig.source)) {
+                    console.warn(`[MapLayers] Source "${layerConfig.source}" not found for layer "${layerConfig.id}"`);
+                    return;
+                }
+                map.addLayer({
+                    ...layerConfig,
+                    ...(filter !== undefined && { filter })
+                }, beforeId);
             }
-            // Update paint and layout properties if needed
-            Object.entries(layerConfig.paint || {}).forEach(([key, value]) => {
-                map.setPaintProperty(layerConfig.id, key, value);
-            });
-            Object.entries(layerConfig.layout || {}).forEach(([key, value]) => {
-                map.setLayoutProperty(layerConfig.id, key, value);
-            });
-        } else {
-            map.addLayer({
-                ...layerConfig,
-                ...(filter !== undefined && { filter })
-            }, beforeId);
+        } catch (err) {
+            console.error(`[MapLayers] Error updating layer ${layerConfig.id}:`, err);
         }
     }, [map]);
 
@@ -133,8 +142,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 properties: {}
             }]
         } : EMPTY_GEOJSON);
-        updateSource('selected-vehicle', selectedVehicleFeature);
-        updateSource('pid-vehicles', showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON);
+        updateSource('selected-vehicle', selectedVehicleFeature || EMPTY_GEOJSON);
+        updateSource('pid-vehicles', (showVehicles && displayVehicles) ? displayVehicles : EMPTY_GEOJSON);
         updateSource('stop-labels-centroids', labelData || EMPTY_GEOJSON);
         updateSource('pid-stops', stopsData || EMPTY_GEOJSON, {
             cluster: true,

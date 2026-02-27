@@ -145,6 +145,10 @@ type MapProps = {
    */
   onMoveEnd?: (viewport: MapViewport) => void;
   /**
+   * Callback fired when the map is loaded.
+   */
+  onLoad?: (e: MapLibreGL.MapLibreEvent) => void;
+  /**
    * Callback fired when the map is clicked.
    */
   onClick?: (e: MapLibreGL.MapMouseEvent) => void;
@@ -252,7 +256,10 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         }
       }, 100);
     };
-    const loadHandler = () => setIsLoaded(true);
+    const loadHandler = (e: MapLibreGL.MapLibreEvent) => {
+      setIsLoaded(true);
+      props.onLoad?.(e);
+    };
 
     // Viewport change handler - skip if triggered by internal update
     const handleMove = () => {

@@ -75,39 +75,29 @@ export const Search: React.FC = React.memo(() => {
             ref={containerRef}
             className="absolute z-10 right-16 md:right-auto md:w-80 safe-top safe-left"
         >
-            <Command className="rounded-2xl border border-white/10 bg-black/90 backdrop-blur-md shadow-2xl">
-                <div className="flex items-center px-3 border-b border-white/5">
-                    <SearchIcon className={cn(
-                        "mr-2 h-4 w-4 shrink-0 opacity-50",
-                        activeFilter && "text-emerald-400 opacity-100"
-                    )} />
-                    <CommandInput
-                        placeholder={t('search.placeholder')}
-                        value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
-                        onValueChange={(v: string) => {
-                            if (activeFilter) {
-                                onLineSelect(null);
-                                setQuery('');
-                            } else {
-                                setQuery(v);
-                            }
-                            setIsOpen(true);
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                    {(query || activeFilter) && (
-                        <button
-                            onClick={() => {
-                                if (activeFilter) onLineSelect(null);
-                                setQuery('');
-                            }}
-                            className="ml-2 h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-zinc-500 hover:text-white transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
-                    )}
-                </div>
+            <Command
+                shouldFilter={false}
+                className="rounded-2xl border border-white/10 bg-black/90 backdrop-blur-md shadow-2xl overflow-hidden"
+            >
+                <CommandInput
+                    placeholder={t('search.placeholder')}
+                    value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
+                    onValueChange={(v: string) => {
+                        if (activeFilter) {
+                            onLineSelect(null);
+                            setQuery('');
+                        } else {
+                            setQuery(v);
+                        }
+                        setIsOpen(true);
+                    }}
+                    onFocus={() => setIsOpen(true)}
+                    className="h-11 border-none"
+                    onClear={activeFilter || query ? () => {
+                        if (activeFilter) onLineSelect(null);
+                        setQuery('');
+                    } : undefined}
+                />
 
                 {isOpen && (
                     <CommandList className="max-h-[60vh]">
@@ -116,6 +106,7 @@ export const Search: React.FC = React.memo(() => {
                         {isLineLike && (
                             <CommandGroup heading={t('search.actions')}>
                                 <CommandItem
+                                    value={`line-${linesFromQuery.join('-')}`}
                                     onSelect={() => {
                                         onLineSelect(linesFromQuery);
                                         setQuery('');
@@ -136,6 +127,7 @@ export const Search: React.FC = React.memo(() => {
                                 {favoriteStopFeatures.map(stop => (
                                     <CommandItem
                                         key={stop.properties.stop_id}
+                                        value={stop.properties.stop_id}
                                         onSelect={() => handleSelectStop(stop)}
                                         className="cursor-pointer gap-3 py-3"
                                     >
@@ -158,6 +150,7 @@ export const Search: React.FC = React.memo(() => {
                                 {searchResults.map(stop => (
                                     <CommandItem
                                         key={stop.properties.stop_id}
+                                        value={stop.properties.stop_id}
                                         onSelect={() => handleSelectStop(stop)}
                                         className="cursor-pointer gap-3 py-3"
                                     >

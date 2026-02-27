@@ -114,19 +114,35 @@ const MapInner: React.FC = () => {
                         target: mapRef.current as MapLibreInstance
                     });
                 }}
+                onLoad={(e) => {
+                    mapEvents.onLoad({ target: e.target });
+                }}
                 className="w-full h-full"
                 styles={{
                     dark: MAP_STYLE,
                     light: MAP_STYLE // Keep dark for now
                 }}
                 onClick={(evt: any) => {
-                    // Extract features from map instance as mapcn doesn't provide them in onClick directly
                     const map = mapRef.current;
                     if (!map) return;
 
                     const features = map.queryRenderedFeatures(evt.point);
-                    const f = features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') return;
+                    if (!features.length) return;
+
+                    // Prioritize interactive layers
+                    const interactiveLayerIds = [
+                        'clusters',
+                        'vehicles-delay-label',
+                        'vehicles-point',
+                        'vehicles-direction-all',
+                        'vehicles-label-all',
+                        'unclustered-point',
+                        'transfer-stations',
+                        'platform-labels'
+                    ];
+
+                    const f = features.find(feat => interactiveLayerIds.includes(feat.layer.id));
+                    if (!f) return;
 
                     if (f.layer.id === 'clusters' || (f.layer.id === 'vehicles-delay-label' && f.properties.point_count)) {
                         const clusterId = f.properties.cluster_id;
@@ -154,7 +170,7 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations' || f.layer.id === 'platform-labels') {
                         const props = f.properties as any;
                         actions.selectStop({
                             id: props.stop_id,
