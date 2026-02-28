@@ -13,8 +13,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles } = state;
-    const { setIsSettingsOpen, setShowVehicles } = actions;
+    const { isSettingsOpen: isOpen, showVehicles, routeTypeFilter } = state;
+    const { setIsSettingsOpen, setShowVehicles, setRouteTypeFilter } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -79,9 +79,40 @@ export const SettingsModal: React.FC = () => {
         }
     };
 
+    const toggleRouteType = (type: string) => {
+        if (routeTypeFilter.includes(type)) {
+            setRouteTypeFilter(routeTypeFilter.filter(t => t !== type));
+        } else {
+            setRouteTypeFilter([...routeTypeFilter, type]);
+        }
+    };
+
+    const vehicleTypes = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'];
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
             <div className="space-y-8 py-2">
+                {/* Filters */}
+                <section className="space-y-3">
+                    <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
+                        {t('settings.sections.filters')}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {vehicleTypes.map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => toggleRouteType(type)}
+                                className={`px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold ${routeTypeFilter.includes(type)
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
+                                    : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
+                                    }`}
+                            >
+                                {t(`settings.vehicleTypes.${type}`)}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
                 {/* Live Vehicles Toggle */}
                 <section className="space-y-3">
                     <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">

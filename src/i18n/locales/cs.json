@@ -10,11 +10,12 @@
     "title": "Nastavení",
     "sections": {
       "display": "Zobrazení",
-      "language": "Jazyk"
+      "language": "Jazyk",
+      "filters": "Filtry"
     },
     "liveVehicles": {
       "title": "Poloha vozidel v reálném čase",
-      "description": "Zobrazit autobusy, tramvaje a metro"
+      "description": "Zobrazit vozidla na mapě"
     },
     "tip": {
       "prefix": "Tip:",
@@ -24,6 +25,15 @@
       "title": "Jazyk",
       "en": "English",
       "cs": "Čeština"
+    },
+    "vehicleTypes": {
+      "metro": "Metro",
+      "tram": "Tramvaj",
+      "bus": "Autobus",
+      "trolleybus": "Trolejbus",
+      "train": "Vlak",
+      "ferry": "Přívoz",
+      "funicular": "Lanovka"
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "version": "Verze {{version}}",

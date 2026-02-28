@@ -10,11 +10,12 @@
     "title": "Settings",
     "sections": {
       "display": "Display",
-      "language": "Language"
+      "language": "Language",
+      "filters": "Filters"
     },
     "liveVehicles": {
       "title": "Live vehicle locations",
-      "description": "Show buses, trams, and metro"
+      "description": "Show vehicles on map"
     },
     "tip": {
       "prefix": "Tip:",
@@ -24,6 +25,15 @@
       "title": "Language",
       "en": "English",
       "cs": "Čeština"
+    },
+    "vehicleTypes": {
+      "metro": "Metro",
+      "tram": "Tram",
+      "bus": "Bus",
+      "trolleybus": "Trolleybus",
+      "train": "Train",
+      "ferry": "Ferry",
+      "funicular": "Funicular"
     },
     "viewSource": "View source on GitHub",
     "version": "Version {{version}}",

@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
 import { useMap } from '../hooks/useMap';
 
-const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null): Promise<VehicleFeature[]> => {
+const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
     try {
         const url = new URL('/api/vehicles', window.location.origin);
 
@@ -11,6 +11,9 @@ const fetchRawVehicles = async (bounds: string | null, trackedId: string | null,
         if (trackedId) url.searchParams.set('tripId', trackedId);
         if (routeFilter && routeFilter.length > 0) {
             routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
+        }
+        if (routeTypeFilter.length > 0) {
+            routeTypeFilter.forEach(type => url.searchParams.append('routeType', type));
         }
 
         if (url.searchParams.toString() === '') return [];
@@ -27,7 +30,7 @@ const fetchRawVehicles = async (bounds: string | null, trackedId: string | null,
 
 export const useVehicles = () => {
     const { state } = useMap();
-    const { debouncedBounds: bounds, selectedVehicle, routeFilter } = state;
+    const { debouncedBounds: bounds, selectedVehicle, routeFilter, routeTypeFilter } = state;
 
     const trackedId = useMemo(() => {
         if (!selectedVehicle) return null;
@@ -42,10 +45,10 @@ export const useVehicles = () => {
     }, []);
 
     const query = useQuery<VehicleFeature[], Error, VehicleCollection>({
-        queryKey: ['vehicles', bounds, trackedId, routeFilter],
-        queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter),
+        queryKey: ['vehicles', bounds, trackedId, routeFilter, routeTypeFilter],
+        queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter, routeTypeFilter),
         select: selectFn,
-        enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0),
+        enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
         refetchInterval: 10000,
         staleTime: 5000,
         gcTime: 60000,

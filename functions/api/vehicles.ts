@@ -12,12 +12,29 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // Extract query parameters
     const bounds = url.searchParams.get("bounds");
-    const routeType = url.searchParams.get("routeType");
+    const routeTypes = url.searchParams.getAll("routeType");
     const tripId = url.searchParams.get("tripId");
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
+    // Process routeShortNames to separate line and run number filters (e.g., "58/1")
+    const lineFilters = new Set<string>();
+    const runFilters = new Map<string, Set<string>>(); // line -> Set of run numbers
+
+    routeShortNames.forEach(filter => {
+        if (filter.includes('/')) {
+            const [line, run] = filter.split('/');
+            lineFilters.add(line);
+            if (!runFilters.has(line)) {
+                runFilters.set(line, new Set());
+            }
+            runFilters.get(line)!.add(run);
+        } else {
+            lineFilters.add(filter);
+        }
+    });
+
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && routeShortNames.length === 0) {
+    if (!tripId && !bounds && lineFilters.size === 0 && routeTypes.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
@@ -25,11 +42,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const fetchPromises: Promise<Response>[] = [];
 
         // 1. Prepare fetch for bounding box / route filters (Public API)
-        if (bounds || routeShortNames.length > 0) {
+        if (bounds || lineFilters.size > 0 || routeTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
             if (bounds) params.boundingBox = bounds;
-            if (routeType) params.routeType = routeType;
-            if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
+            if (routeTypes.length > 0) params.routeType = routeTypes;
+            if (lineFilters.size > 0) params.routeShortName = Array.from(lineFilters);
 
             fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }
@@ -57,7 +74,30 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
-        // 4. Process (deduplicate and jitter) the combined results
+        // 4. Apply run number filtering if requested
+        if (runFilters.size > 0) {
+            allFeatures = allFeatures.filter(f => {
+                const line = f.properties.route_short_name || f.properties.gtfs_route_short_name;
+                const run = String(f.properties.run_number || '');
+
+                if (line && runFilters.has(line)) {
+                    // If we have a specific run filter for this line, check if it matches
+                    // If the line is also in the broad lineFilters but NOT as a run filter specifically (e.g. "58, 58/1"),
+                    // then we might want to keep it. But usually "58/1" means specifically that run.
+                    // If routeShortNames was ["58", "136/1"], lineFilters has ["58", "136"], runFilters has {"136": ["1"]}
+                    // For 58, runFilters doesn't have it, so we keep it (it was in lineFilters).
+                    // For 136, runFilters HAS it, so we MUST match the run.
+                    const allowedRuns = runFilters.get(line);
+                    const isExplicitlyFilteredByLineOnly = routeShortNames.includes(line);
+
+                    if (isExplicitlyFilteredByLineOnly) return true;
+                    return allowedRuns?.has(run);
+                }
+                return true;
+            });
+        }
+
+        // 5. Process (deduplicate and jitter) the combined results
         const features = processVehicleFeatures(allFeatures);
 
         return createSuccessResponse({ type: 'FeatureCollection', features }, CACHE_TTL.VEHICLES);
