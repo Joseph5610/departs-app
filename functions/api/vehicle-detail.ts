@@ -44,13 +44,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 searchParams: { scopes }
             });
         } else {
-            // Try real-time first with standard query parameter
-            response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId}`, env, {
+            // Try real-time first with matrix parameter (essential for some Golemio endpoints to link trip data)
+            response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                searchParams: {
-                    gtfsTripId: tripId,
-                    scopes
-                }
+                searchParams: { scopes }
             });
 
             // If real-time fails (e.g. 404), fall back to static GTFS trip data
@@ -82,9 +79,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 stop_times: data.stop_times || normalized.properties?.stop_times,
                 shapes: data.shapes || normalized.properties?.shapes,
                 vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number || normalized.properties?.run_number,
+                run_number: data.run_number ?? normalized.properties?.run_number,
                 origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
+                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
+                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
             };
         } else if (data.type === 'Feature') {
             const normalized = normalizeVehicleFeature(data, tripId);
@@ -94,13 +92,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 stop_times: data.stop_times || normalized.properties?.stop_times,
                 shapes: data.shapes || normalized.properties?.shapes,
                 vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number || normalized.properties?.run_number,
+                run_number: data.run_number ?? normalized.properties?.run_number,
                 origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
+                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
+                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
             };
         } else {
             // Flat object (typical for gtfs/trips)
-            // Still use normalization logic for consistency if properties look like a feature properties
             const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
             const normalized = normalizeVehicleFeature(mockFeature, tripId);
             vehicleData = {
@@ -109,9 +107,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 stop_times: data.stop_times || normalized.properties?.stop_times,
                 shapes: data.shapes || normalized.properties?.shapes,
                 vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number || normalized.properties?.run_number,
+                run_number: data.run_number ?? normalized.properties?.run_number,
                 origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
+                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
+                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
             };
         }
 
