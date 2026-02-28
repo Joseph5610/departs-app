@@ -97,6 +97,7 @@
       "sortByLine": "Seřadit podle linky",
       "sortByDeparture": "Seřadit podle času odjezdu",
       "distance": "{{distance}}m • {{time}} min pěšky",
+      "atStop": "Jste na zastávce",
       "catchStatus": {
         "success": "Stíháš to",
         "warning": "Možná stíháš",

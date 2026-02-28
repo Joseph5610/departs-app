@@ -97,6 +97,7 @@
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
       "distance": "{{distance}}m • {{time}} min walk",
+      "atStop": "You are at the stop",
       "catchStatus": {
         "success": "You'll catch it",
         "warning": "Maybe you'll catch it",

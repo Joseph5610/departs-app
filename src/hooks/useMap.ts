@@ -14,6 +14,7 @@ export interface MapContextType {
         mapLoaded: boolean;
         labelLayerId: string | undefined;
         userLocation: [number, number] | null;
+        userSpeed: number | null;
         isGeoPending: boolean;
         selectedId: string | number | null;
     };

@@ -9,6 +9,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+    const [userSpeed, setUserSpeed] = useState<number | null>(null);
     const [isGeoPending, setIsGeoPending] = useState(false);
 
     const watchId = useRef<number | null>(null);
@@ -34,6 +35,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const updateLocation = useCallback((pos: GeolocationPosition) => {
         const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
         setUserLocation(coords);
+        setUserSpeed(pos.coords.speed);
         lastUpdatedAt.current = Date.now();
         localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
 
@@ -123,6 +125,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
 
     return {
         userLocation,
+        userSpeed,
         isGeoPending,
         handleLocate,
         performGeolocation: startWatcher
