@@ -40,7 +40,7 @@ export const useMapVehicleSync = (
                 return ftid === stid && stid !== 'NONE';
             });
 
-            if (match) {
+            if (match && match.geometry) {
                 const p = match.properties;
                 const coords = match.geometry.coordinates as [number, number];
                 const matchId = String(p.vehicle_id);

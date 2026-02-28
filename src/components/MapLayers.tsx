@@ -125,14 +125,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 />
             </Source>
 
-            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
+            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as any}>
                 <Layer {...selectedVehiclePulseLayer} />
                 <Layer {...selectedVehiclePointLayer} />
                 <Layer {...selectedVehicleDirectionLayer} />
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            <Source id="pid-vehicles" type="geojson" data={showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON}>
+            <Source id="pid-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
                 <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />

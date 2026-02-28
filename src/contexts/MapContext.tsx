@@ -189,13 +189,14 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                         const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
                         mapRef.current?.flyTo({
                             center: coords,
-                        zoom: MAP_VEHICLE_SELECT_ZOOM,
-                        duration: MAP_ANIMATION_DURATION,
-                        essential: true,
-                        padding: isMobile
-                            ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-                            : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
-                    });
+                            zoom: MAP_VEHICLE_SELECT_ZOOM,
+                            duration: MAP_ANIMATION_DURATION,
+                            essential: true,
+                            padding: isMobile
+                                ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+                                : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
+                        });
+                    }
                 }
             }
         } catch (err) {
