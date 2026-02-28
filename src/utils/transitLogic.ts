@@ -19,10 +19,10 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
 };
 
 /**
- * Average walking speed in m/s (approx 2.9 km/h)
- * Adjusted to be highly conservative for urban environments (stairs, lights, crowds).
+ * Average walking speed in m/s (3.6 km/h)
+ * Adjusted for urban environments.
  */
-export const WALKING_SPEED = 0.8;
+export const WALKING_SPEED = 1.0;
 
 /**
  * Buffer time in seconds to account for platform navigation, ticket validation, etc.
@@ -36,7 +36,8 @@ export type CatchStatus = 'success' | 'warning' | 'error';
  */
 export const getCatchStatus = (
     distanceMeters: number,
-    departureTimestamp: string
+    departureTimestamp: string,
+    isAtStop: boolean = false
 ): { status: CatchStatus; walkingTimeMin: number } => {
     const now = Date.now();
     const depTime = new Date(departureTimestamp).getTime();
@@ -47,10 +48,15 @@ export const getCatchStatus = (
 
     let status: CatchStatus = 'success';
 
-    if (remainingTimeSec < walkingTimeSec) {
-        status = 'error';
-    } else if (remainingTimeSec < totalRequiredTimeSec) {
-        status = 'warning';
+    if (isAtStop) {
+        // If at stop, it's a success as long as it hasn't left yet
+        status = remainingTimeSec >= 0 ? 'success' : 'error';
+    } else {
+        if (remainingTimeSec < walkingTimeSec) {
+            status = 'error';
+        } else if (remainingTimeSec < totalRequiredTimeSec) {
+            status = 'warning';
+        }
     }
 
     return {

@@ -91,7 +91,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { isLoading: loadingDeps } = useDepartures();
     const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, favoriteStops } = state;
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, userSpeed, favoriteStops } = state;
     const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
@@ -102,13 +102,18 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         if (!selectedStop?.coordinates || !userLocation) return null;
         const distance = calculateDistance(userLocation, selectedStop.coordinates);
 
-        const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString());
+        const isAtStop = distance < 20;
+        const isMovingFast = userSpeed !== null && userSpeed > 4; // > 4 m/s (approx 14.4 km/h) is clearly not walking
+
+        const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString(), isAtStop);
         return {
             distance: Math.round(distance),
             time: walkingTimeMin,
-            showCatchIndicator: distance < 750 // Show catch indicators for stops within ~15 min walk
+            isAtStop,
+            isMovingFast,
+            showCatchIndicator: distance < 750 && !isMovingFast // Show catch indicators for stops within ~15 min walk, if not in a fast vehicle
         };
-    }, [selectedStop?.coordinates, userLocation]);
+    }, [selectedStop?.coordinates, userLocation, userSpeed]);
 
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
@@ -124,10 +129,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
-                    {stopDistanceInfo?.showCatchIndicator && (
+                    {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
                             <MapPin size={14} className="text-zinc-500" />
-                            <span className="font-medium">{t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}</span>
+                            <span className="font-medium">
+                                {stopDistanceInfo.isAtStop
+                                    ? t('map.departures.atStop')
+                                    : t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}
+                            </span>
                         </div>
                     )}
                     <div className="flex items-center justify-between">
@@ -232,16 +241,16 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                             <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
                                                 <div className={cn(
                                                     "px-1.5 py-0.5 rounded-md flex items-center gap-1",
-                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
                                                     'bg-rose-500/10 text-rose-400'
                                                 )}>
                                                     <span className="text-[8px] leading-none">
-                                                        {getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'success' ? '🟢' :
-                                                            getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status === 'warning' ? '🟡' : '🔴'}
+                                                        {getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'success' ? '🟢' :
+                                                            getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'warning' ? '🟡' : '🔴'}
                                                     </span>
                                                     <span className="uppercase tracking-tighter">
-                                                        {t(`map.departures.catchStatusCompact.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp).status}`)}
+                                                        {t(`map.departures.catchStatusCompact.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status}`)}
                                                     </span>
                                                 </div>
                                             </div>
