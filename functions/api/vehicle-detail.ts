@@ -1,5 +1,6 @@
 import { Env } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
+import { normalizeVehicleFeature } from "../_utils/transit-utils";
 
 interface ShapeFeature {
     geometry: {
@@ -73,25 +74,45 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         let vehicleData: Record<string, unknown> = {};
 
         if (data.type === 'FeatureCollection' && data.features?.length > 0) {
-            const feature = data.features[0];
+            const normalized = normalizeVehicleFeature(data.features[0], tripId);
             vehicleData = {
-                ...feature.properties,
-                geometry: feature.geometry,
-                // Keep root-level metadata often provided alongside FeatureCollection when using scopes
-                stop_times: data.stop_times || feature.properties?.stop_times,
-                shapes: data.shapes || feature.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || feature.properties?.vehicle_descriptor,
+                ...normalized.properties,
+                geometry: normalized.geometry,
+                // Merge root-level metadata often provided alongside FeatureCollection when using scopes
+                stop_times: data.stop_times || normalized.properties?.stop_times,
+                shapes: data.shapes || normalized.properties?.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
+                run_number: data.run_number || normalized.properties?.run_number,
+                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
             };
         } else if (data.type === 'Feature') {
+            const normalized = normalizeVehicleFeature(data, tripId);
             vehicleData = {
-                ...data.properties,
-                geometry: data.geometry,
-                stop_times: data.stop_times || data.properties?.stop_times,
-                shapes: data.shapes || data.properties?.shapes,
+                ...normalized.properties,
+                geometry: normalized.geometry,
+                stop_times: data.stop_times || normalized.properties?.stop_times,
+                shapes: data.shapes || normalized.properties?.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
+                run_number: data.run_number || normalized.properties?.run_number,
+                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
             };
         } else {
             // Flat object (typical for gtfs/trips)
-            vehicleData = data;
+            // Still use normalization logic for consistency if properties look like a feature properties
+            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
+            const normalized = normalizeVehicleFeature(mockFeature, tripId);
+            vehicleData = {
+                ...normalized.properties,
+                geometry: normalized.geometry,
+                stop_times: data.stop_times || normalized.properties?.stop_times,
+                shapes: data.shapes || normalized.properties?.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
+                run_number: data.run_number || normalized.properties?.run_number,
+                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence || normalized.properties?.last_stop_sequence,
+            };
         }
 
         if (usedStaticFallback) {
