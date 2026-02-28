@@ -69,25 +69,30 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         );
     }, [incidents, exclusions, routeName]);
 
+    // Prefer high-frequency sequence from selectedVehicle (map stream) over vehicleDetail (REST API)
+    const effectiveSequence = useMemo(() => {
+        return selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
+    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence]);
+
     // Memoize next stop sequence calculation to avoid O(n²) complexity
     const nextStopSequence = useMemo(() => {
-        if (!vehicleDetail?.stop_times?.features || !vehicleDetail.last_stop_sequence) return null;
+        if (!vehicleDetail?.stop_times?.features || effectiveSequence === null) return null;
 
         const futureStops = vehicleDetail.stop_times.features
-            .filter((s) => s.properties.stop_sequence > vehicleDetail.last_stop_sequence!)
+            .filter((s) => s.properties.stop_sequence > effectiveSequence)
             .sort((a, b) => a.properties.stop_sequence - b.properties.stop_sequence);
 
         return futureStops[0]?.properties.stop_sequence ?? null;
-    }, [vehicleDetail]);
+    }, [vehicleDetail, effectiveSequence]);
 
     // Memoize filtered stops to prevent re-filtering on every render
     const filteredStops = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features) return [];
 
         return vehicleDetail.stop_times.features.filter((stop) =>
-            showPastStops || stop.properties.stop_sequence >= (vehicleDetail.last_stop_sequence || 0)
+            showPastStops || stop.properties.stop_sequence >= (effectiveSequence || 0)
         );
-    }, [vehicleDetail, showPastStops]);
+    }, [vehicleDetail, showPastStops, effectiveSequence]);
 
     // Memoize toggle handler to prevent unnecessary re-renders
     const handleTogglePastStops = useCallback(() => {
@@ -249,8 +254,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-white/10" />
 
                         {filteredStops.map((stop, idx: number) => {
-                            const isPast = stop.properties.stop_sequence < (vehicleDetail?.last_stop_sequence || 0);
-                            const isCurrent = stop.properties.stop_sequence === vehicleDetail.last_stop_sequence;
+                            const isPast = stop.properties.stop_sequence < (effectiveSequence || 0);
+                            const isCurrent = stop.properties.stop_sequence === effectiveSequence;
                             const isNext = stop.properties.stop_sequence === nextStopSequence;
 
                             return (

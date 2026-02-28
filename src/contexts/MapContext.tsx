@@ -182,10 +182,24 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 const coords = data.geometry?.coordinates as [number, number] | undefined;
                 const hasValidLocation = coords && (coords[0] !== 0 || coords[1] !== 0);
 
-                // Always update metadata even if geometry is missing (static/placeholder trips)
-                setSelectedVehicle((prev: TrackedVehicle | null) =>
-                    prev ? { ...prev, ...(coords ? { _geometry: coords } : {}), ...data } as TrackedVehicle : null
-                );
+                // Update metadata, but be careful not to overwrite live data with static fallback nulls
+                setSelectedVehicle((prev: TrackedVehicle | null) => {
+                    if (!prev) return null;
+                    const isFallback = (data as any).is_static_fallback;
+                    const updated = { ...prev, ...data };
+
+                    // If we got a static fallback, preserve existing live fields
+                    if (isFallback) {
+                        updated.delay = prev.delay ?? updated.delay;
+                        updated.state_position = prev.state_position ?? updated.state_position;
+                        updated.last_stop_sequence = prev.last_stop_sequence ?? updated.last_stop_sequence;
+                    }
+
+                    if (coords) {
+                        updated._geometry = coords;
+                    }
+                    return updated as TrackedVehicle;
+                });
 
                 if (hasValidLocation && coords) {
                     const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
