@@ -19,6 +19,10 @@ export const useMapCameraFollow = (
         if (!isFollowing || !selectedVehicle?._geometry || !mapRef.current) return;
 
         const [lng, lat] = selectedVehicle._geometry;
+
+        // Don't follow if position is unknown/invalid placeholder [0, 0]
+        if (lng === 0 && lat === 0) return;
+
         const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
 
         mapRef.current.easeTo({

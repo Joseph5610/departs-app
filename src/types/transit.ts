@@ -20,7 +20,7 @@ export interface VehicleFeature {
     geometry: {
         type: "Point";
         coordinates: [number, number]; // [lon, lat]
-    };
+    } | null;
     properties: VehicleProperties;
 }
 

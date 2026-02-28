@@ -180,19 +180,23 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 queryClient.setQueryData(['vehicle-detail', activeVehId, tripId], data);
 
                 if (data.geometry?.coordinates) {
-                    const coords = data.geometry.coordinates;
+                    const coords = data.geometry.coordinates as [number, number];
+                    const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
+
                     setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, _geometry: coords, ...data } as TrackedVehicle : null);
 
-                    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
-                    mapRef.current?.flyTo({
-                        center: coords,
-                        zoom: MAP_VEHICLE_SELECT_ZOOM,
-                        duration: MAP_ANIMATION_DURATION,
-                        essential: true,
-                        padding: isMobile
-                            ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-                            : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
-                    });
+                    if (hasValidLocation) {
+                        const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
+                        mapRef.current?.flyTo({
+                            center: coords,
+                            zoom: MAP_VEHICLE_SELECT_ZOOM,
+                            duration: MAP_ANIMATION_DURATION,
+                            essential: true,
+                            padding: isMobile
+                                ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+                                : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
+                        });
+                    }
                 }
             }
         } catch (err) {

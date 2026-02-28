@@ -40,15 +40,20 @@ export const useMapVehicleSync = (
                 return ftid === stid && stid !== 'NONE';
             });
 
-            if (match) {
+            if (match && match.geometry) {
                 const p = match.properties;
-                const coords = match.geometry.coordinates;
+                const coords = match.geometry.coordinates as [number, number];
                 const matchId = String(p.vehicle_id);
+
+                const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
                 if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;
                     newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
-                    newCoords = coords;
+                    // Only update coordinates if they are valid, or if we currently have invalid ones
+                    if (hasValidLocation || (selectedVehicle._geometry[0] === 0 && selectedVehicle._geometry[1] === 0)) {
+                        newCoords = coords;
+                    }
                 }
             }
         }
@@ -56,13 +61,17 @@ export const useMapVehicleSync = (
         // 2. Sync from Direct Detail API
         // If we have detailed info for the selected vehicle, use it to update position and properties.
         if (vehicleDetail?.geometry?.coordinates) {
-            const detailCoords = vehicleDetail.geometry.coordinates;
+            const detailCoords = vehicleDetail.geometry.coordinates as [number, number];
             const detailDelay = vehicleDetail.delay;
+            const hasValidDetailLocation = detailCoords[0] !== 0 || detailCoords[1] !== 0;
 
             // Update if coordinates or delay changed in the detail API
             if (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1] || (newProps.delay !== undefined && newProps.delay !== detailDelay)) {
                 updated = true;
-                newCoords = detailCoords;
+                // Only update coordinates if they are valid, or if we currently have invalid ones
+                if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
+                    newCoords = detailCoords;
+                }
                 newProps = {
                     ...newProps,
                     delay: detailDelay,
