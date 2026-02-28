@@ -136,6 +136,7 @@ export interface TrackedVehicle {
     state_position?: string;
     origin_timestamp?: string;
     next_stop_name?: string;
+    last_stop_sequence?: number;
     is_air_conditioned?: boolean;
     is_wheelchair_accessible?: boolean;
     usb_chargers?: boolean;

@@ -60,22 +60,29 @@ export const useMapVehicleSync = (
 
         // 2. Sync from Direct Detail API
         // If we have detailed info for the selected vehicle, use it to update position and properties.
-        if (vehicleDetail?.geometry?.coordinates) {
-            const detailCoords = vehicleDetail.geometry.coordinates as [number, number];
+        if (vehicleDetail) {
+            const isFallback = (vehicleDetail as any).is_static_fallback;
+            const detailCoords = vehicleDetail.geometry?.coordinates as [number, number] | undefined;
             const detailDelay = vehicleDetail.delay;
-            const hasValidDetailLocation = detailCoords[0] !== 0 || detailCoords[1] !== 0;
+            const hasValidDetailLocation = detailCoords && (detailCoords[0] !== 0 || detailCoords[1] !== 0);
 
-            // Update if coordinates or delay changed in the detail API
-            if (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1] || (newProps.delay !== undefined && newProps.delay !== detailDelay)) {
+            // Update if coordinates, delay or sequence changed in the detail API
+            const coordsChanged = detailCoords && (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1]);
+            const delayChanged = !isFallback && newProps.delay !== undefined && newProps.delay !== detailDelay;
+            const sequenceChanged = !isFallback && vehicleDetail.last_stop_sequence !== undefined && selectedVehicle.last_stop_sequence !== vehicleDetail.last_stop_sequence;
+
+            if (coordsChanged || delayChanged || sequenceChanged) {
                 updated = true;
                 // Only update coordinates if they are valid, or if we currently have invalid ones
                 if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
-                    newCoords = detailCoords;
+                    if (detailCoords) newCoords = detailCoords;
                 }
+
                 newProps = {
                     ...newProps,
-                    delay: detailDelay,
-                    state_position: vehicleDetail.state_position || newProps.state_position,
+                    delay: isFallback ? (newProps.delay ?? selectedVehicle.delay) : detailDelay,
+                    state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
+                    last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
                     vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
                 };
             }

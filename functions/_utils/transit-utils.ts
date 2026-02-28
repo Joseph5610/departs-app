@@ -22,14 +22,41 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
 
     // Position and status data
     const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
-    const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual || 0);
+    const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual ?? p.last_position?.delay ?? 0);
     const state_position = p.state_position || p.last_position?.state_position;
-    const next_stop_name = p.next_stop_name || (p.last_position?.next_stop?.id as string | undefined);
 
-    // Metadata / Amenities
-    const is_wheelchair_accessible = p.is_wheelchair_accessible ?? p.trip?.wheelchair_accessible;
-    const is_air_conditioned = p.is_air_conditioned ?? p.trip?.air_conditioned;
-    const vehicle_registration_number = p.vehicle_registration_number ?? p.trip?.vehicle_registration_number;
+    // Extract next stop info - check various nested structures used by Golemio
+    const next_stop_name = p.next_stop_name ||
+                          p.last_position?.next_stop?.name ||
+                          p.last_position?.next_stop?.id ||
+                          p.trip?.next_stop_name;
+
+    // Metadata / Amenities - check multiple possible locations (Public API, V2 API, nested descriptors)
+    const vehicle_descriptor = p.vehicle_descriptor || p.trip?.vehicle_descriptor || p.last_position?.vehicle_descriptor || {};
+
+    const is_wheelchair_accessible = p.is_wheelchair_accessible ??
+                                   p.trip?.wheelchair_accessible ??
+                                   vehicle_descriptor.is_wheelchair_accessible;
+
+    const is_air_conditioned = p.is_air_conditioned ??
+                               p.trip?.air_conditioned ??
+                               vehicle_descriptor.is_air_conditioned;
+
+    const has_usb_chargers = p.has_usb_chargers ??
+                            p.usb_chargers ??
+                            vehicle_descriptor.has_usb_chargers;
+
+    const vehicle_registration_number = p.vehicle_registration_number ??
+                                      p.trip?.vehicle_registration_number ??
+                                      p.last_position?.vehicle_registration_number ??
+                                      vehicle_descriptor.vehicle_registration_number;
+
+    const operator = p.operator || p.trip?.operator || vehicle_descriptor.operator || p.last_position?.operator;
+
+    // Run and sequence data
+    const run_number = p.run_number ?? p.trip?.run_number ?? p.trip?.gtfs?.run_number ?? p.last_position?.run_number;
+    const last_stop_sequence = p.last_stop_sequence ?? p.last_position?.last_stop?.sequence ?? p.last_position?.last_stop_sequence;
+    const origin_timestamp = p.origin_timestamp || p.last_position?.origin_timestamp || p.trip?.origin_timestamp || p.last_position?.timestamp;
 
     return {
         type: 'Feature',
@@ -48,9 +75,21 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             delay,
             state_position,
             next_stop_name,
+            last_stop_sequence,
+            origin_timestamp,
+            run_number,
             is_wheelchair_accessible,
             is_air_conditioned,
+            has_usb_chargers,
             vehicle_registration_number,
+            vehicle_descriptor: {
+                operator,
+                is_wheelchair_accessible,
+                is_air_conditioned,
+                has_usb_chargers,
+                vehicle_registration_number,
+                ...vehicle_descriptor
+            }
         }
     };
 }
