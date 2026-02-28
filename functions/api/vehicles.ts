@@ -53,7 +53,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const routeShortNames = Array.from(lineFilters);
 
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && routeShortNames.length === 0) {
+    if (!tripId && !bounds && routeShortNames.length === 0 && mappedRouteTypes.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
@@ -93,26 +93,40 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
-        // 4. Apply run number filtering if requested
-        if (runFilters.size > 0) {
+        // 4. Apply strict run number filtering if requested
+        if (lineFilters.size > 0) {
             allFeatures = allFeatures.filter(f => {
                 const line = String(f.properties.route_short_name || f.properties.gtfs_route_short_name || '').trim().toUpperCase();
-                const run = String(f.properties.run_number ?? '').trim();
 
-                if (line && runFilters.has(line)) {
-                    const allowedRuns = runFilters.get(line);
+                // If we are filtering by specific lines, only allow those lines
+                if (!lineFilters.has(line)) return false;
+
+                if (runFilters.has(line)) {
+                    const allowedRuns = runFilters.get(line)!;
 
                     // Check if there's also a "naked" line filter without a run number (e.g. "58, 58/1")
-                    const isExplicitlyFilteredByLineOnly = rawRouteShortNames.some(f => {
-                        const parts = f.split('/');
+                    // If so, we show all vehicles for that line.
+                    const isExplicitlyFilteredByLineOnly = rawRouteShortNames.some(filter => {
+                        const parts = filter.split('/');
                         return parts[0].trim().toUpperCase() === line && parts.length === 1;
                     });
 
                     if (isExplicitlyFilteredByLineOnly) return true;
 
-                    // Match run number: handle potential leading zeros
-                    // e.g. "1" matches "01" or "001"
-                    return Array.from(allowedRuns || []).some(r => {
+                    // Extract run number with robust fallback matching the normalizer
+                    const p = f.properties;
+                    const run_number = p.run_number ??
+                                      p.trip?.run_number ??
+                                      p.trip?.gtfs?.run_number ??
+                                      p.last_position?.run_number ??
+                                      p.last_position?.service_number ??
+                                      (p as any).vehicle_descriptor?.run_number ??
+                                      (p as any).service_number;
+
+                    const run = String(run_number ?? '').trim();
+
+                    // Match run number: handle potential leading zeros (e.g. "1" matches "01")
+                    return Array.from(allowedRuns).some(r => {
                         const rClean = r.trim().replace(/^0+/, '');
                         const runClean = run.replace(/^0+/, '');
                         return rClean === runClean && rClean !== '';
