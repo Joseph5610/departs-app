@@ -17,6 +17,9 @@ export const useMapFilters = (
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
         if (!selectedVehicle || !selectedVehicle._geometry) return EMPTY_GEOJSON;
 
+        const [lng, lat] = selectedVehicle._geometry;
+        if (lng === 0 && lat === 0) return EMPTY_GEOJSON;
+
         return {
             type: 'FeatureCollection',
             features: [
