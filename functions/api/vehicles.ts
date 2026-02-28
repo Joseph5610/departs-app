@@ -16,6 +16,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const tripId = url.searchParams.get("tripId");
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
+    // Map human-readable route types to GTFS route types
+    const routeTypeMap: Record<string, string> = {
+        'metro': '1',
+        'tram': '0',
+        'bus': '3',
+        'trolleybus': '11',
+        'train': '2',
+        'ferry': '4',
+        'funicular': '7'
+    };
+
+    const mappedRouteTypes = routeTypes.map(t => routeTypeMap[t] || t);
+
     // Process routeShortNames to separate line and run number filters (e.g., "58/1")
     const lineFilters = new Set<string>();
     const runFilters = new Map<string, Set<string>>(); // line -> Set of run numbers
@@ -45,19 +58,31 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     try {
         const fetchPromises: Promise<Response>[] = [];
 
-        // 1. Prepare fetch for bounding box / route filters (Public API)
-        if (bounds || lineFilters.size > 0 || routeTypes.length > 0) {
+        // 1. Prepare fetch for bounding box / route filters (V2 API)
+        if (bounds || lineFilters.size > 0 || mappedRouteTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
-            if (bounds) params.boundingBox = bounds;
-            if (routeTypes.length > 0) params.routeType = routeTypes;
-            if (lineFilters.size > 0) params.routeShortName = Array.from(lineFilters);
 
-            fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
+            // Always include bounding box if available to ensure data is returned for the current view
+            if (bounds) {
+                params.boundingBox = bounds;
+            }
+
+            if (mappedRouteTypes.length > 0) params.routeType = mappedRouteTypes;
+
+            if (lineFilters.size > 0) {
+                // Try both formats for maximum compatibility across different Golemio environments
+                params.routeShortName = Array.from(lineFilters);
+                params.routeShortNames = Array.from(lineFilters).join(',');
+            }
+
+            fetchPromises.push(golemioFetch("/v2/vehiclepositions", env, { searchParams: params }));
         }
 
-        // 2. Prepare fetch for specific Trip ID (Internal API for higher precision/specific trip tracking)
+        // 2. Prepare fetch for specific Trip ID using query parameters instead of path
         if (tripId) {
-            fetchPromises.push(golemioFetch(`/v2/vehiclepositions/${tripId}`, env));
+            fetchPromises.push(golemioFetch("/v2/vehiclepositions", env, {
+                searchParams: { tripId: tripId }
+            }));
         }
 
         // 3. Execute all fetches in parallel
