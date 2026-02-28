@@ -6,7 +6,7 @@ import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
-
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 export const SettingsModal: React.FC = () => {
@@ -92,60 +92,79 @@ export const SettingsModal: React.FC = () => {
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
             <div className="space-y-8 py-2">
-                {/* Filters - Only show if live vehicles are enabled */}
-                {showVehicles && (
-                    <section className="space-y-3">
-                        <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
-                            {t('settings.sections.filters')}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {vehicleTypes.map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => toggleRouteType(type)}
-                                    className={`px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold ${routeTypeFilter.includes(type)
-                                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
-                                        : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
-                                        }`}
-                                >
-                                    {t(`settings.vehicleTypes.${type}`)}
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Live Vehicles Toggle */}
+                {/* Live Vehicles Section */}
                 <section className="space-y-3">
                     <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
                         {t('settings.sections.display')}
                     </div>
-                    <button
-                        onClick={() => setShowVehicles(!showVehicles)}
-                        className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
-                    >
-                        <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
-                                {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="text-white font-semibold leading-snug">
-                                    {t('settings.liveVehicles.title')}
-                                </div>
-                                <div className="text-zinc-500 text-xs mt-1 leading-tight">
-                                    {t('settings.liveVehicles.description')}
-                                </div>
-                            </div>
-                        </div>
 
-                        <div
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                    <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+                        <button
+                            onClick={() => setShowVehicles(!showVehicles)}
+                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group border-b border-white/5"
                         >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                        </div>
-                    </button>
+                            <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                    {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-white font-semibold leading-snug">
+                                        {t('settings.liveVehicles.title')}
+                                    </div>
+                                    <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                        {t('settings.liveVehicles.description')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
+                                />
+                            </div>
+                        </button>
+
+                        <AnimatePresence>
+                            {showVehicles && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden bg-white/[0.02]"
+                                >
+                                    <div className="relative p-4 pt-2 space-y-4">
+                                        {/* Connector line for visual hierarchy */}
+                                        <div className="absolute left-8 sm:left-10 top-0 bottom-12 w-px bg-white/10" />
+
+                                        <div className="pl-10 sm:pl-12 space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                                                <div className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em]">
+                                                    {t('settings.sections.filters')}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
+                                                {vehicleTypes.map((type) => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => toggleRouteType(type)}
+                                                        className={`px-3 py-2 rounded-xl border transition-all text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center text-center ${routeTypeFilter.includes(type)
+                                                            ? 'bg-emerald-500 text-black border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                                                            : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
+                                                            }`}
+                                                    >
+                                                        {t(`settings.vehicleTypes.${type}`)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </section>
 
                 {/* Language Selection */}

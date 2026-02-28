@@ -21,15 +21,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const runFilters = new Map<string, Set<string>>(); // line -> Set of run numbers
 
     routeShortNames.forEach(filter => {
-        if (filter.includes('/')) {
-            const [line, run] = filter.split('/');
+        const parts = filter.split('/');
+        const line = parts[0].trim().toUpperCase();
+        if (line) {
             lineFilters.add(line);
-            if (!runFilters.has(line)) {
-                runFilters.set(line, new Set());
+            if (parts.length > 1) {
+                const run = parts[1].trim();
+                if (run) {
+                    if (!runFilters.has(line)) {
+                        runFilters.set(line, new Set());
+                    }
+                    runFilters.get(line)!.add(run);
+                }
             }
-            runFilters.get(line)!.add(run);
-        } else {
-            lineFilters.add(filter);
         }
     });
 
@@ -78,16 +82,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         if (runFilters.size > 0) {
             allFeatures = allFeatures.filter(f => {
                 const line = String(f.properties.route_short_name || f.properties.gtfs_route_short_name || '').trim().toUpperCase();
-                const run = String(f.properties.run_number || '').trim();
+                const run = String(f.properties.run_number ?? '').trim();
 
                 if (line && runFilters.has(line)) {
                     const allowedRuns = runFilters.get(line);
-                    const isExplicitlyFilteredByLineOnly = routeShortNames.some(filter => filter.trim().toUpperCase() === line && !filter.includes('/'));
+                    // Check if there's also a "naked" line filter without a run number (e.g. "58, 58/1")
+                    const isExplicitlyFilteredByLineOnly = routeShortNames.some(f => {
+                        const parts = f.split('/');
+                        return parts[0].trim().toUpperCase() === line && parts.length === 1;
+                    });
 
                     if (isExplicitlyFilteredByLineOnly) return true;
 
-                    // Match run number: handle potential leading zeros and type differences
-                    // e.g. "1" matches "01" or 1
+                    // Match run number: handle potential leading zeros
+                    // e.g. "1" matches "01" or "001"
                     return Array.from(allowedRuns || []).some(r => {
                         const rClean = r.trim().replace(/^0+/, '');
                         const runClean = run.replace(/^0+/, '');
