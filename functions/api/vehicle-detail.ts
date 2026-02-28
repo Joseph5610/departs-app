@@ -9,14 +9,6 @@ interface ShapeFeature {
     };
 }
 
-interface VehicleData {
-    features?: Array<{ properties: Record<string, unknown> }>;
-    shapes?: {
-        features: ShapeFeature[];
-    } | Array<[number, number]>;
-    [key: string]: unknown;
-}
-
 /**
  * Retrieves detailed information about a specific vehicle and its current trip.
  * Includes real-time position, scheduled stop times, and the trip's shape.
@@ -65,52 +57,55 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, unknown>;
 
         // Standardize output structure: handle Feature, FeatureCollection, or flat object
         let vehicleData: Record<string, unknown> = {};
 
-        if (data.type === 'FeatureCollection' && data.features?.length > 0) {
-            const normalized = normalizeVehicleFeature(data.features[0], tripId);
+        if (data.type === 'FeatureCollection' && Array.isArray(data.features) && data.features.length > 0) {
+            const normalized = normalizeVehicleFeature(data.features[0] as any, tripId);
+            const props = (normalized.properties || {}) as Record<string, unknown>;
             vehicleData = {
-                ...normalized.properties,
+                ...props,
                 geometry: normalized.geometry,
                 // Merge root-level metadata often provided alongside FeatureCollection when using scopes
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
+                stop_times: data.stop_times || props.stop_times,
+                shapes: data.shapes || props.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || props.vehicle_descriptor,
+                run_number: data.run_number ?? props.run_number,
+                origin_timestamp: data.origin_timestamp || props.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence ?? props.last_stop_sequence,
+                next_stop_name: data.next_stop_name || props.next_stop_name,
             };
         } else if (data.type === 'Feature') {
-            const normalized = normalizeVehicleFeature(data, tripId);
+            const normalized = normalizeVehicleFeature(data as any, tripId);
+            const props = (normalized.properties || {}) as Record<string, unknown>;
             vehicleData = {
-                ...normalized.properties,
+                ...props,
                 geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
+                stop_times: data.stop_times || props.stop_times,
+                shapes: data.shapes || props.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || props.vehicle_descriptor,
+                run_number: data.run_number ?? props.run_number,
+                origin_timestamp: data.origin_timestamp || props.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence ?? props.last_stop_sequence,
+                next_stop_name: data.next_stop_name || props.next_stop_name,
             };
         } else {
             // Flat object (typical for gtfs/trips)
-            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
-            const normalized = normalizeVehicleFeature(mockFeature, tripId);
+            const mockFeature = { type: 'Feature', geometry: (data.geometry as any) || null, properties: data };
+            const normalized = normalizeVehicleFeature(mockFeature as any, tripId);
+            const props = (normalized.properties || {}) as Record<string, unknown>;
             vehicleData = {
-                ...normalized.properties,
+                ...props,
                 geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
+                stop_times: data.stop_times || props.stop_times,
+                shapes: data.shapes || props.shapes,
+                vehicle_descriptor: data.vehicle_descriptor || props.vehicle_descriptor,
+                run_number: data.run_number ?? props.run_number,
+                origin_timestamp: data.origin_timestamp || props.origin_timestamp,
+                last_stop_sequence: data.last_stop_sequence ?? props.last_stop_sequence,
+                next_stop_name: data.next_stop_name || props.next_stop_name,
             };
         }
 

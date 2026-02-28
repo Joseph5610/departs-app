@@ -62,6 +62,7 @@ export const Search: React.FC = React.memo(() => {
             ref={containerRef}
             className="absolute z-10 right-16 md:right-auto md:w-80 safe-top safe-left"
         >
+            <div className="">
             <div className="relative h-11 flex items-center">
                 <input
                     type="text"
@@ -83,13 +84,14 @@ export const Search: React.FC = React.memo(() => {
                 <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-emerald-400' : 'text-zinc-400'} pointer-events-none z-10`} size={20} />
                 {(query || activeFilter) && (
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             if (activeFilter) {
                                 onLineSelect(null);
                             }
                             setQuery('');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
                     >
                         <X size={18} />
                     </button>
@@ -158,6 +160,7 @@ export const Search: React.FC = React.memo(() => {
                     ))}
                 </div>
             )}
+            </div>
         </div>
     );
 });

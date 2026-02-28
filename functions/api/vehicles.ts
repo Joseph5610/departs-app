@@ -77,21 +77,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         // 4. Apply run number filtering if requested
         if (runFilters.size > 0) {
             allFeatures = allFeatures.filter(f => {
-                const line = f.properties.route_short_name || f.properties.gtfs_route_short_name;
-                const run = String(f.properties.run_number || '');
+                const line = String(f.properties.route_short_name || f.properties.gtfs_route_short_name || '').trim().toUpperCase();
+                const run = String(f.properties.run_number || '').trim();
 
                 if (line && runFilters.has(line)) {
-                    // If we have a specific run filter for this line, check if it matches
-                    // If the line is also in the broad lineFilters but NOT as a run filter specifically (e.g. "58, 58/1"),
-                    // then we might want to keep it. But usually "58/1" means specifically that run.
-                    // If routeShortNames was ["58", "136/1"], lineFilters has ["58", "136"], runFilters has {"136": ["1"]}
-                    // For 58, runFilters doesn't have it, so we keep it (it was in lineFilters).
-                    // For 136, runFilters HAS it, so we MUST match the run.
                     const allowedRuns = runFilters.get(line);
-                    const isExplicitlyFilteredByLineOnly = routeShortNames.includes(line);
+                    const isExplicitlyFilteredByLineOnly = routeShortNames.some(filter => filter.trim().toUpperCase() === line && !filter.includes('/'));
 
                     if (isExplicitlyFilteredByLineOnly) return true;
-                    return allowedRuns?.has(run);
+
+                    // Match run number: handle potential leading zeros and type differences
+                    // e.g. "1" matches "01" or 1
+                    return Array.from(allowedRuns || []).some(r => {
+                        const rClean = r.trim().replace(/^0+/, '');
+                        const runClean = run.replace(/^0+/, '');
+                        return rClean === runClean && rClean !== '';
+                    });
                 }
                 return true;
             });
