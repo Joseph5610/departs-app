@@ -16,7 +16,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     // Identify format and extract core fields
     const vehicle_id = String(p.vehicle_id || p.id || `trip-${p.trip?.gtfs?.trip_id || tripIdFallback || 'unknown'}`);
     const gtfs_trip_id = p.gtfs_trip_id || p.trip?.gtfs?.trip_id || tripIdFallback;
-    const route_short_name = p.route_short_name || p.gtfs_route_short_name || p.trip?.gtfs?.route_short_name || p.trip?.route_short_name;
+    const route_short_name = p.route_short_name || p.gtfs_route_short_name || p.trip?.gtfs?.route_short_name;
     const route_type = p.route_type || p.gtfs_route_type || p.trip?.gtfs?.route_type;
     const trip_headsign = p.trip_headsign || p.gtfs_trip_headsign || p.trip?.gtfs?.trip_headsign;
 
@@ -60,9 +60,8 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
                       p.trip?.gtfs?.run_number ??
                       p.last_position?.run_number ??
                       p.last_position?.service_number ??
-                      vehicle_descriptor?.run_number ??
+                      (p as any).vehicle_descriptor?.run_number ??
                       (p as any).service_number;
-
     const last_stop_sequence = p.last_stop_sequence ?? p.last_position?.last_stop?.sequence ?? p.last_position?.last_stop_sequence;
     const origin_timestamp = p.origin_timestamp || p.last_position?.origin_timestamp || p.trip?.origin_timestamp || p.last_position?.timestamp;
 
@@ -122,10 +121,9 @@ export function processVehicleFeatures(allFeatures: GolemioVehicleFeature[]): Go
         }
     }
 
-    // Group by coordinates, handling missing geometry
+    // Group by coordinates
     const groups: Record<string, GolemioVehicleFeature[]> = {};
     uniqueFeatures.forEach((f) => {
-        if (!f.geometry?.coordinates) return;
         const key = f.geometry.coordinates.join(',');
         if (!groups[key]) groups[key] = [];
         groups[key].push(f);

@@ -212,7 +212,7 @@ export const useMapReducer = () => {
         toggleGroup,
         setDepartureSort,
         setRouteFilter,
-        setRouteTypeFilter,
+            setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
         toggleFavorite

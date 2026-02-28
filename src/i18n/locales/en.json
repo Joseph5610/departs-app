@@ -15,16 +15,7 @@
     },
     "liveVehicles": {
       "title": "Live vehicle locations",
-      "description": "Show vehicles on map"
-    },
-    "tip": {
-      "prefix": "Tip:",
-      "text": "Hiding vehicles can speed up map loading in areas with poor connection."
-    },
-    "language": {
-      "title": "Language",
-      "en": "English",
-      "cs": "Čeština"
+      "description": "Show buses, trams, and metro"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -34,6 +25,15 @@
       "train": "Train",
       "ferry": "Ferry",
       "funicular": "Funicular"
+    },
+    "tip": {
+      "prefix": "Tip:",
+      "text": "Hiding vehicles can speed up map loading in areas with poor connection."
+    },
+    "language": {
+      "title": "Language",
+      "en": "English",
+      "cs": "Čeština"
     },
     "viewSource": "View source on GitHub",
     "version": "Version {{version}}",

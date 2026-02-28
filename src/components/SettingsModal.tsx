@@ -9,6 +9,7 @@ import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
+
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
@@ -48,6 +49,16 @@ export const SettingsModal: React.FC = () => {
         };
     }, []);
 
+    const toggleRouteType = (type: string) => {
+        if (routeTypeFilter.includes(type)) {
+            setRouteTypeFilter(routeTypeFilter.filter(t => t !== type));
+        } else {
+            setRouteTypeFilter([...routeTypeFilter, type]);
+        }
+    };
+
+    const vehicleTypes = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'];
+
     const handleCheckUpdate = async () => {
         if (isChecking) return;
 
@@ -78,16 +89,6 @@ export const SettingsModal: React.FC = () => {
             showToast(t('settings.updates.upToDate'), 'success');
         }
     };
-
-    const toggleRouteType = (type: string) => {
-        if (routeTypeFilter.includes(type)) {
-            setRouteTypeFilter(routeTypeFilter.filter(t => t !== type));
-        } else {
-            setRouteTypeFilter([...routeTypeFilter, type]);
-        }
-    };
-
-    const vehicleTypes = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'];
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>

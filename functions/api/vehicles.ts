@@ -14,7 +14,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const bounds = url.searchParams.get("bounds");
     const routeTypes = url.searchParams.getAll("routeType");
     const tripId = url.searchParams.get("tripId");
-    const routeShortNames = url.searchParams.getAll("routeShortName");
+    const rawRouteShortNames = url.searchParams.getAll("routeShortName");
 
     // Map human-readable route types to GTFS route types
     const routeTypeMap: Record<string, string> = {
@@ -33,7 +33,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const lineFilters = new Set<string>();
     const runFilters = new Map<string, Set<string>>(); // line -> Set of run numbers
 
-    routeShortNames.forEach(filter => {
+    rawRouteShortNames.forEach(filter => {
         const parts = filter.split('/');
         const line = parts[0].trim().toUpperCase();
         if (line) {
@@ -50,35 +50,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
     });
 
+    const routeShortNames = Array.from(lineFilters);
+
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && lineFilters.size === 0 && routeTypes.length === 0) {
+    if (!tripId && !bounds && routeShortNames.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
     try {
         const fetchPromises: Promise<Response>[] = [];
 
-        // 1. Prepare fetch for bounding box / route filters (Public V2 API)
-        if (bounds || lineFilters.size > 0 || mappedRouteTypes.length > 0) {
+        // 1. Prepare fetch for bounding box / route filters (Public API)
+        if (bounds || routeShortNames.length > 0 || mappedRouteTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
-
-            // Always include bounding box if available to ensure data is returned for the current view
-            if (bounds) {
-                params.boundingBox = bounds;
-            }
-
+            if (bounds) params.boundingBox = bounds;
             if (mappedRouteTypes.length > 0) params.routeType = mappedRouteTypes;
-
-            if (lineFilters.size > 0) {
-                // Try both formats for maximum compatibility across different Golemio environments
-                params.routeShortName = Array.from(lineFilters);
-                params.routeShortNames = Array.from(lineFilters).join(',');
-            }
+            if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
             fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }
 
-        // 2. Prepare fetch for specific Trip ID
+        // 2. Prepare fetch for specific Trip ID (Internal API for higher precision/specific trip tracking)
         if (tripId) {
             fetchPromises.push(golemioFetch(`/v2/vehiclepositions/${tripId}`, env));
         }
@@ -109,8 +101,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
                 if (line && runFilters.has(line)) {
                     const allowedRuns = runFilters.get(line);
+
                     // Check if there's also a "naked" line filter without a run number (e.g. "58, 58/1")
-                    const isExplicitlyFilteredByLineOnly = routeShortNames.some(f => {
+                    const isExplicitlyFilteredByLineOnly = rawRouteShortNames.some(f => {
                         const parts = f.split('/');
                         return parts[0].trim().toUpperCase() === line && parts.length === 1;
                     });

@@ -15,16 +15,7 @@
     },
     "liveVehicles": {
       "title": "Poloha vozidel v reálném čase",
-      "description": "Zobrazit vozidla na mapě"
-    },
-    "tip": {
-      "prefix": "Tip:",
-      "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
-    },
-    "language": {
-      "title": "Jazyk",
-      "en": "English",
-      "cs": "Čeština"
+      "description": "Zobrazit autobusy, tramvaje a metro"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -34,6 +25,15 @@
       "train": "Vlak",
       "ferry": "Přívoz",
       "funicular": "Lanovka"
+    },
+    "tip": {
+      "prefix": "Tip:",
+      "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
+    },
+    "language": {
+      "title": "Jazyk",
+      "en": "English",
+      "cs": "Čeština"
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "version": "Verze {{version}}",

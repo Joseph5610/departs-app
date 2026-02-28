@@ -69,7 +69,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         toggleGroup,
         setDepartureSort,
         setRouteFilter,
-        setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
         toggleFavorite
@@ -186,8 +185,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 // Update metadata, but be careful not to overwrite live data with static fallback nulls
                 setSelectedVehicle((prev: TrackedVehicle | null) => {
                     if (!prev) return null;
-                    const isFallback = (data as Record<string, unknown>).is_static_fallback;
-                    const updated = { ...prev, ...data } as TrackedVehicle;
+                    const isFallback = (data as any).is_static_fallback;
+                    const updated = { ...prev, ...data };
 
                     // If we got a static fallback, preserve existing live fields
                     if (isFallback) {
@@ -244,7 +243,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             toggleGroup,
             setDepartureSort,
             setRouteFilter,
-            setRouteTypeFilter,
             setBounds,
             setDebouncedBounds,
             toggleFavorite,
@@ -261,11 +259,11 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             onDragStart
         }
     }), [
-        mapRef, state, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
+        mapRef, state, mapLoaded, labelLayerId, userLocation,
         setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
         setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
-        setRouteFilter, setRouteTypeFilter, setBounds, setDebouncedBounds, toggleFavorite, handleLocate,
+        setRouteFilter, setBounds, setDebouncedBounds, handleLocate,
         handleDepartureClick, performGeolocation,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);

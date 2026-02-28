@@ -62,7 +62,6 @@ export const Search: React.FC = React.memo(() => {
             ref={containerRef}
             className="absolute z-10 right-16 md:right-auto md:w-80 safe-top safe-left"
         >
-            <div className="">
             <div className="relative h-11 flex items-center">
                 <input
                     type="text"
@@ -160,7 +159,6 @@ export const Search: React.FC = React.memo(() => {
                     ))}
                 </div>
             )}
-            </div>
         </div>
     );
 });
