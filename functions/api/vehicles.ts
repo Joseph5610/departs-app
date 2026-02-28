@@ -58,7 +58,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     try {
         const fetchPromises: Promise<Response>[] = [];
 
-        // 1. Prepare fetch for bounding box / route filters (V2 API)
+        // 1. Prepare fetch for bounding box / route filters (Public V2 API)
         if (bounds || lineFilters.size > 0 || mappedRouteTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
 
@@ -75,14 +75,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 params.routeShortNames = Array.from(lineFilters).join(',');
             }
 
-            fetchPromises.push(golemioFetch("/v2/vehiclepositions", env, { searchParams: params }));
+            fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }
 
-        // 2. Prepare fetch for specific Trip ID using query parameters instead of path
+        // 2. Prepare fetch for specific Trip ID
         if (tripId) {
-            fetchPromises.push(golemioFetch("/v2/vehiclepositions", env, {
-                searchParams: { tripId: tripId }
-            }));
+            fetchPromises.push(golemioFetch(`/v2/vehiclepositions/${tripId}`, env));
         }
 
         // 3. Execute all fetches in parallel
