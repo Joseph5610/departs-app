@@ -45,11 +45,13 @@ export const useMapVehicleSync = (
                 const coords = match.geometry.coordinates as [number, number];
                 const matchId = String(p.vehicle_id);
 
-                // Only sync if coordinates are valid
-                if (coords[0] !== 0 || coords[1] !== 0) {
-                    if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
-                        updated = true;
-                        newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
+                const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
+
+                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
+                    updated = true;
+                    newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
+                    // Only update coordinates if they are valid, or if we currently have invalid ones
+                    if (hasValidLocation || (selectedVehicle._geometry[0] === 0 && selectedVehicle._geometry[1] === 0)) {
                         newCoords = coords;
                     }
                 }
@@ -61,20 +63,21 @@ export const useMapVehicleSync = (
         if (vehicleDetail?.geometry?.coordinates) {
             const detailCoords = vehicleDetail.geometry.coordinates as [number, number];
             const detailDelay = vehicleDetail.delay;
+            const hasValidDetailLocation = detailCoords[0] !== 0 || detailCoords[1] !== 0;
 
-            // Only sync if coordinates are valid
-            if (detailCoords[0] !== 0 || detailCoords[1] !== 0) {
-                // Update if coordinates or delay changed in the detail API
-                if (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1] || (newProps.delay !== undefined && newProps.delay !== detailDelay)) {
-                    updated = true;
+            // Update if coordinates or delay changed in the detail API
+            if (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1] || (newProps.delay !== undefined && newProps.delay !== detailDelay)) {
+                updated = true;
+                // Only update coordinates if they are valid, or if we currently have invalid ones
+                if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
                     newCoords = detailCoords;
-                    newProps = {
-                        ...newProps,
-                        delay: detailDelay,
-                        state_position: vehicleDetail.state_position || newProps.state_position,
-                        vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
-                    };
                 }
+                newProps = {
+                    ...newProps,
+                    delay: detailDelay,
+                    state_position: vehicleDetail.state_position || newProps.state_position,
+                    vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
+                };
             }
         }
 

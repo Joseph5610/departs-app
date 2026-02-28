@@ -18,17 +18,17 @@ export const useMapFilters = (
         if (!selectedVehicle || !selectedVehicle._geometry) return EMPTY_GEOJSON;
 
         const [lng, lat] = selectedVehicle._geometry;
-        if (lng === 0 && lat === 0) return EMPTY_GEOJSON;
+        const hasValidLocation = lng !== 0 || lat !== 0;
 
         return {
             type: 'FeatureCollection',
             features: [
                 {
                     type: 'Feature',
-                    geometry: {
+                    geometry: hasValidLocation ? {
                         type: 'Point',
                         coordinates: selectedVehicle._geometry
-                    },
+                    } : null,
                     properties: {
                         ...selectedVehicle,
                         route_type: selectedVehicle.route_type,
