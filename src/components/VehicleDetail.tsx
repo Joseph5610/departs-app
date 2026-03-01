@@ -3,6 +3,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StatusPill } from './StatusPill';
+import { cn } from '../utils/cn';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
 import { parseISO } from 'date-fns';
@@ -137,7 +138,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     onClick={onToggleFollow}
                 >
                     <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}</span>
-                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors ${isFollowing ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
+                    <div className={cn(
+                        "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors",
+                        isFollowing ? "bg-emerald-500" : "bg-zinc-700"
+                    )}>
                         <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                     </div>
                 </div>
@@ -259,13 +263,20 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isNext = stop.properties.stop_sequence === nextStopSequence;
 
                             return (
-                                <div key={idx} className={`relative py-2.5 flex items-center justify-between transition-opacity ${isPast ? 'opacity-40' : 'opacity-100'}`}>
-                                    <div className={`absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10 
-                                        ${isCurrent ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : isPast ? 'bg-zinc-600' : 'bg-white/20'}`}
-                                    />
+                                <div key={idx} className={cn(
+                                    "relative py-2.5 flex items-center justify-between transition-opacity",
+                                    isPast ? "opacity-40" : "opacity-100"
+                                )}>
+                                    <div className={cn(
+                                        "absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-zinc-900 z-10",
+                                        isCurrent ? "bg-emerald-500 ring-4 ring-emerald-500/20" : isPast ? "bg-zinc-600" : "bg-white/20"
+                                    )} />
 
                                     <div className="flex flex-col min-w-0 pr-4">
-                                        <span className={`text-sm truncate ${isNext ? 'text-emerald-400 font-bold' : isPast ? 'text-zinc-400' : 'text-zinc-100 font-medium'}`}>
+                                        <span className={cn(
+                                            "text-sm truncate",
+                                            isNext ? "text-emerald-400 font-bold" : isPast ? "text-zinc-400" : "text-zinc-100 font-medium"
+                                        )}>
                                             {stop.properties.stop_name}
                                         </span>
                                         {isCurrent && <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
@@ -283,7 +294,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                                             return (
                                                 <React.Fragment>
-                                                    <span className={`text-xs tabular-nums ${isPast ? 'text-zinc-600' : isEarly ? 'text-emerald-400' : isLate ? 'text-rose-400' : 'text-zinc-400'}`}>
+                                                    <span className={cn(
+                                                        "text-xs tabular-nums",
+                                                        isPast ? "text-zinc-600" : isEarly ? "text-emerald-400" : isLate ? "text-rose-400" : "text-zinc-400"
+                                                    )}>
                                                         {realtimeTime?.slice(0, 8) || ''}
                                                     </span>
                                                     {hasRealtime && (

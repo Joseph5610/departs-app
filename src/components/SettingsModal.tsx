@@ -20,7 +20,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { cn } from '../utils/cn';
 
 
 export const SettingsModal: React.FC = () => {
@@ -140,10 +140,16 @@ export const SettingsModal: React.FC = () => {
                             </div>
 
                             <div
-                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                                className={cn(
+                                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
+                                    showVehicles ? "bg-emerald-500" : "bg-zinc-700"
+                                )}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
+                                    className={cn(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        showVehicles ? "translate-x-6" : "translate-x-1"
+                                    )}
                                 />
                             </div>
                         </button>
@@ -169,10 +175,12 @@ export const SettingsModal: React.FC = () => {
                                                     <button
                                                         key={id}
                                                         onClick={() => toggleRouteType(id)}
-                                                        className={`group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.includes(id)
-                                                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
-                                                            : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
-                                                            }`}
+                                                        className={cn(
+                                                            "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
+                                                            routeTypeFilter.includes(id)
+                                                                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                                                                : "bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300"
+                                                        )}
                                                     >
                                                         <Icon size={18} className={`transition-transform duration-300 ${routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} />
                                                         <span className="text-[9px] font-bold uppercase tracking-wider">
@@ -190,10 +198,12 @@ export const SettingsModal: React.FC = () => {
 
                                                 <button
                                                     onClick={() => setRouteTypeFilter([])}
-                                                    className={`px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.length === 0
-                                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                                                        : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
-                                                        }`}
+                                                    className={cn(
+                                                        "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
+                                                        routeTypeFilter.length === 0
+                                                            ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                                                            : "bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300"
+                                                    )}
                                                 >
                                                     <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
                                                     <span className="text-[9px] font-bold uppercase tracking-wider">
@@ -219,10 +229,12 @@ export const SettingsModal: React.FC = () => {
                             <button
                                 key={lang}
                                 onClick={() => i18n.changeLanguage(lang)}
-                                className={`py-3 px-4 rounded-2xl border transition-all text-sm font-semibold ${(i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5'
-                                    : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10'
-                                    }`}
+                                className={cn(
+                                    "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold",
+                                    (i18n.resolvedLanguage || i18n.language).startsWith(lang)
+                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5"
+                                        : "bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10"
+                                )}
                             >
                                 {t(`settings.language.${lang}`)}
                             </button>

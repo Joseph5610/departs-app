@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useMap } from '../hooks/useMap';
 import { useVehicleDetail } from './useVehicleDetail';
+import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
 
 export const useRouteShape = () => {
     const { state } = useMap();
@@ -12,8 +13,11 @@ export const useRouteShape = () => {
         if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
 
         const coordinates = vehicleDetail.shapes as [number, number][];
-
         if (coordinates.length < 2) return null;
+
+        const routeName = state.selectedVehicle?.gtfs_route_short_name || state.selectedVehicle?.route_short_name || '';
+        const routeType = state.selectedVehicle?.route_type || 0;
+        const color = isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
 
         return {
             type: 'FeatureCollection' as const,
@@ -23,8 +27,10 @@ export const useRouteShape = () => {
                     type: 'LineString' as const,
                     coordinates: coordinates
                 },
-                properties: {}
+                properties: {
+                    line_color: color
+                }
             }]
         };
-    }, [vId, vehicleDetail]);
+    }, [vId, vehicleDetail, state.selectedVehicle]);
 };

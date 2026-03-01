@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { LineLayerSpecification, FilterSpecification } from 'maplibre-gl';
+import type { FilterSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
 import type { VehicleCollection, StopCollection } from '../types/transit';
 import {
@@ -21,7 +21,8 @@ import {
     selectedVehicleLabelLayer,
     vehiclesPointLayer,
     vehiclesDirectionLayer,
-    vehiclesLabelLayer
+    vehiclesLabelLayer,
+    routeLineLayer
 } from '../config/mapLayers';
 
 interface MapLayersProps {
@@ -43,10 +44,6 @@ interface MapLayersProps {
     selectedVehicleFeature: VehicleCollection;
     /** List of favorite stop IDs */
     favoriteStops: string[];
-    /** MapLibre paint properties for the route line */
-    routeLinePaint: NonNullable<LineLayerSpecification['paint']>;
-    /** MapLibre layout properties for the route line */
-    routeLineLayout: NonNullable<LineLayerSpecification['layout']>;
     /** Filter expression to exclude selected vehicle from the main vehicle layer */
     vehiclesFilter: FilterSpecification;
     /** ID of the first label layer in the style, used for correct layering (Z-index) */
@@ -78,8 +75,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     userLocation,
     selectedVehicleFeature,
     favoriteStops,
-    routeLinePaint,
-    routeLineLayout,
     vehiclesFilter,
     labelLayerId
 }) => {
@@ -90,11 +85,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             {/* Route Shape Layer - UNDER labels */}
             <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                 <Layer
-                    id="route-line"
-                    type="line"
+                    {...routeLineLayer}
                     beforeId={labelLayerId}
-                    layout={routeLineLayout}
-                    paint={routeLinePaint}
                 />
             </Source>
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
-
+import { cn } from '../utils/cn';
 
 
 export const MapControls = React.memo(() => {
@@ -67,7 +67,10 @@ export const MapControls = React.memo(() => {
             >
                 <LocateFixed
                     size={20}
-                    className={`transition-all ${isGeoPending ? 'animate-spin text-blue-400' : 'group-hover:scale-110'}`}
+                    className={cn(
+                        "transition-all",
+                        isGeoPending ? "animate-spin text-blue-400" : "group-hover:scale-110"
+                    )}
                 />
             </button>
             <button

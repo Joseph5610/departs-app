@@ -43,3 +43,14 @@ export const STORAGE_KEYS = {
  */
 export const VEHICLE_REFETCH_INTERVAL = 10000;
 export const VEHICLE_STALE_TIME = 5000;
+
+/**
+ * Average walking speed in m/s (3.6 km/h)
+ * Adjusted for urban environments.
+ */
+export const WALKING_SPEED = 1.0;
+
+/**
+ * Buffer time in seconds to account for platform navigation, ticket validation, etc.
+ */
+export const CATCH_BUFFER = 120;

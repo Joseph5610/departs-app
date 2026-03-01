@@ -1,79 +1,24 @@
 
-import { memo, useState, useEffect, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { motion, AnimatePresence } from 'framer-motion';
-import { format, parseISO, type Locale } from 'date-fns';
+import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
-import { VehicleDetail } from './VehicleDetail';
-import { Countdown } from './Countdown';
-import { getVehicleColor } from '../utils/vehicleColors';
-import type { Departure } from '../types/transit';
-import { useMap } from '../hooks/useMap';
-import { useVehicleDetail } from '../hooks/useVehicleDetail';
-import { useGroupedDepartures } from '../hooks/useGroupedDepartures';
-import { useDepartures } from '../hooks/useDepartures';
-import { METRO_STATIONS } from '../config/stations';
-import { calculateDistance, getCatchStatus } from '../utils/transitLogic';
+import { VehicleDetail } from '../VehicleDetail';
+import { getVehicleColor } from '../../utils/vehicleColors';
+import type { Departure } from '../../types/transit';
+import { useMap } from '../../hooks/useMap';
+import { useVehicleDetail } from '../../hooks/useVehicleDetail';
+import { useGroupedDepartures } from '../../hooks/useGroupedDepartures';
+import { useDepartures } from '../../hooks/useDepartures';
+import { METRO_STATIONS } from '../../config/stations';
+import { calculateDistance } from '../../utils/transitLogic';
+import { DepartureItem } from './DepartureItem';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
     en: enUS
-};
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
-
-const formatDelay = (seconds: number) => {
-    if (seconds <= 30) return '';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (mins === 0) return `+${secs}s`;
-    return `+${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
-    const [isTimedOut, setIsTimedOut] = useState(false);
-    const [lastHandledUpdate, setLastHandledUpdate] = useState<number | undefined>(undefined);
-
-    // Reset timeout state when the update timestamp changes.
-    // This uses the pattern of updating state during render to synchronize with props.
-    if (lastUpdate !== lastHandledUpdate) {
-        setLastHandledUpdate(lastUpdate);
-        setIsTimedOut(false);
-    }
-
-    // eslint-disable-next-line react-hooks/purity
-    const isFresh = delta !== 0 && !!lastUpdate && (Date.now() - lastUpdate < 5000);
-    const visible = isFresh && !isTimedOut;
-
-    useEffect(() => {
-        if (visible && lastUpdate) {
-            const age = Date.now() - lastUpdate;
-            const timer = setTimeout(() => setIsTimedOut(true), 5000 - age);
-            return () => clearTimeout(timer);
-        }
-    }, [visible, lastUpdate]);
-
-    return (
-        <AnimatePresence>
-            {visible && delta !== 0 && (
-                <motion.span
-                    initial={{ opacity: 0, x: -5 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 5 }}
-                    className={`px-1 rounded text-[9px] font-bold tabular-nums flex items-center gap-0.5 ${isInline ? 'ml-1' : ''} ${delta > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}
-                >
-                    <span>{delta > 0 ? '↑' : '↓'}</span>
-                    <span>{Math.abs(delta)}s</span>
-                </motion.span>
-            )}
-        </AnimatePresence>
-    );
 };
 
 interface DetailPanelContentProps {
@@ -95,7 +40,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
-
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
 
     const stopDistanceInfo = useMemo(() => {
@@ -103,15 +47,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         const distance = calculateDistance(userLocation, selectedStop.coordinates);
 
         const isAtStop = distance < 20;
-        const isMovingFast = userSpeed !== null && userSpeed > 4; // > 4 m/s (approx 14.4 km/h) is clearly not walking
+        const isMovingFast = userSpeed !== null && userSpeed > 4;
 
-        const { walkingTimeMin } = getCatchStatus(distance, new Date().toISOString(), isAtStop);
         return {
             distance: Math.round(distance),
-            time: walkingTimeMin,
+            time: Math.ceil(distance / 60), // fallback, actual calculation in getCatchStatus used by DepartureItem
             isAtStop,
             isMovingFast,
-            showCatchIndicator: distance < 750 && !isMovingFast // Show catch indicators for stops within ~15 min walk, if not in a fast vehicle
+            showCatchIndicator: distance < 750 && !isMovingFast
         };
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
 
@@ -125,6 +68,8 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         return isMetroStation && isNightTime;
     }, [showDepartureBoard, selectedStop, groupedDepartures.length, loadingDeps]);
 
+    const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
+
     return (
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
@@ -135,7 +80,10 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             <span className="font-medium">
                                 {stopDistanceInfo.isAtStop
                                     ? t('map.departures.atStop')
-                                    : t('map.departures.distance', { distance: stopDistanceInfo.distance, time: stopDistanceInfo.time })}
+                                    : t('map.departures.distance', {
+                                        distance: stopDistanceInfo.distance,
+                                        time: Math.ceil(stopDistanceInfo.distance / 60) // Simple approximation for header
+                                    })}
                             </span>
                         </div>
                     )}
@@ -201,67 +149,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
                         <div className="space-y-2">
                             {visibleDepartures.map((dep: Departure, idx: number) => (
-                                <div
+                                <DepartureItem
                                     key={idx}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
-                                    onKeyDown={(e) => {
-                                        if ((e.key === 'Enter' || e.key === ' ') && dep.tripId) {
-                                            onDepartureClick(dep.tripId, dep.vehicleId, dep);
-                                        }
-                                    }}
-                                    className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
-                                        ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
-                                    `}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex flex-col">
-                                            <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
-                                            <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                                                <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
-                                                    locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
-                                                })}</span>
-                                                {selectedStop?.isTrain && dep.platform && (
-                                                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold tracking-wider">
-                                                        {dep.platform}
-                                                    </span>
-                                                )}
-                                                <div className="flex items-center">
-                                                    {dep.delay > 30 && (
-                                                        <span className="text-rose-400 font-bold tabular-nums">
-                                                            {formatDelay(dep.delay)}
-                                                        </span>
-                                                    )}
-                                                    <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={dep.delay > 30} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
-                                        <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
-                                            <Countdown timestamp={dep.timestamp} />
-                                        </div>
-                                        {stopDistanceInfo?.showCatchIndicator && (
-                                            <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
-                                                <div className={cn(
-                                                    "px-1.5 py-0.5 rounded-md flex items-center gap-1",
-                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                    getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
-                                                    'bg-rose-500/10 text-rose-400'
-                                                )}>
-                                                    <span className="text-[8px] leading-none">
-                                                        {getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'success' ? '🟢' :
-                                                            getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status === 'warning' ? '🟡' : '🔴'}
-                                                    </span>
-                                                    <span className="uppercase tracking-tighter">
-                                                        {t(`map.departures.catchStatusCompact.${getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop).status}`)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                    departure={dep}
+                                    onDepartureClick={onDepartureClick}
+                                    stopDistanceInfo={stopDistanceInfo}
+                                    isTrainStop={selectedStop?.isTrain}
+                                    locale={locale}
+                                />
                             ))}
 
                             {hasMore && (
