@@ -249,13 +249,18 @@ export const stopLabelLayer: SymbolLayerSpecification = {
             16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
         ],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 3],
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.8, 17, 3.5],
         'text-justify': 'auto',
         'text-max-width': 7,
         'text-letter-spacing': 0.15, // Matched to map style
-        'text-padding': 20, // Aggressive padding to avoid overlaps
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
+        'text-padding': 5, // Balanced padding
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'symbol-sort-key': ['case',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1], 1, // Metro stations first
+            ['==', ['get', 'is_train'], 1], 2, // Train stations second
+            3 // Others last
+        ]
     },
     paint: {
         'text-color': ['case',
@@ -288,8 +293,8 @@ export const platformLabelLayer: SymbolLayerSpecification = {
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 14, 11, 18, 15],
         'text-anchor': 'center',
-        'text-padding': 25, // Large invisible box to push stop names away
-        'text-allow-overlap': true,
+        'text-padding': 10,
+        'text-allow-overlap': false,
         'text-ignore-placement': false
     },
     paint: {

@@ -38,6 +38,7 @@ export const useStops = () => {
                     f.properties.metro_a = lines.includes('A') ? 1 : 0;
                     f.properties.metro_b = lines.includes('B') ? 1 : 0;
                     f.properties.metro_c = lines.includes('C') ? 1 : 0;
+                    f.properties.is_train = stopId.endsWith('Z301') ? 1 : 0;
                     f.properties.variant_seed = seed;
                 });
                 return data;
