@@ -43,12 +43,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const updateAge = () => {
             try {
                 const tsString = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
-                if (!tsString) {
+                if (!tsString || typeof tsString !== 'string') {
                     setLiveDataAgeSeconds(null);
                     return;
                 }
                 const timestamp = parseISO(tsString);
-                if (isNaN(timestamp.getTime())) {
+                if (!timestamp || isNaN(timestamp.getTime())) {
                     setLiveDataAgeSeconds(null);
                     return;
                 }

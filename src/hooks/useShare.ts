@@ -19,7 +19,11 @@ export const useShare = () => {
             url: options.url || window.location.href,
         };
 
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        const canShare = typeof navigator !== 'undefined' &&
+                         !!navigator.share &&
+                         (typeof navigator.canShare === 'undefined' || navigator.canShare(shareData));
+
+        if (canShare) {
             try {
                 await navigator.share(shareData);
             } catch (err) {
