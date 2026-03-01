@@ -4,7 +4,8 @@ export const LINE_COLORS = {
     C: '#C6242D',
     Transfer: '#FFFFFF',
     Unknown: '#38bdf8',
-    Default: '#1e293b'
+    Default: '#1e293b',
+    Train: '#002D5A'
 };
 
 export const METRO_STATIONS: Record<string, string[]> = {

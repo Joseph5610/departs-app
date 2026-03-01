@@ -222,6 +222,11 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                                 <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
                                                     locale: dateLocales[i18n.resolvedLanguage || i18n.language] || enUS
                                                 })}</span>
+                                                {selectedStop?.isTrain && dep.platform && (
+                                                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold tracking-wider">
+                                                        {dep.platform}
+                                                    </span>
+                                                )}
                                                 <div className="flex items-center">
                                                     {dep.delay > 30 && (
                                                         <span className="text-rose-400 font-bold tabular-nums">

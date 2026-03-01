@@ -208,7 +208,8 @@ export function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
         headsign: item.trip?.headsign || 'Unknown',
         isCanceled: item.trip?.is_canceled || false,
         tripId: item.trip?.id,
-        vehicleId: item.vehicle?.id
+        vehicleId: item.vehicle?.id,
+        platform: item.stop?.platform_code || undefined
     };
 }
 
@@ -252,12 +253,14 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         const stopId = p.stop_id;
 
         const metroLines = p.stop_name ? (METRO_STATIONS[p.stop_name] || []) : [];
+        const isTrain = String(stopId).endsWith('Z301') ? 1 : 0;
         const enrichedProperties = {
             ...p,
             metro_lines: metroLines,
             metro_a: metroLines.includes('A') ? 1 : 0,
             metro_b: metroLines.includes('B') ? 1 : 0,
             metro_c: metroLines.includes('C') ? 1 : 0,
+            is_train: isTrain,
             variant_seed: Math.random()
         };
 

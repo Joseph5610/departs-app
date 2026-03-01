@@ -56,6 +56,7 @@ export interface SelectedStop {
     name: string;
     platformCode?: string;
     coordinates?: [number, number];
+    isTrain?: boolean;
 }
 
 export interface Departure {
@@ -71,6 +72,7 @@ export interface Departure {
     isCanceled: boolean;
     tripId?: string;
     vehicleId?: string;
+    platform?: string;
 }
 
 export interface Alert {

@@ -112,6 +112,7 @@ export interface AppDeparture {
     isCanceled: boolean;
     tripId?: string;
     vehicleId?: string;
+    platform?: string;
 }
 
 export interface AppVehicleProperties {
@@ -140,6 +141,7 @@ export interface AppStopProperties {
     parent_station?: string;
     zone_id?: string;
     is_centroid?: boolean;
+    is_train?: number;
     metro_lines?: string[];
     all_ids?: string[];
 }

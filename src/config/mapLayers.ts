@@ -80,6 +80,7 @@ export const stopPointLayer: CircleLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['!=', ['get', 'is_train'], 1],
         // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
@@ -135,7 +136,8 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['!=', ['get', 'is_train'], 1]
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
@@ -159,6 +161,49 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     }
 };
 
+
+export const trainStationLayer: CircleLayerSpecification = {
+    id: 'train-stations',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['==', ['get', 'is_train'], 1]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, 8,
+            17, 24
+        ],
+        'circle-color': LINE_COLORS.Train,
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.7,
+        'circle-stroke-opacity': 1
+    }
+};
+
+export const trainStationGlowLayer: CircleLayerSpecification = {
+    id: 'train-stations-glow',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['==', ['get', 'is_train'], 1]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, 12,
+            17, 40
+        ],
+        'circle-color': LINE_COLORS.Train,
+        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+            13, 0.2,
+            17, 0.35
+        ],
+        'circle-blur': 0.8
+    }
+};
 
 export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
@@ -213,7 +258,14 @@ export const stopLabelLayer: SymbolLayerSpecification = {
         'text-ignore-placement': true
     },
     paint: {
-        'text-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, '#ffffff', '#bdbdbd'],
+        'text-color': ['case',
+            ['any',
+                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['==', ['get', 'is_train'], 1]
+            ],
+            '#ffffff',
+            '#bdbdbd'
+        ],
         'text-halo-color': '#111111',
         'text-halo-width': 1, // Sharper halo like map labels
         'text-halo-blur': 0.5
