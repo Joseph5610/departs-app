@@ -22,16 +22,25 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
 
     // Position and status data
     const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
-    const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual ?? p.last_position?.delay ?? 0);
+
+    // DELAY FALLBACK CHAIN: Ensure delay is captured regardless of where it's nested in Golemio's various formats
+    const delay = p.delay !== undefined ? p.delay : (
+        p.last_position?.delay?.actual ??
+        p.last_position?.delay ??
+        p.trip?.delay ??
+        p.trip?.gtfs?.delay ??
+        null
+    );
+
     const state_position = p.state_position || p.last_position?.state_position;
 
-    // Extract next stop info - check various nested structures used by Golemio
+    // Extract next stop info
     const next_stop_name = p.next_stop_name ||
                           p.last_position?.next_stop?.name ||
                           p.last_position?.next_stop?.id ||
                           p.trip?.next_stop_name;
 
-    // Metadata / Amenities - check multiple possible locations (Public API, V2 API, nested descriptors)
+    // Metadata / Amenities
     const vehicle_descriptor = p.vehicle_descriptor || p.trip?.vehicle_descriptor || p.last_position?.vehicle_descriptor || {};
 
     const is_wheelchair_accessible = p.is_wheelchair_accessible ??

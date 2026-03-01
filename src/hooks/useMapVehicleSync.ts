@@ -1,23 +1,27 @@
-import { useEffect } from 'react';
-import type { VehicleCollection, TrackedVehicle, VehicleDetail } from '../types/transit';
+import { useEffect, useRef } from 'react';
+import type { MapRef } from 'react-map-gl/maplibre';
+import type { VehicleCollection, TrackedVehicle } from '../types/transit';
+import { MAP_VEHICLE_SELECT_ZOOM, MAP_ANIMATION_DURATION, MOBILE_BREAKPOINT, MOBILE_BOTTOM_SHEET_RATIO, SIDEBAR_WIDTH } from '../config/constants';
 
 /**
  * The 'Motor' of the map tracking system.
- * Keeps the selected vehicle state synchronized between two distinct data sources:
- * 1. MAP STREAM (rawVehicles): High-frequency GeoJSON updates (position, speed).
- * 2. DETAIL API (vehicleDetail): Low-frequency REST updates (operator, amenities, full schedule).
- * 
+ * Keeps the selected vehicle state synchronized with the high-frequency MAP STREAM (rawVehicles).
  * It ensures that even if a vehicle is re-jittered or updated in the background, 
  * the UI's selected state remains accurate.
+ *
+ * NOTE: Metadata updates (delay, state) are ONLY synced from the map stream.
+ * We do NOT merge properties from the low-frequency Detail API here to prevent race conditions.
  */
 export const useMapVehicleSync = (
+    mapRef: React.RefObject<MapRef | null>,
     selectedId: string | number | null,
     selectedVehicle: TrackedVehicle | null,
     setSelectedVehicle: (vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) => void,
     isFollowing: boolean,
-    rawVehicles?: VehicleCollection | null,
-    vehicleDetail?: VehicleDetail | null
+    rawVehicles?: VehicleCollection | null
 ) => {
+    const lastFlownId = useRef<string | null>(null);
+
     useEffect(() => {
         if (!selectedId || !selectedVehicle) return;
 
@@ -29,8 +33,6 @@ export const useMapVehicleSync = (
         let newCoords = selectedVehicle._geometry;
 
         // 1. Sync from high-frequency Map Stream
-        // We look for the active vehicle in the latest GeoJSON batch from the map stream.
-        // We match by vehicle_id (preferred) or gtfs_trip_id as a fallback.
         if (rawVehicles?.features) {
             const match = rawVehicles.features.find(f => {
                 const props = f.properties;
@@ -50,7 +52,6 @@ export const useMapVehicleSync = (
                 if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;
                     newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
-                    // Only update coordinates if they are valid, or if we currently have invalid ones
                     if (hasValidLocation || (selectedVehicle._geometry[0] === 0 && selectedVehicle._geometry[1] === 0)) {
                         newCoords = coords;
                     }
@@ -58,38 +59,25 @@ export const useMapVehicleSync = (
             }
         }
 
-        // 2. Sync from Direct Detail API
-        // If we have detailed info for the selected vehicle, use it to update position and properties.
-        if (vehicleDetail) {
-            const isFallback = (vehicleDetail as any).is_static_fallback;
-            const detailCoords = vehicleDetail.geometry?.coordinates as [number, number] | undefined;
-            const detailDelay = vehicleDetail.delay;
-            const hasValidDetailLocation = detailCoords && (detailCoords[0] !== 0 || detailCoords[1] !== 0);
-
-            // Update if coordinates, delay or sequence changed in the detail API
-            const coordsChanged = detailCoords && (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1]);
-            const delayChanged = !isFallback && newProps.delay !== undefined && newProps.delay !== detailDelay;
-            const sequenceChanged = !isFallback && vehicleDetail.last_stop_sequence !== undefined && selectedVehicle.last_stop_sequence !== vehicleDetail.last_stop_sequence;
-
-            if (coordsChanged || delayChanged || sequenceChanged) {
-                updated = true;
-                // Only update coordinates if they are valid, or if we currently have invalid ones
-                if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
-                    if (detailCoords) newCoords = detailCoords;
-                }
-
-                newProps = {
-                    ...newProps,
-                    delay: isFallback ? (newProps.delay ?? selectedVehicle.delay) : detailDelay,
-                    state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
-                    last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
-                    vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
-                };
-            }
-        }
-
         if (updated) {
             setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle : null);
         }
-    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle, setSelectedVehicle]);
+
+        // Map movement: Focus on vehicle when coordinates are found
+        const hasCoords = newCoords[0] !== 0 || newCoords[1] !== 0;
+        const currentId = String(selectedId);
+        if (hasCoords && lastFlownId.current !== currentId) {
+            lastFlownId.current = currentId;
+            const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
+            mapRef.current?.flyTo({
+                center: newCoords,
+                zoom: MAP_VEHICLE_SELECT_ZOOM,
+                duration: MAP_ANIMATION_DURATION,
+                essential: true,
+                padding: isMobile
+                    ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+                    : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
+            });
+        }
+    }, [rawVehicles, isFollowing, selectedId, selectedVehicle, setSelectedVehicle, mapRef]);
 };

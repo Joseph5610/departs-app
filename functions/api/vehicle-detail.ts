@@ -9,14 +9,6 @@ interface ShapeFeature {
     };
 }
 
-interface VehicleData {
-    features?: Array<{ properties: Record<string, unknown> }>;
-    shapes?: {
-        features: ShapeFeature[];
-    } | Array<[number, number]>;
-    [key: string]: unknown;
-}
-
 /**
  * Retrieves detailed information about a specific vehicle and its current trip.
  * Includes real-time position, scheduled stop times, and the trip's shape.
@@ -38,21 +30,32 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         let response: Response;
         let usedStaticFallback = false;
 
+        // CRITICAL IMPROVEMENT: If we have a placeholder ID, try to find the real-time vehicle first via tripId.
+        // This ensures we get real-time stop data even if the frontend didn't know the vehicle ID yet.
         if (isPlaceholder) {
-            response = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
+            response = await golemioFetch(`/v2/public/vehiclepositions`, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                searchParams: { scopes }
+                searchParams: { tripId, scopes }
             });
+
+            // If tripId search fails or is empty, fall back to static GTFS
+            const checkData = response.ok ? await response.clone().json() as any : null;
+            if (!response.ok || (checkData?.type === 'FeatureCollection' && checkData.features?.length === 0)) {
+                response = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
+                    cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
+                    searchParams: { scopes }
+                });
+                usedStaticFallback = true;
+            }
         } else {
-            // Try real-time first with matrix parameter (essential for some Golemio endpoints to link trip data)
+            // Try specific real-time vehicle ID first with matrix parameter
             response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
                 searchParams: { scopes }
             });
 
-            // If real-time fails (e.g. 404), fall back to static GTFS trip data
+            // Fallback to static GTFS trip data if real-time ID fetch fails
             if (!response.ok) {
-                console.warn(`Real-time fetch failed (${response.status}), falling back to static GTFS for trip ${tripId}`);
                 response = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
                     cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
                     searchParams: { scopes }
@@ -67,58 +70,29 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         const data = await response.json() as any;
 
-        // Standardize output structure: handle Feature, FeatureCollection, or flat object
+        // Standardize output structure
         let vehicleData: Record<string, unknown> = {};
+        const sourceFeature = (data.type === 'FeatureCollection' && data.features?.length > 0) ? data.features[0] :
+                            (data.type === 'Feature' ? data : { type: 'Feature', geometry: data.geometry || null, properties: data });
 
-        if (data.type === 'FeatureCollection' && data.features?.length > 0) {
-            const normalized = normalizeVehicleFeature(data.features[0], tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                // Merge root-level metadata often provided alongside FeatureCollection when using scopes
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
-        } else if (data.type === 'Feature') {
-            const normalized = normalizeVehicleFeature(data, tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
-        } else {
-            // Flat object (typical for gtfs/trips)
-            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
-            const normalized = normalizeVehicleFeature(mockFeature, tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
-        }
+        const normalized = normalizeVehicleFeature(sourceFeature, tripId);
+        vehicleData = {
+            ...normalized.properties,
+            geometry: normalized.geometry,
+            stop_times: data.stop_times || sourceFeature.stop_times || normalized.properties?.stop_times,
+            shapes: data.shapes || sourceFeature.shapes || normalized.properties?.shapes,
+            vehicle_descriptor: data.vehicle_descriptor || sourceFeature.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
+            run_number: data.run_number ?? sourceFeature.run_number ?? normalized.properties?.run_number,
+            origin_timestamp: data.origin_timestamp || sourceFeature.origin_timestamp || normalized.properties?.origin_timestamp,
+            last_stop_sequence: data.last_stop_sequence ?? sourceFeature.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
+            next_stop_name: data.next_stop_name || sourceFeature.next_stop_name || normalized.properties?.next_stop_name,
+        };
 
         if (usedStaticFallback) {
             vehicleData.is_static_fallback = true;
         }
 
-        // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates
+        // Shape optimization
         if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
             const shapesObj = vehicleData.shapes as { features?: ShapeFeature[] };
             if (shapesObj.features) {
