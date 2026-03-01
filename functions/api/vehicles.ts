@@ -14,18 +14,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const bounds = url.searchParams.get("bounds");
     const routeTypes = url.searchParams.getAll("routeType");
     const tripId = url.searchParams.get("tripId");
-    const routeShortNamesRaw = url.searchParams.getAll("routeShortName");
-
-    // Parse run numbers from route short names (e.g., "58/1")
-    const routeFilters = routeShortNamesRaw.map(name => {
-        const [line, run] = name.split('/');
-        return {
-            line: line.trim().toUpperCase(),
-            run: run ? run.trim() : null
-        };
-    });
-
-    const routeShortNames = [...new Set(routeFilters.map(f => f.line))];
+    const routeShortNames = url.searchParams.getAll("routeShortName");
 
     // Validate: at least one filter must be present
     if (!tripId && !bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
@@ -41,8 +30,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             if (bounds) params.boundingBox = bounds;
             if (routeTypes.length > 0) params.routeType = routeTypes;
 
-            // If we have run numbers, we fetch the whole line and filter later
-            // If we only have plain lines, we let Golemio filter them
             if (routeShortNames.length > 0) {
                 params.routeShortName = routeShortNames;
             }
@@ -66,25 +53,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             // Normalize differently based on response structure
             if ('type' in data && data.type === 'FeatureCollection' && 'features' in data) {
-                let features = (data.features || []).map((f) => normalizeVehicleFeature(f, tripId || undefined));
-
-                // Post-fetch filtering for run numbers if needed
-                if (routeFilters.some(f => f.run)) {
-                    features = features.filter(f => {
-                        const line = (f.properties.route_short_name || '').toUpperCase();
-                        const run = String(f.properties.run_number ?? '');
-
-                        // Check if this vehicle matches any of our specific line/run combinations
-                        // or if it matches a plain line filter
-                        return routeFilters.some(rf => {
-                            if (rf.run) {
-                                return rf.line === line && rf.run === run;
-                            }
-                            return rf.line === line;
-                        });
-                    });
-                }
-
+                const features = (data.features || []).map((f) => normalizeVehicleFeature(f, tripId || undefined));
                 allFeatures = [...allFeatures, ...features];
             } else if ('type' in data && data.type === 'Feature') {
                 allFeatures.push(normalizeVehicleFeature(data as GolemioVehicleFeature, tripId || undefined));
