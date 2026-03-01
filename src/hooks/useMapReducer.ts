@@ -14,6 +14,7 @@ export interface MapState {
     expandedGroups: string[];
     departureSort: 'line' | 'departure';
     routeFilter: string[] | null;
+    routeTypeFilter: string[];
     bounds: string | null;
     debouncedBounds: string | null;
     favoriteStops: string[];
@@ -35,6 +36,7 @@ export type MapAction =
     | { type: 'TOGGLE_GROUP'; payload: string }
     | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
     | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
+    | { type: 'SET_ROUTE_TYPE_FILTER'; payload: string[] }
     | { type: 'SET_BOUNDS'; payload: string | null }
     | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
     | { type: 'TOGGLE_FAVORITE'; payload: string };
@@ -53,6 +55,7 @@ const getInitialState = (): MapState => ({
     expandedGroups: [],
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeFilter: null,
+    routeTypeFilter: [],
     bounds: null,
     debouncedBounds: null,
     favoriteStops: typeof window !== 'undefined'
@@ -122,6 +125,8 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             return { ...state, departureSort: action.payload };
         case 'SET_ROUTE_FILTER':
             return { ...state, routeFilter: action.payload };
+        case 'SET_ROUTE_TYPE_FILTER':
+            return { ...state, routeTypeFilter: action.payload };
         case 'SET_BOUNDS':
             return { ...state, bounds: action.payload };
         case 'SET_DEBOUNCED_BOUNDS':
@@ -180,6 +185,9 @@ export const useMapReducer = () => {
     const setRouteFilter = useCallback((filter: string[] | null) =>
         dispatch({ type: 'SET_ROUTE_FILTER', payload: filter }), []);
 
+    const setRouteTypeFilter = useCallback((filter: string[]) =>
+        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload: filter }), []);
+
     const setBounds = useCallback((bounds: string | null) =>
         dispatch({ type: 'SET_BOUNDS', payload: bounds }), []);
 
@@ -204,6 +212,7 @@ export const useMapReducer = () => {
         toggleGroup,
         setDepartureSort,
         setRouteFilter,
+            setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
         toggleFavorite

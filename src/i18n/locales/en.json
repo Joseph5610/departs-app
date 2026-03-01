@@ -1,4 +1,7 @@
 {
+  "common": {
+    "all": "All"
+  },
   "search": {
     "placeholder": "Search stops or lines...",
     "platform": "Platform {{code}}",
@@ -10,11 +13,21 @@
     "title": "Settings",
     "sections": {
       "display": "Display",
-      "language": "Language"
+      "language": "Language",
+      "filters": "Filters"
     },
     "liveVehicles": {
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
+    },
+    "vehicleTypes": {
+      "metro": "Metro",
+      "tram": "Tram",
+      "bus": "Bus",
+      "trolleybus": "Trolleybus",
+      "train": "Train",
+      "ferry": "Ferry",
+      "funicular": "Funicular"
     },
     "tip": {
       "prefix": "Tip:",

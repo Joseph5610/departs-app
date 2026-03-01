@@ -12,12 +12,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // Extract query parameters
     const bounds = url.searchParams.get("bounds");
-    const routeType = url.searchParams.get("routeType");
+    const routeTypes = url.searchParams.getAll("routeType");
     const tripId = url.searchParams.get("tripId");
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && routeShortNames.length === 0) {
+    if (!tripId && !bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
@@ -25,11 +25,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const fetchPromises: Promise<Response>[] = [];
 
         // 1. Prepare fetch for bounding box / route filters (Public API)
-        if (bounds || routeShortNames.length > 0) {
+        if (bounds || routeShortNames.length > 0 || routeTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
             if (bounds) params.boundingBox = bounds;
-            if (routeType) params.routeType = routeType;
-            if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
+            if (routeTypes.length > 0) params.routeType = routeTypes;
+
+            if (routeShortNames.length > 0) {
+                params.routeShortName = routeShortNames;
+            }
 
             fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }

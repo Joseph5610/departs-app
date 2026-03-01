@@ -1,11 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
-import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
+import {
+    Eye,
+    EyeOff,
+    Github,
+    RefreshCw,
+    Info,
+    TrainFront as Subway,
+    Bus,
+    TramFront as Tram,
+    Train,
+    Ship,
+    CableCar,
+    CircleSlash
+} from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 
@@ -13,8 +27,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles } = state;
-    const { setIsSettingsOpen, setShowVehicles } = actions;
+    const { isSettingsOpen: isOpen, showVehicles, routeTypeFilter } = state;
+    const { setIsSettingsOpen, setShowVehicles, setRouteTypeFilter } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -47,6 +61,24 @@ export const SettingsModal: React.FC = () => {
             }
         };
     }, []);
+
+    const toggleRouteType = (type: string) => {
+        if (routeTypeFilter.includes(type)) {
+            setRouteTypeFilter(routeTypeFilter.filter(t => t !== type));
+        } else {
+            setRouteTypeFilter([...routeTypeFilter, type]);
+        }
+    };
+
+    const vehicleTypes = [
+        { id: 'metro', icon: Subway },
+        { id: 'tram', icon: Tram },
+        { id: 'bus', icon: Bus },
+        { id: 'trolleybus', icon: Bus },
+        { id: 'train', icon: Train },
+        { id: 'ferry', icon: Ship },
+        { id: 'funicular', icon: CableCar }
+    ];
 
     const handleCheckUpdate = async () => {
         if (isChecking) return;
@@ -82,37 +114,99 @@ export const SettingsModal: React.FC = () => {
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('settings.title')}>
             <div className="space-y-8 py-2">
-                {/* Live Vehicles Toggle */}
+                {/* Live Vehicles Section */}
                 <section className="space-y-3">
                     <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
                         {t('settings.sections.display')}
                     </div>
-                    <button
-                        onClick={() => setShowVehicles(!showVehicles)}
-                        className="w-full flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-2xl border border-white/10 transition-all text-left group"
-                    >
-                        <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
-                                {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="text-white font-semibold leading-snug">
-                                    {t('settings.liveVehicles.title')}
-                                </div>
-                                <div className="text-zinc-500 text-xs mt-1 leading-tight">
-                                    {t('settings.liveVehicles.description')}
-                                </div>
-                            </div>
-                        </div>
 
-                        <div
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                    <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+                        <button
+                            onClick={() => setShowVehicles(!showVehicles)}
+                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group border-b border-white/5"
                         >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                        </div>
-                    </button>
+                            <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                    {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-white font-semibold leading-snug">
+                                        {t('settings.liveVehicles.title')}
+                                    </div>
+                                    <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                        {t('settings.liveVehicles.description')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4 ${showVehicles ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showVehicles ? 'translate-x-6' : 'translate-x-1'}`}
+                                />
+                            </div>
+                        </button>
+
+                        <AnimatePresence>
+                            {showVehicles && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden bg-white/[0.02]"
+                                >
+                                    <div className="relative p-4 pt-2 space-y-4">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                                                <div className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em]">
+                                                    {t('settings.sections.filters')}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                                                {vehicleTypes.map(({ id, icon: Icon }) => (
+                                                    <button
+                                                        key={id}
+                                                        onClick={() => toggleRouteType(id)}
+                                                        className={`group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.includes(id)
+                                                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+                                                            : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
+                                                            }`}
+                                                    >
+                                                        <Icon size={18} className={`transition-transform duration-300 ${routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} />
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                            {t(`settings.vehicleTypes.${id}`)}
+                                                        </span>
+
+                                                        {routeTypeFilter.includes(id) && (
+                                                            <motion.div
+                                                                layoutId="active-indicator"
+                                                                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                                            />
+                                                        )}
+                                                    </button>
+                                                ))}
+
+                                                <button
+                                                    onClick={() => setRouteTypeFilter([])}
+                                                    className={`px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.length === 0
+                                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                                                        : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
+                                                        }`}
+                                                >
+                                                    <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                        {t('common.all')}
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </section>
 
                 {/* Language Selection */}

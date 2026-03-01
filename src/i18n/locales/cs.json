@@ -1,4 +1,7 @@
 {
+  "common": {
+    "all": "Vše"
+  },
   "search": {
     "placeholder": "Hledat zastávky nebo linky...",
     "platform": "Nástupiště {{code}}",
@@ -10,11 +13,21 @@
     "title": "Nastavení",
     "sections": {
       "display": "Zobrazení",
-      "language": "Jazyk"
+      "language": "Jazyk",
+      "filters": "Filtry"
     },
     "liveVehicles": {
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"
+    },
+    "vehicleTypes": {
+      "metro": "Metro",
+      "tram": "Tramvaj",
+      "bus": "Autobus",
+      "trolleybus": "Trolejbus",
+      "train": "Vlak",
+      "ferry": "Přívoz",
+      "funicular": "Lanovka"
     },
     "tip": {
       "prefix": "Tip:",

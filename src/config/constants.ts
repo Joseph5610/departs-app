@@ -17,7 +17,7 @@ export const MAP_DEFAULT_COORDS = {
 };
 
 export const MAP_BOUNDS_DEBOUNCE = 800;
-export const MAP_MIN_ZOOM_FOR_DATA = 11;
+export const MAP_MIN_ZOOM_FOR_DATA = 9;
 
 /**
  * Animation and interaction constants

@@ -29,7 +29,7 @@ export const Search: React.FC = React.memo(() => {
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
 
     const linesFromQuery = React.useMemo(() => {
-        return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 4);
+        return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 10);
     }, [query]);
 
     const isLineLike = React.useMemo(() => {
@@ -37,7 +37,7 @@ export const Search: React.FC = React.memo(() => {
         if (trimmed.length === 0) return false;
 
         if (!trimmed.includes(',')) {
-            return trimmed.length <= 4 && !trimmed.includes(' ');
+            return trimmed.length <= 10 && !trimmed.includes(' ');
         }
 
         return linesFromQuery.length > 0;
@@ -80,13 +80,14 @@ export const Search: React.FC = React.memo(() => {
                 <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-emerald-400' : 'text-zinc-400'} pointer-events-none z-10`} size={20} />
                 {(query || activeFilter) && (
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             if (activeFilter) {
                                 onLineSelect(null);
                             }
                             setQuery('');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
                     >
                         <X size={18} />
                     </button>

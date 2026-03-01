@@ -54,7 +54,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const operator = p.operator || p.trip?.operator || vehicle_descriptor.operator || p.last_position?.operator;
 
     // Run and sequence data
-    const run_number = p.run_number ?? p.trip?.run_number ?? p.trip?.gtfs?.run_number ?? p.last_position?.run_number;
+    const run_number = p.run_number ?? p.trip?.run_number ?? p.trip?.gtfs?.run_number ?? p.last_position?.run_number ?? p.service_number ?? p.trip?.service_number;
     const last_stop_sequence = p.last_stop_sequence ?? p.last_position?.last_stop?.sequence ?? p.last_position?.last_stop_sequence;
     const origin_timestamp = p.origin_timestamp || p.last_position?.origin_timestamp || p.trip?.origin_timestamp || p.last_position?.timestamp;
 
