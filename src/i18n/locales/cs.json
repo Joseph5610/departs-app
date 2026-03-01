@@ -1,4 +1,7 @@
 {
+  "common": {
+    "all": "Vše"
+  },
   "search": {
     "placeholder": "Hledat zastávky nebo linky...",
     "platform": "Nástupiště {{code}}",

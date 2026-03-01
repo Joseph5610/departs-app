@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from './Modal';
-import { Eye, EyeOff, Github, RefreshCw, Info } from 'lucide-react';
+import {
+    Eye,
+    EyeOff,
+    Github,
+    RefreshCw,
+    Info,
+    TrainFront as Subway,
+    Bus,
+    TramFront as Tram,
+    Train,
+    Ship,
+    CableCar,
+    CircleSlash
+} from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
@@ -57,7 +70,15 @@ export const SettingsModal: React.FC = () => {
         }
     };
 
-    const vehicleTypes = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'];
+    const vehicleTypes = [
+        { id: 'metro', icon: Subway },
+        { id: 'tram', icon: Tram },
+        { id: 'bus', icon: Bus },
+        { id: 'trolleybus', icon: Bus },
+        { id: 'train', icon: Train },
+        { id: 'ferry', icon: Ship },
+        { id: 'funicular', icon: CableCar }
+    ];
 
     const handleCheckUpdate = async () => {
         if (isChecking) return;
@@ -146,19 +167,42 @@ export const SettingsModal: React.FC = () => {
                                                     {t('settings.sections.filters')}
                                                 </div>
                                             </div>
-                                            <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
-                                                {vehicleTypes.map((type) => (
+                                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                                                {vehicleTypes.map(({ id, icon: Icon }) => (
                                                     <button
-                                                        key={type}
-                                                        onClick={() => toggleRouteType(type)}
-                                                        className={`px-3 py-2 rounded-xl border transition-all text-[10px] font-black uppercase tracking-wider active:scale-95 flex items-center justify-center text-center ${routeTypeFilter.includes(type)
-                                                            ? 'bg-emerald-500 text-black border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                                                            : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-zinc-200'
+                                                        key={id}
+                                                        onClick={() => toggleRouteType(id)}
+                                                        className={`group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.includes(id)
+                                                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+                                                            : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
                                                             }`}
                                                     >
-                                                        {t(`settings.vehicleTypes.${type}`)}
+                                                        <Icon size={18} className={`transition-transform duration-300 ${routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} />
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                            {t(`settings.vehicleTypes.${id}`)}
+                                                        </span>
+
+                                                        {routeTypeFilter.includes(id) && (
+                                                            <motion.div
+                                                                layoutId="active-indicator"
+                                                                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                                            />
+                                                        )}
                                                     </button>
                                                 ))}
+
+                                                <button
+                                                    onClick={() => setRouteTypeFilter([])}
+                                                    className={`px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 ${routeTypeFilter.length === 0
+                                                        ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                                                        : 'bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300'
+                                                        }`}
+                                                >
+                                                    <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                        {t('common.all')}
+                                                    </span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

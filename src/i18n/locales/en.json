@@ -1,4 +1,7 @@
 {
+  "common": {
+    "all": "All"
+  },
   "search": {
     "placeholder": "Search stops or lines...",
     "platform": "Platform {{code}}",

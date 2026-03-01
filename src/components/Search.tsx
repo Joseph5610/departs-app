@@ -29,7 +29,7 @@ export const Search: React.FC = React.memo(() => {
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
 
     const linesFromQuery = React.useMemo(() => {
-        return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 4);
+        return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 10);
     }, [query]);
 
     const isLineLike = React.useMemo(() => {
@@ -37,7 +37,7 @@ export const Search: React.FC = React.memo(() => {
         if (trimmed.length === 0) return false;
 
         if (!trimmed.includes(',')) {
-            return trimmed.length <= 4 && !trimmed.includes(' ');
+            return trimmed.length <= 10 && !trimmed.includes(' ');
         }
 
         return linesFromQuery.length > 0;
