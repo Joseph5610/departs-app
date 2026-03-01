@@ -43,6 +43,12 @@ export interface StopFeature {
         parent_station?: string;
         zone_id?: string;
         is_centroid?: boolean;
+        is_train?: number;
+        metro_a?: number;
+        metro_b?: number;
+        metro_c?: number;
+        metro_lines?: string[];
+        variant_seed?: number;
     };
 }
 
@@ -56,6 +62,7 @@ export interface SelectedStop {
     name: string;
     platformCode?: string;
     coordinates?: [number, number];
+    isTrain?: boolean;
 }
 
 export interface Departure {
@@ -71,6 +78,7 @@ export interface Departure {
     isCanceled: boolean;
     tripId?: string;
     vehicleId?: string;
+    platform?: string;
 }
 
 export interface Alert {

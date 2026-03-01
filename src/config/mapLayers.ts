@@ -80,6 +80,7 @@ export const stopPointLayer: CircleLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['!=', ['get', 'is_train'], 1],
         // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
@@ -135,7 +136,8 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['!=', ['get', 'is_train'], 1]
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
@@ -159,6 +161,49 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     }
 };
 
+
+export const trainStationLayer: CircleLayerSpecification = {
+    id: 'train-stations',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['==', ['get', 'is_train'], 1]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, 8,
+            17, 24
+        ],
+        'circle-color': LINE_COLORS.Train,
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.7,
+        'circle-stroke-opacity': 1
+    }
+};
+
+export const trainStationGlowLayer: CircleLayerSpecification = {
+    id: 'train-stations-glow',
+    type: 'circle',
+    source: 'pid-stops',
+    filter: ['all',
+        ['!', ['has', 'point_count']],
+        ['==', ['get', 'is_train'], 1]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, 12,
+            17, 40
+        ],
+        'circle-color': LINE_COLORS.Train,
+        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+            13, 0.2,
+            17, 0.35
+        ],
+        'circle-blur': 0.8
+    }
+};
 
 export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
@@ -204,16 +249,28 @@ export const stopLabelLayer: SymbolLayerSpecification = {
             16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
         ],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 3],
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.8, 17, 3.5],
         'text-justify': 'auto',
         'text-max-width': 7,
         'text-letter-spacing': 0.15, // Matched to map style
-        'text-padding': 20, // Aggressive padding to avoid overlaps
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
+        'text-padding': 5, // Balanced padding
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'symbol-sort-key': ['case',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1], 1, // Metro stations first
+            ['==', ['get', 'is_train'], 1], 2, // Train stations second
+            3 // Others last
+        ]
     },
     paint: {
-        'text-color': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, '#ffffff', '#bdbdbd'],
+        'text-color': ['case',
+            ['any',
+                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['==', ['get', 'is_train'], 1]
+            ],
+            '#ffffff',
+            '#bdbdbd'
+        ],
         'text-halo-color': '#111111',
         'text-halo-width': 1, // Sharper halo like map labels
         'text-halo-blur': 0.5
@@ -236,8 +293,8 @@ export const platformLabelLayer: SymbolLayerSpecification = {
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 14, 11, 18, 15],
         'text-anchor': 'center',
-        'text-padding': 25, // Large invisible box to push stop names away
-        'text-allow-overlap': true,
+        'text-padding': 10,
+        'text-allow-overlap': false,
         'text-ignore-placement': false
     },
     paint: {

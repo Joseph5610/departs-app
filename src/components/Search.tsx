@@ -136,6 +136,7 @@ export const Search: React.FC = React.memo(() => {
                                     id: stop.properties.stop_id,
                                     name: stop.properties.stop_name,
                                     platformCode: stop.properties.platform_code,
+                                    isTrain: stop.properties.is_train === 1,
                                     coordinates: stop.geometry.coordinates as [number, number]
                                 });
                                 setQuery('');

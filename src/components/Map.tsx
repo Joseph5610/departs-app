@@ -139,16 +139,17 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'transfer-stations') {
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
                         actions.selectStop({
                             id: f.properties.stop_id,
                             name: f.properties.stop_name,
                             platformCode: f.properties.platform_code,
+                            isTrain: f.properties.is_train === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
+                interactiveLayerIds={['unclustered-point', 'train-stations', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
                 <MapLayers
                     mapLoaded={state.mapLoaded}
