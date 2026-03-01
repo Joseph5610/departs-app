@@ -2,6 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.10.0] - 2026-03-02
+
+### Added
+- **Search History**: The app now remembers your 5 most recent unique searches (stops and line filters).
+- **Recent Searches UI**: A new "Recent" section appears in the search dropdown when the search bar is empty, allowing for one-tap access to your frequent locations.
+- **Clear History**: Added a button in the Settings modal to easily wipe your search history.
+
 ## [0.9.0] - 2026-03-01
 
 ### Added

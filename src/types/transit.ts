@@ -130,6 +130,12 @@ export interface VehicleDetail {
     };
 }
 
+export type SearchHistoryBase =
+    | { type: 'stop'; id: string; name: string; platformCode?: string; coordinates: [number, number]; isTrain?: boolean }
+    | { type: 'line'; lines: string[] };
+
+export type SearchHistoryItem = SearchHistoryBase & { timestamp: number };
+
 export interface TrackedVehicle {
     vehicle_id: string;
     _geometry: [number, number];
