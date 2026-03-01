@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.9.0] - 2026-03-01
+
+### Added
+- **Show Stops Toggle**: You can now show or hide public transport stops on the map in the Settings modal. This allows for a cleaner view if you primarily use the app to track live vehicles.
+
+### Changed
+- **Extended Visibility**: Lowered the minimum zoom level for live vehicles from 12 to 10, allowing you to see vehicles from a higher altitude.
+
 ## [0.8.0] - 2026-02-25
 
 ### Added
