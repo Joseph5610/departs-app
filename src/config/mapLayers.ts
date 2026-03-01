@@ -404,7 +404,7 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     id: 'vehicles-point',
     type: 'circle',
     source: 'pid-vehicles',
-    minzoom: 12,
+    minzoom: 10,
     // Filter handled dynamically in component to exclude selected
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
@@ -419,7 +419,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
     id: 'vehicles-direction-all',
     type: 'symbol',
     source: 'pid-vehicles',
-    minzoom: 12,
+    minzoom: 10,
     // Filter handled dynamically in component
     layout: {
         'icon-image': 'v-arrow-centered',
@@ -441,7 +441,7 @@ export const vehiclesLabelLayer: SymbolLayerSpecification = {
     id: 'vehicles-label-all',
     type: 'symbol',
     source: 'pid-vehicles',
-    minzoom: 12,
+    minzoom: 10,
     // Filter handled dynamically in component
     layout: {
         'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],

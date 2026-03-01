@@ -129,6 +129,7 @@ const MapInner: React.FC = () => {
                 <MapLayers
                     mapLoaded={state.mapLoaded}
                     showVehicles={state.showVehicles}
+                    showStops={state.showStops}
                     displayVehicles={displayVehicles || null}
                     stopsData={stopsData}
                     labelData={labelData}

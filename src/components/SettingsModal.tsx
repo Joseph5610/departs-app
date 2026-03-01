@@ -13,7 +13,8 @@ import {
     Train,
     Ship,
     CableCar,
-    CircleSlash
+    CircleSlash,
+    MapPin
 } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -27,8 +28,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles, routeTypeFilter } = state;
-    const { setIsSettingsOpen, setShowVehicles, setRouteTypeFilter } = actions;
+    const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter } = state;
+    const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -216,6 +217,41 @@ export const SettingsModal: React.FC = () => {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+
+                    <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden mt-3">
+                        <button
+                            onClick={() => setShowStops(!showStops)}
+                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group"
+                        >
+                            <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                    <MapPin size={22} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-white font-semibold leading-snug">
+                                        {t('settings.showStops.title')}
+                                    </div>
+                                    <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                        {t('settings.showStops.description')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                className={cn(
+                                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
+                                    showStops ? "bg-emerald-500" : "bg-zinc-700"
+                                )}
+                            >
+                                <span
+                                    className={cn(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        showStops ? "translate-x-6" : "translate-x-1"
+                                    )}
+                                />
+                            </div>
+                        </button>
                     </div>
                 </section>
 

@@ -20,6 +20,10 @@
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"
     },
+    "showStops": {
+      "title": "Zobrazit zastávky",
+      "description": "Zobrazit zastávky a stanice dopravy"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tramvaj",
