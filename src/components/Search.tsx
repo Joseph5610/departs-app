@@ -20,6 +20,7 @@ export const Search: React.FC = React.memo(() => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops || null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const favoriteStopFeatures = React.useMemo(() => {
         if (!stops?.features || favoriteStops.length === 0) return [];
@@ -52,8 +53,24 @@ export const Search: React.FC = React.memo(() => {
             }
         };
 
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                // Check if any modal is open
+                const isModalOpen = !!document.querySelector('[role="dialog"]');
+                if (!isModalOpen) {
+                    event.preventDefault();
+                    inputRef.current?.focus();
+                    setIsOpen(true);
+                }
+            }
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     return (
@@ -63,6 +80,7 @@ export const Search: React.FC = React.memo(() => {
         >
             <div className="relative h-11 flex items-center">
                 <input
+                    ref={inputRef}
                     type="text"
                     value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
                     onChange={(e) => {

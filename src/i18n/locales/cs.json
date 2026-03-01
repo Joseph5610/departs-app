@@ -1,6 +1,8 @@
 {
   "common": {
-    "all": "Vše"
+    "all": "Vše",
+    "linkCopied": "Odkaz byl zkopírován do schránky",
+    "copyError": "Nepodařilo se zkopírovat odkaz"
   },
   "search": {
     "placeholder": "Hledat zastávky nebo linky...",
@@ -87,6 +89,8 @@
       "headingToDestination": "Směr konečná zastávka",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
+      "shareTitle": "Linka {{line}} směr {{headsign}}",
+      "shareText": "Sleduj linku {{line}} směr {{headsign}} na departs.app",
       "routeSchedule": "Jízdní řád",
       "vehicleId": "ID vozidla",
       "status": "Stav",
@@ -107,6 +111,8 @@
     "departures": {
       "upcoming": "Nadcházející odjezdy",
       "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
+      "shareTitle": "Zastávka: {{name}}",
+      "shareText": "Podívej se na odjezdy ze zastávky {{name}} na departs.app",
       "metroNight": {
         "title": "Metro v noci nejezdí",
         "description": "Využijte noční tramvaje a autobusy, které zajišťují dopravu až do ranních hodin."

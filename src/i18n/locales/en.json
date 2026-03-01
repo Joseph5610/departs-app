@@ -1,6 +1,8 @@
 {
   "common": {
-    "all": "All"
+    "all": "All",
+    "linkCopied": "Link copied to clipboard",
+    "copyError": "Could not copy link"
   },
   "search": {
     "placeholder": "Search stops or lines...",
@@ -87,6 +89,8 @@
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
       "delayLabel": "Delay {{minutes}} min",
+      "shareTitle": "Line {{line}} to {{headsign}}",
+      "shareText": "Track line {{line}} to {{headsign}} on departs.app",
       "routeSchedule": "Route Schedule",
       "vehicleId": "Vehicle ID",
       "status": "Status",
@@ -107,6 +111,8 @@
     "departures": {
       "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
+      "shareTitle": "Stop: {{name}}",
+      "shareText": "Check out departures for {{name}} on departs.app",
       "metroNight": {
         "title": "The metro does not run at night",
         "description": "Please use night trams and buses which provide transportation until the early morning hours."

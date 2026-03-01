@@ -28,6 +28,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        role="dialog"
+                        aria-modal="true"
                         className="relative w-full max-w-lg max-h-[85%] bg-black/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}

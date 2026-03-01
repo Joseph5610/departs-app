@@ -32,9 +32,10 @@ const MapEngine: React.FC = () => {
     const { vehicles: rawVehicles } = useVehicles();
     const { data: vehicleDetail } = useVehicleDetail();
     const { data: stopsData } = useStops();
+    const { selectVehicle } = actions;
 
     // Sync Background Logic
-    useMapUrlSync(selectedStop, setSelectedStop);
+    useMapUrlSync(selectedStop, setSelectedStop, selectedVehicle, selectVehicle);
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
