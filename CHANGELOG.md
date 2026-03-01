@@ -6,12 +6,15 @@ All notable changes to the **Departs.app** project will be documented in this fi
 
 ### Added
 - **Vehicle Type Filtering**: You can now filter live vehicles on the map by type (Metro, Tram, Bus, Train, etc.) in the Settings modal.
-- **Run Number Search Support**: The search field now supports filtering by specific vehicle run numbers (e.g., searching for "58/1").
 - **Multi-Line Search**: Added support for comma-separated searches (e.g., "58, 136, C") to filter multiple lines simultaneously.
+- **Extended Visibility**: Lowered the minimum zoom level for live vehicles from 11 to 9, allowing you to see the transit network from a much higher altitude.
 
 ### Changed
 - **Settings UI Overhaul**: Redesigned the vehicle type selection with a modern, icon-based grid for better accessibility and visual appeal.
 - **Search UI Fixes**: Improved the responsiveness and reliability of the search clear ("X") button on touch devices.
+
+### Fixed
+- **Vehicle Type Filtering**: Resolved a bug where filtering by vehicle type resulted in an empty map due to incorrect API parameter mapping.
 
 ## [0.7.1] - 2026-02-24
 
