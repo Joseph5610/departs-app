@@ -105,9 +105,20 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const props = f.properties;
+                        const props = { ...f.properties };
+
+                        // Fix stringified nested objects from MapLibre
+                        if (typeof props.vehicle_descriptor === 'string') {
+                            try {
+                                props.vehicle_descriptor = JSON.parse(props.vehicle_descriptor);
+                            } catch {
+                                props.vehicle_descriptor = {};
+                            }
+                        }
+
                         actions.selectVehicle({
                             ...props,
+                            route_type: props.route_type !== undefined ? Number(props.route_type) : undefined,
                             vehicle_id: String(props.vehicle_id || props.id),
                             _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         } as TrackedVehicle, false); // clear stop

@@ -48,6 +48,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     return;
                 }
                 const timestamp = parseISO(tsString);
+                if (isNaN(timestamp.getTime())) {
+                    setLiveDataAgeSeconds(null);
+                    return;
+                }
                 const now = new Date();
                 const ageInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
                 setLiveDataAgeSeconds(ageInSeconds);
