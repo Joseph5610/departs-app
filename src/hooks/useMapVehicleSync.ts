@@ -1,16 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import type { MapRef } from 'react-map-gl/maplibre';
 import type { VehicleCollection, TrackedVehicle, VehicleDetail } from '../types/transit';
+import { MAP_VEHICLE_SELECT_ZOOM, MAP_ANIMATION_DURATION, MOBILE_BREAKPOINT, MOBILE_BOTTOM_SHEET_RATIO, SIDEBAR_WIDTH } from '../config/constants';
 
 /**
  * The 'Motor' of the map tracking system.
  * Keeps the selected vehicle state synchronized between two distinct data sources:
  * 1. MAP STREAM (rawVehicles): High-frequency GeoJSON updates (position, speed).
  * 2. DETAIL API (vehicleDetail): Low-frequency REST updates (operator, amenities, full schedule).
- * 
+ *
  * It ensures that even if a vehicle is re-jittered or updated in the background, 
  * the UI's selected state remains accurate.
  */
 export const useMapVehicleSync = (
+    mapRef: React.RefObject<MapRef | null>,
     selectedId: string | number | null,
     selectedVehicle: TrackedVehicle | null,
     setSelectedVehicle: (vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) => void,
@@ -18,6 +21,8 @@ export const useMapVehicleSync = (
     rawVehicles?: VehicleCollection | null,
     vehicleDetail?: VehicleDetail | null
 ) => {
+    const lastFlownId = useRef<string | null>(null);
+
     useEffect(() => {
         if (!selectedId || !selectedVehicle) return;
 
@@ -68,7 +73,15 @@ export const useMapVehicleSync = (
 
             // Update if coordinates, delay or sequence changed in the detail API
             const coordsChanged = detailCoords && (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1]);
-            const delayChanged = !isFallback && newProps.delay !== undefined && newProps.delay !== detailDelay;
+
+            // LOSSLESS DELAY SYNC:
+            // We only trust a "0" delay from the detail API if we don't already have a non-zero delay
+            // from the map stream or departure board. This prevents the "reverts to on-time" bug.
+            const currentDelay = newProps.delay ?? selectedVehicle.delay ?? 0;
+            const detailDelayValue = detailDelay ?? 0;
+            const shouldUpdateDelay = !isFallback && (detailDelayValue !== 0 || currentDelay === 0);
+            const delayChanged = shouldUpdateDelay && currentDelay !== detailDelayValue;
+
             const sequenceChanged = !isFallback && vehicleDetail.last_stop_sequence !== undefined && selectedVehicle.last_stop_sequence !== vehicleDetail.last_stop_sequence;
 
             if (coordsChanged || delayChanged || sequenceChanged) {
@@ -80,7 +93,7 @@ export const useMapVehicleSync = (
 
                 newProps = {
                     ...newProps,
-                    delay: isFallback ? (newProps.delay ?? selectedVehicle.delay) : detailDelay,
+                    delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
                     state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
                     last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
                     vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
@@ -91,5 +104,22 @@ export const useMapVehicleSync = (
         if (updated) {
             setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle : null);
         }
-    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle, setSelectedVehicle]);
+
+        // Map movement: Focus on vehicle when coordinates are found
+        const hasCoords = newCoords[0] !== 0 || newCoords[1] !== 0;
+        const currentId = String(selectedId);
+        if (hasCoords && lastFlownId.current !== currentId) {
+            lastFlownId.current = currentId;
+            const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
+            mapRef.current?.flyTo({
+                center: newCoords,
+                zoom: MAP_VEHICLE_SELECT_ZOOM,
+                duration: MAP_ANIMATION_DURATION,
+                essential: true,
+                padding: isMobile
+                    ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+                    : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
+            });
+        }
+    }, [rawVehicles, vehicleDetail, isFollowing, selectedId, selectedVehicle, setSelectedVehicle, mapRef]);
 };

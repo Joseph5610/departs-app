@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
@@ -13,16 +12,11 @@ import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
 import { useMapStopEnrichment } from '../hooks/useMapStopEnrichment';
 import { addAllIcons } from '../utils/mapIcons';
-import type { TrackedVehicle, Departure, VehicleCollection } from '../types/transit';
+import type { Departure, VehicleCollection } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
-    MAP_BOUNDS_DEBOUNCE,
-    SIDEBAR_WIDTH,
-    MOBILE_BREAKPOINT,
-    MOBILE_BOTTOM_SHEET_RATIO,
-    MAP_VEHICLE_SELECT_ZOOM,
-    MAP_ANIMATION_DURATION
+    MAP_BOUNDS_DEBOUNCE
 } from '../config/constants';
 
 /**
@@ -44,13 +38,12 @@ const MapEngine: React.FC = () => {
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
-    useMapVehicleSync(selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
+    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
 
     return null;
 };
 
 export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<MapRef | null> }> = ({ children, mapRef }) => {
-    const queryClient = useQueryClient();
     const [mapLoaded, setMapLoaded] = useState(false);
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -168,57 +161,12 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             gtfs_route_short_name: initialData?.line,
             route_type: initialData?.type,
             gtfs_trip_headsign: initialData?.headsign,
-            delay: initialData?.delay || 0,
+            delay: initialData?.delay ?? 0,
             state_position: 'on_track',
             _geometry: [0, 0],
             bearing: null
         }, true); // keep stop
-
-        try {
-            const res = await fetch(`/api/vehicle-detail?tripId=${encodeURIComponent(tripId)}&vehicleId=${encodeURIComponent(activeVehId)}`);
-            if (res.ok) {
-                const data = await res.json();
-                queryClient.setQueryData(['vehicle-detail', activeVehId, tripId], data);
-
-                const coords = data.geometry?.coordinates as [number, number] | undefined;
-                const hasValidLocation = coords && (coords[0] !== 0 || coords[1] !== 0);
-
-                // Update metadata, but be careful not to overwrite live data with static fallback nulls
-                setSelectedVehicle((prev: TrackedVehicle | null) => {
-                    if (!prev) return null;
-                    const isFallback = (data as any).is_static_fallback;
-                    const updated = { ...prev, ...data };
-
-                    // If we got a static fallback, preserve existing live fields
-                    if (isFallback) {
-                        updated.delay = prev.delay ?? updated.delay;
-                        updated.state_position = prev.state_position ?? updated.state_position;
-                        updated.last_stop_sequence = prev.last_stop_sequence ?? updated.last_stop_sequence;
-                    }
-
-                    if (coords) {
-                        updated._geometry = coords;
-                    }
-                    return updated as TrackedVehicle;
-                });
-
-                if (hasValidLocation && coords) {
-                    const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
-                    mapRef.current?.flyTo({
-                        center: coords,
-                        zoom: MAP_VEHICLE_SELECT_ZOOM,
-                        duration: MAP_ANIMATION_DURATION,
-                        essential: true,
-                        padding: isMobile
-                            ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-                            : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 }
-                    });
-                }
-            }
-        } catch (err) {
-            console.error('Prefetch failed:', err);
-        }
-    }, [mapRef, queryClient, setSelectedVehicle, selectVehicle]);
+    }, [selectVehicle]);
 
     const value = useMemo(() => ({
         mapRef,
@@ -261,7 +209,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             onDragStart
         }
     }), [
-        mapRef, state, mapLoaded, labelLayerId, userLocation,
+        mapRef, state, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
         setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
         setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
