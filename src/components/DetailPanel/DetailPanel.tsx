@@ -69,24 +69,30 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         },
     }), [isMobile]);
 
-    const handleDragEnd = useCallback((_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
-        if (!isMobile) return;
-        const { velocity, offset } = info;
-      
-        // Snapping logic with velocity projection
-        // We use a slightly more aggressive projection for better feel
-        const travel = offset.y + (velocity.y * 0.15);
-        const threshold = 75;
+    const handleDragEnd = useCallback((_: unknown, info: { velocity: { x: number; y: number }; offset: { x: number; y: number } }) => {
+        if (isMobile) {
+            const { velocity, offset } = info;
+            // Snapping logic with velocity projection
+            const travel = offset.y + (velocity.y * 0.15);
+            const threshold = 75;
 
-        if (travel > threshold) {
-            // Moving DOWN
-            if (sheetState === 'full') setSheetState('peek');
-            else if (sheetState === 'peek') setSheetState('collapsed');
-            else onClose();
-        } else if (travel < -threshold) {
-            // Moving UP
-            if (sheetState === 'collapsed') setSheetState('peek');
-            else if (sheetState === 'peek') setSheetState('full');
+            if (travel > threshold) {
+                // Moving DOWN
+                if (sheetState === 'full') setSheetState('peek');
+                else if (sheetState === 'peek') setSheetState('collapsed');
+                else onClose();
+            } else if (travel < -threshold) {
+                // Moving UP
+                if (sheetState === 'collapsed') setSheetState('peek');
+                else if (sheetState === 'peek') setSheetState('full');
+            }
+        } else {
+            // Desktop horizontal swipe-to-close (to the left)
+            const travel = info.offset.x + (info.velocity.x * 0.15);
+            const threshold = -100;
+            if (travel < threshold) {
+                onClose();
+            }
         }
     }, [isMobile, sheetState, onClose]);
 
@@ -101,15 +107,27 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         exit="hidden"
                         variants={variants}
                         transition={{ type: 'spring', damping: 25, stiffness: 220, mass: 0.5 }}
-                        drag={isMobile ? "y" : false}
+                        drag={isMobile ? "y" : "x"}
                         dragControls={dragControls}
                         dragListener={false}
-                        dragConstraints={{ top: 0, bottom: windowSize.height }}
-                        dragElastic={0.05}
+                        dragConstraints={isMobile
+                            ? { top: 0, bottom: windowSize.height }
+                            : { left: -420, right: 0 }
+                        }
+                        dragElastic={isMobile ? 0.05 : { left: 0.1, right: 0.02 }}
                         onDragEnd={handleDragEnd}
                         className="fixed left-0 right-0 z-50 bg-black/95 backdrop-blur-lg md:backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden bottom-0 rounded-t-[32px] border-t border-white/10 md:top-4 md:left-4 md:bottom-4 md:right-auto md:w-[420px] md:rounded-[32px] md:border will-change-transform h-[92%] md:h-auto"
                     >
-                        {/* Drag Handle: Explicitly for dragging the whole sheet */}
+                        {/* Desktop Swipe Handle (Right edge) */}
+                        {!isMobile && (
+                            <div
+                                data-testid="sidebar-swipe-handle"
+                                className="absolute top-0 right-0 w-6 h-full cursor-ew-resize z-50"
+                                onPointerDown={(e) => dragControls.start(e)}
+                            />
+                        )}
+
+                        {/* Header Area (Draggable) */}
                         <div
                             className="flex flex-col shrink-0 pt-2.5 pb-2 cursor-grab active:cursor-grabbing touch-none"
                             onPointerDown={(e) => {
