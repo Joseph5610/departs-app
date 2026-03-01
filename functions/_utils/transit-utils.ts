@@ -54,14 +54,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const operator = p.operator || p.trip?.operator || vehicle_descriptor.operator || p.last_position?.operator;
 
     // Run and sequence data
-    // Check multiple possible paths for run/service number as Golemio API structure varies
-    const run_number = p.run_number ??
-                      p.trip?.run_number ??
-                      p.trip?.gtfs?.run_number ??
-                      p.last_position?.run_number ??
-                      p.last_position?.service_number ??
-                      (p as any).vehicle_descriptor?.run_number ??
-                      (p as any).service_number;
+    const run_number = p.run_number ?? p.trip?.run_number ?? p.trip?.gtfs?.run_number ?? p.last_position?.run_number;
     const last_stop_sequence = p.last_stop_sequence ?? p.last_position?.last_stop?.sequence ?? p.last_position?.last_stop_sequence;
     const origin_timestamp = p.origin_timestamp || p.last_position?.origin_timestamp || p.trip?.origin_timestamp || p.last_position?.timestamp;
 
