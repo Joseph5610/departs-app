@@ -20,6 +20,10 @@
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
     },
+    "showStops": {
+      "title": "Show stops",
+      "description": "Show transport stops and stations"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tram",

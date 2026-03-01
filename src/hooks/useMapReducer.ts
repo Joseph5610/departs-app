@@ -10,6 +10,7 @@ export interface MapState {
     selectedVehicle: TrackedVehicle | null;
     isFollowing: boolean;
     showVehicles: boolean;
+    showStops: boolean;
     isSettingsOpen: boolean;
     expandedGroups: string[];
     departureSort: 'line' | 'departure';
@@ -31,6 +32,7 @@ export type MapAction =
     | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
+    | { type: 'SET_SHOW_STOPS'; payload: boolean }
     | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
     | { type: 'SET_EXPANDED_GROUPS'; payload: string[] }
     | { type: 'TOGGLE_GROUP'; payload: string }
@@ -50,6 +52,9 @@ const getInitialState = (): MapState => ({
     isFollowing: false,
     showVehicles: typeof window !== 'undefined'
         ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false'
+        : true,
+    showStops: typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false'
         : true,
     isSettingsOpen: false,
     expandedGroups: [],
@@ -109,6 +114,9 @@ function mapReducer(state: MapState, action: MapAction): MapState {
         case 'SET_SHOW_VEHICLES':
             localStorage.setItem(STORAGE_KEYS.SHOW_VEHICLES, String(action.payload));
             return { ...state, showVehicles: action.payload };
+        case 'SET_SHOW_STOPS':
+            localStorage.setItem(STORAGE_KEYS.SHOW_STOPS, String(action.payload));
+            return { ...state, showStops: action.payload };
         case 'SET_IS_SETTINGS_OPEN':
             return { ...state, isSettingsOpen: action.payload };
         case 'SET_EXPANDED_GROUPS':
@@ -170,6 +178,9 @@ export const useMapReducer = () => {
     const setShowVehicles = useCallback((val: boolean) =>
         dispatch({ type: 'SET_SHOW_VEHICLES', payload: val }), []);
 
+    const setShowStops = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_STOPS', payload: val }), []);
+
     const setIsSettingsOpen = useCallback((val: boolean) =>
         dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val }), []);
 
@@ -207,6 +218,7 @@ export const useMapReducer = () => {
         clearSelection,
         setIsFollowing,
         setShowVehicles,
+        setShowStops,
         setIsSettingsOpen,
         setExpandedGroups,
         toggleGroup,

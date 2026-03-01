@@ -30,6 +30,8 @@ interface MapLayersProps {
     mapLoaded: boolean;
     /** Global visibility toggle for vehicles */
     showVehicles: boolean;
+    /** Global visibility toggle for stops */
+    showStops: boolean;
     /** Collection of all vehicles to be displayed */
     displayVehicles: VehicleCollection | null;
     /** Collection of physical stop locations (points) */
@@ -68,6 +70,7 @@ const EMPTY_GEOJSON: FeatureCollection = {
 export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     mapLoaded,
     showVehicles,
+    showStops,
     displayVehicles,
     stopsData,
     labelData,
@@ -132,14 +135,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
             </Source>
 
-            <Source id="stop-labels-centroids" type="geojson" data={labelData ? labelData : EMPTY_GEOJSON}>
+            <Source id="stop-labels-centroids" type="geojson" data={(showStops && labelData ? labelData : EMPTY_GEOJSON) as any}>
                 <Layer {...stopLabelLayer} />
             </Source>
 
             <Source
                 id="pid-stops"
                 type="geojson"
-                data={stopsData ? stopsData : EMPTY_GEOJSON}
+                data={(showStops && stopsData ? stopsData : EMPTY_GEOJSON) as any}
                 cluster={true}
                 clusterMaxZoom={13}
                 clusterRadius={25}
