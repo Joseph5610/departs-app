@@ -43,6 +43,12 @@ export interface StopFeature {
         parent_station?: string;
         zone_id?: string;
         is_centroid?: boolean;
+        is_train?: number;
+        metro_a?: number;
+        metro_b?: number;
+        metro_c?: number;
+        metro_lines?: string[];
+        variant_seed?: number;
     };
 }
 
