@@ -69,6 +69,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         toggleGroup,
         setDepartureSort,
         setRouteFilter,
+        setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
         toggleFavorite
@@ -243,6 +244,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             toggleGroup,
             setDepartureSort,
             setRouteFilter,
+            setRouteTypeFilter,
             setBounds,
             setDebouncedBounds,
             toggleFavorite,
@@ -263,7 +265,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
         setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
-        setRouteFilter, setBounds, setDebouncedBounds, handleLocate,
+        setRouteFilter, setRouteTypeFilter, setBounds, setDebouncedBounds, handleLocate,
         handleDepartureClick, performGeolocation,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);
