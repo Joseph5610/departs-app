@@ -18,10 +18,12 @@ export const isFresh = (timestamp: string | number | Date, maxAgeMinutes = 5): b
 };
 
 /**
- * Formats a delay in seconds into a human readable string.
+ * Formats a delay in seconds into a human readable string (+M:SS or +Ss).
  */
-export const formatDelay = (delaySeconds: number): string => {
-    const mins = Math.round(delaySeconds / 60);
-    if (mins <= 0) return 'Včas';
-    return `+${mins} min`;
+export const formatDelay = (seconds: number) => {
+    if (seconds <= 30) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins === 0) return `+${secs}s`;
+    return `+${mins}:${secs.toString().padStart(2, '0')}`;
 };

@@ -3,14 +3,12 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { type MapRef } from 'react-map-gl/maplibre';
 import maplibregl, {
-    type Map as MapLibreInstance,
-    type LineLayerSpecification
+    type Map as MapLibreInstance
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { DetailPanel } from './DetailPanel';
+import { DetailPanel } from './DetailPanel/DetailPanel';
 
 import { LiveStatus } from './LiveStatus';
-import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
 import { getInitialViewState } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
@@ -21,10 +19,9 @@ import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
 import type { TrackedVehicle } from '../types/transit';
 import { MapControls } from './MapControls';
-import { DetailPanelContent } from './DetailPanelContent';
+import { DetailPanelContent } from './DetailPanel/DetailPanelContent';
 import { useVehicles } from '../hooks/useVehicles';
-import { useMapStops } from '../hooks/useMapStops';
-import { useMapCentroids } from '../hooks/useMapCentroids';
+import { useStops } from '../hooks/useStops';
 import { useRouteShape } from '../hooks/useRouteShape';
 import { useMapFilters } from '../hooks/useMapFilters';
 
@@ -42,8 +39,7 @@ const MapInner: React.FC = () => {
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
-    const stopsData = useMapStops();
-    const labelData = useMapCentroids();
+    const { stops: stopsData, centroids: labelData } = useStops();
     const routeShapeData = useRouteShape();
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
@@ -65,27 +61,6 @@ const MapInner: React.FC = () => {
         }
         return state.selectedStop ? state.selectedStop.name : '';
     }, [state.selectedVehicle, state.selectedStop, t]);
-
-    // Memoize route line color to prevent re-computation on every render
-    const routeLineColor = useMemo(() => {
-        const routeName = state.selectedVehicle?.gtfs_route_short_name || state.selectedVehicle?.route_short_name || '';
-        const routeType = state.selectedVehicle?.route_type || 0;
-        return isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
-    }, [state.selectedVehicle?.gtfs_route_short_name, state.selectedVehicle?.route_short_name, state.selectedVehicle?.route_type]);
-
-    // Memoize route line paint object
-    const routeLinePaint = useMemo<NonNullable<LineLayerSpecification['paint']>>(() => ({
-        'line-color': routeLineColor,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
-        'line-opacity': 0.8,
-        'line-blur': 0.5
-    }), [routeLineColor]);
-
-    // Memoize route line layout object
-    const routeLineLayout = useMemo<NonNullable<LineLayerSpecification['layout']>>(() => ({
-        'line-join': 'round',
-        'line-cap': 'round'
-    }), []);
 
     return (
         <>
@@ -112,10 +87,10 @@ const MapInner: React.FC = () => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') return;
 
-                    if (f.layer.id === 'clusters' || (f.layer.id === 'vehicles-delay-label' && f.properties.point_count)) {
+                    if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
                         const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
-                        const sourceId = f.layer.id === 'clusters' ? 'pid-stops' : 'pid-vehicles';
+                        const sourceId = 'pid-stops';
                         const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
                         source.getClusterExpansionZoom(clusterId).then((zoom) => {
                             mapRef.current?.easeTo({
@@ -129,7 +104,7 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all' || f.layer.id === 'vehicles-delay-label') {
+                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
                         const props = f.properties;
                         actions.selectVehicle({
                             ...props,
@@ -161,8 +136,6 @@ const MapInner: React.FC = () => {
                     userLocation={state.userLocation}
                     selectedVehicleFeature={selectedVehicleFeature}
                     favoriteStops={state.favoriteStops}
-                    routeLinePaint={routeLinePaint}
-                    routeLineLayout={routeLineLayout}
                     vehiclesFilter={vehiclesFilter}
                     labelLayerId={state.labelLayerId}
                 />

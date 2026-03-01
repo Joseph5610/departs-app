@@ -6,7 +6,7 @@ import { useStopSearch } from '../hooks/useStopSearch';
 import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
 import { useStops } from '../hooks/useStops';
-
+import { cn } from '../utils/cn';
 
 
 export const Search: React.FC = React.memo(() => {
@@ -74,7 +74,10 @@ export const Search: React.FC = React.memo(() => {
                     }}
                     onFocus={() => setIsOpen(true)}
                     placeholder={t('search.placeholder')}
-                    className={`w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border ${activeFilter ? 'border-emerald-500/50 ring-2 ring-emerald-500/10' : 'border-white/10'} shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all`}
+                    className={cn(
+                        "w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all",
+                        activeFilter ? "border-emerald-500/50 ring-2 ring-emerald-500/10" : "border-white/10"
+                    )}
                     readOnly={!!activeFilter}
                 />
                 <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-emerald-400' : 'text-zinc-400'} pointer-events-none z-10`} size={20} />

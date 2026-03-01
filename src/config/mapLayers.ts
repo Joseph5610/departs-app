@@ -469,6 +469,7 @@ export const routeLineLayer: LineLayerSpecification = {
         'line-cap': 'round'
     },
     paint: {
+        'line-color': ['get', 'line_color'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5

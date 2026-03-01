@@ -13,8 +13,10 @@ const CACHE_KEY = 'pid_stops_geojson_v17';
 const CACHE_TS_KEY = 'pid_stops_updated_at_v17';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
+import { useMemo } from 'react';
+
 export const useStops = () => {
-    return useQuery<StopCollection>({
+    const query = useQuery<StopCollection>({
         queryKey: ['stops'],
         queryFn: async () => {
             const now = Date.now();
@@ -68,4 +70,26 @@ export const useStops = () => {
         staleTime: Infinity,
         gcTime: Infinity,
     });
+
+    const stops = useMemo(() => {
+        if (!query.data) return null;
+        return {
+            type: 'FeatureCollection',
+            features: query.data.features.filter(f => !f.properties.is_centroid)
+        } as StopCollection;
+    }, [query.data]);
+
+    const centroids = useMemo(() => {
+        if (!query.data) return null;
+        return {
+            type: 'FeatureCollection',
+            features: query.data.features.filter(f => f.properties.is_centroid)
+        } as StopCollection;
+    }, [query.data]);
+
+    return {
+        ...query,
+        stops,
+        centroids
+    };
 };

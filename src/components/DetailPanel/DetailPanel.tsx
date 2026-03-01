@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { X, ArrowLeft } from 'lucide-react';
-import { MOBILE_BREAKPOINT } from '../config/constants';
+import { MOBILE_BREAKPOINT } from '../../config/constants';
 
 interface DetailPanelProps {
     isOpen: boolean;

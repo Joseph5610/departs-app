@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../utils/cn';
 
 interface StatusPillProps {
     label: string;
@@ -16,13 +17,10 @@ export const StatusPill: React.FC<StatusPillProps> = ({ label, icon, variant = '
     };
 
     return (
-        <div className={`
-            inline-flex items-center gap-1.5 
-            px-2.5 py-1 rounded-full border
-            text-[10px] font-bold uppercase tracking-wider
-            transition-colors duration-200
-            ${variants[variant]}
-        `}>
+        <div className={cn(
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-colors duration-200",
+            variants[variant]
+        )}>
             {icon && <span className="shrink-0">{icon}</span>}
             <span className="whitespace-nowrap">{label}</span>
         </div>
