@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
@@ -13,16 +12,11 @@ import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
 import { useMapStopEnrichment } from '../hooks/useMapStopEnrichment';
 import { addAllIcons } from '../utils/mapIcons';
-import type { TrackedVehicle, Departure, VehicleCollection } from '../types/transit';
+import type { Departure, VehicleCollection } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
-    MAP_BOUNDS_DEBOUNCE,
-    SIDEBAR_WIDTH,
-    MOBILE_BREAKPOINT,
-    MOBILE_BOTTOM_SHEET_RATIO,
-    MAP_VEHICLE_SELECT_ZOOM,
-    MAP_ANIMATION_DURATION
+    MAP_BOUNDS_DEBOUNCE
 } from '../config/constants';
 
 /**
@@ -44,13 +38,12 @@ const MapEngine: React.FC = () => {
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
-    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection);
+    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
 
     return null;
 };
 
 export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<MapRef | null> }> = ({ children, mapRef }) => {
-    const queryClient = useQueryClient();
     const [mapLoaded, setMapLoaded] = useState(false);
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -216,7 +209,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             onDragStart
         }
     }), [
-        mapRef, state, mapLoaded, labelLayerId, userLocation,
+        mapRef, state, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
         setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
         setIsFollowing, setShowVehicles,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,

@@ -147,9 +147,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     </h3>
                     <div className="flex items-center md:justify-center gap-2 flex-wrap">
                         <StatusPill
-                            variant={(selectedVehicle.delay ?? vehicleDetail?.delay ?? 0) > 30 ? 'danger' : 'success'}
-                            label={(selectedVehicle.delay ?? vehicleDetail?.delay ?? 0) > 30
-                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((selectedVehicle.delay ?? vehicleDetail?.delay ?? 0) / 60) })
+                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30 ? 'danger' : 'success'}
+                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30
+                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) / 60) })
                                 : t('map.vehicleDetails.onTime')}
                         />
 
