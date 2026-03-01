@@ -27,18 +27,24 @@ export interface GolemioVehicleFeature {
         is_wheelchair_accessible?: boolean;
         is_air_conditioned?: boolean;
         vehicle_registration_number?: number;
+        run_number?: number | string;
+        service_number?: number | string;
         trip?: {
             gtfs?: {
                 trip_id?: string;
                 route_short_name?: string;
                 route_type?: string;
                 trip_headsign?: string;
+                run_number?: number | string;
             };
+            run_number?: number | string;
+            service_number?: number | string;
             wheelchair_accessible?: boolean;
             air_conditioned?: boolean;
             vehicle_registration_number?: number;
         };
         last_position?: {
+            run_number?: number | string;
             bearing?: number;
             delay?: { actual?: number };
             state_position?: string;

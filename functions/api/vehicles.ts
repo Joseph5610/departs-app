@@ -27,21 +27,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const routeShortNames = [...new Set(routeFilters.map(f => f.line))];
 
-    // Map human-readable route types to GTFS route types
-    const routeTypeMap: Record<string, string> = {
-        'metro': '1',
-        'tram': '0',
-        'bus': '3',
-        'trolleybus': '11',
-        'train': '2',
-        'ferry': '4',
-        'funicular': '7'
-    };
-
-    const mappedRouteTypes = routeTypes.map(t => routeTypeMap[t] || t);
-
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && routeShortNames.length === 0 && mappedRouteTypes.length === 0) {
+    if (!tripId && !bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
@@ -49,10 +36,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const fetchPromises: Promise<Response>[] = [];
 
         // 1. Prepare fetch for bounding box / route filters (Public API)
-        if (bounds || routeShortNames.length > 0 || mappedRouteTypes.length > 0) {
+        if (bounds || routeShortNames.length > 0 || routeTypes.length > 0) {
             const params: Record<string, string | string[]> = {};
             if (bounds) params.boundingBox = bounds;
-            if (mappedRouteTypes.length > 0) params.routeType = mappedRouteTypes;
+            if (routeTypes.length > 0) params.routeType = routeTypes;
 
             // If we have run numbers, we fetch the whole line and filter later
             // If we only have plain lines, we let Golemio filter them
