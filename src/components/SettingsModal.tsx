@@ -157,11 +157,8 @@ export const SettingsModal: React.FC = () => {
                                     className="overflow-hidden bg-white/[0.02]"
                                 >
                                     <div className="relative p-4 pt-2 space-y-4">
-                                        {/* Connector line for visual hierarchy */}
-                                        <div className="absolute left-8 sm:left-10 top-0 bottom-12 w-px bg-white/10" />
-
-                                        <div className="pl-10 sm:pl-12 space-y-4">
-                                            <div className="flex items-center gap-2">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-2 px-1">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
                                                 <div className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em]">
                                                     {t('settings.sections.filters')}
