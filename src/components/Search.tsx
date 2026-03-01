@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, X, MapPin, Star } from 'lucide-react';
+import { Search as SearchIcon, X, MapPin, Star, Clock } from 'lucide-react';
 import { useStopSearch } from '../hooks/useStopSearch';
 import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
@@ -14,8 +14,8 @@ export const Search: React.FC = React.memo(() => {
     const { state, actions, mapRef } = useMap();
     const { data: stops } = useStops();
 
-    const { routeFilter: activeFilter, favoriteStops } = state;
-    const { setRouteFilter: onLineSelect, selectStop } = actions;
+    const { routeFilter: activeFilter, favoriteStops, searchHistory } = state;
+    const { setRouteFilter: onLineSelect, selectStop, addToHistory } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +27,8 @@ export const Search: React.FC = React.memo(() => {
     }, [stops, favoriteStops]);
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
+
+    const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
     const linesFromQuery = React.useMemo(() => {
         return query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 10);
@@ -97,8 +99,59 @@ export const Search: React.FC = React.memo(() => {
                 )}
             </div>
 
-            {isOpen && (results.length > 0 || isLineLike) && (
+            {isOpen && (results.length > 0 || isLineLike || showHistory) && (
                 <div className="mt-2 bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
+                    {showHistory && (
+                        <div className="border-b border-white/5 last:border-none">
+                            <div className="px-4 py-2 bg-white/5 border-b border-white/5">
+                                <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
+                                    <Clock size={10} />
+                                    {t('search.recent')}
+                                </span>
+                            </div>
+                            {searchHistory.map((item) => (
+                                <button
+                                    key={item.type === 'stop' ? `hist-stop-${item.id}` : `hist-line-${item.lines.join('-')}`}
+                                    onClick={() => {
+                                        if (item.type === 'stop') {
+                                            mapRef.current?.flyTo({
+                                                center: item.coordinates,
+                                                zoom: MAP_STOP_SELECT_ZOOM,
+                                                duration: MAP_FLY_DURATION
+                                            });
+                                            selectStop({
+                                                id: item.id,
+                                                name: item.name,
+                                                platformCode: item.platformCode,
+                                                coordinates: item.coordinates,
+                                                isTrain: item.isTrain
+                                            });
+                                            addToHistory(item);
+                                        } else {
+                                            onLineSelect(item.lines);
+                                            addToHistory(item);
+                                        }
+                                        setQuery('');
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 transition-colors text-left border-b border-white/5 last:border-none"
+                                >
+                                    <div className="p-2 bg-white/5 rounded-lg text-zinc-400">
+                                        {item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-white font-medium">
+                                            {item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
+                                        </span>
+                                        {item.type === 'stop' && item.platformCode && (
+                                            <span className="text-zinc-500 text-xs">{t('search.platform', { code: item.platformCode })}</span>
+                                        )}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {query === '' && results.length > 0 && (
                         <div className="px-4 py-2 bg-white/5 border-b border-white/5">
                             <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
@@ -111,6 +164,7 @@ export const Search: React.FC = React.memo(() => {
                         <button
                             onClick={() => {
                                 onLineSelect(linesFromQuery);
+                                addToHistory({ type: 'line', lines: linesFromQuery });
                                 setQuery('');
                                 setIsOpen(false);
                             }}
@@ -135,11 +189,17 @@ export const Search: React.FC = React.memo(() => {
                                     zoom: MAP_STOP_SELECT_ZOOM,
                                     duration: MAP_FLY_DURATION
                                 });
-                                selectStop({
+                                const selectedStop = {
                                     id: stop.properties.stop_id,
                                     name: stop.properties.stop_name,
                                     platformCode: stop.properties.platform_code,
                                     isTrain: stop.properties.is_train === 1,
+                                    coordinates: stop.geometry.coordinates as [number, number]
+                                };
+                                selectStop(selectedStop);
+                                addToHistory({
+                                    type: 'stop',
+                                    ...selectedStop,
                                     coordinates: stop.geometry.coordinates as [number, number]
                                 });
                                 setQuery('');

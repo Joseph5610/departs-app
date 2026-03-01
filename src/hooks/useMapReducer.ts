@@ -1,6 +1,6 @@
 import { useReducer, useCallback } from 'react';
 import { STORAGE_KEYS } from '../config/constants';
-import type { TrackedVehicle, SelectedStop } from '../types/transit';
+import type { TrackedVehicle, SelectedStop, SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 
 /**
  * State managed by the map reducer
@@ -19,6 +19,7 @@ export interface MapState {
     bounds: string | null;
     debouncedBounds: string | null;
     favoriteStops: string[];
+    searchHistory: SearchHistoryItem[];
 }
 
 /**
@@ -41,7 +42,9 @@ export type MapAction =
     | { type: 'SET_ROUTE_TYPE_FILTER'; payload: string[] }
     | { type: 'SET_BOUNDS'; payload: string | null }
     | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
-    | { type: 'TOGGLE_FAVORITE'; payload: string };
+    | { type: 'TOGGLE_FAVORITE'; payload: string }
+    | { type: 'ADD_TO_HISTORY'; payload: SearchHistoryBase }
+    | { type: 'CLEAR_HISTORY' };
 
 /**
  * Initial state factory
@@ -65,6 +68,9 @@ const getInitialState = (): MapState => ({
     debouncedBounds: null,
     favoriteStops: typeof window !== 'undefined'
         ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[])
+        : [],
+    searchHistory: typeof window !== 'undefined'
+        ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY) || '[]') as SearchHistoryItem[])
         : []
 });
 
@@ -146,6 +152,24 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
             return { ...state, favoriteStops: newFavorites };
         }
+        case 'ADD_TO_HISTORY': {
+            const newItem = { ...action.payload, timestamp: Date.now() } as SearchHistoryItem;
+            let newHistory = state.searchHistory.filter(item => {
+                if (item.type === 'stop' && newItem.type === 'stop') {
+                    return item.id !== newItem.id;
+                }
+                if (item.type === 'line' && newItem.type === 'line') {
+                    return item.lines.join(',') !== newItem.lines.join(',');
+                }
+                return true;
+            });
+            newHistory = [newItem, ...newHistory].slice(0, 5);
+            localStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(newHistory));
+            return { ...state, searchHistory: newHistory };
+        }
+        case 'CLEAR_HISTORY':
+            localStorage.removeItem(STORAGE_KEYS.SEARCH_HISTORY);
+            return { ...state, searchHistory: [] };
         default:
             return state;
     }
@@ -208,6 +232,12 @@ export const useMapReducer = () => {
     const toggleFavorite = useCallback((stopId: string) =>
         dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId }), []);
 
+    const addToHistory = useCallback((item: SearchHistoryBase) =>
+        dispatch({ type: 'ADD_TO_HISTORY', payload: item }), []);
+
+    const clearHistory = useCallback(() =>
+        dispatch({ type: 'CLEAR_HISTORY' }), []);
+
     return {
         state,
         dispatch,
@@ -224,9 +254,11 @@ export const useMapReducer = () => {
         toggleGroup,
         setDepartureSort,
         setRouteFilter,
-            setRouteTypeFilter,
+        setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
-        toggleFavorite
+        toggleFavorite,
+        addToHistory,
+        clearHistory
     };
 };
