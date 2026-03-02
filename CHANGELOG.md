@@ -2,6 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.13.0] - 2026-03-04
+
+### Added
+- **Mobile Accessibility Improvements**: Increased touch target sizes (hit areas) for several small interactive elements across the application to a minimum of 44-48px.
+- **Improved Filter Interactions**: The search bar's clear button is now much easier to tap and uses `preventDefault` to ensure that clicking it doesn't accidentally trigger map interactions like zooming.
+
+### Changed
+- **UI Standardisation**: Standardized the padding and interaction areas for close and back buttons in the Detail Panel, Modals, Toasts, and Update Popups, ensuring consistent and reliable tap targets for mobile users.
+
 ## [0.12.0] - 2026-03-04
 
 ### Added
