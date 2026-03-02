@@ -32,16 +32,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
                           p.trip?.next_stop_name;
 
     // Metadata / Amenities - check multiple possible locations (Public API, V2 API, nested descriptors)
-    let vehicle_descriptor = p.vehicle_descriptor || p.trip?.vehicle_descriptor || p.last_position?.vehicle_descriptor || {};
-
-    // Safety check if it's a string (e.g. from MapLibre stringified properties)
-    if (typeof vehicle_descriptor === 'string') {
-        try {
-            vehicle_descriptor = JSON.parse(vehicle_descriptor);
-        } catch {
-            vehicle_descriptor = {};
-        }
-    }
+    const vehicle_descriptor = p.vehicle_descriptor || p.trip?.vehicle_descriptor || p.last_position?.vehicle_descriptor || {};
 
     const is_wheelchair_accessible = p.is_wheelchair_accessible ??
                                    p.trip?.wheelchair_accessible ??

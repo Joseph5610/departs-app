@@ -89,8 +89,6 @@
       "headingToDestination": "Směr konečná zastávka",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
-      "shareTitle": "Linka {{line}} směr {{headsign}}",
-      "shareText": "Sleduj linku {{line}} směr {{headsign}} na departs.app",
       "routeSchedule": "Jízdní řád",
       "vehicleId": "ID vozidla",
       "status": "Stav",

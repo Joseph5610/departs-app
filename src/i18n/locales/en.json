@@ -89,8 +89,6 @@
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
       "delayLabel": "Delay {{minutes}} min",
-      "shareTitle": "Line {{line}} to {{headsign}}",
-      "shareText": "Track line {{line}} to {{headsign}} on departs.app",
       "routeSchedule": "Route Schedule",
       "vehicleId": "Vehicle ID",
       "status": "Status",

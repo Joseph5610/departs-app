@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink, Share2 } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { cn } from '../utils/cn';
 import { getVehicleColor } from '../utils/vehicleColors';
@@ -16,7 +16,6 @@ interface VehicleDetailProps {
     loadingDetail: boolean;
     isFollowing: boolean;
     onToggleFollow: () => void;
-    onShare: () => void;
 }
 
 export const VehicleDetail = React.memo<VehicleDetailProps>(({
@@ -24,8 +23,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     vehicleDetail,
     loadingDetail,
     isFollowing,
-    onToggleFollow,
-    onShare
+    onToggleFollow
 }) => {
     const { t } = useTranslation();
     const { data: incidents } = useRSS('incidents');
@@ -43,15 +41,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const updateAge = () => {
             try {
                 const tsString = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
-                if (!tsString || typeof tsString !== 'string') {
+                if (!tsString) {
                     setLiveDataAgeSeconds(null);
                     return;
                 }
                 const timestamp = parseISO(tsString);
-                if (!timestamp || isNaN(timestamp.getTime())) {
-                    setLiveDataAgeSeconds(null);
-                    return;
-                }
                 const now = new Date();
                 const ageInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
                 setLiveDataAgeSeconds(ageInSeconds);
@@ -173,15 +167,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         )}
                     </div>
                 </div>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onShare();
-                    }}
-                    className="z-10 h-8 w-8 flex items-center justify-center rounded-xl border bg-white/10 border-white/10 text-white/70 hover:text-white transition-all active:scale-90 md:absolute md:top-4 md:right-4"
-                >
-                    <Share2 size={14} />
-                </button>
             </div>
 
             {(vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator) && (

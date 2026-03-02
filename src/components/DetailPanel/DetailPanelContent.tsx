@@ -73,22 +73,14 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
 
     const handleShare = useCallback(() => {
-        if (selectedVehicle) {
-            const line = selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '';
-            const headsign = selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || '';
-            share({
-                title: t('map.vehicleDetails.shareTitle', { line, headsign }),
-                text: t('map.vehicleDetails.shareText', { line, headsign }),
-                url: window.location.href
-            });
-        } else if (selectedStop) {
+        if (selectedStop) {
             share({
                 title: t('map.departures.shareTitle', { name: selectedStop.name }),
                 text: t('map.departures.shareText', { name: selectedStop.name }),
                 url: window.location.href
             });
         }
-    }, [selectedVehicle, selectedStop, share, t]);
+    }, [selectedStop, share, t]);
 
     return (
         <div className="space-y-4 pt-1">
@@ -149,7 +141,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 loadingDetail={loadingDetail}
                 isFollowing={isFollowing}
                 onToggleFollow={onToggleFollow}
-                onShare={handleShare}
             />
 
             {showDepartureBoard && groupedDepartures.map((group, index) => {

@@ -105,27 +105,9 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const props = { ...f.properties };
-
-                        // Fix stringified nested objects and types from MapLibre
-                        if (typeof props.vehicle_descriptor === 'string' && props.vehicle_descriptor.startsWith('{')) {
-                            try {
-                                props.vehicle_descriptor = JSON.parse(props.vehicle_descriptor);
-                            } catch {
-                                props.vehicle_descriptor = {};
-                            }
-                        }
-
-                        // Ensure numeric fields are correctly typed if stringified by MapLibre
-                        const route_type = (props.route_type !== undefined && props.route_type !== null) ? Number(props.route_type) : undefined;
-                        const delay = (props.delay !== undefined && props.delay !== null) ? Number(props.delay) : 0;
-                        const last_stop_sequence = (props.last_stop_sequence !== undefined && props.last_stop_sequence !== null) ? Number(props.last_stop_sequence) : undefined;
-
+                        const props = f.properties;
                         actions.selectVehicle({
                             ...props,
-                            route_type: isNaN(route_type as number) ? undefined : route_type,
-                            delay: isNaN(delay) ? 0 : delay,
-                            last_stop_sequence: isNaN(last_stop_sequence as number) ? undefined : last_stop_sequence,
                             vehicle_id: String(props.vehicle_id || props.id),
                             _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         } as TrackedVehicle, false); // clear stop
