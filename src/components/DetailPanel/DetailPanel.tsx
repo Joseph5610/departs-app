@@ -146,7 +146,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                                     {onBack && (
                                         <button
                                             onClick={onBack}
-                                            className="p-2 -ml-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                            className="p-3 -ml-3 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
                                         >
                                             <ArrowLeft size={20} />
                                         </button>
@@ -164,7 +164,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
+                                    className="p-3 -mr-3 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-all active:scale-95 shrink-0"
                                 >
                                     <X size={20} />
                                 </button>
