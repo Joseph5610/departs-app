@@ -58,7 +58,7 @@ export const UpdatePopup: React.FC = () => {
                             )}
                             <button
                                 onClick={close}
-                                className="p-1.5 hover:bg-white/5 rounded-lg text-zinc-500 transition-colors"
+                                className="p-3 -m-1.5 hover:bg-white/5 rounded-lg text-zinc-500 transition-colors"
                             >
                                 <X size={16} />
                             </button>

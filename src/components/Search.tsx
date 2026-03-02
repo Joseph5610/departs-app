@@ -97,7 +97,7 @@ export const Search: React.FC = React.memo(() => {
                     onFocus={() => setIsOpen(true)}
                     placeholder={t('search.placeholder')}
                     className={cn(
-                        "w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-10 text-white text-base placeholder:text-zinc-500 rounded-2xl border shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all",
+                        "w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-12 text-white text-base placeholder:text-zinc-500 rounded-2xl border shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all",
                         activeFilter ? "border-emerald-500/50 ring-2 ring-emerald-500/10" : "border-white/10"
                     )}
                     readOnly={!!activeFilter}
@@ -106,13 +106,14 @@ export const Search: React.FC = React.memo(() => {
                 {(query || activeFilter) && (
                     <button
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             if (activeFilter) {
                                 onLineSelect(null);
                             }
                             setQuery('');
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
+                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
                         aria-label={t('search.clearFilter')}
                     >
                         <X size={18} />
