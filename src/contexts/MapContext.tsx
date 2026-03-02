@@ -66,7 +66,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         setRouteTypeFilter,
         setBounds,
         setDebouncedBounds,
-        toggleFavorite
+        toggleFavorite,
+        addToHistory,
+        clearHistory
     } = useMapReducer();
 
     const { userLocation, userSpeed, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef);
@@ -198,6 +200,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setBounds,
             setDebouncedBounds,
             toggleFavorite,
+            addToHistory,
+            clearHistory,
             handleLocate,
             handleDepartureClick,
             performGeolocation,

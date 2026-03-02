@@ -7,7 +7,8 @@
     "platform": "Nástupiště {{code}}",
     "lineFilter": "Filtrovat linku {{line}}",
     "clearFilter": "Zrušit filtr",
-    "favorites": "Oblíbené zastávky"
+    "favorites": "Oblíbené zastávky",
+    "recent": "Nedávné"
   },
   "settings": {
     "title": "Nastavení",
@@ -50,6 +51,10 @@
       "checking": "Kontrola aktualizací...",
       "upToDate": "Máte aktuální verzi!",
       "available": "Nová verze k dispozici!"
+    },
+    "clearHistory": {
+      "button": "Smazat historii hledání",
+      "success": "Historie smazána"
     }
   },
   "welcome": {

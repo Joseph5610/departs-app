@@ -14,7 +14,8 @@ import {
     Ship,
     CableCar,
     CircleSlash,
-    MapPin
+    MapPin,
+    Clock
 } from 'lucide-react';
 import { version } from '../../package.json';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -28,8 +29,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter } = state;
-    const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter } = actions;
+    const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter, searchHistory } = state;
+    const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter, clearHistory } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -291,6 +292,23 @@ export const SettingsModal: React.FC = () => {
                 {/* Footer Actions & Info */}
                 <div className="pt-4 space-y-6 border-t border-white/5">
                     <div className="flex flex-col gap-3">
+                        {searchHistory.length > 0 && (
+                            <button
+                                onClick={() => {
+                                    clearHistory();
+                                    showToast(t('settings.clearHistory.success'), 'success');
+                                }}
+                                className="flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+                                        <Clock size={18} />
+                                    </div>
+                                    <span className="text-zinc-300 text-sm font-medium">{t('settings.clearHistory.button')}</span>
+                                </div>
+                            </button>
+                        )}
+
                         <button
                             onClick={handleCheckUpdate}
                             disabled={isChecking}

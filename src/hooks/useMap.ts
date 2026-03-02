@@ -2,7 +2,7 @@ import React, { createContext, useContext } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import type { useMapReducer } from './useMapReducer';
-import type { Departure, SelectedStop } from '../types/transit';
+import type { Departure, SelectedStop, SearchHistoryBase } from '../types/transit';
 
 /**
  * Context type defining state and actions available to the entire map component tree.
@@ -25,6 +25,8 @@ export interface MapContextType {
         performGeolocation: () => void;
         setMapLoaded: (loaded: boolean) => void;
         setLabelLayerId: (id: string | undefined) => void;
+        addToHistory: (item: SearchHistoryBase) => void;
+        clearHistory: () => void;
     };
     mapEvents: {
         onMove: (evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => void;
