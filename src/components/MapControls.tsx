@@ -64,6 +64,7 @@ export const MapControls = React.memo(() => {
                 onClick={(e) => onLocate(e)}
                 className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.myLocation')}
+                aria-label={t('map.controls.myLocation')}
             >
                 <LocateFixed
                     size={20}
@@ -77,6 +78,7 @@ export const MapControls = React.memo(() => {
                 onClick={onSettings}
                 className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.settings')}
+                aria-label={t('map.controls.settings')}
             >
                 <Settings size={20} className="group-hover:rotate-45 transition-transform" />
             </button>
@@ -87,6 +89,7 @@ export const MapControls = React.memo(() => {
                     onClick={onZoomIn}
                     className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
                     title={t('map.controls.zoomIn')}
+                    aria-label={t('map.controls.zoomIn')}
                 >
                     <Plus size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
@@ -95,6 +98,7 @@ export const MapControls = React.memo(() => {
                     onClick={onZoomOut}
                     className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
                     title={t('map.controls.zoomOut')}
+                    aria-label={t('map.controls.zoomOut')}
                 >
                     <Minus size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
@@ -104,6 +108,7 @@ export const MapControls = React.memo(() => {
                     onClick={onResetBearing}
                     className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
                     title={t('map.controls.resetBearing')}
+                    aria-label={t('map.controls.resetBearing')}
                 >
                     <Compass size={20} className="group-hover:rotate-12 transition-transform" />
                 </button>

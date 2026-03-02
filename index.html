@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sk">
+<html lang="cs">
 
 <head>
   <meta charset="UTF-8" />
@@ -8,10 +8,10 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-  <title>departs.app — Prague Integrated Transport LIVE</title>
+  <title>departs.app — Pražská integrovaná doprava LIVE</title>
   <meta name="description"
-    content="Track the location of PID vehicles in real time on the map. Current departures, delays, and an interactive map of transport in Prague and the surrounding area." />
-  <meta name="keywords" content="PID, MHD Praha, odchody, mapa dopravy, real-time, Praha, doprava" />
+    content="Sledujte polohu vozidel PID v reálném čase na mapě. Aktuální odjezdy, zpoždění a interaktivní mapa dopravy v Praze a okolí." />
+  <meta name="keywords" content="PID, MHD Praha, odjezdy, mapa dopravy, real-time, Praha, doprava, sledování spojů" />
 
   <!-- Theme & Mobile -->
   <meta name="theme-color" content="#000000" />
@@ -22,17 +22,35 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://departs.app/" />
-  <meta property="og:title" content="departs.app — Prague Integrated Transport LIVE" />
+  <meta property="og:title" content="departs.app — Pražská integrovaná doprava LIVE" />
   <meta property="og:description"
-    content="Track the location of PID vehicles in real time on the map. Current departures and delays." />
-  <!-- <meta property="og:image" content="https://departs.app/og-image.png" /> -->
+    content="Sledujte polohu vozidel PID v reálném čase na mapě. Aktuální odjezdy, zpoždění a interaktivní mapa dopravy v Praze a okolí." />
+  <meta property="og:image" content="https://departs.app/icon.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://departs.app/" />
   <meta property="twitter:title" content="departs.app — Pražská integrovaná doprava LIVE" />
   <meta property="twitter:description"
-    content="Track the location of PID vehicles in real time on the map. Current departures and delays." />
+    content="Sledujte polohu vozidel PID v reálném čase na mapě. Aktuální odjezdy, zpoždění a interaktivní mapa dopravy v Praze a okolí." />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "departs.app",
+      "url": "https://departs.app",
+      "description": "Real-time visualization of Prague public transport (PID). Track buses, trams, and metro live.",
+      "applicationCategory": "TransportApplication",
+      "operatingSystem": "All",
+      "image": "https://departs.app/icon.png",
+      "author": {
+        "@type": "Organization",
+        "name": "departs.app"
+      }
+    }
+  </script>
 </head>
 
 <body>
