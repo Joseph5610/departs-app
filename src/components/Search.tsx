@@ -83,6 +83,7 @@ export const Search: React.FC = React.memo(() => {
                 <input
                     ref={inputRef}
                     type="text"
+                    aria-label={t('search.placeholder')}
                     value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
                     onChange={(e) => {
                         if (activeFilter) {
@@ -112,6 +113,7 @@ export const Search: React.FC = React.memo(() => {
                             setQuery('');
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
+                        aria-label={t('search.clearFilter')}
                     >
                         <X size={18} />
                     </button>
