@@ -217,10 +217,12 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     }), [
         mapRef, state, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
         setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
-        setIsFollowing, setShowVehicles,
+        setIsFollowing, setShowVehicles, setShowStops,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
-        setRouteFilter, setRouteTypeFilter, setBounds, setDebouncedBounds, handleLocate,
-        handleDepartureClick, performGeolocation,
+        setRouteFilter, setRouteTypeFilter, setBounds, setDebouncedBounds,
+        toggleFavorite, addToHistory, clearHistory,
+        handleLocate, handleDepartureClick, performGeolocation,
+        setMapLoaded, setLabelLayerId,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);
 

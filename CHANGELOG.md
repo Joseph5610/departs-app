@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.11.0] - 2026-03-03
+
+### Added
+- **Search Keyboard Shortcut**: You can now press `/` on your keyboard to quickly focus the search bar. The shortcut is automatically disabled when modals are open or when you're already typing.
+- **Stop Sharing**: Added a new "Share" button to the stop departure board, allowing you to easily share a link to any stop via the Web Share API or by copying it to your clipboard.
+
 ## [0.10.0] - 2026-03-02
 
 ### Added
