@@ -1,7 +1,7 @@
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -15,6 +15,7 @@ import { useDepartures } from '../../hooks/useDepartures';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
+import { useShare } from '../../hooks/useShare';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -30,6 +31,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 }) => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
+    const { share } = useShare();
 
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
@@ -70,6 +72,16 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
     const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
 
+    const handleShare = useCallback(() => {
+        if (selectedStop) {
+            share({
+                title: t('map.departures.shareTitle', { name: selectedStop.name }),
+                text: t('map.departures.shareText', { name: selectedStop.name }),
+                url: window.location.href
+            });
+        }
+    }, [selectedStop, share, t]);
+
     return (
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
@@ -90,6 +102,12 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     <div className="flex items-center justify-between">
                         <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleShare}
+                                className="h-8 w-8 flex items-center justify-center rounded-xl border bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300 transition-all active:scale-90"
+                            >
+                                <Share2 size={14} />
+                            </button>
                             <button
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
                                 className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}

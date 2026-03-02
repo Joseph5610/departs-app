@@ -1,6 +1,8 @@
 {
   "common": {
-    "all": "All"
+    "all": "All",
+    "linkCopied": "Link copied to clipboard",
+    "copyError": "Could not copy link"
   },
   "search": {
     "placeholder": "Search stops or lines...",
@@ -107,6 +109,8 @@
     "departures": {
       "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
+      "shareTitle": "Stop: {{name}}",
+      "shareText": "Check out departures for {{name}} on departs.app",
       "metroNight": {
         "title": "The metro does not run at night",
         "description": "Please use night trams and buses which provide transportation until the early morning hours."

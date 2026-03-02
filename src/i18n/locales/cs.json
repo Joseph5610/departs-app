@@ -1,6 +1,8 @@
 {
   "common": {
-    "all": "Vše"
+    "all": "Vše",
+    "linkCopied": "Odkaz byl zkopírován do schránky",
+    "copyError": "Nepodařilo se zkopírovat odkaz"
   },
   "search": {
     "placeholder": "Hledat zastávky nebo linky...",
@@ -107,6 +109,8 @@
     "departures": {
       "upcoming": "Nadcházející odjezdy",
       "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
+      "shareTitle": "Zastávka: {{name}}",
+      "shareText": "Podívej se na odjezdy ze zastávky {{name}} na departs.app",
       "metroNight": {
         "title": "Metro v noci nejezdí",
         "description": "Využijte noční tramvaje a autobusy, které zajišťují dopravu až do ranních hodin."

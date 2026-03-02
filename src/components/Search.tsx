@@ -18,8 +18,26 @@ export const Search: React.FC = React.memo(() => {
     const { setRouteFilter: onLineSelect, selectStop, addToHistory } = actions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops || null);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === '/' &&
+                document.activeElement?.tagName !== 'INPUT' &&
+                document.activeElement?.tagName !== 'TEXTAREA' &&
+                !document.querySelector('[role="dialog"]')
+            ) {
+                e.preventDefault();
+                inputRef.current?.focus();
+                setIsOpen(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const favoriteStopFeatures = React.useMemo(() => {
         if (!stops?.features || favoriteStops.length === 0) return [];
@@ -63,6 +81,7 @@ export const Search: React.FC = React.memo(() => {
         >
             <div className="relative h-11 flex items-center">
                 <input
+                    ref={inputRef}
                     type="text"
                     value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
                     onChange={(e) => {
