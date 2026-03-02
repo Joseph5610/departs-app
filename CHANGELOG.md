@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.12.0] - 2026-03-04
+
+### Added
+- **SEO Optimization**: Updated metadata for better Google visibility, including localized meta tags and JSON-LD structured data for "WebApplication" rich snippets.
+- **Search Engine Discovery**: Added `robots.txt` and `sitemap.xml` to assist search crawlers in indexing the site correctly.
+- **Visually Hidden Content**: Added descriptive text for search engines in both Czech and English, providing context for the map-centric interface.
+- **Accessibility Improvements**: Added `aria-label` attributes to all map controls and search inputs to improve experience for screen reader users.
+
 ## [0.11.0] - 2026-03-03
 
 ### Added
