@@ -25,7 +25,7 @@
     },
     "showStops": {
       "title": "Zobrazit zastávky",
-      "description": "Zobrazit zastávky a stanice dopravy"
+      "description": "Zobrazit zastávky a stanice"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -65,7 +65,7 @@
     "steps": {
       "clickStop": {
         "title": "Klikněte na zastávku",
-        "description": "Zobrazte si nadcházející odjezdy s informacemi o zpoždění."
+        "description": "Zobrazte si nejbližší odjezdy s informacemi o zpoždění."
       },
       "trackVehicles": {
         "title": "Sledujte vozidla",
@@ -84,9 +84,9 @@
     },
     "vehicleDetails": {
       "fetching": "Načítání podrobností...",
-      "previousTrip": "Vozidlo vykonává předchozí jízdu",
-      "previousTripDescription": "Vozidlo ještě nezahájilo tuto konkrétní jízdu. Zobrazená poloha může být z jeho předchozího spoje.",
-      "headingToDestination": "Směr konečná zastávka",
+      "previousTrip": "Vozidlo je na předchozím spoji",
+      "previousTripDescription": "Vozidlo ještě nezahájilo tento konkrétní spoj. Zobrazená poloha může být z jeho předchozí jízdy.",
+      "headingToDestination": "Směr",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
       "routeSchedule": "Jízdní řád",
@@ -100,15 +100,15 @@
       "ac": "Klima",
       "runNumber": "Pořadí",
       "liveDataAge": "{{seconds}}s",
-      "currentStop": "Právě proběhlo / Aktuální",
-      "nextStop": "Následující zastávka",
+      "currentStop": "Aktuální / Poslední projetá",
+      "nextStop": "Příští zastávka",
       "showPastStops": "Zobrazit předchozí zastávky",
       "hidePastStops": "Skrýt předchozí zastávky",
       "scheduledTime": "plán."
     },
     "departures": {
-      "upcoming": "Nadcházející odjezdy",
-      "noUpcoming": "Nebyly nalezeny žádné nadcházející odjezdy.",
+      "upcoming": "Nejbližší odjezdy",
+      "noUpcoming": "Nebyly nalezeny žádné nejbližší odjezdy.",
       "shareTitle": "Zastávka: {{name}}",
       "shareText": "Podívej se na odjezdy ze zastávky {{name}} na departs.app",
       "metroNight": {
