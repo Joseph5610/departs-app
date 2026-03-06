@@ -150,12 +150,23 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                     </h3>
                     <div className="flex items-center md:justify-center gap-2 flex-wrap">
-                        <StatusPill
-                            variant={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30 ? 'danger' : 'success'}
-                            label={(vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) > 30
-                                ? t('map.vehicleDetails.delayLabel', { minutes: Math.round((vehicleDetail?.delay ?? selectedVehicle.delay ?? 0) / 60) })
-                                : t('map.vehicleDetails.onTime')}
-                        />
+                        {(() => {
+                            const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
+                            const delayMinutes = Math.round(Math.abs(rawDelay) / 60);
+                            const isLate = rawDelay > 30; // Threshold of 30s for the minute-based label
+                            const isEarly = rawDelay < -30;
+
+                            return (
+                                <StatusPill
+                                    variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
+                                    label={isLate
+                                        ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
+                                        : isEarly
+                                            ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
+                                            : t('map.vehicleDetails.onTime')}
+                                />
+                            );
+                        })()}
 
                         {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 rounded-full border border-white/5">

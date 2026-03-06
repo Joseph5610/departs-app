@@ -89,6 +89,7 @@
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
       "delayLabel": "Delay {{minutes}} min",
+      "earlyLabel": "Ahead {{minutes}} min",
       "routeSchedule": "Route Schedule",
       "vehicleId": "Vehicle ID",
       "status": "Status",

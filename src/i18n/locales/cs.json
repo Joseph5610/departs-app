@@ -89,6 +89,7 @@
       "headingToDestination": "Směr",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
+      "earlyLabel": "Napřed {{minutes}} min",
       "routeSchedule": "Jízdní řád",
       "vehicleId": "ID vozidla",
       "status": "Stav",
