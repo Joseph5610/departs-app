@@ -61,12 +61,15 @@ export const DepartureItem = ({
                             </span>
                         )}
                         <div className="flex items-center">
-                            {dep.delay > 30 && (
-                                <span className="text-rose-400 font-bold tabular-nums">
+                            {typeof dep.delay === 'number' && dep.delay !== 0 && (
+                                <span className={cn(
+                                    "font-bold tabular-nums",
+                                    dep.delay > 0 ? "text-rose-400" : "text-sky-400"
+                                )}>
                                     {formatDelay(dep.delay)}
                                 </span>
                             )}
-                            <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={dep.delay > 30} />
+                            <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={typeof dep.delay === 'number' && dep.delay !== 0} />
                         </div>
                     </div>
                 </div>

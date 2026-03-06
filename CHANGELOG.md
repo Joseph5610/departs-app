@@ -2,6 +2,20 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.14.0] - 2026-03-06
+
+### Added
+- **Early Arrival Tracking**: The application now tracks and displays early arrivals (when a vehicle is ahead of schedule).
+- **Blue/Sky Visuals for Early Arrivals**: Early vehicles are now highlighted in blue (sky-400) to distinguish them from late (red) and on-time (green) status.
+- **Granular Delay Info**: Removed the 30-second visibility threshold for departure boards, allowing you to see even small delays or early arrivals (e.g., +10s, -15s).
+
+### Changed
+- **Unified Timing Logic**: Standardized how delays and early arrivals are calculated and displayed across the map, departure boards, and vehicle details.
+- **Improved Vehicle Detail Header**: The status pill now accurately reflects if a vehicle is "Ahead" of its schedule with improved rounding logic to prevent "0 min" labels.
+
+### Fixed
+- **Robust Delay Formatting**: Hardened the delay display logic to gracefully handle scheduled trips without real-time data, preventing visual glitches like "NaN" or empty labels.
+
 ## [0.13.0] - 2026-03-04
 
 ### Added
