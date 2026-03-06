@@ -61,6 +61,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
 
+    const routeNameString = useMemo(() => (routeName || '').toString(), [routeName]);
+
     const relevantAlerts = useMemo(() => {
         const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
         if (!routeName) return [];
@@ -133,11 +135,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                 />
                 <div
-                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer"
+                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer p-1 @container"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                     onClick={onToggleFollow}
                 >
-                    <span className="text-2xl md:text-3xl font-black text-white">{selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name}</span>
+                    <span className="font-black text-white whitespace-nowrap leading-none text-[min(2.25rem,40cqw)] md:text-[min(3rem,40cqw)]">
+                        {routeNameString}
+                    </span>
                     <div className={cn(
                         "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors",
                         isFollowing ? "bg-emerald-500" : "bg-zinc-700"
