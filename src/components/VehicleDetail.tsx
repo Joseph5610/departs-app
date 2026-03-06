@@ -61,8 +61,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
 
-    const routeNameString = useMemo(() => (routeName || '').toString(), [routeName]);
-
     const relevantAlerts = useMemo(() => {
         const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
         if (!routeName) return [];
@@ -140,7 +138,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     onClick={onToggleFollow}
                 >
                     <span className="font-black text-white whitespace-nowrap leading-none text-[min(2.25rem,40cqw)] md:text-[min(3rem,40cqw)]">
-                        {routeNameString}
+                        {routeName}
                     </span>
                     <div className={cn(
                         "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors",
