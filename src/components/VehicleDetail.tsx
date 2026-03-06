@@ -133,13 +133,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                 />
                 <div
-                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl z-10 relative group cursor-pointer p-1 @container"
+                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex items-center justify-center shadow-2xl z-10 relative group cursor-pointer p-1.5"
                     style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name || '') }}
                     onClick={onToggleFollow}
                 >
-                    <span className="font-black text-white whitespace-nowrap leading-none text-[min(2.25rem,40cqw)] md:text-[min(3rem,40cqw)]">
-                        {routeName}
-                    </span>
+                    <svg viewBox="0 0 100 100" className="w-full h-full pointer-events-none overflow-visible">
+                        <text
+                            x="50"
+                            y="52"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            className="fill-white font-black"
+                            style={{
+                                fontSize: `${Math.min(65, 180 / Math.max(2.5, (routeName?.toString().length || 0)))}px`,
+                                letterSpacing: '-0.05em'
+                            }}
+                        >
+                            {routeName}
+                        </text>
+                    </svg>
                     <div className={cn(
                         "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-black flex items-center justify-center transition-colors",
                         isFollowing ? "bg-emerald-500" : "bg-zinc-700"

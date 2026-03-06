@@ -156,12 +156,10 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                         {showHeader && (
                             <div className="flex items-center gap-3 px-1">
                                 <div
-                                    className="px-3 py-1 rounded-lg font-bold text-white shadow-md whitespace-nowrap @container min-w-[32px] flex justify-center"
+                                    className="px-3 py-1 rounded-lg text-xs font-bold text-white shadow-md"
                                     style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
                                 >
-                                    <span className="text-[min(0.75rem,45cqw)]">
-                                        {group.line}
-                                    </span>
+                                    {group.line}
                                 </div>
                                 <div className="h-[1px] flex-1 bg-white/10" />
                             </div>
