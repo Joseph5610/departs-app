@@ -1,7 +1,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2, AlertTriangle } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -100,14 +100,22 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     {relevantInfotexts.map(info => (
                         <div
                             key={info.id}
-                            className={`px-4 py-3 rounded-2xl border text-sm leading-relaxed ${info.priority === 'high'
-                                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-200'
+                            className={`p-4 rounded-2xl border flex items-start gap-4 transition-all
+                                ${info.priority === 'high'
+                                    ? 'bg-rose-500/10 border-rose-500/20'
                                     : info.priority === 'normal'
-                                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-200'
-                                        : 'bg-white/5 border-white/5 text-zinc-300'
-                                }`}
+                                        ? 'bg-amber-500/10 border-amber-500/20'
+                                        : 'bg-white/5 border-white/10'}
+                            `}
                         >
-                            {i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                            <div className={`p-2 rounded-full shrink-0 ${info.priority === 'high' ? 'bg-rose-500/20 text-rose-500' : info.priority === 'normal' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-zinc-400'}`}>
+                                <AlertTriangle size={20} className={info.priority === 'high' ? 'animate-pulse' : ''} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className={`text-sm leading-relaxed font-medium ${info.priority === 'high' ? 'text-rose-200' : info.priority === 'normal' ? 'text-amber-200' : 'text-zinc-200'}`}>
+                                    {i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                                </p>
+                            </div>
                         </div>
                     ))}
 
