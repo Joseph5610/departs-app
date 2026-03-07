@@ -97,27 +97,31 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
-                    {relevantInfotexts.map(info => (
-                        <div
-                            key={info.id}
-                            className={`p-4 rounded-2xl border flex items-start gap-4 transition-all
-                                ${info.priority === 'high'
-                                    ? 'bg-rose-500/10 border-rose-500/20'
-                                    : info.priority === 'normal'
-                                        ? 'bg-amber-500/10 border-amber-500/20'
-                                        : 'bg-white/5 border-white/10'}
-                            `}
-                        >
-                            <div className={`p-2 rounded-full shrink-0 ${info.priority === 'high' ? 'bg-rose-500/20 text-rose-500' : info.priority === 'normal' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-zinc-400'}`}>
-                                <AlertTriangle size={20} className={info.priority === 'high' ? 'animate-pulse' : ''} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className={`text-sm leading-relaxed font-medium ${info.priority === 'high' ? 'text-rose-200' : info.priority === 'normal' ? 'text-amber-200' : 'text-zinc-200'}`}>
-                                    {i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
-                                </p>
-                            </div>
+                    {relevantInfotexts.length > 0 && (
+                        <div className="space-y-2">
+                            {relevantInfotexts.map(info => (
+                                <div
+                                    key={info.id}
+                                    className={`p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group
+                                        ${info.priority === 'high'
+                                            ? 'bg-rose-500/10 border-rose-500/20'
+                                            : info.priority === 'normal'
+                                                ? 'bg-amber-500/10 border-amber-500/20'
+                                                : 'bg-white/5 border-white/10'}
+                                    `}
+                                >
+                                    <div className={`p-2 rounded-full shrink-0 ${info.priority === 'high' ? 'bg-rose-500/20 text-rose-500' : info.priority === 'normal' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-zinc-400'}`}>
+                                        <AlertTriangle size={20} className={info.priority === 'high' ? 'animate-pulse' : ''} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`font-bold text-sm leading-tight ${info.priority === 'high' ? 'text-rose-500' : info.priority === 'normal' ? 'text-amber-500' : 'text-zinc-200'}`}>
+                                            {i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
 
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
