@@ -94,6 +94,26 @@ export interface GolemioInfotext {
     valid_to: string | null;
 }
 
+export interface AppRSSItem {
+    title: string;
+    link: string;
+    pubDate: string;
+    isoDate: string;
+    guid?: string;
+    date?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    priority?: string;
+    lines?: string[];
+    isActive?: boolean;
+    isFuture?: boolean;
+}
+
+export interface AppRSSResponse {
+    incidents: AppRSSItem[];
+    exclusions: AppRSSItem[];
+}
+
 export interface GolemioStopFeature {
     type: 'Feature';
     geometry: {

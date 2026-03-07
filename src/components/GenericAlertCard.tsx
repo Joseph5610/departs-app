@@ -14,7 +14,6 @@ const dateLocales: Record<string, any> = {
 export interface CommonAlertProps {
     id?: string;
     title: string;
-    description?: string | null;
     link?: string;
     priority: 'high' | 'normal' | 'low' | string;
     date?: string;
@@ -29,7 +28,6 @@ export interface CommonAlertProps {
 
 export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     title,
-    description,
     link,
     priority,
     date,
@@ -81,12 +79,6 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     </div>
                     {link && <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />}
                 </div>
-
-                {description && (
-                    <p className="text-zinc-400 text-[10px] mt-0.5 line-clamp-2 leading-relaxed">
-                        {description}
-                    </p>
-                )}
 
                 {lines && lines.length > 0 && lineColors && (
                     <div className="flex flex-wrap gap-1.5 mt-1">

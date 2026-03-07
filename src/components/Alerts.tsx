@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
 import { useRSS } from '../hooks/useRSS';
-import type { RSSItem } from '../hooks/useRSS';
+import type { RSSItem } from '../types/transit';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
@@ -15,14 +15,13 @@ export const Alerts: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'incidents' | 'exclusions'>('incidents');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { data: incidents, isLoading: loadingIncidents } = useRSS('incidents');
-    const { data: exclusions, isLoading: loadingExclusions } = useRSS('exclusions');
+    const { data: rssData, isLoading: loadingRSS } = useRSS();
 
-    const incidentsCount = incidents?.items?.length || 0;
-    const exclusionsCount = exclusions?.items?.length || 0;
+    const incidentsCount = rssData?.incidents?.length || 0;
+    const exclusionsCount = rssData?.exclusions?.length || 0;
 
     const currentItems = useMemo(() => {
-        const items = activeTab === 'incidents' ? incidents?.items : exclusions?.items;
+        const items = activeTab === 'incidents' ? rssData?.incidents : rssData?.exclusions;
         if (!items) return [];
 
         const filtered = searchQuery.trim()
@@ -38,7 +37,7 @@ export const Alerts: React.FC = () => {
             if (!a.isFuture && b.isFuture) return -1;
             return 0;
         });
-    }, [activeTab, incidents, exclusions, searchQuery]);
+    }, [activeTab, rssData, searchQuery]);
 
     return (
         <>
@@ -112,7 +111,7 @@ export const Alerts: React.FC = () => {
                                     <AlertCard key={item.guid || idx} item={item} />
                                 ))}
 
-                                {currentItems.length === 0 && !loadingIncidents && !loadingExclusions && (
+                                {currentItems.length === 0 && !loadingRSS && (
                                     <div className="flex-1 flex flex-col items-center justify-center py-12 text-zinc-500 text-sm h-full min-h-[50vh]">
                                         {t('alerts.noAlerts')}
                                     </div>

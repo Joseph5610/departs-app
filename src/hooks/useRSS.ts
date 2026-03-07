@@ -1,47 +1,18 @@
 
 import { useQuery } from '@tanstack/react-query';
+import type { RSSResponse } from '../types/transit';
 
-export interface RSSItem {
-    title: string;
-    link: string;
-    pubDate: string;
-    content: string;
-    contentSnippet: string;
-    guid: string;
-    isoDate: string;
-    date?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    priority?: string;
-    lines?: string[];
-    type?: 'incidents' | 'exclusions';
-    isActive?: boolean;
-    isFuture?: boolean;
-}
-
-export interface RSSFeed {
-    title: string;
-    description: string;
-    link: string;
-    items: RSSItem[];
-}
-
-const FEEDS = {
-    incidents: 'incidents',
-    exclusions: 'exclusions'
-};
-
-const fetchFeed = async (url: string): Promise<RSSFeed> => {
-    const res = await fetch(`/api/rss?type=${url}`);
-    if (!res.ok) throw new Error(`Failed to fetch feed: ${res.statusText}`);
+const fetchRSS = async (): Promise<RSSResponse> => {
+    const res = await fetch('/api/rss');
+    if (!res.ok) throw new Error(`Failed to fetch RSS: ${res.statusText}`);
     return await res.json();
 };
 
-export const useRSS = (type: 'incidents' | 'exclusions') => {
+export const useRSS = () => {
     return useQuery({
-        queryKey: ['rss', type],
-        queryFn: () => fetchFeed(FEEDS[type]),
-        refetchInterval: type === 'incidents' ? 5 * 60 * 1000 : 60 * 60 * 1000,
-        staleTime: type === 'incidents' ? 5 * 60 * 1000 : 60 * 60 * 1000,
+        queryKey: ['rss'],
+        queryFn: fetchRSS,
+        refetchInterval: 5 * 60 * 1000,
+        staleTime: 5 * 60 * 1000,
     });
 };
