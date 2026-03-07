@@ -162,6 +162,7 @@
     "error": "Chyba při načítání upozornění",
     "moreInfo": "Více informací",
     "planned": "Plánováno",
-    "active": "Právě probíhá"
+    "active": "Právě probíhá",
+    "validFrom": "Od {{date}}"
   }
 }

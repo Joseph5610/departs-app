@@ -1,7 +1,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2, AlertTriangle } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -17,6 +17,7 @@ import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
 import { useShare } from '../../hooks/useShare';
+import { GenericAlertCard } from '../GenericAlertCard';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -100,25 +101,13 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     {relevantInfotexts.length > 0 && (
                         <div className="space-y-2">
                             {relevantInfotexts.map(info => (
-                                <div
+                                <GenericAlertCard
                                     key={info.id}
-                                    className={`p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group
-                                        ${info.priority === 'high'
-                                            ? 'bg-rose-500/10 border-rose-500/20'
-                                            : info.priority === 'normal'
-                                                ? 'bg-amber-500/10 border-amber-500/20'
-                                                : 'bg-white/5 border-white/10'}
-                                    `}
-                                >
-                                    <div className={`p-2 rounded-full shrink-0 ${info.priority === 'high' ? 'bg-rose-500/20 text-rose-500' : info.priority === 'normal' ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-zinc-400'}`}>
-                                        <AlertTriangle size={20} className={info.priority === 'high' ? 'animate-pulse' : ''} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`font-bold text-sm leading-tight ${info.priority === 'high' ? 'text-rose-500' : info.priority === 'normal' ? 'text-amber-500' : 'text-zinc-200'}`}>
-                                            {i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
-                                        </p>
-                                    </div>
-                                </div>
+                                    title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                                    priority={info.priority}
+                                    date={info.valid_to ? `${new Date(info.valid_from).toLocaleDateString()} - ${new Date(info.valid_to).toLocaleDateString()}` : t('alerts.validFrom', { date: new Date(info.valid_from).toLocaleDateString() })}
+                                    isActive={true}
+                                />
                             ))}
                         </div>
                     )}

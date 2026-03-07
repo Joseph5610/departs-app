@@ -1,12 +1,13 @@
 
 import React, { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
 import { StatusPill } from './StatusPill';
 import { cn } from '../utils/cn';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
 import { parseISO } from 'date-fns';
+import { GenericAlertCard } from './GenericAlertCard';
 
 import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
 
@@ -221,32 +222,16 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             {relevantAlerts.length > 0 && (
                 <div className="space-y-2">
                     {relevantAlerts.map((alert, idx) => (
-                        <a
+                        <GenericAlertCard
                             key={alert.guid || idx}
-                            href={alert.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`p-4 rounded-2xl border flex items-start gap-4 transition-all hover:bg-white/5 group
-                                ${alert.priority === '1'
-                                    ? 'bg-rose-500/10 border-rose-500/20'
-                                    : 'bg-amber-500/10 border-amber-500/20'}
-                            `}
-                        >
-                            <div className={`p-2 rounded-full shrink-0 ${alert.priority === '1' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>
-                                <AlertTriangle size={20} className={alert.priority === '1' ? 'animate-pulse' : ''} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start gap-2">
-                                    <h4 className={`font-bold text-sm leading-tight ${alert.priority === '1' ? 'text-rose-500' : 'text-amber-500'}`}>
-                                        {alert.title}
-                                    </h4>
-                                    <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />
-                                </div>
-                                <p className="text-zinc-400 text-[10px] mt-1 line-clamp-2">
-                                    {alert.contentSnippet || alert.date}
-                                </p>
-                            </div>
-                        </a>
+                            title={alert.title}
+                            description={alert.contentSnippet}
+                            link={alert.link}
+                            priority={alert.priority || 'normal'}
+                            date={alert.date}
+                            isActive={alert.isActive}
+                            isFuture={alert.isFuture}
+                        />
                     ))}
                 </div>
             )}

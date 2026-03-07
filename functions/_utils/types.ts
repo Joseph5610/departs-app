@@ -168,4 +168,6 @@ export interface AppInfotext {
     priority: 'low' | 'normal' | 'high';
     displayType: 'inline' | 'general';
     relatedStopIds: string[];
+    valid_from: string;
+    valid_to: string | null;
 }

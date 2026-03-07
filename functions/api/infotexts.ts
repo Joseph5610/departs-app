@@ -36,7 +36,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 textEn: item.text_en,
                 priority: item.priority,
                 displayType: item.display_type,
-                relatedStopIds: item.related_stops.map(stop => stop.id)
+                relatedStopIds: item.related_stops.map(stop => stop.id),
+                valid_from: item.valid_from,
+                valid_to: item.valid_to
             }));
 
         return createSuccessResponse(filteredAndNormalized, CACHE_TTL.INFOTEXTS);

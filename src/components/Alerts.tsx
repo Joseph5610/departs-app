@@ -1,12 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ExternalLink, Search as SearchIcon, X } from 'lucide-react';
+import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
 import { useRSS } from '../hooks/useRSS';
 import type { RSSItem } from '../hooks/useRSS';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
+import { GenericAlertCard } from './GenericAlertCard';
 
 export const Alerts: React.FC = () => {
     const { t } = useTranslation();
@@ -135,10 +136,6 @@ const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string,
 );
 
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
-    const { t } = useTranslation();
-    const isFuture = item.isFuture;
-    const isActive = item.isActive;
-
     // Simple heuristic for transport type to get colors
     const guessType = (line: string) => {
         if (['A', 'B', 'C'].includes(line.toUpperCase())) return 'metro';
@@ -152,60 +149,15 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     };
 
     return (
-        <a
-            href={item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`block p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all group relative overflow-hidden
-                ${item.priority === '1' ? 'border-rose-500/30 bg-rose-500/5' : ''}
-                ${isFuture ? 'opacity-60 grayscale-[0.3]' : ''}
-            `}
-        >
-            {item.priority === '1' && (
-                <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
-            )}
-
-            <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-start gap-4">
-                    <div className="flex flex-col gap-1.5">
-                        {isFuture ? (
-                            <span className="text-[9px] font-black text-rose-500/80 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                                {t('alerts.planned')}
-                            </span>
-                        ) : isActive ? (
-                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                {t('alerts.active')}
-                            </span>
-                        ) : null}
-                        <div className="text-white font-bold text-sm leading-tight group-hover:text-emerald-400 transition-colors">
-                            {item.title}
-                        </div>
-                    </div>
-                    <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />
-                </div>
-
-                {item.lines && item.lines.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                        {item.lines.map(line => (
-                            <span
-                                key={line}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-sm"
-                                style={{ backgroundColor: getVehicleColor(guessType(line), line) }}
-                            >
-                                {line}
-                            </span>
-                        ))}
-                    </div>
-                )}
-
-                {(item.date || item.pubDate) && (
-                    <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2">
-                        <span>{item.date || new Date(item.pubDate).toLocaleDateString()}</span>
-                    </div>
-                )}
-            </div>
-        </a>
+        <GenericAlertCard
+            title={item.title}
+            link={item.link}
+            priority={item.priority || 'low'}
+            date={item.date || (item.pubDate ? new Date(item.pubDate).toLocaleDateString() : undefined)}
+            isActive={item.isActive}
+            isFuture={item.isFuture}
+            lines={item.lines}
+            lineColors={(line) => getVehicleColor(guessType(line), line)}
+        />
     );
 };
