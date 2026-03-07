@@ -79,6 +79,21 @@ export interface GolemioDepartureItem {
     };
 }
 
+export interface GolemioInfotext {
+    id: string;
+    priority: 'low' | 'normal' | 'high';
+    display_type: 'inline' | 'general';
+    text: string;
+    text_en: string | null;
+    related_stops: Array<{
+        id: string;
+        name: string;
+        platform_code: string | null;
+    }>;
+    valid_from: string;
+    valid_to: string | null;
+}
+
 export interface GolemioStopFeature {
     type: 'Feature';
     geometry: {
@@ -144,4 +159,15 @@ export interface AppStopProperties {
     is_train?: number;
     metro_lines?: string[];
     all_ids?: string[];
+}
+
+export interface AppInfotext {
+    id: string;
+    text: string;
+    textEn: string | null;
+    priority: 'low' | 'normal' | 'high';
+    displayType: 'inline' | 'general';
+    relatedStopIds: string[];
+    valid_from: string;
+    valid_to: string | null;
 }

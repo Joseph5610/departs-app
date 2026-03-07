@@ -12,10 +12,12 @@ import { useMap } from '../../hooks/useMap';
 import { useVehicleDetail } from '../../hooks/useVehicleDetail';
 import { useGroupedDepartures } from '../../hooks/useGroupedDepartures';
 import { useDepartures } from '../../hooks/useDepartures';
+import { useInfotexts } from '../../hooks/useInfotexts';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
 import { useShare } from '../../hooks/useShare';
+import { GenericAlertCard } from '../GenericAlertCard';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -36,6 +38,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
     const { isLoading: loadingDeps } = useDepartures();
+    const { data: allInfotexts } = useInfotexts();
     const groupedDepartures = useGroupedDepartures();
 
     const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, userSpeed, favoriteStops } = state;
@@ -59,6 +62,15 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
             showCatchIndicator: distance < 750 && !isMovingFast
         };
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
+
+    const relevantInfotexts = useMemo(() => {
+        if (!showDepartureBoard || !selectedStop || !allInfotexts) return [];
+
+        const stopIds = [selectedStop.id, ...(selectedStop.all_ids || [])];
+        return allInfotexts.filter(info =>
+            info.relatedStopIds.some(id => stopIds.includes(id))
+        );
+    }, [showDepartureBoard, selectedStop, allInfotexts]);
 
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
@@ -86,6 +98,21 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
         <div className="space-y-4 pt-1">
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
+                    {relevantInfotexts.length > 0 && (
+                        <div className="space-y-2">
+                            {relevantInfotexts.map(info => (
+                                <GenericAlertCard
+                                    key={info.id}
+                                    title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                                    priority={info.priority}
+                                    validFrom={info.valid_from}
+                                    validTo={info.valid_to}
+                                    isActive={true}
+                                />
+                            ))}
+                        </div>
+                    )}
+
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
                             <MapPin size={14} className="text-zinc-500" />

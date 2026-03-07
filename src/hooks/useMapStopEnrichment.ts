@@ -26,7 +26,8 @@ export const useMapStopEnrichment = (
             console.log('✨ Enriching selected stop with coordinates:', feature.geometry.coordinates);
             setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
                 ...prev,
-                coordinates: feature.geometry.coordinates as [number, number]
+                coordinates: feature.geometry.coordinates as [number, number],
+                all_ids: feature.properties.all_ids
             } : prev);
             lastCheckedId.current = selectedStop.id;
         }

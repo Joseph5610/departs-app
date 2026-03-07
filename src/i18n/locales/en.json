@@ -162,6 +162,7 @@
     "error": "Error loading alerts",
     "moreInfo": "More info",
     "planned": "Planned",
-    "active": "Active now"
+    "active": "Active now",
+    "validFrom": "From {{date}}"
   }
 }
