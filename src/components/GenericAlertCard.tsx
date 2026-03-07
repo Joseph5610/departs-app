@@ -2,6 +2,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { cs } from 'date-fns/locale/cs';
+import { enUS } from 'date-fns/locale/en-US';
+
+const dateLocales: Record<string, any> = {
+    cs: cs,
+    en: enUS
+};
 
 export interface CommonAlertProps {
     id?: string;
@@ -10,6 +18,8 @@ export interface CommonAlertProps {
     link?: string;
     priority: 'high' | 'normal' | 'low' | string;
     date?: string;
+    validFrom?: string;
+    validTo?: string | null;
     isActive?: boolean;
     isFuture?: boolean;
     lines?: string[];
@@ -22,12 +32,15 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     link,
     priority,
     date,
+    validFrom,
+    validTo,
     isActive,
     isFuture,
     lines,
     lineColors
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
     const isHigh = priority === 'high' || priority === '1';
     const isNormal = priority === 'normal' || priority === '2';
 
@@ -87,9 +100,19 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     </div>
                 )}
 
-                {date && (
+                {(date || validFrom) && (
                     <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
-                        <span>{date}</span>
+                        <span>{(() => {
+                            if (validFrom) {
+                                const fromStr = format(parseISO(validFrom), 'd. M. yyyy', { locale });
+                                if (validTo) {
+                                    const toStr = format(parseISO(validTo), 'd. M. yyyy', { locale });
+                                    return `${fromStr} – ${toStr}`;
+                                }
+                                return t('alerts.validFrom', { date: fromStr });
+                            }
+                            return date;
+                        })()}</span>
                     </div>
                 )}
             </div>
