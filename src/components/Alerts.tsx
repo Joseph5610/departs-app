@@ -31,11 +31,11 @@ export const Alerts: React.FC = () => {
               )
             : [...items];
 
-        // Sort: Active first, Future (planned) last
+        // Sort: Active first, Future (planned) last. Secondary sort by timestamp (newest first).
         return filtered.sort((a, b) => {
             if (a.isFuture && !b.isFuture) return 1;
             if (!a.isFuture && b.isFuture) return -1;
-            return 0;
+            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
         });
     }, [activeTab, rssData, searchQuery]);
 
@@ -159,9 +159,7 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             title={item.title}
             link={item.link}
             priority={item.priority || 'low'}
-            date={item.displayDate || (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : undefined)}
-            validFrom={item.startDate}
-            validTo={item.endDate}
+            date={item.displayDate}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

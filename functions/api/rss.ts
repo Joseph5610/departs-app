@@ -84,7 +84,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             }
         }
 
-        // Attempt to calculate activity status for both incidents and exclusions
+        // Internal logic: Attempt to calculate activity status
         let start = normalizeRSSDate(dateFrom || '', now, pubDate);
         let end = normalizeRSSDate(dateTo || '', now, pubDate);
 
@@ -104,13 +104,13 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             isActive = false;
         }
 
-        // Incidents are always considered active if they are in the feed
+        // Incidents are forced to active
         if (type === 'incidents') {
             isActive = true;
             isFuture = false;
         }
 
-        // Use publication date for sorting, fallback to start date, then current time
+        // Internal logic: Determine primary timestamp for sorting
         let timestamp = now.toISOString();
         if (pubDate) {
             timestamp = new Date(pubDate).toISOString();
@@ -123,8 +123,6 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             link: getXMLTagContent(itemXml, 'link'),
             timestamp,
             displayDate: dateRange || undefined,
-            startDate: start?.toISOString(),
-            endDate: end?.toISOString(),
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,

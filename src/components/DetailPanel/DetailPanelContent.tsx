@@ -100,16 +100,21 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 <div className="space-y-4 mb-2">
                     {relevantInfotexts.length > 0 && (
                         <div className="space-y-2">
-                            {relevantInfotexts.map(info => (
-                                <GenericAlertCard
-                                    key={info.id}
-                                    title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
-                                    priority={info.priority}
-                                    validFrom={info.valid_from}
-                                    validTo={info.valid_to}
-                                    isActive={true}
-                                />
-                            ))}
+                            {relevantInfotexts.map(info => {
+                                const fromDate = new Date(info.valid_from).toLocaleDateString(i18n.resolvedLanguage || 'cs');
+                                const toDate = info.valid_to ? new Date(info.valid_to).toLocaleDateString(i18n.resolvedLanguage || 'cs') : null;
+                                const displayDate = toDate ? `${fromDate} – ${toDate}` : t('alerts.validFrom', { date: fromDate });
+
+                                return (
+                                    <GenericAlertCard
+                                        key={info.id}
+                                        title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
+                                        priority={info.priority}
+                                        date={displayDate}
+                                        isActive={true}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
 

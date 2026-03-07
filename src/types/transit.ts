@@ -88,8 +88,6 @@ export interface RSSItem {
     link: string;
     timestamp: string;
     displayDate?: string;
-    startDate?: string;
-    endDate?: string;
     guid?: string;
     priority?: string;
     lines?: string[];
