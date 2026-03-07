@@ -49,6 +49,7 @@ export interface StopFeature {
         metro_c?: number;
         metro_lines?: string[];
         variant_seed?: number;
+        all_ids?: string[];
     };
 }
 
@@ -63,6 +64,7 @@ export interface SelectedStop {
     platformCode?: string;
     coordinates?: [number, number];
     isTrain?: boolean;
+    all_ids?: string[];
 }
 
 export interface Departure {
@@ -91,6 +93,15 @@ export interface Alert {
     isActive: boolean;
     url?: string;
     type: 'incident' | 'exclusion' | 'incidents' | 'exclusions';
+}
+
+export interface Infotext {
+    id: string;
+    text: string;
+    textEn: string | null;
+    priority: 'low' | 'normal' | 'high';
+    displayType: 'inline' | 'general';
+    relatedStopIds: string[];
 }
 
 export interface VehicleDetail {
