@@ -24,13 +24,20 @@ export const Alerts: React.FC = () => {
     const currentItems = useMemo(() => {
         const items = activeTab === 'incidents' ? incidents?.items : exclusions?.items;
         if (!items) return [];
-        if (!searchQuery.trim()) return items;
 
-        const q = searchQuery.toLowerCase();
-        return items.filter(item =>
-            item.title.toLowerCase().includes(q) ||
-            item.lines?.some(l => l.toLowerCase().includes(q))
-        );
+        const filtered = searchQuery.trim()
+            ? items.filter(item =>
+                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                item.lines?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()))
+              )
+            : [...items];
+
+        // Sort: Active first, Future (planned) last
+        return filtered.sort((a, b) => {
+            if (a.isFuture && !b.isFuture) return 1;
+            if (!a.isFuture && b.isFuture) return -1;
+            return 0;
+        });
     }, [activeTab, incidents, exclusions, searchQuery]);
 
     return (
