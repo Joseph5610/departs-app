@@ -156,6 +156,7 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             date={item.date || (item.pubDate ? new Date(item.pubDate).toLocaleDateString() : undefined)}
             isActive={item.isActive}
             isFuture={item.isFuture}
+            showStatus={true}
             lines={item.lines}
             lineColors={(line) => getVehicleColor(guessType(line), line)}
         />
