@@ -27,6 +27,22 @@
       "title": "Zobrazit zastávky",
       "description": "Zobrazit zastávky a stanice"
     },
+    "showParking": {
+      "title": "Zobrazit parkoviště",
+      "description": "Zobrazit P+R a ostatní parkoviště"
+    },
+    "showSharedCars": {
+      "title": "Sdílená auta",
+      "description": "Zobrazit dostupná sdílená auta na mapě"
+    },
+    "showBicycleCounters": {
+      "title": "Sčítače cyklistů",
+      "description": "Zobrazit denní počty cyklistů na sledovaných místech"
+    },
+    "showAirQuality": {
+      "title": "Kvalita ovzduší",
+      "description": "Zobrazit stanice a aktuální index kvality"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tramvaj",
@@ -148,6 +164,20 @@
   "liveStatus": {
     "refreshing": "Aktualizace",
     "live": "Živě"
+  },
+  "airQuality": {
+    "title": "Kvalita ovzduší",
+    "station": "Stanice {{name}}",
+    "index": "Index {{index}}",
+    "unknown": "Neznámo",
+    "indices": {
+      "1": "Velmi dobrá",
+      "2": "Dobrá",
+      "3": "Uspokojivá",
+      "4": "Vyhovující",
+      "5": "Špatná",
+      "6": "Velmi špatná"
+    }
   },
   "toasts": {
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",

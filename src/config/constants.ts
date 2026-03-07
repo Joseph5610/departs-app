@@ -33,6 +33,10 @@ export const MAP_VEHICLE_SELECT_ZOOM = 15;
 export const STORAGE_KEYS = {
     SHOW_VEHICLES: 'showVehicles',
     SHOW_STOPS: 'showStops',
+    SHOW_PARKING: 'showParking',
+    SHOW_SHARED_CARS: 'showSharedCars',
+    SHOW_BICYCLE_COUNTERS: 'showBicycleCounters',
+    SHOW_AIR_QUALITY: 'showAirQuality',
     DEPARTURE_SORT: 'departureSort',
     LAST_LOCATION: 'lastUserLocation',
     WELCOME_SEEN: 'departs_welcome_seen',

@@ -27,6 +27,22 @@
       "title": "Show stops",
       "description": "Show transport stops and stations"
     },
+    "showParking": {
+      "title": "Show parking",
+      "description": "Show P+R and other parking locations"
+    },
+    "showSharedCars": {
+      "title": "Show shared cars",
+      "description": "Show available shared cars on the map"
+    },
+    "showBicycleCounters": {
+      "title": "Show bicycle counters",
+      "description": "Show daily cyclist counts at monitored locations"
+    },
+    "showAirQuality": {
+      "title": "Show air quality",
+      "description": "Show air quality stations and current index"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tram",
@@ -148,6 +164,20 @@
   "liveStatus": {
     "refreshing": "Refreshing",
     "live": "Live"
+  },
+  "airQuality": {
+    "title": "Air Quality",
+    "station": "Station {{name}}",
+    "index": "Index {{index}}",
+    "unknown": "Unknown",
+    "indices": {
+      "1": "Very Good",
+      "2": "Good",
+      "3": "Fair",
+      "4": "Poor",
+      "5": "Very Poor",
+      "6": "Hazardous"
+    }
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",

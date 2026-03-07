@@ -14,6 +14,7 @@ const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => 
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
+import { AirQualityWidget } from './AirQualityWidget';
 import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
@@ -22,6 +23,10 @@ import { MapControls } from './MapControls';
 import { DetailPanelContent } from './DetailPanel/DetailPanelContent';
 import { useVehicles } from '../hooks/useVehicles';
 import { useStops } from '../hooks/useStops';
+import { useParking } from '../hooks/useParking';
+import { useSharedCars } from '../hooks/useSharedCars';
+import { useBicycleCounters } from '../hooks/useBicycleCounters';
+import { useAirQuality } from '../hooks/useAirQuality';
 import { useRouteShape } from '../hooks/useRouteShape';
 import { useMapFilters } from '../hooks/useMapFilters';
 
@@ -40,6 +45,10 @@ const MapInner: React.FC = () => {
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
     const { stops: stopsData, centroids: labelData } = useStops();
+    const { data: parkingData } = useParking();
+    const { data: sharedCarsData } = useSharedCars();
+    const { data: bicycleCountersData } = useBicycleCounters();
+    const { data: airQualityData } = useAirQuality();
     const routeShapeData = useRouteShape();
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
@@ -122,15 +131,76 @@ const MapInner: React.FC = () => {
                             isTrain: f.properties.is_train === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
+                        return;
+                    }
+
+                    if (f.layer.id === 'parking' || f.layer.id === 'parking-labels') {
+                        const props = f.properties;
+                        const occupancy = typeof props.occupancy === 'string' ? JSON.parse(props.occupancy) : props.occupancy;
+                        actions.selectStop({
+                            id: props.id,
+                            name: props.name || t('settings.showParking.title'),
+                            platformCode: occupancy ? `${occupancy.free}/${occupancy.total}` : undefined,
+                            coordinates: (f.geometry as { type: 'Point' | 'Polygon'; coordinates: any }).type === 'Point'
+                                ? (f.geometry as any).coordinates
+                                : undefined
+                        });
+                        return;
+                    }
+
+                    if (f.layer.id === 'shared-cars' || f.layer.id === 'shared-cars-labels') {
+                        const props = f.properties;
+                        actions.selectStop({
+                            id: props.id,
+                            name: props.name,
+                            platformCode: props.company,
+                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                        });
+                        return;
+                    }
+
+                    if (f.layer.id === 'bicycle-counters') {
+                        const props = f.properties;
+                        actions.selectStop({
+                            id: props.id,
+                            name: props.name,
+                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                        });
+                        return;
+                    }
+
+                    if (f.layer.id === 'air-quality') {
+                        const props = f.properties;
+                        const measurement = typeof props.measurement === 'string' ? JSON.parse(props.measurement) : props.measurement;
+                        actions.selectStop({
+                            id: props.id,
+                            name: props.name,
+                            platformCode: measurement ? `${t('airQuality.title')}: ${measurement.AQ_hourly_index}` : undefined,
+                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                        });
+                        return;
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'train-stations', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
+                interactiveLayerIds={[
+                    'unclustered-point', 'train-stations', 'clusters', 'transfer-stations',
+                    'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all',
+                    'parking', 'parking-labels', 'shared-cars', 'shared-cars-labels',
+                    'bicycle-counters', 'air-quality'
+                ]}
             >
                 <MapLayers
                     mapLoaded={state.mapLoaded}
                     showVehicles={state.showVehicles}
                     showStops={state.showStops}
+                    showParking={state.showParking}
+                    showSharedCars={state.showSharedCars}
+                    showBicycleCounters={state.showBicycleCounters}
+                    showAirQuality={state.showAirQuality}
                     displayVehicles={displayVehicles || null}
+                    parkingData={parkingData || null}
+                    sharedCarsData={sharedCarsData || null}
+                    bicycleCountersData={bicycleCountersData || null}
+                    airQualityData={airQualityData || null}
                     stopsData={stopsData}
                     labelData={labelData}
                     routeShapeData={routeShapeData}
@@ -144,6 +214,7 @@ const MapInner: React.FC = () => {
 
             <LiveStatus />
             <Search />
+            <AirQualityWidget />
             <MapControls />
 
             <React.Suspense fallback={null}>

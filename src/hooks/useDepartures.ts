@@ -13,6 +13,12 @@ export const useDepartures = () => {
         queryKey: ['departures', stopId],
         queryFn: async () => {
             if (!stopId) return null;
+            // Ignore non-numeric stop IDs for the departure board (like parking-123)
+            // unless they are known to be valid Golemio IDs.
+            // For now, we just skip if it contains non-numeric characters and isn't a standard stop.
+            if (stopId.includes('-') && !stopId.startsWith('U')) {
+                return { departures: [] };
+            }
             const res = await fetch(`/api/departures?stopId=${encodeURIComponent(stopId)}`);
             if (!res.ok) throw new Error('Failed to fetch departures');
             return res.json();

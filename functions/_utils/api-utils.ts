@@ -17,6 +17,10 @@ export const CACHE_TTL = {
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h
     GTFS_DATA: 3600, // 1h for the static data fetch process
+    PARKING: 300, // 5m
+    AIR_QUALITY: 1200, // 20m
+    SHARED_CARS: 60, // 1m
+    BICYCLE_COUNTERS: 3600, // 1h
 };
 
 /**

@@ -20,6 +20,10 @@ export interface MapContextType {
     };
     actions: Omit<ReturnType<typeof useMapReducer>, 'state' | 'dispatch'> & {
         setShowStops: (val: boolean) => void;
+        setShowParking: (val: boolean) => void;
+        setShowSharedCars: (val: boolean) => void;
+        setShowBicycleCounters: (val: boolean) => void;
+        setShowAirQuality: (val: boolean) => void;
         handleLocate: (e?: React.MouseEvent | React.TouchEvent) => void;
         handleDepartureClick: (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => Promise<void>;
         performGeolocation: () => void;

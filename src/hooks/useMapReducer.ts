@@ -11,6 +11,10 @@ export interface MapState {
     isFollowing: boolean;
     showVehicles: boolean;
     showStops: boolean;
+    showParking: boolean;
+    showSharedCars: boolean;
+    showBicycleCounters: boolean;
+    showAirQuality: boolean;
     isSettingsOpen: boolean;
     expandedGroups: string[];
     departureSort: 'line' | 'departure';
@@ -34,6 +38,10 @@ export type MapAction =
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
     | { type: 'SET_SHOW_STOPS'; payload: boolean }
+    | { type: 'SET_SHOW_PARKING'; payload: boolean }
+    | { type: 'SET_SHOW_SHARED_CARS'; payload: boolean }
+    | { type: 'SET_SHOW_BICYCLE_COUNTERS'; payload: boolean }
+    | { type: 'SET_SHOW_AIR_QUALITY'; payload: boolean }
     | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
     | { type: 'SET_EXPANDED_GROUPS'; payload: string[] }
     | { type: 'TOGGLE_GROUP'; payload: string }
@@ -59,6 +67,18 @@ const getInitialState = (): MapState => ({
     showStops: typeof window !== 'undefined'
         ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false'
         : true,
+    showParking: typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_PARKING) === 'true'
+        : false,
+    showSharedCars: typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_SHARED_CARS) === 'true'
+        : false,
+    showBicycleCounters: typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_BICYCLE_COUNTERS) === 'true'
+        : false,
+    showAirQuality: typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.SHOW_AIR_QUALITY) === 'true'
+        : false,
     isSettingsOpen: false,
     expandedGroups: [],
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
@@ -123,6 +143,18 @@ function mapReducer(state: MapState, action: MapAction): MapState {
         case 'SET_SHOW_STOPS':
             localStorage.setItem(STORAGE_KEYS.SHOW_STOPS, String(action.payload));
             return { ...state, showStops: action.payload };
+        case 'SET_SHOW_PARKING':
+            localStorage.setItem(STORAGE_KEYS.SHOW_PARKING, String(action.payload));
+            return { ...state, showParking: action.payload };
+        case 'SET_SHOW_SHARED_CARS':
+            localStorage.setItem(STORAGE_KEYS.SHOW_SHARED_CARS, String(action.payload));
+            return { ...state, showSharedCars: action.payload };
+        case 'SET_SHOW_BICYCLE_COUNTERS':
+            localStorage.setItem(STORAGE_KEYS.SHOW_BICYCLE_COUNTERS, String(action.payload));
+            return { ...state, showBicycleCounters: action.payload };
+        case 'SET_SHOW_AIR_QUALITY':
+            localStorage.setItem(STORAGE_KEYS.SHOW_AIR_QUALITY, String(action.payload));
+            return { ...state, showAirQuality: action.payload };
         case 'SET_IS_SETTINGS_OPEN':
             return { ...state, isSettingsOpen: action.payload };
         case 'SET_EXPANDED_GROUPS':
@@ -205,6 +237,18 @@ export const useMapReducer = () => {
     const setShowStops = useCallback((val: boolean) =>
         dispatch({ type: 'SET_SHOW_STOPS', payload: val }), []);
 
+    const setShowParking = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_PARKING', payload: val }), []);
+
+    const setShowSharedCars = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_SHARED_CARS', payload: val }), []);
+
+    const setShowBicycleCounters = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_BICYCLE_COUNTERS', payload: val }), []);
+
+    const setShowAirQuality = useCallback((val: boolean) =>
+        dispatch({ type: 'SET_SHOW_AIR_QUALITY', payload: val }), []);
+
     const setIsSettingsOpen = useCallback((val: boolean) =>
         dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val }), []);
 
@@ -249,6 +293,10 @@ export const useMapReducer = () => {
         setIsFollowing,
         setShowVehicles,
         setShowStops,
+        setShowParking,
+        setShowSharedCars,
+        setShowBicycleCounters,
+        setShowAirQuality,
         setIsSettingsOpen,
         setExpandedGroups,
         toggleGroup,

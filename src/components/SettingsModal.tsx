@@ -8,6 +8,10 @@ import {
     RefreshCw,
     Info,
     TrainFront as Subway,
+    Car,
+    Bike,
+    Wind,
+    ParkingCircle,
     Bus,
     TramFront as Tram,
     Train,
@@ -30,8 +34,29 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
-    const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter, searchHistory } = state;
-    const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter, clearHistory } = actions;
+    const {
+        isSettingsOpen: isOpen,
+        showVehicles,
+        showStops,
+        showParking,
+        showSharedCars,
+        showBicycleCounters,
+        showAirQuality,
+        routeTypeFilter,
+        searchHistory
+    } = state;
+
+    const {
+        setIsSettingsOpen,
+        setShowVehicles,
+        setShowStops,
+        setShowParking,
+        setShowSharedCars,
+        setShowBicycleCounters,
+        setShowAirQuality,
+        setRouteTypeFilter,
+        clearHistory
+    } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -221,40 +246,51 @@ export const SettingsModal: React.FC = () => {
                         </AnimatePresence>
                     </div>
 
-                    <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden mt-3">
-                        <button
-                            onClick={() => setShowStops(!showStops)}
-                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group"
-                        >
-                            <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
-                                    <MapPin size={22} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-white font-semibold leading-snug">
-                                        {t('settings.showStops.title')}
-                                    </div>
-                                    <div className="text-zinc-500 text-xs mt-1 leading-tight">
-                                        {t('settings.showStops.description')}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                className={cn(
-                                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
-                                    showStops ? "bg-emerald-500" : "bg-zinc-700"
-                                )}
+                    {[
+                        { id: 'showStops', value: showStops, setter: setShowStops, icon: MapPin },
+                        { id: 'showParking', value: showParking, setter: setShowParking, icon: ParkingCircle },
+                        { id: 'showSharedCars', value: showSharedCars, setter: setShowSharedCars, icon: Car },
+                        { id: 'showBicycleCounters', value: showBicycleCounters, setter: setShowBicycleCounters, icon: Bike },
+                        { id: 'showAirQuality', value: showAirQuality, setter: setShowAirQuality, icon: Wind },
+                    ].map(({ id, value, setter, icon: Icon }) => (
+                        <div key={id} className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden mt-3">
+                            <button
+                                onClick={() => setter(!value)}
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group"
                             >
-                                <span
+                                <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
+                                    <div className={cn(
+                                        "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
+                                        value ? "bg-emerald-500/10 text-emerald-500" : "bg-zinc-500/10 text-zinc-500"
+                                    )}>
+                                        <Icon size={22} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-white font-semibold leading-snug">
+                                            {t(`settings.${id}.title`)}
+                                        </div>
+                                        <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                            {t(`settings.${id}.description`)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
                                     className={cn(
-                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                        showStops ? "translate-x-6" : "translate-x-1"
+                                        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
+                                        value ? "bg-emerald-500" : "bg-zinc-700"
                                     )}
-                                />
-                            </div>
-                        </button>
-                    </div>
+                                >
+                                    <span
+                                        className={cn(
+                                            "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                            value ? "translate-x-6" : "translate-x-1"
+                                        )}
+                                    />
+                                </div>
+                            </button>
+                        </div>
+                    ))}
                 </section>
 
                 {/* Language Selection */}

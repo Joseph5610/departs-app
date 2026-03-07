@@ -94,6 +94,79 @@ export interface GolemioInfotext {
     valid_to: string | null;
 }
 
+export interface GolemioParkingFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point' | 'Polygon' | 'MultiPolygon';
+        coordinates: any;
+    };
+    properties: {
+        id: string;
+        name: string | null;
+        parking_policy: string | null;
+        parking_type: string | null;
+        last_updated_at: string;
+        has_occupancy_info: boolean;
+        capacity: number | null;
+        [key: string]: any;
+    };
+}
+
+export interface GolemioParkingOccupancy {
+    parking_id: string;
+    free_spot_number: number | null;
+    occupied_spot_number: number | null;
+    total_spot_number: number | null;
+    last_updated: string;
+}
+
+export interface GolemioAirQualityFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    properties: {
+        id: string;
+        name: string;
+        measurement: {
+            AQ_hourly_index: number;
+            components: Array<{
+                type: string;
+                averaged_time: { value: number };
+            }>;
+        };
+        updated_at: string;
+    };
+}
+
+export interface GolemioSharedCarFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    properties: {
+        id: string;
+        name: string;
+        company: { name: string };
+        updated_at: string;
+    };
+}
+
+export interface GolemioBicycleCounterFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    properties: {
+        id: string;
+        name: string;
+        updated_at: string;
+    };
+}
+
 export interface GolemioStopFeature {
     type: 'Feature';
     geometry: {

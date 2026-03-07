@@ -460,6 +460,98 @@ export const vehiclesLabelLayer: SymbolLayerSpecification = {
     }
 };
 
+export const parkingLayer: CircleLayerSpecification = {
+    id: 'parking',
+    type: 'circle',
+    source: 'pid-parking',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 15, 10],
+        'circle-color': '#3b82f6',
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.8
+    }
+};
+
+export const parkingLabelLayer: SymbolLayerSpecification = {
+    id: 'parking-labels',
+    type: 'symbol',
+    source: 'pid-parking',
+    minzoom: 13,
+    layout: {
+        'text-field': ['case',
+            ['has', 'occupancy'],
+            ['to-string', ['get', 'free', ['get', 'occupancy']]],
+            'P'
+        ],
+        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-size': 10,
+        'text-allow-overlap': false
+    },
+    paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': '#000000',
+        'text-halo-width': 1
+    }
+};
+
+export const sharedCarsLayer: CircleLayerSpecification = {
+    id: 'shared-cars',
+    type: 'circle',
+    source: 'pid-shared-cars',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 15, 7],
+        'circle-color': '#f59e0b',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#ffffff'
+    }
+};
+
+export const sharedCarsLabelLayer: SymbolLayerSpecification = {
+    id: 'shared-cars-labels',
+    type: 'symbol',
+    source: 'pid-shared-cars',
+    minzoom: 14,
+    layout: {
+        'icon-image': 'car-15',
+        'icon-size': 1,
+        'icon-allow-overlap': false
+    }
+};
+
+export const bicycleCountersLayer: CircleLayerSpecification = {
+    id: 'bicycle-counters',
+    type: 'circle',
+    source: 'pid-bicycle-counters',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 15, 7],
+        'circle-color': '#10b981',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#ffffff'
+    }
+};
+
+export const airQualityLayer: CircleLayerSpecification = {
+    id: 'air-quality',
+    type: 'circle',
+    source: 'pid-air-quality',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 12],
+        'circle-color': [
+            'match', ['get', 'AQ_hourly_index', ['get', 'measurement']],
+            1, '#10b981',
+            2, '#84cc16',
+            3, '#f59e0b',
+            4, '#f97316',
+            5, '#f43f5e',
+            6, '#a855f7',
+            '#71717a'
+        ],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
+    }
+};
+
 export const routeLineLayer: LineLayerSpecification = {
     id: 'route-line',
     type: 'line',

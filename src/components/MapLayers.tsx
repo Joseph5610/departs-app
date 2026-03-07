@@ -22,18 +22,31 @@ import {
     vehiclesPointLayer,
     vehiclesDirectionLayer,
     vehiclesLabelLayer,
-    routeLineLayer
+    routeLineLayer,
+    parkingLayer,
+    parkingLabelLayer,
+    sharedCarsLayer,
+    sharedCarsLabelLayer,
+    bicycleCountersLayer,
+    airQualityLayer
 } from '../config/mapLayers';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */
     mapLoaded: boolean;
-    /** Global visibility toggle for vehicles */
+    /** Global visibility toggles */
     showVehicles: boolean;
-    /** Global visibility toggle for stops */
     showStops: boolean;
-    /** Collection of all vehicles to be displayed */
+    showParking: boolean;
+    showSharedCars: boolean;
+    showBicycleCounters: boolean;
+    showAirQuality: boolean;
+    /** Data collections */
     displayVehicles: VehicleCollection | null;
+    parkingData: FeatureCollection | null;
+    sharedCarsData: FeatureCollection | null;
+    bicycleCountersData: FeatureCollection | null;
+    airQualityData: FeatureCollection | null;
     /** Collection of physical stop locations (points) */
     stopsData: StopCollection | null;
     /** Collection of stop label centroids (text) */
@@ -71,7 +84,15 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     mapLoaded,
     showVehicles,
     showStops,
+    showParking,
+    showSharedCars,
+    showBicycleCounters,
+    showAirQuality,
     displayVehicles,
+    parkingData,
+    sharedCarsData,
+    bicycleCountersData,
+    airQualityData,
     stopsData,
     labelData,
     routeShapeData,
@@ -137,6 +158,24 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
 
             <Source id="stop-labels-centroids" type="geojson" data={(showStops && labelData ? labelData : EMPTY_GEOJSON) as any}>
                 <Layer {...stopLabelLayer} />
+            </Source>
+
+            <Source id="pid-parking" type="geojson" data={(showParking && parkingData ? parkingData : EMPTY_GEOJSON) as any}>
+                <Layer {...parkingLayer} />
+                <Layer {...parkingLabelLayer} />
+            </Source>
+
+            <Source id="pid-shared-cars" type="geojson" data={(showSharedCars && sharedCarsData ? sharedCarsData : EMPTY_GEOJSON) as any}>
+                <Layer {...sharedCarsLayer} />
+                <Layer {...sharedCarsLabelLayer} />
+            </Source>
+
+            <Source id="pid-bicycle-counters" type="geojson" data={(showBicycleCounters && bicycleCountersData ? bicycleCountersData : EMPTY_GEOJSON) as any}>
+                <Layer {...bicycleCountersLayer} />
+            </Source>
+
+            <Source id="pid-air-quality" type="geojson" data={(showAirQuality && airQualityData ? airQualityData : EMPTY_GEOJSON) as any}>
+                <Layer {...airQualityLayer} />
             </Source>
 
             <Source
