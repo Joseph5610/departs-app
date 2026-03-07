@@ -119,6 +119,12 @@ export const onRequest: PagesFunction = async (context) => {
                 isActive = false;
             }
 
+            // Incidents are always considered active if they are in the feed
+            if (type === 'incidents') {
+                isActive = true;
+                isFuture = false;
+            }
+
             items.push({ ...alert, isActive, isFuture });
         }
 
