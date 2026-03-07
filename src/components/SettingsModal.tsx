@@ -14,6 +14,7 @@ import {
     Ship,
     CableCar,
     CircleSlash,
+    Database,
     MapPin,
     Clock
 } from 'lucide-react';
@@ -325,15 +326,27 @@ export const SettingsModal: React.FC = () => {
                             </span>
                         </button>
 
-                        <a
-                            href="https://github.com/joseph5610/departs-app"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
-                        >
-                            <Github size={14} />
-                            {t('settings.viewSource')}
-                        </a>
+                        <div className="flex items-center justify-center gap-6">
+                            <a
+                                href="https://golemio.cz"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
+                            >
+                                <Database size={14} />
+                                {t('settings.dataSource')}
+                            </a>
+
+                            <a
+                                href="https://github.com/joseph5610/departs-app"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
+                            >
+                                <Github size={14} />
+                                {t('settings.viewSource')}
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

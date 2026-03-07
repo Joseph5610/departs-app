@@ -46,6 +46,7 @@
       "cs": "Čeština"
     },
     "viewSource": "View source on GitHub",
+    "dataSource": "Data Source",
     "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {

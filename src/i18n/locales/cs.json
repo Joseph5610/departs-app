@@ -46,6 +46,7 @@
       "cs": "Čeština"
     },
     "viewSource": "Zdrojový kód na GitHubu",
+    "dataSource": "Zdroj dat",
     "version": "Verze {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
