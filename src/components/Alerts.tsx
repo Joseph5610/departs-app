@@ -159,7 +159,9 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             title={item.title}
             link={item.link}
             priority={item.priority || 'low'}
-            date={item.date || (item.pubDate ? new Date(item.pubDate).toLocaleDateString() : undefined)}
+            date={item.displayDate || (item.timestamp ? new Date(item.timestamp).toLocaleDateString() : undefined)}
+            validFrom={item.startDate}
+            validTo={item.endDate}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

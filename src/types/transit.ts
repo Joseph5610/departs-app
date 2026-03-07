@@ -86,12 +86,11 @@ export interface Departure {
 export interface RSSItem {
     title: string;
     link: string;
-    pubDate: string;
-    isoDate: string;
+    timestamp: string;
+    displayDate?: string;
+    startDate?: string;
+    endDate?: string;
     guid?: string;
-    date?: string;
-    dateFrom?: string;
-    dateTo?: string;
     priority?: string;
     lines?: string[];
     isActive?: boolean;

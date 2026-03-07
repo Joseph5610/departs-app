@@ -98,12 +98,17 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
                         <span>{(() => {
                             if (validFrom) {
-                                const fromStr = format(parseISO(validFrom), 'd. M. yyyy', { locale });
-                                if (validTo) {
-                                    const toStr = format(parseISO(validTo), 'd. M. yyyy', { locale });
-                                    return `${fromStr} – ${toStr}`;
+                                try {
+                                    const fromStr = format(parseISO(validFrom), 'd. M. yyyy', { locale });
+                                    if (validTo) {
+                                        const toStr = format(parseISO(validTo), 'd. M. yyyy', { locale });
+                                        return `${fromStr} – ${toStr}`;
+                                    }
+                                    return t('alerts.validFrom', { date: fromStr });
+                                } catch (e) {
+                                    // Fallback to raw display date if formatting fails
+                                    return date;
                                 }
-                                return t('alerts.validFrom', { date: fromStr });
                             }
                             return date;
                         })()}</span>

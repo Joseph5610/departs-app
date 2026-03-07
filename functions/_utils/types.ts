@@ -97,12 +97,11 @@ export interface GolemioInfotext {
 export interface AppRSSItem {
     title: string;
     link: string;
-    pubDate: string;
-    isoDate: string;
+    timestamp: string; // ISO string for sorting/publication
+    displayDate?: string; // Human-readable date string from feed
+    startDate?: string; // ISO string for event start
+    endDate?: string; // ISO string for event end
     guid?: string;
-    date?: string;
-    dateFrom?: string;
-    dateTo?: string;
     priority?: string;
     lines?: string[];
     isActive?: boolean;

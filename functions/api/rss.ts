@@ -84,31 +84,18 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             }
         }
 
-        const alert: AppRSSItem = {
-            title,
-            link: getXMLTagContent(itemXml, 'link'),
-            pubDate,
-            isoDate: pubDate ? new Date(pubDate).toISOString() : now.toISOString(),
-            guid: getXMLTagContent(itemXml, 'guid'),
-            date: dateRange,
-            dateFrom,
-            dateTo,
-            priority: getXMLTagContent(itemXml, 'priority'),
-            lines
-        };
-
-        let isActive = true;
-        let isFuture = false;
-
         // Attempt to calculate activity status for both incidents and exclusions
-        let start = normalizeRSSDate(dateFrom || '', now, alert.isoDate);
-        let end = normalizeRSSDate(dateTo || '', now, alert.isoDate);
+        let start = normalizeRSSDate(dateFrom || '', now, pubDate);
+        let end = normalizeRSSDate(dateTo || '', now, pubDate);
 
         if (!start && dateRange) {
             const parts = dateRange.split('-');
-            if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, alert.isoDate);
-            if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, alert.isoDate);
+            if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, pubDate);
+            if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, pubDate);
         }
+
+        let isActive = true;
+        let isFuture = false;
 
         if (start && start > now) {
             isActive = false;
@@ -123,7 +110,27 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             isFuture = false;
         }
 
-        items.push({ ...alert, isActive, isFuture });
+        // Use publication date for sorting, fallback to start date, then current time
+        let timestamp = now.toISOString();
+        if (pubDate) {
+            timestamp = new Date(pubDate).toISOString();
+        } else if (start) {
+            timestamp = start.toISOString();
+        }
+
+        items.push({
+            title,
+            link: getXMLTagContent(itemXml, 'link'),
+            timestamp,
+            displayDate: dateRange || undefined,
+            startDate: start?.toISOString(),
+            endDate: end?.toISOString(),
+            guid: getXMLTagContent(itemXml, 'guid'),
+            priority: getXMLTagContent(itemXml, 'priority'),
+            lines,
+            isActive,
+            isFuture
+        });
     }
 
     return items;
