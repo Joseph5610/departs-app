@@ -2,6 +2,17 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.15.0] - 2026-03-07
+
+### Added
+- **Transit Infotexts (Alerts)**: Integrated real-time Golemio transit alerts directly into the departure board. You can now see service changes, temporary stop relocations, and other important notices for specific stops.
+- **Unified Alert UI**: Introduced a shared `GenericAlertCard` component to ensure consistent styling between RSS-based incidents/exclusions and Golemio transit infotexts.
+- **Standardized Date Formatting**: Implemented localized and consistent date formatting (e.g., "7. 3. 2026") across all alerts using `date-fns`.
+
+### Changed
+- **De-cluttered UI**: Redundant "Active now" labels are now hidden on the departure board and vehicle details, keeping focus on the alert message. They remain visible in the global "Alerts" modal where context is required.
+- **Stop Data Enrichment**: Enhanced stop nodes to track all platform IDs, ensuring alerts relevant to any part of a station correctly appear on its grouped departure board.
+
 ## [0.14.0] - 2026-03-06
 
 ### Added

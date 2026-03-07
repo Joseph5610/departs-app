@@ -1,7 +1,7 @@
 {
   "name": "departs-app",
   "private": true,
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Lightweight real-time Prague public transport departures app",
   "author": "departs.app",
   "license": "MIT",
