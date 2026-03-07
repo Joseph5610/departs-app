@@ -36,7 +36,12 @@ export const onRequest: PagesFunction = async (context) => {
             const title = getXMLTagContent(itemXml, 'title');
             const description = getXMLTagContent(itemXml, 'description');
             const pubDate = getXMLTagContent(itemXml, 'pubDate');
-            const dateRange = getXMLTagContent(itemXml, 'date') || description.split(';')[0]?.trim();
+
+            const dateTag = getXMLTagContent(itemXml, 'date');
+            const dateRangeFallback = type === 'incidents' && description.includes(';')
+                ? description.split(';')[0].trim()
+                : '';
+            const dateRange = dateTag || dateRangeFallback;
 
             const dateFrom = getXMLTagContent(itemXml, 'dateFrom');
             const dateTo = getXMLTagContent(itemXml, 'dateTo');
@@ -55,12 +60,36 @@ export const onRequest: PagesFunction = async (context) => {
                 }
             }
 
+            // Process description into contentSnippet
+            // 1. Replace <br> with spaces to avoid merging words
+            // 2. Strip all other HTML tags
+            let contentSnippet = description
+                .replace(/<br\s*\/?>/gi, ' ')
+                .replace(/<[^>]*>?/gm, '')
+                .trim();
+
+            // Strip dateRange if it's a prefix in the description
+            if (dateRange && contentSnippet.startsWith(dateRange)) {
+                contentSnippet = contentSnippet.slice(dateRange.length).trim();
+            }
+
+            // Remove redundant line information ("Dotčené linky: ..." or "Linky: ...")
+            // These are already available in the 'lines' array and displayed as badges
+            contentSnippet = contentSnippet
+                .replace(/Dotčené linky:\s*([A-Z0-9,\s]+)/gi, '')
+                .replace(/Linky:\s*([A-Z0-9,\s]+)/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            // Clean up leading/trailing punctuation like semicolons left after stripping prefixes
+            contentSnippet = contentSnippet.replace(/^[;:\-\s]+|[;:\-\s]+$/g, '').trim();
+
             const alert = {
                 title,
                 link: getXMLTagContent(itemXml, 'link'),
                 pubDate,
                 isoDate: pubDate ? new Date(pubDate).toISOString() : now.toISOString(),
-                contentSnippet: description.replace(/<[^>]*>?/gm, ''),
+                contentSnippet,
                 guid: getXMLTagContent(itemXml, 'guid'),
                 date: dateRange,
                 dateFrom,
@@ -73,22 +102,21 @@ export const onRequest: PagesFunction = async (context) => {
             let isActive = true;
             let isFuture = false;
 
-            if (type === 'exclusions') {
-                let start = normalizeRSSDate(dateFrom || '', now, alert.isoDate);
-                let end = normalizeRSSDate(dateTo || '', now, alert.isoDate);
+            // Attempt to calculate activity status for both incidents and exclusions
+            let start = normalizeRSSDate(dateFrom || '', now, alert.isoDate);
+            let end = normalizeRSSDate(dateTo || '', now, alert.isoDate);
 
-                if (!start && dateRange) {
-                    const parts = dateRange.split('-');
-                    if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, alert.isoDate);
-                    if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, alert.isoDate);
-                }
+            if (!start && dateRange) {
+                const parts = dateRange.split('-');
+                if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, alert.isoDate);
+                if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, alert.isoDate);
+            }
 
-                if (start && start > now) {
-                    isActive = false;
-                    isFuture = true;
-                } else if (end && end < now) {
-                    isActive = false;
-                }
+            if (start && start > now) {
+                isActive = false;
+                isFuture = true;
+            } else if (end && end < now) {
+                isActive = false;
             }
 
             items.push({ ...alert, isActive, isFuture });
