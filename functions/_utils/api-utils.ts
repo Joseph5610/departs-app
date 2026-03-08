@@ -129,6 +129,24 @@ export function createErrorResponse(message: string, status: number = 500): Resp
 }
 
 /**
+ * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
+ */
+export function formatPragueDate(date: Date): string {
+    const d = new Intl.DateTimeFormat('cs-CZ', {
+        timeZone: 'Europe/Prague',
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+    }).formatToParts(date);
+
+    const get = (type: string) => d.find(p => p.type === type)?.value;
+    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
+}
+
+/**
  * Creates a standardized JSON success response with appropriate Cache-Control headers.
  *
  * @param data Data to return in the response body

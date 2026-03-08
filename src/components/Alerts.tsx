@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
 import { useRSS } from '../hooks/useRSS';
-import type { RSSItem } from '../hooks/useRSS';
+import type { RSSItem } from '../types/transit';
 import { Modal } from './Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
@@ -15,30 +15,30 @@ export const Alerts: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'incidents' | 'exclusions'>('incidents');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { data: incidents, isLoading: loadingIncidents } = useRSS('incidents');
-    const { data: exclusions, isLoading: loadingExclusions } = useRSS('exclusions');
+    const { data: rssData, isLoading: loadingRSS } = useRSS();
 
-    const incidentsCount = incidents?.items?.length || 0;
-    const exclusionsCount = exclusions?.items?.length || 0;
+    const incidentsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'incident').length || 0, [rssData]);
+    const exclusionsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'exclusion').length || 0, [rssData]);
 
     const currentItems = useMemo(() => {
-        const items = activeTab === 'incidents' ? incidents?.items : exclusions?.items;
+        const items = rssData?.alerts?.filter(a => activeTab === 'incidents' ? a.type === 'incident' : a.type === 'exclusion');
         if (!items) return [];
 
         const filtered = searchQuery.trim()
             ? items.filter(item =>
                 item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 item.lines?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()))
               )
             : [...items];
 
-        // Sort: Active first, Future (planned) last
+        // Frontend sorting: Priority (Active > Future), then original feed order
         return filtered.sort((a, b) => {
-            if (a.isFuture && !b.isFuture) return 1;
-            if (!a.isFuture && b.isFuture) return -1;
+            if (a.isActive && !b.isActive) return -1;
+            if (!a.isActive && b.isActive) return 1;
             return 0;
         });
-    }, [activeTab, incidents, exclusions, searchQuery]);
+    }, [activeTab, rssData, searchQuery]);
 
     return (
         <>
@@ -112,7 +112,7 @@ export const Alerts: React.FC = () => {
                                     <AlertCard key={item.guid || idx} item={item} />
                                 ))}
 
-                                {currentItems.length === 0 && !loadingIncidents && !loadingExclusions && (
+                                {currentItems.length === 0 && !loadingRSS && (
                                     <div className="flex-1 flex flex-col items-center justify-center py-12 text-zinc-500 text-sm h-full min-h-[50vh]">
                                         {t('alerts.noAlerts')}
                                     </div>
@@ -143,6 +143,7 @@ const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string,
 );
 
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
+    const { t } = useTranslation();
     // Simple heuristic for transport type to get colors
     const guessType = (line: string) => {
         if (['A', 'B', 'C'].includes(line.toUpperCase())) return 'metro';
@@ -158,9 +159,11 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     return (
         <GenericAlertCard
             title={item.title}
+            description={item.description}
             link={item.link}
             priority={item.priority || 'low'}
-            date={item.date || (item.pubDate ? new Date(item.pubDate).toLocaleDateString() : undefined)}
+            validFrom={item.valid_from}
+            validTo={item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

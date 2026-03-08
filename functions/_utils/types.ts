@@ -161,6 +161,24 @@ export interface AppStopProperties {
     all_ids?: string[];
 }
 
+export interface AppRSSItem {
+    type: 'incident' | 'exclusion';
+    title: string;
+    description: string | null;
+    link: string;
+    valid_from: string | null;
+    valid_to: string | null;
+    guid?: string;
+    priority?: string;
+    lines?: string[];
+    isActive?: boolean;
+    isFuture?: boolean;
+}
+
+export interface AppRSSResponse {
+    alerts: AppRSSItem[];
+}
+
 export interface AppInfotext {
     id: string;
     text: string;

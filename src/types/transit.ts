@@ -83,16 +83,22 @@ export interface Departure {
     platform?: string;
 }
 
-export interface Alert {
-    id: string;
+export interface RSSItem {
+    type: 'incident' | 'exclusion';
     title: string;
-    description: string;
-    startTime: string;
-    endTime: string;
-    isPlanned: boolean;
-    isActive: boolean;
-    url?: string;
-    type: 'incident' | 'exclusion' | 'incidents' | 'exclusions';
+    description: string | null;
+    valid_from: string | null;
+    valid_to: string | null;
+    link: string;
+    guid?: string;
+    priority?: string;
+    lines?: string[];
+    isActive?: boolean;
+    isFuture?: boolean;
+}
+
+export interface RSSResponse {
+    alerts: RSSItem[];
 }
 
 export interface Infotext {

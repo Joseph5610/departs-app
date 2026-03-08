@@ -1,5 +1,5 @@
 import { Env, GolemioInfotext, AppInfotext } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, formatPragueDate } from "../_utils/api-utils";
 
 /**
  * Retrieves the transit infotexts from Golemio API.
@@ -20,7 +20,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const data: GolemioInfotext[] = await response.json();
-        const now = new Date().getTime();
+        const now = new Date();
+        const nowMs = now.getTime();
 
         const filteredAndNormalized: AppInfotext[] = data
             .filter(item => {
@@ -28,7 +29,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 const validTo = item.valid_to ? new Date(item.valid_to).getTime() : null;
 
                 // Filter: now >= valid_from AND (valid_to is null OR now <= valid_to)
-                return now >= validFrom && (validTo === null || now <= validTo);
+                return nowMs >= validFrom && (validTo === null || nowMs <= validTo);
             })
             .map(item => ({
                 id: item.id,
@@ -37,8 +38,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 priority: item.priority,
                 displayType: item.display_type,
                 relatedStopIds: item.related_stops.map(stop => stop.id),
-                valid_from: item.valid_from,
-                valid_to: item.valid_to
+                valid_from: formatPragueDate(new Date(item.valid_from)),
+                valid_to: item.valid_to ? formatPragueDate(new Date(item.valid_to)) : null
             }));
 
         return createSuccessResponse(filteredAndNormalized, CACHE_TTL.INFOTEXTS);
