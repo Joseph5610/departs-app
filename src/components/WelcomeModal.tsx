@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal } from './Modal';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../config/constants';
 import { useMap } from '../hooks/useMap';
@@ -20,9 +25,15 @@ export const WelcomeModal: React.FC = () => {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title={t('welcome.title')}>
-            <div className="space-y-8">
-                <div className="flex flex-col items-center text-center space-y-4">
+        <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-[32px] border-white/10 bg-black/95 backdrop-blur-md" showCloseButton={false}>
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-white tracking-tight text-center">
+                        {t('welcome.title')}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-8">
+                    <div className="flex flex-col items-center text-center space-y-4">
                     <div className="w-24 h-24 bg-black/20 rounded-[2rem] flex items-center justify-center p-4 ring-1 ring-white/10 shadow-2xl backdrop-blur-xl">
                         <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
                     </div>
@@ -49,16 +60,17 @@ export const WelcomeModal: React.FC = () => {
                             <div className="text-zinc-500 text-xs mt-1">{t('welcome.steps.trackVehicles.description')}</div>
                         </div>
                     </div>
-                </div>
+                    </div>
 
-                <button
+                    <button
                     onClick={handleClose}
                     className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 group"
                 >
                     {t('welcome.cta')}
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-            </div>
-        </Modal>
+                    </button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };

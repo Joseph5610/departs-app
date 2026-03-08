@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
 import { useRSS } from '../hooks/useRSS';
 import type { RSSItem } from '../types/transit';
-import { Modal } from './Modal';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { GenericAlertCard } from './GenericAlertCard';
@@ -55,73 +60,80 @@ export const Alerts: React.FC = () => {
                 )}
             </button>
 
-            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title={t('alerts.title')}>
-                <div className="flex flex-col min-h-0">
-                    {/* Sticky Header Section */}
-                    <div className="sticky -top-4 z-10 bg-black pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-white/5">
-                        {/* Tabs */}
-                        <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
-                            <TabButton
-                                active={activeTab === 'incidents'}
-                                onClick={() => setActiveTab('incidents')}
-                                label={t('alerts.incidents')}
-                                count={incidentsCount}
-                                isIncident={true}
-                            />
-                            <TabButton
-                                active={activeTab === 'exclusions'}
-                                onClick={() => setActiveTab('exclusions')}
-                                label={t('alerts.exclusions')}
-                                count={exclusionsCount}
-                            />
-                        </div>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-[32px] border-white/10 bg-black/95 backdrop-blur-md">
+                    <DialogHeader className="mb-4">
+                        <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                            {t('alerts.title')}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col min-h-0">
+                        {/* Sticky Header Section */}
+                        <div className="sticky -top-4 z-10 bg-black pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-white/5">
+                            {/* Tabs */}
+                            <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
+                                <TabButton
+                                    active={activeTab === 'incidents'}
+                                    onClick={() => setActiveTab('incidents')}
+                                    label={t('alerts.incidents')}
+                                    count={incidentsCount}
+                                    isIncident={true}
+                                />
+                                <TabButton
+                                    active={activeTab === 'exclusions'}
+                                    onClick={() => setActiveTab('exclusions')}
+                                    label={t('alerts.exclusions')}
+                                    count={exclusionsCount}
+                                />
+                            </div>
 
-                        {/* Search */}
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={t('search.placeholder')}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-8 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                            />
-                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
-                                >
-                                    <X size={14} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* List */}
-                    <div className="space-y-3 pt-0">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab + searchQuery}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-3"
-                            >
-                                {currentItems.map((item, idx) => (
-                                    <AlertCard key={item.guid || idx} item={item} />
-                                ))}
-
-                                {currentItems.length === 0 && !loadingRSS && (
-                                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-zinc-500 text-sm h-full min-h-[50vh]">
-                                        {t('alerts.noAlerts')}
-                                    </div>
+                            {/* Search */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t('search.placeholder')}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-8 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                                />
+                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                                    >
+                                        <X size={14} />
+                                    </button>
                                 )}
-                            </motion.div>
-                        </AnimatePresence>
+                            </div>
+                        </div>
+
+                        {/* List */}
+                        <div className="space-y-3 pt-4">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab + searchQuery}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="space-y-3"
+                                >
+                                    {currentItems.map((item, idx) => (
+                                        <AlertCard key={item.guid || idx} item={item} />
+                                    ))}
+
+                                    {currentItems.length === 0 && !loadingRSS && (
+                                        <div className="flex-1 flex flex-col items-center justify-center py-12 text-zinc-500 text-sm h-full min-h-[50vh]">
+                                            {t('alerts.noAlerts')}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
                     </div>
-                </div>
-            </Modal>
+                </DialogContent>
+            </Dialog>
         </>
     );
 };
