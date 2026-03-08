@@ -22,8 +22,8 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
 
     // Position and status data
     const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
-    const rawDelay = p.delay !== undefined ? p.delay : p.last_position?.delay;
-    const delay = typeof rawDelay === 'number' ? rawDelay : (rawDelay?.actual ?? 0);
+    const delayValue = p.delay ?? p.last_position?.delay;
+    const delay = typeof delayValue === 'number' ? delayValue : (delayValue?.actual ?? 0);
     const state_position = p.state_position || p.last_position?.state_position;
 
     // Extract next stop info - check various nested structures used by Golemio

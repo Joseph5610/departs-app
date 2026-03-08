@@ -97,17 +97,19 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
                     if (!match) return str;
                     const [_, d, m, time] = match;
                     const day = parseInt(d);
-                    const month = parseInt(m) - 1;
-                    const [hours, mins] = time.split(':').map(n => parseInt(n));
+                    const month = parseInt(m);
 
                     let year = now.getFullYear();
-                    // Incident feeds often lack year. If month is much later than now, it's likely last year.
-                    // If month is much earlier than now, it's likely next year (rare for incidents but possible for planned ones).
-                    if (month > now.getMonth() + 1) year--;
-                    else if (month < now.getMonth() - 10) year++;
+                    // Incident feeds often lack year.
+                    // Compare month (1-indexed) - 1 with now.getMonth() (0-indexed)
+                    if (month - 1 > now.getMonth() + 1) year--;
+                    else if (month - 1 < now.getMonth() - 10) year++;
 
-                    const date = new Date(year, month, day, hours, mins);
-                    return formatPragueDate(date);
+                    const [h, min] = time.split(':');
+                    const paddedH = h.padStart(2, '0');
+
+                    // These are already in Prague time, just format the string
+                    return `${day}. ${month}. ${year} ${paddedH}:${min}`;
                 };
 
                 date_from = parseAndFormat(dateMatch[1]);
