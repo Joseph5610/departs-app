@@ -164,7 +164,6 @@
     "moreInfo": "Více informací",
     "planned": "Plánováno",
     "active": "Právě probíhá",
-    "validFrom": "Od {{date}}",
-    "untilFurtherNotice": "do odvolání"
+    "validFrom": "Od {{date}}"
   }
 }

@@ -56,8 +56,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 priority: item.priority,
                 displayType: item.display_type,
                 relatedStopIds: item.related_stops.map(stop => stop.id),
-                date_from: formatPragueDate(new Date(item.valid_from)),
-                date_to: item.valid_to ? formatPragueDate(new Date(item.valid_to)) : null
+                valid_from: formatPragueDate(new Date(item.valid_from)),
+                valid_to: item.valid_to ? formatPragueDate(new Date(item.valid_to)) : null
             }));
 
         return createSuccessResponse(filteredAndNormalized, CACHE_TTL.INFOTEXTS);

@@ -87,8 +87,8 @@ export interface RSSItem {
     type: 'incident' | 'exclusion';
     title: string;
     link: string;
-    date_from: string | null;
-    date_to: string | null;
+    valid_from: string | null;
+    valid_to: string | null;
     guid?: string;
     priority?: string;
     lines?: string[];
@@ -107,8 +107,8 @@ export interface Infotext {
     priority: 'low' | 'normal' | 'high';
     displayType: 'inline' | 'general';
     relatedStopIds: string[];
-    date_from: string;
-    date_to: string | null;
+    valid_from: string;
+    valid_to: string | null;
 }
 
 export interface VehicleDetail {

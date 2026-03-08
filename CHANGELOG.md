@@ -5,14 +5,10 @@ All notable changes to the **Departs.app** project will be documented in this fi
 ## [0.16.0] - 2026-03-08
 
 ### Changed
-- **RSS Alert Consolidation**: Refactored the backend to fetch both traffic incidents and exclusions in a single `/api/rss` request, reducing network overhead.
-- **Improved Date Accuracy**: Implemented a "Smart Backend" for date formatting. All alert and infotext dates are now pre-formatted in the backend using the `Europe/Prague` timezone, ensuring consistent display across different user environments.
-- **Incident Time Precision**: Fixed a bug where incident times (extracted from descriptions) were shifted by one hour due to timezone conversion.
-- **Lightweight Payloads**: Removed the heavy `description` field from the RSS API response to significantly reduce the JSON payload size.
-
-### Fixed
-- **Alert Sorting**: Standardized the sorting of alerts in the global modal, prioritizing currently active alerts over planned future ones.
-- **Infotext Formatting**: Standardized the date range display for stop-specific infotexts to match the `D. M. YYYY HH:mm` format used by RSS alerts.
+- **RSS API Consolidation**: Refactored the backend to fetch both traffic incidents and exclusions in a single `/api/rss` request, reducing frontend network overhead.
+- **Optimized Payload**: Heavy `description` fields (unused by the frontend) are now stripped from the RSS response, significantly reducing JSON payload size.
+- **Smart Date Parsing**: Implemented refined backend date parsing for traffic incidents, ensuring accurate Prague-localized times even when year data is missing in the source feeds.
+- **Unified Alert Types**: Synchronized RSS and Infotext data structures to use consistent `valid_from` and `valid_to` field names across the stack.
 
 ## [0.15.0] - 2026-03-07
 

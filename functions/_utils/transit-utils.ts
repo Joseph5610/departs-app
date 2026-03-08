@@ -22,8 +22,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
 
     // Position and status data
     const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
-    const delayValue = p.delay ?? p.last_position?.delay;
-    const delay = typeof delayValue === 'number' ? delayValue : (delayValue?.actual ?? 0);
+    const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual ?? p.last_position?.delay ?? 0);
     const state_position = p.state_position || p.last_position?.state_position;
 
     // Extract next stop info - check various nested structures used by Golemio
@@ -82,7 +81,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             is_wheelchair_accessible,
             is_air_conditioned,
             has_usb_chargers,
-            vehicle_registration_number: typeof vehicle_registration_number === 'number' ? vehicle_registration_number : undefined,
+            vehicle_registration_number,
             vehicle_descriptor: {
                 operator,
                 is_wheelchair_accessible,
@@ -90,7 +89,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
                 has_usb_chargers,
                 vehicle_registration_number,
                 ...vehicle_descriptor
-            } as any
+            }
         }
     };
 }

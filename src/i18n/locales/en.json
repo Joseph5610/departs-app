@@ -164,7 +164,6 @@
     "moreInfo": "More info",
     "planned": "Planned",
     "active": "Active now",
-    "validFrom": "From {{date}}",
-    "untilFurtherNotice": "until further notice"
+    "validFrom": "From {{date}}"
   }
 }

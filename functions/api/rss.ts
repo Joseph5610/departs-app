@@ -83,8 +83,8 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
 
         let isActive = true;
         let isFuture = false;
-        let date_from: string | null = null;
-        let date_to: string | null = null;
+        let valid_from: string | null = null;
+        let valid_to: string | null = null;
 
         if (type === 'incidents') {
             // Parsing incidents from description: "7.3. 20:32 - do&nbsp;odvolání" or "7.3. 08:00 - 8.3. 21:00"
@@ -101,32 +101,28 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
 
                     let year = now.getFullYear();
                     // Incident feeds often lack year.
-                    // Compare month (1-indexed) - 1 with now.getMonth() (0-indexed)
                     if (month - 1 > now.getMonth() + 1) year--;
                     else if (month - 1 < now.getMonth() - 10) year++;
 
                     const [h, min] = time.split(':');
                     const paddedH = h.padStart(2, '0');
 
-                    // These are already in Prague time, just format the string
                     return `${day}. ${month}. ${year} ${paddedH}:${min}`;
                 };
 
-                date_from = parseAndFormat(dateMatch[1]);
+                valid_from = parseAndFormat(dateMatch[1]);
                 let toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
                 if (toStr.toLowerCase().includes('odvolání')) {
-                    date_to = null;
+                    valid_to = null;
                 } else {
-                    date_to = parseAndFormat(toStr);
+                    valid_to = parseAndFormat(toStr);
                 }
             } else {
-                // Fallback to <date> tag if available, but incidents usually don't have it in a good format
                 const rawDate = getXMLTagContent(itemXml, 'date');
                 if (rawDate) {
-                    date_from = rawDate;
+                    valid_from = rawDate;
                 }
             }
-            // Incidents are forced to active
             isActive = true;
             isFuture = false;
         } else {
@@ -135,14 +131,14 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             const end = dateToTag && /^\d+$/.test(dateToTag) ? new Date(parseInt(dateToTag) * 1000) : null;
 
             if (start) {
-                date_from = formatPragueDate(start);
+                valid_from = formatPragueDate(start);
                 if (start > now) {
                     isActive = false;
                     isFuture = true;
                 }
             }
             if (end) {
-                date_to = formatPragueDate(end);
+                valid_to = formatPragueDate(end);
                 if (end < now) {
                     isActive = false;
                 }
@@ -167,8 +163,8 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             type: itemType,
             title,
             link: getXMLTagContent(itemXml, 'link'),
-            date_from,
-            date_to,
+            valid_from,
+            valid_to,
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,
