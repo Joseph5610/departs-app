@@ -75,12 +75,19 @@ export const AirQualityWidget: React.FC = () => {
                 title={t('airQuality.station', { name: stationName })}
                 style={{ top: 'calc(1.25rem + env(safe-area-inset-top, 0px))', right: 'calc(4.5rem + env(safe-area-inset-right, 0px))' }}
             >
-                <Wind size={18} />
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-none mb-0.5">
-                        {t('airQuality.title')}
+                <div className="relative">
+                    <Wind size={20} />
+                    {index && (
+                        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white text-black text-[8px] font-black flex items-center justify-center border border-current">
+                            {index}
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col min-w-[80px]">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.1em] opacity-80 leading-none mb-1">
+                        {stationName.replace('Praha ', '').split('-')[0]}
                     </span>
-                    <span className="text-xs font-black leading-none">
+                    <span className="text-[11px] font-black leading-none truncate">
                         {index ? t(`airQuality.indices.${index}`) : t('airQuality.unknown')}
                     </span>
                 </div>

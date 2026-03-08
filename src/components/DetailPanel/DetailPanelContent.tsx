@@ -1,7 +1,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2, Info, Car, Bike, Wind, ParkingCircle } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2, Car, Bike, Wind, ParkingCircle } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -33,6 +33,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 }) => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
+
     const { share } = useShare();
 
     // Data Hooks
@@ -162,12 +163,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             )}
                         </div>
 
-                        {selectedStop.type === 'stop' && (
-                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase font-black tracking-widest pt-2">
-                                <Info size={12} />
-                                <span>{t('map.departures.noUpcoming')}</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
