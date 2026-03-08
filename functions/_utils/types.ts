@@ -133,7 +133,8 @@ export interface AppRSSItem {
     type: 'incident' | 'exclusion';
     title: string;
     link: string;
-    displayDate?: string; // Pre-formatted string for UI
+    date_from: string | null;
+    date_to: string | null;
     guid?: string;
     priority?: string;
     lines?: string[];

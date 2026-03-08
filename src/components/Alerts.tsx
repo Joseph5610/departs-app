@@ -31,8 +31,12 @@ export const Alerts: React.FC = () => {
               )
             : [...items];
 
-        // Backend already sorts by status (Active > Future) and timestamp (Newest first).
-        return filtered;
+        // Frontend sorting: Priority (Active > Future), then original feed order
+        return filtered.sort((a, b) => {
+            if (a.isActive && !b.isActive) return -1;
+            if (!a.isActive && b.isActive) return 1;
+            return 0;
+        });
     }, [activeTab, rssData, searchQuery]);
 
     return (
@@ -155,7 +159,8 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             title={item.title}
             link={item.link}
             priority={item.priority || 'low'}
-            date={item.displayDate}
+            dateFrom={item.date_from}
+            dateTo={item.date_to}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

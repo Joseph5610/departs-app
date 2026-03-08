@@ -87,7 +87,8 @@ export interface RSSItem {
     type: 'incident' | 'exclusion';
     title: string;
     link: string;
-    displayDate?: string;
+    date_from: string | null;
+    date_to: string | null;
     guid?: string;
     priority?: string;
     lines?: string[];

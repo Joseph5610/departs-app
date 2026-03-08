@@ -1,5 +1,5 @@
 import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse } from "../_utils/api-utils";
-import { getXMLTagContent, normalizeRSSDate } from "../_utils/rss-utils";
+import { getXMLTagContent } from "../_utils/rss-utils";
 import { AppRSSItem, AppRSSResponse } from "../_utils/types";
 
 export const onRequest: PagesFunction = async () => {
@@ -55,20 +55,46 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
 
     const now = new Date();
 
+    const formatDate = (date: Date): string => {
+        return `${date.getDate()}.${date.getMonth() + 1}. ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+    };
+
     while ((match = itemRegex.exec(xmlString)) !== null) {
         const itemXml = match[1];
         const title = getXMLTagContent(itemXml, 'title');
         const description = getXMLTagContent(itemXml, 'description');
-        const pubDate = getXMLTagContent(itemXml, 'pubDate');
 
-        const dateTag = getXMLTagContent(itemXml, 'date');
-        const dateRangeFallback = type === 'incidents' && description.includes(';')
-            ? description.split(';')[0].trim()
-            : '';
-        const dateRange = dateTag || dateRangeFallback;
+        const dateFromTag = getXMLTagContent(itemXml, 'dateFrom');
+        const dateToTag = getXMLTagContent(itemXml, 'dateTo');
 
-        const dateFrom = getXMLTagContent(itemXml, 'dateFrom');
-        const dateTo = getXMLTagContent(itemXml, 'dateTo');
+        let isActive = true;
+        let isFuture = false;
+        let date_from: string | null = null;
+        let date_to: string | null = null;
+
+        if (type === 'incidents') {
+            date_from = getXMLTagContent(itemXml, 'date') || null;
+            isActive = true;
+            isFuture = false;
+        } else {
+            // Exclusions
+            const start = dateFromTag && /^\d+$/.test(dateFromTag) ? new Date(parseInt(dateFromTag) * 1000) : null;
+            const end = dateToTag && /^\d+$/.test(dateToTag) ? new Date(parseInt(dateToTag) * 1000) : null;
+
+            if (start) {
+                date_from = formatDate(start);
+                if (start > now) {
+                    isActive = false;
+                    isFuture = true;
+                }
+            }
+            if (end) {
+                date_to = formatDate(end);
+                if (end < now) {
+                    isActive = false;
+                }
+            }
+        }
 
         let lines: string[] = [];
         const linesMatch = itemXml.match(/<lines>([\s\S]*?)<\/lines>/i);
@@ -84,60 +110,19 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             }
         }
 
-        // Internal logic: Attempt to calculate activity status
-        let start = normalizeRSSDate(dateFrom || '', now, pubDate);
-        let end = normalizeRSSDate(dateTo || '', now, pubDate);
-
-        if (!start && dateRange) {
-            const parts = dateRange.split('-');
-            if (parts.length >= 1) start = normalizeRSSDate(parts[0], now, pubDate);
-            if (!end && parts.length >= 2) end = normalizeRSSDate(parts[1], now, pubDate);
-        }
-
-        let isActive = true;
-        let isFuture = false;
-
-        if (start && start > now) {
-            isActive = false;
-            isFuture = true;
-        } else if (end && end < now) {
-            isActive = false;
-        }
-
-        // Incidents are forced to active
-        if (type === 'incidents') {
-            isActive = true;
-            isFuture = false;
-        }
-
-        // Internal logic: Determine primary timestamp for sorting
-        let timestamp = now.toISOString();
-        if (pubDate) {
-            timestamp = new Date(pubDate).toISOString();
-        } else if (start) {
-            timestamp = start.toISOString();
-        }
-
         items.push({
             type: itemType,
             title,
             link: getXMLTagContent(itemXml, 'link'),
-            timestamp, // included for sorting, will be stripped before response
-            displayDate: dateRange || undefined,
+            date_from,
+            date_to,
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,
             isActive,
             isFuture
-        } as any);
+        });
     }
 
-    // Sort: Active first, Future (planned) last. Within groups, newest first.
-    return items
-        .sort((a: any, b: any) => {
-            if (a.isFuture && !b.isFuture) return 1;
-            if (!a.isFuture && b.isFuture) return -1;
-            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-        })
-        .map(({ timestamp, ...item }: any) => item as AppRSSItem);
+    return items;
 }

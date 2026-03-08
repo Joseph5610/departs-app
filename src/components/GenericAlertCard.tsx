@@ -8,7 +8,8 @@ export interface CommonAlertProps {
     title: string;
     link?: string;
     priority: 'high' | 'normal' | 'low' | string;
-    date?: string;
+    dateFrom?: string | null;
+    dateTo?: string | null;
     isActive?: boolean;
     isFuture?: boolean;
     showStatus?: boolean;
@@ -20,7 +21,8 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     title,
     link,
     priority,
-    date,
+    dateFrom,
+    dateTo,
     isActive,
     isFuture,
     showStatus = false,
@@ -81,9 +83,11 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     </div>
                 )}
 
-                {date && (
+                {(dateFrom || dateTo) && (
                     <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
-                        <span>{date}</span>
+                        <span>
+                            {dateFrom && dateTo ? `${dateFrom} – ${dateTo}` : (dateFrom || dateTo)}
+                        </span>
                     </div>
                 )}
             </div>

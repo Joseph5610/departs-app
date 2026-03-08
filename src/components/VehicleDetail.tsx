@@ -226,7 +226,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             title={alert.title}
                             link={alert.link}
                             priority={alert.priority || 'normal'}
-                            date={alert.displayDate}
+                            dateFrom={alert.date_from}
+                            dateTo={alert.date_to}
                             isActive={alert.isActive}
                             isFuture={alert.isFuture}
                         />
