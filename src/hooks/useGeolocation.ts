@@ -5,6 +5,12 @@ import { useToast } from './useToast';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../config/constants';
 
+/**
+ * useGeolocation
+ *
+ * Handles user position tracking and map focus.
+ * Updated to remove "searching" toast as per user request.
+ */
 export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const { t } = useTranslation();
     const { showToast } = useToast();
@@ -101,7 +107,8 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
         } else {
             console.log('⏳ Manual locate: Requesting fresh position...');
             setIsGeoPending(true);
-            showToast(t('toasts.geoSearching'), 'info');
+
+            // "Searching for location" toast removed per user request
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {

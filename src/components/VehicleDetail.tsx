@@ -25,6 +25,7 @@ interface VehicleDetailProps {
  * VehicleDetail
  *
  * Re-architected with semantic layout components.
+ * Robustness update: ensures type safety for routeName and sequence numbers.
  */
 export const VehicleDetail = React.memo<VehicleDetailProps>(({
     selectedVehicle,
@@ -65,33 +66,37 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         return () => clearInterval(interval);
     }, [vehicleDetail?.origin_timestamp, selectedVehicle?.origin_timestamp]);
 
-    const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
+    // Safety: Ensure routeName is always a string
+    const rawRouteName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
+    const routeName = rawRouteName ? String(rawRouteName) : '';
 
     const relevantAlerts = useMemo(() => {
         const allItems = rssData?.alerts || [];
         if (!routeName) return [];
         return allItems.filter(item =>
-            item.lines?.some((l: string) => l.toUpperCase() === routeName.toString().toUpperCase()) &&
+            item.lines?.some((l: string) => l.toUpperCase() === routeName.toUpperCase()) &&
             item.isActive
         );
     }, [rssData, routeName]);
 
+    // Safety: Coerce sequence to number
     const effectiveSequence = useMemo(() => {
-        return selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
+        const seq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
+        return seq !== null ? Number(seq) : null;
     }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence]);
 
     const nextStopSequence = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features || effectiveSequence === null) return null;
         const futureStops = vehicleDetail.stop_times.features
-            .filter((s) => s.properties.stop_sequence > effectiveSequence)
-            .sort((a, b) => a.properties.stop_sequence - b.properties.stop_sequence);
-        return futureStops[0]?.properties.stop_sequence ?? null;
+            .filter((s) => Number(s.properties.stop_sequence) > effectiveSequence)
+            .sort((a, b) => Number(a.properties.stop_sequence) - Number(b.properties.stop_sequence));
+        return Number(futureStops[0]?.properties.stop_sequence) ?? null;
     }, [vehicleDetail, effectiveSequence]);
 
     const filteredStops = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features) return [];
         return vehicleDetail.stop_times.features.filter((stop) =>
-            showPastStops || stop.properties.stop_sequence >= (effectiveSequence || 0)
+            showPastStops || Number(stop.properties.stop_sequence) >= (effectiveSequence || 0)
         );
     }, [vehicleDetail, showPastStops, effectiveSequence]);
 
@@ -130,12 +135,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             <Box className="relative overflow-hidden rounded-3xl border border-border p-4 md:p-6 bg-muted/30">
                 <Box
                     className="absolute inset-0 opacity-10"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName || '') }}
+                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName) }}
                 />
                 <HStack className="relative z-10 gap-4 flex-col md:flex-row md:text-center items-center">
                     <button
-                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95"
-                        style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName || '') }}
+                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 outline-none"
+                        style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName) }}
                         onClick={onToggleFollow}
                     >
                         <span className="text-2xl md:text-3xl font-black text-white">{routeName}</span>
@@ -153,9 +158,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <HStack className="md:justify-center gap-2 flex-wrap">
                             {(() => {
                                 const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
-                                const delayMinutes = Math.round(Math.abs(rawDelay) / 60);
-                                const isLate = rawDelay > 30;
-                                const isEarly = rawDelay < -30;
+                                const delayMinutes = Math.round(Math.abs(Number(rawDelay)) / 60);
+                                const isLate = Number(rawDelay) > 30;
+                                const isEarly = Number(rawDelay) < -30;
                                 return (
                                     <StatusPill
                                         variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
@@ -254,9 +259,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <Box className="relative pl-6">
                         <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
                         {filteredStops.map((stop, idx: number) => {
-                            const isPast = stop.properties.stop_sequence < (effectiveSequence || 0);
-                            const isCurrent = stop.properties.stop_sequence === effectiveSequence;
-                            const isNext = stop.properties.stop_sequence === nextStopSequence;
+                            const stopSeq = Number(stop.properties.stop_sequence);
+                            const isPast = stopSeq < (effectiveSequence || 0);
+                            const isCurrent = stopSeq === effectiveSequence;
+                            const isNext = stopSeq === nextStopSequence;
 
                             return (
                                 <HStack key={idx} className={cn(

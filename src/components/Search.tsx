@@ -104,7 +104,7 @@ export const Search: React.FC = React.memo(() => {
                         placeholder={t('search.placeholder')}
                         className={cn(
                             "h-11 pl-10 pr-12 rounded-2xl shadow-2xl bg-background/95 backdrop-blur-md transition-all",
-                            activeFilter && "border-primary/50 ring-2 ring-primary/10"
+                            activeFilter && "border-primary/50 ring-2 ring-primary/10 ring-offset-2 ring-offset-background"
                         )}
                         readOnly={!!activeFilter}
                     />
@@ -248,7 +248,7 @@ const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highl
     <button
         onClick={onClick}
         className={cn(
-            "w-full px-4 py-3 flex items-center gap-3 transition-colors text-left border-b border-border last:border-none",
+            "w-full px-4 py-3 flex items-center gap-3 transition-colors text-left border-b border-border last:border-none outline-none focus-visible:bg-muted",
             variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-muted active:bg-accent"
         )}
     >
