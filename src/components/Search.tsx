@@ -7,8 +7,15 @@ import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
 import { useStops } from '../hooks/useStops';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Overlay, Surface, Stack, HStack, Box } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
 
-
+/**
+ * Search Component
+ *
+ * Re-architected for "className-free" JSX using semantic layout components.
+ */
 export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions, mapRef } = useMap();
@@ -45,7 +52,6 @@ export const Search: React.FC = React.memo(() => {
     }, [stops, favoriteStops]);
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
-
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
     const linesFromQuery = React.useMemo(() => {
@@ -55,11 +61,7 @@ export const Search: React.FC = React.memo(() => {
     const isLineLike = React.useMemo(() => {
         const trimmed = query.trim();
         if (trimmed.length === 0) return false;
-
-        if (!trimmed.includes(',')) {
-            return trimmed.length <= 10 && !trimmed.includes(' ');
-        }
-
+        if (!trimmed.includes(',')) return trimmed.length <= 10 && !trimmed.includes(' ');
         return linesFromQuery.length > 0;
     }, [query, linesFromQuery]);
 
@@ -74,176 +76,194 @@ export const Search: React.FC = React.memo(() => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const clearSearch = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        if (activeFilter) onLineSelect(null);
+        setQuery('');
+    };
+
     return (
-        <div
-            ref={containerRef}
-            className="absolute z-10 right-16 md:right-auto md:w-80 safe-top safe-left"
-        >
-            <div className="relative h-11 flex items-center">
-                <input
-                    ref={inputRef}
-                    type="text"
-                    aria-label={t('search.placeholder')}
-                    value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
-                    onChange={(e) => {
-                        if (activeFilter) {
-                            onLineSelect(null);
-                            setQuery('');
-                        } else {
-                            setQuery(e.target.value);
-                        }
-                        setIsOpen(true);
-                    }}
-                    onFocus={() => setIsOpen(true)}
-                    placeholder={t('search.placeholder')}
-                    className={cn(
-                        "w-full h-full bg-background/95 backdrop-blur-md pl-10 pr-12 text-foreground text-base placeholder:text-muted-foreground rounded-2xl border shadow-2xl focus:outline-none transition-all",
-                        activeFilter ? "border-primary/50 ring-2 ring-primary/10" : "border-border"
-                    )}
-                    readOnly={!!activeFilter}
-                />
-                <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-primary' : 'text-muted-foreground'} pointer-events-none z-10`} size={20} />
-                {(query || activeFilter) && (
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
+        <Overlay position="top-left" className="right-16 md:right-auto md:w-80 safe-top safe-left">
+            <Box ref={containerRef}>
+                <div className="relative group">
+                    <Input
+                        ref={inputRef}
+                        aria-label={t('search.placeholder')}
+                        value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
+                        onChange={(e) => {
                             if (activeFilter) {
                                 onLineSelect(null);
+                                setQuery('');
+                            } else {
+                                setQuery(e.target.value);
                             }
-                            setQuery('');
+                            setIsOpen(true);
                         }}
-                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all z-20"
-                        aria-label={t('search.clearFilter')}
-                    >
-                        <X size={18} />
-                    </button>
-                )}
-            </div>
+                        onFocus={() => setIsOpen(true)}
+                        placeholder={t('search.placeholder')}
+                        className={cn(
+                            "h-11 pl-10 pr-12 rounded-2xl shadow-2xl bg-background/95 backdrop-blur-md transition-all",
+                            activeFilter && "border-primary/50 ring-2 ring-primary/10"
+                        )}
+                        readOnly={!!activeFilter}
+                    />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <SearchIcon size={20} className={cn(activeFilter && "text-primary")} />
+                    </div>
+                    {(query || activeFilter) && (
+                        <div className="absolute right-0 top-0 h-full flex items-center pr-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={clearSearch}
+                                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                                aria-label={t('search.clearFilter')}
+                            >
+                                <X size={18} />
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
-            {isOpen && (results.length > 0 || isLineLike || showHistory) && (
-                <div className="mt-2 bg-background/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
-                    {showHistory && (
-                        <div className="border-b border-border last:border-none">
-                            <div className="px-4 py-2 bg-muted/50 border-b border-border">
-                                <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
-                                    <Clock size={10} />
-                                    {t('search.recent')}
-                                </span>
-                            </div>
-                            {searchHistory.map((item) => (
-                                <button
-                                    key={item.type === 'stop' ? `hist-stop-${item.id}` : `hist-line-${item.lines.join('-')}`}
+                {isOpen && (results.length > 0 || isLineLike || showHistory) && (
+                    <Surface className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto">
+                        <Stack className="gap-0">
+                            {showHistory && (
+                                <>
+                                    <Box className="px-4 py-2 bg-muted/50 border-b border-border">
+                                        <HStack className="gap-2">
+                                            <Clock size={10} className="text-muted-foreground" />
+                                            <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
+                                                {t('search.recent')}
+                                            </span>
+                                        </HStack>
+                                    </Box>
+                                    {searchHistory.map((item) => (
+                                        <SearchItem
+                                            key={item.type === 'stop' ? `hist-stop-${item.id}` : `hist-line-${item.lines.join('-')}`}
+                                            icon={item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
+                                            title={item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
+                                            subtitle={item.type === 'stop' && item.platformCode ? t('search.platform', { code: item.platformCode }) : undefined}
+                                            onClick={() => {
+                                                if (item.type === 'stop') {
+                                                    mapRef.current?.flyTo({
+                                                        center: item.coordinates,
+                                                        zoom: MAP_STOP_SELECT_ZOOM,
+                                                        duration: MAP_FLY_DURATION
+                                                    });
+                                                    selectStop({
+                                                        id: item.id,
+                                                        name: item.name,
+                                                        platformCode: item.platformCode,
+                                                        coordinates: item.coordinates,
+                                                        isTrain: item.isTrain
+                                                    });
+                                                    addToHistory(item);
+                                                } else {
+                                                    onLineSelect(item.lines);
+                                                    addToHistory(item);
+                                                }
+                                                setQuery('');
+                                                setIsOpen(false);
+                                            }}
+                                        />
+                                    ))}
+                                </>
+                            )}
+
+                            {query === '' && results.length > 0 && (
+                                <Box className="px-4 py-2 bg-muted/50 border-b border-border">
+                                    <HStack className="gap-2">
+                                        <Star size={10} fill="currentColor" className="text-muted-foreground" />
+                                        <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
+                                            {t('search.favorites')}
+                                        </span>
+                                    </HStack>
+                                </Box>
+                            )}
+
+                            {isLineLike && (
+                                <SearchItem
+                                    icon={<SearchIcon size={16} />}
+                                    title={t('search.lineFilter', { line: linesFromQuery.join(', ') })}
+                                    variant="primary"
                                     onClick={() => {
-                                        if (item.type === 'stop') {
-                                            mapRef.current?.flyTo({
-                                                center: item.coordinates,
-                                                zoom: MAP_STOP_SELECT_ZOOM,
-                                                duration: MAP_FLY_DURATION
-                                            });
-                                            selectStop({
-                                                id: item.id,
-                                                name: item.name,
-                                                platformCode: item.platformCode,
-                                                coordinates: item.coordinates,
-                                                isTrain: item.isTrain
-                                            });
-                                            addToHistory(item);
-                                        } else {
-                                            onLineSelect(item.lines);
-                                            addToHistory(item);
-                                        }
+                                        onLineSelect(linesFromQuery);
+                                        addToHistory({ type: 'line', lines: linesFromQuery });
                                         setQuery('');
                                         setIsOpen(false);
                                     }}
-                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted active:bg-accent transition-colors text-left border-b border-border last:border-none"
-                                >
-                                    <div className="p-2 bg-muted rounded-lg text-muted-foreground">
-                                        {item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-foreground font-medium">
-                                            {item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
-                                        </span>
-                                        {item.type === 'stop' && item.platformCode && (
-                                            <span className="text-muted-foreground text-xs">{t('search.platform', { code: item.platformCode })}</span>
-                                        )}
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                                />
+                            )}
 
-                    {query === '' && results.length > 0 && (
-                        <div className="px-4 py-2 bg-muted/50 border-b border-border">
-                            <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
-                                <Star size={10} fill="currentColor" />
-                                {t('search.favorites')}
-                            </span>
-                        </div>
-                    )}
-                    {isLineLike && (
-                        <button
-                            onClick={() => {
-                                onLineSelect(linesFromQuery);
-                                addToHistory({ type: 'line', lines: linesFromQuery });
-                                setQuery('');
-                                setIsOpen(false);
-                            }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/20 transition-colors text-left border-b border-border"
-                        >
-                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                <SearchIcon size={16} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-foreground font-medium">{t('search.lineFilter', { line: linesFromQuery.join(', ') })}</span>
-                            </div>
-                        </button>
-                    )}
-                    {results.map((stop) => (
-                        <button
-                            key={stop.properties.stop_id}
-                            onClick={() => {
-                                // Handle selection logic internally
-                                const [lng, lat] = stop.geometry.coordinates;
-                                mapRef.current?.flyTo({
-                                    center: [lng, lat],
-                                    zoom: MAP_STOP_SELECT_ZOOM,
-                                    duration: MAP_FLY_DURATION
-                                });
-                                const selectedStop = {
-                                    id: stop.properties.stop_id,
-                                    name: stop.properties.stop_name,
-                                    platformCode: stop.properties.platform_code,
-                                    isTrain: stop.properties.is_train === 1,
-                                    coordinates: stop.geometry.coordinates as [number, number]
-                                };
-                                selectStop(selectedStop);
-                                addToHistory({
-                                    type: 'stop',
-                                    ...selectedStop,
-                                    coordinates: stop.geometry.coordinates as [number, number]
-                                });
-                                setQuery('');
-                                setIsOpen(false);
-                            }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted active:bg-accent transition-colors text-left border-b border-border last:border-none"
-                        >
-                            <div className={`p-2 rounded-lg ${favoriteStops.includes(stop.properties.stop_id) ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground'}`}>
-                                {favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-foreground font-medium">{stop.properties.stop_name}</span>
-                                {stop.properties.platform_code && (
-                                    <span className="text-muted-foreground text-xs">{t('search.platform', { code: stop.properties.platform_code })}</span>
-                                )}
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
+                            {results.map((stop) => (
+                                <SearchItem
+                                    key={stop.properties.stop_id}
+                                    icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
+                                    title={stop.properties.stop_name}
+                                    subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+                                    highlight={favoriteStops.includes(stop.properties.stop_id)}
+                                    onClick={() => {
+                                        const [lng, lat] = stop.geometry.coordinates;
+                                        mapRef.current?.flyTo({
+                                            center: [lng, lat],
+                                            zoom: MAP_STOP_SELECT_ZOOM,
+                                            duration: MAP_FLY_DURATION
+                                        });
+                                        const selectedStop = {
+                                            id: stop.properties.stop_id,
+                                            name: stop.properties.stop_name,
+                                            platformCode: stop.properties.platform_code,
+                                            isTrain: stop.properties.is_train === 1,
+                                            coordinates: stop.geometry.coordinates as [number, number]
+                                        };
+                                        selectStop(selectedStop);
+                                        addToHistory({
+                                            type: 'stop',
+                                            ...selectedStop,
+                                            coordinates: stop.geometry.coordinates as [number, number]
+                                        });
+                                        setQuery('');
+                                        setIsOpen(false);
+                                    }}
+                                />
+                            ))}
+                        </Stack>
+                    </Surface>
+                )}
+            </Box>
+        </Overlay>
     );
 });
+
+const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highlight = false }: {
+    icon: React.ReactNode,
+    title: string,
+    subtitle?: string,
+    onClick: () => void,
+    variant?: 'default' | 'primary',
+    highlight?: boolean
+}) => (
+    <button
+        onClick={onClick}
+        className={cn(
+            "w-full px-4 py-3 flex items-center gap-3 transition-colors text-left border-b border-border last:border-none",
+            variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-muted active:bg-accent"
+        )}
+    >
+        <div className={cn(
+            "p-2 rounded-lg",
+            variant === 'primary' ? "bg-primary/10 text-primary" :
+            highlight ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
+        )}>
+            {icon}
+        </div>
+        <Stack className="gap-0">
+            <span className="text-foreground font-medium">{title}</span>
+            {subtitle && <span className="text-muted-foreground text-xs">{subtitle}</span>}
+        </Stack>
+    </button>
+);
 
 Search.displayName = 'Search';

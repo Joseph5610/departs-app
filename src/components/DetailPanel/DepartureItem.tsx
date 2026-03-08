@@ -6,6 +6,7 @@ import { getCatchStatus } from '../../utils/transitLogic';
 import { formatDelay } from '../../utils/dateUtils';
 import type { Departure } from '../../types/transit';
 import { useTranslation } from 'react-i18next';
+import { Box, Stack, HStack } from '@/components/ui/layout';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -20,6 +21,11 @@ interface DepartureItemProps {
     locale: Locale;
 }
 
+/**
+ * DepartureItem
+ *
+ * Re-architected with semantic components. Internalizes layout classes.
+ */
 export const DepartureItem = ({
     departure,
     onDepartureClick,
@@ -35,33 +41,26 @@ export const DepartureItem = ({
         : null;
 
     return (
-        <div
-            role="button"
-            tabIndex={0}
+        <button
             onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
-            onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && dep.tripId) {
-                    onDepartureClick(dep.tripId, dep.vehicleId, dep);
-                }
-            }}
             className={cn(
-                "flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border transition-all",
-                dep.tripId && "hover:bg-muted/50 hover:border-border/80 cursor-pointer active:scale-[0.98]"
+                "flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border transition-all w-full text-left outline-none",
+                dep.tripId ? "hover:bg-muted/50 hover:border-border/80 cursor-pointer active:scale-[0.98]" : "cursor-default"
             )}
         >
-            <div className="flex items-center gap-4">
-                <div className="flex flex-col">
+            <HStack className="gap-4">
+                <Stack className="gap-0">
                     <div className="text-foreground font-semibold leading-tight">{dep.headsign}</div>
-                    <div className="text-muted-foreground text-[10px] mt-1 flex items-center gap-2">
-                        <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
-                            locale: locale
-                        })}</span>
+                    <HStack className="text-muted-foreground text-[10px] mt-1 gap-2">
+                        <span className="tabular-nums">
+                            {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
+                        </span>
                         {isTrainStop && dep.platform && (
                             <span className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold tracking-wider border border-border">
                                 {dep.platform}
                             </span>
                         )}
-                        <div className="flex items-center">
+                        <HStack className="gap-1">
                             {typeof dep.delay === 'number' && dep.delay !== 0 && (
                                 <span className={cn(
                                     "font-bold tabular-nums",
@@ -70,19 +69,24 @@ export const DepartureItem = ({
                                     {formatDelay(dep.delay)}
                                 </span>
                             )}
-                            <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={typeof dep.delay === 'number' && dep.delay !== 0} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
-                <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
+                            <DelayDelta
+                                delta={dep.delayDelta || 0}
+                                lastUpdate={dep.lastDelayUpdate}
+                                isInline={typeof dep.delay === 'number' && dep.delay !== 0}
+                            />
+                        </HStack>
+                    </HStack>
+                </Stack>
+            </HStack>
+
+            <Stack className="items-end justify-center min-w-[100px] gap-0">
+                <Box className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
                     <Countdown timestamp={dep.timestamp} />
-                </div>
+                </Box>
                 {stopDistanceInfo?.showCatchIndicator && catchStatus && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
-                        <div className={cn(
-                            "px-1.5 py-0.5 rounded-md flex items-center gap-1",
+                    <Box className="mt-2">
+                        <HStack className={cn(
+                            "px-1.5 py-0.5 rounded-md gap-1 text-[10px] font-bold whitespace-nowrap",
                             catchStatus.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
                             catchStatus.status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
                             'bg-rose-500/10 text-rose-400'
@@ -94,10 +98,10 @@ export const DepartureItem = ({
                             <span className="uppercase tracking-tighter">
                                 {t(`map.departures.catchStatusCompact.${catchStatus.status}`)}
                             </span>
-                        </div>
-                    </div>
+                        </HStack>
+                    </Box>
                 )}
-            </div>
-        </div>
+            </Stack>
+        </button>
     );
 };

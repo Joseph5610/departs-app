@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
+import { Box, Stack } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     children?: ReactNode;
@@ -10,6 +12,11 @@ interface State {
     error?: Error;
 }
 
+/**
+ * ErrorBoundary
+ *
+ * Re-architected with semantic layout components.
+ */
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false
@@ -26,33 +33,34 @@ export class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="fixed inset-0 bg-[#0f172a] flex items-center justify-center p-6 text-center z-[9999]">
-                    <div className="max-w-md w-full bg-white/5 border border-rose-500/20 rounded-[32px] p-8 backdrop-blur-xl">
-                        <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <AlertCircle className="text-rose-500" size={32} />
-                        </div>
-                        <h1 className="text-white text-2xl font-bold mb-2">Oops, something went wrong</h1>
-                        <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                <Box className="fixed inset-0 bg-background flex items-center justify-center p-6 text-center z-[9999]">
+                    <Stack className="max-w-md w-full bg-muted/30 border border-destructive/20 rounded-[32px] p-8 backdrop-blur-xl gap-0">
+                        <Box className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <AlertCircle className="text-destructive" size={32} />
+                        </Box>
+                        <h1 className="text-foreground text-2xl font-bold mb-2">Oops, something went wrong</h1>
+                        <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
                             The application encountered an unexpected error. Please try refreshing.
                         </p>
 
-                        <button
+                        <Button
+                            size="lg"
                             onClick={() => window.location.reload()}
-                            className="w-full py-4 bg-white text-[#0f172a] rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95"
+                            className="w-full h-auto py-4 bg-primary text-primary-foreground rounded-2xl font-bold flex items-center justify-center gap-2"
                         >
                             <RefreshCcw size={18} />
                             Refresh Application
-                        </button>
+                        </Button>
 
                         {import.meta.env.DEV && (
-                            <div className="mt-8 pt-6 border-t border-white/5 text-left">
-                                <p className="text-rose-400 text-[10px] font-mono leading-tight break-words">
+                            <Box className="mt-8 pt-6 border-t border-border text-left">
+                                <p className="text-destructive text-[10px] font-mono leading-tight break-words">
                                     {this.state.error?.toString()}
                                 </p>
-                            </div>
+                            </Box>
                         )}
-                    </div>
-                </div>
+                    </Stack>
+                </Box>
             );
         }
 

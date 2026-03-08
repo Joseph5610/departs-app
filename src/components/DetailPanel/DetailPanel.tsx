@@ -14,6 +14,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Box, HStack } from '@/components/ui/layout';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -24,6 +25,11 @@ interface DetailPanelProps {
     children: React.ReactNode;
 }
 
+/**
+ * DetailPanel
+ *
+ * Re-architected with semantic components for the header.
+ */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
 
@@ -34,8 +40,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     }, []);
 
     const headerContent = (
-        <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-2 min-w-0">
+        <HStack className="justify-between w-full">
+            <HStack className="gap-2 min-w-0">
                 {onBack && (
                     <Button
                         variant="ghost"
@@ -46,17 +52,17 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         <ArrowLeft size={20} />
                     </Button>
                 )}
-                <div className="flex items-center gap-2 min-w-0">
+                <HStack className="gap-2 min-w-0">
                     <h2 className="text-xl font-bold text-foreground truncate tracking-tight">
                         {title || ''}
                     </h2>
                     {platformCode && (
-                        <div className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
+                        <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
                             {platformCode}
-                        </div>
+                        </Box>
                     )}
-                </div>
-            </div>
+                </HStack>
+            </HStack>
             {!isMobile && (
                 <Button
                     variant="ghost"
@@ -67,7 +73,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     <X size={20} />
                 </Button>
             )}
-        </div>
+        </HStack>
     );
 
     if (isMobile) {
@@ -79,9 +85,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             {headerContent}
                         </DrawerTitle>
                     </DrawerHeader>
-                    <div className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)]">
+                    <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)]">
                         {children}
-                    </div>
+                    </Box>
                 </DrawerContent>
             </Drawer>
         );
@@ -99,10 +105,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         {headerContent}
                     </SheetTitle>
                 </SheetHeader>
-                <div className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-6">
+                <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-6">
                     {children}
-                </div>
+                </Box>
             </SheetContent>
         </Sheet>
     );
 });
+
+DetailPanel.displayName = 'DetailPanel';

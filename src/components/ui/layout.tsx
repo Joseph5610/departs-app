@@ -1,0 +1,67 @@
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface LayoutProps extends React.HTMLAttributes<HTMLDivElement> {
+    children?: React.ReactNode;
+}
+
+export const Box = React.forwardRef<HTMLDivElement, LayoutProps>(
+    ({ className, ...props }, ref) => (
+        <div ref={ref} className={cn(className)} {...props} />
+    )
+);
+Box.displayName = 'Box';
+
+export const Stack = React.forwardRef<HTMLDivElement, LayoutProps>(
+    ({ className, ...props }, ref) => (
+        <div ref={ref} className={cn("flex flex-col gap-2", className)} {...props} />
+    )
+);
+Stack.displayName = 'Stack';
+
+export const HStack = React.forwardRef<HTMLDivElement, LayoutProps>(
+    ({ className, ...props }, ref) => (
+        <div ref={ref} className={cn("flex flex-row items-center gap-2", className)} {...props} />
+    )
+);
+HStack.displayName = 'HStack';
+
+export const Overlay = ({
+    position = 'top-left',
+    children,
+    className
+}: {
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center';
+    children: React.ReactNode;
+    className?: string;
+}) => {
+    const positions = {
+        'top-left': 'top-4 left-4',
+        'top-right': 'top-4 right-4',
+        'bottom-left': 'bottom-4 left-4',
+        'bottom-right': 'bottom-4 right-4',
+        'top-center': 'top-4 left-1/2 -translate-x-1/2',
+    };
+
+    return (
+        <div className={cn("fixed z-10 pointer-events-none", positions[position], className)}>
+            <div className="pointer-events-auto">
+                {children}
+            </div>
+        </div>
+    );
+};
+
+export const Surface = React.forwardRef<HTMLDivElement, LayoutProps>(
+    ({ className, ...props }, ref) => (
+        <div
+            ref={ref}
+            className={cn(
+                "bg-background/95 backdrop-blur-md border border-border rounded-3xl shadow-2xl",
+                className
+            )}
+            {...props}
+        />
+    )
+);
+Surface.displayName = 'Surface';

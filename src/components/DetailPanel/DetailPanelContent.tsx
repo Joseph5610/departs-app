@@ -18,6 +18,9 @@ import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
 import { useShare } from '../../hooks/useShare';
 import { GenericAlertCard } from '../GenericAlertCard';
+import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -28,6 +31,11 @@ interface DetailPanelContentProps {
     onToggleFollow: () => void;
 }
 
+/**
+ * DetailPanelContent
+ *
+ * Re-architected with semantic layout components.
+ */
 export const DetailPanelContent = memo<DetailPanelContentProps>(({
     onToggleFollow
 }) => {
@@ -95,11 +103,11 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     }, [selectedStop, share, t]);
 
     return (
-        <div className="space-y-4 pt-1">
+        <Stack className="gap-4 pt-1">
             {showDepartureBoard && (
-                <div className="space-y-4 mb-2">
+                <Stack className="gap-4 mb-2">
                     {relevantInfotexts.length > 0 && (
-                        <div className="space-y-2">
+                        <Stack className="gap-2">
                             {relevantInfotexts.map(info => (
                                 <GenericAlertCard
                                     key={info.id}
@@ -110,56 +118,75 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                     isActive={true}
                                 />
                             ))}
-                        </div>
+                        </Stack>
                     )}
 
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-2xl border border-border text-muted-foreground text-xs">
+                        <HStack className="px-3 py-2 bg-muted/30 rounded-2xl border border-border text-muted-foreground text-xs gap-2">
                             <MapPin size={14} className="text-muted-foreground/60" />
                             <span className="font-medium text-foreground">
                                 {stopDistanceInfo.isAtStop
                                     ? t('map.departures.atStop')
                                     : t('map.departures.distance', {
                                         distance: stopDistanceInfo.distance,
-                                        time: Math.ceil(stopDistanceInfo.distance / 60) // Simple approximation for header
+                                        time: Math.ceil(stopDistanceInfo.distance / 60)
                                     })}
                             </span>
-                        </div>
+                        </HStack>
                     )}
-                    <div className="flex items-center justify-between">
+
+                    <HStack className="justify-between">
                         <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                        <div className="flex items-center gap-2">
-                            <button
+                        <HStack className="gap-2">
+                            <Button
+                                variant="outline"
+                                size="icon"
                                 onClick={handleShare}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl border bg-muted/30 border-border text-muted-foreground hover:text-foreground transition-all active:scale-90"
+                                className="h-8 w-8 rounded-xl bg-muted/30 border-border text-muted-foreground hover:text-foreground"
                             >
                                 <Share2 size={14} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-muted/30 border-border text-muted-foreground hover:text-foreground'}`}
+                                className={cn(
+                                    "h-8 w-8 rounded-xl transition-all",
+                                    isFavorite ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                                )}
                             >
                                 <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
-                            </button>
-                            <div className="flex h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
-                                <button
+                            </Button>
+
+                            <HStack className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setDepartureSort('line')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-accent text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={cn(
+                                        "h-full w-8 rounded-lg",
+                                        departureSort === 'line' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                    )}
                                     title={t('map.departures.sortByLine')}
                                 >
                                     <ArrowDownAz size={14} />
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setDepartureSort('departure')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-accent text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={cn(
+                                        "h-full w-8 rounded-lg",
+                                        departureSort === 'departure' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                    )}
                                     title={t('map.departures.sortByDeparture')}
                                 >
                                     <Clock size={14} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                </Button>
+                            </HStack>
+                        </HStack>
+                    </HStack>
+                </Stack>
             )}
 
             <VehicleDetail
@@ -179,20 +206,20 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
 
                 return (
-                    <div key={group.groupId} className={showHeader ? "space-y-3" : "space-y-3 -mt-1"}>
+                    <Stack key={group.groupId} className={cn("gap-3", !showHeader && "-mt-1")}>
                         {showHeader && (
-                            <div className="flex items-center gap-3 px-1">
-                                <div
+                            <HStack className="gap-3 px-1">
+                                <Box
                                     className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
                                     style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
                                 >
                                     {group.line}
-                                </div>
-                                <div className="h-[1px] flex-1 bg-border" />
-                            </div>
+                                </Box>
+                                <Box className="h-[1px] flex-1 bg-border" />
+                            </HStack>
                         )}
 
-                        <div className="space-y-2">
+                        <Stack className="gap-2">
                             {visibleDepartures.map((dep: Departure, idx: number) => (
                                 <DepartureItem
                                     key={idx}
@@ -205,36 +232,38 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             ))}
 
                             {hasMore && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full py-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground transition-colors"
+                                    className="w-full h-auto py-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground"
                                 >
-                                    <div className="h-[1px] flex-1 bg-border" />
+                                    <Box className="h-[1px] flex-1 bg-border" />
                                     <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <div className="h-[1px] flex-1 bg-border" />
-                                </button>
+                                    <Box className="h-[1px] flex-1 bg-border" />
+                                </Button>
                             )}
-                        </div>
-                    </div>
+                        </Stack>
+                    </Stack>
                 );
             })}
 
             {showMetroNightMessage ? (
-                <div className="py-12 px-6 flex flex-col items-center text-center space-y-4 bg-muted/30 rounded-3xl border border-border">
-                    <div className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                <Stack className="py-12 px-6 items-center text-center gap-4 bg-muted/30 rounded-3xl border border-border">
+                    <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
                         <MoonStar size={32} className="text-indigo-400" />
-                    </div>
-                    <div className="space-y-2">
+                    </Box>
+                    <Stack className="gap-2">
                         <h3 className="text-foreground font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                             {t('map.departures.metroNight.description')}
                         </p>
-                    </div>
-                </div>
+                    </Stack>
+                </Stack>
             ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
-                <div className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</div>
+                <Box className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</Box>
             )}
-        </div>
+        </Stack>
     );
 });
 

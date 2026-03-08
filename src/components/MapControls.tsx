@@ -5,8 +5,14 @@ import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Overlay, Stack, Surface, Box } from '@/components/ui/layout';
 
-
+/**
+ * MapControls Component
+ *
+ * Re-architected with semantic components to remove redundant positioning classes.
+ */
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions, mapRef } = useMap();
@@ -33,6 +39,7 @@ export const MapControls = React.memo(() => {
             pitch: 0
         });
     }, [mapRef]);
+
     const [showCompass, setShowCompass] = useState(false);
 
     useEffect(() => {
@@ -42,14 +49,11 @@ export const MapControls = React.memo(() => {
         const updateCompass = () => {
             const bearing = map.getBearing();
             const pitch = map.getPitch();
-            // Show compass if bearing or pitch is more than 0.5 degrees
             setShowCompass(Math.abs(bearing) > 0.5 || Math.abs(pitch) > 0.5);
         };
 
         map.on('rotate', updateCompass);
         map.on('pitch', updateCompass);
-
-        // Initial check
         updateCompass();
 
         return () => {
@@ -59,62 +63,76 @@ export const MapControls = React.memo(() => {
     }, [mapRef, mapLoaded]);
 
     return (
-        <div className="absolute z-10 flex flex-col gap-2 safe-top safe-right">
-            <button
-                onClick={(e) => onLocate(e)}
-                className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
-                title={t('map.controls.myLocation')}
-                aria-label={t('map.controls.myLocation')}
-            >
-                <LocateFixed
-                    size={20}
-                    className={cn(
-                        "transition-all",
-                        isGeoPending ? "animate-spin text-primary" : "group-hover:scale-110"
-                    )}
-                />
-            </button>
-            <button
-                onClick={onSettings}
-                className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
-                title={t('map.controls.settings')}
-                aria-label={t('map.controls.settings')}
-            >
-                <Settings size={20} className="group-hover:rotate-45 transition-transform" />
-            </button>
-            <Alerts />
+        <Overlay position="top-right" className="safe-top safe-right">
+            <Stack className="gap-2">
+                <ControlButton
+                    onClick={(e) => onLocate(e)}
+                    title={t('map.controls.myLocation')}
+                >
+                    <LocateFixed
+                        size={20}
+                        className={cn(
+                            "transition-all",
+                            isGeoPending ? "animate-spin text-primary" : "group-hover:scale-110"
+                        )}
+                    />
+                </ControlButton>
 
-            <div className="flex flex-col bg-background/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl mt-2 overflow-hidden">
-                <button
-                    onClick={onZoomIn}
-                    className="p-3 text-foreground hover:bg-muted active:bg-accent active:scale-95 transition-all pointer-events-auto group"
-                    title={t('map.controls.zoomIn')}
-                    aria-label={t('map.controls.zoomIn')}
+                <ControlButton
+                    onClick={onSettings}
+                    title={t('map.controls.settings')}
                 >
-                    <Plus size={20} className="group-hover:scale-110 transition-transform" />
-                </button>
-                <div className="mx-2 h-[1px] bg-border" />
-                <button
-                    onClick={onZoomOut}
-                    className="p-3 text-foreground hover:bg-muted active:bg-accent active:scale-95 transition-all pointer-events-auto group"
-                    title={t('map.controls.zoomOut')}
-                    aria-label={t('map.controls.zoomOut')}
-                >
-                    <Minus size={20} className="group-hover:scale-110 transition-transform" />
-                </button>
-            </div>
-            {showCompass && (
-                <button
-                    onClick={onResetBearing}
-                    className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
-                    title={t('map.controls.resetBearing')}
-                    aria-label={t('map.controls.resetBearing')}
-                >
-                    <Compass size={20} className="group-hover:rotate-12 transition-transform" />
-                </button>
-            )}
-        </div>
+                    <Settings size={20} className="group-hover:rotate-45 transition-transform" />
+                </ControlButton>
+
+                <Alerts />
+
+                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onZoomIn}
+                        className="h-11 w-11 rounded-none hover:bg-muted"
+                        title={t('map.controls.zoomIn')}
+                    >
+                        <Plus size={20} />
+                    </Button>
+                    <Box className="mx-2 h-[1px] bg-border" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onZoomOut}
+                        className="h-11 w-11 rounded-none hover:bg-muted"
+                        title={t('map.controls.zoomOut')}
+                    >
+                        <Minus size={20} />
+                    </Button>
+                </Surface>
+
+                {showCompass && (
+                    <ControlButton
+                        onClick={onResetBearing}
+                        title={t('map.controls.resetBearing')}
+                    >
+                        <Compass size={20} className="group-hover:rotate-12 transition-transform" />
+                    </ControlButton>
+                )}
+            </Stack>
+        </Overlay>
     );
 });
+
+const ControlButton = ({ children, onClick, title }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string }) => (
+    <Button
+        variant="outline"
+        size="icon"
+        onClick={onClick}
+        title={title}
+        aria-label={title}
+        className="h-11 w-11 rounded-2xl bg-background/95 backdrop-blur-md shadow-2xl border-border"
+    >
+        {children}
+    </Button>
+);
 
 MapControls.displayName = 'MapControls';

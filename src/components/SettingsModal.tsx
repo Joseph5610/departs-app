@@ -29,8 +29,13 @@ import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Box, Stack, HStack } from '@/components/ui/layout';
 
-
+/**
+ * SettingsModal
+ *
+ * Re-architected with semantic layout components.
+ */
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
@@ -127,33 +132,36 @@ export const SettingsModal: React.FC = () => {
                         {t('settings.title')}
                     </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-8 py-2">
+                <Stack className="gap-8 py-2">
                     {/* Live Vehicles Section */}
-                    <section className="space-y-3">
-                        <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    <Stack className="gap-3">
+                        <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.display')}
-                        </div>
+                        </Box>
 
-                    <div className="bg-muted/30 rounded-3xl border border-border overflow-hidden">
+                        <Box className="bg-muted/30 rounded-3xl border border-border overflow-hidden">
                             <button
                                 onClick={() => setShowVehicles(!showVehicles)}
-                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border"
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border outline-none"
                             >
-                                <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
+                                <HStack className="gap-0 sm:gap-4 min-w-0 flex-1">
+                                    <Box className={cn(
+                                        "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
+                                        showVehicles ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                                    )}>
                                         {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                    <div className="font-semibold leading-snug">
+                                    </Box>
+                                    <Stack className="min-w-0 flex-1 gap-1">
+                                        <div className="font-semibold leading-snug">
                                             {t('settings.liveVehicles.title')}
                                         </div>
-                                    <div className="text-muted-foreground text-xs mt-1 leading-tight">
+                                        <div className="text-muted-foreground text-xs leading-tight">
                                             {t('settings.liveVehicles.description')}
                                         </div>
-                                    </div>
-                                </div>
+                                    </Stack>
+                                </HStack>
 
-                                <div
+                                <Box
                                     className={cn(
                                         "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
                                         showVehicles ? "bg-primary" : "bg-muted"
@@ -165,7 +173,7 @@ export const SettingsModal: React.FC = () => {
                                             showVehicles ? "translate-x-6" : "translate-x-1"
                                         )}
                                     />
-                                </div>
+                                </Box>
                             </button>
 
                             <AnimatePresence>
@@ -176,27 +184,27 @@ export const SettingsModal: React.FC = () => {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="overflow-hidden bg-foreground/[0.02]"
                                     >
-                                        <div className="relative p-4 pt-2 space-y-4">
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-2 px-1">
-                                                <div className="w-1 h-1 rounded-full bg-primary" />
-                                                <div className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
+                                        <Stack className="relative p-4 pt-2 gap-4">
+                                            <Stack className="gap-4">
+                                                <HStack className="gap-2 px-1">
+                                                    <Box className="w-1 h-1 rounded-full bg-primary" />
+                                                    <Box className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
                                                         {t('settings.sections.filters')}
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                                                    </Box>
+                                                </HStack>
+                                                <Box className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
                                                     {vehicleTypes.map(({ id, icon: Icon }) => (
                                                         <button
                                                             key={id}
                                                             onClick={() => toggleRouteType(id)}
                                                             className={cn(
-                                                                "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
+                                                                "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                                 routeTypeFilter.includes(id)
                                                                     ? "bg-primary/15 border-primary/40 text-primary"
-                                                                : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                                                                    : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                                             )}
                                                         >
-                                                            <Icon size={18} className={`transition-transform duration-300 ${routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} />
+                                                            <Icon size={18} className={cn("transition-transform duration-300", routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70')} />
                                                             <span className="text-[9px] font-bold uppercase tracking-wider">
                                                                 {t(`settings.vehicleTypes.${id}`)}
                                                             </span>
@@ -213,7 +221,7 @@ export const SettingsModal: React.FC = () => {
                                                     <button
                                                         onClick={() => setRouteTypeFilter([])}
                                                         className={cn(
-                                                            "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
+                                                            "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                             routeTypeFilter.length === 0
                                                                 ? "bg-amber-500/15 border-amber-500/40 text-amber-500"
                                                                 : "bg-muted/10 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
@@ -224,34 +232,37 @@ export const SettingsModal: React.FC = () => {
                                                             {t('common.all')}
                                                         </span>
                                                     </button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                                </Box>
+                                            </Stack>
+                                        </Stack>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </Box>
 
-                        <div className="bg-muted/30 rounded-3xl border border-border overflow-hidden mt-3">
+                        <Box className="bg-muted/30 rounded-3xl border border-border overflow-hidden mt-3">
                             <button
                                 onClick={() => setShowStops(!showStops)}
-                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group"
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group outline-none"
                             >
-                                <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
+                                <HStack className="gap-0 sm:gap-4 min-w-0 flex-1">
+                                    <Box className={cn(
+                                        "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
+                                        showStops ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                                    )}>
                                         <MapPin size={22} />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
+                                    </Box>
+                                    <Stack className="min-w-0 flex-1 gap-1">
                                         <div className="font-semibold leading-snug">
                                             {t('settings.showStops.title')}
                                         </div>
-                                        <div className="text-muted-foreground text-xs mt-1 leading-tight">
+                                        <div className="text-muted-foreground text-xs leading-tight">
                                             {t('settings.showStops.description')}
                                         </div>
-                                    </div>
-                                </div>
+                                    </Stack>
+                                </HStack>
 
-                                <div
+                                <Box
                                     className={cn(
                                         "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
                                         showStops ? "bg-primary" : "bg-muted"
@@ -263,86 +274,86 @@ export const SettingsModal: React.FC = () => {
                                             showStops ? "translate-x-6" : "translate-x-1"
                                         )}
                                     />
-                                </div>
+                                </Box>
                             </button>
-                        </div>
-                    </section>
+                        </Box>
+                    </Stack>
 
                     {/* Language Selection */}
-                    <section className="space-y-3">
-                    <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    <Stack className="gap-3">
+                        <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.language')}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        </Box>
+                        <Box className="grid grid-cols-2 gap-3">
                             {(['en', 'cs'] as const).map((lang) => (
                                 <button
                                     key={lang}
                                     onClick={() => i18n.changeLanguage(lang)}
                                     className={cn(
-                                        "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold",
+                                        "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold outline-none",
                                         (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
-                                        : "bg-muted/30 border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                                            : "bg-muted/30 border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                                     )}
                                 >
                                     {t(`settings.language.${lang}`)}
                                 </button>
                             ))}
-                        </div>
-                    </section>
+                        </Box>
+                    </Stack>
 
                     {/* Tip Box */}
-                    <div className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 flex gap-2.5 sm:gap-3">
-                        <div className="shrink-0 text-amber-500/50 mt-0.5">
+                    <HStack className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 gap-2.5 sm:gap-3 items-start">
+                        <Box className="shrink-0 text-amber-500/50 mt-0.5">
                             <Info size={16} />
-                        </div>
-                    <div className="text-muted-foreground text-xs leading-relaxed">
+                        </Box>
+                        <Box className="text-muted-foreground text-xs leading-relaxed">
                             <span className="text-amber-200/80 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
-                        </div>
-                    </div>
+                        </Box>
+                    </HStack>
 
                     {/* Footer Actions & Info */}
-                <div className="pt-4 space-y-6 border-t border-border">
-                        <div className="flex flex-col gap-3">
+                    <Stack className="pt-4 gap-6 border-t border-border">
+                        <Stack className="gap-3">
                             {searchHistory.length > 0 && (
                                 <button
                                     onClick={() => {
                                         clearHistory();
                                         showToast(t('settings.clearHistory.success'), 'success');
                                     }}
-                                className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left"
+                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left outline-none"
                                 >
-                                    <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-destructive/10 text-destructive">
+                                    <HStack className="gap-3">
+                                        <Box className="p-2 rounded-lg bg-destructive/10 text-destructive">
                                             <Clock size={18} />
-                                        </div>
-                                    <span className="text-foreground text-sm font-medium">{t('settings.clearHistory.button')}</span>
-                                    </div>
+                                        </Box>
+                                        <span className="text-foreground text-sm font-medium">{t('settings.clearHistory.button')}</span>
+                                    </HStack>
                                 </button>
                             )}
 
                             <button
                                 onClick={handleCheckUpdate}
                                 disabled={isChecking}
-                            className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left"
+                                className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left outline-none"
                             >
-                                <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                                <HStack className="gap-3">
+                                    <Box className="p-2 rounded-lg bg-muted text-muted-foreground">
                                         <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
-                                    </div>
-                                <span className="text-foreground text-sm font-medium">{t('settings.updates.check')}</span>
-                                </div>
-                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-accent px-2 py-1 rounded-md">
+                                    </Box>
+                                    <span className="text-foreground text-sm font-medium">{t('settings.updates.check')}</span>
+                                </HStack>
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-accent px-2 py-1 rounded-md">
                                     {t('settings.versionBadge', { version })}
                                 </span>
                             </button>
 
-                            <div className="flex items-center justify-center gap-6">
+                            <HStack className="justify-center gap-6">
                                 <a
                                     href="https://golemio.cz"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest"
+                                    className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                                 >
                                     <Database size={14} />
                                     {t('settings.dataSource')}
@@ -352,15 +363,15 @@ export const SettingsModal: React.FC = () => {
                                     href="https://github.com/joseph5610/departs-app"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest"
+                                    className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                                 >
                                     <Github size={14} />
                                     {t('settings.viewSource')}
                                 </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </HStack>
+                        </Stack>
+                    </Stack>
+                </Stack>
             </DialogContent>
         </Dialog>
     );

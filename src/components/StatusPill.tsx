@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { HStack, Box } from '@/components/ui/layout';
 
 interface StatusPillProps {
     label: string;
@@ -7,6 +8,11 @@ interface StatusPillProps {
     variant?: 'success' | 'danger' | 'info' | 'warning' | 'neutral';
 }
 
+/**
+ * StatusPill
+ *
+ * Re-architected with semantic components.
+ */
 export const StatusPill: React.FC<StatusPillProps> = ({ label, icon, variant = 'neutral' }) => {
     const variants = {
         success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/10',
@@ -17,12 +23,12 @@ export const StatusPill: React.FC<StatusPillProps> = ({ label, icon, variant = '
     };
 
     return (
-        <div className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-colors duration-200",
+        <HStack className={cn(
+            "inline-flex px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-colors duration-200 gap-1.5",
             variants[variant]
         )}>
-            {icon && <span className="shrink-0">{icon}</span>}
+            {icon && <Box className="shrink-0">{icon}</Box>}
             <span className="whitespace-nowrap">{label}</span>
-        </div>
+        </HStack>
     );
 };
