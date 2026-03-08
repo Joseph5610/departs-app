@@ -12,7 +12,7 @@ import { cn } from '../utils/cn';
  */
 export const AirQualityWidget: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions } = useMap();
+    const { state, mapRef } = useMap();
     const { data: aqData } = useAirQuality();
     const { showAirQuality } = state;
 
@@ -20,7 +20,7 @@ export const AirQualityWidget: React.FC = () => {
     const nearestStation = useMemo(() => {
         if (!aqData?.features || aqData.features.length === 0) return null;
 
-        const map = state.mapLoaded ? actions.mapRef.current?.getMap() : null;
+        const map = state.mapLoaded ? mapRef.current?.getMap() : null;
         const center = map ? [map.getCenter().lng, map.getCenter().lat] : (state.userLocation || [14.4378, 50.0755]);
 
         return aqData.features.reduce((prev: any, curr: any) => {
@@ -29,7 +29,7 @@ export const AirQualityWidget: React.FC = () => {
 
             return dist(curr.geometry.coordinates) < dist(prev.geometry.coordinates) ? curr : prev;
         });
-    }, [aqData, state.userLocation, state.mapLoaded, actions.mapRef]);
+    }, [aqData, state.userLocation, state.mapLoaded, mapRef]);
 
     if (!showAirQuality || !nearestStation) return null;
 

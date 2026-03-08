@@ -465,7 +465,7 @@ export const parkingPolygonLayer: FillLayerSpecification = {
     id: 'parking-polygons',
     type: 'fill',
     source: 'pid-parking',
-    filter: ['any', ['==', ['$type'], 'Polygon'], ['==', ['$type'], 'MultiPolygon']],
+    filter: ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']],
     paint: {
         'fill-color': '#3b82f6',
         'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 16, 0.5],
@@ -477,7 +477,7 @@ export const parkingLayer: CircleLayerSpecification = {
     id: 'parking',
     type: 'circle',
     source: 'pid-parking',
-    filter: ['==', ['$type'], 'Point'],
+    filter: ['==', ['geometry-type'], 'Point'],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 15, 10],
         'circle-color': '#3b82f6',
