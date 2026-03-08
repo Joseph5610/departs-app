@@ -1,7 +1,7 @@
 import { format, parseISO, type Locale } from 'date-fns';
 import { Countdown } from '../Countdown';
 import { DelayDelta } from './DelayDelta';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import { getCatchStatus } from '../../utils/transitLogic';
 import { formatDelay } from '../../utils/dateUtils';
 import type { Departure } from '../../types/transit';

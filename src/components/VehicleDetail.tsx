@@ -3,7 +3,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
 import { StatusPill } from './StatusPill';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
 import { parseISO } from 'date-fns';

@@ -73,7 +73,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     if (isMobile) {
         return (
             <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={true}>
-                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-[32px] max-h-[92%]">
+                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl max-h-[92%]">
                     <DrawerHeader className="px-6 pt-2 pb-2 text-left">
                         <DrawerTitle>
                             {headerContent}
@@ -92,7 +92,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             <SheetContent
                 side="left"
                 showCloseButton={false}
-                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-[32px] border-border bg-background/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden flex flex-col outline-none"
+                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl border-border bg-background/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden flex flex-col outline-none"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                     <SheetTitle>

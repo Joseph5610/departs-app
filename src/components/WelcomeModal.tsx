@@ -26,15 +26,15 @@ export const WelcomeModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-[32px] border-white/10 bg-black/95 backdrop-blur-md" showCloseButton={false}>
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-3xl border-border bg-background/95 backdrop-blur-md" showCloseButton={false}>
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-white tracking-tight text-center">
+                    <DialogTitle className="text-xl font-bold tracking-tight text-center">
                         {t('welcome.title')}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-8">
                     <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-24 h-24 bg-black/20 rounded-[2rem] flex items-center justify-center p-4 ring-1 ring-white/10 shadow-2xl backdrop-blur-xl">
+                    <div className="w-24 h-24 bg-muted/20 rounded-[2rem] flex items-center justify-center p-4 ring-1 ring-border shadow-2xl backdrop-blur-xl">
                         <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
                     </div>
                     <div>
@@ -45,19 +45,19 @@ export const WelcomeModal: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                    <div className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div className="flex gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
-                            <div className="text-white font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
-                            <div className="text-zinc-500 text-xs mt-1">{t('welcome.steps.clickStop.description')}</div>
+                            <div className="font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
+                            <div className="text-muted-foreground text-xs mt-1">{t('welcome.steps.clickStop.description')}</div>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div className="flex gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
                         <div className="mt-1 text-emerald-400"><Info size={18} /></div>
                         <div>
-                            <div className="text-white font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
-                            <div className="text-zinc-500 text-xs mt-1">{t('welcome.steps.trackVehicles.description')}</div>
+                            <div className="font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
+                            <div className="text-muted-foreground text-xs mt-1">{t('welcome.steps.trackVehicles.description')}</div>
                         </div>
                     </div>
                     </div>

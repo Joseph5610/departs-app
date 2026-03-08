@@ -6,7 +6,7 @@ import { useStopSearch } from '../hooks/useStopSearch';
 import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
 import { useStops } from '../hooks/useStops';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
 
 
 export const Search: React.FC = React.memo(() => {

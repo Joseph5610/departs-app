@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
 
 
 export const MapControls = React.memo(() => {

@@ -28,7 +28,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
 
 
 export const SettingsModal: React.FC = () => {
@@ -121,9 +121,9 @@ export const SettingsModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-[32px] border-white/10 bg-black/95 backdrop-blur-md">
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-3xl border-border bg-background/95 backdrop-blur-md">
                 <DialogHeader className="mb-4">
-                    <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                    <DialogTitle className="text-xl font-bold tracking-tight">
                         {t('settings.title')}
                     </DialogTitle>
                 </DialogHeader>
@@ -134,20 +134,20 @@ export const SettingsModal: React.FC = () => {
                             {t('settings.sections.display')}
                         </div>
 
-                        <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+                    <div className="bg-muted/30 rounded-3xl border border-border overflow-hidden">
                             <button
                                 onClick={() => setShowVehicles(!showVehicles)}
-                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group border-b border-white/5"
+                            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border"
                             >
                                 <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
                                         {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-white font-semibold leading-snug">
+                                    <div className="font-semibold leading-snug">
                                             {t('settings.liveVehicles.title')}
                                         </div>
-                                        <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                    <div className="text-muted-foreground text-xs mt-1 leading-tight">
                                             {t('settings.liveVehicles.description')}
                                         </div>
                                     </div>
@@ -179,8 +179,8 @@ export const SettingsModal: React.FC = () => {
                                         <div className="relative p-4 pt-2 space-y-4">
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-2 px-1">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-                                                    <div className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em]">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                                <div className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
                                                         {t('settings.sections.filters')}
                                                     </div>
                                                 </div>
@@ -193,7 +193,7 @@ export const SettingsModal: React.FC = () => {
                                                                 "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
                                                                 routeTypeFilter.includes(id)
                                                                     ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
-                                                                    : "bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300"
+                                                                : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                                             )}
                                                         >
                                                             <Icon size={18} className={`transition-transform duration-300 ${routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70'}`} />
@@ -232,20 +232,20 @@ export const SettingsModal: React.FC = () => {
                             </AnimatePresence>
                         </div>
 
-                        <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden mt-3">
+                        <div className="bg-muted/30 rounded-3xl border border-border overflow-hidden mt-3">
                             <button
                                 onClick={() => setShowStops(!showStops)}
-                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 active:bg-white/10 transition-all text-left group"
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group"
                             >
                                 <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'} hidden sm:flex`}>
+                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
                                         <MapPin size={22} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-white font-semibold leading-snug">
+                                        <div className="font-semibold leading-snug">
                                             {t('settings.showStops.title')}
                                         </div>
-                                        <div className="text-zinc-500 text-xs mt-1 leading-tight">
+                                        <div className="text-muted-foreground text-xs mt-1 leading-tight">
                                             {t('settings.showStops.description')}
                                         </div>
                                     </div>
@@ -270,7 +270,7 @@ export const SettingsModal: React.FC = () => {
 
                     {/* Language Selection */}
                     <section className="space-y-3">
-                        <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
+                    <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.language')}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -281,8 +281,8 @@ export const SettingsModal: React.FC = () => {
                                     className={cn(
                                         "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold",
                                         (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-inner shadow-emerald-500/5"
-                                            : "bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10 hover:border-white/10"
+                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                                        : "bg-muted/30 border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                                     )}
                                 >
                                     {t(`settings.language.${lang}`)}
@@ -296,13 +296,13 @@ export const SettingsModal: React.FC = () => {
                         <div className="shrink-0 text-amber-500/50 mt-0.5">
                             <Info size={16} />
                         </div>
-                        <div className="text-zinc-400 text-xs leading-relaxed">
+                    <div className="text-muted-foreground text-xs leading-relaxed">
                             <span className="text-amber-200/80 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
                         </div>
                     </div>
 
                     {/* Footer Actions & Info */}
-                    <div className="pt-4 space-y-6 border-t border-white/5">
+                <div className="pt-4 space-y-6 border-t border-border">
                         <div className="flex flex-col gap-3">
                             {searchHistory.length > 0 && (
                                 <button
@@ -310,13 +310,13 @@ export const SettingsModal: React.FC = () => {
                                         clearHistory();
                                         showToast(t('settings.clearHistory.success'), 'success');
                                     }}
-                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
+                                className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+                                    <div className="p-2 rounded-lg bg-destructive/10 text-destructive">
                                             <Clock size={18} />
                                         </div>
-                                        <span className="text-zinc-300 text-sm font-medium">{t('settings.clearHistory.button')}</span>
+                                    <span className="text-foreground text-sm font-medium">{t('settings.clearHistory.button')}</span>
                                     </div>
                                 </button>
                             )}
@@ -324,15 +324,15 @@ export const SettingsModal: React.FC = () => {
                             <button
                                 onClick={handleCheckUpdate}
                                 disabled={isChecking}
-                                className="flex items-center justify-between p-3.5 sm:p-4 bg-white/5 hover:bg-white/10 active:scale-[0.98] rounded-2xl border border-white/5 transition-all text-left"
+                            className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-400">
+                                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                                         <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
                                     </div>
-                                    <span className="text-zinc-300 text-sm font-medium">{t('settings.updates.check')}</span>
+                                <span className="text-foreground text-sm font-medium">{t('settings.updates.check')}</span>
                                 </div>
-                                <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md">
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-accent px-2 py-1 rounded-md">
                                     {t('settings.versionBadge', { version })}
                                 </span>
                             </button>
@@ -342,7 +342,7 @@ export const SettingsModal: React.FC = () => {
                                     href="https://golemio.cz"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
+                                className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest"
                                 >
                                     <Database size={14} />
                                     {t('settings.dataSource')}

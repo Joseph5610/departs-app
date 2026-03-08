@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMap } from '../hooks/useMap';
 import { useVehicles } from '../hooks/useVehicles';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
 
 
 export const LiveStatus: React.FC = () => {

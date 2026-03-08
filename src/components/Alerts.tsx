@@ -61,17 +61,17 @@ export const Alerts: React.FC = () => {
             </button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-[32px] border-white/10 bg-black/95 backdrop-blur-md">
+                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-3xl border-border bg-background/95 backdrop-blur-md">
                     <DialogHeader className="mb-4">
-                        <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                        <DialogTitle className="text-xl font-bold tracking-tight">
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col min-h-0">
                         {/* Sticky Header Section */}
-                        <div className="sticky -top-4 z-10 bg-black pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-white/5">
+                        <div className="sticky -top-4 z-10 bg-background pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-border">
                             {/* Tabs */}
-                            <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
+                            <div className="flex p-1 bg-muted/30 rounded-2xl border border-border">
                                 <TabButton
                                     active={activeTab === 'incidents'}
                                     onClick={() => setActiveTab('incidents')}
@@ -94,7 +94,7 @@ export const Alerts: React.FC = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('search.placeholder')}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-8 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                                    className="w-full bg-muted/30 border border-border rounded-xl py-2 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all"
                                 />
                                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
                                 {searchQuery && (
@@ -142,12 +142,12 @@ const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string,
     <button
         onClick={onClick}
         className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2
-            ${active ? 'bg-white/10 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}
+            ${active ? 'bg-accent text-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground'}
         `}
     >
         <span>{label}</span>
         {count > 0 && (
-            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? (isIncident ? 'bg-rose-500' : 'bg-white/20') : 'bg-white/5'}`}>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${active ? (isIncident ? 'bg-rose-500' : 'bg-foreground/20') : 'bg-muted'}`}>
                 {count}
             </span>
         )}
