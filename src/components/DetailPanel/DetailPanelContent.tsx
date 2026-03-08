@@ -1,7 +1,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
+import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2, Info, Car, Bike, Wind, ParkingCircle } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -44,7 +44,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, userSpeed, favoriteStops } = state;
     const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
 
-    const showDepartureBoard = selectedStop && !selectedVehicle;
+    const showDepartureBoard = selectedStop && !selectedVehicle && selectedStop.type === 'stop';
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
 
     const stopDistanceInfo = useMemo(() => {
@@ -96,6 +96,41 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
     return (
         <div className="space-y-4 pt-1">
+            {selectedStop && !selectedVehicle && selectedStop.type !== 'stop' && (
+                <div className="space-y-4">
+                    <div className="flex flex-col items-center justify-center py-8 px-4 bg-white/5 rounded-3xl border border-white/5 text-center space-y-4">
+                        <div className="p-4 bg-white/5 rounded-full">
+                            {selectedStop.type === 'parking' && <ParkingCircle size={32} className="text-blue-400" />}
+                            {selectedStop.type === 'car' && <Car size={32} className="text-amber-400" />}
+                            {selectedStop.type === 'bicycle' && <Bike size={32} className="text-emerald-400" />}
+                            {selectedStop.type === 'air' && <Wind size={32} className="text-sky-400" />}
+                        </div>
+
+                        <div className="space-y-1">
+                            <h3 className="text-white font-bold text-lg">{selectedStop.name}</h3>
+                            {selectedStop.type === 'parking' && selectedStop.occupancy && (
+                                <p className="text-zinc-400 text-sm">
+                                    {t('map.departures.atStop')}: {selectedStop.occupancy.free} / {selectedStop.occupancy.total}
+                                </p>
+                            )}
+                            {selectedStop.type === 'car' && selectedStop.company && (
+                                <p className="text-zinc-400 text-sm">{selectedStop.company}</p>
+                            )}
+                            {selectedStop.type === 'air' && selectedStop.measurement && (
+                                <p className="text-zinc-400 text-sm">
+                                    {t('airQuality.title')}: {t(`airQuality.indices.${selectedStop.measurement.AQ_hourly_index}`)}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase font-black tracking-widest pt-2">
+                            <Info size={12} />
+                            <span>{t('map.departures.noUpcoming')}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showDepartureBoard && (
                 <div className="space-y-4 mb-2">
                     {relevantInfotexts.length > 0 && (

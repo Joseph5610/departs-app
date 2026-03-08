@@ -12,7 +12,7 @@ import { cn } from '../utils/cn';
  */
 export const AirQualityWidget: React.FC = () => {
     const { t } = useTranslation();
-    const { state } = useMap();
+    const { state, actions } = useMap();
     const { data: aqData } = useAirQuality();
     const { showAirQuality } = state;
 
@@ -20,10 +20,8 @@ export const AirQualityWidget: React.FC = () => {
     const nearestStation = useMemo(() => {
         if (!aqData?.features || aqData.features.length === 0) return null;
 
-        // Note: In a real app, we might want to use the actual map center
-        // For simplicity, we'll just take the first one or implement a basic distance check
-        // if we have the user's location.
-        const center = state.userLocation || [14.4378, 50.0755]; // Default to Prague center
+        const map = state.mapLoaded ? actions.mapRef.current?.getMap() : null;
+        const center = map ? [map.getCenter().lng, map.getCenter().lat] : (state.userLocation || [14.4378, 50.0755]);
 
         return aqData.features.reduce((prev: any, curr: any) => {
             const dist = (coords: [number, number]) =>
@@ -31,7 +29,7 @@ export const AirQualityWidget: React.FC = () => {
 
             return dist(curr.geometry.coordinates) < dist(prev.geometry.coordinates) ? curr : prev;
         });
-    }, [aqData, state.userLocation]);
+    }, [aqData, state.userLocation, state.mapLoaded, actions.mapRef]);
 
     if (!showAirQuality || !nearestStation) return null;
 
@@ -57,10 +55,11 @@ export const AirQualityWidget: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.9, x: 20 }}
                 className={cn(
-                    "absolute right-4 top-20 z-10 flex items-center gap-3 px-3 py-2 rounded-2xl border backdrop-blur-md shadow-lg pointer-events-none sm:pointer-events-auto sm:cursor-help group",
+                    "absolute right-4 top-4 z-10 flex items-center gap-3 px-3 py-2 rounded-2xl border backdrop-blur-md shadow-lg pointer-events-none sm:pointer-events-auto sm:cursor-help group",
                     getIndexColor(index)
                 )}
                 title={t('airQuality.station', { name: stationName })}
+                style={{ top: 'calc(1.25rem + (var(--safe-area-inset-top, 0px)))', right: 'calc(4.5rem + (var(--safe-area-inset-right, 0px)))' }}
             >
                 <Wind size={18} />
                 <div className="flex flex-col">

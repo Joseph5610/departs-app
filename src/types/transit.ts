@@ -61,10 +61,21 @@ export interface StopCollection {
 export interface SelectedStop {
     id: string;
     name: string;
+    type?: 'stop' | 'parking' | 'car' | 'bicycle' | 'air';
     platformCode?: string;
     coordinates?: [number, number];
     isTrain?: boolean;
     all_ids?: string[];
+    // POI specific properties
+    occupancy?: {
+        free: number;
+        total: number;
+    };
+    company?: string;
+    measurement?: {
+        AQ_hourly_index: number;
+        [key: string]: any;
+    };
 }
 
 export interface Departure {

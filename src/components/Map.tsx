@@ -127,6 +127,7 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: f.properties.stop_id,
                             name: f.properties.stop_name,
+                            type: 'stop',
                             platformCode: f.properties.platform_code,
                             isTrain: f.properties.is_train === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
@@ -140,7 +141,8 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: props.id,
                             name: props.name || t('settings.showParking.title'),
-                            platformCode: occupancy ? `${occupancy.free}/${occupancy.total}` : undefined,
+                            type: 'parking',
+                            occupancy,
                             coordinates: (f.geometry as { type: 'Point' | 'Polygon'; coordinates: any }).type === 'Point'
                                 ? (f.geometry as any).coordinates
                                 : undefined
@@ -153,7 +155,8 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: props.id,
                             name: props.name,
-                            platformCode: props.company,
+                            type: 'car',
+                            company: props.company,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                         return;
@@ -164,6 +167,7 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: props.id,
                             name: props.name,
+                            type: 'bicycle',
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                         return;
@@ -175,7 +179,8 @@ const MapInner: React.FC = () => {
                         actions.selectStop({
                             id: props.id,
                             name: props.name,
-                            platformCode: measurement ? `${t('airQuality.title')}: ${measurement.AQ_hourly_index}` : undefined,
+                            type: 'air',
+                            measurement,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                         return;
@@ -228,7 +233,7 @@ const MapInner: React.FC = () => {
                 onClose={actions.clearSelection}
                 onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
                 title={panelTitle}
-                platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
+                platformCode={(!state.selectedVehicle && state.selectedStop?.type === 'stop') ? state.selectedStop?.platformCode : undefined}
             >
                 <DetailPanelContent
                     onToggleFollow={handleToggleFollow}

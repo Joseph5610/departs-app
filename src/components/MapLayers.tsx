@@ -23,6 +23,7 @@ import {
     vehiclesDirectionLayer,
     vehiclesLabelLayer,
     routeLineLayer,
+    parkingPolygonLayer,
     parkingLayer,
     parkingLabelLayer,
     sharedCarsLayer,
@@ -161,6 +162,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             </Source>
 
             <Source id="pid-parking" type="geojson" data={(showParking && parkingData ? parkingData : EMPTY_GEOJSON) as any}>
+                <Layer {...parkingPolygonLayer} />
                 <Layer {...parkingLayer} />
                 <Layer {...parkingLabelLayer} />
             </Source>

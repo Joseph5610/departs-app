@@ -2,6 +2,7 @@ import type {
     CircleLayerSpecification,
     SymbolLayerSpecification,
     LineLayerSpecification,
+    FillLayerSpecification,
     ExpressionSpecification
 } from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
@@ -460,10 +461,23 @@ export const vehiclesLabelLayer: SymbolLayerSpecification = {
     }
 };
 
+export const parkingPolygonLayer: FillLayerSpecification = {
+    id: 'parking-polygons',
+    type: 'fill',
+    source: 'pid-parking',
+    filter: ['any', ['==', ['$type'], 'Polygon'], ['==', ['$type'], 'MultiPolygon']],
+    paint: {
+        'fill-color': '#3b82f6',
+        'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 16, 0.5],
+        'fill-outline-color': '#ffffff'
+    }
+};
+
 export const parkingLayer: CircleLayerSpecification = {
     id: 'parking',
     type: 'circle',
     source: 'pid-parking',
+    filter: ['==', ['$type'], 'Point'],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 15, 10],
         'circle-color': '#3b82f6',
