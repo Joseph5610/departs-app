@@ -160,8 +160,8 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             title={item.title}
             link={item.link}
             priority={item.priority || 'low'}
-            dateFrom={item.date_from}
-            dateTo={item.date_from && !item.date_to ? t('alerts.untilFurtherNotice') : item.date_to}
+            dateFrom={item.valid_from}
+            dateTo={item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

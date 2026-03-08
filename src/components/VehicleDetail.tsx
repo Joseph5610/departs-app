@@ -27,8 +27,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     onToggleFollow
 }) => {
     const { t } = useTranslation();
-    const { data: incidents } = useRSS('incidents');
-    const { data: exclusions } = useRSS('exclusions');
+    const { data: rssData } = useRSS();
     const [showPastStops, setShowPastStops] = useState(false);
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
 
@@ -63,13 +62,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
 
     const relevantAlerts = useMemo(() => {
-        const allItems = [...(incidents?.items || []), ...(exclusions?.items || [])];
+        const allItems = rssData?.alerts || [];
         if (!routeName) return [];
         return allItems.filter(item =>
-            item.lines?.some(l => l.toUpperCase() === routeName.toString().toUpperCase()) &&
+            item.lines?.some((l: string) => l.toUpperCase() === routeName.toString().toUpperCase()) &&
             item.isActive
         );
-    }, [incidents, exclusions, routeName]);
+    }, [rssData, routeName]);
 
     // Prefer high-frequency sequence from selectedVehicle (map stream) over vehicleDetail (REST API)
     const effectiveSequence = useMemo(() => {
@@ -227,7 +226,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             title={alert.title}
                             link={alert.link}
                             priority={alert.priority || 'normal'}
-                            date={alert.date}
+                            dateFrom={alert.valid_from}
+                            dateTo={alert.valid_to}
                             isActive={alert.isActive}
                             isFuture={alert.isFuture}
                         />

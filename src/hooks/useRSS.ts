@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { RSSResponse } from '../types/transit';
+import type { RSSResponse } from '../types/transit';
 
 const fetchRSS = async (): Promise<RSSResponse> => {
     const res = await fetch('/api/rss');
