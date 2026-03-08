@@ -2,6 +2,24 @@ import { Env, GolemioInfotext, AppInfotext } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 
 /**
+ * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
+ */
+function formatPragueDate(date: Date): string {
+    const d = new Intl.DateTimeFormat('cs-CZ', {
+        timeZone: 'Europe/Prague',
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+    }).formatToParts(date);
+
+    const get = (type: string) => d.find(p => p.type === type)?.value;
+    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
+}
+
+/**
  * Retrieves the transit infotexts from Golemio API.
  */
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -23,10 +41,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const now = new Date();
         const nowMs = now.getTime();
 
-        const formatDate = (date: Date): string => {
-            return `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-        };
-
         const filteredAndNormalized: AppInfotext[] = data
             .filter(item => {
                 const validFrom = new Date(item.valid_from).getTime();
@@ -42,8 +56,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 priority: item.priority,
                 displayType: item.display_type,
                 relatedStopIds: item.related_stops.map(stop => stop.id),
-                date_from: formatDate(new Date(item.valid_from)),
-                date_to: item.valid_to ? formatDate(new Date(item.valid_to)) : null
+                date_from: formatPragueDate(new Date(item.valid_from)),
+                date_to: item.valid_to ? formatPragueDate(new Date(item.valid_to)) : null
             }));
 
         return createSuccessResponse(filteredAndNormalized, CACHE_TTL.INFOTEXTS);

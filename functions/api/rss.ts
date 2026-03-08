@@ -47,6 +47,24 @@ async function fetchFeed(url: string): Promise<string> {
     return await response.text();
 }
 
+/**
+ * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
+ */
+function formatPragueDate(date: Date): string {
+    const d = new Intl.DateTimeFormat('cs-CZ', {
+        timeZone: 'Europe/Prague',
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+    }).formatToParts(date);
+
+    const get = (type: string) => d.find(p => p.type === type)?.value;
+    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
+}
+
 function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSItem[] {
     const itemType = type === 'incidents' ? 'incident' : 'exclusion';
     const items: AppRSSItem[] = [];
@@ -54,10 +72,6 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
     let match: RegExpExecArray | null;
 
     const now = new Date();
-
-    const formatDate = (date: Date): string => {
-        return `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    };
 
     while ((match = itemRegex.exec(xmlString)) !== null) {
         const itemXml = match[1];
@@ -74,8 +88,6 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
 
         if (type === 'incidents') {
             // Parsing incidents from description: "7.3. 20:32 - do&nbsp;odvolání" or "7.3. 08:00 - 8.3. 21:00"
-            // Regex handles optional space after day dot and month dot.
-            // Format: Day. Month. Time
             const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
             const dateMatch = description.match(/(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i);
 
@@ -89,10 +101,13 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
                     const [hours, mins] = time.split(':').map(n => parseInt(n));
 
                     let year = now.getFullYear();
-                    if (month < now.getMonth() - 1) year++; // Simple logic for year wrap (e.g. Dec -> Jan)
+                    // Incident feeds often lack year. If month is much later than now, it's likely last year.
+                    // If month is much earlier than now, it's likely next year (rare for incidents but possible for planned ones).
+                    if (month > now.getMonth() + 1) year--;
+                    else if (month < now.getMonth() - 10) year++;
 
                     const date = new Date(year, month, day, hours, mins);
-                    return formatDate(date);
+                    return formatPragueDate(date);
                 };
 
                 date_from = parseAndFormat(dateMatch[1]);
@@ -103,8 +118,13 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
                     date_to = parseAndFormat(toStr);
                 }
             } else {
-                date_from = getXMLTagContent(itemXml, 'date') || null;
+                // Fallback to <date> tag if available, but incidents usually don't have it in a good format
+                const rawDate = getXMLTagContent(itemXml, 'date');
+                if (rawDate) {
+                    date_from = rawDate;
+                }
             }
+            // Incidents are forced to active
             isActive = true;
             isFuture = false;
         } else {
@@ -113,14 +133,14 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             const end = dateToTag && /^\d+$/.test(dateToTag) ? new Date(parseInt(dateToTag) * 1000) : null;
 
             if (start) {
-                date_from = formatDate(start);
+                date_from = formatPragueDate(start);
                 if (start > now) {
                     isActive = false;
                     isFuture = true;
                 }
             }
             if (end) {
-                date_to = formatDate(end);
+                date_to = formatPragueDate(end);
                 if (end < now) {
                     isActive = false;
                 }
