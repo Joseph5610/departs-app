@@ -19,10 +19,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         const data = await res.json() as { features: GolemioAirQualityFeature[] };
 
-        // We return the raw features - frontend will calculate proximity and display the nearest
+        // Flatten features for easier MapLibre rendering
+        const features = (data.features || []).map(f => ({
+            type: "Feature",
+            geometry: f.geometry,
+            properties: {
+                id: f.properties.id,
+                name: f.properties.name,
+                aq_index: f.properties.measurement?.AQ_hourly_index || null,
+                updated_at: f.properties.updated_at
+            }
+        }));
+
         return createSuccessResponse({
             type: "FeatureCollection",
-            features: data.features || []
+            features
         }, CACHE_TTL.AIR_QUALITY);
 
     } catch (error) {

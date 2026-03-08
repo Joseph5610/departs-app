@@ -494,8 +494,8 @@ export const parkingLabelLayer: SymbolLayerSpecification = {
     minzoom: 13,
     layout: {
         'text-field': ['case',
-            ['has', 'occupancy'],
-            ['to-string', ['get', 'free', ['get', 'occupancy']]],
+            ['any', ['!=', ['get', 'free_spots'], null], ['has', 'free_spots']],
+            ['to-string', ['to-number', ['get', 'free_spots']]],
             'P'
         ],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
@@ -552,7 +552,7 @@ export const airQualityLayer: CircleLayerSpecification = {
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 12],
         'circle-color': [
-            'match', ['get', 'AQ_hourly_index', ['get', 'measurement']],
+            'match', ['to-number', ['get', 'aq_index']],
             1, '#10b981',
             2, '#84cc16',
             3, '#f59e0b',

@@ -71,11 +71,10 @@ export interface SelectedStop {
         free: number;
         total: number;
     };
+    parkingPolicy?: string;
+    parkingType?: string;
     company?: string;
-    measurement?: {
-        AQ_hourly_index: number;
-        [key: string]: any;
-    };
+    aq_index?: number;
 }
 
 export interface Departure {

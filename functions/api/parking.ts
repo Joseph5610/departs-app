@@ -42,12 +42,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return {
                 ...feature,
                 properties: {
-                    ...feature.properties,
-                    occupancy: occupancy ? {
-                        free: occupancy.free_spot_number,
-                        total: occupancy.total_spot_number,
-                        last_updated: occupancy.last_updated
-                    } : null
+                    id: feature.properties.id,
+                    name: feature.properties.name,
+                    parking_policy: feature.properties.parking_policy,
+                    parking_type: feature.properties.parking_type,
+                    has_occupancy_info: feature.properties.has_occupancy_info,
+                    free_spots: occupancy?.free_spot_number ?? null,
+                    total_spots: occupancy?.total_spot_number ?? null,
+                    last_updated: occupancy?.last_updated ?? feature.properties.last_updated_at
                 }
             };
         });

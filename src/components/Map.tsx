@@ -135,28 +135,48 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'parking' || f.layer.id === 'parking-labels') {
+                    if (f.layer.id === 'parking' || f.layer.id === 'parking-labels' || f.layer.id === 'parking-polygons') {
                         const props = f.properties;
-                        const occupancy = typeof props.occupancy === 'string' ? JSON.parse(props.occupancy) : props.occupancy;
+
+                        let coordinates: [number, number] | undefined;
+                        if (f.geometry.type === 'Point') {
+                            coordinates = (f.geometry as any).coordinates;
+                        } else if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+                            const coords = f.geometry.type === 'Polygon' ? (f.geometry as any).coordinates[0][0] : (f.geometry as any).coordinates[0][0][0];
+                            coordinates = [coords[0], coords[1]];
+                        }
+
+                        const parseJSON = (val: any) => {
+                            try { return typeof val === 'string' ? JSON.parse(val) : val; }
+                            catch { return val; }
+                        };
+
                         actions.selectStop({
                             id: props.id,
                             name: props.name || t('settings.showParking.title'),
                             type: 'parking',
-                            occupancy,
-                            coordinates: (f.geometry as { type: 'Point' | 'Polygon'; coordinates: any }).type === 'Point'
-                                ? (f.geometry as any).coordinates
-                                : undefined
+                            parkingPolicy: props.parking_policy,
+                            parkingType: props.parking_type,
+                            occupancy: (props.free_spots !== undefined && props.free_spots !== null) ? {
+                                free: Number(props.free_spots),
+                                total: Number(props.total_spots)
+                            } : parseJSON(props.occupancy),
+                            coordinates
                         });
                         return;
                     }
 
                     if (f.layer.id === 'shared-cars' || f.layer.id === 'shared-cars-labels') {
                         const props = f.properties;
+                        const company = typeof props.company === 'string' && props.company.startsWith('{')
+                            ? JSON.parse(props.company).name
+                            : (typeof props.company === 'object' ? props.company?.name : props.company);
+
                         actions.selectStop({
                             id: props.id,
                             name: props.name,
                             type: 'car',
-                            company: props.company,
+                            company: company || "Unknown",
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                         return;
@@ -175,12 +195,11 @@ const MapInner: React.FC = () => {
 
                     if (f.layer.id === 'air-quality') {
                         const props = f.properties;
-                        const measurement = typeof props.measurement === 'string' ? JSON.parse(props.measurement) : props.measurement;
                         actions.selectStop({
                             id: props.id,
                             name: props.name,
                             type: 'air',
-                            measurement,
+                            aq_index: Number(props.aq_index),
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                         return;
@@ -189,7 +208,7 @@ const MapInner: React.FC = () => {
                 interactiveLayerIds={[
                     'unclustered-point', 'train-stations', 'clusters', 'transfer-stations',
                     'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all',
-                    'parking', 'parking-labels', 'shared-cars', 'shared-cars-labels',
+                    'parking', 'parking-labels', 'parking-polygons', 'shared-cars', 'shared-cars-labels',
                     'bicycle-counters', 'air-quality'
                 ]}
             >

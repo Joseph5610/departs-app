@@ -108,25 +108,66 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
                         <div className="space-y-1">
                             <h3 className="text-white font-bold text-lg">{selectedStop.name}</h3>
-                            {selectedStop.type === 'parking' && selectedStop.occupancy && (
-                                <p className="text-zinc-400 text-sm">
-                                    {t('map.departures.atStop')}: {selectedStop.occupancy.free} / {selectedStop.occupancy.total}
-                                </p>
+                            {selectedStop.type === 'parking' && (
+                                <div className="space-y-1 text-zinc-400 text-sm">
+                                    {selectedStop.occupancy ? (
+                                        <div className="space-y-1">
+                                            <p className="text-emerald-400 font-black text-2xl tabular-nums">
+                                                {selectedStop.occupancy.free}
+                                            </p>
+                                            <p className="text-[10px] uppercase font-bold tracking-widest opacity-60">
+                                                {t('common.all')} {selectedStop.occupancy.total}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p className="opacity-50">{t('airQuality.unknown')}</p>
+                                    )}
+                                    <div className="flex flex-wrap justify-center gap-1 mt-4">
+                                        {selectedStop.parkingPolicy && (
+                                            <span className="px-2.5 py-1 bg-white/10 rounded-lg text-[9px] uppercase font-bold tracking-wider border border-white/5">
+                                                {selectedStop.parkingPolicy.replace(/_/g, ' ')}
+                                            </span>
+                                        )}
+                                        {selectedStop.parkingType && (
+                                            <span className="px-2.5 py-1 bg-white/10 rounded-lg text-[9px] uppercase font-bold tracking-wider border border-white/5">
+                                                {selectedStop.parkingType.replace(/_/g, ' ')}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             )}
                             {selectedStop.type === 'car' && selectedStop.company && (
-                                <p className="text-zinc-400 text-sm">{selectedStop.company}</p>
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{selectedStop.company}</p>
+                                        <p className="text-white font-bold text-xl leading-tight">{selectedStop.name}</p>
+                                    </div>
+                                    <div className="inline-flex px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
+                                        {t('settings.showSharedCars.title')}
+                                    </div>
+                                </div>
                             )}
-                            {selectedStop.type === 'air' && selectedStop.measurement && (
-                                <p className="text-zinc-400 text-sm">
-                                    {t('airQuality.title')}: {t(`airQuality.indices.${selectedStop.measurement.AQ_hourly_index}`)}
-                                </p>
+                            {selectedStop.type === 'air' && (
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <p className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('airQuality.label')}</p>
+                                        <p className="text-white font-bold text-xl leading-tight">
+                                            {selectedStop.aq_index ? t(`airQuality.indices.${selectedStop.aq_index}`) : t('airQuality.unknown')}
+                                        </p>
+                                    </div>
+                                    <div className="inline-flex px-3 py-1 bg-sky-500/10 text-sky-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-sky-500/20">
+                                        {t('airQuality.title')}
+                                    </div>
+                                </div>
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase font-black tracking-widest pt-2">
-                            <Info size={12} />
-                            <span>{t('map.departures.noUpcoming')}</span>
-                        </div>
+                        {selectedStop.type === 'stop' && (
+                            <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase font-black tracking-widest pt-2">
+                                <Info size={12} />
+                                <span>{t('map.departures.noUpcoming')}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

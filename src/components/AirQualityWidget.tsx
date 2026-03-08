@@ -14,26 +14,40 @@ export const AirQualityWidget: React.FC = () => {
     const { t } = useTranslation();
     const { state, mapRef } = useMap();
     const { data: aqData } = useAirQuality();
-    const { showAirQuality } = state;
+    const { showAirQuality, debouncedBounds } = state;
 
     // Determine the nearest station to the center of the map
     const nearestStation = useMemo(() => {
         if (!aqData?.features || aqData.features.length === 0) return null;
 
         const map = state.mapLoaded ? mapRef.current?.getMap() : null;
-        const center = map ? [map.getCenter().lng, map.getCenter().lat] : (state.userLocation || [14.4378, 50.0755]);
+        let center: [number, number] = state.userLocation || [14.4378, 50.0755];
 
-        return aqData.features.reduce((prev: any, curr: any) => {
+        if (map) {
+            const c = map.getCenter();
+            center = [c.lng, c.lat];
+        }
+
+        // Filter out stations with unknown index (null/0) or very old data if we had timestamps
+        const validStations = aqData.features.filter((f: any) =>
+            f.properties.aq_index !== null && f.properties.aq_index !== undefined
+        );
+        const stationsToSearch = validStations.length > 0 ? validStations : aqData.features;
+
+        return stationsToSearch.reduce((prev: any, curr: any) => {
             const dist = (coords: [number, number]) =>
                 Math.sqrt(Math.pow(coords[0] - center[0], 2) + Math.pow(coords[1] - center[1], 2));
 
-            return dist(curr.geometry.coordinates) < dist(prev.geometry.coordinates) ? curr : prev;
+            const distPrev = dist(prev.geometry.coordinates);
+            const distCurr = dist(curr.geometry.coordinates);
+
+            return distCurr < distPrev ? curr : prev;
         });
-    }, [aqData, state.userLocation, state.mapLoaded, mapRef]);
+    }, [aqData, state.userLocation, state.mapLoaded, mapRef, debouncedBounds]);
 
     if (!showAirQuality || !nearestStation) return null;
 
-    const index = nearestStation.properties.measurement?.AQ_hourly_index;
+    const index = nearestStation.properties.aq_index;
     const stationName = nearestStation.properties.name;
 
     const getIndexColor = (idx: number) => {
@@ -59,7 +73,7 @@ export const AirQualityWidget: React.FC = () => {
                     getIndexColor(index)
                 )}
                 title={t('airQuality.station', { name: stationName })}
-                style={{ top: 'calc(1.25rem + (var(--safe-area-inset-top, 0px)))', right: 'calc(4.5rem + (var(--safe-area-inset-right, 0px)))' }}
+                style={{ top: 'calc(1.25rem + env(safe-area-inset-top, 0px))', right: 'calc(4.5rem + env(safe-area-inset-right, 0px))' }}
             >
                 <Wind size={18} />
                 <div className="flex flex-col">

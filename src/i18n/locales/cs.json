@@ -169,7 +169,8 @@
     "title": "Kvalita ovzduší",
     "station": "Stanice {{name}}",
     "index": "Index {{index}}",
-    "unknown": "Neznámo",
+    "unknown": "Neznámý / Nedostupný",
+    "label": "Míra znečištění",
     "indices": {
       "1": "Velmi dobrá",
       "2": "Dobrá",
