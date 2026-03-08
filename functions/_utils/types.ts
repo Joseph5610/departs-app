@@ -164,6 +164,7 @@ export interface AppStopProperties {
 export interface AppRSSItem {
     type: 'incident' | 'exclusion';
     title: string;
+    description: string | null;
     link: string;
     valid_from: string | null;
     valid_to: string | null;

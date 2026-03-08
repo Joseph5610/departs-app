@@ -224,10 +224,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <GenericAlertCard
                             key={alert.guid || idx}
                             title={alert.title}
+                            description={alert.description}
                             link={alert.link}
                             priority={alert.priority || 'normal'}
-                            dateFrom={alert.valid_from}
-                            dateTo={alert.valid_to}
+                            validFrom={alert.valid_from}
+                            validTo={alert.valid_to}
                             isActive={alert.isActive}
                             isFuture={alert.isFuture}
                         />

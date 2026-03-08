@@ -86,9 +86,10 @@ export interface Departure {
 export interface RSSItem {
     type: 'incident' | 'exclusion';
     title: string;
-    link: string;
+    description: string | null;
     valid_from: string | null;
     valid_to: string | null;
+    link: string;
     guid?: string;
     priority?: string;
     lines?: string[];

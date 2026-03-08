@@ -105,8 +105,8 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                     key={info.id}
                                     title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
                                     priority={info.priority}
-                                    dateFrom={info.valid_from}
-                                    dateTo={info.valid_to}
+                                    validFrom={info.valid_from}
+                                    validTo={info.valid_to}
                                     isActive={true}
                                 />
                             ))}

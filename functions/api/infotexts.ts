@@ -1,23 +1,5 @@
 import { Env, GolemioInfotext, AppInfotext } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
-
-/**
- * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
- */
-function formatPragueDate(date: Date): string {
-    const d = new Intl.DateTimeFormat('cs-CZ', {
-        timeZone: 'Europe/Prague',
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false
-    }).formatToParts(date);
-
-    const get = (type: string) => d.find(p => p.type === type)?.value;
-    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
-}
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, formatPragueDate } from "../_utils/api-utils";
 
 /**
  * Retrieves the transit infotexts from Golemio API.

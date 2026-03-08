@@ -27,6 +27,7 @@ export const Alerts: React.FC = () => {
         const filtered = searchQuery.trim()
             ? items.filter(item =>
                 item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 item.lines?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()))
               )
             : [...items];
@@ -158,10 +159,11 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     return (
         <GenericAlertCard
             title={item.title}
+            description={item.description}
             link={item.link}
             priority={item.priority || 'low'}
-            dateFrom={item.valid_from}
-            dateTo={item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to}
+            validFrom={item.valid_from}
+            validTo={item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

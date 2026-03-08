@@ -1,16 +1,20 @@
-import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse, formatPragueDate } from "../_utils/api-utils";
 import { getXMLTagContent } from "../_utils/rss-utils";
 import { AppRSSItem, AppRSSResponse } from "../_utils/types";
 
 export const onRequest: PagesFunction = async () => {
     try {
-        const [incidentsXml, exclusionsXml] = await Promise.all([
+        const [incidentsRes, exclusionsRes] = await Promise.allSettled([
             fetchFeed(TRANSIT_CONFIG.RSS_FEEDS.incidents),
             fetchFeed(TRANSIT_CONFIG.RSS_FEEDS.exclusions)
         ]);
 
-        const incidents = parseRSS(incidentsXml, 'incidents');
-        const exclusions = parseRSS(exclusionsXml, 'exclusions');
+        const incidents = incidentsRes.status === 'fulfilled' ? parseRSS(incidentsRes.value, 'incidents') : [];
+        const exclusions = exclusionsRes.status === 'fulfilled' ? parseRSS(exclusionsRes.value, 'exclusions') : [];
+
+        if (incidentsRes.status === 'rejected' && exclusionsRes.status === 'rejected') {
+            throw new Error("Both RSS feeds failed to fetch");
+        }
 
         const response: AppRSSResponse = {
             alerts: [...incidents, ...exclusions]
@@ -47,24 +51,6 @@ async function fetchFeed(url: string): Promise<string> {
     return await response.text();
 }
 
-/**
- * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
- */
-function formatPragueDate(date: Date): string {
-    const d = new Intl.DateTimeFormat('cs-CZ', {
-        timeZone: 'Europe/Prague',
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false
-    }).formatToParts(date);
-
-    const get = (type: string) => d.find(p => p.type === type)?.value;
-    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
-}
-
 function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSItem[] {
     const itemType = type === 'incidents' ? 'incident' : 'exclusion';
     const items: AppRSSItem[] = [];
@@ -77,6 +63,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         const itemXml = match[1];
         const title = getXMLTagContent(itemXml, 'title');
         const description = getXMLTagContent(itemXml, 'description');
+        const pubDate = getXMLTagContent(itemXml, 'pubDate');
 
         const dateFromTag = getXMLTagContent(itemXml, 'dateFrom');
         const dateToTag = getXMLTagContent(itemXml, 'dateTo');
@@ -86,30 +73,29 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         let valid_from: string | null = null;
         let valid_to: string | null = null;
 
+        const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
+        const dateRangeRegex = /(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i;
+
+        const parseAndFormat = (str: string) => {
+            const match = str.match(datePartsRegex);
+            if (!match) return str.trim();
+            const [_, d, m, time] = match;
+            const day = parseInt(d);
+            const month = parseInt(m);
+
+            let year = now.getFullYear();
+            if (month - 1 > now.getMonth() + 1) year--;
+            else if (month - 1 < now.getMonth() - 10) year++;
+
+            const [h, min] = time.split(':');
+            const paddedH = h.padStart(2, '0');
+
+            return `${day}. ${month}. ${year} ${paddedH}:${min}`;
+        };
+
         if (type === 'incidents') {
-            // Parsing incidents from description: "7.3. 20:32 - do&nbsp;odvolání" or "7.3. 08:00 - 8.3. 21:00"
-            const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
-            const dateMatch = description.match(/(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i);
-
+            const dateMatch = description.match(dateRangeRegex);
             if (dateMatch) {
-                const parseAndFormat = (str: string) => {
-                    const match = str.match(datePartsRegex);
-                    if (!match) return str;
-                    const [_, d, m, time] = match;
-                    const day = parseInt(d);
-                    const month = parseInt(m);
-
-                    let year = now.getFullYear();
-                    // Incident feeds often lack year.
-                    if (month - 1 > now.getMonth() + 1) year--;
-                    else if (month - 1 < now.getMonth() - 10) year++;
-
-                    const [h, min] = time.split(':');
-                    const paddedH = h.padStart(2, '0');
-
-                    return `${day}. ${month}. ${year} ${paddedH}:${min}`;
-                };
-
                 valid_from = parseAndFormat(dateMatch[1]);
                 let toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
                 if (toStr.toLowerCase().includes('odvolání')) {
@@ -117,12 +103,17 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
                 } else {
                     valid_to = parseAndFormat(toStr);
                 }
-            } else {
+            }
+
+            if (!valid_from) {
                 const rawDate = getXMLTagContent(itemXml, 'date');
                 if (rawDate) {
                     valid_from = rawDate;
+                } else if (pubDate) {
+                    valid_from = formatPragueDate(new Date(pubDate));
                 }
             }
+
             isActive = true;
             isFuture = false;
         } else {
@@ -159,9 +150,21 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             }
         }
 
+        // Clean description: remove the leading date range and "Dotčené linky"
+        let cleanedDescription = description
+            .replace(dateRangeRegex, '')
+            .replace(/Dotčené linky:\s*([A-Z0-9,\s]+)/i, '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .trim();
+
+        // Remove trailing semicolons or dots if they are left over
+        cleanedDescription = cleanedDescription.replace(/^[;\s\.]+|[;\s\.]+$/g, '');
+
         items.push({
             type: itemType,
             title,
+            description: cleanedDescription || null,
             link: getXMLTagContent(itemXml, 'link'),
             valid_from,
             valid_to,

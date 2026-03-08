@@ -6,10 +6,11 @@ import { AlertTriangle, ExternalLink } from 'lucide-react';
 export interface CommonAlertProps {
     id?: string;
     title: string;
+    description?: string | null;
     link?: string;
     priority: 'high' | 'normal' | 'low' | string;
-    dateFrom?: string | null;
-    dateTo?: string | null;
+    validFrom?: string | null;
+    validTo?: string | null;
     isActive?: boolean;
     isFuture?: boolean;
     showStatus?: boolean;
@@ -19,10 +20,11 @@ export interface CommonAlertProps {
 
 export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     title,
+    description,
     link,
     priority,
-    dateFrom,
-    dateTo,
+    validFrom,
+    validTo,
     isActive,
     isFuture,
     showStatus = false,
@@ -69,6 +71,12 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     {link && <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />}
                 </div>
 
+                {description && (
+                    <p className="text-zinc-400 text-[10px] mt-0.5 line-clamp-3 leading-relaxed">
+                        {description}
+                    </p>
+                )}
+
                 {lines && lines.length > 0 && lineColors && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
                         {lines.map(line => (
@@ -83,10 +91,10 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                     </div>
                 )}
 
-                {dateFrom && (
+                {validFrom && (
                     <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
                         <span>
-                            {dateTo ? `${dateFrom} – ${dateTo}` : t('alerts.validFrom', { date: dateFrom })}
+                            {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
                         </span>
                     </div>
                 )}
