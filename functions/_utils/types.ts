@@ -26,9 +26,21 @@ export interface GolemioVehicleFeature {
         next_stop_name?: string;
         is_wheelchair_accessible?: boolean;
         is_air_conditioned?: boolean;
+        has_usb_chargers?: boolean;
+        usb_chargers?: boolean;
+        operator?: string;
         vehicle_registration_number?: number;
         run_number?: number | string;
         service_number?: number | string;
+        last_stop_sequence?: number;
+        origin_timestamp?: string;
+        vehicle_descriptor?: {
+            is_wheelchair_accessible?: boolean;
+            is_air_conditioned?: boolean;
+            has_usb_chargers?: boolean;
+            vehicle_registration_number?: string | number;
+            operator?: string;
+        };
         trip?: {
             gtfs?: {
                 trip_id?: string;
@@ -42,13 +54,36 @@ export interface GolemioVehicleFeature {
             wheelchair_accessible?: boolean;
             air_conditioned?: boolean;
             vehicle_registration_number?: number;
+            next_stop_name?: string;
+            vehicle_descriptor?: {
+                is_wheelchair_accessible?: boolean;
+                is_air_conditioned?: boolean;
+                has_usb_chargers?: boolean;
+                vehicle_registration_number?: string | number;
+                operator?: string;
+            };
+            operator?: string;
+            origin_timestamp?: string;
         };
         last_position?: {
             run_number?: number | string;
             bearing?: number;
-            delay?: { actual?: number };
+            delay?: number | { actual?: number };
             state_position?: string;
-            next_stop?: { id?: string };
+            next_stop?: { id?: string; name?: string };
+            vehicle_descriptor?: {
+                is_wheelchair_accessible?: boolean;
+                is_air_conditioned?: boolean;
+                has_usb_chargers?: boolean;
+                vehicle_registration_number?: string | number;
+                operator?: string;
+            };
+            vehicle_registration_number?: number | string;
+            operator?: string;
+            last_stop?: { sequence?: number };
+            last_stop_sequence?: number;
+            origin_timestamp?: string;
+            timestamp?: string;
         };
         [key: string]: unknown;
     };
