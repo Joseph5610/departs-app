@@ -84,9 +84,9 @@ export interface Departure {
 }
 
 export interface RSSItem {
+    type: 'incident' | 'exclusion';
     title: string;
     link: string;
-    timestamp: string;
     displayDate?: string;
     guid?: string;
     priority?: string;
@@ -96,8 +96,7 @@ export interface RSSItem {
 }
 
 export interface RSSResponse {
-    incidents: RSSItem[];
-    exclusions: RSSItem[];
+    alerts: RSSItem[];
 }
 
 export interface Infotext {

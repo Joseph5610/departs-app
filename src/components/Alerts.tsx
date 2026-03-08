@@ -17,11 +17,11 @@ export const Alerts: React.FC = () => {
 
     const { data: rssData, isLoading: loadingRSS } = useRSS();
 
-    const incidentsCount = rssData?.incidents?.length || 0;
-    const exclusionsCount = rssData?.exclusions?.length || 0;
+    const incidentsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'incident').length || 0, [rssData]);
+    const exclusionsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'exclusion').length || 0, [rssData]);
 
     const currentItems = useMemo(() => {
-        const items = activeTab === 'incidents' ? rssData?.incidents : rssData?.exclusions;
+        const items = rssData?.alerts?.filter(a => activeTab === 'incidents' ? a.type === 'incident' : a.type === 'exclusion');
         if (!items) return [];
 
         const filtered = searchQuery.trim()
@@ -31,12 +31,8 @@ export const Alerts: React.FC = () => {
               )
             : [...items];
 
-        // Sort: Active first, Future (planned) last. Secondary sort by timestamp (newest first).
-        return filtered.sort((a, b) => {
-            if (a.isFuture && !b.isFuture) return 1;
-            if (!a.isFuture && b.isFuture) return -1;
-            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-        });
+        // Backend already sorts by status (Active > Future) and timestamp (Newest first).
+        return filtered;
     }, [activeTab, rssData, searchQuery]);
 
     return (

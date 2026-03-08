@@ -62,7 +62,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const routeName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name;
 
     const relevantAlerts = useMemo(() => {
-        const allItems = [...(rssData?.incidents || []), ...(rssData?.exclusions || [])];
+        const allItems = rssData?.alerts || [];
         if (!routeName) return [];
         return allItems.filter(item =>
             item.lines?.some(l => l.toUpperCase() === routeName.toString().toUpperCase()) &&

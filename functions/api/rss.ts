@@ -13,8 +13,7 @@ export const onRequest: PagesFunction = async () => {
         const exclusions = parseRSS(exclusionsXml, 'exclusions');
 
         const response: AppRSSResponse = {
-            incidents,
-            exclusions
+            alerts: [...incidents, ...exclusions]
         };
 
         return new Response(JSON.stringify(response), {
@@ -49,6 +48,7 @@ async function fetchFeed(url: string): Promise<string> {
 }
 
 function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSItem[] {
+    const itemType = type === 'incidents' ? 'incident' : 'exclusion';
     const items: AppRSSItem[] = [];
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let match: RegExpExecArray | null;
@@ -119,17 +119,25 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         }
 
         items.push({
+            type: itemType,
             title,
             link: getXMLTagContent(itemXml, 'link'),
-            timestamp,
+            timestamp, // included for sorting, will be stripped before response
             displayDate: dateRange || undefined,
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,
             isActive,
             isFuture
-        });
+        } as any);
     }
 
-    return items;
+    // Sort: Active first, Future (planned) last. Within groups, newest first.
+    return items
+        .sort((a: any, b: any) => {
+            if (a.isFuture && !b.isFuture) return 1;
+            if (!a.isFuture && b.isFuture) return -1;
+            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        })
+        .map(({ timestamp, ...item }: any) => item as AppRSSItem);
 }

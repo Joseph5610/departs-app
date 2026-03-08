@@ -95,10 +95,10 @@ export interface GolemioInfotext {
 }
 
 export interface AppRSSItem {
+    type: 'incident' | 'exclusion';
     title: string;
     link: string;
-    timestamp: string; // ISO string for sorting
-    displayDate?: string; // Raw date string for UI
+    displayDate?: string; // Pre-formatted string for UI
     guid?: string;
     priority?: string;
     lines?: string[];
@@ -107,8 +107,7 @@ export interface AppRSSItem {
 }
 
 export interface AppRSSResponse {
-    incidents: AppRSSItem[];
-    exclusions: AppRSSItem[];
+    alerts: AppRSSItem[];
 }
 
 export interface GolemioStopFeature {
