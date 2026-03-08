@@ -49,27 +49,27 @@ export const Alerts: React.FC = () => {
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group relative"
+                className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group relative"
                 title={t('alerts.title')}
             >
-                <AlertTriangle size={20} className={incidentsCount > 0 ? "text-rose-500 animate-pulse" : "group-hover:scale-110 transition-transform"} />
+                <AlertTriangle size={20} className={incidentsCount > 0 ? "text-destructive animate-pulse" : "group-hover:scale-110 transition-transform"} />
                 {incidentsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-black min-w-[20px] text-center">
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-background min-w-[20px] text-center">
                         {incidentsCount}
                     </span>
                 )}
             </button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-3xl border-border bg-background/95 backdrop-blur-md">
-                    <DialogHeader className="mb-4">
-                        <DialogTitle className="text-xl font-bold tracking-tight">
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col min-h-0">
                         {/* Sticky Header Section */}
-                        <div className="sticky -top-4 z-10 bg-background pt-0 pb-2 space-y-2 -mx-4 px-4 border-b border-border">
+                        <div className="sticky -top-6 z-10 bg-background/95 backdrop-blur-md pt-0 pb-2 space-y-2 -mx-6 px-6 border-b border-border">
                             {/* Tabs */}
                             <div className="flex p-1 bg-muted/30 rounded-2xl border border-border">
                                 <TabButton
@@ -94,13 +94,13 @@ export const Alerts: React.FC = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('search.placeholder')}
-                                    className="w-full bg-muted/30 border border-border rounded-xl py-2 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                                    className="w-full bg-muted/30 border border-border rounded-xl py-2 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
                                 />
-                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                                 {searchQuery && (
                                     <button
                                         onClick={() => setSearchQuery('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                     >
                                         <X size={14} />
                                     </button>
@@ -124,7 +124,7 @@ export const Alerts: React.FC = () => {
                                     ))}
 
                                     {currentItems.length === 0 && !loadingRSS && (
-                                        <div className="flex-1 flex flex-col items-center justify-center py-12 text-zinc-500 text-sm h-full min-h-[50vh]">
+                                        <div className="flex-1 flex flex-col items-center justify-center py-12 text-muted-foreground text-sm h-full min-h-[50vh]">
                                             {t('alerts.noAlerts')}
                                         </div>
                                     )}

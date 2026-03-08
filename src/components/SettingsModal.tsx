@@ -121,16 +121,16 @@ export const SettingsModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto custom-scrollbar !rounded-3xl border-border bg-background/95 backdrop-blur-md">
-                <DialogHeader className="mb-4">
-                    <DialogTitle className="text-xl font-bold tracking-tight">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
                         {t('settings.title')}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-8 py-2">
                     {/* Live Vehicles Section */}
                     <section className="space-y-3">
-                        <div className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest px-1">
+                        <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.display')}
                         </div>
 
@@ -140,7 +140,7 @@ export const SettingsModal: React.FC = () => {
                             className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border"
                             >
                                 <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
+                                <div className={`p-3 rounded-xl transition-colors shrink-0 ${showVehicles ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
                                         {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -156,7 +156,7 @@ export const SettingsModal: React.FC = () => {
                                 <div
                                     className={cn(
                                         "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
-                                        showVehicles ? "bg-emerald-500" : "bg-zinc-700"
+                                        showVehicles ? "bg-primary" : "bg-muted"
                                     )}
                                 >
                                     <span
@@ -174,12 +174,12 @@ export const SettingsModal: React.FC = () => {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden bg-white/[0.02]"
+                                        className="overflow-hidden bg-foreground/[0.02]"
                                     >
                                         <div className="relative p-4 pt-2 space-y-4">
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-2 px-1">
-                                                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                                <div className="w-1 h-1 rounded-full bg-primary" />
                                                 <div className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
                                                         {t('settings.sections.filters')}
                                                     </div>
@@ -192,7 +192,7 @@ export const SettingsModal: React.FC = () => {
                                                             className={cn(
                                                                 "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
                                                                 routeTypeFilter.includes(id)
-                                                                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                                                                    ? "bg-primary/15 border-primary/40 text-primary"
                                                                 : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                                             )}
                                                         >
@@ -204,7 +204,7 @@ export const SettingsModal: React.FC = () => {
                                                             {routeTypeFilter.includes(id) && (
                                                                 <motion.div
                                                                     layoutId="active-indicator"
-                                                                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                                                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"
                                                                 />
                                                             )}
                                                         </button>
@@ -215,8 +215,8 @@ export const SettingsModal: React.FC = () => {
                                                         className={cn(
                                                             "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5",
                                                             routeTypeFilter.length === 0
-                                                                ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
-                                                                : "bg-white/[0.03] border-white/5 text-zinc-500 hover:bg-white/5 hover:border-white/10 hover:text-zinc-300"
+                                                                ? "bg-amber-500/15 border-amber-500/40 text-amber-500"
+                                                                : "bg-muted/10 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                                         )}
                                                     >
                                                         <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
@@ -238,7 +238,7 @@ export const SettingsModal: React.FC = () => {
                                 className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group"
                             >
                                 <div className="flex items-center gap-0 sm:gap-4 min-w-0 flex-1">
-                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
+                                    <div className={`p-3 rounded-xl transition-colors shrink-0 ${showStops ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'} hidden sm:flex`}>
                                         <MapPin size={22} />
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -254,7 +254,7 @@ export const SettingsModal: React.FC = () => {
                                 <div
                                     className={cn(
                                         "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
-                                        showStops ? "bg-emerald-500" : "bg-zinc-700"
+                                        showStops ? "bg-primary" : "bg-muted"
                                     )}
                                 >
                                     <span
@@ -352,7 +352,7 @@ export const SettingsModal: React.FC = () => {
                                     href="https://github.com/joseph5610/departs-app"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 py-3 text-[10px] text-zinc-500 hover:text-emerald-500 transition-colors uppercase font-bold tracking-widest"
+                                    className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest"
                                 >
                                     <Github size={14} />
                                     {t('settings.viewSource')}

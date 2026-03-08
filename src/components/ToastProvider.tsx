@@ -2,6 +2,7 @@ import React, { useState, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { ToastContext, type ToastType } from '../hooks/useToast';
+import { cn } from '@/lib/utils';
 
 interface Toast {
     id: string;
@@ -41,26 +42,28 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 50, opacity: 0 }}
                             layout
-                            className="pointer-events-auto bg-black/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3"
+                            className="pointer-events-auto bg-background/95 backdrop-blur-xl border border-border p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-3"
                         >
                             <div className="flex items-start gap-3">
-                                <div className={`mt-0.5 p-2 rounded-xl 
-                                    ${toast.type === 'success' ? 'bg-emerald-500/20 text-emerald-500' :
-                                        toast.type === 'error' ? 'bg-red-500/20 text-red-500' :
-                                            'bg-blue-500/20 text-blue-500'}`}>
+                                <div className={cn(
+                                    "mt-0.5 p-2 rounded-xl",
+                                    toast.type === 'success' ? 'bg-primary/20 text-primary' :
+                                    toast.type === 'error' ? 'bg-destructive/20 text-destructive' :
+                                    'bg-sky-500/20 text-sky-500'
+                                )}>
                                     {toast.type === 'success' && <CheckCircle size={18} />}
                                     {toast.type === 'error' && <AlertCircle size={18} />}
                                     {toast.type === 'info' && <Info size={18} />}
                                 </div>
                                 <div className="flex flex-col justify-center min-h-[36px]">
-                                    <span className="text-white text-sm font-medium leading-tight">
+                                    <span className="text-foreground text-sm font-medium leading-tight">
                                         {toast.message}
                                     </span>
                                 </div>
                             </div>
                             <button
                                 onClick={() => removeToast(toast.id)}
-                                className="p-3 -m-1.5 hover:bg-white/5 rounded-lg text-zinc-500 transition-colors self-start"
+                                className="p-3 -m-1.5 hover:bg-accent rounded-lg text-muted-foreground transition-colors self-start"
                             >
                                 <X size={16} />
                             </button>

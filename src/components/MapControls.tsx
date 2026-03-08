@@ -62,7 +62,7 @@ export const MapControls = React.memo(() => {
         <div className="absolute z-10 flex flex-col gap-2 safe-top safe-right">
             <button
                 onClick={(e) => onLocate(e)}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.myLocation')}
                 aria-label={t('map.controls.myLocation')}
             >
@@ -70,13 +70,13 @@ export const MapControls = React.memo(() => {
                     size={20}
                     className={cn(
                         "transition-all",
-                        isGeoPending ? "animate-spin text-blue-400" : "group-hover:scale-110"
+                        isGeoPending ? "animate-spin text-primary" : "group-hover:scale-110"
                     )}
                 />
             </button>
             <button
                 onClick={onSettings}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
                 title={t('map.controls.settings')}
                 aria-label={t('map.controls.settings')}
             >
@@ -84,19 +84,19 @@ export const MapControls = React.memo(() => {
             </button>
             <Alerts />
 
-            <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
+            <div className="flex flex-col bg-background/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl mt-2 overflow-hidden">
                 <button
                     onClick={onZoomIn}
-                    className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
+                    className="p-3 text-foreground hover:bg-muted active:bg-accent active:scale-95 transition-all pointer-events-auto group"
                     title={t('map.controls.zoomIn')}
                     aria-label={t('map.controls.zoomIn')}
                 >
                     <Plus size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
-                <div className="mx-2 h-[1px] bg-white/10" />
+                <div className="mx-2 h-[1px] bg-border" />
                 <button
                     onClick={onZoomOut}
-                    className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
+                    className="p-3 text-foreground hover:bg-muted active:bg-accent active:scale-95 transition-all pointer-events-auto group"
                     title={t('map.controls.zoomOut')}
                     aria-label={t('map.controls.zoomOut')}
                 >
@@ -106,7 +106,7 @@ export const MapControls = React.memo(() => {
             {showCompass && (
                 <button
                     onClick={onResetBearing}
-                    className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
+                    className="p-3 bg-background/95 backdrop-blur-md hover:bg-background/80 active:bg-accent active:scale-95 text-foreground rounded-2xl border border-border shadow-2xl transition-all pointer-events-auto group"
                     title={t('map.controls.resetBearing')}
                     aria-label={t('map.controls.resetBearing')}
                 >

@@ -97,12 +97,12 @@ export const Search: React.FC = React.memo(() => {
                     onFocus={() => setIsOpen(true)}
                     placeholder={t('search.placeholder')}
                     className={cn(
-                        "w-full h-full bg-black/90 backdrop-blur-md pl-10 pr-12 text-white text-base placeholder:text-zinc-500 rounded-2xl border shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all",
-                        activeFilter ? "border-emerald-500/50 ring-2 ring-emerald-500/10" : "border-white/10"
+                        "w-full h-full bg-background/95 backdrop-blur-md pl-10 pr-12 text-foreground text-base placeholder:text-muted-foreground rounded-2xl border shadow-2xl focus:outline-none transition-all",
+                        activeFilter ? "border-primary/50 ring-2 ring-primary/10" : "border-border"
                     )}
                     readOnly={!!activeFilter}
                 />
-                <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-emerald-400' : 'text-zinc-400'} pointer-events-none z-10`} size={20} />
+                <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 ${activeFilter ? 'text-primary' : 'text-muted-foreground'} pointer-events-none z-10`} size={20} />
                 {(query || activeFilter) && (
                     <button
                         onClick={(e) => {
@@ -113,7 +113,7 @@ export const Search: React.FC = React.memo(() => {
                             }
                             setQuery('');
                         }}
-                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-zinc-500 hover:text-white active:scale-90 transition-all z-20"
+                        className="absolute right-0 top-0 h-full w-12 flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all z-20"
                         aria-label={t('search.clearFilter')}
                     >
                         <X size={18} />
@@ -122,11 +122,11 @@ export const Search: React.FC = React.memo(() => {
             </div>
 
             {isOpen && (results.length > 0 || isLineLike || showHistory) && (
-                <div className="mt-2 bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
+                <div className="mt-2 bg-background/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
                     {showHistory && (
-                        <div className="border-b border-white/5 last:border-none">
-                            <div className="px-4 py-2 bg-white/5 border-b border-white/5">
-                                <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
+                        <div className="border-b border-border last:border-none">
+                            <div className="px-4 py-2 bg-muted/50 border-b border-border">
+                                <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
                                     <Clock size={10} />
                                     {t('search.recent')}
                                 </span>
@@ -156,17 +156,17 @@ export const Search: React.FC = React.memo(() => {
                                         setQuery('');
                                         setIsOpen(false);
                                     }}
-                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 transition-colors text-left border-b border-white/5 last:border-none"
+                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted active:bg-accent transition-colors text-left border-b border-border last:border-none"
                                 >
-                                    <div className="p-2 bg-white/5 rounded-lg text-zinc-400">
+                                    <div className="p-2 bg-muted rounded-lg text-muted-foreground">
                                         {item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-white font-medium">
+                                        <span className="text-foreground font-medium">
                                             {item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
                                         </span>
                                         {item.type === 'stop' && item.platformCode && (
-                                            <span className="text-zinc-500 text-xs">{t('search.platform', { code: item.platformCode })}</span>
+                                            <span className="text-muted-foreground text-xs">{t('search.platform', { code: item.platformCode })}</span>
                                         )}
                                     </div>
                                 </button>
@@ -175,8 +175,8 @@ export const Search: React.FC = React.memo(() => {
                     )}
 
                     {query === '' && results.length > 0 && (
-                        <div className="px-4 py-2 bg-white/5 border-b border-white/5">
-                            <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
+                        <div className="px-4 py-2 bg-muted/50 border-b border-border">
+                            <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
                                 <Star size={10} fill="currentColor" />
                                 {t('search.favorites')}
                             </span>
@@ -190,13 +190,13 @@ export const Search: React.FC = React.memo(() => {
                                 setQuery('');
                                 setIsOpen(false);
                             }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-500/10 active:bg-emerald-500/20 transition-colors text-left border-b border-white/5"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-primary/10 active:bg-primary/20 transition-colors text-left border-b border-border"
                         >
-                            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                 <SearchIcon size={16} />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-white font-medium">{t('search.lineFilter', { line: linesFromQuery.join(', ') })}</span>
+                                <span className="text-foreground font-medium">{t('search.lineFilter', { line: linesFromQuery.join(', ') })}</span>
                             </div>
                         </button>
                     )}
@@ -227,15 +227,15 @@ export const Search: React.FC = React.memo(() => {
                                 setQuery('');
                                 setIsOpen(false);
                             }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 transition-colors text-left border-b border-white/5 last:border-none"
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted active:bg-accent transition-colors text-left border-b border-border last:border-none"
                         >
-                            <div className={`p-2 rounded-lg ${favoriteStops.includes(stop.properties.stop_id) ? 'bg-amber-500/10 text-amber-400' : 'bg-white/5 text-zinc-400'}`}>
+                            <div className={`p-2 rounded-lg ${favoriteStops.includes(stop.properties.stop_id) ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground'}`}>
                                 {favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-white font-medium">{stop.properties.stop_name}</span>
+                                <span className="text-foreground font-medium">{stop.properties.stop_name}</span>
                                 {stop.properties.platform_code && (
-                                    <span className="text-zinc-500 text-xs">{t('search.platform', { code: stop.properties.platform_code })}</span>
+                                    <span className="text-muted-foreground text-xs">{t('search.platform', { code: stop.properties.platform_code })}</span>
                                 )}
                             </div>
                         </button>

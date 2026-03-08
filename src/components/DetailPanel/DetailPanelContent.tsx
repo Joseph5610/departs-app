@@ -114,9 +114,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     )}
 
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
-                            <MapPin size={14} className="text-zinc-500" />
-                            <span className="font-medium">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-2xl border border-border text-muted-foreground text-xs">
+                            <MapPin size={14} className="text-muted-foreground/60" />
+                            <span className="font-medium text-foreground">
                                 {stopDistanceInfo.isAtStop
                                     ? t('map.departures.atStop')
                                     : t('map.departures.distance', {
@@ -127,31 +127,31 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                         </div>
                     )}
                     <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
+                        <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleShare}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl border bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300 transition-all active:scale-90"
+                                className="h-8 w-8 flex items-center justify-center rounded-xl border bg-muted/30 border-border text-muted-foreground hover:text-foreground transition-all active:scale-90"
                             >
                                 <Share2 size={14} />
                             </button>
                             <button
                                 onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
+                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-muted/30 border-border text-muted-foreground hover:text-foreground'}`}
                             >
                                 <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                             </button>
-                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5">
+                            <div className="flex h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
                                 <button
                                     onClick={() => setDepartureSort('line')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-accent text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     title={t('map.departures.sortByLine')}
                                 >
                                     <ArrowDownAz size={14} />
                                 </button>
                                 <button
                                     onClick={() => setDepartureSort('departure')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-accent text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     title={t('map.departures.sortByDeparture')}
                                 >
                                     <Clock size={14} />
@@ -188,7 +188,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                 >
                                     {group.line}
                                 </div>
-                                <div className="h-[1px] flex-1 bg-white/10" />
+                                <div className="h-[1px] flex-1 bg-border" />
                             </div>
                         )}
 
@@ -207,11 +207,11 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             {hasMore && (
                                 <button
                                     onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
+                                    className="w-full py-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground transition-colors"
                                 >
-                                    <div className="h-[1px] flex-1 bg-white/5" />
+                                    <div className="h-[1px] flex-1 bg-border" />
                                     <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <div className="h-[1px] flex-1 bg-white/5" />
+                                    <div className="h-[1px] flex-1 bg-border" />
                                 </button>
                             )}
                         </div>
@@ -220,19 +220,19 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
             })}
 
             {showMetroNightMessage ? (
-                <div className="py-12 px-6 flex flex-col items-center text-center space-y-4 bg-white/5 rounded-3xl border border-white/5">
+                <div className="py-12 px-6 flex flex-col items-center text-center space-y-4 bg-muted/30 rounded-3xl border border-border">
                     <div className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
                         <MoonStar size={32} className="text-indigo-400" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-white font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
-                        <p className="text-zinc-400 text-sm leading-relaxed">
+                        <h3 className="text-foreground font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
                             {t('map.departures.metroNight.description')}
                         </p>
                     </div>
                 </div>
             ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
-                <div className="py-12 text-center text-zinc-500">{t('map.departures.noUpcoming')}</div>
+                <div className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</div>
             )}
         </div>
     );

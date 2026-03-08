@@ -36,20 +36,20 @@ export const LiveStatus: React.FC = () => {
                 initial={{ opacity: 0, y: -20, x: '-50%' }}
                 animate={{ opacity: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, y: -20, x: '-50%' }}
-                className="absolute left-1/2 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10 shadow-2xl pointer-events-none"
+                className="absolute left-1/2 z-10 flex items-center gap-2 px-3 py-1.5 bg-background/40 backdrop-blur-md rounded-full border border-border shadow-2xl pointer-events-none"
                 style={{ top: 'calc(4.5rem + env(safe-area-inset-top, 0px))' }}
             >
                 <div className={cn(
                     "w-2 h-2 rounded-full transition-colors duration-500",
-                    fetching ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                    fetching ? "bg-amber-500 animate-pulse" : "bg-primary"
                 )} />
-                <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
                     {fetching ? (
-                        t('liveStatus.refreshing')
+                        <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
                     ) : (
                         <>
-                            {t('liveStatus.live')}
-                            <span className="text-zinc-500 tabular-nums">{nextRefreshIn}s</span>
+                            <span className="text-primary">{t('liveStatus.live')}</span>
+                            <span className="text-muted-foreground/60 tabular-nums">{nextRefreshIn}s</span>
                         </>
                     )}
                 </span>

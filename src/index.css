@@ -40,86 +40,6 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* Hide scrollbars globally */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-*::-webkit-scrollbar {
-  display: none;
-}
-
-/* Base layout & viewport fixes */
-html,
-body {
-  height: 100%;
-  height: -webkit-fill-available;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
-  position: fixed;
-}
-
-#root {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-body {
-  color: #f8fafc;
-}
-
-/* Scrolling utility */
-.custom-scrollbar {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  overscroll-behavior: contain;
-}
-
-/* Interactivity */
-button,
-[role="button"],
-.cursor-pointer {
-  cursor: pointer;
-}
-
-/* Safe areas positioning utilities */
-.safe-top {
-  top: 1rem;
-  top: calc(1rem + env(safe-area-inset-top, 0px));
-}
-
-.safe-left {
-  left: 1rem;
-  left: calc(1rem + env(safe-area-inset-left, 0px));
-}
-
-.safe-right {
-  right: 1rem;
-  right: calc(1rem + env(safe-area-inset-right, 0px));
-}
-
-.safe-bottom {
-  bottom: 1rem;
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-}
-
-/* MapLibre Controls */
-.maplibregl-ctrl-bottom-right {
-  margin: 0 0.5rem 0.5rem 0 !important;
-}
-
-@media (max-width: 768px) {
-  .maplibregl-ctrl-bottom-right {
-    margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
 .dark {
   --background: oklch(0.12 0 0);
   --foreground: oklch(0.98 0 0);
@@ -139,36 +59,10 @@ button,
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.705 0.14 162.71);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @theme inline {
   --font-sans: 'Geist Variable', sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -199,11 +93,64 @@ button,
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    height: 100%;
+    height: -webkit-fill-available;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    @apply bg-background text-foreground font-sans;
   }
-  html {
-    @apply font-sans;
+  #root {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+}
+
+@utility custom-scrollbar {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+@utility safe-top {
+  top: 1rem;
+  top: calc(1rem + env(safe-area-inset-top, 0px));
+}
+
+@utility safe-left {
+  left: 1rem;
+  left: calc(1rem + env(safe-area-inset-left, 0px));
+}
+
+@utility safe-right {
+  right: 1rem;
+  right: calc(1rem + env(safe-area-inset-right, 0px));
+}
+
+@utility safe-bottom {
+  bottom: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* MapLibre Controls Overrides */
+.maplibregl-ctrl-bottom-right {
+  margin: 0 0.5rem 0.5rem 0 !important;
+}
+
+@media (max-width: 768px) {
+  .maplibregl-ctrl-bottom-right {
+    margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }

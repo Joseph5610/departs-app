@@ -44,19 +44,20 @@ export const DepartureItem = ({
                     onDepartureClick(dep.tripId, dep.vehicleId, dep);
                 }
             }}
-            className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
-                ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
-            `}
+            className={cn(
+                "flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border transition-all",
+                dep.tripId && "hover:bg-muted/50 hover:border-border/80 cursor-pointer active:scale-[0.98]"
+            )}
         >
             <div className="flex items-center gap-4">
                 <div className="flex flex-col">
-                    <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
-                    <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
+                    <div className="text-foreground font-semibold leading-tight">{dep.headsign}</div>
+                    <div className="text-muted-foreground text-[10px] mt-1 flex items-center gap-2">
                         <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
                             locale: locale
                         })}</span>
                         {isTrainStop && dep.platform && (
-                            <span className="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold tracking-wider">
+                            <span className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold tracking-wider border border-border">
                                 {dep.platform}
                             </span>
                         )}
