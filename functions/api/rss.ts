@@ -56,7 +56,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
     const now = new Date();
 
     const formatDate = (date: Date): string => {
-        return `${date.getDate()}.${date.getMonth() + 1}. ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+        return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     };
 
     while ((match = itemRegex.exec(xmlString)) !== null) {
@@ -73,7 +73,16 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         let date_to: string | null = null;
 
         if (type === 'incidents') {
-            date_from = getXMLTagContent(itemXml, 'date') || null;
+            // Parsing incidents from description: "7.3. 20:32 - do&nbsp;odvolání" or "7.3. 08:00 - 8.3. 21:00"
+            // Regex handles optional space after day dot and month dot
+            const dateMatch = description.match(/(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i);
+            if (dateMatch) {
+                date_from = dateMatch[1].trim();
+                let toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
+                date_to = toStr.toLowerCase().includes('odvolání') ? null : toStr;
+            } else {
+                date_from = getXMLTagContent(itemXml, 'date') || null;
+            }
             isActive = true;
             isFuture = false;
         } else {

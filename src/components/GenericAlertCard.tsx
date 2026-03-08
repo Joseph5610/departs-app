@@ -86,7 +86,7 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
                 {(dateFrom || dateTo) && (
                     <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
                         <span>
-                            {dateFrom && dateTo ? `${dateFrom} – ${dateTo}` : (dateFrom || dateTo)}
+                            {dateFrom && dateTo ? `${dateFrom} – ${dateTo}` : (dateFrom ? `${dateFrom} – ${t('alerts.untilFurtherNotice')}` : dateTo)}
                         </span>
                     </div>
                 )}
