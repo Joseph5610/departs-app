@@ -56,7 +56,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
     const now = new Date();
 
     const formatDate = (date: Date): string => {
-        return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+        return `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     };
 
     while ((match = itemRegex.exec(xmlString)) !== null) {
@@ -74,12 +74,34 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
 
         if (type === 'incidents') {
             // Parsing incidents from description: "7.3. 20:32 - do&nbsp;odvolání" or "7.3. 08:00 - 8.3. 21:00"
-            // Regex handles optional space after day dot and month dot
+            // Regex handles optional space after day dot and month dot.
+            // Format: Day. Month. Time
+            const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
             const dateMatch = description.match(/(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i);
+
             if (dateMatch) {
-                date_from = dateMatch[1].trim();
+                const parseAndFormat = (str: string) => {
+                    const match = str.match(datePartsRegex);
+                    if (!match) return str;
+                    const [_, d, m, time] = match;
+                    const day = parseInt(d);
+                    const month = parseInt(m) - 1;
+                    const [hours, mins] = time.split(':').map(n => parseInt(n));
+
+                    let year = now.getFullYear();
+                    if (month < now.getMonth() - 1) year++; // Simple logic for year wrap (e.g. Dec -> Jan)
+
+                    const date = new Date(year, month, day, hours, mins);
+                    return formatDate(date);
+                };
+
+                date_from = parseAndFormat(dateMatch[1]);
                 let toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
-                date_to = toStr.toLowerCase().includes('odvolání') ? null : toStr;
+                if (toStr.toLowerCase().includes('odvolání')) {
+                    date_to = null;
+                } else {
+                    date_to = parseAndFormat(toStr);
+                }
             } else {
                 date_from = getXMLTagContent(itemXml, 'date') || null;
             }

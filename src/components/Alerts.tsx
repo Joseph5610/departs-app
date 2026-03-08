@@ -142,6 +142,7 @@ const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string,
 );
 
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
+    const { t } = useTranslation();
     // Simple heuristic for transport type to get colors
     const guessType = (line: string) => {
         if (['A', 'B', 'C'].includes(line.toUpperCase())) return 'metro';
@@ -160,7 +161,7 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             link={item.link}
             priority={item.priority || 'low'}
             dateFrom={item.date_from}
-            dateTo={item.date_to}
+            dateTo={item.date_from && !item.date_to ? t('alerts.untilFurtherNotice') : item.date_to}
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}

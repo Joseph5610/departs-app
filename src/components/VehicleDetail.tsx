@@ -227,7 +227,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             link={alert.link}
                             priority={alert.priority || 'normal'}
                             dateFrom={alert.date_from}
-                            dateTo={alert.date_to}
+                            dateTo={alert.date_from && !alert.date_to ? t('alerts.untilFurtherNotice') : alert.date_to}
                             isActive={alert.isActive}
                             isFuture={alert.isFuture}
                         />
