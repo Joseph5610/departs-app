@@ -36,6 +36,13 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
     const [snap, setSnap] = useState<string | number | null>(0.4);
 
+    // Sync snap point with open state
+    useEffect(() => {
+        if (isOpen) {
+            setSnap(0.4);
+        }
+    }, [isOpen]);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
         window.addEventListener('resize', handleResize);
@@ -84,24 +91,22 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             <Drawer
                 open={isOpen}
                 onOpenChange={(open) => {
-                    if (!open) onClose();
+                    if (!open) {
+                        onClose();
+                    }
                 }}
                 dismissible={true}
                 snapPoints={[120, 0.4, 0.95]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={(s) => {
                     setSnap(s);
-                    // If user swipes down to the smallest snap point, we might want to close?
-                    // But usually 120 is "collapsed but visible".
-                    // However, if the user swiped it away, onOpenChange handles it.
-                    if (s === 120) {
-                        // Optional: if you want it to close when at 120
-                        // onClose();
-                    }
                 }}
                 modal={false}
             >
-                <DrawerContent className="glassy-surface !rounded-t-3xl overflow-hidden">
+                <DrawerContent
+                    hideOverlay={true}
+                    className="glassy-surface !rounded-t-3xl overflow-hidden"
+                >
                     <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
                         <DrawerTitle>
                             {headerContent}

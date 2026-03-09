@@ -74,7 +74,7 @@ export const MapControls = React.memo(() => {
                         size={20}
                         className={cn(
                             "transition-all",
-                            isGeoPending ? "animate-spin text-primary" : "group-hover:scale-110"
+                            isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
                         )}
                     />
                 </ControlButton>
@@ -83,12 +83,12 @@ export const MapControls = React.memo(() => {
                     onClick={onSettings}
                     title={t('map.controls.settings')}
                 >
-                    <Settings size={20} className="group-hover:rotate-45 transition-transform" />
+                    <Settings size={20} className="transition-transform group-hover:rotate-45" />
                 </ControlButton>
 
                 <Alerts />
 
-                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl glassy-element">
+                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl glassy-surface">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -117,7 +117,7 @@ export const MapControls = React.memo(() => {
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
                     >
-                        <Compass size={20} className="group-hover:rotate-12 transition-transform" />
+                        <Compass size={20} className="transition-transform group-hover:rotate-12" />
                     </ControlButton>
                 )}
             </Stack>
@@ -132,7 +132,7 @@ const ControlButton = ({ children, onClick, title }: { children: React.ReactNode
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 rounded-2xl glassy-element text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
+        className="h-11 w-11 rounded-2xl glassy-surface text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
     >
         {children}
     </Button>

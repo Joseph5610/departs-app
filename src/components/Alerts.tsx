@@ -56,13 +56,13 @@ export const Alerts: React.FC = () => {
     return (
         <>
             <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(true)}
                 title={t('alerts.title')}
-                className="h-11 w-11 rounded-2xl bg-background/95 backdrop-blur-md shadow-2xl border-border relative"
+                className="h-11 w-11 rounded-2xl glassy-surface text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors relative"
             >
-                <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "group-hover:scale-110 transition-transform")} />
+                <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "transition-transform group-hover:scale-110")} />
                 {incidentsCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-background min-w-[20px] text-center">
                         {incidentsCount}
