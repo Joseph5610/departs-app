@@ -150,6 +150,14 @@
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
+@utility glassy-element {
+  @apply bg-background/60 border border-white/20 backdrop-blur-2xl shadow-2xl;
+}
+
+@utility glassy-surface {
+  @apply bg-background/60 border border-white/20 backdrop-blur-2xl shadow-2xl;
+}
+
 /* MapLibre Controls Overrides */
 .maplibregl-ctrl-bottom-right {
   margin: 0 0.5rem 0.5rem 0 !important;

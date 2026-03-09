@@ -107,7 +107,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     if (!selectedVehicle) return null;
 
-    const routeType = selectedVehicle.route_type !== undefined ? Number(selectedVehicle.route_type) : 0;
+    const routeType = selectedVehicle.route_type ?? 0;
 
     return (
         <Stack className="gap-4">
@@ -140,13 +140,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
-                <HStack className="relative z-10 gap-4 flex-col md:flex-row md:text-center items-center">
+                <HStack className="relative z-10 gap-4 flex-col items-center text-center">
                     <button
                         className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 outline-none"
                         style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                         onClick={onToggleFollow}
                     >
-                        <span className="text-2xl md:text-3xl font-black text-white">{routeName}</span>
+                        <span className="text-2xl md:text-3xl font-black text-white leading-none">{routeName}</span>
                         <Box className={cn(
                             "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-background flex items-center justify-center transition-colors",
                             isFollowing ? "bg-primary" : "bg-muted"
@@ -154,11 +154,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             <MapPin size={isFollowing ? 10 : 12} className="text-white" />
                         </Box>
                     </button>
-                    <Stack className="flex-1 min-w-0 md:w-full gap-2">
-                        <h3 className="text-lg md:text-xl font-bold text-foreground truncate">
+                    <Stack className="flex-1 min-w-0 w-full gap-1 items-center">
+                        <h3 className="text-lg md:text-xl font-bold text-foreground truncate w-full text-center">
                             {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                         </h3>
-                        <HStack className="md:justify-center gap-2 flex-wrap">
+                        <HStack className="justify-center gap-2 flex-wrap">
                             {(() => {
                                 const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
                                 const delayVal = Number(rawDelay);

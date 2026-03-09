@@ -88,13 +88,14 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl shadow-2xl">
+                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl glassy-element">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 text-white/90"
+                        className="h-11 w-11 rounded-none hover:bg-white/5 active:bg-white/10 transition-colors text-white/90"
                         title={t('map.controls.zoomIn')}
+                        aria-label={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
@@ -103,8 +104,9 @@ export const MapControls = React.memo(() => {
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 text-white/90"
+                        className="h-11 w-11 rounded-none hover:bg-white/5 active:bg-white/10 transition-colors text-white/90"
                         title={t('map.controls.zoomOut')}
+                        aria-label={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} />
                     </Button>
@@ -130,7 +132,7 @@ const ControlButton = ({ children, onClick, title }: { children: React.ReactNode
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl shadow-2xl text-white/90 hover:bg-white/10"
+        className="h-11 w-11 rounded-2xl glassy-element text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
     >
         {children}
     </Button>

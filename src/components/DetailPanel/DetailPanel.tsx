@@ -83,14 +83,25 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         return (
             <Drawer
                 open={isOpen}
-                onOpenChange={(open) => !open && onClose()}
+                onOpenChange={(open) => {
+                    if (!open) onClose();
+                }}
                 dismissible={true}
                 snapPoints={[120, 0.4, 0.95]}
                 activeSnapPoint={snap}
-                setActiveSnapPoint={setSnap}
+                setActiveSnapPoint={(s) => {
+                    setSnap(s);
+                    // If user swipes down to the smallest snap point, we might want to close?
+                    // But usually 120 is "collapsed but visible".
+                    // However, if the user swiped it away, onOpenChange handles it.
+                    if (s === 120) {
+                        // Optional: if you want it to close when at 120
+                        // onClose();
+                    }
+                }}
                 modal={false}
             >
-                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl overflow-hidden shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
+                <DrawerContent className="glassy-surface !rounded-t-3xl overflow-hidden">
                     <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
                         <DrawerTitle>
                             {headerContent}
@@ -109,7 +120,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             <SheetContent
                 side="left"
                 showCloseButton={false}
-                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl border-border bg-background/95 backdrop-blur-2xl shadow-2xl p-0 overflow-hidden flex flex-col outline-none"
+                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                     <SheetTitle>
