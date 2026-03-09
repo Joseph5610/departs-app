@@ -30,9 +30,11 @@ interface DetailPanelProps {
  *
  * Re-architected with semantic components for the header.
  * Updated with snap points for mobile bottom sheet.
+ * Fixed UI freeze by removing controlled activeSnapPoint and simplified configuration.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
+    const [snap, setSnap] = useState<string | number | null>(0.4);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -84,9 +86,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 onOpenChange={(open) => !open && onClose()}
                 dismissible={true}
                 snapPoints={[0.4, 0.95]}
-                activeSnapPoint={0.4}
+                activeSnapPoint={snap}
+                setActiveSnapPoint={setSnap}
+                modal={false}
             >
-                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl overflow-hidden">
+                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl overflow-hidden shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
                     <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
                         <DrawerTitle>
                             {headerContent}

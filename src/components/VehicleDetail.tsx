@@ -25,7 +25,8 @@ interface VehicleDetailProps {
  * VehicleDetail
  *
  * Re-architected with semantic layout components.
- * Robustness update: ensures type safety for routeName and sequence numbers.
+ * Highly robust update: ensures type safety for routeName and sequence numbers.
+ * Handled edge cases for MapLibre data delivery.
  */
 export const VehicleDetail = React.memo<VehicleDetailProps>(({
     selectedVehicle,
@@ -40,18 +41,15 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
 
     React.useEffect(() => {
-        if (!vehicleDetail?.origin_timestamp && !selectedVehicle?.origin_timestamp) {
+        const originTs = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
+        if (!originTs) {
             setLiveDataAgeSeconds(null);
             return;
         }
 
         const updateAge = () => {
             try {
-                const tsString = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
-                if (!tsString) {
-                    setLiveDataAgeSeconds(null);
-                    return;
-                }
+                const tsString = String(originTs);
                 const timestamp = parseISO(tsString);
                 const now = new Date();
                 const ageInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
@@ -66,23 +64,24 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         return () => clearInterval(interval);
     }, [vehicleDetail?.origin_timestamp, selectedVehicle?.origin_timestamp]);
 
-    // Safety: Ensure routeName is always a string
+    // Safety: Ensure routeName is always a string and not "undefined"
     const rawRouteName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
-    const routeName = rawRouteName ? String(rawRouteName) : '';
+    const routeName = (rawRouteName !== undefined && rawRouteName !== null) ? String(rawRouteName) : '';
 
     const relevantAlerts = useMemo(() => {
         const allItems = rssData?.alerts || [];
         if (!routeName) return [];
+        const upperRouteName = routeName.toUpperCase();
         return allItems.filter(item =>
-            item.lines?.some((l: string) => l.toUpperCase() === routeName.toUpperCase()) &&
+            item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName) &&
             item.isActive
         );
     }, [rssData, routeName]);
 
-    // Safety: Coerce sequence to number
+    // Safety: Coerce sequence to number, handle strings from MapLibre
     const effectiveSequence = useMemo(() => {
         const seq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
-        return seq !== null ? Number(seq) : null;
+        return (seq !== null && seq !== undefined) ? Number(seq) : null;
     }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence]);
 
     const nextStopSequence = useMemo(() => {
@@ -90,13 +89,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const futureStops = vehicleDetail.stop_times.features
             .filter((s) => Number(s.properties.stop_sequence) > effectiveSequence)
             .sort((a, b) => Number(a.properties.stop_sequence) - Number(b.properties.stop_sequence));
-        return Number(futureStops[0]?.properties.stop_sequence) ?? null;
+        return futureStops.length > 0 ? Number(futureStops[0].properties.stop_sequence) : null;
     }, [vehicleDetail, effectiveSequence]);
 
     const filteredStops = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features) return [];
+        const limit = effectiveSequence ?? 0;
         return vehicleDetail.stop_times.features.filter((stop) =>
-            showPastStops || Number(stop.properties.stop_sequence) >= (effectiveSequence || 0)
+            showPastStops || Number(stop.properties.stop_sequence) >= limit
         );
     }, [vehicleDetail, showPastStops, effectiveSequence]);
 
@@ -105,6 +105,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     }, []);
 
     if (!selectedVehicle) return null;
+
+    const routeType = selectedVehicle.route_type !== undefined ? Number(selectedVehicle.route_type) : 0;
 
     return (
         <Stack className="gap-4">
@@ -117,7 +119,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             )}
 
             {/* Warning: Before Track / Previous Trip */}
-            {((['before_track', 'before_track_delayed'] as string[]).includes(selectedVehicle.state_position || '') || (['before_track', 'before_track_delayed'] as string[]).includes(vehicleDetail?.state_position || '')) && (
+            {((['before_track', 'before_track_delayed'] as string[]).includes(String(selectedVehicle.state_position || '')) || (['before_track', 'before_track_delayed'] as string[]).includes(String(vehicleDetail?.state_position || ''))) && (
                 <HStack className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl items-start gap-4">
                     <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                         <Info size={20} />
@@ -135,12 +137,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             <Box className="relative overflow-hidden rounded-3xl border border-border p-4 md:p-6 bg-muted/30">
                 <Box
                     className="absolute inset-0 opacity-10"
-                    style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName) }}
+                    style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
                 <HStack className="relative z-10 gap-4 flex-col md:flex-row md:text-center items-center">
                     <button
                         className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 outline-none"
-                        style={{ backgroundColor: getVehicleColor(selectedVehicle.route_type || 0, routeName) }}
+                        style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                         onClick={onToggleFollow}
                     >
                         <span className="text-2xl md:text-3xl font-black text-white">{routeName}</span>
@@ -158,9 +160,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <HStack className="md:justify-center gap-2 flex-wrap">
                             {(() => {
                                 const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
-                                const delayMinutes = Math.round(Math.abs(Number(rawDelay)) / 60);
-                                const isLate = Number(rawDelay) > 30;
-                                const isEarly = Number(rawDelay) < -30;
+                                const delayVal = Number(rawDelay);
+                                const delayMinutes = Math.round(Math.abs(delayVal) / 60);
+                                const isLate = delayVal > 30;
+                                const isEarly = delayVal < -30;
                                 return (
                                     <StatusPill
                                         variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
@@ -192,7 +195,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <Info size={14} className="text-muted-foreground shrink-0" />
                         <Stack className="gap-0 min-w-0">
                             <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">
-                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
+                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator || (selectedVehicle as any).operator}
                             </span>
                             <span className="text-foreground text-[11px] font-bold truncate">
                                 #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_registration_number || '---'}
@@ -260,7 +263,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
                         {filteredStops.map((stop, idx: number) => {
                             const stopSeq = Number(stop.properties.stop_sequence);
-                            const isPast = stopSeq < (effectiveSequence || 0);
+                            const limit = effectiveSequence ?? 0;
+                            const isPast = stopSeq < limit;
                             const isCurrent = stopSeq === effectiveSequence;
                             const isNext = stopSeq === nextStopSequence;
 
@@ -297,11 +301,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                                         "text-xs tabular-nums",
                                                         isPast ? "text-muted-foreground" : isEarly ? "text-primary" : isLate ? "text-destructive" : "text-muted-foreground"
                                                     )}>
-                                                        {realtimeTime?.slice(0, 8) || ''}
+                                                        {String(realtimeTime || '').slice(0, 8)}
                                                     </span>
                                                     {hasRealtime && (
                                                         <span className="text-[9px] text-muted-foreground tabular-nums">
-                                                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8) || ''}
+                                                            {t('map.vehicleDetails.scheduledTime')} {String(scheduledTime || '').slice(0, 8)}
                                                         </span>
                                                     )}
                                                 </>

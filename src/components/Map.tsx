@@ -105,7 +105,8 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const props = { ...f.properties };
+                        const rawProps = f.properties || {};
+                        const props = { ...rawProps };
 
                         // MapLibre stringifies objects in properties. Safely parse them.
                         if (typeof props.vehicle_descriptor === 'string') {
@@ -119,14 +120,17 @@ const MapInner: React.FC = () => {
                         // Ensure numeric types for properties that might be stringified
                         const numericProps = ['delay', 'bearing', 'last_stop_sequence', 'route_type'];
                         numericProps.forEach(key => {
-                            if (props[key] !== undefined && props[key] !== null) {
+                            if (props[key] !== undefined && props[key] !== null && props[key] !== '') {
                                 props[key] = Number(props[key]);
                             }
                         });
 
+                        const vehicleId = String(props.vehicle_id || props.id || '');
+                        if (!vehicleId) return;
+
                         actions.selectVehicle({
                             ...props,
-                            vehicle_id: String(props.vehicle_id || props.id),
+                            vehicle_id: vehicleId,
                             _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         } as TrackedVehicle, false); // clear stop
                         return;
@@ -134,10 +138,10 @@ const MapInner: React.FC = () => {
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
                         actions.selectStop({
-                            id: f.properties.stop_id,
-                            name: f.properties.stop_name,
-                            platformCode: f.properties.platform_code,
-                            isTrain: f.properties.is_train === 1,
+                            id: String(f.properties.stop_id),
+                            name: String(f.properties.stop_name),
+                            platformCode: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
+                            isTrain: Number(f.properties.is_train) === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }

@@ -12,7 +12,7 @@ import { Overlay, Stack, Surface, Box } from '@/components/ui/layout';
  * MapControls Component
  *
  * Re-architected with semantic components to remove redundant positioning classes.
- * Applied glassy theme to zoom controls.
+ * Applied glassy theme with increased transparency for better backdrop-blur visibility.
  */
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
@@ -88,12 +88,12 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-background/95 backdrop-blur-md shadow-2xl border-border">
+                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-background/80 backdrop-blur-md shadow-2xl border-border">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-muted"
+                        className="h-11 w-11 rounded-none hover:bg-muted/40"
                         title={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
@@ -103,7 +103,7 @@ export const MapControls = React.memo(() => {
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-muted"
+                        className="h-11 w-11 rounded-none hover:bg-muted/40"
                         title={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} />
@@ -130,7 +130,7 @@ const ControlButton = ({ children, onClick, title }: { children: React.ReactNode
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 rounded-2xl bg-background/95 backdrop-blur-md shadow-2xl border-border"
+        className="h-11 w-11 rounded-2xl bg-background/80 backdrop-blur-md shadow-2xl border-border"
     >
         {children}
     </Button>
