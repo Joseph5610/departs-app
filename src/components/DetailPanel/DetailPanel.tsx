@@ -107,7 +107,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             >
                 <DrawerContent
                     hideOverlay={true}
-                    className="glassy-surface !rounded-t-3xl overflow-hidden"
+                    className="glassy-surface !rounded-t-3xl overflow-hidden md:max-w-md mx-auto"
                 >
                     <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
                         <DrawerTitle>
@@ -128,7 +128,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
+                className="w-[420px] sm:max-w-[420px] top-5 left-5 bottom-5 h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                     <SheetTitle>

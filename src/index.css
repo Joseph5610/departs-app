@@ -131,23 +131,23 @@
 }
 
 @utility safe-top {
-  top: 1rem;
-  top: calc(1rem + env(safe-area-inset-top, 0px));
+  top: 1.25rem;
+  top: calc(1.25rem + env(safe-area-inset-top, 0px));
 }
 
 @utility safe-left {
-  left: 1rem;
-  left: calc(1rem + env(safe-area-inset-left, 0px));
+  left: 1.25rem;
+  left: calc(1.25rem + env(safe-area-inset-left, 0px));
 }
 
 @utility safe-right {
-  right: 1rem;
-  right: calc(1rem + env(safe-area-inset-right, 0px));
+  right: 1.25rem;
+  right: calc(1.25rem + env(safe-area-inset-right, 0px));
 }
 
 @utility safe-bottom {
-  bottom: 1rem;
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  bottom: 1.25rem;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 @utility glassy-element {
