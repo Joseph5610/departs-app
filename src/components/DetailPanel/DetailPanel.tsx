@@ -98,11 +98,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     }
                 }}
                 dismissible={true}
-                snapPoints={[120, 0.4, 0.95]}
+                snapPoints={[0.4, 0.95]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={(s) => {
                     setSnap(s);
                 }}
+                shouldScaleBackground={false}
                 modal={false}
             >
                 <DrawerContent
