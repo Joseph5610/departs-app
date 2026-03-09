@@ -6,7 +6,7 @@ import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Overlay, Stack, Surface, Box } from '@/components/ui/layout';
+import { Overlay, Stack, Box } from '@/components/ui/layout';
 
 /**
  * MapControls Component
@@ -88,27 +88,27 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-background/80 backdrop-blur-md shadow-2xl border-border">
+                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl shadow-2xl">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-muted/40"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 text-white/90"
                         title={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
-                    <Box className="mx-2 h-[1px] bg-border" />
+                    <Box className="mx-2 h-[1px] bg-white/10" />
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-muted/40"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 text-white/90"
                         title={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} />
                     </Button>
-                </Surface>
+                </Box>
 
                 {showCompass && (
                     <ControlButton
@@ -125,12 +125,12 @@ export const MapControls = React.memo(() => {
 
 const ControlButton = ({ children, onClick, title }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string }) => (
     <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 rounded-2xl bg-background/80 backdrop-blur-md shadow-2xl border-border"
+        className="h-11 w-11 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl shadow-2xl text-white/90 hover:bg-white/10"
     >
         {children}
     </Button>

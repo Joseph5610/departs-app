@@ -102,7 +102,20 @@ export const useMapVehicleSync = (
         }
 
         if (updated) {
-            setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle : null);
+            setSelectedVehicle((prev: TrackedVehicle | null) => {
+                if (!prev) return null;
+                // Deep equality check for properties that trigger updates
+                const hasGeometryChanged = prev._geometry[0] !== newCoords[0] || prev._geometry[1] !== newCoords[1];
+                const hasDelayChanged = prev.delay !== (newProps.delay ?? prev.delay);
+                const hasSequenceChanged = prev.last_stop_sequence !== (newProps.last_stop_sequence ?? prev.last_stop_sequence);
+                const hasStateChanged = prev.state_position !== (newProps.state_position ?? prev.state_position);
+
+                if (!hasGeometryChanged && !hasDelayChanged && !hasSequenceChanged && !hasStateChanged) {
+                    return prev;
+                }
+
+                return { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle;
+            });
         }
 
         // Map movement: Focus on vehicle when coordinates are found

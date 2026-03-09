@@ -40,8 +40,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const [showPastStops, setShowPastStops] = useState(false);
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
 
+    const originTs = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
+
     React.useEffect(() => {
-        const originTs = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
         if (!originTs) {
             setLiveDataAgeSeconds(null);
             return;
@@ -62,7 +63,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         updateAge();
         const interval = setInterval(updateAge, 1000);
         return () => clearInterval(interval);
-    }, [vehicleDetail?.origin_timestamp, selectedVehicle?.origin_timestamp]);
+    }, [originTs]);
 
     // Safety: Ensure routeName is always a string and not "undefined"
     const rawRouteName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
