@@ -79,7 +79,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         const parseAndFormat = (str: string) => {
             const match = str.match(datePartsRegex);
             if (!match) return str.trim();
-            const [_, d, m, time] = match;
+            const [, d, m, time] = match;
             const day = parseInt(d);
             const month = parseInt(m);
 
@@ -97,7 +97,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             const dateMatch = description.match(dateRangeRegex);
             if (dateMatch) {
                 valid_from = parseAndFormat(dateMatch[1]);
-                let toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
+                const toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
                 if (toStr.toLowerCase().includes('odvolání')) {
                     valid_to = null;
                 } else {
@@ -159,7 +159,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             .trim();
 
         // Remove trailing semicolons or dots if they are left over
-        cleanedDescription = cleanedDescription.replace(/^[;\s\.]+|[;\s\.]+$/g, '');
+        cleanedDescription = cleanedDescription.replace(/^[;\s.]+|[;\s.]+$/g, '');
 
         items.push({
             type: itemType,

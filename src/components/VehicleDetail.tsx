@@ -196,7 +196,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <Info size={14} className="text-muted-foreground shrink-0" />
                         <Stack className="gap-0 min-w-0">
                             <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">
-                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator || (selectedVehicle as any).operator}
+                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator || selectedVehicle?.operator}
                             </span>
                             <span className="text-foreground text-[11px] font-bold truncate">
                                 #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_registration_number || '---'}

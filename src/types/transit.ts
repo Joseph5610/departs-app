@@ -118,6 +118,7 @@ export interface VehicleDetail {
     trip_headsign: string;
     delay: number;
     state_position: string;
+    is_static_fallback?: boolean;
     last_stop_sequence?: number;
     origin_timestamp?: string;
     run_number?: number;
@@ -186,4 +187,5 @@ export interface TrackedVehicle {
     // Legacy/Sync compatibility
     trip_id?: string;
     id?: string;
+    operator?: string;
 }

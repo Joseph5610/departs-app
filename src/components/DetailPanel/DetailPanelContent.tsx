@@ -56,8 +56,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
 
     const stopDistanceInfo = useMemo(() => {
-        if (!selectedStop?.coordinates || !userLocation) return null;
-        const distance = calculateDistance(userLocation, selectedStop.coordinates);
+        const coords = selectedStop?.coordinates;
+        if (!coords || !userLocation) return null;
+        const distance = calculateDistance(userLocation, coords);
 
         const isAtStop = distance < 20;
         const isMovingFast = userSpeed !== null && userSpeed > 4;

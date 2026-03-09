@@ -4,6 +4,14 @@ export interface Env {
 
 // --- Golemio API Types ---
 
+export interface GolemioVehicleDescriptor {
+    operator?: string;
+    is_wheelchair_accessible?: boolean;
+    is_air_conditioned?: boolean;
+    has_usb_chargers?: boolean;
+    vehicle_registration_number?: number;
+}
+
 export interface GolemioVehicleFeature {
     type: 'Feature';
     geometry: {
@@ -42,14 +50,26 @@ export interface GolemioVehicleFeature {
             wheelchair_accessible?: boolean;
             air_conditioned?: boolean;
             vehicle_registration_number?: number;
+            operator?: string;
+            next_stop_name?: string;
+            origin_timestamp?: string;
+            vehicle_descriptor?: GolemioVehicleDescriptor;
         };
         last_position?: {
             run_number?: number | string;
             bearing?: number;
-            delay?: { actual?: number };
+            delay?: { actual?: number } | number;
             state_position?: string;
-            next_stop?: { id?: string };
+            next_stop?: { id?: string; name?: string };
+            vehicle_registration_number?: number;
+            operator?: string;
+            origin_timestamp?: string;
+            timestamp?: string;
+            last_stop?: { sequence?: number };
+            last_stop_sequence?: number;
+            vehicle_descriptor?: GolemioVehicleDescriptor;
         };
+        vehicle_descriptor?: GolemioVehicleDescriptor;
         [key: string]: unknown;
     };
 }

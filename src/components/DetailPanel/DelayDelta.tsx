@@ -8,22 +8,26 @@ import { HStack } from '@/components/ui/layout';
  * Animates in when a new update is received and fades out after 5 seconds.
  */
 export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
-    const [isTimedOut, setIsTimedOut] = useState(false);
-    const [lastHandledUpdate, setLastHandledUpdate] = useState<number | undefined>(undefined);
+    const [visible, setVisible] = useState(false);
+    const [prevLastUpdate, setPrevLastUpdate] = useState<number | undefined>(undefined);
 
-    // Reset timeout state when the update timestamp changes.
-    if (lastUpdate !== lastHandledUpdate) {
-        setLastHandledUpdate(lastUpdate);
-        setIsTimedOut(false);
+    // Sync state from props during render - this is the recommended React pattern
+    // for resetting state when a prop changes.
+    if (lastUpdate !== prevLastUpdate) {
+        setPrevLastUpdate(lastUpdate);
+        if (delta !== 0 && lastUpdate) {
+            setVisible(true);
+        }
     }
-
-    const isFresh = delta !== 0 && !!lastUpdate && (Date.now() - lastUpdate < 5000);
-    const visible = isFresh && !isTimedOut;
 
     useEffect(() => {
         if (visible && lastUpdate) {
             const age = Date.now() - lastUpdate;
-            const timer = setTimeout(() => setIsTimedOut(true), 5000 - age);
+            const remaining = Math.max(0, 5000 - age);
+
+            const timer = setTimeout(() => {
+                setVisible(false);
+            }, remaining);
             return () => clearTimeout(timer);
         }
     }, [visible, lastUpdate]);

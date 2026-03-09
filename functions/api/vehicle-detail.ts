@@ -1,4 +1,4 @@
-import { Env } from "../_utils/types";
+import { Env, GolemioVehicleFeature } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 import { normalizeVehicleFeature } from "../_utils/transit-utils";
 
@@ -7,14 +7,6 @@ interface ShapeFeature {
         type: string;
         coordinates: [number, number];
     };
-}
-
-interface VehicleData {
-    features?: Array<{ properties: Record<string, unknown> }>;
-    shapes?: {
-        features: ShapeFeature[];
-    } | Array<[number, number]>;
-    [key: string]: unknown;
 }
 
 /**
@@ -65,13 +57,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, unknown>;
 
         // Standardize output structure: handle Feature, FeatureCollection, or flat object
         let vehicleData: Record<string, unknown> = {};
 
-        if (data.type === 'FeatureCollection' && data.features?.length > 0) {
-            const normalized = normalizeVehicleFeature(data.features[0], tripId);
+        const features = data.features as GolemioVehicleFeature[] | undefined;
+        if (data.type === 'FeatureCollection' && features && features.length > 0) {
+            const normalized = normalizeVehicleFeature(features[0], tripId);
             vehicleData = {
                 ...normalized.properties,
                 geometry: normalized.geometry,
@@ -82,10 +75,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 run_number: data.run_number ?? normalized.properties?.run_number,
                 origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
                 last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
+                next_stop_name: (data.next_stop_name as string) || normalized.properties?.next_stop_name,
             };
         } else if (data.type === 'Feature') {
-            const normalized = normalizeVehicleFeature(data, tripId);
+            const normalized = normalizeVehicleFeature(data as unknown as GolemioVehicleFeature, tripId);
             vehicleData = {
                 ...normalized.properties,
                 geometry: normalized.geometry,
@@ -99,7 +92,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             };
         } else {
             // Flat object (typical for gtfs/trips)
-            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
+            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as unknown as GolemioVehicleFeature;
             const normalized = normalizeVehicleFeature(mockFeature, tripId);
             vehicleData = {
                 ...normalized.properties,

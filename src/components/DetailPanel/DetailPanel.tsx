@@ -35,13 +35,15 @@ interface DetailPanelProps {
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
     const [snap, setSnap] = useState<string | number | null>(0.4);
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-    // Sync snap point with open state
-    useEffect(() => {
+    // Sync snap point with open state during render to avoid cascading renders in useEffect
+    if (isOpen !== prevIsOpen) {
+        setPrevIsOpen(isOpen);
         if (isOpen) {
             setSnap(0.4);
         }
-    }, [isOpen]);
+    }
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);

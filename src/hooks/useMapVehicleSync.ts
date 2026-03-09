@@ -66,7 +66,7 @@ export const useMapVehicleSync = (
         // 2. Sync from Direct Detail API
         // If we have detailed info for the selected vehicle, use it to update position and properties.
         if (vehicleDetail) {
-            const isFallback = (vehicleDetail as any).is_static_fallback;
+            const isFallback = vehicleDetail.is_static_fallback;
             const detailCoords = vehicleDetail.geometry?.coordinates as [number, number] | undefined;
             const detailDelay = vehicleDetail.delay;
             const hasValidDetailLocation = detailCoords && (detailCoords[0] !== 0 || detailCoords[1] !== 0);
