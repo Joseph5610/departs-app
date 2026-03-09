@@ -12,6 +12,7 @@ import { Overlay, Stack, Surface, Box } from '@/components/ui/layout';
  * MapControls Component
  *
  * Re-architected with semantic components to remove redundant positioning classes.
+ * Applied glassy theme to zoom controls.
  */
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
@@ -87,7 +88,7 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl">
+                <Surface className="flex flex-col mt-2 overflow-hidden rounded-2xl bg-background/95 backdrop-blur-md shadow-2xl border-border">
                     <Button
                         variant="ghost"
                         size="icon"

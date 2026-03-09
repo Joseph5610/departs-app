@@ -10,12 +10,14 @@ interface Props {
 interface State {
     hasError: boolean;
     error?: Error;
+    errorInfo?: ErrorInfo;
 }
 
 /**
  * ErrorBoundary
  *
  * Re-architected with semantic layout components.
+ * Enhanced to show error details in all builds for debugging.
  */
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {
@@ -28,6 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Uncaught error:', error, errorInfo);
+        this.setState({ errorInfo });
     }
 
     public render() {
@@ -52,13 +55,17 @@ export class ErrorBoundary extends Component<Props, State> {
                             Refresh Application
                         </Button>
 
-                        {import.meta.env.DEV && (
-                            <Box className="mt-8 pt-6 border-t border-border text-left">
-                                <p className="text-destructive text-[10px] font-mono leading-tight break-words">
-                                    {this.state.error?.toString()}
-                                </p>
-                            </Box>
-                        )}
+                        {/* Enhanced debug info (temporary) */}
+                        <Box className="mt-8 pt-6 border-t border-border text-left overflow-hidden">
+                            <p className="text-destructive text-[10px] font-mono leading-tight break-all mb-2">
+                                {this.state.error?.toString()}
+                            </p>
+                            {this.state.errorInfo && (
+                                <pre className="text-muted-foreground text-[8px] font-mono leading-tight whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                    {this.state.errorInfo.componentStack}
+                                </pre>
+                            )}
+                        </Box>
                     </Stack>
                 </Box>
             );

@@ -29,6 +29,7 @@ interface DetailPanelProps {
  * DetailPanel
  *
  * Re-architected with semantic components for the header.
+ * Updated with snap points for mobile bottom sheet.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
@@ -78,9 +79,15 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
     if (isMobile) {
         return (
-            <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()} dismissible={true}>
-                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl max-h-[92%]">
-                    <DrawerHeader className="px-6 pt-2 pb-2 text-left">
+            <Drawer
+                open={isOpen}
+                onOpenChange={(open) => !open && onClose()}
+                dismissible={true}
+                snapPoints={[0.4, 0.95]}
+                activeSnapPoint={0.4}
+            >
+                <DrawerContent className="bg-background/95 backdrop-blur-xl border-border !rounded-t-3xl overflow-hidden">
+                    <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
                         <DrawerTitle>
                             {headerContent}
                         </DrawerTitle>

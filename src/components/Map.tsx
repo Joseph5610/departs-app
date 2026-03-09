@@ -105,7 +105,25 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const props = f.properties;
+                        const props = { ...f.properties };
+
+                        // MapLibre stringifies objects in properties. Safely parse them.
+                        if (typeof props.vehicle_descriptor === 'string') {
+                            try {
+                                props.vehicle_descriptor = JSON.parse(props.vehicle_descriptor);
+                            } catch {
+                                // Fallback if parsing fails
+                            }
+                        }
+
+                        // Ensure numeric types for properties that might be stringified
+                        const numericProps = ['delay', 'bearing', 'last_stop_sequence', 'route_type'];
+                        numericProps.forEach(key => {
+                            if (props[key] !== undefined && props[key] !== null) {
+                                props[key] = Number(props[key]);
+                            }
+                        });
+
                         actions.selectVehicle({
                             ...props,
                             vehicle_id: String(props.vehicle_id || props.id),
