@@ -123,11 +123,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
             <SheetContent
                 side="left"
                 showCloseButton={false}
-                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none"
+                hideOverlay={true}
+                className="w-[420px] sm:max-w-[420px] top-4 left-4 bottom-4 h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                     <SheetTitle>

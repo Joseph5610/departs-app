@@ -85,7 +85,10 @@ const MapInner: React.FC = () => {
                 }}
                 onClick={(evt) => {
                     const f = evt.features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') return;
+                    if (!f || f.layer.id === 'entrance-layer') {
+                        actions.clearSelection();
+                        return;
+                    }
 
                     if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
