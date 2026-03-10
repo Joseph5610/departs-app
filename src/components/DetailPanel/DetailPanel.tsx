@@ -87,14 +87,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     }
                 }}
                 dismissible={true}
-                snapPoints={[0.5]}
-                fixed={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
                     className="glassy-surface !rounded-t-3xl overflow-hidden border-none shadow-2xl"
                 >
-                    <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
+                    <DrawerHeader className="px-6 pt-0 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
                         <DrawerTitle>
                             {headerContent}
                         </DrawerTitle>
