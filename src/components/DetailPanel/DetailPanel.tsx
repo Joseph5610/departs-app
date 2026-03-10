@@ -111,28 +111,17 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         <Sheet
             open={isOpen}
             onOpenChange={(open, event) => {
-                if (!open && event.reason !== 'outside-press' && event.reason !== 'focus-out' && event.reason !== 'escape') {
+                if (!open && event.reason !== 'outside-press' && event.reason !== 'focus-out' && event.reason !== 'escape-key') {
                     onClose();
                 }
             }}
             modal={false}
+            disablePointerDismissal={true}
         >
             <SheetContent
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                onInteractOutside={(e) => {
-                    // Prevent dismissal on outside interactions
-                    e.preventDefault();
-                }}
-                onPointerDownOutside={(e) => {
-                    // Specifically allow map interaction but prevent it from closing the sheet
-                    e.preventDefault();
-                }}
-                onFocusOutside={(e) => {
-                    // Prevent focus changes (like clicking the map) from closing the sheet
-                    e.preventDefault();
-                }}
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
