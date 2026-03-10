@@ -35,9 +35,9 @@ const MapEngine: React.FC = () => {
 
     // Sync Background Logic
     useMapUrlSync(selectedStop, setSelectedStop);
-    useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
+    useMapStopEnrichment(selectedStop, setSelectedStop, (stopsData as any)?._raw_data || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
-    useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
+    useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
     useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
 
     return null;

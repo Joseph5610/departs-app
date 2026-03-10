@@ -30,6 +30,18 @@ export const useMapStopEnrichment = (
                 all_ids: feature.properties.all_ids
             } : prev);
             lastCheckedId.current = selectedStop.id;
+        } else {
+            // Check centroids if not found in unclustered stops
+            const centroid = stopsData.features.find(f => f.properties.stop_id === selectedStop.id || f.properties.all_ids?.includes(selectedStop.id));
+             if (centroid) {
+                console.log('✨ Enriching selected stop from centroid:', centroid.geometry.coordinates);
+                setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
+                    ...prev,
+                    coordinates: centroid.geometry.coordinates as [number, number],
+                    all_ids: centroid.properties.all_ids
+                } : prev);
+                lastCheckedId.current = selectedStop.id;
+             }
         }
     }, [selectedStop, stopsData, setSelectedStop]);
 };

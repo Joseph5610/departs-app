@@ -86,7 +86,9 @@ const MapInner: React.FC = () => {
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') {
-                        actions.clearSelection();
+                        // User clicked on empty area or background layer
+                        // We intentionally do NOT clear selection here to keep the DetailPanel open
+                        // according to "Smart Sidebar" behavior.
                         return;
                     }
 
@@ -179,7 +181,10 @@ const MapInner: React.FC = () => {
 
             <DetailPanel
                 isOpen={!!state.selectedStop || !!state.selectedVehicle}
-                onClose={actions.clearSelection}
+                onClose={() => {
+                    // Logic to clear URL if needed
+                    actions.clearSelection();
+                }}
                 onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
                 title={panelTitle}
                 platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}

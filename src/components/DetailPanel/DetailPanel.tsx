@@ -28,22 +28,11 @@ interface DetailPanelProps {
 /**
  * DetailPanel
  *
- * Re-architected with semantic components for the header.
- * Updated with snap points for mobile bottom sheet.
- * Fixed UI freeze by removing controlled activeSnapPoint and simplified configuration.
+ * Simplified to a single 0.5 snap point for mobile.
+ * Removed complex snap state management to improve stability.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
-    const [snap, setSnap] = useState<string | number | null>(0.4);
-    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-
-    // Sync snap point with open state during render to avoid cascading renders in useEffect
-    if (isOpen !== prevIsOpen) {
-        setPrevIsOpen(isOpen);
-        if (isOpen) {
-            setSnap(0.4);
-        }
-    }
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -98,17 +87,14 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     }
                 }}
                 dismissible={true}
-                snapPoints={['120px', 0.4, 0.95]}
-                activeSnapPoint={snap}
-                setActiveSnapPoint={(s) => {
-                    setSnap(s);
-                }}
+                snapPoints={[0.5]}
+                fixed={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
-                    className="glassy-surface !rounded-t-3xl overflow-hidden md:max-w-md mx-auto border-none shadow-2xl"
+                    className="glassy-surface !rounded-t-3xl overflow-hidden border-none shadow-2xl"
                 >
-                    <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0">
+                    <DrawerHeader className="px-6 pt-2 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
                         <DrawerTitle>
                             {headerContent}
                         </DrawerTitle>
@@ -122,11 +108,31 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
+        <Sheet
+            open={isOpen}
+            onOpenChange={(open, event) => {
+                if (!open && event.reason !== 'outside-press' && event.reason !== 'focus-out' && event.reason !== 'escape') {
+                    onClose();
+                }
+            }}
+            modal={false}
+        >
             <SheetContent
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
+                onInteractOutside={(e) => {
+                    // Prevent dismissal on outside interactions
+                    e.preventDefault();
+                }}
+                onPointerDownOutside={(e) => {
+                    // Specifically allow map interaction but prevent it from closing the sheet
+                    e.preventDefault();
+                }}
+                onFocusOutside={(e) => {
+                    // Prevent focus changes (like clicking the map) from closing the sheet
+                    e.preventDefault();
+                }}
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
                 <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
