@@ -90,14 +90,14 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 shouldScaleBackground={false}
             >
                 <DrawerContent
-                    className="glassy-surface !rounded-t-3xl overflow-hidden border-none shadow-2xl"
+                    className="glassy-surface !rounded-t-3xl overflow-hidden border-none shadow-2xl max-h-[82vh]"
                 >
                     <DrawerHeader className="px-6 pt-0 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
                         <DrawerTitle>
                             {headerContent}
                         </DrawerTitle>
                     </DrawerHeader>
-                    <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)]">
+                    <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
                         {children}
                     </Box>
                 </DrawerContent>
