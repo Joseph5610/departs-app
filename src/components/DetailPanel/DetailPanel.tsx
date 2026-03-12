@@ -6,6 +6,7 @@ import {
     DrawerContent,
     DrawerHeader,
     DrawerTitle,
+    DrawerHandle,
 } from '@/components/ui/drawer';
 import {
     Sheet,
@@ -87,19 +88,24 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     }
                 }}
                 dismissible={true}
+                handleOnly={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
-                    className="glassy-surface !rounded-t-3xl overflow-hidden border-none shadow-2xl max-h-[82vh]"
+                    className="glassy-surface !rounded-t-3xl border-none shadow-2xl"
                 >
-                    <DrawerHeader className="px-6 pt-0 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
-                        <DrawerTitle>
-                            {headerContent}
-                        </DrawerTitle>
-                    </DrawerHeader>
-                    <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
-                        {children}
-                    </Box>
+                    <div className="flex flex-col max-h-[82dvh] min-h-0 overflow-hidden">
+                        <DrawerHandle className="mt-0 h-auto w-full bg-transparent block">
+                            <DrawerHeader className="px-6 pt-0 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
+                                <DrawerTitle>
+                                    {headerContent}
+                                </DrawerTitle>
+                            </DrawerHeader>
+                        </DrawerHandle>
+                        <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
+                            {children}
+                        </Box>
+                    </div>
                 </DrawerContent>
             </Drawer>
         );

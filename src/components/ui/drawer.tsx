@@ -29,14 +29,17 @@ function DrawerClose({
 
 function DrawerHandle({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Handle>) {
   return (
     <DrawerPrimitive.Handle
       data-slot="drawer-handle"
-      className={cn("mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted", className)}
+      className={cn("mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted", !children && "block", className)}
       {...props}
-    />
+    >
+      {children}
+    </DrawerPrimitive.Handle>
   )
 }
 
