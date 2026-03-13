@@ -12,6 +12,7 @@ import {
     SheetContent,
     SheetTitle,
 } from '@/components/ui/sheet';
+import type { DialogRootChangeEventDetails } from '@base-ui/react';
 import { Button } from '@/components/ui/button';
 import { Box, HStack } from '@/components/ui/layout';
 
@@ -111,8 +112,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     return (
         <Sheet
             open={isOpen}
-            onOpenChange={(open, event, reason) => {
-                if (!open && reason !== 'outside-press' && reason !== 'focus-out' && reason !== 'escape-key') {
+            onOpenChange={(open: boolean, details: DialogRootChangeEventDetails) => {
+                if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out' && details.reason !== 'escape-key') {
                     onClose();
                 }
             }}
