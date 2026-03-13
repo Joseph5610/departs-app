@@ -10,11 +10,10 @@ import {
 import {
     Sheet,
     SheetContent,
-    SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Box, HStack, Stack } from '@/components/ui/layout';
+import { Box, HStack } from '@/components/ui/layout';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -88,15 +87,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     className="glassy-surface !rounded-t-3xl border-none shadow-2xl"
                     showHandle={false}
                 >
-                    <div className="flex flex-col max-h-[82dvh] min-h-0 overflow-hidden">
-                        <DrawerHandle className="block w-full cursor-grab active:cursor-grabbing">
-                            <Stack className="w-full gap-0 px-6 pb-4">
-                                <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted mb-4" />
-                                <HStack className="justify-between w-full">
-                                    {titleContent}
-                                </HStack>
-                            </Stack>
-                        </DrawerHandle>
+                    <div className="flex flex-col max-h-[82dvh] min-h-0 overflow-hidden relative">
+                        {/* Overlay handle over the header area */}
+                        <DrawerHandle className="absolute inset-x-0 top-0 h-24 z-10 opacity-0 cursor-grab active:cursor-grabbing" />
+
+                        <div className="flex flex-col shrink-0">
+                            <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted mb-2" />
+                            <Box className="px-6 pb-4">
+                                {titleContent}
+                            </Box>
+                        </div>
                         <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
                             {children}
                         </Box>
@@ -122,7 +122,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 hideOverlay={true}
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
-                <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
+                <div className="px-6 pt-6 pb-2 shrink-0">
                     <HStack className="justify-between w-full">
                         {titleContent}
                         <Button
@@ -134,7 +134,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             <X size={20} />
                         </Button>
                     </HStack>
-                </SheetHeader>
+                </div>
                 <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-6">
                     {children}
                 </Box>
