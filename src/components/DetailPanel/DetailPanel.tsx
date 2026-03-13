@@ -15,7 +15,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Box, HStack } from '@/components/ui/layout';
+import { Box, HStack, Stack } from '@/components/ui/layout';
 
 interface DetailPanelProps {
     isOpen: boolean;
