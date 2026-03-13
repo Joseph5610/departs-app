@@ -27,11 +27,12 @@ interface DetailPanelProps {
 /**
  * DetailPanel
  *
- * Simplified to a single 0.5 snap point for mobile.
- * Removed complex snap state management to improve stability.
+ * Responsive panel for displaying stop and vehicle details.
+ * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
+    const [snap, setSnap] = useState<string | number | null>(0.5);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -79,24 +80,25 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
+                snapPoints={[0.5, 1]}
+                activeSnapPoint={snap}
+                setActiveSnapPoint={setSnap}
                 dismissible={true}
                 handleOnly={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
-                    className="glassy-surface !rounded-t-3xl border-none shadow-2xl"
+                    className="glassy-surface !rounded-t-3xl border-none shadow-2xl h-full data-[vaul-drawer-direction=bottom]:max-h-[96dvh]"
                     showHandle={false}
                 >
-                    <div className="flex flex-col max-h-[82dvh] min-h-0 overflow-hidden relative">
-                        {/* Overlay handle over the header area */}
-                        <DrawerHandle className="absolute inset-x-0 top-0 h-24 z-10 opacity-0 cursor-grab active:cursor-grabbing" />
-
-                        <div className="flex flex-col shrink-0">
+                    <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
+                        <DrawerHandle className="flex flex-col shrink-0 cursor-grab active:cursor-grabbing">
                             <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted mb-2" />
                             <Box className="px-6 pb-4">
                                 {titleContent}
                             </Box>
-                        </div>
+                        </DrawerHandle>
+
                         <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
                             {children}
                         </Box>
@@ -109,8 +111,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     return (
         <Sheet
             open={isOpen}
-            onOpenChange={(open, details) => {
-                if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out' && details.reason !== 'escape-key') {
+            onOpenChange={(open, event, reason) => {
+                if (!open && reason !== 'outside-press' && reason !== 'focus-out' && reason !== 'escape-key') {
                     onClose();
                 }
             }}
