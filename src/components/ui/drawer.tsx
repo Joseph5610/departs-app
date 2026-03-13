@@ -35,7 +35,11 @@ function DrawerHandle({
   return (
     <DrawerPrimitive.Handle
       data-slot="drawer-handle"
-      className={cn("mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted", !children && "block", className)}
+      className={cn(
+        "mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted",
+        children && "h-auto w-auto bg-transparent rounded-none mt-0 mx-0",
+        className
+      )}
       {...props}
     >
       {children}
@@ -63,8 +67,12 @@ function DrawerContent({
   className,
   children,
   hideOverlay = false,
+  showHandle = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content> & { hideOverlay?: boolean }) {
+}: React.ComponentProps<typeof DrawerPrimitive.Content> & {
+  hideOverlay?: boolean;
+  showHandle?: boolean;
+}) {
   return (
     <DrawerPortal data-slot="drawer-portal">
       {!hideOverlay && <DrawerOverlay />}
@@ -76,7 +84,9 @@ function DrawerContent({
         )}
         {...props}
       >
-        <DrawerHandle className="group-data-[vaul-drawer-direction=bottom]/drawer-content:block hidden" />
+        {showHandle && (
+          <DrawerHandle className="group-data-[vaul-drawer-direction=bottom]/drawer-content:block hidden" />
+        )}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>

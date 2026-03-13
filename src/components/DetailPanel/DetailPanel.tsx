@@ -42,40 +42,45 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     }, []);
 
     const headerContent = (
-        <HStack className="justify-between w-full">
-            <HStack className="gap-2 min-w-0">
-                {onBack && (
+        <Stack className="w-full gap-0 items-center">
+            {isMobile && (
+                <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted mb-4" />
+            )}
+            <HStack className="justify-between w-full">
+                <HStack className="gap-2 min-w-0">
+                    {onBack && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onBack}
+                            className="shrink-0 -ml-2 h-10 w-10 text-muted-foreground hover:text-foreground"
+                        >
+                            <ArrowLeft size={20} />
+                        </Button>
+                    )}
+                    <HStack className="gap-2 min-w-0">
+                        <h2 className="text-xl font-bold text-foreground truncate tracking-tight">
+                            {title || ''}
+                        </h2>
+                        {platformCode && (
+                            <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
+                                {platformCode}
+                            </Box>
+                        )}
+                    </HStack>
+                </HStack>
+                {!isMobile && (
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={onBack}
-                        className="shrink-0 -ml-2 h-10 w-10 text-muted-foreground hover:text-foreground"
+                        onClick={onClose}
+                        className="shrink-0 -mr-2 h-10 w-10 text-muted-foreground hover:text-foreground"
                     >
-                        <ArrowLeft size={20} />
+                        <X size={20} />
                     </Button>
                 )}
-                <HStack className="gap-2 min-w-0">
-                    <h2 className="text-xl font-bold text-foreground truncate tracking-tight">
-                        {title || ''}
-                    </h2>
-                    {platformCode && (
-                        <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
-                            {platformCode}
-                        </Box>
-                    )}
-                </HStack>
             </HStack>
-            {!isMobile && (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onClose}
-                    className="shrink-0 -mr-2 h-10 w-10 text-muted-foreground hover:text-foreground"
-                >
-                    <X size={20} />
-                </Button>
-            )}
-        </HStack>
+        </Stack>
     );
 
     if (isMobile) {
@@ -93,11 +98,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             >
                 <DrawerContent
                     className="glassy-surface !rounded-t-3xl border-none shadow-2xl"
+                    showHandle={false}
                 >
                     <div className="flex flex-col max-h-[82dvh] min-h-0 overflow-hidden">
-                        <DrawerHandle className="mt-0 h-auto w-full bg-transparent block">
-                            <DrawerHeader className="px-6 pt-0 pb-2 text-left shrink-0 cursor-grab active:cursor-grabbing">
-                                <DrawerTitle>
+                        <DrawerHandle className="block w-full">
+                            <DrawerHeader className="px-6 pt-0 pb-4 text-left shrink-0 cursor-grab active:cursor-grabbing">
+                                <DrawerTitle className="text-left">
                                     {headerContent}
                                 </DrawerTitle>
                             </DrawerHeader>
