@@ -4,7 +4,6 @@ import { MOBILE_BREAKPOINT } from '../../config/constants';
 import {
     Drawer,
     DrawerContent,
-    DrawerHeader,
     DrawerTitle,
     DrawerHandle,
 } from '@/components/ui/drawer';
@@ -110,8 +109,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     return (
         <Sheet
             open={isOpen}
-            onOpenChange={(open, _event, reason) => {
-                if (!open && reason !== 'outside-press' && reason !== 'focus-out' && reason !== 'escape-key') {
+            onOpenChange={(open, details) => {
+                if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out' && details.reason !== 'escape-key') {
                     onClose();
                 }
             }}
