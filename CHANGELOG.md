@@ -2,6 +2,23 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.17.0] - 2026-03-09
+
+### Added
+- **Modern UI Migration**: Fully migrated the application to **shadcn/ui (Nova)** and **Tailwind CSS v4**. This includes a premium dark theme using OKLCH color spaces and glassy backdrop effects.
+- **Semantic Layout System**: Introduced a set of layout primitives (`Box`, `Stack`, `HStack`, `Overlay`, `Surface`) to replace manual CSS classes with a more maintainable and semantic structure.
+- **Enhanced Mobile Drawer**: Refactored the `DetailPanel` to use a native-feeling drawer (`vaul`) on mobile with dual snap points (50% and 96% height) and a unified swipe-to-dismiss handle.
+
+### Changed
+- **Responsive Navigation**: Replaced the universal bottom sheet with a context-aware `DetailPanel` that acts as a sidebar on desktop and a bottom drawer on mobile.
+- **Improved Map Interactions**: Map controls and the search bar are now visually unified and positioned to avoid overlap with system UI elements.
+- **Project Versioning**: Updated the application to version `0.17.0`.
+
+### Fixed
+- **Infinite Loop Prevention**: Resolved a critical performance bug in `useMapVehicleSync.ts` where real-time vehicle updates could trigger infinite re-renders.
+- **Sidebar Persistence**: Fixed an issue on desktop where the sidebar would close unexpectedly when interacting with the map.
+- **Data Robustness**: Hardened the vehicle detail panel to handle stringified MapLibre properties and improved type safety for route names and sequences.
+
 ## [0.16.0] - 2026-03-08
 
 ### Changed

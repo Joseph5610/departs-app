@@ -93,14 +93,46 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     showHandle={false}
                 >
                     <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
-                        <DrawerHandle className="flex flex-col shrink-0 cursor-grab active:cursor-grabbing">
+                        {/*
+                            Transparent handle as a drag target behind the header.
+                            Using h-24 to cover both the pill and the station title area.
+                        */}
+                        <DrawerHandle className="absolute inset-x-0 top-0 h-24 z-0 cursor-grab active:cursor-grabbing opacity-0" />
+
+                        {/*
+                            Visual Header
+                            We use pointer-events-none so drags pass through to the handle,
+                            but child buttons (like Back) use pointer-events-auto.
+                        */}
+                        <div className="flex flex-col shrink-0 relative z-10 pointer-events-none">
                             <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted mb-2" />
                             <Box className="px-6 pb-4">
-                                {titleContent}
+                                <HStack className="gap-2 min-w-0 flex-1 pointer-events-none">
+                                    {onBack && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={onBack}
+                                            className="shrink-0 -ml-2 h-10 w-10 text-muted-foreground hover:text-foreground pointer-events-auto"
+                                        >
+                                            <ArrowLeft size={20} />
+                                        </Button>
+                                    )}
+                                    <HStack className="gap-2 min-w-0 flex-1">
+                                        <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                                            {title || ''}
+                                        </DrawerTitle>
+                                        {platformCode && (
+                                            <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
+                                                {platformCode}
+                                            </Box>
+                                        )}
+                                    </HStack>
+                                </HStack>
                             </Box>
-                        </DrawerHandle>
+                        </div>
 
-                        <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y">
+                        <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)] touch-pan-y relative z-10">
                             {children}
                         </Box>
                     </div>
