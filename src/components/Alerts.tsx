@@ -73,18 +73,18 @@ export const Alerts: React.FC = () => {
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent>
-                    <DialogHeader>
+                <DialogContent className="flex flex-col max-h-[90vh] sm:max-h-[85vh] p-0 overflow-hidden gap-0">
+                    <DialogHeader className="px-6 pt-6 mb-4">
                         <DialogTitle>
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
-                    <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="min-h-0">
-                        {/* Sticky Header Section */}
-                        <Box className="sticky -top-6 z-10 bg-background/95 backdrop-blur-md pt-0 pb-2 -mx-6 px-6 border-b border-border">
+                    <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0 gap-0">
+                        {/* Header Section */}
+                        <Box className="bg-background/95 backdrop-blur-md pt-0 pb-4 px-6 border-b border-border">
                             <Stack className="gap-3">
                                 <TabsList className="w-full h-11 p-1 bg-muted/30 rounded-2xl border border-border flex">
-                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-[state=active]:bg-secondary data-[state=active]:text-foreground">
+                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
                                         <span>{t('alerts.incidents')}</span>
                                         {incidentsCount > 0 && (
                                             <span className={cn(
@@ -95,7 +95,7 @@ export const Alerts: React.FC = () => {
                                             </span>
                                         )}
                                     </TabsTrigger>
-                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-[state=active]:bg-secondary data-[state=active]:text-foreground">
+                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
                                         <span>{t('alerts.exclusions')}</span>
                                         {exclusionsCount > 0 && (
                                             <span className={cn(
@@ -131,7 +131,7 @@ export const Alerts: React.FC = () => {
                             </Stack>
                         </Box>
 
-                        <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+                        <ScrollArea className="flex-1 min-h-0 px-6">
                             <div className="pt-4 pb-6">
                                 <AnimatePresence mode="wait">
                                     <motion.div
