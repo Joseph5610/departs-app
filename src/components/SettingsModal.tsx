@@ -6,6 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import {
     Eye,
     EyeOff,
@@ -161,19 +162,11 @@ export const SettingsModal: React.FC = () => {
                                     </Stack>
                                 </HStack>
 
-                                <Box
-                                    className={cn(
-                                        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
-                                        showVehicles ? "bg-primary" : "bg-muted"
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                            showVehicles ? "translate-x-6" : "translate-x-1"
-                                        )}
-                                    />
-                                </Box>
+                                <Switch
+                                    checked={showVehicles}
+                                    onCheckedChange={setShowVehicles}
+                                    className="ml-3 sm:ml-4"
+                                />
                             </button>
 
                             <AnimatePresence>
@@ -262,19 +255,11 @@ export const SettingsModal: React.FC = () => {
                                     </Stack>
                                 </HStack>
 
-                                <Box
-                                    className={cn(
-                                        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ml-3 sm:ml-4",
-                                        showStops ? "bg-primary" : "bg-muted"
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                            showStops ? "translate-x-6" : "translate-x-1"
-                                        )}
-                                    />
-                                </Box>
+                                <Switch
+                                    checked={showStops}
+                                    onCheckedChange={setShowStops}
+                                    className="ml-3 sm:ml-4"
+                                />
                             </button>
                         </Box>
                     </Stack>

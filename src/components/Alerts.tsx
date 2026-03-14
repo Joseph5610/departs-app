@@ -10,12 +10,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { GenericAlertCard } from './GenericAlertCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Stack, HStack, Box } from '@/components/ui/layout';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Stack, Box } from '@/components/ui/layout';
 import { cn } from '@/lib/utils';
 
 /**
@@ -77,43 +79,50 @@ export const Alerts: React.FC = () => {
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
-                    <Stack className="min-h-0 gap-0">
+                    <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="min-h-0">
                         {/* Sticky Header Section */}
                         <Box className="sticky -top-6 z-10 bg-background/95 backdrop-blur-md pt-0 pb-2 -mx-6 px-6 border-b border-border">
-                            <Stack className="gap-2">
-                                {/* Tabs */}
-                                <HStack className="p-1 bg-muted/30 rounded-2xl border border-border">
-                                    <TabButton
-                                        active={activeTab === 'incidents'}
-                                        onClick={() => setActiveTab('incidents')}
-                                        label={t('alerts.incidents')}
-                                        count={incidentsCount}
-                                        isIncident={true}
-                                    />
-                                    <TabButton
-                                        active={activeTab === 'exclusions'}
-                                        onClick={() => setActiveTab('exclusions')}
-                                        label={t('alerts.exclusions')}
-                                        count={exclusionsCount}
-                                    />
-                                </HStack>
+                            <Stack className="gap-3">
+                                <TabsList className="w-full h-11 p-1 bg-muted/30 rounded-2xl border border-border flex">
+                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-[state=active]:bg-secondary data-[state=active]:text-foreground">
+                                        <span>{t('alerts.incidents')}</span>
+                                        {incidentsCount > 0 && (
+                                            <span className={cn(
+                                                "px-1.5 py-0.5 rounded-full text-[10px]",
+                                                activeTab === 'incidents' ? 'bg-rose-500 text-white' : 'bg-muted'
+                                            )}>
+                                                {incidentsCount}
+                                            </span>
+                                        )}
+                                    </TabsTrigger>
+                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-[state=active]:bg-secondary data-[state=active]:text-foreground">
+                                        <span>{t('alerts.exclusions')}</span>
+                                        {exclusionsCount > 0 && (
+                                            <span className={cn(
+                                                "px-1.5 py-0.5 rounded-full text-[10px]",
+                                                activeTab === 'exclusions' ? 'bg-foreground/20' : 'bg-muted'
+                                            )}>
+                                                {exclusionsCount}
+                                            </span>
+                                        )}
+                                    </TabsTrigger>
+                                </TabsList>
 
-                                {/* Search */}
                                 <Box className="relative group">
                                     <Input
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder={t('search.placeholder')}
-                                        className="h-9 pl-9 pr-8 text-sm"
+                                        className="h-10 pl-10 pr-10 text-sm rounded-xl"
                                     />
-                                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={14} />
+                                    <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                     {searchQuery && (
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setSearchQuery('')}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
                                         >
                                             <X size={14} />
                                         </Button>
@@ -122,57 +131,38 @@ export const Alerts: React.FC = () => {
                             </Stack>
                         </Box>
 
-                        {/* List */}
-                        <Box className="pt-4">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeTab + searchQuery}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <Stack className="gap-3">
-                                        {currentItems.map((item, idx) => (
-                                            <AlertCard key={item.guid || idx} item={item} />
-                                        ))}
+                        <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+                            <div className="pt-4 pb-6">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={activeTab + searchQuery}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <Stack className="gap-3">
+                                            {currentItems.map((item, idx) => (
+                                                <AlertCard key={item.guid || idx} item={item} />
+                                            ))}
 
-                                        {currentItems.length === 0 && !loadingRSS && (
-                                            <Stack className="flex-1 items-center justify-center py-12 text-muted-foreground text-sm min-h-[50vh] gap-0">
-                                                {t('alerts.noAlerts')}
-                                            </Stack>
-                                        )}
-                                    </Stack>
-                                </motion.div>
-                            </AnimatePresence>
-                        </Box>
-                    </Stack>
+                                            {currentItems.length === 0 && !loadingRSS && (
+                                                <Stack className="flex-1 items-center justify-center py-12 text-muted-foreground text-sm min-h-[50vh] gap-0">
+                                                    {t('alerts.noAlerts')}
+                                                </Stack>
+                                            )}
+                                        </Stack>
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </ScrollArea>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </>
     );
 };
 
-const TabButton: React.FC<{ active: boolean, onClick: () => void, label: string, count: number, isIncident?: boolean }> = ({ active, onClick, label, count, isIncident }) => (
-    <Button
-        variant={active ? "secondary" : "ghost"}
-        onClick={onClick}
-        className={cn(
-            "flex-1 h-9 rounded-xl text-xs font-bold gap-2",
-            !active && "text-muted-foreground hover:text-foreground"
-        )}
-    >
-        <span>{label}</span>
-        {count > 0 && (
-            <span className={cn(
-                "px-1.5 py-0.5 rounded-full text-[10px]",
-                active ? (isIncident ? 'bg-rose-500 text-white' : 'bg-foreground/20') : 'bg-muted'
-            )}>
-                {count}
-            </span>
-        )}
-    </Button>
-);
 
 const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
     const { t } = useTranslation();

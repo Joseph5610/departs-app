@@ -15,6 +15,8 @@ import {
 import type { DialogRootChangeEventDetails } from '@base-ui/react';
 import { Button } from '@/components/ui/button';
 import { Box, HStack } from '@/components/ui/layout';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -64,9 +66,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     </SheetTitle>
                 )}
                 {platformCode && (
-                    <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
+                    <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums p-0">
                         {platformCode}
-                    </Box>
+                    </Badge>
                 )}
             </HStack>
         </HStack>
@@ -117,17 +119,17 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                                         {title || ''}
                                     </DrawerTitle>
                                     {platformCode && (
-                                        <Box className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums">
+                                        <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums p-0">
                                             {platformCode}
-                                        </Box>
+                                        </Badge>
                                     )}
                                 </HStack>
                             </HStack>
                         </Box>
 
-                        <Box className="flex-1 min-h-0 px-6 overflow-y-auto custom-scrollbar pb-[env(safe-area-inset-bottom,1.5rem)]">
+                        <ScrollArea className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)]">
                             {children}
-                        </Box>
+                        </ScrollArea>
                     </div>
                 </DrawerContent>
             </Drawer>
@@ -163,9 +165,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         </Button>
                     </HStack>
                 </div>
-                <Box className="flex-1 px-6 overflow-y-auto custom-scrollbar pb-6">
+                <ScrollArea className="flex-1 px-6 pb-6">
                     {children}
-                </Box>
+                </ScrollArea>
             </SheetContent>
         </Sheet>
     );

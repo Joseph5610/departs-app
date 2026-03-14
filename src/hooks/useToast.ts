@@ -1,17 +1,27 @@
-import { createContext, useContext } from 'react';
+import { toast } from 'sonner';
 
 export type ToastType = 'success' | 'error' | 'info';
 
-export interface ToastContextType {
-    showToast: (message: string, type?: ToastType) => void;
-}
-
-export const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
+/**
+ * useToast
+ *
+ * Re-implemented with Sonner for a more premium look and feel.
+ */
 export const useToast = () => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within a ToastProvider');
-    }
-    return context;
+    const showToast = (message: string, type: ToastType = 'info') => {
+        switch (type) {
+            case 'success':
+                toast.success(message);
+                break;
+            case 'error':
+                toast.error(message);
+                break;
+            case 'info':
+            default:
+                toast.info(message);
+                break;
+        }
+    };
+
+    return { showToast };
 };
