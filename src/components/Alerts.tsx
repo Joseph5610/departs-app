@@ -83,8 +83,8 @@ export const Alerts: React.FC = () => {
                         {/* Header Section */}
                         <Box className="bg-background/95 backdrop-blur-md pt-0 pb-4 px-6 border-b border-border">
                             <Stack className="gap-3">
-                                <TabsList className="w-full h-11 p-1 bg-muted/30 rounded-2xl border border-border flex">
-                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
+                                <TabsList className="w-full h-14 p-1.5 bg-muted/30 rounded-2xl border border-border flex">
+                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-sm font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
                                         <span>{t('alerts.incidents')}</span>
                                         {incidentsCount > 0 && (
                                             <span className={cn(
@@ -95,7 +95,7 @@ export const Alerts: React.FC = () => {
                                             </span>
                                         )}
                                     </TabsTrigger>
-                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-xs font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
+                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-sm font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
                                         <span>{t('alerts.exclusions')}</span>
                                         {exclusionsCount > 0 && (
                                             <span className={cn(
