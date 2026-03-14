@@ -29,7 +29,6 @@ function DrawerClose({
 
 function DrawerHandle({
   className,
-  children,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Handle>) {
   return (
@@ -37,13 +36,10 @@ function DrawerHandle({
       data-slot="drawer-handle"
       className={cn(
         "mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted",
-        children && "h-auto w-auto bg-transparent rounded-none mt-0 mx-0",
         className
       )}
       {...props}
-    >
-      {children}
-    </DrawerPrimitive.Handle>
+    />
   )
 }
 
