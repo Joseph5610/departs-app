@@ -84,7 +84,7 @@ export const Search: React.FC = React.memo(() => {
     };
 
     return (
-        <Overlay position="top-left" className="right-16 md:right-auto md:w-80 safe-top safe-left">
+        <Overlay position="top-left" className="right-16 md:right-auto md:w-80 safe-top safe-left p-4">
             <Box ref={containerRef}>
                 <div className="relative group">
                     <Input

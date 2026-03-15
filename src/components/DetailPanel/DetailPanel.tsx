@@ -87,7 +87,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
                 dismissible={true}
-                handleOnly={false}
+                handleOnly={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
@@ -103,28 +103,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
                         {/* Visual Header containing the station name */}
                         <Box className="px-6 pb-4 shrink-0">
-                            <HStack className="gap-2 min-w-0 flex-1">
-                                {onBack && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={onBack}
-                                        className="shrink-0 -ml-2 h-10 w-10 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <ArrowLeft size={20} />
-                                    </Button>
-                                )}
-                                <HStack className="gap-2 min-w-0 flex-1">
-                                    <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
-                                        {title || ''}
-                                    </DrawerTitle>
-                                    {platformCode && (
-                                        <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums p-0">
-                                            {platformCode}
-                                        </Badge>
-                                    )}
-                                </HStack>
-                            </HStack>
+                            {titleContent}
                         </Box>
 
                         <ScrollArea className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)]">

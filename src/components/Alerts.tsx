@@ -73,15 +73,15 @@ export const Alerts: React.FC = () => {
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="flex flex-col max-h-[90vh] sm:max-h-[85vh] p-0 overflow-hidden gap-0">
-                    <DialogHeader className="px-6 pt-6 mb-4">
+                <DialogContent className="flex flex-col h-[85vh] p-0 overflow-hidden gap-0">
+                    <DialogHeader className="px-6 pt-6 mb-4 shrink-0">
                         <DialogTitle>
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0 gap-0">
                         {/* Header Section */}
-                        <Box className="bg-background/95 backdrop-blur-md pt-0 pb-4 px-6 border-b border-border">
+                        <Box className="bg-background/95 backdrop-blur-md pt-0 pb-4 px-6 border-b border-border shrink-0">
                             <Stack className="gap-3">
                                 <TabsList className="w-full h-14 p-1.5 bg-muted/30 rounded-2xl border border-border flex">
                                     <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-sm font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
