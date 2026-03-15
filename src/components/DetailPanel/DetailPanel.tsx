@@ -129,9 +129,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-auto rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
+                className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
             >
-                <div className="px-6 pt-6 pb-2 shrink-0">
+                <Box className="px-6 pt-6 pb-2 shrink-0">
                     <HStack className="justify-between w-full">
                         {titleContent}
                         <Button
@@ -143,8 +143,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             <X size={20} />
                         </Button>
                     </HStack>
-                </div>
-                <ScrollArea className="flex-1 px-6 pb-6">
+                </Box>
+                <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
                     {children}
                 </ScrollArea>
             </SheetContent>
