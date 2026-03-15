@@ -35,7 +35,7 @@ export const LiveStatus: React.FC = () => {
     if (!bounds) return null;
 
     return (
-        <Overlay position="top-center" className="pt-14 sm:pt-4">
+        <Overlay position="top-center" className="pt-[calc(4.75rem+env(safe-area-inset-top,0px))] sm:pt-[calc(1rem+env(safe-area-inset-top,0px))]">
             <AnimatePresence mode="wait">
                 <motion.div
                     key="live-pill"

@@ -73,7 +73,7 @@ export const Alerts: React.FC = () => {
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="flex flex-col h-[85vh] p-0 overflow-hidden gap-0">
+                <DialogContent className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
                     <DialogHeader className="px-6 pt-6 mb-4 shrink-0">
                         <DialogTitle>
                             {t('alerts.title')}
