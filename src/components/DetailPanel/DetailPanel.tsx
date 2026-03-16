@@ -43,33 +43,43 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const titleContent = (
+    const backButton = onBack && (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="shrink-0 -ml-2 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+        >
+            <ArrowLeft size={20} />
+        </Button>
+    );
+
+    const platformBadge = platformCode && (
+        <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-bold tabular-nums p-0">
+            {platformCode}
+        </Badge>
+    );
+
+    const mobileTitleContent = (
         <HStack className="gap-2 min-w-0 flex-1">
-            {onBack && (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="shrink-0 -ml-2 h-10 w-10 text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft size={20} />
-                </Button>
-            )}
+            {backButton}
             <HStack className="gap-2 min-w-0 flex-1">
-                {isMobile ? (
-                    <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
-                        {title || ''}
-                    </DrawerTitle>
-                ) : (
-                    <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight">
-                        {title || ''}
-                    </SheetTitle>
-                )}
-                {platformCode && (
-                    <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-black tabular-nums p-0">
-                        {platformCode}
-                    </Badge>
-                )}
+                <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                    {title || ''}
+                </DrawerTitle>
+                {platformBadge}
+            </HStack>
+        </HStack>
+    );
+
+    const desktopTitleContent = (
+        <HStack className="gap-2 min-w-0 flex-1">
+            {backButton}
+            <HStack className="gap-2 min-w-0 flex-1">
+                <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                    {title || ''}
+                </SheetTitle>
+                {platformBadge}
             </HStack>
         </HStack>
     );
@@ -91,19 +101,23 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 shouldScaleBackground={false}
             >
                 <DrawerContent
-                    className="glassy-surface !rounded-t-3xl border-none shadow-2xl h-full data-[vaul-drawer-direction=bottom]:max-h-[96dvh]"
+                    className="h-full data-[vaul-drawer-direction=bottom]:max-h-[96dvh]"
                     showHandle={false}
+                    variant="glassy"
+                    hideOverlay={true}
                 >
                     <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
                         {/*
                           The actual DrawerHandle is just the visual pill at the top.
-                          We make it larger via padding to be easier to grab.
+                          We use a wrapper to make the grab area larger without overriding the pill's visual design.
                         */}
-                        <DrawerHandle className="w-full h-8 shrink-0 cursor-grab active:cursor-grabbing hover:bg-muted/50 transition-colors" />
+                        <div className="w-full shrink-0 cursor-grab active:cursor-grabbing flex justify-center py-2 h-10 items-center">
+                            <DrawerHandle className="mt-0 mb-0" />
+                        </div>
 
                         {/* Visual Header containing the station name */}
-                        <Box className="px-6 pb-4 shrink-0">
-                            {titleContent}
+                        <Box padding="none" className="px-6 pb-4 shrink-0 relative">
+                            {mobileTitleContent}
                         </Box>
 
                         <ScrollArea className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)]">
@@ -129,16 +143,20 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] rounded-3xl glassy-surface p-0 overflow-hidden flex flex-col outline-none border-none shadow-2xl"
+                variant="glassy"
+                className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
+                data-testid="detail-panel"
             >
-                <Box className="px-6 pt-6 pb-2 shrink-0">
-                    <HStack className="justify-between w-full">
-                        {titleContent}
+                <Box padding="none" className="px-6 pt-6 pb-2 shrink-0">
+                    <HStack justify="between" className="w-full">
+                        <Box padding="none" className="min-w-0 flex-1 pr-4">
+                            {desktopTitleContent}
+                        </Box>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={onClose}
-                            className="shrink-0 -mr-2 h-10 w-10 text-muted-foreground hover:text-foreground"
+                            className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
                         >
                             <X size={20} />
                         </Button>

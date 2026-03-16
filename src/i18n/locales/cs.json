@@ -73,7 +73,8 @@
         "description": "Šipka u vozidla ukazuje jeho aktuální směr."
       }
     },
-    "cta": "Začínáme"
+    "cta": "Začínáme",
+    "beta": "Beta"
   },
   "map": {
     "controls": {

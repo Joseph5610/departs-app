@@ -62,11 +62,11 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
 export const isNightRouteExpression: ExpressionSpecification = [
     'any',
     // Trams 90-99
-    ['match', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
+    ['match', ['to-string', ['coalesce', ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
     // Buses 9xx (Length 3, Starts with 9)
     ['all',
-        ['==', ['length', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']]], 3],
-        ['==', ['slice', ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']], 0, 1], '9']
+        ['==', ['length', ['to-string', ['coalesce', ['get', 'route_short_name'], '']]], 3],
+        ['==', ['slice', ['to-string', ['coalesce', ['get', 'route_short_name'], '']], 0, 1], '9']
     ]
 ];
 
@@ -78,17 +78,14 @@ export const vehicleColorExpression: ExpressionSpecification = [
     'case',
     // 1. Metro Specifics (Priority)
     ['any',
-        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'A'],
         ['==', ['to-string', ['get', 'route_short_name']], 'A'],
         ['==', ['to-string', ['get', 'n']], 'A']
     ], '#00A651',
     ['any',
-        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'B'],
         ['==', ['to-string', ['get', 'route_short_name']], 'B'],
         ['==', ['to-string', ['get', 'n']], 'B']
     ], '#F9B233',
     ['any',
-        ['==', ['to-string', ['get', 'gtfs_route_short_name']], 'C'],
         ['==', ['to-string', ['get', 'route_short_name']], 'C'],
         ['==', ['to-string', ['get', 'n']], 'C']
     ], '#E31E24',

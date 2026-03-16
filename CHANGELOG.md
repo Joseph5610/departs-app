@@ -12,7 +12,6 @@ All notable changes to the **Departs.app** project will be documented in this fi
 ### Changed
 - **Responsive Navigation**: Replaced the universal bottom sheet with a context-aware `DetailPanel` that acts as a sidebar on desktop and a bottom drawer on mobile.
 - **Improved Map Interactions**: Map controls and the search bar are now visually unified and positioned to avoid overlap with system UI elements.
-- **Project Versioning**: Updated the application to version `0.17.0`.
 
 ### Fixed
 - **Infinite Loop Prevention**: Resolved a critical performance bug in `useMapVehicleSync.ts` where real-time vehicle updates could trigger infinite re-renders.

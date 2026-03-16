@@ -1,0 +1,28 @@
+import { test, expect } from '@playwright/test';
+import { MapPage } from '../page-objects/MapPage';
+import { SearchPage } from '../page-objects/SearchPage';
+
+test.describe('Smoke tests', () => {
+    test('should load the map and search for a stop', async ({ page }) => {
+        const mapPage = new MapPage(page);
+        const searchPage = new SearchPage(page);
+
+        await mapPage.goto();
+        
+        // Verify map controls are visible (indicates map loaded)
+        await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
+
+        // Search for a known stop (example: 'Hlavní nádraží')
+        await searchPage.search('Hlavní nádraží');
+        
+        // Look for the stop in results
+        const stopItem = page.getByTestId('search-item-stop-Hlavní nádraží');
+        await expect(stopItem).toBeVisible();
+        
+        // Click the stop
+        await stopItem.click();
+        
+        // Verify detail panel opens
+        await expect(mapPage.detailPanel).toBeVisible();
+    });
+});

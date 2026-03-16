@@ -8,8 +8,9 @@ import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
 import { parseISO } from 'date-fns';
 import { GenericAlertCard } from './GenericAlertCard';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { VehicleDetailSkeleton } from './LoadingSkeletons';
 
 import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
 
@@ -66,7 +67,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     }, [originTs]);
 
     // Safety: Ensure routeName is always a string and not "undefined"
-    const rawRouteName = selectedVehicle?.gtfs_route_short_name || selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
+    const rawRouteName = selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
     const routeName = (rawRouteName !== undefined && rawRouteName !== null) ? String(rawRouteName) : '';
 
     const relevantAlerts = useMemo(() => {
@@ -110,55 +111,52 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const routeType = selectedVehicle.route_type ?? 0;
 
     return (
-        <Stack className="gap-4">
+        <Stack gap={4}>
             {/* Loading State */}
             {loadingDetail && !vehicleDetail && (
-                <Stack className="py-8 items-center justify-center gap-3">
-                    <Box className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">{t('map.vehicleDetails.fetching')}</span>
-                </Stack>
+                <VehicleDetailSkeleton />
             )}
 
             {/* Warning: Before Track / Previous Trip */}
             {((['before_track', 'before_track_delayed'] as string[]).includes(String(selectedVehicle.state_position || '')) || (['before_track', 'before_track_delayed'] as string[]).includes(String(vehicleDetail?.state_position || ''))) && (
-                <HStack className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl items-start gap-4">
+                <Surface variant="subtle" padding="md" className="bg-amber-500/10 border-amber-500/20 flex flex-row items-start gap-4">
                     <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                         <Info size={20} />
                     </Box>
-                    <Stack className="gap-1">
+                    <Stack gap={1}>
                         <h4 className="text-amber-500 font-bold text-sm">{t('map.vehicleDetails.previousTrip')}</h4>
                         <p className="text-amber-500/80 text-xs leading-relaxed">
                             {t('map.vehicleDetails.previousTripDescription')}
                         </p>
                     </Stack>
-                </HStack>
+                </Surface>
             )}
 
             {/* Header Hero Section */}
-            <Box className="relative overflow-hidden rounded-3xl border border-border p-4 md:p-6 bg-muted/30">
+            <Surface variant="subtle" padding="md" className="relative overflow-hidden md:p-6">
                 <Box
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
-                <HStack className="relative z-10 gap-4 flex-col items-center text-center">
+                <HStack align="center" gap={4} className="relative z-10 flex-col text-center">
                     <button
-                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 outline-none"
+                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                         onClick={onToggleFollow}
                     >
                         <span className="text-2xl md:text-3xl font-black text-white leading-none">{routeName}</span>
-                        <Box className={cn(
-                            "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-background flex items-center justify-center transition-colors",
-                            isFollowing ? "bg-primary" : "bg-muted"
-                        )}>
-                            <MapPin size={isFollowing ? 10 : 12} className="text-white" />
-                        </Box>
-                    </button>
-                    <Stack className="flex-1 min-w-0 w-full gap-1 items-center">
-                        <h3 className="text-lg md:text-xl font-bold text-foreground truncate w-full text-center">
-                            {vehicleDetail?.trip_headsign || selectedVehicle.gtfs_trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
-                        </h3>
-                        <HStack className="justify-center gap-2 flex-wrap">
+                                <Box className={cn(
+                                    "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-background flex items-center justify-center transition-colors",
+                                    isFollowing ? "bg-primary" : "bg-muted"
+                                )}>
+                                    <MapPin size={isFollowing ? 10 : 12} className="text-white" />
+                                </Box>
+                            </button>
+                            <Stack align="center" gap={1} className="flex-1 min-w-0 w-full">
+                                <h3 className="text-lg md:text-xl font-bold text-foreground truncate w-full text-center">
+                                    {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
+                                </h3>
+                                <HStack justify="center" gap={2} className="flex-wrap">
                             {(() => {
                                 const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
                                 const delayVal = Number(rawDelay);
@@ -177,58 +175,63 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 );
                             })()}
                             {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                                <HStack className="px-2.5 py-1 bg-muted/30 rounded-full border border-border gap-1.5">
-                                    <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                                        {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
-                                    </span>
-                                </HStack>
+                                    <HStack gap={2} className="px-2.5 py-1 bg-muted/30 rounded-full border border-border">
+                                        <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                                            {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
+                                        </span>
+                                    </HStack>
                             )}
                         </HStack>
                     </Stack>
                 </HStack>
-            </Box>
+            </Surface>
 
             {/* Metadata Grid */}
-            <HStack className="gap-2 items-stretch">
-                <HStack className="flex-1 min-w-0 p-3 bg-muted/30 rounded-2xl border border-border justify-between">
-                    <HStack className="gap-2 min-w-0">
+            <HStack align="stretch" gap={2}>
+                <Surface variant="subtle" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3">
+                    <HStack gap={2} className="min-w-0 flex-1 pr-2">
                         <Info size={14} className="text-muted-foreground shrink-0" />
-                        <Stack className="gap-0 min-w-0">
-                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">
-                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator || selectedVehicle?.operator}
+                        <Stack gap={0} className="min-w-0 flex-1">
+                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate block w-full">
+                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
                             </span>
-                            <span className="text-foreground text-[11px] font-bold truncate">
-                                #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_registration_number || '---'}
-                            </span>
+                            <HStack gap={1} align="center" className="min-w-0 w-full">
+                                <span className="text-foreground text-[11px] font-bold truncate shrink">
+                                    {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
+                                </span>
+                                <span className="text-muted-foreground text-[10px] font-semibold shrink-0">
+                                    #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
+                                </span>
+                            </HStack>
                         </Stack>
                     </HStack>
-                    <HStack className="gap-1.5 shrink-0">
-                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.is_air_conditioned) && (
+                    <HStack gap={2} className="shrink-0">
+                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
                             <Snowflake size={14} className="text-sky-400" />
                         )}
-                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.usb_chargers) && (
+                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
                             <Zap size={14} className="text-amber-400" />
                         )}
-                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.is_wheelchair_accessible) && (
+                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
                             <Accessibility size={14} className="text-primary" />
                         )}
                     </HStack>
-                </HStack>
+                </Surface>
                 {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                    <HStack className="flex-initial min-w-[70px] p-3 bg-muted/30 rounded-2xl border border-border gap-2">
+                    <Surface variant="subtle" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3">
                         <Navigation size={14} className="text-muted-foreground shrink-0" />
-                        <Stack className="gap-0 min-w-0">
+                        <Stack gap={0} className="min-w-0">
                             <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>
                             <span className="text-foreground text-[11px] font-bold">{vehicleDetail?.run_number || selectedVehicle?.run_number}</span>
                         </Stack>
-                    </HStack>
+                    </Surface>
                 )}
             </HStack>
 
             {/* Alerts */}
             {relevantAlerts.length > 0 && (
-                <Stack className="gap-2">
+                <Stack gap={2}>
                     {relevantAlerts.map((alert, idx) => (
                         <GenericAlertCard
                             key={alert.guid || idx}
@@ -247,14 +250,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {/* Schedule / Stop List */}
             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
-                <Stack className="gap-3">
-                    <HStack className="justify-between px-1">
-                        <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
+                <Stack gap={3}>
+                    <HStack justify="between" className="px-1">
+                        <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleTogglePastStops}
-                            className="h-7 rounded-xl text-[10px] font-bold uppercase tracking-wider px-2 gap-1.5"
+                            className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
                         >
                             {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
                             {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -270,25 +273,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isNext = stopSeq === nextStopSequence;
 
                             return (
-                                <HStack key={idx} className={cn(
-                                    "relative py-2.5 justify-between transition-opacity",
+                                <HStack key={idx} justify="between" className={cn(
+                                    "relative py-2.5 transition-opacity",
                                     isPast ? "opacity-40" : "opacity-100"
                                 )}>
                                     <Box className={cn(
-                                        "absolute -left-[19px] w-2.5 h-2.5 rounded-full border-2 border-background z-10",
-                                        isCurrent ? "bg-primary ring-4 ring-primary/20" : isPast ? "bg-muted-foreground" : "bg-muted"
+                                        "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
+                                        isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
                                     )} />
-                                    <Stack className="min-w-0 pr-4 gap-0">
+                                    <Stack align="start" gap={0} className="min-w-0 pr-4">
                                         <span className={cn(
                                             "text-sm truncate",
-                                            isNext ? "text-primary font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                                            isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                                         )}>
                                             {stop.properties.stop_name}
                                         </span>
                                         {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
-                                        {isNext && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
+                                        {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
                                     </Stack>
-                                    <Stack className="items-end shrink-0 gap-0">
+                                    <Stack align="end" gap={0} className="shrink-0">
                                         {(() => {
                                             const { realtime_arrival_time, arrival_time } = stop.properties;
                                             const realtimeTime = realtime_arrival_time || arrival_time;

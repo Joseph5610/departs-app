@@ -32,7 +32,7 @@ export const useMapFilters = (
                     properties: {
                         ...selectedVehicle,
                         route_type: selectedVehicle.route_type,
-                        gtfs_route_short_name: selectedVehicle.gtfs_route_short_name || selectedVehicle.route_short_name
+                        route_short_name: selectedVehicle.route_short_name
                     }
                 } as unknown as VehicleFeature
             ]

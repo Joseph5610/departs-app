@@ -384,7 +384,7 @@ export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
     type: 'symbol',
     source: 'selected-vehicle',
     layout: {
-        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
+        'text-field': ['to-string', ['coalesce', ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
         'text-allow-overlap': true,
@@ -444,7 +444,7 @@ export const vehiclesLabelLayer: SymbolLayerSpecification = {
     minzoom: 10,
     // Filter handled dynamically in component
     layout: {
-        'text-field': ['to-string', ['coalesce', ['get', 'gtfs_route_short_name'], ['get', 'route_short_name'], '']],
+        'text-field': ['to-string', ['coalesce', ['get', 'route_short_name'], '']],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 10, 9, 16, 13],
         'text-allow-overlap': true,

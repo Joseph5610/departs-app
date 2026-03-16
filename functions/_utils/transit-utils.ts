@@ -34,7 +34,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
                           last_pos?.next_stop?.id ||
                           trip?.next_stop_name;
 
-    // Metadata / Amenities - check multiple possible locations (Public API, V2 API, nested descriptors)
+    // Metadata / Amenities
     const vehicle_descriptor = (p.vehicle_descriptor || trip?.vehicle_descriptor || last_pos?.vehicle_descriptor || {});
 
     const is_wheelchair_accessible = p.is_wheelchair_accessible ??
@@ -65,15 +65,11 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
         type: 'Feature',
         geometry: feature.geometry,
         properties: {
-            ...p, // Preserve any extra properties
             vehicle_id,
             gtfs_trip_id,
-            trip_id: gtfs_trip_id,
             route_short_name,
-            gtfs_route_short_name: route_short_name,
             route_type,
             trip_headsign,
-            gtfs_trip_headsign: trip_headsign,
             bearing,
             delay,
             state_position,
@@ -81,17 +77,13 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             last_stop_sequence,
             origin_timestamp,
             run_number,
-            is_wheelchair_accessible,
-            is_air_conditioned,
-            has_usb_chargers,
-            vehicle_registration_number,
             vehicle_descriptor: {
                 operator,
+                vehicle_type: (p.vehicle_type as string | undefined) || p.trip?.vehicle_type || vehicle_descriptor.vehicle_type,
                 is_wheelchair_accessible,
                 is_air_conditioned,
                 has_usb_chargers,
-                vehicle_registration_number,
-                ...vehicle_descriptor
+                vehicle_registration_number
             }
         }
     };

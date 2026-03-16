@@ -18,9 +18,10 @@ import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
 import { useShare } from '../../hooks/useShare';
 import { GenericAlertCard } from '../GenericAlertCard';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DepartureListSkeleton } from '../LoadingSkeletons';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -104,11 +105,11 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     }, [selectedStop, share, t]);
 
     return (
-        <Stack className="gap-4 pt-1">
+        <Stack gap={4} className="pt-1">
             {showDepartureBoard && (
-                <Stack className="gap-4 mb-2">
+                <Stack gap={4} className="mb-2">
                     {relevantInfotexts.length > 0 && (
-                        <Stack className="gap-2">
+                        <Stack gap={2}>
                             {relevantInfotexts.map(info => (
                                 <GenericAlertCard
                                     key={info.id}
@@ -123,9 +124,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     )}
 
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <HStack className="px-3 py-2 bg-muted/30 rounded-2xl border border-border text-muted-foreground text-xs gap-2">
+                        <Surface variant="subtle" padding="sm" className="flex flex-row items-center gap-2">
                             <MapPin size={14} className="text-muted-foreground/60" />
-                            <span className="font-medium text-foreground">
+                            <span className="font-medium text-foreground text-xs">
                                 {stopDistanceInfo.isAtStop
                                     ? t('map.departures.atStop')
                                     : t('map.departures.distance', {
@@ -133,12 +134,12 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                         time: Math.ceil(stopDistanceInfo.distance / 60)
                                     })}
                             </span>
-                        </HStack>
+                        </Surface>
                     )}
 
-                    <HStack className="justify-between">
-                        <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                        <HStack className="gap-2">
+                    <HStack justify="between">
+                        <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.departures.upcoming')}</span>
+                        <HStack gap={2}>
                             <Button
                                 variant="outline"
                                 size="icon"
@@ -159,7 +160,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                 <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                             </Button>
 
-                            <HStack className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
+                            <HStack padding="none" className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -207,9 +208,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
 
                 return (
-                    <Stack key={group.groupId} className={cn("gap-3", !showHeader && "-mt-1")}>
+                    <Stack key={group.groupId} gap={3} className={cn(!showHeader && "-mt-1")}>
                         {showHeader && (
-                            <HStack className="gap-3 px-1">
+                            <HStack gap={3} className="px-1">
                                 <Box
                                     className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
                                     style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
@@ -248,22 +249,23 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     </Stack>
                 );
             })}
-
             {showMetroNightMessage ? (
-                <Stack className="py-12 px-6 items-center text-center gap-4 bg-muted/30 rounded-3xl border border-border">
+                <Surface variant="subtle" padding="xl" className="items-center text-center flex flex-col gap-4">
                     <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
                         <MoonStar size={32} className="text-indigo-400" />
                     </Box>
-                    <Stack className="gap-2">
+                    <Stack gap={2}>
                         <h3 className="text-foreground font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                             {t('map.departures.metroNight.description')}
                         </p>
                     </Stack>
-                </Stack>
-            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
+                </Surface>
+            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps ? (
                 <Box className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</Box>
-            )}
+            ) : showDepartureBoard && groupedDepartures.length === 0 && loadingDeps ? (
+                <DepartureListSkeleton />
+            ) : null}
         </Stack>
     );
 });

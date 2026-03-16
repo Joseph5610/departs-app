@@ -2,7 +2,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 
 /**
@@ -39,12 +39,12 @@ export const UpdatePopup: React.FC = () => {
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 50, opacity: 0 }}
                     >
-                        <HStack className="bg-background/90 backdrop-blur-xl border border-border p-4 rounded-2xl shadow-2xl justify-between gap-4">
-                            <HStack className="items-start gap-3">
+                        <Surface variant="glassy" padding="md" className="flex flex-row items-center justify-between gap-4 border-border/50">
+                            <HStack align="start" gap={3}>
                                 <Box className="mt-0.5 p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
                                     <RefreshCw size={18} className={needRefresh ? 'animate-spin' : ''} />
                                 </Box>
-                                <Stack className="gap-0.5">
+                                <Stack gap={1}>
                                     <span className="text-foreground text-sm font-semibold">
                                         {needRefresh ? t('update.newVersion') : t('update.pwaPrompt')}
                                     </span>
@@ -54,7 +54,7 @@ export const UpdatePopup: React.FC = () => {
                                 </Stack>
                             </HStack>
 
-                            <HStack className="gap-2">
+                            <HStack gap={2}>
                                 {needRefresh && (
                                     <Button
                                         size="sm"
@@ -68,12 +68,12 @@ export const UpdatePopup: React.FC = () => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={close}
-                                    className="h-10 w-10 -m-1.5 text-muted-foreground"
+                                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                                 >
-                                    <X size={16} />
+                                    <X size={20} />
                                 </Button>
                             </HStack>
-                        </HStack>
+                        </Surface>
                     </motion.div>
                 </Box>
             )}

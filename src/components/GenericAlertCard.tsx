@@ -4,6 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack } from '@/components/ui/layout';
+import { 
+    Alert, 
+    AlertDescription, 
+    AlertTitle 
+} from '@/components/ui/alert';
 
 export interface CommonAlertProps {
     id?: string;
@@ -23,7 +28,7 @@ export interface CommonAlertProps {
 /**
  * GenericAlertCard
  *
- * Re-architected with semantic layout components.
+ * Final polish: fixed alignment via Alert primitive fix, tightened gaps, and minimal typography.
  */
 export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     title,
@@ -41,89 +46,94 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     const { t } = useTranslation();
     const isHigh = priority === 'high' || priority === '1';
     const isNormal = priority === 'normal' || priority === '2';
+    
+    const alertVariant = isHigh ? 'destructive' : 'default';
 
     const CardContent = (
-        <HStack
+        <Alert 
+            variant={alertVariant}
             className={cn(
-                "items-start p-4 rounded-2xl border transition-all overflow-hidden relative gap-4",
-                link && "hover:bg-muted/50 cursor-pointer group",
-                isHigh ? "bg-destructive/10 border-destructive/20" : isNormal ? "bg-amber-500/10 border-amber-500/20" : "bg-muted/30 border-border",
-                isFuture && "opacity-60 grayscale-[0.3]"
+                "relative transition-all overflow-hidden border p-3 sm:p-4 rounded-xl sm:rounded-2xl backdrop-blur-md",
+                isHigh ? "!bg-destructive/10 !border-destructive/20" : isNormal ? "!bg-amber-500/10 !border-amber-500/20" : "!bg-muted/30 !border-border/40",
+                link && "hover:bg-accent/40 cursor-pointer group",
+                isFuture && "opacity-60 grayscale-[0.3]",
+                "shadow-lg shadow-black/5"
             )}
         >
-            {isHigh && link && (
-                <Box className="absolute top-0 left-0 w-1 h-full bg-destructive" />
-            )}
+            <AlertTriangle className={cn(
+                "h-4 w-4 mt-0.5 shrink-0",
+                isHigh ? "!text-destructive animate-pulse" : isNormal ? "!text-amber-500" : "text-muted-foreground"
+            )} />
+            
+            <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
+                {showStatus && (isFuture ? (
+                    <HStack gap={1} className="mb-0.5">
+                        <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+                        <span className="text-[8px] font-black text-destructive/80 uppercase tracking-widest">
+                            {t('alerts.planned')}
+                        </span>
+                    </HStack>
+                ) : isActive ? (
+                    <HStack gap={1} className="mb-0.5">
+                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)] animate-pulse" />
+                        <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+                            {t('alerts.active')}
+                        </span>
+                    </HStack>
+                ) : null)}
+                
+                <span className={cn(
+                    "font-bold text-sm leading-tight transition-colors",
+                    isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
+                    link && "group-hover:text-primary"
+                )}>
+                    {title}
+                </span>
+            </AlertTitle>
 
-            <Box className={cn(
-                "p-2 rounded-full shrink-0",
-                isHigh ? "bg-destructive/20 text-destructive" : isNormal ? "bg-amber-500/20 text-amber-500" : "bg-muted text-muted-foreground"
-            )}>
-                <AlertTriangle size={20} className={isHigh ? 'animate-pulse' : ''} />
-            </Box>
-
-            <Stack className="flex-1 min-w-0 gap-1.5">
-                <HStack className="justify-between items-start gap-2">
-                    <Stack className="gap-1.5 min-w-0">
-                        {showStatus && (isFuture ? (
-                            <HStack className="gap-1.5">
-                                <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
-                                <span className="text-[9px] font-black text-destructive/80 uppercase tracking-widest">
-                                    {t('alerts.planned')}
-                                </span>
-                            </HStack>
-                        ) : isActive ? (
-                            <HStack className="gap-1.5">
-                                <Box className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-                                <span className="text-[9px] font-black text-primary uppercase tracking-widest">
-                                    {t('alerts.active')}
-                                </span>
-                            </HStack>
-                        ) : null)}
-
-                        <h4 className={cn(
-                            "font-bold text-sm leading-tight transition-colors",
-                            isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
-                            link && "group-hover:text-primary"
-                        )}>
-                            {title}
-                        </h4>
-                    </Stack>
-                    {link && <ExternalLink size={14} className="text-muted-foreground group-hover:text-foreground shrink-0 mt-0.5" />}
-                </HStack>
-
+            <AlertDescription className="grid gap-3">
                 {description && (
-                    <p className="text-muted-foreground text-[10px] mt-0.5 line-clamp-3 leading-relaxed">
+                    <p className="text-[10px] line-clamp-2 leading-normal text-muted-foreground font-medium opacity-80">
                         {description}
                     </p>
                 )}
 
-                {lines && lines.length > 0 && lineColors && (
-                    <HStack className="flex-wrap gap-1.5 mt-1">
-                        {lines.map(line => (
-                            <span
-                                key={line}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-sm"
-                                style={{ backgroundColor: lineColors(line) }}
-                            >
-                                {line}
-                            </span>
-                        ))}
-                    </HStack>
-                )}
+                {(lines && lines.length > 0 && lineColors) || validFrom ? (
+                    <Stack gap={2}>
+                        {lines && lines.length > 0 && lineColors && (
+                            <HStack gap={1} className="flex-wrap">
+                                {lines.map(line => (
+                                    <span
+                                        key={line}
+                                        className="px-2.5 py-1 rounded-md text-[10px] font-black text-white shadow-sm ring-1 ring-white/10"
+                                        style={{ backgroundColor: lineColors(line) }}
+                                    >
+                                        {line}
+                                    </span>
+                                ))}
+                            </HStack>
+                        )}
 
-                {validFrom && (
-                    <Box className="text-muted-foreground text-[10px] font-medium mt-0.5">
-                        {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
-                    </Box>
-                )}
-            </Stack>
-        </HStack>
+                        {validFrom && (
+                            <Box className="text-[9px] font-extrabold text-muted-foreground/70 mt-0.5">
+                                {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
+                            </Box>
+                        )}
+                    </Stack>
+                ) : null}
+            </AlertDescription>
+
+            {link && (
+                <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
+                    <ExternalLink size={12} />
+                </div>
+            )}
+        </Alert>
     );
 
     if (link) {
         return (
-            <a href={link} target="_blank" rel="noopener noreferrer" className="block outline-none">
+            <a href={link} target="_blank" rel="noopener noreferrer" className="block outline-none no-underline active:scale-[0.99] transition-transform">
                 {CardContent}
             </a>
         );

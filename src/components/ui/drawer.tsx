@@ -1,5 +1,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
+import { X } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
@@ -35,7 +37,7 @@ function DrawerHandle({
     <DrawerPrimitive.Handle
       data-slot="drawer-handle"
       className={cn(
-        "mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-muted",
+        "mx-auto mt-4 h-3 w-48 shrink-0 rounded-full bg-muted-foreground/40",
         className
       )}
       {...props}
@@ -51,7 +53,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -64,10 +66,14 @@ function DrawerContent({
   children,
   hideOverlay = false,
   showHandle = true,
+  showCloseButton = false,
+  variant = 'default',
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   hideOverlay?: boolean;
   showHandle?: boolean;
+  showCloseButton?: boolean;
+  variant?: 'default' | 'glassy';
 }) {
   return (
     <DrawerPortal data-slot="drawer-portal">
@@ -75,7 +81,13 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col bg-background text-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:max-h-[82dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:border-border data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-2xl data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:border-border data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-2xl data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:border-border data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:max-h-[82dvh] data-[vaul-drawer-direction=top]:rounded-b-2xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:border-border data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm shadow-2xl",
+          "group/drawer-content fixed z-50 flex h-auto flex-col bg-background text-foreground shadow-2xl transition-all",
+          "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:max-h-[82dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=bottom]:border-border",
+          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-3xl data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:border-border",
+          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-3xl data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:border-border",
+          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:max-h-[82dvh] data-[vaul-drawer-direction=top]:rounded-b-3xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=top]:border-border",
+          "data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
+          variant === 'glassy' && "bg-white/20 dark:bg-white/10 backdrop-blur-3xl border-white/20!",
           className
         )}
         {...props}
@@ -84,6 +96,20 @@ function DrawerContent({
           <DrawerHandle className="group-data-[vaul-drawer-direction=bottom]/drawer-content:block hidden" />
         )}
         {children}
+        {showCloseButton && (
+          <DrawerPrimitive.Close
+            asChild
+          >
+            <Button
+              variant="ghost"
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground rounded-full h-9 w-9 p-0 z-50"
+              size="icon"
+            >
+              <X size={20} />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DrawerPrimitive.Close>
+        )}
       </DrawerPrimitive.Content>
     </DrawerPortal>
   )

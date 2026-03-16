@@ -6,7 +6,7 @@ import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Overlay, Stack, Box } from '@/components/ui/layout';
+import { Overlay, Stack, Box, Surface } from '@/components/ui/layout';
 
 /**
  * MapControls Component
@@ -64,11 +64,12 @@ export const MapControls = React.memo(() => {
     }, [mapRef, mapLoaded]);
 
     return (
-        <Overlay position="top-right" className="safe-top safe-right p-4">
-            <Stack className="gap-2">
+        <Overlay position="top-right" className="safe-top safe-right p-4" data-testid="map-controls">
+            <Stack gap={2}>
                 <ControlButton
                     onClick={(e) => onLocate(e)}
                     title={t('map.controls.myLocation')}
+                    testId="map-locate-btn"
                 >
                     <LocateFixed
                         size={20}
@@ -82,35 +83,36 @@ export const MapControls = React.memo(() => {
                 <ControlButton
                     onClick={onSettings}
                     title={t('map.controls.settings')}
+                    testId="map-settings-btn"
                 >
                     <Settings size={20} className="transition-transform group-hover:rotate-45" />
                 </ControlButton>
 
                 <Alerts />
 
-                <Box className="flex flex-col mt-2 overflow-hidden rounded-2xl glassy-surface">
+                <Surface variant="glassy" padding="none" className="flex flex-col mt-2 overflow-hidden rounded-2xl">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-white/5 active:bg-white/10 transition-colors text-white/90"
+                        className="h-11 w-11 rounded-none hover:bg-white/20 active:bg-white/30 transition-colors text-white focus-visible:z-10"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
-                    <Box className="mx-2 h-[1px] bg-white/10" />
+                    <Box className="mx-2 h-[1px] bg-white/20" />
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-white/5 active:bg-white/10 transition-colors text-white/90"
+                        className="h-11 w-11 rounded-none hover:bg-white/20 active:bg-white/30 transition-colors text-white focus-visible:z-10"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} />
                     </Button>
-                </Box>
+                </Surface>
 
                 {showCompass && (
                     <ControlButton
@@ -125,14 +127,15 @@ export const MapControls = React.memo(() => {
     );
 });
 
-const ControlButton = ({ children, onClick, title }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string }) => (
+const ControlButton = ({ children, onClick, title, testId }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string }) => (
     <Button
-        variant="ghost"
+        variant="glassy"
         size="icon"
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 rounded-2xl glassy-surface text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
+        className="h-11 w-11"
+        data-testid={testId}
     >
         {children}
     </Button>

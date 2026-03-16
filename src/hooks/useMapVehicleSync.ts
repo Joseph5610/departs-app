@@ -96,7 +96,10 @@ export const useMapVehicleSync = (
                     delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
                     state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
                     last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
-                    vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
+                    vehicle_descriptor: {
+                        ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
+                        vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
+                    }
                 };
             }
         }

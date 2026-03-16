@@ -17,7 +17,7 @@ import { GenericAlertCard } from './GenericAlertCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Stack, Box } from '@/components/ui/layout';
+import { Stack, Box, Surface } from '@/components/ui/layout';
 import { cn } from '@/lib/utils';
 
 /**
@@ -58,11 +58,12 @@ export const Alerts: React.FC = () => {
     return (
         <>
             <Button
-                variant="ghost"
+                variant="glassy"
                 size="icon"
                 onClick={() => setIsOpen(true)}
                 title={t('alerts.title')}
-                className="h-11 w-11 rounded-2xl glassy-surface text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors relative"
+                className="relative"
+                data-testid="map-alerts-btn"
             >
                 <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "transition-transform group-hover:scale-110")} />
                 {incidentsCount > 0 && (
@@ -73,33 +74,33 @@ export const Alerts: React.FC = () => {
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
-                    <DialogHeader className="px-6 pt-6 mb-4 shrink-0">
+                <DialogContent data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+                    <DialogHeader className="px-6 pt-6 mb-3 shrink-0">
                         <DialogTitle>
                             {t('alerts.title')}
                         </DialogTitle>
                     </DialogHeader>
-                    <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0 gap-0">
+                    <Tabs defaultValue="incidents" value={activeTab} onValueChange={(v) => setActiveTab(v as 'incidents' | 'exclusions')} className="flex-1 flex flex-col min-h-0">
                         {/* Header Section */}
-                        <Box className="bg-background/95 backdrop-blur-md pt-0 pb-4 px-6 border-b border-border shrink-0">
-                            <Stack className="gap-3">
-                                <TabsList className="w-full h-14 p-1.5 bg-muted/30 rounded-2xl border border-border flex">
-                                    <TabsTrigger value="incidents" className="flex-1 h-full rounded-xl text-sm font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
+                        <Surface variant="ghost" padding="none" className="pt-1 pb-3 px-6 shrink-0 rounded-none">
+                            <Stack gap={2}>
+                                <TabsList variant="pill">
+                                    <TabsTrigger value="incidents" className="gap-2">
                                         <span>{t('alerts.incidents')}</span>
                                         {incidentsCount > 0 && (
                                             <span className={cn(
-                                                "px-1.5 py-0.5 rounded-full text-[10px]",
-                                                activeTab === 'incidents' ? 'bg-rose-500 text-white' : 'bg-muted'
+                                                "px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+                                                activeTab === 'incidents' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/20 text-destructive'
                                             )}>
                                                 {incidentsCount}
                                             </span>
                                         )}
                                     </TabsTrigger>
-                                    <TabsTrigger value="exclusions" className="flex-1 h-full rounded-xl text-sm font-bold gap-2 data-active:bg-secondary/50 data-active:text-foreground">
+                                    <TabsTrigger value="exclusions" className="gap-2">
                                         <span>{t('alerts.exclusions')}</span>
                                         {exclusionsCount > 0 && (
                                             <span className={cn(
-                                                "px-1.5 py-0.5 rounded-full text-[10px]",
+                                                "px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
                                                 activeTab === 'exclusions' ? 'bg-foreground/20' : 'bg-muted'
                                             )}>
                                                 {exclusionsCount}
@@ -129,7 +130,7 @@ export const Alerts: React.FC = () => {
                                     )}
                                 </Box>
                             </Stack>
-                        </Box>
+                        </Surface>
 
                         <ScrollArea className="flex-1 min-h-0 px-6">
                             <div className="pt-4 pb-6">
@@ -141,13 +142,13 @@ export const Alerts: React.FC = () => {
                                         exit={{ opacity: 0, y: -10 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <Stack className="gap-3">
+                                        <Stack gap={3}>
                                             {currentItems.map((item, idx) => (
                                                 <AlertCard key={item.guid || idx} item={item} />
                                             ))}
 
                                             {currentItems.length === 0 && !loadingRSS && (
-                                                <Stack className="flex-1 items-center justify-center py-12 text-muted-foreground text-sm min-h-[50vh] gap-0">
+                                                <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
                                                     {t('alerts.noAlerts')}
                                                 </Stack>
                                             )}

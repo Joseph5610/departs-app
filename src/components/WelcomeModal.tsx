@@ -9,8 +9,10 @@ import {
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../config/constants';
 import { useMap } from '../hooks/useMap';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+
+import { Badge } from '@/components/ui/badge';
 
 /**
  * WelcomeModal
@@ -35,12 +37,15 @@ export const WelcomeModal: React.FC = () => {
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <DialogContent showCloseButton={false}>
                 <DialogHeader>
-                    <DialogTitle className="text-center">
+                    <DialogTitle className="text-center flex items-center justify-center gap-2">
                         {t('welcome.title')}
+                        <Badge variant="secondary" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary border-primary/20">
+                            {t('welcome.beta')}
+                        </Badge>
                     </DialogTitle>
                 </DialogHeader>
-                <Stack className="gap-8">
-                    <Stack className="items-center text-center gap-4">
+                <Stack gap={8}>
+                    <Stack align="center" gap={4} className="text-center">
                         <Box className="w-24 h-24 bg-muted/20 rounded-[2rem] flex items-center justify-center p-4 border border-border shadow-2xl">
                             <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
                         </Box>
@@ -51,27 +56,28 @@ export const WelcomeModal: React.FC = () => {
                         </Box>
                     </Stack>
 
-                    <Stack className="gap-4">
-                        <HStack className="gap-4 p-4 bg-muted/30 rounded-2xl border border-border items-start">
+                    <Stack gap={4}>
+                        <Surface variant="subtle" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
-                            <Stack className="gap-1">
+                            <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
                                 <div className="text-muted-foreground text-xs">{t('welcome.steps.clickStop.description')}</div>
                             </Stack>
-                        </HStack>
+                        </Surface>
 
-                        <HStack className="gap-4 p-4 bg-muted/30 rounded-2xl border border-border items-start">
+                        <Surface variant="subtle" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
-                            <Stack className="gap-1">
+                            <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
                                 <div className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</div>
                             </Stack>
-                        </HStack>
+                        </Surface>
                     </Stack>
 
                     <Button
                         size="lg"
                         onClick={handleClose}
+                        data-testid="welcome-cta"
                         className="w-full h-auto py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group"
                     >
                         {t('welcome.cta')}

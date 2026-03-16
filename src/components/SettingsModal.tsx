@@ -30,7 +30,7 @@ import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 
 /**
  * SettingsModal
@@ -127,32 +127,32 @@ export const SettingsModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent>
+            <DialogContent data-testid="settings-modal-content">
                 <DialogHeader>
                     <DialogTitle>
                         {t('settings.title')}
                     </DialogTitle>
                 </DialogHeader>
-                <Stack className="gap-8 py-2">
+                <Stack gap={8} className="py-2">
                     {/* Live Vehicles Section */}
-                    <Stack className="gap-3">
-                        <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    <Stack gap={3}>
+                        <Box padding="none" className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.display')}
                         </Box>
 
-                        <Box className="bg-muted/30 rounded-3xl border border-border overflow-hidden">
+                        <Surface variant="subtle" className="overflow-hidden">
                             <button
                                 onClick={() => setShowVehicles(!showVehicles)}
-                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border outline-none"
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                             >
-                                <HStack className="gap-0 sm:gap-4 min-w-0 flex-1">
+                                <HStack gap={4} className="min-w-0 flex-1">
                                     <Box className={cn(
                                         "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
                                         showVehicles ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                                     )}>
                                         {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                                     </Box>
-                                    <Stack className="min-w-0 flex-1 gap-1">
+                                    <Stack gap={1} className="min-w-0 flex-1">
                                         <div className="font-semibold leading-snug">
                                             {t('settings.liveVehicles.title')}
                                         </div>
@@ -177,11 +177,11 @@ export const SettingsModal: React.FC = () => {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="overflow-hidden bg-foreground/[0.02]"
                                     >
-                                        <Stack className="relative p-4 pt-2 gap-4">
-                                            <Stack className="gap-4">
-                                                <HStack className="gap-2 px-1">
+                                        <Stack gap={4} className="relative p-4 pt-2">
+                                            <Stack gap={4}>
+                                                <HStack gap={2} className="px-1">
                                                     <Box className="w-1 h-1 rounded-full bg-primary" />
-                                                    <Box className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
+                                                    <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
                                                         {t('settings.sections.filters')}
                                                     </Box>
                                                 </HStack>
@@ -196,18 +196,13 @@ export const SettingsModal: React.FC = () => {
                                                                     ? "bg-primary/15 border-primary/40 text-primary"
                                                                     : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                                             )}
+                                                            data-testid={`vehicle-type-${id}`}
                                                         >
                                                             <Icon size={18} className={cn("transition-transform duration-300", routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70')} />
                                                             <span className="text-[9px] font-bold uppercase tracking-wider">
                                                                 {t(`settings.vehicleTypes.${id}`)}
                                                             </span>
 
-                                                            {routeTypeFilter.includes(id) && (
-                                                                <motion.div
-                                                                    layoutId="active-indicator"
-                                                                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"
-                                                                />
-                                                            )}
                                                         </button>
                                                     ))}
 
@@ -231,21 +226,21 @@ export const SettingsModal: React.FC = () => {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </Box>
+                        </Surface>
 
-                        <Box className="bg-muted/30 rounded-3xl border border-border overflow-hidden mt-3">
+                        <Surface variant="subtle" className="overflow-hidden mt-3">
                             <button
                                 onClick={() => setShowStops(!showStops)}
-                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group outline-none"
+                                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                             >
-                                <HStack className="gap-0 sm:gap-4 min-w-0 flex-1">
+                                <HStack gap={4} className="min-w-0 flex-1">
                                     <Box className={cn(
                                         "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
                                         showStops ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                                     )}>
                                         <MapPin size={22} />
                                     </Box>
-                                    <Stack className="min-w-0 flex-1 gap-1">
+                                    <Stack gap={1} className="min-w-0 flex-1">
                                         <div className="font-semibold leading-snug">
                                             {t('settings.showStops.title')}
                                         </div>
@@ -261,11 +256,11 @@ export const SettingsModal: React.FC = () => {
                                     className="ml-3 sm:ml-4"
                                 />
                             </button>
-                        </Box>
+                        </Surface>
                     </Stack>
 
                     {/* Language Selection */}
-                    <Stack className="gap-3">
+                    <Stack gap={3}>
                         <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                             {t('settings.sections.language')}
                         </Box>
@@ -298,17 +293,17 @@ export const SettingsModal: React.FC = () => {
                     </HStack>
 
                     {/* Footer Actions & Info */}
-                    <Stack className="pt-4 gap-6 border-t border-border">
-                        <Stack className="gap-3">
+                    <Stack gap={6} className="pt-4 border-t border-border">
+                        <Stack gap={3}>
                             {searchHistory.length > 0 && (
                                 <button
                                     onClick={() => {
                                         clearHistory();
                                         showToast(t('settings.clearHistory.success'), 'success');
                                     }}
-                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left outline-none"
+                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                                 >
-                                    <HStack className="gap-3">
+                                    <HStack gap={3}>
                                         <Box className="p-2 rounded-lg bg-destructive/10 text-destructive">
                                             <Clock size={18} />
                                         </Box>
@@ -322,7 +317,7 @@ export const SettingsModal: React.FC = () => {
                                 disabled={isChecking}
                                 className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left outline-none"
                             >
-                                <HStack className="gap-3">
+                                <HStack gap={3}>
                                     <Box className="p-2 rounded-lg bg-muted text-muted-foreground">
                                         <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
                                     </Box>
@@ -333,7 +328,7 @@ export const SettingsModal: React.FC = () => {
                                 </span>
                             </button>
 
-                            <HStack className="justify-center gap-6">
+                            <HStack justify="center" gap={6}>
                                 <a
                                     href="https://golemio.cz"
                                     target="_blank"

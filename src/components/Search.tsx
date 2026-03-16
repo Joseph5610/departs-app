@@ -6,6 +6,7 @@ import { useStopSearch } from '../hooks/useStopSearch';
 import { useMap } from '../hooks/useMap';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
 import { useStops } from '../hooks/useStops';
+import type { StopFeature } from '../types/transit';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Overlay, Surface, Stack, HStack, Box } from '@/components/ui/layout';
@@ -83,8 +84,35 @@ export const Search: React.FC = React.memo(() => {
         setQuery('');
     };
 
+    const handleStopSelect = (stop: StopFeature) => {
+        const [lng, lat] = stop.geometry.coordinates;
+        mapRef.current?.flyTo({
+            center: [lng, lat],
+            zoom: MAP_STOP_SELECT_ZOOM,
+            duration: MAP_FLY_DURATION
+        });
+        const selectedStop = {
+            id: stop.properties.stop_id,
+            name: stop.properties.stop_name,
+            platformCode: stop.properties.platform_code,
+            isTrain: stop.properties.is_train === 1,
+            coordinates: stop.geometry.coordinates as [number, number]
+        };
+        selectStop(selectedStop);
+        addToHistory({
+            type: 'stop',
+            ...selectedStop,
+            coordinates: stop.geometry.coordinates as [number, number]
+        });
+        setQuery('');
+        setIsOpen(false);
+    };
+
     return (
-        <Overlay position="top-left" className="right-16 md:right-auto md:w-80 safe-top safe-left p-4">
+        <Overlay
+            position="top-left"
+            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-40"
+        >
             <Box ref={containerRef}>
                 <div className="relative group">
                     <Input
@@ -100,12 +128,18 @@ export const Search: React.FC = React.memo(() => {
                             }
                             setIsOpen(true);
                         }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && results.length > 0) {
+                                handleStopSelect(results[0]);
+                            }
+                        }}
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-10 pr-12 rounded-2xl glassy-surface transition-all focus:!ring-primary/20",
-                            activeFilter && "border-primary/50 ring-2 ring-primary/10 ring-offset-2 ring-offset-background"
+                            "h-11 pl-10 pr-12 rounded-2xl bg-white/20 dark:bg-white/10 border border-white/20 backdrop-blur-3xl transition-all",
+                            activeFilter && "border-primary/50"
                         )}
+                        data-testid="search-input"
                         readOnly={!!activeFilter}
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
@@ -117,24 +151,24 @@ export const Search: React.FC = React.memo(() => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={clearSearch}
-                                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
                                 aria-label={t('search.clearFilter')}
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </Button>
                         </div>
                     )}
                 </div>
 
                 {isOpen && (results.length > 0 || isLineLike || showHistory) && (
-                    <Surface className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto">
-                        <Stack className="gap-0">
+                    <Surface variant="glassy" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto">
+                        <Stack gap={0}>
                             {showHistory && (
                                 <>
                                     <Box className="px-4 py-2 bg-muted/50 border-b border-border">
                                         <HStack className="gap-2">
                                             <Clock size={10} className="text-muted-foreground" />
-                                            <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
+                                            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
                                                 {t('search.recent')}
                                             </span>
                                         </HStack>
@@ -145,6 +179,7 @@ export const Search: React.FC = React.memo(() => {
                                             icon={item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
                                             title={item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
                                             subtitle={item.type === 'stop' && item.platformCode ? t('search.platform', { code: item.platformCode }) : undefined}
+                                            testId={item.type === 'stop' ? `search-item-stop-${item.name}` : `search-item-line-${item.lines.join('-')}`}
                                             onClick={() => {
                                                 if (item.type === 'stop') {
                                                     mapRef.current?.flyTo({
@@ -176,7 +211,7 @@ export const Search: React.FC = React.memo(() => {
                                 <Box className="px-4 py-2 bg-muted/50 border-b border-border">
                                     <HStack className="gap-2">
                                         <Star size={10} fill="currentColor" className="text-muted-foreground" />
-                                        <span className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
+                                        <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
                                             {t('search.favorites')}
                                         </span>
                                     </HStack>
@@ -188,6 +223,7 @@ export const Search: React.FC = React.memo(() => {
                                     icon={<SearchIcon size={16} />}
                                     title={t('search.lineFilter', { line: linesFromQuery.join(', ') })}
                                     variant="primary"
+                                    testId={`search-item-line-${linesFromQuery.join('-')}`}
                                     onClick={() => {
                                         onLineSelect(linesFromQuery);
                                         addToHistory({ type: 'line', lines: linesFromQuery });
@@ -204,29 +240,8 @@ export const Search: React.FC = React.memo(() => {
                                     title={stop.properties.stop_name}
                                     subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
                                     highlight={favoriteStops.includes(stop.properties.stop_id)}
-                                    onClick={() => {
-                                        const [lng, lat] = stop.geometry.coordinates;
-                                        mapRef.current?.flyTo({
-                                            center: [lng, lat],
-                                            zoom: MAP_STOP_SELECT_ZOOM,
-                                            duration: MAP_FLY_DURATION
-                                        });
-                                        const selectedStop = {
-                                            id: stop.properties.stop_id,
-                                            name: stop.properties.stop_name,
-                                            platformCode: stop.properties.platform_code,
-                                            isTrain: stop.properties.is_train === 1,
-                                            coordinates: stop.geometry.coordinates as [number, number]
-                                        };
-                                        selectStop(selectedStop);
-                                        addToHistory({
-                                            type: 'stop',
-                                            ...selectedStop,
-                                            coordinates: stop.geometry.coordinates as [number, number]
-                                        });
-                                        setQuery('');
-                                        setIsOpen(false);
-                                    }}
+                                    testId={`search-item-stop-${stop.properties.stop_name}${stop.properties.platform_code ? '-' + stop.properties.platform_code : ''}`}
+                                    onClick={() => handleStopSelect(stop)}
                                 />
                             ))}
                         </Stack>
@@ -237,33 +252,40 @@ export const Search: React.FC = React.memo(() => {
     );
 });
 
-const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highlight = false }: {
+const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highlight = false, testId }: {
     icon: React.ReactNode,
     title: string,
     subtitle?: string,
     onClick: () => void,
     variant?: 'default' | 'primary',
-    highlight?: boolean
+    highlight?: boolean,
+    testId?: string
 }) => (
-    <button
-        onClick={onClick}
+    <Surface
+        asChild
+        variant="ghost"
         className={cn(
-            "w-full px-4 py-3 flex items-center gap-3 transition-colors text-left border-b border-border last:border-none outline-none focus-visible:bg-muted/50",
-            variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-white/5 active:bg-white/10"
+            "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left border-b border-border last:border-none outline-none focus-visible:bg-muted/50 rounded-none",
+            variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-accent/50 active:bg-accent"
         )}
     >
-        <div className={cn(
-            "p-2 rounded-lg",
-            variant === 'primary' ? "bg-primary/10 text-primary" :
-            highlight ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
-        )}>
-            {icon}
-        </div>
-        <Stack className="gap-0">
-            <span className="text-foreground font-medium">{title}</span>
-            {subtitle && <span className="text-muted-foreground text-xs">{subtitle}</span>}
-        </Stack>
-    </button>
+        <button 
+            onClick={onClick}
+            data-testid={testId}
+        >
+            <Box center padding="sm" className={cn(
+                "rounded-lg shrink-0",
+                variant === 'primary' ? "bg-primary/10 text-primary" :
+                highlight ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
+            )}>
+                {icon}
+            </Box>
+            <Stack gap={0} className="min-w-0">
+                <span className="text-foreground font-medium truncate">{title}</span>
+                {subtitle && <span className="text-muted-foreground text-xs truncate">{subtitle}</span>}
+            </Stack>
+        </button>
+    </Surface>
 );
 
 Search.displayName = 'Search';

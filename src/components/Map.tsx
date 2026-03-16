@@ -57,7 +57,7 @@ const MapInner: React.FC = () => {
 
     const panelTitle = useMemo(() => {
         if (state.selectedVehicle) {
-            return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name });
+            return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.route_short_name || '' });
         }
         return state.selectedStop ? state.selectedStop.name : '';
     }, [state.selectedVehicle, state.selectedStop, t]);

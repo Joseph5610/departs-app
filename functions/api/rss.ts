@@ -141,7 +141,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         if (linesMatch) {
             const lineMatches = linesMatch[1].match(/<line>([\s\S]*?)<\/line>/gi);
             if (lineMatches) {
-                lines = lineMatches.map(l => l.replace(/<\/?line>/gi, '').trim()).filter(Boolean);
+                lines = lineMatches.map((l: string) => l.replace(/<\/?line>/gi, '').trim()).filter(Boolean);
             }
         } else {
             const linesDescMatch = description.match(/Dotčené linky:\s*([A-Z0-9,\s]+)/i);
