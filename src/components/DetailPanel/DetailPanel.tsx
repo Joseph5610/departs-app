@@ -96,6 +96,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
                 dismissible={true}
+                handleOnly={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
