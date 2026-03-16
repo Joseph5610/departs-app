@@ -5,7 +5,6 @@ import {
     Drawer,
     DrawerContent,
     DrawerTitle,
-    DrawerHandle,
 } from '@/components/ui/drawer';
 import {
     Sheet,
@@ -93,36 +92,30 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.5, 1]}
+                snapPoints={[0.5, 0.8]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
                 dismissible={true}
-                handleOnly={true}
                 shouldScaleBackground={false}
             >
                 <DrawerContent
                     className="h-full data-[vaul-drawer-direction=bottom]:max-h-[96dvh]"
-                    showHandle={false}
                     variant="glassy"
                     hideOverlay={true}
                 >
                     <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
-                        {/*
-                          The actual DrawerHandle is just the visual pill at the top.
-                          We use a wrapper to make the grab area larger without overriding the pill's visual design.
-                        */}
-                        <div className="w-full shrink-0 cursor-grab active:cursor-grabbing flex justify-center py-2 h-10 items-center">
-                            <DrawerHandle className="mt-0 mb-0" />
-                        </div>
-
                         {/* Visual Header containing the station name */}
-                        <Box padding="none" className="px-6 pb-4 shrink-0 relative">
+                        <Box padding="none" className="px-6 pt-6 pb-4 shrink-0 relative">
                             {mobileTitleContent}
                         </Box>
 
-                        <ScrollArea className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)]">
+                        {/* 
+                          Native scrolling for PWA compatibility. 
+                          ScrollArea can conflict with vaul's touch detection.
+                        */}
+                        <div className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)] overflow-y-auto no-scrollbar">
                             {children}
-                        </ScrollArea>
+                        </div>
                     </div>
                 </DrawerContent>
             </Drawer>
