@@ -1,9 +1,0 @@
-
-> departs-app@0.17.0 build
-> tsc -b && vite build
-
-src/components/Map.tsx(60,84): error TS2551: Property 'gtfs_route_short_name' does not exist on type 'TrackedVehicle'. Did you mean 'route_short_name'?
-src/hooks/useMapFilters.ts(35,64): error TS2551: Property 'gtfs_route_short_name' does not exist on type 'TrackedVehicle'. Did you mean 'route_short_name'?
-src/hooks/useMapVehicleSync.ts(99,21): error TS2353: Object literal may only specify known properties, and 'vehicle_registration_number' does not exist in type 'Partial<TrackedVehicle>'.
-src/hooks/useMapVehicleSync.ts(99,124): error TS2339: Property 'vehicle_registration_number' does not exist on type 'Partial<TrackedVehicle>'.
-src/hooks/useRouteShape.ts(18,50): error TS2551: Property 'gtfs_route_short_name' does not exist on type 'TrackedVehicle'. Did you mean 'route_short_name'?
