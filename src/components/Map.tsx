@@ -12,7 +12,6 @@ import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
-const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
 import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
@@ -176,7 +175,6 @@ const MapInner: React.FC = () => {
             <React.Suspense fallback={null}>
                 <WelcomeModal />
                 <SettingsModal />
-                <UpdatePopup />
             </React.Suspense>
 
             <DetailPanel

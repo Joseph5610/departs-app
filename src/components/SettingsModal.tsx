@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -49,30 +49,8 @@ export const SettingsModal: React.FC = () => {
     }, [setIsSettingsOpen]);
     const { showToast } = useToast();
     const [isChecking, setIsChecking] = useState(false);
-    const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const { needRefresh } = usePWA();
-
-    // Handle update detection during manual check
-    useEffect(() => {
-        if (isChecking && needRefresh) {
-            showToast(t('settings.updates.available'), 'success');
-            setIsChecking(false);
-            if (checkTimerRef.current) {
-                clearTimeout(checkTimerRef.current);
-                checkTimerRef.current = null;
-            }
-        }
-    }, [needRefresh, isChecking, showToast, t]);
-
-    // Cleanup timer on unmount
-    useEffect(() => {
-        return () => {
-            if (checkTimerRef.current) {
-                clearTimeout(checkTimerRef.current);
-            }
-        };
-    }, []);
 
     const toggleRouteType = (type: string) => {
         if (routeTypeFilter.includes(type)) {
@@ -103,24 +81,23 @@ export const SettingsModal: React.FC = () => {
                 const registration = await navigator.serviceWorker.getRegistration();
                 if (registration) {
                     await registration.update();
-
-                    // Fallback timer if no update is found or already up to date
-                    checkTimerRef.current = setTimeout(() => {
+                    
+                    // Small delay to allow SW to potentially find an update
+                    setTimeout(() => {
                         setIsChecking(false);
-                        checkTimerRef.current = null;
                         if (!needRefresh) {
                             showToast(t('settings.updates.upToDate'), 'success');
                         }
-                    }, 2000);
+                    }, 1500);
                     return;
                 }
             }
-            throw new Error('SW not found');
         } catch (error) {
             console.error('Update check failed', error);
-            setIsChecking(false);
-            showToast(t('settings.updates.upToDate'), 'success');
         }
+        
+        setIsChecking(false);
+        showToast(t('settings.updates.upToDate'), 'success');
     };
 
     return (
