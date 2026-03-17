@@ -70,7 +70,7 @@ const MapInner: React.FC = () => {
                 onMove={mapEvents.onMove}
                 onMoveEnd={mapEvents.onMoveEnd}
                 onLoad={mapEvents.onLoad}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
                 mapStyle={MAP_STYLE}
                 mapLib={maplibregl as unknown as typeof maplibregl}
                 onDragStart={mapEvents.onDragStart}

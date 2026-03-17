@@ -5,6 +5,8 @@ import {
     Drawer,
     DrawerContent,
     DrawerTitle,
+    DrawerHeader,
+    DrawerDescription,
 } from '@/components/ui/drawer';
 import {
     Sheet,
@@ -59,18 +61,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         </Badge>
     );
 
-    const mobileTitleContent = (
-        <HStack className="gap-2 min-w-0 flex-1">
-            {backButton}
-            <HStack className="gap-2 min-w-0 flex-1">
-                <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
-                    {title || ''}
-                </DrawerTitle>
-                {platformBadge}
-            </HStack>
-        </HStack>
-    );
-
     const desktopTitleContent = (
         <HStack className="gap-2 min-w-0 flex-1">
             {backButton}
@@ -92,31 +82,25 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.5, 0.8]}
+                snapPoints={[0.5, 0.9]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
-                dismissible={true}
-                handleOnly={true}
                 shouldScaleBackground={false}
+                modal={false}
+                dismissible={true}
             >
-                <DrawerContent
-                    className="h-full data-[vaul-drawer-direction=bottom]:max-h-[96dvh]"
-                    variant="glassy"
+                <DrawerContent 
+                    className="h-screen flex flex-col pointer-events-none bg-white/20 dark:bg-white/10 backdrop-blur-3xl border-white/20!"
                     hideOverlay={true}
                 >
-                    <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
-                        {/* Visual Header containing the station name */}
-                        <Box padding="none" className="px-6 pt-6 pb-4 shrink-0 relative">
-                            {mobileTitleContent}
-                        </Box>
-
-                        {/* 
-                          Native scrolling for PWA compatibility. 
-                          ScrollArea can conflict with vaul's touch detection.
-                        */}
-                        <div className="flex-1 min-h-0 px-6 pb-[env(safe-area-inset-bottom,1.5rem)] overflow-y-auto no-scrollbar">
-                            {children}
-                        </div>
+                    <DrawerHeader className="shrink-0 pointer-events-auto">
+                        <DrawerTitle>{title || ''}</DrawerTitle>
+                        <DrawerDescription>
+                            {platformCode && `Platform ${platformCode}`}
+                        </DrawerDescription>
+                    </DrawerHeader>
+                    <div className="no-scrollbar overflow-y-auto px-6 pb-[60vh] flex-1 pointer-events-auto">
+                        {children}
                     </div>
                 </DrawerContent>
             </Drawer>
