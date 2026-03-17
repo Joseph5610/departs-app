@@ -109,11 +109,18 @@
     margin: 0;
     padding: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
     @apply bg-background text-foreground font-sans selection:bg-primary/20;
+  }
+
+  /* Keep 100vh for PWA to ensure it fills the physical screen behind the home indicator */
+  @media (display-mode: standalone) {
+    html, body {
+      height: 100vh;
+    }
   }
 
   /* Force map interaction even when a drawer blocks the body */
@@ -134,8 +141,14 @@
 
   #root {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
+  }
+
+  @media (display-mode: standalone) {
+    #root {
+      height: 100vh;
+    }
   }
 }
 
