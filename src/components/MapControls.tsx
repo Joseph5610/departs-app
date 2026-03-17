@@ -90,23 +90,23 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Surface variant="glassy" padding="none" className="flex flex-col mt-2 overflow-hidden rounded-2xl">
+                <Surface variant="tinted" padding="none" className="flex flex-col mt-2 overflow-hidden rounded-2xl border-white/20!">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-white/20 active:bg-white/30 transition-colors text-white focus-visible:z-10"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
-                    <Box className="mx-2 h-[1px] bg-white/20" />
+                    <Box className="mx-2 h-[1px] bg-white/10" />
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-white/20 active:bg-white/30 transition-colors text-white focus-visible:z-10"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
@@ -129,12 +129,12 @@ export const MapControls = React.memo(() => {
 
 const ControlButton = ({ children, onClick, title, testId }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string }) => (
     <Button
-        variant="glassy"
+        variant="tinted"
         size="icon"
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11"
+        className="h-11 w-11 border-white/20!"
         data-testid={testId}
     >
         {children}

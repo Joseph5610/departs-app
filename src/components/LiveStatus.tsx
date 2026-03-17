@@ -44,9 +44,9 @@ export const LiveStatus: React.FC = () => {
                     exit={{ opacity: 0, y: -20 }}
                 >
                     <Surface
-                        variant="glassy"
+                        variant="tinted"
                         padding="none"
-                        className="px-3 py-1.5 rounded-full border-border/50 shadow-2xl"
+                        className="px-3 py-1.5 rounded-full border-white/10! shadow-2xl"
                     >
                         <HStack gap={2}>
                             <Box className={cn(

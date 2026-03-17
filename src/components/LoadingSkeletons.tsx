@@ -10,7 +10,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
     return (
         <Stack gap={4} className="animate-in fade-in duration-500">
             {/* Header Hero Skeleton */}
-            <Surface variant="subtle" padding="md" className="relative overflow-hidden md:p-6">
+            <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
                 <HStack align="center" gap={4} className="flex-col text-center">
                     {/* Route Icon Skeleton */}
                     <Skeleton className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl" />
@@ -30,7 +30,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
 
             {/* Metadata Grid Skeleton */}
             <HStack align="stretch" gap={2}>
-                <Surface variant="subtle" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 h-[52px]">
+                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 h-[52px] border-white/10!">
                     <HStack gap={2} className="min-w-0">
                         <Skeleton className="w-3.5 h-3.5 rounded-full shrink-0" />
                         <Stack gap={2} className="min-w-0">
@@ -46,7 +46,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
                         <Skeleton className="w-4 h-4 rounded-full" />
                     </HStack>
                 </Surface>
-                <Surface variant="subtle" padding="sm" className="flex-initial min-w-[70px] flex flex-row items-center px-3 h-[52px]">
+                <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] flex flex-row items-center px-3 h-[52px] border-white/10!">
                     <Skeleton className="w-3.5 h-3.5 rounded-full shrink-0 mr-2" />
                     <Stack gap={2}>
                         <Skeleton className="h-2 w-8" />
@@ -97,7 +97,7 @@ export const DepartureListSkeleton: React.FC = () => {
                     {/* Departure Items Skeletons */}
                     <Stack gap={2}>
                         {[1, 2].map((item) => (
-                            <Surface key={item} variant="subtle" padding="sm" className="flex flex-row items-center justify-between h-[60px]">
+                            <Surface key={item} variant="tinted" padding="sm" className="flex flex-row items-center justify-between h-[60px] border-white/10!">
                                 <HStack gap={3}>
                                     <Skeleton className="w-8 h-8 rounded-full" />
                                     <Stack gap={2}>

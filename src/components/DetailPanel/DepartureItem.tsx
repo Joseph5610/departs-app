@@ -43,11 +43,11 @@ export const DepartureItem = ({
     return (
         <Surface
             asChild
-            variant="subtle"
+            variant="tinted"
             padding="md"
             className={cn(
-                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-border/50",
-                dep.tripId ? "hover:bg-muted/50 hover:border-border cursor-pointer active:scale-[0.98]" : "cursor-default"
+                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/5!",
+                dep.tripId ? "hover:bg-white/5 hover:border-white/10 cursor-pointer active:scale-[0.98]" : "cursor-default"
             )}
         >
             <button

@@ -136,8 +136,8 @@ export const Search: React.FC = React.memo(() => {
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-10 pr-12 rounded-2xl bg-white/20 dark:bg-white/10 border border-white/20 backdrop-blur-3xl transition-all",
-                            activeFilter && "border-primary/50"
+                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted transition-all placeholder:text-[11px]",
+                            activeFilter && "ring-1 ring-primary/50"
                         )}
                         data-testid="search-input"
                         readOnly={!!activeFilter}
@@ -161,11 +161,11 @@ export const Search: React.FC = React.memo(() => {
                 </div>
 
                 {isOpen && (results.length > 0 || isLineLike || showHistory) && (
-                    <Surface variant="glassy" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto">
+                    <Surface variant="tinted" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto border-white/10!">
                         <Stack gap={0}>
                             {showHistory && (
                                 <>
-                                    <Box className="px-4 py-2 bg-muted/50 border-b border-border">
+                                    <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
                                         <HStack className="gap-2">
                                             <Clock size={10} className="text-muted-foreground" />
                                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
@@ -208,7 +208,7 @@ export const Search: React.FC = React.memo(() => {
                             )}
 
                             {query === '' && results.length > 0 && (
-                                <Box className="px-4 py-2 bg-muted/50 border-b border-border">
+                                <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
                                     <HStack className="gap-2">
                                         <Star size={10} fill="currentColor" className="text-muted-foreground" />
                                         <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">

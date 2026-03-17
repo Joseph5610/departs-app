@@ -90,7 +90,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 dismissible={true}
             >
                 <DrawerContent 
-                    className="h-screen flex flex-col pointer-events-none bg-white/20 dark:bg-white/10 backdrop-blur-3xl border-white/20!"
+                    className="max-h-[96%] min-h-[50dvh] flex flex-col pointer-events-auto glassy-tinted border-white/20! outline-none"
                     hideOverlay={true}
                 >
                     <DrawerHeader className="shrink-0 pointer-events-auto">
@@ -99,8 +99,13 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             {platformCode && `Platform ${platformCode}`}
                         </DrawerDescription>
                     </DrawerHeader>
-                    <div vaul-no-drag className="no-scrollbar overflow-y-auto px-6 pb-[60vh] flex-1 pointer-events-auto">
-                        {children}
+                    <div 
+                        vaul-no-drag 
+                        className="flex-1 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
+                    >
+                        <div className="pb-[50dvh]">
+                            {children}
+                        </div>
                     </div>
                 </DrawerContent>
             </Drawer>
@@ -121,7 +126,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                variant="glassy"
+                variant="tinted"
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
                 data-testid="detail-panel"
             >

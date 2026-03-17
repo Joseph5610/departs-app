@@ -58,7 +58,7 @@ export const Alerts: React.FC = () => {
     return (
         <>
             <Button
-                variant="glassy"
+                variant="tinted"
                 size="icon"
                 onClick={() => setIsOpen(true)}
                 title={t('alerts.title')}
@@ -74,7 +74,7 @@ export const Alerts: React.FC = () => {
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+                <DialogContent variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
                     <DialogHeader className="px-6 pt-6 mb-3 shrink-0">
                         <DialogTitle>
                             {t('alerts.title')}

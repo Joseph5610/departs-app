@@ -124,7 +124,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                     )}
 
                     {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <Surface variant="subtle" padding="sm" className="flex flex-row items-center gap-2">
+                        <Surface variant="tinted" padding="sm" className="flex flex-row items-center gap-2 border-white/10!">
                             <MapPin size={14} className="text-muted-foreground/60" />
                             <span className="font-medium text-foreground text-xs">
                                 {stopDistanceInfo.isAtStop
@@ -250,7 +250,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 );
             })}
             {showMetroNightMessage ? (
-                <Surface variant="subtle" padding="xl" className="items-center text-center flex flex-col gap-4">
+                <Surface variant="tinted" padding="xl" className="items-center text-center flex flex-col gap-4 border-white/10!">
                     <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
                         <MoonStar size={32} className="text-indigo-400" />
                     </Box>

@@ -119,7 +119,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {/* Warning: Before Track / Previous Trip */}
             {((['before_track', 'before_track_delayed'] as string[]).includes(String(selectedVehicle.state_position || '')) || (['before_track', 'before_track_delayed'] as string[]).includes(String(vehicleDetail?.state_position || ''))) && (
-                <Surface variant="subtle" padding="md" className="bg-amber-500/10 border-amber-500/20 flex flex-row items-start gap-4">
+                <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
                     <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                         <Info size={20} />
                     </Box>
@@ -133,7 +133,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             )}
 
             {/* Header Hero Section */}
-            <Surface variant="subtle" padding="md" className="relative overflow-hidden md:p-6">
+            <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
                 <Box
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
@@ -189,7 +189,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {/* Metadata Grid */}
             <HStack align="stretch" gap={2}>
-                <Surface variant="subtle" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3">
+                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 border-white/10!">
                     <HStack gap={2} className="min-w-0 flex-1 pr-2">
                         <Info size={14} className="text-muted-foreground shrink-0" />
                         <Stack gap={0} className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     </HStack>
                 </Surface>
                 {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                    <Surface variant="subtle" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3">
+                    <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3 border-white/10!">
                         <Navigation size={14} className="text-muted-foreground shrink-0" />
                         <Stack gap={0} className="min-w-0">
                             <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>

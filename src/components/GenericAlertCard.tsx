@@ -53,11 +53,11 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
         <Alert 
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden border p-3 sm:p-4 rounded-xl sm:rounded-2xl backdrop-blur-md",
-                isHigh ? "!bg-destructive/10 !border-destructive/20" : isNormal ? "!bg-amber-500/10 !border-amber-500/20" : "!bg-muted/30 !border-border/40",
-                link && "hover:bg-accent/40 cursor-pointer group",
-                isFuture && "opacity-60 grayscale-[0.3]",
-                "shadow-lg shadow-black/5"
+                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-xl sm:rounded-2xl border-white/5!",
+                isHigh && "!bg-destructive/15 !border-destructive/30",
+                isNormal && "!bg-amber-500/10 !border-amber-500/20",
+                link && "hover:brightness-125 cursor-pointer group",
+                isFuture && "opacity-60 grayscale-[0.3]"
             )}
         >
             <AlertTriangle className={cn(

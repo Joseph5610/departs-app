@@ -33,13 +33,13 @@ export const UpdatePopup: React.FC = () => {
     return (
         <AnimatePresence>
             {(offlineReady || needRefresh) && (
-                <Box className="fixed bottom-24 left-4 right-4 z-[100] md:left-auto md:right-4 md:w-80">
+                <Box className="fixed bottom-24 left-4 right-4 z-[1000] md:left-auto md:right-4 md:w-80">
                     <motion.div
                         initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 50, opacity: 0 }}
                     >
-                        <Surface variant="glassy" padding="md" className="flex flex-row items-center justify-between gap-4 border-border/50">
+                        <Surface variant="tinted" padding="md" className="flex flex-row items-center justify-between gap-4 border-white/10!">
                             <HStack align="start" gap={3}>
                                 <Box className="mt-0.5 p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
                                     <RefreshCw size={18} className={needRefresh ? 'animate-spin' : ''} />

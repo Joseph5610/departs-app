@@ -127,7 +127,7 @@ export const SettingsModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent data-testid="settings-modal-content">
+            <DialogContent variant="tinted" data-testid="settings-modal-content">
                 <DialogHeader>
                     <DialogTitle>
                         {t('settings.title')}
@@ -140,7 +140,7 @@ export const SettingsModal: React.FC = () => {
                             {t('settings.sections.display')}
                         </Box>
 
-                        <Surface variant="subtle" className="overflow-hidden">
+                        <Surface variant="tinted" className="overflow-hidden border-white/5!">
                             <button
                                 onClick={() => setShowVehicles(!showVehicles)}
                                 className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -228,7 +228,7 @@ export const SettingsModal: React.FC = () => {
                             </AnimatePresence>
                         </Surface>
 
-                        <Surface variant="subtle" className="overflow-hidden mt-3">
+                        <Surface variant="tinted" className="overflow-hidden mt-3 border-white/5!">
                             <button
                                 onClick={() => setShowStops(!showStops)}
                                 className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -270,10 +270,10 @@ export const SettingsModal: React.FC = () => {
                                     key={lang}
                                     onClick={() => i18n.changeLanguage(lang)}
                                     className={cn(
-                                        "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold outline-none",
+                                        "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold outline-none glassy-tinted",
                                         (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
-                                            : "bg-muted/30 border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                                            ? "ring-1 ring-primary/40 text-primary border-primary/20"
+                                            : "border-white/5 text-muted-foreground hover:bg-white/5 hover:text-foreground"
                                     )}
                                 >
                                     {t(`settings.language.${lang}`)}

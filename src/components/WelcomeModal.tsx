@@ -35,7 +35,7 @@ export const WelcomeModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent showCloseButton={false}>
+            <DialogContent variant="tinted" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle className="text-center flex items-center justify-center gap-2">
                         {t('welcome.title')}
@@ -57,7 +57,7 @@ export const WelcomeModal: React.FC = () => {
                     </Stack>
 
                     <Stack gap={4}>
-                        <Surface variant="subtle" padding="md" className="flex flex-row items-start gap-4">
+                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4 border-white/5!">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
@@ -65,7 +65,7 @@ export const WelcomeModal: React.FC = () => {
                             </Stack>
                         </Surface>
 
-                        <Surface variant="subtle" padding="md" className="flex flex-row items-start gap-4">
+                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4 border-white/5!">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
