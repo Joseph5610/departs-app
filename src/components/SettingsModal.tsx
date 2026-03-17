@@ -25,7 +25,7 @@ import {
     Clock
 } from 'lucide-react';
 import { version } from '../../package.json';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import { usePWA } from '../contexts/PWAContext';
 import { useToast } from '../hooks/useToast';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,9 +51,7 @@ export const SettingsModal: React.FC = () => {
     const [isChecking, setIsChecking] = useState(false);
     const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const {
-        needRefresh: [needRefresh],
-    } = useRegisterSW();
+    const { needRefresh } = usePWA();
 
     // Handle update detection during manual check
     useEffect(() => {

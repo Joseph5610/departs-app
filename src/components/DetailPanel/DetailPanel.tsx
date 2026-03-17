@@ -5,15 +5,14 @@ import {
     Drawer,
     DrawerContent,
     DrawerTitle,
-    DrawerHeader,
-    DrawerDescription,
+    DrawerHandle,
 } from '@/components/ui/drawer';
 import {
     Sheet,
     SheetContent,
     SheetTitle,
+    type DialogRootChangeEventDetails
 } from '@/components/ui/sheet';
-import type { DialogRootChangeEventDetails } from '@base-ui/react';
 import { Button } from '@/components/ui/button';
 import { Box, HStack } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +35,7 @@ interface DetailPanelProps {
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
-    const [snap, setSnap] = useState<string | number | null>(0.5);
+    const [snap, setSnap] = useState<string | number | null>(0.6);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -61,15 +60,31 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         </Badge>
     );
 
-    const desktopTitleContent = (
-        <HStack className="gap-2 min-w-0 flex-1">
-            {backButton}
+    const headerContent = (
+        <HStack justify="between" className="w-full">
             <HStack className="gap-2 min-w-0 flex-1">
-                <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight">
-                    {title || ''}
-                </SheetTitle>
-                {platformBadge}
+                {backButton}
+                <HStack className="gap-2 min-w-0 flex-1">
+                    {isMobile ? (
+                        <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                            {title || ''}
+                        </DrawerTitle>
+                    ) : (
+                        <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                            {title || ''}
+                        </SheetTitle>
+                    )}
+                    {platformBadge}
+                </HStack>
             </HStack>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+            >
+                <X size={20} />
+            </Button>
         </HStack>
     );
 
@@ -82,25 +97,36 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.5, 0.9]}
+                snapPoints={[0.6, 0.9]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
                 shouldScaleBackground={false}
                 modal={false}
                 dismissible={true}
+                handleOnly={true}
             >
                 <DrawerContent 
-                    className="max-h-[96%] min-h-[50dvh] flex flex-col pointer-events-auto glassy-tinted border-white/20! outline-none"
+                    className="max-h-[96%] min-h-[50dvh] flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
                     hideOverlay={true}
                 >
-                    <DrawerHeader className="shrink-0 pointer-events-auto">
-                        <DrawerTitle>{title || ''}</DrawerTitle>
-                        <DrawerDescription>
-                            {platformCode && `Platform ${platformCode}`}
-                        </DrawerDescription>
-                    </DrawerHeader>
+                    {/* Visual & Small Drag Handle */}
+                    <DrawerHandle />
+
+                    {/* Draggable Header Area */}
+                    <div className="relative mt-2 px-6 pb-4 shrink-0 pointer-events-auto">
+                        {/* 
+                            Invisible Handle Overlay: 
+                            Allows dragging the entire header area without affecting its UI/layout.
+                        */}
+                        <DrawerHandle className="absolute inset-0 z-10 w-full h-full bg-transparent mt-0 rounded-none h-auto!" />
+                        
+                        {/* Actual Header UI - Untouched */}
+                        <div className="relative z-0">
+                            {headerContent}
+                        </div>
+                    </div>
+
                     <div 
-                        vaul-no-drag 
                         className="flex-1 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
                     >
                         <div className="pb-[50dvh]">
@@ -131,19 +157,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 data-testid="detail-panel"
             >
                 <Box padding="none" className="px-6 pt-6 pb-2 shrink-0">
-                    <HStack justify="between" className="w-full">
-                        <Box padding="none" className="min-w-0 flex-1 pr-4">
-                            {desktopTitleContent}
-                        </Box>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onClose}
-                            className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
-                        >
-                            <X size={20} />
-                        </Button>
-                    </HStack>
+                    {headerContent}
                 </Box>
                 <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
                     {children}

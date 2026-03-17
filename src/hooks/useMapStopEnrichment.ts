@@ -23,7 +23,6 @@ export const useMapStopEnrichment = (
 
         const feature = stopsData.features.find(f => f.properties.stop_id === selectedStop.id);
         if (feature) {
-            console.log('✨ Enriching selected stop with coordinates:', feature.geometry.coordinates);
             setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
                 ...prev,
                 coordinates: feature.geometry.coordinates as [number, number],
@@ -34,7 +33,6 @@ export const useMapStopEnrichment = (
             // Check centroids if not found in unclustered stops
             const centroid = stopsData.features.find(f => f.properties.stop_id === selectedStop.id || f.properties.all_ids?.includes(selectedStop.id));
              if (centroid) {
-                console.log('✨ Enriching selected stop from centroid:', centroid.geometry.coordinates);
                 setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
                     ...prev,
                     coordinates: centroid.geometry.coordinates as [number, number],

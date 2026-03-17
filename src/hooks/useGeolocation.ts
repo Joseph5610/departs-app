@@ -50,7 +50,6 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
             const p = new URLSearchParams(window.location.search);
             const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
             if (!hasExplicitLocation) {
-                console.log('🚀 Initial geolocation lock: Snapping map to user');
                 flyToLocation(coords, true);
             }
             isInitialSet.current = true;
@@ -60,14 +59,12 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     const startWatcher = useCallback(() => {
         if (!navigator.geolocation || watchId.current !== null) return;
 
-        console.log('🛰️ Starting geolocation watcher...');
         watchId.current = navigator.geolocation.watchPosition(
             (pos) => {
                 updateLocation(pos);
                 setIsGeoPending(false);
             },
             (err) => {
-                console.error(`❌ Geolocation error (${err.code}): ${err.message}`);
                 setIsGeoPending(false);
 
                 // Only clear watch on permission denied. For other errors, keep it or let browser handle it.
@@ -102,10 +99,8 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
         const isStale = now - lastUpdatedAt.current > 20000; // 20 seconds threshold
 
         if (userLocation && !isStale) {
-            console.log('🎯 Manual locate: Flying to current known location');
             flyToLocation(userLocation);
         } else {
-            console.log('⏳ Manual locate: Requesting fresh position...');
             setIsGeoPending(true);
 
             // "Searching for location" toast removed per user request
@@ -117,8 +112,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
                     setIsGeoPending(false);
                     flyToLocation(coords);
                 },
-                (err) => {
-                    console.error('❌ Manual location fix failed:', err);
+                () => {
                     setIsGeoPending(false);
                     showToast(t('toasts.geoError'), 'error');
                 },

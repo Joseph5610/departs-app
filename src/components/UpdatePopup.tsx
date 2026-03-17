@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import { usePWA } from '../contexts/PWAContext';
 import { RefreshCw, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -15,17 +15,12 @@ import { Box, Stack, HStack } from '@/components/ui/layout';
 export const UpdatePopup: React.FC = () => {
     const { t } = useTranslation();
     const {
-        offlineReady: [offlineReady, setOfflineReady],
-        needRefresh: [needRefresh, setNeedRefresh],
+        offlineReady,
+        setOfflineReady,
+        needRefresh,
+        setNeedRefresh,
         updateServiceWorker,
-    } = useRegisterSW({
-        onRegistered(r) {
-            console.log('SW Registered: ', r);
-        },
-        onRegisterError(error) {
-            console.error('SW registration error', error);
-        },
-    });
+    } = usePWA();
 
     const close = () => {
         setOfflineReady(false);
