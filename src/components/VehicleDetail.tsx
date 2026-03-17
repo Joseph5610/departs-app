@@ -272,9 +272,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isCurrent = stopSeq === effectiveSequence;
                             const isNext = stopSeq === nextStopSequence;
 
-                            // Only show zone if it changed from the previous stop in the FILTERED list
-                            const prevStop = idx > 0 ? filteredStops[idx - 1] : null;
-                            const showZone = stop.properties.zone_id && (!prevStop || prevStop.properties.zone_id !== stop.properties.zone_id);
+                            const showZone = !!stop.properties.zone_id;
 
                             return (
                                 <HStack key={idx} justify="between" className={cn(
