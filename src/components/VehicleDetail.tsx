@@ -272,6 +272,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isCurrent = stopSeq === effectiveSequence;
                             const isNext = stopSeq === nextStopSequence;
 
+                            // Only show zone if it changed from the previous stop in the FILTERED list
+                            const prevStop = idx > 0 ? filteredStops[idx - 1] : null;
+                            const showZone = stop.properties.zone_id && (!prevStop || prevStop.properties.zone_id !== stop.properties.zone_id);
+
                             return (
                                 <HStack key={idx} justify="between" className={cn(
                                     "relative py-2.5 transition-opacity",
@@ -281,19 +285,21 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                         "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
                                         isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
                                     )} />
-                                    <Stack align="start" gap={0} className="min-w-0 pr-4">
-                                        <span className={cn(
-                                            "text-sm truncate",
-                                            isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
-                                        )}>
-                                            {stop.properties.stop_name}
-                                        </span>
-                                        <HStack gap={2} align="center" className="flex-wrap">
-                                            {stop.properties.zone_id && (
-                                                <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
-                                                    {t('map.vehicleDetails.zone')} {stop.properties.zone_id}
+                                    <Stack align="start" gap={0} className="min-w-0 pr-4 flex-1">
+                                        <HStack gap={2} align="center" className="w-full">
+                                            <span className={cn(
+                                                "text-sm truncate flex-1",
+                                                isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                                            )}>
+                                                {stop.properties.stop_name}
+                                            </span>
+                                            {showZone && (
+                                                <span className="shrink-0 text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
+                                                    {stop.properties.zone_id}
                                                 </span>
                                             )}
+                                        </HStack>
+                                        <HStack gap={2} align="center" className="flex-wrap">
                                             {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
                                             {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
                                         </HStack>
