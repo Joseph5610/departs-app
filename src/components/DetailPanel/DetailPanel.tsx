@@ -97,7 +97,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.6, 0.9]}
+                snapPoints={[0.6, 0.8]}
                 activeSnapPoint={snap}
                 setActiveSnapPoint={setSnap}
                 shouldScaleBackground={false}

@@ -111,7 +111,7 @@ export const Search: React.FC = React.memo(() => {
     return (
         <Overlay
             position="top-left"
-            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-40"
+            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-[600]"
         >
             <Box ref={containerRef}>
                 <div className="relative group">

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { format, parseISO, type Locale } from 'date-fns';
 import { Countdown } from '../Countdown';
 import { DelayDelta } from './DelayDelta';
@@ -40,6 +41,27 @@ export const DepartureItem = ({
         ? getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop)
         : null;
 
+    const clickStartPos = useRef<{ x: number; y: number } | null>(null);
+
+    const handlePointerDown = (e: React.PointerEvent) => {
+        clickStartPos.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (!clickStartPos.current) return;
+        
+        const dx = Math.abs(e.clientX - clickStartPos.current.x);
+        const dy = Math.abs(e.clientY - clickStartPos.current.y);
+        const threshold = 5; // 5px threshold
+
+        if (dx < threshold && dy < threshold) {
+            if (dep.tripId) {
+                onDepartureClick(dep.tripId, dep.vehicleId, dep);
+            }
+        }
+        clickStartPos.current = null;
+    };
+
     return (
         <Surface
             asChild
@@ -51,7 +73,8 @@ export const DepartureItem = ({
             )}
         >
             <button
-                onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
+                onPointerDown={handlePointerDown}
+                onClick={handleClick}
                 className="flex items-center justify-between"
             >
             <HStack gap={4}>
