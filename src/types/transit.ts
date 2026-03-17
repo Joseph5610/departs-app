@@ -145,6 +145,7 @@ export interface VehicleDetail {
                 realtime_arrival_time?: string;
                 departure_time?: string;
                 realtime_departure_time?: string;
+                zone_id?: string;
             };
         }>;
     };

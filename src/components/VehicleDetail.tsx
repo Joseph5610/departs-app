@@ -272,6 +272,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             const isCurrent = stopSeq === effectiveSequence;
                             const isNext = stopSeq === nextStopSequence;
 
+                            const showZone = !!stop.properties.zone_id;
+
                             return (
                                 <HStack key={idx} justify="between" className={cn(
                                     "relative py-2.5 transition-opacity",
@@ -281,17 +283,26 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                         "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
                                         isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
                                     )} />
-                                    <Stack align="start" gap={0} className="min-w-0 pr-4">
+                                    <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
                                         <span className={cn(
-                                            "text-sm truncate",
+                                            "text-sm truncate w-full",
                                             isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                                         )}>
                                             {stop.properties.stop_name}
                                         </span>
-                                        {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
-                                        {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
+                                        <HStack gap={2} align="center" className="flex-wrap">
+                                            {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
+                                            {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
+                                        </HStack>
                                     </Stack>
-                                    <Stack align="end" gap={0} className="shrink-0">
+                                    <Box className="shrink-0 w-8 flex justify-center">
+                                        {showZone && (
+                                            <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
+                                                {stop.properties.zone_id}
+                                            </span>
+                                        )}
+                                    </Box>
+                                    <Stack align="end" gap={0} className="shrink-0 min-w-[64px]">
                                         {(() => {
                                             const { realtime_arrival_time, arrival_time } = stop.properties;
                                             const realtimeTime = realtime_arrival_time || arrival_time;
