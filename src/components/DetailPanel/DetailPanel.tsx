@@ -13,7 +13,7 @@ import {
     type DialogRootChangeEventDetails
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Box, HStack } from '@/components/ui/layout';
+import { HStack } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -87,20 +87,38 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         </HStack>
     );
 
+    const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
+    const [isActuallyOpen, setIsActuallyOpen] = useState(false);
+
+    // Reset snap point when selection changes (title changes) without unmounting the drawer
+    useEffect(() => {
+        if (isOpen) {
+            setActiveSnapPoint(0.60);
+            setIsActuallyOpen(false); // Force a brief close
+            const timer = setTimeout(() => setIsActuallyOpen(true), 10);
+            return () => clearTimeout(timer);
+        } else {
+            setIsActuallyOpen(false);
+        }
+    }, [isOpen, title]);
+
     if (isMobile) {
         return (
             <Drawer
-                key={`${isOpen}-${title}`}
-                open={isOpen}
+                open={isActuallyOpen}
                 onOpenChange={(open) => {
                     if (!open) {
                         onClose();
                     }
                 }}
                 snapPoints={[0.60, 0.80]}
+                activeSnapPoint={activeSnapPoint}
+                setActiveSnapPoint={setActiveSnapPoint}
                 modal={false}
                 dismissible={true}
                 shouldScaleBackground={false}
+                disablePreventScroll={true}
+                noBodyStyles={true}
             >
                 <DrawerContent
                     className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
@@ -163,10 +181,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
                 data-testid="detail-panel"
             >
-                <Box padding="none" className="px-6 pt-6 pb-2 shrink-0">
-                    {headerContent}
-                    {subHeader && <div className="mt-4">{subHeader}</div>}
-                </Box>
+                <div className="shrink-0 flex flex-col">
+                    <div className="px-6 pt-6 pb-2">
+                        {headerContent}
+                    </div>
+                    {subHeader && (
+                        <div className="w-full">
+                            {subHeader}
+                        </div>
+                    )}
+                </div>
                 <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
                     {children}
                 </ScrollArea>

@@ -216,7 +216,7 @@ export const Overlay = ({
 
     return (
         <div 
-            className={cn('fixed z-10 pointer-events-none', positions[position], className)}
+            className={cn('fixed z-40 pointer-events-none', positions[position], className)}
             {...props}
         >
             <div className="pointer-events-auto">{children}</div>

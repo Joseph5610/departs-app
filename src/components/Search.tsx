@@ -111,7 +111,8 @@ export const Search: React.FC = React.memo(() => {
     return (
         <Overlay
             position="top-left"
-            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-[1000]"
+            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-[2000]"
+            data-vaul-no-drag
         >
             <Box ref={containerRef}>
                 <div className="relative group">
@@ -142,7 +143,7 @@ export const Search: React.FC = React.memo(() => {
                         data-testid="search-input"
                         readOnly={!!activeFilter}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                         <SearchIcon size={20} className={cn(activeFilter && "text-primary")} />
                     </div>
                     {(query || activeFilter) && (
