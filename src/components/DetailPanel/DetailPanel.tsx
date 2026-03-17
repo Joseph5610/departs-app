@@ -99,7 +99,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             {platformCode && `Platform ${platformCode}`}
                         </DrawerDescription>
                     </DrawerHeader>
-                    <div className="no-scrollbar overflow-y-auto px-6 pb-[60vh] flex-1 pointer-events-auto">
+                    <div vaul-no-drag className="no-scrollbar overflow-y-auto px-6 pb-[60vh] flex-1 pointer-events-auto">
                         {children}
                     </div>
                 </DrawerContent>
