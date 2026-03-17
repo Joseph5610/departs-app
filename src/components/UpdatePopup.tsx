@@ -33,7 +33,7 @@ export const UpdatePopup: React.FC = () => {
     return (
         <AnimatePresence>
             {(offlineReady || needRefresh) && (
-                <Box className="fixed bottom-24 left-4 right-4 z-[1000] md:left-auto md:right-4 md:w-80">
+                <Box data-slot="dialog-content" className="fixed bottom-24 left-4 right-4 z-[1000] md:left-auto md:right-4 md:w-80">
                     <motion.div
                         initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}

@@ -119,9 +119,11 @@
     pointer-events: auto;
   }
 
-  /* When a dialog is open, the map should be non-interactive to prevent click-through */
+  /* When a dialog or drawer-modal is open, the map should be non-interactive to prevent click-through */
   body:has([data-slot="dialog-content"]) .maplibregl-map,
-  body:has([data-slot="dialog-content"]) .maplibregl-canvas {
+  body:has([data-slot="dialog-content"]) .maplibregl-canvas,
+  body:has([role="dialog"]) .maplibregl-map,
+  body:has([role="dialog"]) .maplibregl-canvas {
     pointer-events: none !important;
   }
 
