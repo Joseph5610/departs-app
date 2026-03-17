@@ -1,7 +1,6 @@
-
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
+import { MoonStar } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -16,7 +15,6 @@ import { useInfotexts } from '../../hooks/useInfotexts';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
-import { useShare } from '../../hooks/useShare';
 import { GenericAlertCard } from '../GenericAlertCard';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
@@ -42,7 +40,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 }) => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
-    const { share } = useShare();
 
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
@@ -50,11 +47,10 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { data: allInfotexts } = useInfotexts();
     const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, userSpeed, favoriteStops } = state;
-    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, userLocation, userSpeed } = state;
+    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
-    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
 
     const stopDistanceInfo = useMemo(() => {
         const coords = selectedStop?.coordinates;
@@ -66,9 +62,8 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
         return {
             distance: Math.round(distance),
-            time: Math.ceil(distance / 60), // fallback, actual calculation in getCatchStatus used by DepartureItem
+            time: Math.ceil(distance / 60),
             isAtStop,
-            isMovingFast,
             showCatchIndicator: distance < 750 && !isMovingFast
         };
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
@@ -94,20 +89,10 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
     const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
 
-    const handleShare = useCallback(() => {
-        if (selectedStop) {
-            share({
-                title: t('map.departures.shareTitle', { name: selectedStop.name }),
-                text: t('map.departures.shareText', { name: selectedStop.name }),
-                url: window.location.href
-            });
-        }
-    }, [selectedStop, share, t]);
-
     return (
         <Stack gap={4} className="pt-1">
             {showDepartureBoard && (
-                <Stack gap={4} className="mb-2">
+                <Stack gap={4}>
                     {relevantInfotexts.length > 0 && (
                         <Stack gap={2}>
                             {relevantInfotexts.map(info => (
@@ -122,72 +107,6 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             ))}
                         </Stack>
                     )}
-
-                    {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <Surface variant="tinted" padding="sm" className="flex flex-row items-center gap-2 border-white/10!">
-                            <MapPin size={14} className="text-muted-foreground/60" />
-                            <span className="font-medium text-foreground text-xs">
-                                {stopDistanceInfo.isAtStop
-                                    ? t('map.departures.atStop')
-                                    : t('map.departures.distance', {
-                                        distance: stopDistanceInfo.distance,
-                                        time: Math.ceil(stopDistanceInfo.distance / 60)
-                                    })}
-                            </span>
-                        </Surface>
-                    )}
-
-                    <HStack justify="between">
-                        <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.departures.upcoming')}</span>
-                        <HStack gap={2}>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={handleShare}
-                                className="h-8 w-8 rounded-xl bg-muted/30 border-border text-muted-foreground hover:text-foreground"
-                            >
-                                <Share2 size={14} />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={cn(
-                                    "h-8 w-8 rounded-xl transition-all",
-                                    isFavorite ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
-                            </Button>
-
-                            <HStack padding="none" className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setDepartureSort('line')}
-                                    className={cn(
-                                        "h-full w-8 rounded-lg",
-                                        departureSort === 'line' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                    title={t('map.departures.sortByLine')}
-                                >
-                                    <ArrowDownAz size={14} />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setDepartureSort('departure')}
-                                    className={cn(
-                                        "h-full w-8 rounded-lg",
-                                        departureSort === 'departure' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                    )}
-                                    title={t('map.departures.sortByDeparture')}
-                                >
-                                    <Clock size={14} />
-                                </Button>
-                            </HStack>
-                        </HStack>
-                    </HStack>
                 </Stack>
             )}
 

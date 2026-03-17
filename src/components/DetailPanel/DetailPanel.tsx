@@ -5,7 +5,6 @@ import {
     Drawer,
     DrawerContent,
     DrawerTitle,
-    DrawerHandle,
 } from '@/components/ui/drawer';
 import {
     Sheet,
@@ -24,6 +23,7 @@ interface DetailPanelProps {
     onBack?: () => void;
     title?: string;
     platformCode?: string;
+    subHeader?: React.ReactNode;
     children: React.ReactNode;
 }
 
@@ -33,9 +33,8 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
-export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, children }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, subHeader, children }) => {
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
-    const [snap, setSnap] = useState<string | number | null>(0.6);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -70,7 +69,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                             {title || ''}
                         </DrawerTitle>
                     ) : (
-                        <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                        <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight text-left">
                             {title || ''}
                         </SheetTitle>
                     )}
@@ -91,42 +90,50 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     if (isMobile) {
         return (
             <Drawer
+                key={`${isOpen}-${title}`}
                 open={isOpen}
                 onOpenChange={(open) => {
                     if (!open) {
                         onClose();
                     }
                 }}
-                snapPoints={[0.6, 0.8]}
-                activeSnapPoint={snap}
-                setActiveSnapPoint={setSnap}
-                shouldScaleBackground={false}
+                snapPoints={[0.60, 0.80]}
                 modal={false}
                 dismissible={true}
-                handleOnly={true}
+                shouldScaleBackground={false}
             >
-                <DrawerContent 
-                    className="max-h-[96%] min-h-[50dvh] flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
+                <DrawerContent
+                    className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
                     hideOverlay={true}
                 >
-                    {/* Visual & Small Drag Handle */}
-                    <DrawerHandle />
-
-                    {/* Draggable Header Area */}
-                    <div className="relative mt-2 px-6 pb-4 shrink-0 pointer-events-auto">
-                        {/* 
-                            Invisible Handle Overlay: 
-                            Allows dragging the entire header area without affecting its UI/layout.
-                        */}
-                        <DrawerHandle className="absolute inset-0 z-10 w-full h-full bg-transparent mt-0 rounded-none h-auto!" />
+                    {/* 
+                        Draggable Header Area:
+                        With handleOnly removed, the ENTIRE DrawerContent is draggable by default.
+                        The header (station name, subheader) is naturally part of the drag area.
+                        No DrawerHandle component needed — just a visual bar.
+                    */}
+                    <div className="shrink-0 flex flex-col">
+                        {/* Visual Handle Bar (purely cosmetic, not a DrawerHandle) */}
+                        <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-white/20 mb-2" />
                         
-                        {/* Actual Header UI - Untouched */}
-                        <div className="relative z-0">
+                        <div className="mt-2 px-6 pb-2">
                             {headerContent}
                         </div>
+                        
+                        {subHeader && (
+                            <div className="w-full">
+                                {subHeader}
+                            </div>
+                        )}
                     </div>
 
+                    {/* 
+                        Scrollable Content Area:
+                        data-vaul-no-drag prevents scrolling here from triggering drawer drag.
+                        This is the standard vaul pattern for large drag areas.
+                    */}
                     <div 
+                        data-vaul-no-drag
                         className="flex-1 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
                     >
                         <div className="pb-[50dvh]">
@@ -158,6 +165,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             >
                 <Box padding="none" className="px-6 pt-6 pb-2 shrink-0">
                     {headerContent}
+                    {subHeader && <div className="mt-4">{subHeader}</div>}
                 </Box>
                 <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
                     {children}

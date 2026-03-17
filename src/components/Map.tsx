@@ -7,6 +7,7 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DetailPanel } from './DetailPanel/DetailPanel';
+import { DepartureBoardHeader } from './DetailPanel/DepartureBoardHeader';
 
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../utils/mapUtils';
@@ -186,6 +187,7 @@ const MapInner: React.FC = () => {
                 onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
                 title={panelTitle}
                 platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
+                subHeader={<DepartureBoardHeader />}
             >
                 <DetailPanelContent
                     onToggleFollow={handleToggleFollow}
