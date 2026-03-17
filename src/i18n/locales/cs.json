@@ -107,7 +107,8 @@
       "nextStop": "Příští zastávka",
       "showPastStops": "Zobrazit předchozí zastávky",
       "hidePastStops": "Skrýt předchozí zastávky",
-      "scheduledTime": "plán."
+      "scheduledTime": "plán.",
+      "zone": "Pásmo"
     },
     "departures": {
       "upcoming": "Nejbližší odjezdy",

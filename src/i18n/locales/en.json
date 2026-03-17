@@ -107,7 +107,8 @@
       "nextStop": "Next stop",
       "showPastStops": "Show past stops",
       "hidePastStops": "Hide past stops",
-      "scheduledTime": "sched."
+      "scheduledTime": "sched.",
+      "zone": "Zone"
     },
     "departures": {
       "upcoming": "Upcoming Departures",

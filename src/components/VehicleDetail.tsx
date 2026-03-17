@@ -282,12 +282,19 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                         isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
                                     )} />
                                     <Stack align="start" gap={0} className="min-w-0 pr-4">
-                                        <span className={cn(
-                                            "text-sm truncate",
-                                            isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
-                                        )}>
-                                            {stop.properties.stop_name}
-                                        </span>
+                                        <HStack gap={2} align="center" className="min-w-0">
+                                            <span className={cn(
+                                                "text-sm truncate",
+                                                isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                                            )}>
+                                                {stop.properties.stop_name}
+                                            </span>
+                                            {stop.properties.zone_id && (
+                                                <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
+                                                    {stop.properties.zone_id}
+                                                </span>
+                                            )}
+                                        </HStack>
                                         {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
                                         {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
                                     </Stack>
