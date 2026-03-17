@@ -39,15 +39,6 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [needRefresh, updateServiceWorker, t]);
 
-    useEffect(() => {
-        if (offlineReady) {
-            toast.success(t('update.pwaPrompt'), {
-                description: t('update.addToHome'),
-                onAutoClose: () => setOfflineReady(false),
-                onDismiss: () => setOfflineReady(false),
-            });
-        }
-    }, [offlineReady, t, setOfflineReady]);
 
     return (
         <PWAContext.Provider
