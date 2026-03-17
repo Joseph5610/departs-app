@@ -2,6 +2,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Box, Stack, HStack } from '@/components/ui/layout';
+import { 
+    Alert, 
+    AlertDescription, 
+    AlertTitle 
+} from '@/components/ui/alert';
 
 export interface CommonAlertProps {
     id?: string;
@@ -18,6 +25,11 @@ export interface CommonAlertProps {
     lineColors?: (line: string) => string;
 }
 
+/**
+ * GenericAlertCard
+ *
+ * Final polish: fixed alignment via Alert primitive fix, tightened gaps, and minimal typography.
+ */
 export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     title,
     description,
@@ -34,77 +46,94 @@ export const GenericAlertCard: React.FC<CommonAlertProps> = ({
     const { t } = useTranslation();
     const isHigh = priority === 'high' || priority === '1';
     const isNormal = priority === 'normal' || priority === '2';
+    
+    const alertVariant = isHigh ? 'destructive' : 'default';
 
     const CardContent = (
-        <div className={`p-4 rounded-2xl border flex items-start gap-4 transition-all overflow-hidden relative
-            ${link ? 'hover:bg-white/5 cursor-pointer group' : ''}
-            ${isHigh ? 'bg-rose-500/10 border-rose-500/20' : isNormal ? 'bg-amber-500/10 border-amber-500/20' : 'bg-white/5 border-white/10'}
-            ${isFuture ? 'opacity-60 grayscale-[0.3]' : ''}
-        `}>
-            {isHigh && link && (
-                <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
+        <Alert 
+            variant={alertVariant}
+            className={cn(
+                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-xl sm:rounded-2xl border-white/5!",
+                isHigh && "!bg-destructive/15 !border-destructive/30",
+                isNormal && "!bg-amber-500/10 !border-amber-500/20",
+                link && "hover:brightness-125 cursor-pointer group",
+                isFuture && "opacity-60 grayscale-[0.3]"
             )}
+        >
+            <AlertTriangle className={cn(
+                "h-4 w-4 mt-0.5 shrink-0",
+                isHigh ? "!text-destructive animate-pulse" : isNormal ? "!text-amber-500" : "text-muted-foreground"
+            )} />
+            
+            <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
+                {showStatus && (isFuture ? (
+                    <HStack gap={1} className="mb-0.5">
+                        <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+                        <span className="text-[8px] font-black text-destructive/80 uppercase tracking-widest">
+                            {t('alerts.planned')}
+                        </span>
+                    </HStack>
+                ) : isActive ? (
+                    <HStack gap={1} className="mb-0.5">
+                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)] animate-pulse" />
+                        <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+                            {t('alerts.active')}
+                        </span>
+                    </HStack>
+                ) : null)}
+                
+                <span className={cn(
+                    "font-bold text-sm leading-tight transition-colors",
+                    isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
+                    link && "group-hover:text-primary"
+                )}>
+                    {title}
+                </span>
+            </AlertTitle>
 
-            <div className={`p-2 rounded-full shrink-0 ${isHigh ? 'bg-rose-500/20 text-rose-500' : isNormal ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-zinc-400'}`}>
-                <AlertTriangle size={20} className={isHigh ? 'animate-pulse' : ''} />
-            </div>
-
-            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div className="flex justify-between items-start gap-2">
-                    <div className="flex flex-col gap-1.5 min-w-0">
-                        {showStatus && (isFuture ? (
-                            <span className="text-[9px] font-black text-rose-500/80 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                                {t('alerts.planned')}
-                            </span>
-                        ) : isActive ? (
-                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                {t('alerts.active')}
-                            </span>
-                        ) : null)}
-
-                        <h4 className={`font-bold text-sm leading-tight transition-colors ${isHigh ? 'text-rose-500' : isNormal ? 'text-amber-500' : 'text-zinc-200'} ${link ? 'group-hover:text-emerald-400' : ''}`}>
-                            {title}
-                        </h4>
-                    </div>
-                    {link && <ExternalLink size={14} className="text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5" />}
-                </div>
-
+            <AlertDescription className="grid gap-3">
                 {description && (
-                    <p className="text-zinc-400 text-[10px] mt-0.5 line-clamp-3 leading-relaxed">
+                    <p className="text-[10px] line-clamp-2 leading-normal text-muted-foreground font-medium opacity-80">
                         {description}
                     </p>
                 )}
 
-                {lines && lines.length > 0 && lineColors && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                        {lines.map(line => (
-                            <span
-                                key={line}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-sm"
-                                style={{ backgroundColor: lineColors(line) }}
-                            >
-                                {line}
-                            </span>
-                        ))}
-                    </div>
-                )}
+                {(lines && lines.length > 0 && lineColors) || validFrom ? (
+                    <Stack gap={2}>
+                        {lines && lines.length > 0 && lineColors && (
+                            <HStack gap={1} className="flex-wrap">
+                                {lines.map(line => (
+                                    <span
+                                        key={line}
+                                        className="px-2.5 py-1 rounded-md text-[10px] font-black text-white shadow-sm ring-1 ring-white/10"
+                                        style={{ backgroundColor: lineColors(line) }}
+                                    >
+                                        {line}
+                                    </span>
+                                ))}
+                            </HStack>
+                        )}
 
-                {validFrom && (
-                    <div className="text-zinc-500 text-[10px] font-medium flex items-center gap-2 mt-0.5">
-                        <span>
-                            {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
-                        </span>
-                    </div>
-                )}
-            </div>
-        </div>
+                        {validFrom && (
+                            <Box className="text-[9px] font-extrabold text-muted-foreground/70 mt-0.5">
+                                {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
+                            </Box>
+                        )}
+                    </Stack>
+                ) : null}
+            </AlertDescription>
+
+            {link && (
+                <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
+                    <ExternalLink size={12} />
+                </div>
+            )}
+        </Alert>
     );
 
     if (link) {
         return (
-            <a href={link} target="_blank" rel="noopener noreferrer" className="block">
+            <a href={link} target="_blank" rel="noopener noreferrer" className="block outline-none no-underline active:scale-[0.99] transition-transform">
                 {CardContent}
             </a>
         );

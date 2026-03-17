@@ -90,6 +90,7 @@ export const useStops = () => {
     return {
         ...query,
         stops,
-        centroids
+        centroids,
+        _raw_data: query.data
     };
 };

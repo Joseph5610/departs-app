@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
+import { Box, Surface } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     children?: ReactNode;
@@ -8,8 +10,15 @@ interface Props {
 interface State {
     hasError: boolean;
     error?: Error;
+    errorInfo?: ErrorInfo;
 }
 
+/**
+ * ErrorBoundary
+ *
+ * Re-architected with semantic layout components.
+ * Enhanced to show error details in all builds for debugging.
+ */
 export class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false
@@ -21,38 +30,45 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Uncaught error:', error, errorInfo);
+        this.setState({ errorInfo });
     }
 
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="fixed inset-0 bg-[#0f172a] flex items-center justify-center p-6 text-center z-[9999]">
-                    <div className="max-w-md w-full bg-white/5 border border-rose-500/20 rounded-[32px] p-8 backdrop-blur-xl">
-                        <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <AlertCircle className="text-rose-500" size={32} />
-                        </div>
-                        <h1 className="text-white text-2xl font-bold mb-2">Oops, something went wrong</h1>
-                        <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                <Box center className="fixed inset-0 bg-background p-6 z-[9999]">
+                    <Surface variant="tinted" padding="xl" className="max-w-md w-full border-destructive/20! rounded-[32px] flex flex-col gap-0 items-center">
+                        <Box center className="w-16 h-16 bg-destructive/10 rounded-2xl mb-6 shrink-0">
+                            <AlertCircle className="text-destructive" size={32} />
+                        </Box>
+                        <h1 className="text-foreground text-2xl font-bold mb-2">Oops, something went wrong</h1>
+                        <p className="text-muted-foreground text-sm mb-8 leading-relaxed text-center">
                             The application encountered an unexpected error. Please try refreshing.
                         </p>
 
-                        <button
+                        <Button
+                            size="xl"
+                            variant="default"
                             onClick={() => window.location.reload()}
-                            className="w-full py-4 bg-white text-[#0f172a] rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95"
+                            className="w-full h-auto py-4 font-bold flex items-center justify-center gap-2"
                         >
                             <RefreshCcw size={18} />
                             Refresh Application
-                        </button>
+                        </Button>
 
-                        {import.meta.env.DEV && (
-                            <div className="mt-8 pt-6 border-t border-white/5 text-left">
-                                <p className="text-rose-400 text-[10px] font-mono leading-tight break-words">
-                                    {this.state.error?.toString()}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                        {/* Enhanced debug info (temporary) */}
+                        <Box className="mt-8 pt-6 border-t border-border text-left overflow-hidden w-full">
+                            <p className="text-destructive text-[10px] font-mono leading-tight break-all mb-2">
+                                {this.state.error?.toString()}
+                            </p>
+                            {this.state.errorInfo && (
+                                <pre className="text-muted-foreground text-[8px] font-mono leading-tight whitespace-pre-wrap max-h-40 overflow-y-auto w-full">
+                                    {this.state.errorInfo.componentStack}
+                                </pre>
+                            )}
+                        </Box>
+                    </Surface>
+                </Box>
             );
         }
 

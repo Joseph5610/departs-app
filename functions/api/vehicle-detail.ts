@@ -1,4 +1,4 @@
-import { Env } from "../_utils/types";
+import { Env, GolemioVehicleFeature } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 import { normalizeVehicleFeature } from "../_utils/transit-utils";
 
@@ -7,14 +7,6 @@ interface ShapeFeature {
         type: string;
         coordinates: [number, number];
     };
-}
-
-interface VehicleData {
-    features?: Array<{ properties: Record<string, unknown> }>;
-    shapes?: {
-        features: ShapeFeature[];
-    } | Array<[number, number]>;
-    [key: string]: unknown;
 }
 
 /**
@@ -65,54 +57,37 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = await response.json() as any;
+        const data = (await response.json()) as Record<string, unknown>;
 
-        // Standardize output structure: handle Feature, FeatureCollection, or flat object
-        let vehicleData: Record<string, unknown> = {};
+        // Standardize output structure: handle FeatureCollection, Feature, or flat object
+        let normalizedFeature: GolemioVehicleFeature;
 
-        if (data.type === 'FeatureCollection' && data.features?.length > 0) {
-            const normalized = normalizeVehicleFeature(data.features[0], tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                // Merge root-level metadata often provided alongside FeatureCollection when using scopes
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
+        const features = data.features as GolemioVehicleFeature[] | undefined;
+        if (data.type === 'FeatureCollection' && features && features.length > 0) {
+            normalizedFeature = normalizeVehicleFeature(features[0], tripId);
         } else if (data.type === 'Feature') {
-            const normalized = normalizeVehicleFeature(data, tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
+            normalizedFeature = normalizeVehicleFeature(data as unknown as GolemioVehicleFeature, tripId);
         } else {
             // Flat object (typical for gtfs/trips)
-            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as any;
-            const normalized = normalizeVehicleFeature(mockFeature, tripId);
-            vehicleData = {
-                ...normalized.properties,
-                geometry: normalized.geometry,
-                stop_times: data.stop_times || normalized.properties?.stop_times,
-                shapes: data.shapes || normalized.properties?.shapes,
-                vehicle_descriptor: data.vehicle_descriptor || normalized.properties?.vehicle_descriptor,
-                run_number: data.run_number ?? normalized.properties?.run_number,
-                origin_timestamp: data.origin_timestamp || normalized.properties?.origin_timestamp,
-                last_stop_sequence: data.last_stop_sequence ?? normalized.properties?.last_stop_sequence,
-                next_stop_name: data.next_stop_name || normalized.properties?.next_stop_name,
-            };
+            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as unknown as GolemioVehicleFeature;
+            normalizedFeature = normalizeVehicleFeature(mockFeature, tripId);
         }
+
+        // Final vehicle data: core properties from normalization, plus expanded scope data
+        const vehicleData: Record<string, unknown> = {
+            ...normalizedFeature.properties,
+            geometry: normalizedFeature.geometry,
+            // Merge root-level metadata often provided alongside FeatureCollection when using scopes
+            stop_times: data.stop_times || normalizedFeature.properties?.stop_times,
+            shapes: data.shapes || normalizedFeature.properties?.shapes,
+        };
+
+        // If upstream provided expanded descriptors/metadata at root, use them
+        if (data.vehicle_descriptor) vehicleData.vehicle_descriptor = data.vehicle_descriptor;
+        if (data.run_number !== undefined) vehicleData.run_number = data.run_number;
+        if (data.origin_timestamp) vehicleData.origin_timestamp = data.origin_timestamp;
+        if (data.last_stop_sequence !== undefined) vehicleData.last_stop_sequence = data.last_stop_sequence;
+        if (data.next_stop_name) vehicleData.next_stop_name = data.next_stop_name;
 
         if (usedStaticFallback) {
             vehicleData.is_static_fallback = true;

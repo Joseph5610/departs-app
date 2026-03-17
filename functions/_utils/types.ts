@@ -4,6 +4,15 @@ export interface Env {
 
 // --- Golemio API Types ---
 
+export interface GolemioVehicleDescriptor {
+    operator?: string;
+    vehicle_type?: string;
+    is_wheelchair_accessible?: boolean;
+    is_air_conditioned?: boolean;
+    has_usb_chargers?: boolean;
+    vehicle_registration_number?: number;
+}
+
 export interface GolemioVehicleFeature {
     type: 'Feature';
     geometry: {
@@ -42,14 +51,28 @@ export interface GolemioVehicleFeature {
             wheelchair_accessible?: boolean;
             air_conditioned?: boolean;
             vehicle_registration_number?: number;
+            operator?: string;
+            vehicle_type?: string;
+            next_stop_name?: string;
+            origin_timestamp?: string;
+            vehicle_descriptor?: GolemioVehicleDescriptor;
         };
         last_position?: {
             run_number?: number | string;
             bearing?: number;
-            delay?: { actual?: number };
+            delay?: { actual?: number } | number;
             state_position?: string;
-            next_stop?: { id?: string };
+            next_stop?: { id?: string; name?: string };
+            vehicle_registration_number?: number;
+            operator?: string;
+            vehicle_type?: string;
+            origin_timestamp?: string;
+            timestamp?: string;
+            last_stop?: { sequence?: number };
+            last_stop_sequence?: number;
+            vehicle_descriptor?: GolemioVehicleDescriptor;
         };
+        vehicle_descriptor?: GolemioVehicleDescriptor;
         [key: string]: unknown;
     };
 }
@@ -133,19 +156,17 @@ export interface AppDeparture {
 export interface AppVehicleProperties {
     vehicle_id: string;
     gtfs_trip_id?: string;
-    trip_id?: string;
     route_short_name?: string;
-    gtfs_route_short_name?: string;
     route_type?: string;
     trip_headsign?: string;
-    gtfs_trip_headsign?: string;
     bearing?: number;
     delay: number;
     state_position?: string;
     next_stop_name?: string;
-    is_wheelchair_accessible?: boolean;
-    is_air_conditioned?: boolean;
-    vehicle_registration_number?: number;
+    last_stop_sequence?: number;
+    origin_timestamp?: string;
+    run_number?: number | string;
+    vehicle_descriptor?: GolemioVehicleDescriptor;
 }
 
 export interface AppStopProperties {

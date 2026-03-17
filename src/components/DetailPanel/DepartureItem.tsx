@@ -1,11 +1,13 @@
+import { useRef } from 'react';
 import { format, parseISO, type Locale } from 'date-fns';
 import { Countdown } from '../Countdown';
 import { DelayDelta } from './DelayDelta';
-import { cn } from '../../utils/cn';
+import { cn } from '@/lib/utils';
 import { getCatchStatus } from '../../utils/transitLogic';
 import { formatDelay } from '../../utils/dateUtils';
 import type { Departure } from '../../types/transit';
 import { useTranslation } from 'react-i18next';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -20,6 +22,11 @@ interface DepartureItemProps {
     locale: Locale;
 }
 
+/**
+ * DepartureItem
+ *
+ * Re-architected with semantic components. Internalizes layout classes.
+ */
 export const DepartureItem = ({
     departure,
     onDepartureClick,
@@ -34,33 +41,55 @@ export const DepartureItem = ({
         ? getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop)
         : null;
 
+    const clickStartPos = useRef<{ x: number; y: number } | null>(null);
+
+    const handlePointerDown = (e: React.PointerEvent) => {
+        clickStartPos.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (!clickStartPos.current) return;
+        
+        const dx = Math.abs(e.clientX - clickStartPos.current.x);
+        const dy = Math.abs(e.clientY - clickStartPos.current.y);
+        const threshold = 5; // 5px threshold
+
+        if (dx < threshold && dy < threshold) {
+            if (dep.tripId) {
+                onDepartureClick(dep.tripId, dep.vehicleId, dep);
+            }
+        }
+        clickStartPos.current = null;
+    };
+
     return (
-        <div
-            role="button"
-            tabIndex={0}
-            onClick={() => dep.tripId && onDepartureClick(dep.tripId, dep.vehicleId, dep)}
-            onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && dep.tripId) {
-                    onDepartureClick(dep.tripId, dep.vehicleId, dep);
-                }
-            }}
-            className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 transition-all
-                ${dep.tripId ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]' : ''}
-            `}
+        <Surface
+            asChild
+            variant="tinted"
+            padding="md"
+            className={cn(
+                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/5!",
+                dep.tripId ? "hover:bg-white/5 hover:border-white/10 cursor-pointer active:scale-[0.98]" : "cursor-default"
+            )}
         >
-            <div className="flex items-center gap-4">
-                <div className="flex flex-col">
-                    <div className="text-white font-semibold leading-tight">{dep.headsign}</div>
-                    <div className="text-zinc-500 text-[10px] mt-1 flex items-center gap-2">
-                        <span className="tabular-nums">{format(parseISO(dep.scheduled), 'HH:mm', {
-                            locale: locale
-                        })}</span>
+            <button
+                onPointerDown={handlePointerDown}
+                onClick={handleClick}
+                className="flex items-center justify-between"
+            >
+            <HStack gap={4}>
+                <Stack gap={0}>
+                    <div className="text-foreground font-semibold leading-tight">{dep.headsign}</div>
+                    <HStack gap={2} className="text-muted-foreground text-[10px] mt-1">
+                        <span className="tabular-nums">
+                            {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
+                        </span>
                         {isTrainStop && dep.platform && (
-                            <span className="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold tracking-wider">
+                            <span className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold tracking-wider border border-border">
                                 {dep.platform}
                             </span>
                         )}
-                        <div className="flex items-center">
+                        <HStack gap={1}>
                             {typeof dep.delay === 'number' && dep.delay !== 0 && (
                                 <span className={cn(
                                     "font-bold tabular-nums",
@@ -69,19 +98,24 @@ export const DepartureItem = ({
                                     {formatDelay(dep.delay)}
                                 </span>
                             )}
-                            <DelayDelta delta={dep.delayDelta || 0} lastUpdate={dep.lastDelayUpdate} isInline={typeof dep.delay === 'number' && dep.delay !== 0} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="text-right flex flex-col items-end justify-center min-w-[100px]">
-                <div className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
+                            <DelayDelta
+                                delta={dep.delayDelta || 0}
+                                lastUpdate={dep.lastDelayUpdate}
+                                isInline={typeof dep.delay === 'number' && dep.delay !== 0}
+                            />
+                        </HStack>
+                    </HStack>
+                </Stack>
+            </HStack>
+
+            <Stack gap={0} align="end" justify="center" className="min-w-[100px]">
+                <Box className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
                     <Countdown timestamp={dep.timestamp} />
-                </div>
+                </Box>
                 {stopDistanceInfo?.showCatchIndicator && catchStatus && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold whitespace-nowrap">
-                        <div className={cn(
-                            "px-1.5 py-0.5 rounded-md flex items-center gap-1",
+                    <Box className="mt-2">
+                        <HStack gap={1} className={cn(
+                            "px-1.5 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap",
                             catchStatus.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
                             catchStatus.status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
                             'bg-rose-500/10 text-rose-400'
@@ -93,10 +127,11 @@ export const DepartureItem = ({
                             <span className="uppercase tracking-tighter">
                                 {t(`map.departures.catchStatusCompact.${catchStatus.status}`)}
                             </span>
-                        </div>
-                    </div>
+                        </HStack>
+                    </Box>
                 )}
-            </div>
-        </div>
+            </Stack>
+            </button>
+        </Surface>
     );
 };

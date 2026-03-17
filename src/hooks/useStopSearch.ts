@@ -14,10 +14,12 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
             .filter(stop => stop.properties.location_type !== 2)
             .map(stop => {
                 const normalizedName = normalizeString(stop.properties.stop_name);
+                const stopId = stop.properties.stop_id.toUpperCase();
                 return {
                     stop,
                     normalizedName,
-                    nameTokens: normalizedName.split(/[-\s/]+/)
+                    nameTokens: normalizedName.split(/[-\s/]+/),
+                    stopId
                 };
             });
     }, [stops]);
@@ -27,10 +29,14 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
         if (deferredQuery.length < 2) return [];
 
         const normalizedQuery = normalizeString(deferredQuery).trim();
+        const upperQuery = deferredQuery.trim().toUpperCase();
         const queryTokens = normalizedQuery.split(/[-\s/]+/);
 
         const matches = searchIndex
             .filter(item => {
+                // Match by stop ID prefix
+                if (item.stopId.startsWith(upperQuery)) return true;
+
                 // Every query token must match at least one name token (as prefix)
                 return queryTokens.every(qToken =>
                     item.nameTokens.some(nToken => nToken.startsWith(qToken))
@@ -38,6 +44,13 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
             })
             .map(item => {
                 let score = 0;
+
+                // Stop ID match (highest priority)
+                if (item.stopId === upperQuery) {
+                    score += 2000;
+                } else if (item.stopId.startsWith(upperQuery)) {
+                    score += 1500;
+                }
 
                 // Exact match (highest priority)
                 if (item.normalizedName === normalizedQuery) {

@@ -15,7 +15,7 @@ export const useRouteShape = () => {
         const coordinates = vehicleDetail.shapes as [number, number][];
         if (coordinates.length < 2) return null;
 
-        const routeName = state.selectedVehicle?.gtfs_route_short_name || state.selectedVehicle?.route_short_name || '';
+        const routeName = state.selectedVehicle?.route_short_name || '';
         const routeType = state.selectedVehicle?.route_type || 0;
         const color = isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
 

@@ -122,27 +122,27 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 />
             </Source>
 
-            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature as any}>
+            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
                 <Layer {...selectedVehiclePulseLayer} />
                 <Layer {...selectedVehiclePointLayer} />
                 <Layer {...selectedVehicleDirectionLayer} />
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            <Source id="pid-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON) as any}>
+            <Source id="pid-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
                 <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
             </Source>
 
-            <Source id="stop-labels-centroids" type="geojson" data={(showStops && labelData ? labelData : EMPTY_GEOJSON) as any}>
+            <Source id="stop-labels-centroids" type="geojson" data={(showStops && labelData ? labelData : EMPTY_GEOJSON)}>
                 <Layer {...stopLabelLayer} />
             </Source>
 
             <Source
                 id="pid-stops"
                 type="geojson"
-                data={(showStops && stopsData ? stopsData : EMPTY_GEOJSON) as any}
+                data={(showStops && stopsData ? stopsData : EMPTY_GEOJSON)}
                 cluster={true}
                 clusterMaxZoom={13}
                 clusterRadius={25}

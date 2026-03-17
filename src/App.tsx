@@ -1,9 +1,9 @@
 import { Map } from './components/Map';
-import { ToastProvider } from './components/ToastProvider';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   return (
-    <ToastProvider>
+    <>
       {/* Visually hidden SEO content */}
       <div className="sr-only">
         <h1>departs.app — Pražská integrovaná doprava LIVE</h1>
@@ -18,7 +18,8 @@ function App() {
       </div>
 
       <Map />
-    </ToastProvider>
+      <Toaster position="bottom-center" />
+    </>
   );
 }
 

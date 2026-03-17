@@ -21,56 +21,55 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const trip_headsign = p.trip_headsign || p.gtfs_trip_headsign || p.trip?.gtfs?.trip_headsign;
 
     // Position and status data
-    const bearing = p.bearing !== undefined ? p.bearing : p.last_position?.bearing;
-    const delay = p.delay !== undefined ? p.delay : (p.last_position?.delay?.actual ?? p.last_position?.delay ?? 0);
-    const state_position = p.state_position || p.last_position?.state_position;
+    const last_pos = p.last_position;
+    const trip = p.trip;
+
+    const bearing = p.bearing !== undefined ? p.bearing : last_pos?.bearing;
+    const delay = p.delay !== undefined ? p.delay : (typeof last_pos?.delay === 'object' ? last_pos?.delay?.actual : last_pos?.delay) ?? 0;
+    const state_position = p.state_position || last_pos?.state_position;
 
     // Extract next stop info - check various nested structures used by Golemio
     const next_stop_name = p.next_stop_name ||
-                          p.last_position?.next_stop?.name ||
-                          p.last_position?.next_stop?.id ||
-                          p.trip?.next_stop_name;
+                          last_pos?.next_stop?.name ||
+                          last_pos?.next_stop?.id ||
+                          trip?.next_stop_name;
 
-    // Metadata / Amenities - check multiple possible locations (Public API, V2 API, nested descriptors)
-    const vehicle_descriptor = p.vehicle_descriptor || p.trip?.vehicle_descriptor || p.last_position?.vehicle_descriptor || {};
+    // Metadata / Amenities
+    const vehicle_descriptor = (p.vehicle_descriptor || trip?.vehicle_descriptor || last_pos?.vehicle_descriptor || {});
 
     const is_wheelchair_accessible = p.is_wheelchair_accessible ??
-                                   p.trip?.wheelchair_accessible ??
+                                   trip?.wheelchair_accessible ??
                                    vehicle_descriptor.is_wheelchair_accessible;
 
     const is_air_conditioned = p.is_air_conditioned ??
-                               p.trip?.air_conditioned ??
+                               trip?.air_conditioned ??
                                vehicle_descriptor.is_air_conditioned;
 
-    const has_usb_chargers = p.has_usb_chargers ??
-                            p.usb_chargers ??
+    const has_usb_chargers = (p.has_usb_chargers as boolean | undefined) ??
+                            (p.usb_chargers as boolean | undefined) ??
                             vehicle_descriptor.has_usb_chargers;
 
     const vehicle_registration_number = p.vehicle_registration_number ??
-                                      p.trip?.vehicle_registration_number ??
-                                      p.last_position?.vehicle_registration_number ??
+                                      trip?.vehicle_registration_number ??
+                                      last_pos?.vehicle_registration_number ??
                                       vehicle_descriptor.vehicle_registration_number;
 
-    const operator = p.operator || p.trip?.operator || vehicle_descriptor.operator || p.last_position?.operator;
+    const operator = (p.operator as string | undefined) || trip?.operator || vehicle_descriptor.operator || last_pos?.operator;
 
     // Run and sequence data
-    const run_number = p.run_number ?? p.trip?.run_number ?? p.trip?.gtfs?.run_number ?? p.last_position?.run_number ?? p.service_number ?? p.trip?.service_number;
-    const last_stop_sequence = p.last_stop_sequence ?? p.last_position?.last_stop?.sequence ?? p.last_position?.last_stop_sequence;
-    const origin_timestamp = p.origin_timestamp || p.last_position?.origin_timestamp || p.trip?.origin_timestamp || p.last_position?.timestamp;
+    const run_number = p.run_number ?? trip?.run_number ?? trip?.gtfs?.run_number ?? last_pos?.run_number ?? p.service_number ?? trip?.service_number;
+    const last_stop_sequence = (p.last_stop_sequence as number | undefined) ?? last_pos?.last_stop?.sequence ?? last_pos?.last_stop_sequence;
+    const origin_timestamp = (p.origin_timestamp as string | undefined) || last_pos?.origin_timestamp || trip?.origin_timestamp || last_pos?.timestamp;
 
     return {
         type: 'Feature',
         geometry: feature.geometry,
         properties: {
-            ...p, // Preserve any extra properties
             vehicle_id,
             gtfs_trip_id,
-            trip_id: gtfs_trip_id,
             route_short_name,
-            gtfs_route_short_name: route_short_name,
             route_type,
             trip_headsign,
-            gtfs_trip_headsign: trip_headsign,
             bearing,
             delay,
             state_position,
@@ -78,17 +77,13 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             last_stop_sequence,
             origin_timestamp,
             run_number,
-            is_wheelchair_accessible,
-            is_air_conditioned,
-            has_usb_chargers,
-            vehicle_registration_number,
             vehicle_descriptor: {
                 operator,
+                vehicle_type: (p.vehicle_type as string | undefined) || p.trip?.vehicle_type || vehicle_descriptor.vehicle_type,
                 is_wheelchair_accessible,
                 is_air_conditioned,
                 has_usb_chargers,
-                vehicle_registration_number,
-                ...vehicle_descriptor
+                vehicle_registration_number
             }
         }
     };

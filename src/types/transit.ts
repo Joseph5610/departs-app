@@ -1,18 +1,22 @@
 export interface VehicleProperties {
     vehicle_id: string;
     route_type: string;
-    gtfs_route_short_name: string;
-    gtfs_route_type?: string;
     gtfs_trip_id: string;
-    gtfs_trip_headsign?: string;
     route_short_name?: string;
     trip_headsign?: string;
     bearing: number | null | undefined;
     delay: number;
     state_position: string;
-    last_stop_name?: string;
     next_stop_name?: string;
     last_updated?: string;
+    vehicle_descriptor?: {
+        operator?: string;
+        vehicle_type?: string;
+        is_wheelchair_accessible?: boolean;
+        is_air_conditioned?: boolean;
+        has_usb_chargers?: boolean;
+        vehicle_registration_number?: string;
+    };
 }
 
 export interface VehicleFeature {
@@ -20,7 +24,7 @@ export interface VehicleFeature {
     geometry: {
         type: "Point";
         coordinates: [number, number]; // [lon, lat]
-    } | null;
+    };
     properties: VehicleProperties;
 }
 
@@ -118,6 +122,7 @@ export interface VehicleDetail {
     trip_headsign: string;
     delay: number;
     state_position: string;
+    is_static_fallback?: boolean;
     last_stop_sequence?: number;
     origin_timestamp?: string;
     run_number?: number;
@@ -160,9 +165,7 @@ export interface TrackedVehicle {
     _geometry: [number, number];
     gtfs_trip_id?: string;
     route_short_name?: string;
-    gtfs_route_short_name?: string;
     trip_headsign?: string;
-    gtfs_trip_headsign?: string;
     delay?: number;
     bearing?: number | null;
     route_type?: string | number;
@@ -170,10 +173,6 @@ export interface TrackedVehicle {
     origin_timestamp?: string;
     next_stop_name?: string;
     last_stop_sequence?: number;
-    is_air_conditioned?: boolean;
-    is_wheelchair_accessible?: boolean;
-    usb_chargers?: boolean;
-    vehicle_registration_number?: string;
     run_number?: number | string;
     vehicle_descriptor?: {
         operator?: string;
@@ -183,7 +182,7 @@ export interface TrackedVehicle {
         has_usb_chargers?: boolean;
         vehicle_registration_number?: string;
     };
-    // Legacy/Sync compatibility
+    // Legacy/Sync compatibility (can be removed later if not used)
     trip_id?: string;
     id?: string;
 }

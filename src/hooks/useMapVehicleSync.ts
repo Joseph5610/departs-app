@@ -66,7 +66,7 @@ export const useMapVehicleSync = (
         // 2. Sync from Direct Detail API
         // If we have detailed info for the selected vehicle, use it to update position and properties.
         if (vehicleDetail) {
-            const isFallback = (vehicleDetail as any).is_static_fallback;
+            const isFallback = vehicleDetail.is_static_fallback;
             const detailCoords = vehicleDetail.geometry?.coordinates as [number, number] | undefined;
             const detailDelay = vehicleDetail.delay;
             const hasValidDetailLocation = detailCoords && (detailCoords[0] !== 0 || detailCoords[1] !== 0);
@@ -96,13 +96,29 @@ export const useMapVehicleSync = (
                     delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
                     state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
                     last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
-                    vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_registration_number
+                    vehicle_descriptor: {
+                        ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
+                        vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
+                    }
                 };
             }
         }
 
         if (updated) {
-            setSelectedVehicle((prev: TrackedVehicle | null) => prev ? { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle : null);
+            setSelectedVehicle((prev: TrackedVehicle | null) => {
+                if (!prev) return null;
+                // Deep equality check for properties that trigger updates
+                const hasGeometryChanged = prev._geometry[0] !== newCoords[0] || prev._geometry[1] !== newCoords[1];
+                const hasDelayChanged = prev.delay !== (newProps.delay ?? prev.delay);
+                const hasSequenceChanged = prev.last_stop_sequence !== (newProps.last_stop_sequence ?? prev.last_stop_sequence);
+                const hasStateChanged = prev.state_position !== (newProps.state_position ?? prev.state_position);
+
+                if (!hasGeometryChanged && !hasDelayChanged && !hasSequenceChanged && !hasStateChanged) {
+                    return prev;
+                }
+
+                return { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle;
+            });
         }
 
         // Map movement: Focus on vehicle when coordinates are found

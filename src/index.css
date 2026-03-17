@@ -1,77 +1,188 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.145 0 0 / 25%);
+  --radius: 0.625rem;
+  --glass-tint: oklch(0.2 0.02 260);
+  --glass-tint-opacity: 0.12;
 }
 
-/* Hide scrollbars globally */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.dark {
+  --background: oklch(0.12 0.01 260);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.15 0.02 260);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.15 0.02 260);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.705 0.14 162.71);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.2 0.02 260);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.18 0.02 260);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.22 0.02 260);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.6 0.18 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(1 0 0 / 40%);
+  --glass-tint: oklch(0.3 0.1 260);
+  --glass-tint-opacity: 0.35;
 }
 
-*::-webkit-scrollbar {
-  display: none;
+@theme inline {
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+  --radius-4xl: 1.5rem;
 }
 
-/* Base layout & viewport fixes */
-html,
-body {
-  height: 100%;
-  height: -webkit-fill-available;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #000000;
-  color: #f8fafc;
-  overscroll-behavior: none;
-  position: fixed;
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* Focus rings standardization - using ring-2 with 50% opacity ring color and NO offset for better compatibility with glassy elements and dark mode */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring/50;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    @apply bg-background text-foreground font-sans selection:bg-primary/20;
+  }
+
+  /* Keep 100vh for PWA to ensure it fills the physical screen behind the home indicator */
+  @media (display-mode: standalone) {
+    html, body {
+      height: 100vh;
+    }
+  }
+
+  /* Force map interaction even when a drawer blocks the body */
+  .maplibregl-map, .maplibregl-canvas {
+    pointer-events: auto;
+  }
+
+  /* Rely matches the backdrop behavior in dialog.tsx - modal backdrops naturally block interaction */
+
+  button, [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled, 
+  [role="button"]:disabled,
+  [role="button"][aria-disabled="true"],
+  [role="button"][data-disabled] {
+    cursor: default;
+  }
+
+  #root {
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  @media (display-mode: standalone) {
+    #root {
+      height: 100vh;
+    }
+  }
 }
 
-#root {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-/* Scrolling utility */
-.custom-scrollbar {
+@utility custom-scrollbar {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior: contain;
 }
 
-/* Interactivity */
-button,
-[role="button"],
-.cursor-pointer {
-  cursor: pointer;
+@utility glassy-tinted {
+  @apply backdrop-blur-3xl border border-white/15 shadow-2xl relative;
+  background: color-mix(in oklch, var(--glass-tint), rgba(15, 20, 35, 0.3) 80%);
+  
+  &.dark, .dark & {
+    background: color-mix(in oklch, var(--glass-tint), rgba(0, 0, 0, 0.5) 75%);
+    @apply border-white/15;
+  }
 }
 
-/* Safe areas positioning utilities */
-.safe-top {
-  top: 1rem;
-  top: calc(1rem + env(safe-area-inset-top, 0px));
+@utility safe-top {
+  padding-top: 1rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
 }
 
-.safe-left {
-  left: 1rem;
-  left: calc(1rem + env(safe-area-inset-left, 0px));
+@utility safe-left {
+  padding-left: 1rem;
+  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
 }
 
-.safe-right {
-  right: 1rem;
-  right: calc(1rem + env(safe-area-inset-right, 0px));
+@utility safe-right {
+  padding-right: 1rem;
+  padding-right: calc(1rem + env(safe-area-inset-right, 0px));
 }
 
-.safe-bottom {
-  bottom: 1rem;
-  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+@utility safe-bottom {
+  padding-bottom: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* MapLibre Controls */
+/* MapLibre Controls Overrides */
 .maplibregl-ctrl-bottom-right {
   margin: 0 0.5rem 0.5rem 0 !important;
 }

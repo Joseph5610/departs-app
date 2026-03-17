@@ -1,7 +1,6 @@
-
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, MoonStar, Star, MapPin, Share2 } from 'lucide-react';
+import { MoonStar } from 'lucide-react';
 import { type Locale } from 'date-fns';
 import { cs } from 'date-fns/locale/cs';
 import { enUS } from 'date-fns/locale/en-US';
@@ -16,8 +15,11 @@ import { useInfotexts } from '../../hooks/useInfotexts';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
-import { useShare } from '../../hooks/useShare';
 import { GenericAlertCard } from '../GenericAlertCard';
+import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { DepartureListSkeleton } from '../LoadingSkeletons';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -28,12 +30,16 @@ interface DetailPanelContentProps {
     onToggleFollow: () => void;
 }
 
+/**
+ * DetailPanelContent
+ *
+ * Re-architected with semantic layout components.
+ */
 export const DetailPanelContent = memo<DetailPanelContentProps>(({
     onToggleFollow
 }) => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
-    const { share } = useShare();
 
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
@@ -41,24 +47,23 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const { data: allInfotexts } = useInfotexts();
     const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, departureSort, userLocation, userSpeed, favoriteStops } = state;
-    const { setDepartureSort, toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, toggleFavorite } = actions;
+    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, userLocation, userSpeed } = state;
+    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
-    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
 
     const stopDistanceInfo = useMemo(() => {
-        if (!selectedStop?.coordinates || !userLocation) return null;
-        const distance = calculateDistance(userLocation, selectedStop.coordinates);
+        const coords = selectedStop?.coordinates;
+        if (!coords || !userLocation) return null;
+        const distance = calculateDistance(userLocation, coords);
 
         const isAtStop = distance < 20;
         const isMovingFast = userSpeed !== null && userSpeed > 4;
 
         return {
             distance: Math.round(distance),
-            time: Math.ceil(distance / 60), // fallback, actual calculation in getCatchStatus used by DepartureItem
+            time: Math.ceil(distance / 60),
             isAtStop,
-            isMovingFast,
             showCatchIndicator: distance < 750 && !isMovingFast
         };
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
@@ -84,22 +89,12 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
 
     const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
 
-    const handleShare = useCallback(() => {
-        if (selectedStop) {
-            share({
-                title: t('map.departures.shareTitle', { name: selectedStop.name }),
-                text: t('map.departures.shareText', { name: selectedStop.name }),
-                url: window.location.href
-            });
-        }
-    }, [selectedStop, share, t]);
-
     return (
-        <div className="space-y-4 pt-1">
+        <Stack gap={4} className="pt-1">
             {showDepartureBoard && (
-                <div className="space-y-4 mb-2">
+                <Stack gap={4}>
                     {relevantInfotexts.length > 0 && (
-                        <div className="space-y-2">
+                        <Stack gap={2}>
                             {relevantInfotexts.map(info => (
                                 <GenericAlertCard
                                     key={info.id}
@@ -110,56 +105,9 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                     isActive={true}
                                 />
                             ))}
-                        </div>
+                        </Stack>
                     )}
-
-                    {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-2xl border border-white/5 text-zinc-400 text-xs">
-                            <MapPin size={14} className="text-zinc-500" />
-                            <span className="font-medium">
-                                {stopDistanceInfo.isAtStop
-                                    ? t('map.departures.atStop')
-                                    : t('map.departures.distance', {
-                                        distance: stopDistanceInfo.distance,
-                                        time: Math.ceil(stopDistanceInfo.distance / 60) // Simple approximation for header
-                                    })}
-                            </span>
-                        </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                        <span className="text-zinc-500 text-[10px] uppercase font-black tracking-widest">{t('map.departures.upcoming')}</span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleShare}
-                                className="h-8 w-8 flex items-center justify-center rounded-xl border bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300 transition-all active:scale-90"
-                            >
-                                <Share2 size={14} />
-                            </button>
-                            <button
-                                onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
-                                className={`h-8 w-8 flex items-center justify-center rounded-xl border transition-all active:scale-90 ${isFavorite ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:text-zinc-300'}`}
-                            >
-                                <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
-                            </button>
-                            <div className="flex h-8 bg-white/5 p-0.5 rounded-xl border border-white/5">
-                                <button
-                                    onClick={() => setDepartureSort('line')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'line' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                    title={t('map.departures.sortByLine')}
-                                >
-                                    <ArrowDownAz size={14} />
-                                </button>
-                                <button
-                                    onClick={() => setDepartureSort('departure')}
-                                    className={`px-2 h-full rounded-lg transition-all ${departureSort === 'departure' ? 'bg-white/10 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                    title={t('map.departures.sortByDeparture')}
-                                >
-                                    <Clock size={14} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </Stack>
             )}
 
             <VehicleDetail
@@ -179,20 +127,20 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
 
                 return (
-                    <div key={group.groupId} className={showHeader ? "space-y-3" : "space-y-3 -mt-1"}>
+                    <Stack key={group.groupId} gap={3} className={cn(!showHeader && "-mt-1")}>
                         {showHeader && (
-                            <div className="flex items-center gap-3 px-1">
-                                <div
+                            <HStack gap={3} className="px-1">
+                                <Box
                                     className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
                                     style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
                                 >
                                     {group.line}
-                                </div>
-                                <div className="h-[1px] flex-1 bg-white/10" />
-                            </div>
+                                </Box>
+                                <Box className="h-[1px] flex-1 bg-border" />
+                            </HStack>
                         )}
 
-                        <div className="space-y-2">
+                        <Stack className="gap-2">
                             {visibleDepartures.map((dep: Departure, idx: number) => (
                                 <DepartureItem
                                     key={idx}
@@ -205,36 +153,39 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                             ))}
 
                             {hasMore && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full py-2 text-zinc-500 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-zinc-400 transition-colors"
+                                    className="w-full h-auto py-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground"
                                 >
-                                    <div className="h-[1px] flex-1 bg-white/5" />
+                                    <Box className="h-[1px] flex-1 bg-border" />
                                     <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <div className="h-[1px] flex-1 bg-white/5" />
-                                </button>
+                                    <Box className="h-[1px] flex-1 bg-border" />
+                                </Button>
                             )}
-                        </div>
-                    </div>
+                        </Stack>
+                    </Stack>
                 );
             })}
-
             {showMetroNightMessage ? (
-                <div className="py-12 px-6 flex flex-col items-center text-center space-y-4 bg-white/5 rounded-3xl border border-white/5">
-                    <div className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                <Surface variant="tinted" padding="xl" className="items-center text-center flex flex-col gap-4 border-white/10!">
+                    <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
                         <MoonStar size={32} className="text-indigo-400" />
-                    </div>
-                    <div className="space-y-2">
-                        <h3 className="text-white font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
-                        <p className="text-zinc-400 text-sm leading-relaxed">
+                    </Box>
+                    <Stack gap={2}>
+                        <h3 className="text-foreground font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
                             {t('map.departures.metroNight.description')}
                         </p>
-                    </div>
-                </div>
-            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps && (
-                <div className="py-12 text-center text-zinc-500">{t('map.departures.noUpcoming')}</div>
-            )}
-        </div>
+                    </Stack>
+                </Surface>
+            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps ? (
+                <Box className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</Box>
+            ) : showDepartureBoard && groupedDepartures.length === 0 && loadingDeps ? (
+                <DepartureListSkeleton />
+            ) : null}
+        </Stack>
     );
 });
 

@@ -7,12 +7,12 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DetailPanel } from './DetailPanel/DetailPanel';
+import { DepartureBoardHeader } from './DetailPanel/DepartureBoardHeader';
 
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
-const UpdatePopup = React.lazy(() => import('./UpdatePopup').then(module => ({ default: module.UpdatePopup })));
 import { Search } from './Search';
 import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
@@ -57,7 +57,7 @@ const MapInner: React.FC = () => {
 
     const panelTitle = useMemo(() => {
         if (state.selectedVehicle) {
-            return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.gtfs_route_short_name || state.selectedVehicle.route_short_name });
+            return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.route_short_name || '' });
         }
         return state.selectedStop ? state.selectedStop.name : '';
     }, [state.selectedVehicle, state.selectedStop, t]);
@@ -70,7 +70,7 @@ const MapInner: React.FC = () => {
                 onMove={mapEvents.onMove}
                 onMoveEnd={mapEvents.onMoveEnd}
                 onLoad={mapEvents.onLoad}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
                 mapStyle={MAP_STYLE}
                 mapLib={maplibregl as unknown as typeof maplibregl}
                 onDragStart={mapEvents.onDragStart}
@@ -85,7 +85,12 @@ const MapInner: React.FC = () => {
                 }}
                 onClick={(evt) => {
                     const f = evt.features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') return;
+                    if (!f || f.layer.id === 'entrance-layer') {
+                        // User clicked on empty area or background layer
+                        // We intentionally do NOT clear selection here to keep the DetailPanel open
+                        // according to "Smart Sidebar" behavior.
+                        return;
+                    }
 
                     if (f.layer.id === 'clusters') {
                         const clusterId = f.properties.cluster_id;
@@ -105,10 +110,32 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const props = f.properties;
+                        const rawProps = f.properties || {};
+                        const props = { ...rawProps };
+
+                        // MapLibre stringifies objects in properties. Safely parse them.
+                        if (typeof props.vehicle_descriptor === 'string') {
+                            try {
+                                props.vehicle_descriptor = JSON.parse(props.vehicle_descriptor);
+                            } catch {
+                                // Fallback if parsing fails
+                            }
+                        }
+
+                        // Ensure numeric types for properties that might be stringified
+                        const numericProps = ['delay', 'bearing', 'last_stop_sequence', 'route_type'];
+                        numericProps.forEach(key => {
+                            if (props[key] !== undefined && props[key] !== null && props[key] !== '') {
+                                props[key] = Number(props[key]);
+                            }
+                        });
+
+                        const vehicleId = String(props.vehicle_id || props.id || '');
+                        if (!vehicleId) return;
+
                         actions.selectVehicle({
                             ...props,
-                            vehicle_id: String(props.vehicle_id || props.id),
+                            vehicle_id: vehicleId,
                             _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         } as TrackedVehicle, false); // clear stop
                         return;
@@ -116,10 +143,10 @@ const MapInner: React.FC = () => {
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
                         actions.selectStop({
-                            id: f.properties.stop_id,
-                            name: f.properties.stop_name,
-                            platformCode: f.properties.platform_code,
-                            isTrain: f.properties.is_train === 1,
+                            id: String(f.properties.stop_id),
+                            name: String(f.properties.stop_name),
+                            platformCode: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
+                            isTrain: Number(f.properties.is_train) === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
@@ -149,15 +176,18 @@ const MapInner: React.FC = () => {
             <React.Suspense fallback={null}>
                 <WelcomeModal />
                 <SettingsModal />
-                <UpdatePopup />
             </React.Suspense>
 
             <DetailPanel
                 isOpen={!!state.selectedStop || !!state.selectedVehicle}
-                onClose={actions.clearSelection}
+                onClose={() => {
+                    // Logic to clear URL if needed
+                    actions.clearSelection();
+                }}
                 onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
                 title={panelTitle}
                 platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
+                subHeader={<DepartureBoardHeader />}
             >
                 <DetailPanelContent
                     onToggleFollow={handleToggleFollow}

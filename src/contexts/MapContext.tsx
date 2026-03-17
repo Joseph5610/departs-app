@@ -31,13 +31,13 @@ const MapEngine: React.FC = () => {
     // Data needed for sync hooks
     const { vehicles: rawVehicles } = useVehicles();
     const { data: vehicleDetail } = useVehicleDetail();
-    const { data: stopsData } = useStops();
+    const { _raw_data: stopsRawData } = useStops();
 
     // Sync Background Logic
     useMapUrlSync(selectedStop, setSelectedStop);
-    useMapStopEnrichment(selectedStop, setSelectedStop, stopsData || null);
+    useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
-    useMapCameraFollow(mapRef, selectedVehicle, isFollowing);
+    useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
     useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
 
     return null;
@@ -161,9 +161,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
             trip_id: tripId,
-            gtfs_route_short_name: initialData?.line,
+            route_short_name: initialData?.line,
             route_type: initialData?.type,
-            gtfs_trip_headsign: initialData?.headsign,
+            trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
             state_position: 'on_track',
             _geometry: [0, 0],

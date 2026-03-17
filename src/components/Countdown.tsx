@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CountdownProps {
     timestamp: string;
 }
 
+/**
+ * Countdown
+ *
+ * Logic-only component for time display.
+ */
 export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     const { t } = useTranslation();
     const [secondsLeft, setSecondsLeft] = useState(() =>
@@ -33,7 +39,7 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
         : `${mins}:${secs.toString().padStart(2, '0')}`;
 
     return (
-        <span className={secondsLeft < 120 ? 'text-emerald-400' : 'text-white'}>
+        <span className={cn(secondsLeft < 120 ? 'text-emerald-400' : 'text-foreground')}>
             {formatted}
         </span>
     );

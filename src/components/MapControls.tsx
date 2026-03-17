@@ -4,9 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
-import { cn } from '../utils/cn';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Overlay, Stack, Box, Surface } from '@/components/ui/layout';
 
-
+/**
+ * MapControls Component
+ *
+ * Re-architected with semantic components to remove redundant positioning classes.
+ * Applied glassy theme with increased transparency for better backdrop-blur visibility.
+ */
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions, mapRef } = useMap();
@@ -33,6 +40,7 @@ export const MapControls = React.memo(() => {
             pitch: 0
         });
     }, [mapRef]);
+
     const [showCompass, setShowCompass] = useState(false);
 
     useEffect(() => {
@@ -42,14 +50,11 @@ export const MapControls = React.memo(() => {
         const updateCompass = () => {
             const bearing = map.getBearing();
             const pitch = map.getPitch();
-            // Show compass if bearing or pitch is more than 0.5 degrees
             setShowCompass(Math.abs(bearing) > 0.5 || Math.abs(pitch) > 0.5);
         };
 
         map.on('rotate', updateCompass);
         map.on('pitch', updateCompass);
-
-        // Initial check
         updateCompass();
 
         return () => {
@@ -59,62 +64,81 @@ export const MapControls = React.memo(() => {
     }, [mapRef, mapLoaded]);
 
     return (
-        <div className="absolute z-10 flex flex-col gap-2 safe-top safe-right">
-            <button
-                onClick={(e) => onLocate(e)}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                title={t('map.controls.myLocation')}
-                aria-label={t('map.controls.myLocation')}
-            >
-                <LocateFixed
-                    size={20}
-                    className={cn(
-                        "transition-all",
-                        isGeoPending ? "animate-spin text-blue-400" : "group-hover:scale-110"
-                    )}
-                />
-            </button>
-            <button
-                onClick={onSettings}
-                className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                title={t('map.controls.settings')}
-                aria-label={t('map.controls.settings')}
-            >
-                <Settings size={20} className="group-hover:rotate-45 transition-transform" />
-            </button>
-            <Alerts />
+        <Overlay position="top-right" className="safe-top safe-right p-4 z-40" data-testid="map-controls">
+            <Stack gap={2}>
+                <ControlButton
+                    onClick={(e) => onLocate(e)}
+                    title={t('map.controls.myLocation')}
+                    testId="map-locate-btn"
+                >
+                    <LocateFixed
+                        size={20}
+                        className={cn(
+                            "transition-all",
+                            isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
+                        )}
+                    />
+                </ControlButton>
 
-            <div className="flex flex-col bg-black/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mt-2 overflow-hidden">
-                <button
-                    onClick={onZoomIn}
-                    className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
-                    title={t('map.controls.zoomIn')}
-                    aria-label={t('map.controls.zoomIn')}
+                <ControlButton
+                    onClick={onSettings}
+                    title={t('map.controls.settings')}
+                    testId="map-settings-btn"
                 >
-                    <Plus size={20} className="group-hover:scale-110 transition-transform" />
-                </button>
-                <div className="mx-2 h-[1px] bg-white/10" />
-                <button
-                    onClick={onZoomOut}
-                    className="p-3 text-white hover:bg-white/5 active:bg-white/10 active:scale-95 transition-all pointer-events-auto group"
-                    title={t('map.controls.zoomOut')}
-                    aria-label={t('map.controls.zoomOut')}
-                >
-                    <Minus size={20} className="group-hover:scale-110 transition-transform" />
-                </button>
-            </div>
-            {showCompass && (
-                <button
-                    onClick={onResetBearing}
-                    className="p-3 bg-black/90 backdrop-blur-md hover:bg-black/80 active:bg-zinc-800 active:scale-95 text-white rounded-2xl border border-white/10 shadow-2xl transition-all pointer-events-auto group"
-                    title={t('map.controls.resetBearing')}
-                    aria-label={t('map.controls.resetBearing')}
-                >
-                    <Compass size={20} className="group-hover:rotate-12 transition-transform" />
-                </button>
-            )}
-        </div>
+                    <Settings size={20} className="transition-transform group-hover:rotate-45" />
+                </ControlButton>
+
+                <Alerts />
+
+                <Surface variant="tinted" padding="none" className="flex flex-col mt-2 overflow-hidden rounded-2xl border-white/20!">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onZoomIn}
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
+                        title={t('map.controls.zoomIn')}
+                        aria-label={t('map.controls.zoomIn')}
+                    >
+                        <Plus size={20} />
+                    </Button>
+                    <Box className="mx-2 h-[1px] bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onZoomOut}
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
+                        title={t('map.controls.zoomOut')}
+                        aria-label={t('map.controls.zoomOut')}
+                    >
+                        <Minus size={20} />
+                    </Button>
+                </Surface>
+
+                {showCompass && (
+                    <ControlButton
+                        onClick={onResetBearing}
+                        title={t('map.controls.resetBearing')}
+                    >
+                        <Compass size={20} className="transition-transform group-hover:rotate-12" />
+                    </ControlButton>
+                )}
+            </Stack>
+        </Overlay>
     );
 });
+
+const ControlButton = ({ children, onClick, title, testId }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string }) => (
+    <Button
+        variant="tinted"
+        size="icon"
+        onClick={onClick}
+        title={title}
+        aria-label={title}
+        className="h-11 w-11 border-white/20!"
+        data-testid={testId}
+    >
+        {children}
+    </Button>
+);
 
 MapControls.displayName = 'MapControls';
