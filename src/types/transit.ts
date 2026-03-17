@@ -121,6 +121,7 @@ export interface VehicleDetail {
     route_short_name: string;
     trip_headsign: string;
     delay: number;
+    bearing: number | null;
     state_position: string;
     is_static_fallback?: boolean;
     last_stop_sequence?: number;

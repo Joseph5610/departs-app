@@ -3,12 +3,11 @@ import { useCallback, useMemo } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../types/transit';
 import { useMap } from '../hooks/useMap';
 
-const fetchRawVehicles = async (bounds: string | null, trackedId: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
+const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
     try {
         const url = new URL('/api/vehicles', window.location.origin);
 
         if (bounds) url.searchParams.set('bounds', bounds);
-        if (trackedId) url.searchParams.set('tripId', trackedId);
         if (routeFilter && routeFilter.length > 0) {
             routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
         }
@@ -30,12 +29,7 @@ const fetchRawVehicles = async (bounds: string | null, trackedId: string | null,
 
 export const useVehicles = () => {
     const { state } = useMap();
-    const { debouncedBounds: bounds, selectedVehicle, routeFilter, routeTypeFilter } = state;
-
-    const trackedId = useMemo(() => {
-        if (!selectedVehicle) return null;
-        return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || null;
-    }, [selectedVehicle]);
+    const { debouncedBounds: bounds, routeFilter, routeTypeFilter } = state;
 
     const selectFn = useCallback((allFeatures: VehicleFeature[]): VehicleCollection => {
         return {
@@ -45,10 +39,10 @@ export const useVehicles = () => {
     }, []);
 
     const query = useQuery<VehicleFeature[], Error, VehicleCollection>({
-        queryKey: ['vehicles', bounds, trackedId, routeFilter, routeTypeFilter],
-        queryFn: () => fetchRawVehicles(bounds, trackedId, routeFilter, routeTypeFilter),
+        queryKey: ['vehicles', bounds, routeFilter, routeTypeFilter],
+        queryFn: () => fetchRawVehicles(bounds, routeFilter, routeTypeFilter),
         select: selectFn,
-        enabled: !!bounds || !!trackedId || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
+        enabled: !!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
         refetchInterval: 10000,
         staleTime: 5000,
         gcTime: 60000,
