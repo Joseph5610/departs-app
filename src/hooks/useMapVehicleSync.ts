@@ -71,8 +71,9 @@ export const useMapVehicleSync = (
             const detailDelay = vehicleDetail.delay;
             const hasValidDetailLocation = detailCoords && (detailCoords[0] !== 0 || detailCoords[1] !== 0);
 
-            // Update if coordinates, delay or sequence changed in the detail API
+            // Update if coordinates, delay, bearing or sequence changed in the detail API
             const coordsChanged = detailCoords && (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1]);
+            const bearingChanged = !isFallback && vehicleDetail.bearing !== undefined && selectedVehicle.bearing !== vehicleDetail.bearing;
 
             // LOSSLESS DELAY SYNC:
             // We only trust a "0" delay from the detail API if we don't already have a non-zero delay
@@ -84,7 +85,7 @@ export const useMapVehicleSync = (
 
             const sequenceChanged = !isFallback && vehicleDetail.last_stop_sequence !== undefined && selectedVehicle.last_stop_sequence !== vehicleDetail.last_stop_sequence;
 
-            if (coordsChanged || delayChanged || sequenceChanged) {
+            if (coordsChanged || delayChanged || bearingChanged || sequenceChanged) {
                 updated = true;
                 // Only update coordinates if they are valid, or if we currently have invalid ones
                 if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
@@ -94,6 +95,7 @@ export const useMapVehicleSync = (
                 newProps = {
                     ...newProps,
                     delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
+                    bearing: isFallback ? (newProps.bearing ?? selectedVehicle.bearing) : (vehicleDetail.bearing ?? newProps.bearing),
                     state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
                     last_stop_sequence: isFallback ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence) : (vehicleDetail.last_stop_sequence ?? newProps.last_stop_sequence),
                     vehicle_descriptor: {
@@ -110,10 +112,11 @@ export const useMapVehicleSync = (
                 // Deep equality check for properties that trigger updates
                 const hasGeometryChanged = prev._geometry[0] !== newCoords[0] || prev._geometry[1] !== newCoords[1];
                 const hasDelayChanged = prev.delay !== (newProps.delay ?? prev.delay);
+                const hasBearingChanged = prev.bearing !== (newProps.bearing ?? prev.bearing);
                 const hasSequenceChanged = prev.last_stop_sequence !== (newProps.last_stop_sequence ?? prev.last_stop_sequence);
                 const hasStateChanged = prev.state_position !== (newProps.state_position ?? prev.state_position);
 
-                if (!hasGeometryChanged && !hasDelayChanged && !hasSequenceChanged && !hasStateChanged) {
+                if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged) {
                     return prev;
                 }
 

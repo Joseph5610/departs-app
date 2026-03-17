@@ -13,11 +13,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     // Extract query parameters
     const bounds = url.searchParams.get("bounds");
     const routeTypes = url.searchParams.getAll("routeType");
-    const tripId = url.searchParams.get("tripId");
     const routeShortNames = url.searchParams.getAll("routeShortName");
 
     // Validate: at least one filter must be present
-    if (!tripId && !bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
+    if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
@@ -37,12 +36,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             fetchPromises.push(golemioFetch("/v2/public/vehiclepositions", env, { searchParams: params }));
         }
 
-        // 2. Prepare fetch for specific Trip ID (Internal API for higher precision/specific trip tracking)
-        if (tripId) {
-            fetchPromises.push(golemioFetch(`/v2/vehiclepositions/${tripId}`, env));
-        }
-
-        // 3. Execute all fetches in parallel
+        // 2. Execute all fetches in parallel
         const responses = await Promise.all(fetchPromises);
         let allFeatures: GolemioVehicleFeature[] = [];
 
@@ -53,14 +47,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             // Normalize differently based on response structure
             if ('type' in data && data.type === 'FeatureCollection' && 'features' in data) {
-                const features = (data.features || []).map((f) => normalizeVehicleFeature(f, tripId || undefined));
+                const features = (data.features || []).map((f) => normalizeVehicleFeature(f));
                 allFeatures = [...allFeatures, ...features];
             } else if ('type' in data && data.type === 'Feature') {
-                allFeatures.push(normalizeVehicleFeature(data as GolemioVehicleFeature, tripId || undefined));
+                allFeatures.push(normalizeVehicleFeature(data as GolemioVehicleFeature));
             }
         }
 
-        // 4. Process (deduplicate and jitter) the combined results
+        // 3. Process (deduplicate and jitter) the combined results
         const features = processVehicleFeatures(allFeatures);
 
         return createSuccessResponse({ type: 'FeatureCollection', features }, CACHE_TTL.VEHICLES);
