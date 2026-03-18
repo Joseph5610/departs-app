@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { TrackedVehicle } from '../types/transit';
+import type { VehicleDetail } from '../types/transit';
 
 /**
  * Handles the pulsing animation for a selected vehicle on the map.
@@ -11,7 +11,7 @@ import type { TrackedVehicle } from '../types/transit';
  */
 export const useMapAnimation = (
     mapRef: React.RefObject<MapRef | null>,
-    selectedVehicle: TrackedVehicle | null,
+    selectedVehicle: VehicleDetail | null,
     isFollowing: boolean
 ) => {
     useEffect(() => {
@@ -20,8 +20,9 @@ export const useMapAnimation = (
 
         const animate = () => {
             const map = mapRef.current?.getMap();
-            if (map && selectedVehicle?._geometry) {
-                const [lng, lat] = selectedVehicle._geometry;
+            const coords = selectedVehicle?.geometry?.coordinates;
+            if (map && coords) {
+                const [lng, lat] = coords;
                 if (lng === 0 && lat === 0) {
                     frame = requestAnimationFrame(animate);
                     return;

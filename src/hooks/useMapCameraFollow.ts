@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { TrackedVehicle } from '../types/transit';
+import type { VehicleDetail } from '../types/transit';
 import {
     MOBILE_BREAKPOINT,
     MOBILE_BOTTOM_SHEET_RATIO,
@@ -12,7 +12,7 @@ import {
  */
 export const useMapCameraFollow = (
     mapRef: React.RefObject<MapRef | null>,
-    selectedVehicle: TrackedVehicle | null,
+    selectedVehicle: VehicleDetail | null,
     isFollowing: boolean,
     selectedStop?: { coordinates?: [number, number] } | null
 ) => {
@@ -36,9 +36,10 @@ export const useMapCameraFollow = (
             return;
         }
 
-        if (!selectedVehicle?._geometry || !mapRef.current) return;
+        const coords = selectedVehicle?.geometry?.coordinates;
+        if (!coords || !mapRef.current) return;
 
-        const [lng, lat] = selectedVehicle._geometry;
+        const [lng, lat] = coords;
 
         // Don't follow if position is unknown/invalid placeholder [0, 0]
         if (lng === 0 && lat === 0) return;
@@ -49,5 +50,5 @@ export const useMapCameraFollow = (
             essential: true,
             padding
         });
-    }, [selectedVehicle?._geometry, isFollowing, mapRef, selectedStop?.coordinates]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates]);
 };

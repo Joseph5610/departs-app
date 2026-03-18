@@ -1,13 +1,13 @@
 import { useReducer, useCallback } from 'react';
 import { STORAGE_KEYS } from '../config/constants';
-import type { TrackedVehicle, SelectedStop, SearchHistoryItem, SearchHistoryBase } from '../types/transit';
+import type { VehicleDetail, SelectedStop, SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 
 /**
  * State managed by the map reducer
  */
 export interface MapState {
     selectedStop: SelectedStop | null;
-    selectedVehicle: TrackedVehicle | null;
+    selectedVehicle: VehicleDetail | null;
     isFollowing: boolean;
     showVehicles: boolean;
     showStops: boolean;
@@ -27,9 +27,9 @@ export interface MapState {
  */
 export type MapAction =
     | { type: 'SET_SELECTED_STOP'; payload: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null) }
-    | { type: 'SET_SELECTED_VEHICLE'; payload: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null) }
+    | { type: 'SET_SELECTED_VEHICLE'; payload: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null) }
     | { type: 'SELECT_STOP'; payload: SelectedStop | null }
-    | { type: 'SELECT_VEHICLE'; payload: TrackedVehicle | null; keepStop?: boolean }
+    | { type: 'SELECT_VEHICLE'; payload: VehicleDetail | null; keepStop?: boolean }
     | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean }
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
@@ -156,7 +156,7 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             const newItem = { ...action.payload, timestamp: Date.now() } as SearchHistoryItem;
             let newHistory = state.searchHistory.filter(item => {
                 if (item.type === 'stop' && newItem.type === 'stop') {
-                    return item.id !== newItem.id;
+                    return item.stop_id !== newItem.stop_id;
                 }
                 if (item.type === 'line' && newItem.type === 'line') {
                     return item.lines.join(',') !== newItem.lines.join(',');
@@ -184,13 +184,13 @@ export const useMapReducer = () => {
     const setSelectedStop = useCallback((stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) =>
         dispatch({ type: 'SET_SELECTED_STOP', payload: stop }), []);
 
-    const setSelectedVehicle = useCallback((vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) =>
+    const setSelectedVehicle = useCallback((vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) =>
         dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
 
     const selectStop = useCallback((stop: SelectedStop | null) =>
         dispatch({ type: 'SELECT_STOP', payload: stop }), []);
 
-    const selectVehicle = useCallback((vehicle: TrackedVehicle | null, keepStop = false) =>
+    const selectVehicle = useCallback((vehicle: VehicleDetail | null, keepStop = false) =>
         dispatch({ type: 'SELECT_VEHICLE', payload: vehicle, keepStop }), []);
 
     const clearSelection = useCallback(() =>

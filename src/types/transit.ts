@@ -1,14 +1,14 @@
-export interface VehicleProperties {
+export interface BaseVehicleProperties {
     vehicle_id: string;
-    route_type: string;
     gtfs_trip_id: string;
     route_short_name?: string;
+    route_type?: string | number;
     trip_headsign?: string;
     bearing: number | null | undefined;
     delay: number;
-    state_position: string;
+    state_position?: string;
     next_stop_name?: string;
-    last_updated?: string;
+    run_number?: number | string;
     vehicle_descriptor?: {
         operator?: string;
         vehicle_type?: string;
@@ -17,6 +17,11 @@ export interface VehicleProperties {
         has_usb_chargers?: boolean;
         vehicle_registration_number?: string;
     };
+}
+
+export interface VehicleProperties extends BaseVehicleProperties {
+    state_position: string; // Required in map features
+    last_updated?: string;
 }
 
 export interface VehicleFeature {
@@ -63,11 +68,11 @@ export interface StopCollection {
 }
 
 export interface SelectedStop {
-    id: string;
-    name: string;
-    platformCode?: string;
+    stop_id: string;
+    stop_name: string;
+    platform_code?: string;
     coordinates?: [number, number];
-    isTrain?: boolean;
+    is_train?: boolean;
     all_ids?: string[];
 }
 
@@ -116,75 +121,40 @@ export interface Infotext {
     valid_to: string | null;
 }
 
-export interface VehicleDetail {
-    gtfs_trip_id: string;
-    route_short_name: string;
-    trip_headsign: string;
-    delay: number;
-    bearing: number | null;
-    state_position: string;
-    is_static_fallback?: boolean;
-    last_stop_sequence?: number;
+export interface VehicleDetail extends BaseVehicleProperties {
+    last_stop_sequence?: number | null;
     origin_timestamp?: string;
-    run_number?: number;
-    vehicle_id?: string;
-    vehicle_descriptor?: {
-        operator?: string;
-        vehicle_type?: string;
-        is_wheelchair_accessible?: boolean;
-        is_air_conditioned?: boolean;
-        has_usb_chargers?: boolean;
-        vehicle_registration_number?: string;
-    };
-    stop_times?: {
-        features: Array<{
-            properties: {
-                stop_name: string;
-                stop_sequence: number;
-                arrival_time: string;
-                realtime_arrival_time?: string;
-                departure_time?: string;
-                realtime_departure_time?: string;
-                zone_id?: string;
-            };
-        }>;
-    };
-    shapes?: number[][];
     geometry?: {
         type: "Point";
         coordinates: [number, number];
     };
+    stop_times?: {
+        type: "FeatureCollection";
+        features: Array<{
+            type: "Feature";
+            geometry: {
+                type: "Point";
+                coordinates: [number, number];
+            };
+            properties: {
+                stop_name: string;
+                stop_sequence: number;
+                zone_id?: string;
+                is_wheelchair_accessible?: boolean | null;
+                shape_dist_traveled?: number;
+                arrival_time: string;
+                departure_time: string;
+                realtime_arrival_time?: string;
+                realtime_departure_time?: string;
+            };
+        }>;
+    };
+    shapes?: number[][];
+    is_static_fallback?: boolean;
 }
 
 export type SearchHistoryBase =
-    | { type: 'stop'; id: string; name: string; platformCode?: string; coordinates: [number, number]; isTrain?: boolean }
+    | { type: 'stop'; stop_id: string; stop_name: string; platform_code?: string; coordinates: [number, number]; is_train?: boolean }
     | { type: 'line'; lines: string[] };
 
 export type SearchHistoryItem = SearchHistoryBase & { timestamp: number };
-
-export interface TrackedVehicle {
-    vehicle_id: string;
-    _geometry: [number, number];
-    gtfs_trip_id?: string;
-    route_short_name?: string;
-    trip_headsign?: string;
-    delay?: number;
-    bearing?: number | null;
-    route_type?: string | number;
-    state_position?: string;
-    origin_timestamp?: string;
-    next_stop_name?: string;
-    last_stop_sequence?: number;
-    run_number?: number | string;
-    vehicle_descriptor?: {
-        operator?: string;
-        vehicle_type?: string;
-        is_wheelchair_accessible?: boolean;
-        is_air_conditioned?: boolean;
-        has_usb_chargers?: boolean;
-        vehicle_registration_number?: string;
-    };
-    // Legacy/Sync compatibility (can be removed later if not used)
-    trip_id?: string;
-    id?: string;
-}

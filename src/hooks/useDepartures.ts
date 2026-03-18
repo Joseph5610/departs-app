@@ -5,7 +5,7 @@ import { useMap } from '../hooks/useMap';
 
 export const useDepartures = () => {
     const { state } = useMap();
-    const stopId = state.selectedStop?.id || null;
+    const stopId = state.selectedStop?.stop_id || null;
     const prevDelaysRef = useRef<Record<string, number>>({});
     const lastUpdateRef = useRef<Record<string, number>>({});
 

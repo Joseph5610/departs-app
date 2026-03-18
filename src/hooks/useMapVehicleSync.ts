@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { VehicleCollection, TrackedVehicle, VehicleDetail } from '../types/transit';
+import type { VehicleCollection, VehicleDetail } from '../types/transit';
 import { MAP_VEHICLE_SELECT_ZOOM, MAP_ANIMATION_DURATION, MOBILE_BREAKPOINT, MOBILE_BOTTOM_SHEET_RATIO, SIDEBAR_WIDTH } from '../config/constants';
 
 /**
@@ -15,8 +15,8 @@ import { MAP_VEHICLE_SELECT_ZOOM, MAP_ANIMATION_DURATION, MOBILE_BREAKPOINT, MOB
 export const useMapVehicleSync = (
     mapRef: React.RefObject<MapRef | null>,
     selectedId: string | number | null,
-    selectedVehicle: TrackedVehicle | null,
-    setSelectedVehicle: (vehicle: TrackedVehicle | null | ((prev: TrackedVehicle | null) => TrackedVehicle | null)) => void,
+    selectedVehicle: VehicleDetail | null,
+    setSelectedVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void,
     isFollowing: boolean,
     rawVehicles?: VehicleCollection | null,
     vehicleDetail?: VehicleDetail | null
@@ -30,8 +30,9 @@ export const useMapVehicleSync = (
         const stid = String(selectedVehicle.gtfs_trip_id || 'NONE');
 
         let updated = false;
-        let newProps: Partial<TrackedVehicle> = {};
-        let newCoords = selectedVehicle._geometry;
+        let newProps: Partial<VehicleDetail> = {};
+        const currentCoords = selectedVehicle.geometry?.coordinates || [0, 0];
+        let newCoords = [...currentCoords] as [number, number];
 
         // 1. Sync from high-frequency Map Stream
         // We look for the active vehicle in the latest GeoJSON batch from the map stream.
@@ -52,11 +53,11 @@ export const useMapVehicleSync = (
 
                 const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
-                if (selectedVehicle._geometry[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
+                if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;
                     newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
                     // Only update coordinates if they are valid, or if we currently have invalid ones
-                    if (hasValidLocation || (selectedVehicle._geometry[0] === 0 && selectedVehicle._geometry[1] === 0)) {
+                    if (hasValidLocation || (currentCoords[0] === 0 && currentCoords[1] === 0)) {
                         newCoords = coords;
                     }
                 }
@@ -107,20 +108,28 @@ export const useMapVehicleSync = (
         }
 
         if (updated) {
-            setSelectedVehicle((prev: TrackedVehicle | null) => {
+            setSelectedVehicle((prev: VehicleDetail | null) => {
                 if (!prev) return null;
+                const prevCoords = prev.geometry?.coordinates || [0, 0];
                 // Deep equality check for properties that trigger updates
-                const hasGeometryChanged = prev._geometry[0] !== newCoords[0] || prev._geometry[1] !== newCoords[1];
-                const hasDelayChanged = prev.delay !== (newProps.delay ?? prev.delay);
-                const hasBearingChanged = prev.bearing !== (newProps.bearing ?? prev.bearing);
-                const hasSequenceChanged = prev.last_stop_sequence !== (newProps.last_stop_sequence ?? prev.last_stop_sequence);
-                const hasStateChanged = prev.state_position !== (newProps.state_position ?? prev.state_position);
+                const hasGeometryChanged = prevCoords[0] !== newCoords[0] || prevCoords[1] !== newCoords[1];
+                const hasDelayChanged = newProps.delay !== undefined && prev.delay !== newProps.delay;
+                const hasBearingChanged = newProps.bearing !== undefined && prev.bearing !== newProps.bearing;
+                const hasSequenceChanged = newProps.last_stop_sequence !== undefined && prev.last_stop_sequence !== newProps.last_stop_sequence;
+                const hasStateChanged = newProps.state_position !== undefined && prev.state_position !== newProps.state_position;
 
                 if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged) {
                     return prev;
                 }
 
-                return { ...prev, ...newProps, _geometry: newCoords } as TrackedVehicle;
+                return {
+                    ...prev,
+                    ...newProps,
+                    geometry: {
+                        type: 'Point',
+                        coordinates: newCoords
+                    }
+                } as VehicleDetail;
             });
         }
 

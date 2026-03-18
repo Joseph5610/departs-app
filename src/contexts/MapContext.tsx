@@ -12,7 +12,7 @@ import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
 import { useMapStopEnrichment } from '../hooks/useMapStopEnrichment';
 import { addAllIcons } from '../utils/mapIcons';
-import type { Departure, VehicleCollection } from '../types/transit';
+import type { Departure } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
@@ -38,7 +38,7 @@ const MapEngine: React.FC = () => {
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
-    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles as VehicleCollection, vehicleDetail);
+    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles, vehicleDetail);
 
     return null;
 };
@@ -160,13 +160,15 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         selectVehicle({
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
-            trip_id: tripId,
             route_short_name: initialData?.line,
             route_type: initialData?.type,
             trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
             state_position: 'on_track',
-            _geometry: [0, 0],
+            geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+            },
             bearing: null
         }, true); // keep stop
     }, [selectVehicle]);
@@ -180,7 +182,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             userLocation,
             userSpeed,
             isGeoPending,
-            selectedId: state.selectedVehicle?.vehicle_id || state.selectedVehicle?.id || null
+            selectedId: state.selectedVehicle?.vehicle_id || null
         },
         actions: {
             setSelectedStop,

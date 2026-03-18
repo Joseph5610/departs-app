@@ -12,10 +12,10 @@ import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { VehicleDetailSkeleton } from './LoadingSkeletons';
 
-import type { TrackedVehicle, VehicleDetail as VehicleDetailType } from '../types/transit';
+import type { VehicleDetail as VehicleDetailType } from '../types/transit';
 
 interface VehicleDetailProps {
-    selectedVehicle: TrackedVehicle | null;
+    selectedVehicle: VehicleDetailType | null;
     vehicleDetail: VehicleDetailType | null;
     loadingDetail: boolean;
     isFollowing: boolean;

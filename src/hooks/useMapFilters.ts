@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
-import type { TrackedVehicle, VehicleCollection, VehicleFeature } from '../types/transit';
+import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../types/transit';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
@@ -11,13 +11,14 @@ const EMPTY_GEOJSON: VehicleCollection = {
  * Provides memoized GeoJSON and filter expressions for map layers.
  */
 export const useMapFilters = (
-    selectedVehicle: TrackedVehicle | null,
+    selectedVehicle: VehicleDetail | null,
     selectedId: string | null
 ) => {
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
-        if (!selectedVehicle || !selectedVehicle._geometry) return EMPTY_GEOJSON;
+        const coords = selectedVehicle?.geometry?.coordinates;
+        if (!selectedVehicle || !coords) return EMPTY_GEOJSON;
 
-        const [lng, lat] = selectedVehicle._geometry;
+        const [lng, lat] = coords;
         const hasValidLocation = lng !== 0 || lat !== 0;
 
         return {
@@ -25,24 +26,24 @@ export const useMapFilters = (
             features: [
                 {
                     type: 'Feature',
-                    geometry: hasValidLocation ? {
+                    geometry: {
                         type: 'Point',
-                        coordinates: selectedVehicle._geometry
-                    } : null,
+                        coordinates: hasValidLocation ? coords : [0, 0]
+                    },
                     properties: {
                         ...selectedVehicle,
                         route_type: selectedVehicle.route_type,
                         route_short_name: selectedVehicle.route_short_name
                     }
-                } as unknown as VehicleFeature
+                } as VehicleFeature
             ]
         };
     }, [selectedVehicle]);
 
     const vehiclesFilter = useMemo<FilterSpecification>(() => ['!', ['any',
         ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], String(selectedId || 'NOMATCH')],
-        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || selectedVehicle?.trip_id || 'NOMATCH')]
-    ]] as FilterSpecification, [selectedId, selectedVehicle?.gtfs_trip_id, selectedVehicle?.trip_id]);
+        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], String(selectedVehicle?.gtfs_trip_id || 'NOMATCH')]
+    ]] as FilterSpecification, [selectedId, selectedVehicle?.gtfs_trip_id]);
 
     return {
         selectedVehicleFeature,

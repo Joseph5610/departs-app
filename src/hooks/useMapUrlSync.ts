@@ -33,7 +33,7 @@ export const useMapUrlSync = (
                 }
             }
 
-            setSelectedStop({ id, name: finalName, platformCode: finalPlatform || undefined });
+            setSelectedStop({ stop_id: id, stop_name: finalName, platform_code: finalPlatform || undefined });
         }
         initialized.current = true;
     }, [setSelectedStop, selectedStop]);
@@ -42,10 +42,10 @@ export const useMapUrlSync = (
     useEffect(() => {
         const url = new URL(window.location.href);
         if (selectedStop) {
-            url.searchParams.set('stopId', selectedStop.id);
-            url.searchParams.set('stopName', selectedStop.name);
-            if (selectedStop.platformCode) {
-                url.searchParams.set('stopPlatform', selectedStop.platformCode);
+            url.searchParams.set('stopId', selectedStop.stop_id);
+            url.searchParams.set('stopName', selectedStop.stop_name);
+            if (selectedStop.platform_code) {
+                url.searchParams.set('stopPlatform', selectedStop.platform_code);
             } else {
                 url.searchParams.delete('stopPlatform');
             }
