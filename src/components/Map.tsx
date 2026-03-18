@@ -1,9 +1,9 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import MapGL, { type MapRef } from 'react-map-gl/maplibre';
+import MapGL, { type MapRef, type MapLayerMouseEvent } from 'react-map-gl/maplibre';
 import maplibregl, {
-    type Map as MapLibreInstance
+    type GeoJSONSource
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DetailPanel } from './DetailPanel/DetailPanel';
@@ -72,18 +72,18 @@ const MapInner: React.FC = () => {
                 onLoad={mapEvents.onLoad}
                 style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
                 mapStyle={MAP_STYLE}
-                mapLib={maplibregl as unknown as typeof maplibregl}
+                mapLib={maplibregl}
                 onDragStart={mapEvents.onDragStart}
-                onMouseEnter={(evt) => {
+                onMouseEnter={(evt: MapLayerMouseEvent) => {
                     const features = evt.features;
                     if (features?.length && features[0].layer.id !== 'entrance-layer') {
-                        (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = 'pointer';
+                        evt.target.getCanvas().style.cursor = 'pointer';
                     }
                 }}
-                onMouseLeave={(evt) => {
-                    (evt.target as unknown as MapLibreInstance).getCanvas().style.cursor = '';
+                onMouseLeave={(evt: MapLayerMouseEvent) => {
+                    evt.target.getCanvas().style.cursor = '';
                 }}
-                onClick={(evt) => {
+                onClick={(evt: MapLayerMouseEvent) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') {
                         // User clicked on empty area or background layer
@@ -93,19 +93,22 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'clusters') {
-                        const clusterId = f.properties.cluster_id;
-                        const map = mapRef.current?.getMap() as unknown as MapLibreInstance;
+                        const clusterId = f.properties?.cluster_id;
+                        const map = mapRef.current?.getMap();
+                        if (!map) return;
                         const sourceId = 'pid-stops';
-                        const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
-                        source.getClusterExpansionZoom(clusterId).then((zoom) => {
-                            mapRef.current?.easeTo({
-                                center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
-                                zoom,
-                                duration: 500
+                        const source = map.getSource(sourceId) as GeoJSONSource;
+                        if (source && clusterId !== undefined) {
+                            source.getClusterExpansionZoom(clusterId).then((zoom) => {
+                                mapRef.current?.easeTo({
+                                    center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
+                                    zoom,
+                                    duration: 500
+                                });
+                            }).catch(() => {
+                                // Silent fail
                             });
-                        }).catch(() => {
-                            // Silent fail
-                        });
+                        }
                         return;
                     }
 
@@ -137,18 +140,20 @@ const MapInner: React.FC = () => {
                             ...props,
                             vehicle_id: vehicleId,
                             geometry: f.geometry
-                        } as VehicleDetail, false); // clear stop
+                        } as unknown as VehicleDetail, false); // clear stop
                         return;
                     }
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
-                        actions.selectStop({
-                            stop_id: String(f.properties.stop_id),
-                            stop_name: String(f.properties.stop_name),
-                            platform_code: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
-                            is_train: Number(f.properties.is_train) === 1,
-                            coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                        });
+                        if (f.properties) {
+                            actions.selectStop({
+                                stop_id: String(f.properties.stop_id),
+                                stop_name: String(f.properties.stop_name),
+                                platform_code: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
+                                is_train: Number(f.properties.is_train) === 1,
+                                coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                            });
+                        }
                     }
                 }}
                 interactiveLayerIds={['unclustered-point', 'train-stations', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}

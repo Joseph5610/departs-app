@@ -34,7 +34,6 @@ export const METRO_STATIONS: Record<string, string[]> = {
     "Florenc": ["B", "C"]
 };
 
-export const TRANSFER_STATION_NAMES = ['Můstek', 'Muzeum', 'Florenc'];
 
 // Generate the flat array for Mapbox 'match' expression: [name, color, name, color, ...]
 export const getStationColorMatchPairs = (): (string | number)[] => {

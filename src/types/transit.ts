@@ -1,4 +1,4 @@
-export interface BaseVehicleProperties {
+interface BaseVehicleProperties {
     vehicle_id: string;
     gtfs_trip_id: string;
     route_short_name?: string;

@@ -43,8 +43,6 @@ export const STORAGE_KEYS = {
 /**
  * API and Transit constants
  */
-export const VEHICLE_REFETCH_INTERVAL = 10000;
-export const VEHICLE_STALE_TIME = 5000;
 
 /**
  * Average walking speed in m/s (3.6 km/h)
