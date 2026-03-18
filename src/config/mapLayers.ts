@@ -89,8 +89,8 @@ export const stopPointLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 6],
-            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 28, 22]
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 9.5, 5.7],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 26.6, 20.9]
         ],
         'circle-color': ['case',
             // Only apply custom colors for Stations (Type 1)
@@ -141,8 +141,8 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 15, 10],
-            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 46, 30]
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14.2, 9.5],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 43.7, 28.5]
         ],
         'circle-color': [
             'case',
@@ -172,8 +172,8 @@ export const trainStationLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 10,
-            17, 28
+            13, 9.5,
+            17, 26.6
         ],
         'circle-color': LINE_COLORS.Train,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
@@ -193,8 +193,8 @@ export const trainStationGlowLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 15,
-            17, 46
+            13, 14.2,
+            17, 43.7
         ],
         'circle-color': LINE_COLORS.Train,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
@@ -287,7 +287,7 @@ export const platformLabelLayer: SymbolLayerSpecification = {
         ['has', 'platform_code'],
         ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
     ],
-    minzoom: 14,
+    minzoom: 14.5,
     layout: {
         'text-field': ['get', 'platform_code'],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
