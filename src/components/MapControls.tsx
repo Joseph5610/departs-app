@@ -102,7 +102,7 @@ export const MapControls = React.memo(() => {
                     >
                         <Plus size={20} />
                     </Button>
-                    <ButtonGroupSeparator className="bg-white/10 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" className="mx-2" />
                     <Button
                         variant="tinted"
                         size="icon"
