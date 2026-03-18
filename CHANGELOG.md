@@ -2,6 +2,13 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.18.0] - 2026-03-10
+
+### Changed
+- **Codebase Cleanup**: Conducted a comprehensive frontend audit, removing unused exports, constants, and utility functions to reduce technical debt.
+- **Improved Type Safety**: Refined MapLibre event handling and internal component props with stricter TypeScript definitions, eliminating several generic `as unknown as` casts.
+- **Ref Handling**: Hardened the `Slot` layout primitive to more reliably handle React refs and forwarded refs.
+
 ## [0.17.0] - 2026-03-09
 
 ### Added

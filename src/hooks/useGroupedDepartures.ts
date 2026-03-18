@@ -4,14 +4,6 @@ import type { Departure } from '../types/transit';
 import { useMap } from '../hooks/useMap';
 import { useDepartures } from './useDepartures';
 
-export interface DepartureGroup {
-    groupId: string;
-    line: string;
-    type: string;
-    departures: Departure[];
-    firstTime: number;
-}
-
 export const useGroupedDepartures = () => {
     const { state } = useMap();
     const { data: departures } = useDepartures();

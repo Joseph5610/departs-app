@@ -10,7 +10,7 @@ import {
     AlertTitle 
 } from '@/components/ui/alert';
 
-export interface CommonAlertProps {
+interface GenericAlertCardProps {
     id?: string;
     title: string;
     description?: string | null;
@@ -30,7 +30,7 @@ export interface CommonAlertProps {
  *
  * Final polish: fixed alignment via Alert primitive fix, tightened gaps, and minimal typography.
  */
-export const GenericAlertCard: React.FC<CommonAlertProps> = ({
+export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
     title,
     description,
     link,

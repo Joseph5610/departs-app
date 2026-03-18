@@ -118,7 +118,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             )}
 
             {/* Warning: Before Track / Previous Trip */}
-            {((['before_track', 'before_track_delayed'] as string[]).includes(String(selectedVehicle.state_position || '')) || (['before_track', 'before_track_delayed'] as string[]).includes(String(vehicleDetail?.state_position || ''))) && (
+            {((['before_track', 'before_track_delayed'] as (string | undefined)[]).includes(selectedVehicle.state_position) || (['before_track', 'before_track_delayed'] as (string | undefined)[]).includes(vehicleDetail?.state_position)) && (
                 <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
                     <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                         <Info size={20} />

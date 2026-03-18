@@ -13,18 +13,24 @@ const Slot = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement> & {
 
         const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement> & { ref?: React.Ref<HTMLElement> }>;
         const childProps = child.props;
-        
+
         return React.cloneElement(child, {
             ...props,
             ...childProps,
             className: cn(props.className, childProps?.className),
             ref: (node: HTMLElement) => {
-                if (typeof ref === 'function') ref(node);
-                else if (ref) (ref as React.MutableRefObject<HTMLElement | null>).current = node;
+                if (typeof ref === 'function') {
+                    ref(node);
+                } else if (ref && 'current' in ref) {
+                    (ref as React.MutableRefObject<HTMLElement | null>).current = node;
+                }
 
                 const childRef = child.props.ref;
-                if (typeof childRef === 'function') childRef(node);
-                else if (childRef && 'current' in childRef) (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
+                if (typeof childRef === 'function') {
+                    childRef(node);
+                } else if (childRef && 'current' in childRef) {
+                    (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
+                }
             },
         });
     }
@@ -54,7 +60,7 @@ const boxVariants = cva('', {
     },
 });
 
-export interface BoxProps
+interface BoxProps
     extends React.HTMLAttributes<HTMLDivElement>,
         VariantProps<typeof boxVariants> {
     asChild?: boolean;
@@ -112,7 +118,7 @@ const stackVariants = cva('flex', {
     },
 });
 
-export interface StackProps
+interface StackProps
     extends BoxProps,
         VariantProps<typeof stackVariants> {}
 
@@ -172,7 +178,7 @@ const surfaceVariants = cva('rounded-3xl border transition-all', {
     },
 });
 
-export interface SurfaceProps
+interface SurfaceProps
     extends React.HTMLAttributes<HTMLDivElement>,
         VariantProps<typeof surfaceVariants> {
     asChild?: boolean;
