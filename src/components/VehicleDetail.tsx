@@ -245,15 +245,15 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <Stack gap={3}>
                         <HStack justify="between" className="px-1">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                            <CollapsibleTrigger asChild>
+                            <CollapsibleTrigger render={
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
-                                >
-                                    {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                                    {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                </Button>
+                                />
+                            }>
+                                {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
+                                {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                             </CollapsibleTrigger>
                         </HStack>
                         <Box className="relative pl-6 overflow-hidden!">
