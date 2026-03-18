@@ -89,8 +89,8 @@ export const stopPointLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 8, 4],
-            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 24, 18]
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 6],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 28, 22]
         ],
         'circle-color': ['case',
             // Only apply custom colors for Stations (Type 1)
@@ -141,8 +141,8 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 12, 8],
-            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 40, 24]
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 15, 10],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 46, 30]
         ],
         'circle-color': [
             'case',
@@ -172,8 +172,8 @@ export const trainStationLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 8,
-            17, 24
+            13, 10,
+            17, 28
         ],
         'circle-color': LINE_COLORS.Train,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
@@ -193,8 +193,8 @@ export const trainStationGlowLayer: CircleLayerSpecification = {
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 12,
-            17, 40
+            13, 15,
+            17, 46
         ],
         'circle-color': LINE_COLORS.Train,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
@@ -249,7 +249,7 @@ export const stopLabelLayer: SymbolLayerSpecification = {
             16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
         ],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 1.8, 17, 3.5],
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 13, 2.2, 17, 4.2],
         'text-justify': 'auto',
         'text-max-width': 7,
         'text-letter-spacing': 0.15, // Matched to map style
@@ -291,9 +291,9 @@ export const platformLabelLayer: SymbolLayerSpecification = {
     layout: {
         'text-field': ['get', 'platform_code'],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 14, 11, 18, 15],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 14, 12, 18, 17],
         'text-anchor': 'center',
-        'text-padding': 10,
+        'text-padding': 2,
         'text-allow-overlap': false,
         'text-ignore-placement': false
     },
