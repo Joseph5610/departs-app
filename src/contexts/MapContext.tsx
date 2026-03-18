@@ -160,13 +160,15 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         selectVehicle({
             vehicle_id: activeVehId,
             gtfs_trip_id: tripId,
-            trip_id: tripId,
             route_short_name: initialData?.line,
             route_type: initialData?.type,
             trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
             state_position: 'on_track',
-            _geometry: [0, 0],
+            geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+            },
             bearing: null
         }, true); // keep stop
     }, [selectVehicle]);
@@ -180,7 +182,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             userLocation,
             userSpeed,
             isGeoPending,
-            selectedId: state.selectedVehicle?.vehicle_id || state.selectedVehicle?.id || null
+            selectedId: state.selectedVehicle?.vehicle_id || null
         },
         actions: {
             setSelectedStop,

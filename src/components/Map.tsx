@@ -17,7 +17,7 @@ import { Search } from './Search';
 import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
-import type { TrackedVehicle } from '../types/transit';
+import type { VehicleDetail } from '../types/transit';
 import { MapControls } from './MapControls';
 import { DetailPanelContent } from './DetailPanel/DetailPanelContent';
 import { useVehicles } from '../hooks/useVehicles';
@@ -136,8 +136,11 @@ const MapInner: React.FC = () => {
                         actions.selectVehicle({
                             ...props,
                             vehicle_id: vehicleId,
-                            _geometry: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                        } as TrackedVehicle, false); // clear stop
+                            geometry: {
+                                type: 'Point',
+                                coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+                            }
+                        } as VehicleDetail, false); // clear stop
                         return;
                     }
 

@@ -15,7 +15,7 @@ export const useVehicleDetail = () => {
 
     const trackedId = useMemo(() => {
         if (!selectedVehicle) return null;
-        return selectedVehicle.gtfs_trip_id || selectedVehicle.trip_id || null;
+        return selectedVehicle.gtfs_trip_id || null;
     }, [selectedVehicle]);
 
     const vehicleIdStr = selectedId ? String(selectedId) : null;
