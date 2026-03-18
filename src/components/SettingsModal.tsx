@@ -53,6 +53,13 @@ export const SettingsModal: React.FC = () => {
 
     const { needRefresh } = usePWA();
 
+    // Reset checking state if update is found
+    React.useEffect(() => {
+        if (needRefresh && isChecking) {
+            setIsChecking(false);
+        }
+    }, [needRefresh, isChecking]);
+
     const toggleRouteType = (type: string) => {
         if (routeTypeFilter.includes(type)) {
             setRouteTypeFilter(routeTypeFilter.filter(t => t !== type));
@@ -74,8 +81,13 @@ export const SettingsModal: React.FC = () => {
     const handleCheckUpdate = async () => {
         if (isChecking) return;
 
+        // If already need refresh, don't show another check
+        if (needRefresh) {
+            // PWAContext should have the toast visible
+            return;
+        }
+
         setIsChecking(true);
-        showToast(t('settings.updates.checking'), 'info');
 
         try {
             if ('serviceWorker' in navigator) {
@@ -83,13 +95,17 @@ export const SettingsModal: React.FC = () => {
                 if (registration) {
                     await registration.update();
                     
-                    // Small delay to allow SW to potentially find an update
+                    // Wait to see if needRefresh becomes true (meaning update was found)
+                    // If not after 2.5 seconds, we assume we are up to date
                     setTimeout(() => {
-                        setIsChecking(false);
-                        if (!needRefresh) {
-                            showToast(t('settings.updates.upToDate'), 'success');
-                        }
-                    }, 1500);
+                        setIsChecking((currentChecking) => {
+                            if (currentChecking) {
+                                showToast(t('settings.updates.upToDate'), 'success');
+                                return false;
+                            }
+                            return false;
+                        });
+                    }, 2500);
                     return;
                 }
             }
@@ -298,7 +314,9 @@ export const SettingsModal: React.FC = () => {
                                         <Box className="p-2 rounded-lg bg-muted text-muted-foreground">
                                             <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
                                         </Box>
-                                        <span className="text-foreground text-sm font-medium">{t('settings.updates.check')}</span>
+                                        <span className="text-foreground text-sm font-medium">
+                                            {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
+                                        </span>
                                     </HStack>
                                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-accent px-2 py-1 rounded-md">
                                         {t('settings.versionBadge', { version })}
