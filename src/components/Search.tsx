@@ -92,10 +92,10 @@ export const Search: React.FC = React.memo(() => {
             duration: MAP_FLY_DURATION
         });
         const selectedStop = {
-            id: stop.properties.stop_id,
-            name: stop.properties.stop_name,
-            platformCode: stop.properties.platform_code,
-            isTrain: stop.properties.is_train === 1,
+            stop_id: stop.properties.stop_id,
+            stop_name: stop.properties.stop_name,
+            platform_code: stop.properties.platform_code,
+            is_train: stop.properties.is_train === 1,
             coordinates: stop.geometry.coordinates as [number, number]
         };
         selectStop(selectedStop);
@@ -176,11 +176,11 @@ export const Search: React.FC = React.memo(() => {
                                     </Box>
                                     {searchHistory.map((item) => (
                                         <SearchItem
-                                            key={item.type === 'stop' ? `hist-stop-${item.id}` : `hist-line-${item.lines.join('-')}`}
+                                            key={item.type === 'stop' ? `hist-stop-${item.stop_id}` : `hist-line-${item.lines.join('-')}`}
                                             icon={item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
-                                            title={item.type === 'stop' ? item.name : t('search.lineFilter', { line: item.lines.join(', ') })}
-                                            subtitle={item.type === 'stop' && item.platformCode ? t('search.platform', { code: item.platformCode }) : undefined}
-                                            testId={item.type === 'stop' ? `search-item-stop-${item.name}` : `search-item-line-${item.lines.join('-')}`}
+                                            title={item.type === 'stop' ? item.stop_name : t('search.lineFilter', { line: item.lines.join(', ') })}
+                                            subtitle={item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) : undefined}
+                                            testId={item.type === 'stop' ? `search-item-stop-${item.stop_name}` : `search-item-line-${item.lines.join('-')}`}
                                             onClick={() => {
                                                 if (item.type === 'stop') {
                                                     mapRef.current?.flyTo({
@@ -189,11 +189,11 @@ export const Search: React.FC = React.memo(() => {
                                                         duration: MAP_FLY_DURATION
                                                     });
                                                     selectStop({
-                                                        id: item.id,
-                                                        name: item.name,
-                                                        platformCode: item.platformCode,
+                                                        stop_id: item.stop_id,
+                                                        stop_name: item.stop_name,
+                                                        platform_code: item.platform_code,
                                                         coordinates: item.coordinates,
-                                                        isTrain: item.isTrain
+                                                        is_train: item.is_train
                                                     });
                                                     addToHistory(item);
                                                 } else {

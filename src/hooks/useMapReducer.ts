@@ -156,7 +156,7 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             const newItem = { ...action.payload, timestamp: Date.now() } as SearchHistoryItem;
             let newHistory = state.searchHistory.filter(item => {
                 if (item.type === 'stop' && newItem.type === 'stop') {
-                    return item.id !== newItem.id;
+                    return item.stop_id !== newItem.stop_id;
                 }
                 if (item.type === 'line' && newItem.type === 'line') {
                     return item.lines.join(',') !== newItem.lines.join(',');

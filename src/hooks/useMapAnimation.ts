@@ -20,8 +20,9 @@ export const useMapAnimation = (
 
         const animate = () => {
             const map = mapRef.current?.getMap();
-            if (map && selectedVehicle?.geometry?.coordinates) {
-                const [lng, lat] = selectedVehicle.geometry.coordinates;
+            const coords = selectedVehicle?.geometry?.coordinates;
+            if (map && coords) {
+                const [lng, lat] = coords;
                 if (lng === 0 && lat === 0) {
                     frame = requestAnimationFrame(animate);
                     return;

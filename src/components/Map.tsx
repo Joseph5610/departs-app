@@ -17,13 +17,13 @@ import { Search } from './Search';
 import { MapLayers } from './MapLayers';
 import { MapProvider } from '../contexts/MapContext';
 import { useMap } from '../hooks/useMap';
-import type { VehicleDetail } from '../types/transit';
 import { MapControls } from './MapControls';
 import { DetailPanelContent } from './DetailPanel/DetailPanelContent';
 import { useVehicles } from '../hooks/useVehicles';
 import { useStops } from '../hooks/useStops';
 import { useRouteShape } from '../hooks/useRouteShape';
 import { useMapFilters } from '../hooks/useMapFilters';
+import type { VehicleDetail } from '../types/transit';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -59,7 +59,7 @@ const MapInner: React.FC = () => {
         if (state.selectedVehicle) {
             return t('map.vehicleDetails.lineLabel', { line: state.selectedVehicle.route_short_name || '' });
         }
-        return state.selectedStop ? state.selectedStop.name : '';
+        return state.selectedStop ? state.selectedStop.stop_name : '';
     }, [state.selectedVehicle, state.selectedStop, t]);
 
     return (
@@ -146,10 +146,10 @@ const MapInner: React.FC = () => {
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
                         actions.selectStop({
-                            id: String(f.properties.stop_id),
-                            name: String(f.properties.stop_name),
-                            platformCode: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
-                            isTrain: Number(f.properties.is_train) === 1,
+                            stop_id: String(f.properties.stop_id),
+                            stop_name: String(f.properties.stop_name),
+                            platform_code: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
+                            is_train: Number(f.properties.is_train) === 1,
                             coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
                         });
                     }
@@ -189,7 +189,7 @@ const MapInner: React.FC = () => {
                 }}
                 onBack={(state.selectedVehicle && state.selectedStop) ? handleBack : undefined}
                 title={panelTitle}
-                platformCode={!state.selectedVehicle ? state.selectedStop?.platformCode : undefined}
+                platformCode={!state.selectedVehicle ? state.selectedStop?.platform_code : undefined}
                 subHeader={<DepartureBoardHeader />}
             >
                 <DetailPanelContent

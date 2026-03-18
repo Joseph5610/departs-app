@@ -71,7 +71,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const relevantInfotexts = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || !allInfotexts) return [];
 
-        const stopIds = [selectedStop.id, ...(selectedStop.all_ids || [])];
+        const stopIds = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
         return allInfotexts.filter(info =>
             info.relatedStopIds.some(id => stopIds.includes(id))
         );
@@ -80,7 +80,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
 
-        const isMetroStation = !!METRO_STATIONS[selectedStop.name];
+        const isMetroStation = !!METRO_STATIONS[selectedStop.stop_name];
         const hour = new Date().getHours();
         const isNightTime = hour >= 0 && hour < 5;
 
@@ -147,7 +147,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                     departure={dep}
                                     onDepartureClick={onDepartureClick}
                                     stopDistanceInfo={stopDistanceInfo}
-                                    isTrainStop={selectedStop?.isTrain}
+                                    isTrainStop={selectedStop?.is_train}
                                     locale={locale}
                                 />
                             ))}

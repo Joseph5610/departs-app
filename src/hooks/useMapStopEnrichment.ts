@@ -14,31 +14,33 @@ export const useMapStopEnrichment = (
 
     useEffect(() => {
         if (!selectedStop || !stopsData || selectedStop.coordinates) {
-            lastCheckedId.current = selectedStop?.id || null;
+            lastCheckedId.current = selectedStop?.stop_id || null;
             return;
         }
 
-        // Only run if the stop ID has changed or we haven't successfully enriched it yet
-        if (lastCheckedId.current === selectedStop.id) return;
+        const sid = selectedStop.stop_id;
 
-        const feature = stopsData.features.find(f => f.properties.stop_id === selectedStop.id);
+        // Only run if the stop ID has changed or we haven't successfully enriched it yet
+        if (lastCheckedId.current === sid) return;
+
+        const feature = stopsData.features.find(f => f.properties.stop_id === sid);
         if (feature) {
-            setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
+            setSelectedStop((prev: SelectedStop | null) => prev?.stop_id === sid ? {
                 ...prev,
                 coordinates: feature.geometry.coordinates as [number, number],
                 all_ids: feature.properties.all_ids
             } : prev);
-            lastCheckedId.current = selectedStop.id;
+            lastCheckedId.current = sid;
         } else {
             // Check centroids if not found in unclustered stops
-            const centroid = stopsData.features.find(f => f.properties.stop_id === selectedStop.id || f.properties.all_ids?.includes(selectedStop.id));
+            const centroid = stopsData.features.find(f => f.properties.stop_id === sid || f.properties.all_ids?.includes(sid));
              if (centroid) {
-                setSelectedStop((prev: SelectedStop | null) => prev?.id === selectedStop.id ? {
+                setSelectedStop((prev: SelectedStop | null) => prev?.stop_id === sid ? {
                     ...prev,
                     coordinates: centroid.geometry.coordinates as [number, number],
                     all_ids: centroid.properties.all_ids
                 } : prev);
-                lastCheckedId.current = selectedStop.id;
+                lastCheckedId.current = sid;
              }
         }
     }, [selectedStop, stopsData, setSelectedStop]);

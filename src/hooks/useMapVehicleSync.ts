@@ -31,7 +31,8 @@ export const useMapVehicleSync = (
 
         let updated = false;
         let newProps: Partial<VehicleDetail> = {};
-        let newCoords = selectedVehicle.geometry?.coordinates || [0, 0];
+        const currentCoords = selectedVehicle.geometry?.coordinates || [0, 0];
+        let newCoords = [...currentCoords] as [number, number];
 
         // 1. Sync from high-frequency Map Stream
         // We look for the active vehicle in the latest GeoJSON batch from the map stream.
@@ -52,11 +53,11 @@ export const useMapVehicleSync = (
 
                 const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
-                if (newCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
+                if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay) {
                     updated = true;
                     newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
                     // Only update coordinates if they are valid, or if we currently have invalid ones
-                    if (hasValidLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
+                    if (hasValidLocation || (currentCoords[0] === 0 && currentCoords[1] === 0)) {
                         newCoords = coords;
                     }
                 }
@@ -78,7 +79,7 @@ export const useMapVehicleSync = (
             // LOSSLESS DELAY SYNC:
             // We only trust a "0" delay from the detail API if we don't already have a non-zero delay
             // from the map stream or departure board. This prevents the "reverts to on-time" bug.
-            const currentDelay = (newProps.delay !== undefined ? newProps.delay : selectedVehicle.delay) ?? 0;
+            const currentDelay = newProps.delay ?? selectedVehicle.delay ?? 0;
             const detailDelayValue = detailDelay ?? 0;
             const shouldUpdateDelay = !isFallback && (detailDelayValue !== 0 || currentDelay === 0);
             const delayChanged = shouldUpdateDelay && currentDelay !== detailDelayValue;
@@ -109,13 +110,13 @@ export const useMapVehicleSync = (
         if (updated) {
             setSelectedVehicle((prev: VehicleDetail | null) => {
                 if (!prev) return null;
-                // Deep equality check for properties that trigger updates
                 const prevCoords = prev.geometry?.coordinates || [0, 0];
+                // Deep equality check for properties that trigger updates
                 const hasGeometryChanged = prevCoords[0] !== newCoords[0] || prevCoords[1] !== newCoords[1];
-                const hasDelayChanged = prev.delay !== (newProps.delay ?? prev.delay);
-                const hasBearingChanged = prev.bearing !== (newProps.bearing ?? prev.bearing);
-                const hasSequenceChanged = prev.last_stop_sequence !== (newProps.last_stop_sequence ?? prev.last_stop_sequence);
-                const hasStateChanged = prev.state_position !== (newProps.state_position ?? prev.state_position);
+                const hasDelayChanged = newProps.delay !== undefined && prev.delay !== newProps.delay;
+                const hasBearingChanged = newProps.bearing !== undefined && prev.bearing !== newProps.bearing;
+                const hasSequenceChanged = newProps.last_stop_sequence !== undefined && prev.last_stop_sequence !== newProps.last_stop_sequence;
+                const hasStateChanged = newProps.state_position !== undefined && prev.state_position !== newProps.state_position;
 
                 if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged) {
                     return prev;

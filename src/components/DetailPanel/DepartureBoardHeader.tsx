@@ -24,7 +24,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const { setDepartureSort, toggleFavorite } = actions;
 
     const showHeader = !!selectedStop && !selectedVehicle;
-    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.id) : false;
+    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const stopDistanceInfo = useMemo(() => {
         const coords = selectedStop?.coordinates;
@@ -44,8 +44,8 @@ export const DepartureBoardHeader = React.memo(() => {
     const handleShare = useCallback(() => {
         if (selectedStop) {
             share({
-                title: t('map.departures.shareTitle', { name: selectedStop.name }),
-                text: t('map.departures.shareText', { name: selectedStop.name }),
+                title: t('map.departures.shareTitle', { name: selectedStop.stop_name }),
+                text: t('map.departures.shareText', { name: selectedStop.stop_name }),
                 url: window.location.href
             });
         }
@@ -85,7 +85,7 @@ export const DepartureBoardHeader = React.memo(() => {
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => selectedStop && toggleFavorite(selectedStop.id)}
+                        onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
                         className={cn(
                             "h-8 w-8 rounded-xl transition-all",
                             isFavorite ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
