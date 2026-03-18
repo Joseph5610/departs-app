@@ -26,16 +26,16 @@ export const useMapFilters = (
             features: [
                 {
                     type: 'Feature',
-                    geometry: hasValidLocation ? {
+                    geometry: {
                         type: 'Point',
-                        coordinates: coords
-                    } : null,
+                        coordinates: hasValidLocation ? coords : [0, 0]
+                    },
                     properties: {
                         ...selectedVehicle,
                         route_type: selectedVehicle.route_type,
                         route_short_name: selectedVehicle.route_short_name
                     }
-                } as unknown as VehicleFeature
+                } as VehicleFeature
             ]
         };
     }, [selectedVehicle]);

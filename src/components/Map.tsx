@@ -136,10 +136,7 @@ const MapInner: React.FC = () => {
                         actions.selectVehicle({
                             ...props,
                             vehicle_id: vehicleId,
-                            geometry: {
-                                type: 'Point',
-                                coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                            }
+                            geometry: f.geometry
                         } as VehicleDetail, false); // clear stop
                         return;
                     }
