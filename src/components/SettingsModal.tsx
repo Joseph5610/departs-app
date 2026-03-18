@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import {
     Eye,
     EyeOff,
@@ -136,7 +137,7 @@ export const SettingsModal: React.FC = () => {
                             <Surface variant="tinted" className="overflow-hidden border-white/5!">
                                 <button
                                     onClick={() => setShowVehicles(!showVehicles)}
-                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                                 >
                                     <HStack gap={4} className="min-w-0 flex-1">
                                         <Box className={cn(
@@ -161,6 +162,7 @@ export const SettingsModal: React.FC = () => {
                                         className="ml-3 sm:ml-4"
                                     />
                                 </button>
+                                {showVehicles && <Separator className="mx-4 w-auto!" />}
 
                                 <AnimatePresence>
                                     {showVehicles && (
@@ -286,7 +288,8 @@ export const SettingsModal: React.FC = () => {
                         </HStack>
 
                         {/* Footer Actions & Info */}
-                        <Stack gap={6} className="pt-4 border-t border-border">
+                        <Separator />
+                        <Stack gap={6} className="pt-4">
                             <Stack gap={3}>
                                 {searchHistory.length > 0 && (
                                     <button

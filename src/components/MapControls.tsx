@@ -6,7 +6,8 @@ import { Alerts } from './Alerts';
 import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Overlay, Stack, Box, Surface } from '@/components/ui/layout';
+import { Overlay, Stack } from '@/components/ui/layout';
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 
 /**
  * MapControls Component
@@ -90,29 +91,29 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <Surface variant="tinted" padding="none" className="flex flex-col mt-2 overflow-hidden rounded-2xl border-white/20!">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden border border-white/20!">
                     <Button
-                        variant="ghost"
+                        variant="tinted"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
+                        className="h-11 w-11 rounded-none border-none!"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
-                    <Box className="mx-2 h-[1px] bg-white/10" />
+                    <ButtonGroupSeparator className="bg-white/10 mx-2" />
                     <Button
-                        variant="ghost"
+                        variant="tinted"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-colors text-white focus-visible:z-10"
+                        className="h-11 w-11 rounded-none border-none!"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} />
                     </Button>
-                </Surface>
+                </ButtonGroup>
 
                 {showCompass && (
                     <ControlButton
