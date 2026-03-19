@@ -1,8 +1,7 @@
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
-import { StatusPill } from './StatusPill';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
@@ -10,6 +9,8 @@ import { parseISO } from 'date-fns';
 import { GenericAlertCard } from './GenericAlertCard';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { VehicleDetailSkeleton } from './LoadingSkeletons';
 
 import type { VehicleDetail as VehicleDetailType } from '../types/transit';
@@ -94,18 +95,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         return futureStops.length > 0 ? Number(futureStops[0].properties.stop_sequence) : null;
     }, [vehicleDetail, effectiveSequence]);
 
-    const filteredStops = useMemo(() => {
-        if (!vehicleDetail?.stop_times?.features) return [];
-        const limit = effectiveSequence ?? 0;
-        return vehicleDetail.stop_times.features.filter((stop) =>
-            showPastStops || Number(stop.properties.stop_sequence) >= limit
-        );
-    }, [vehicleDetail, showPastStops, effectiveSequence]);
-
-    const handleTogglePastStops = useCallback(() => {
-        setShowPastStops(prev => !prev);
-    }, []);
-
     if (!selectedVehicle) return null;
 
     const routeType = selectedVehicle.route_type ?? 0;
@@ -175,23 +164,22 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 const isLate = delayVal > 30;
                                 const isEarly = delayVal < -30;
                                 return (
-                                    <StatusPill
-                                        variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
-                                        label={isLate
+                                    <Badge variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}>
+                                        {isLate
                                             ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
                                             : isEarly
                                                 ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
                                                 : t('map.vehicleDetails.onTime')}
-                                    />
+                                    </Badge>
                                 );
                             })()}
                             {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                                    <HStack gap={2} className="px-2.5 py-1 bg-muted/30 rounded-full border border-border">
-                                        <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                                            {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
-                                        </span>
-                                    </HStack>
+                                <Badge variant="status">
+                                    <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                    <span>
+                                        {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
+                                    </span>
+                                </Badge>
                             )}
                         </HStack>
                     </Stack>
@@ -261,91 +249,128 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {/* Schedule / Stop List */}
             {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
-                <Stack gap={3}>
-                    <HStack justify="between" className="px-1">
-                        <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleTogglePastStops}
-                            className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
-                        >
-                            {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                            {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </Button>
-                    </HStack>
-                    <Box className="relative pl-6">
-                        <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
-                        {filteredStops.map((stop, idx: number) => {
-                            const stopSeq = Number(stop.properties.stop_sequence);
-                            const limit = effectiveSequence ?? 0;
-                            const isPast = stopSeq < limit;
-                            const isCurrent = stopSeq === effectiveSequence;
-                            const isNext = stopSeq === nextStopSequence;
+                <Collapsible open={showPastStops} onOpenChange={setShowPastStops}>
+                    <Stack gap={3}>
+                        <HStack justify="between" className="px-1">
+                            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
+                            <CollapsibleTrigger render={
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
+                                />
+                            }>
+                                {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
+                                {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            </CollapsibleTrigger>
+                        </HStack>
+                        <Box className="relative pl-6 overflow-hidden!">
+                            <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
 
-                            const showZone = !!stop.properties.zone_id;
+                            {/* Past Stops (Collapsible) */}
+                            <CollapsibleContent className="transition-[height] duration-300 ease-in-out data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
+                                {vehicleDetail.stop_times.features
+                                    .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
+                                    .map((stop, idx: number) => (
+                                        <StopItem
+                                            key={`past-${idx}`}
+                                            stop={stop}
+                                            isPast={true}
+                                            effectiveSequence={effectiveSequence}
+                                            nextStopSequence={nextStopSequence}
+                                        />
+                                    ))
+                                }
+                            </CollapsibleContent>
 
-                            return (
-                                <HStack key={idx} justify="between" className={cn(
-                                    "relative py-2.5 transition-opacity",
-                                    isPast ? "opacity-40" : "opacity-100"
-                                )}>
-                                    <Box className={cn(
-                                        "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
-                                        isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
-                                    )} />
-                                    <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
-                                        <span className={cn(
-                                            "text-sm truncate w-full",
-                                            isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
-                                        )}>
-                                            {stop.properties.stop_name}
-                                        </span>
-                                        <HStack gap={2} align="center" className="flex-wrap">
-                                            {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
-                                            {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
-                                        </HStack>
-                                    </Stack>
-                                    <Box className="shrink-0 w-8 flex justify-center">
-                                        {showZone && (
-                                            <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
-                                                {stop.properties.zone_id}
-                                            </span>
-                                        )}
-                                    </Box>
-                                    <Stack align="end" gap={0} className="shrink-0 min-w-[64px]">
-                                        {(() => {
-                                            const { realtime_arrival_time, arrival_time } = stop.properties;
-                                            const realtimeTime = realtime_arrival_time || arrival_time;
-                                            const scheduledTime = arrival_time;
-                                            const hasRealtime = !!realtime_arrival_time && realtime_arrival_time !== arrival_time;
-                                            const isEarly = hasRealtime && realtime_arrival_time < arrival_time;
-                                            const isLate = hasRealtime && realtime_arrival_time > arrival_time;
-                                            return (
-                                                <>
-                                                    <span className={cn(
-                                                        "text-xs tabular-nums",
-                                                        isPast ? "text-muted-foreground" : isEarly ? "text-primary" : isLate ? "text-destructive" : "text-muted-foreground"
-                                                    )}>
-                                                        {String(realtimeTime || '').slice(0, 8)}
-                                                    </span>
-                                                    {hasRealtime && (
-                                                        <span className="text-[9px] text-muted-foreground tabular-nums">
-                                                            {t('map.vehicleDetails.scheduledTime')} {String(scheduledTime || '').slice(0, 8)}
-                                                        </span>
-                                                    )}
-                                                </>
-                                            );
-                                        })()}
-                                    </Stack>
-                                </HStack>
-                            );
-                        })}
-                    </Box>
-                </Stack>
+                            {/* Current & Future Stops */}
+                            {vehicleDetail.stop_times.features
+                                .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
+                                .map((stop, idx: number) => (
+                                    <StopItem
+                                        key={`future-${idx}`}
+                                        stop={stop}
+                                        isPast={false}
+                                        effectiveSequence={effectiveSequence}
+                                        nextStopSequence={nextStopSequence}
+                                    />
+                                ))
+                            }
+                        </Box>
+                    </Stack>
+                </Collapsible>
             )}
         </Stack>
     );
 });
+
+const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
+    stop: any,
+    isPast: boolean,
+    effectiveSequence: number | null,
+    nextStopSequence: number | null
+}) => {
+    const { t } = useTranslation();
+    const stopSeq = Number(stop.properties.stop_sequence);
+    const isCurrent = stopSeq === effectiveSequence;
+    const isNext = stopSeq === nextStopSequence;
+    const showZone = !!stop.properties.zone_id;
+
+    return (
+        <HStack justify="between" className={cn(
+            "relative py-2.5 transition-opacity",
+            isPast ? "opacity-40" : "opacity-100"
+        )}>
+            <Box className={cn(
+                "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
+                isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
+            )} />
+            <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
+                <span className={cn(
+                    "text-sm truncate w-full",
+                    isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                )}>
+                    {stop.properties.stop_name}
+                </span>
+                <HStack gap={2} align="center" className="flex-wrap">
+                    {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
+                    {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
+                </HStack>
+            </Stack>
+            <Box className="shrink-0 w-8 flex justify-center">
+                {showZone && (
+                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
+                        {stop.properties.zone_id}
+                    </span>
+                )}
+            </Box>
+            <Stack align="end" gap={0} className="shrink-0 min-w-[64px]">
+                {(() => {
+                    const { realtime_arrival_time, arrival_time } = stop.properties;
+                    const realtimeTime = realtime_arrival_time || arrival_time;
+                    const scheduledTime = arrival_time;
+                    const hasRealtime = !!realtime_arrival_time && realtime_arrival_time !== arrival_time;
+                    const isEarly = hasRealtime && realtime_arrival_time < arrival_time;
+                    const isLate = hasRealtime && realtime_arrival_time > arrival_time;
+                    return (
+                        <>
+                            <span className={cn(
+                                "text-xs tabular-nums",
+                                isPast ? "text-muted-foreground" : isEarly ? "text-primary" : isLate ? "text-destructive" : "text-muted-foreground"
+                            )}>
+                                {String(realtimeTime || '').slice(0, 8)}
+                            </span>
+                            {hasRealtime && (
+                                <span className="text-[9px] text-muted-foreground tabular-nums">
+                                    {t('map.vehicleDetails.scheduledTime')} {String(scheduledTime || '').slice(0, 8)}
+                                </span>
+                            )}
+                        </>
+                    );
+                })()}
+            </Stack>
+        </HStack>
+    );
+};
 
 VehicleDetail.displayName = 'VehicleDetail';

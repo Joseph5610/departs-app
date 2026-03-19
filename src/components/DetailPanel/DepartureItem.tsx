@@ -8,6 +8,7 @@ import { formatDelay } from '../../utils/dateUtils';
 import type { Departure } from '../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
+import { Badge } from '@/components/ui/badge';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -85,9 +86,9 @@ export const DepartureItem = ({
                             {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
                         </span>
                         {isTrainStop && dep.platform && (
-                            <span className="bg-muted px-1.5 py-0.5 rounded text-foreground font-bold tracking-wider border border-border">
+                            <Badge variant="outline" className="h-4 px-1 rounded text-[10px] font-bold tracking-wider">
                                 {dep.platform}
-                            </span>
+                            </Badge>
                         )}
                         <HStack gap={1}>
                             {typeof dep.delay === 'number' && dep.delay !== 0 && (
@@ -114,12 +115,13 @@ export const DepartureItem = ({
                 </Box>
                 {stopDistanceInfo?.showCatchIndicator && catchStatus && (
                     <Box className="mt-2">
-                        <HStack gap={1} className={cn(
-                            "px-1.5 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap",
-                            catchStatus.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
-                            catchStatus.status === 'warning' ? 'bg-amber-500/10 text-amber-400' :
-                            'bg-rose-500/10 text-rose-400'
-                        )}>
+                        <Badge
+                            variant={
+                                catchStatus.status === 'success' ? 'success' :
+                                catchStatus.status === 'warning' ? 'warning' : 'danger'
+                            }
+                            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap gap-1"
+                        >
                             <span className="text-[8px] leading-none">
                                 {catchStatus.status === 'success' ? '🟢' :
                                     catchStatus.status === 'warning' ? '🟡' : '🔴'}
@@ -127,7 +129,7 @@ export const DepartureItem = ({
                             <span className="uppercase tracking-tighter">
                                 {t(`map.departures.catchStatusCompact.${catchStatus.status}`)}
                             </span>
-                        </HStack>
+                        </Badge>
                     </Box>
                 )}
             </Stack>

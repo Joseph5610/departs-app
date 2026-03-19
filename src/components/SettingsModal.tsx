@@ -136,7 +136,7 @@ export const SettingsModal: React.FC = () => {
                             <Surface variant="tinted" className="overflow-hidden border-white/5!">
                                 <button
                                     onClick={() => setShowVehicles(!showVehicles)}
-                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                                 >
                                     <HStack gap={4} className="min-w-0 flex-1">
                                         <Box className={cn(

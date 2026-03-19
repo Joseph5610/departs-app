@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Overlay, Surface, Stack, HStack, Box } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { Kbd } from '@/components/ui/kbd';
 
 /**
  * Search Component
@@ -146,6 +147,13 @@ export const Search: React.FC = React.memo(() => {
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                         <SearchIcon size={20} className={cn(activeFilter && "text-primary")} />
                     </div>
+                    {!query && !activeFilter && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                            <Kbd className="bg-white/10 border-white/10 text-white/50 h-5 min-w-5 rounded-md px-1.5 font-bold">
+                                /
+                            </Kbd>
+                        </div>
+                    )}
                     {(query || activeFilter) && (
                         <div className="absolute right-0 top-0 h-full flex items-center pr-1">
                             <Button
