@@ -88,6 +88,8 @@
       "fetching": "Fetching live details...",
       "previousTrip": "Vehicle is performing a previous trip",
       "previousTripDescription": "The vehicle hasn't started this specific trip yet. The location shown might be from its previous service.",
+      "offTrack": "Vehicle is off-route",
+      "offTrackDescription": "The vehicle is not on its regular track, check alerts for incidents.",
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
       "delayLabel": "Delay {{minutes}} min",
