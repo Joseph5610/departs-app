@@ -53,9 +53,9 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert 
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-xl sm:rounded-2xl border-white/5!",
-                isHigh && "!bg-destructive/15 !border-destructive/30",
-                isNormal && "!bg-amber-500/10 !border-amber-500/20",
+                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-xl sm:rounded-2xl border-white/15!",
+                isHigh && "!bg-destructive/20 !border-destructive/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]",
+                isNormal && "!bg-amber-500/15 !border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.15)]",
                 link && "hover:brightness-125 cursor-pointer group",
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
@@ -93,7 +93,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             <AlertDescription className="grid gap-3">
                 {description && (
-                    <p className="text-[10px] line-clamp-2 leading-normal text-muted-foreground font-medium opacity-80">
+                    <p className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
                         {description}
                     </p>
                 )}
@@ -115,7 +115,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                         )}
 
                         {validFrom && (
-                            <Box className="text-[9px] font-extrabold text-muted-foreground/70 mt-0.5">
+                            <Box className="text-[10px] font-black text-foreground/60 mt-0.5">
                                 {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
                             </Box>
                         )}

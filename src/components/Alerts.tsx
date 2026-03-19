@@ -115,7 +115,7 @@ export const Alerts: React.FC = () => {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder={t('search.placeholder')}
-                                        className="h-10 pl-10 pr-10 text-sm rounded-xl"
+                                        className="h-10 pl-10 pr-10 text-sm rounded-xl border-2 border-white/10 bg-muted/40"
                                     />
                                     <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
                                     {searchQuery && (
