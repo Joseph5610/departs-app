@@ -133,7 +133,7 @@ export const SettingsModal: React.FC = () => {
                                 {t('settings.sections.display')}
                             </Box>
 
-                            <Surface variant="tinted" className="overflow-hidden border-white/5!">
+                            <Surface variant="tinted" className="overflow-hidden border-white/15!">
                                 <button
                                     onClick={() => setShowVehicles(!showVehicles)}
                                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -184,15 +184,15 @@ export const SettingsModal: React.FC = () => {
                                                                 key={id}
                                                                 onClick={() => toggleRouteType(id)}
                                                                 className={cn(
-                                                                    "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
+                                                                    "group relative px-3 py-2.5 rounded-2xl border-2 transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                                     routeTypeFilter.includes(id)
-                                                                        ? "bg-primary/15 border-primary/40 text-primary"
-                                                                        : "bg-muted/20 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                                                                        ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(var(--color-primary),0.1)]"
+                                                                        : "bg-muted/40 border-white/10 text-foreground/80 hover:bg-accent hover:border-accent hover:text-foreground"
                                                                 )}
                                                                 data-testid={`vehicle-type-${id}`}
                                                             >
-                                                                <Icon size={18} className={cn("transition-transform duration-300", routeTypeFilter.includes(id) ? 'scale-110' : 'group-hover:scale-110 opacity-70')} />
-                                                                <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                                <Icon size={18} className={cn("transition-transform duration-300", routeTypeFilter.includes(id) ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider">
                                                                     {t(`settings.vehicleTypes.${id}`)}
                                                                 </span>
 
@@ -202,14 +202,14 @@ export const SettingsModal: React.FC = () => {
                                                         <button
                                                             onClick={() => setRouteTypeFilter([])}
                                                             className={cn(
-                                                                "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
+                                                                "px-3 py-2.5 rounded-2xl border-2 transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                                 routeTypeFilter.length === 0
-                                                                    ? "bg-amber-500/15 border-amber-500/40 text-amber-500"
-                                                                    : "bg-muted/10 border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                                                                    ? "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
+                                                                    : "bg-muted/40 border-white/10 text-foreground/80 hover:bg-accent hover:border-accent hover:text-foreground"
                                                             )}
                                                         >
                                                             <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider">
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider">
                                                                 {t('common.all')}
                                                             </span>
                                                         </button>
@@ -221,7 +221,7 @@ export const SettingsModal: React.FC = () => {
                                 </AnimatePresence>
                             </Surface>
 
-                            <Surface variant="tinted" className="overflow-hidden mt-3 border-white/5!">
+                            <Surface variant="tinted" className="overflow-hidden mt-3 border-white/15!">
                                 <button
                                     onClick={() => setShowStops(!showStops)}
                                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -276,12 +276,12 @@ export const SettingsModal: React.FC = () => {
                         </Stack>
 
                         {/* Tip Box */}
-                        <HStack className="p-3.5 sm:p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 gap-2.5 sm:gap-3 items-start">
-                            <Box className="shrink-0 text-amber-500/50 mt-0.5">
+                        <HStack className="p-3.5 sm:p-4 bg-amber-500/10 rounded-2xl border border-amber-500/30 gap-2.5 sm:gap-3 items-start">
+                            <Box className="shrink-0 text-amber-500/70 mt-0.5">
                                 <Info size={16} />
                             </Box>
-                            <Box className="text-muted-foreground text-xs leading-relaxed">
-                                <span className="text-amber-200/80 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
+                            <Box className="text-foreground/90 text-xs leading-relaxed font-medium">
+                                <span className="text-amber-200 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
                             </Box>
                         </HStack>
 
@@ -294,13 +294,13 @@ export const SettingsModal: React.FC = () => {
                                             clearHistory();
                                             showToast(t('settings.clearHistory.success'), 'success');
                                         }}
-                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-accent active:scale-[0.98] rounded-2xl border-2 border-white/10 hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         <HStack gap={3}>
-                                            <Box className="p-2 rounded-lg bg-destructive/10 text-destructive">
+                                            <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
                                                 <Clock size={18} />
                                             </Box>
-                                            <span className="text-foreground text-sm font-medium">{t('settings.clearHistory.button')}</span>
+                                            <span className="text-foreground text-sm font-bold">{t('settings.clearHistory.button')}</span>
                                         </HStack>
                                     </button>
                                 )}
@@ -308,17 +308,17 @@ export const SettingsModal: React.FC = () => {
                                 <button
                                     onClick={handleCheckUpdate}
                                     disabled={isChecking}
-                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/30 hover:bg-accent active:scale-[0.98] rounded-2xl border border-border transition-all text-left outline-none"
+                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-accent active:scale-[0.98] rounded-2xl border-2 border-white/10 transition-all text-left outline-none"
                                 >
                                     <HStack gap={3}>
-                                        <Box className="p-2 rounded-lg bg-muted text-muted-foreground">
+                                        <Box className="p-2 rounded-lg bg-white/10 text-foreground">
                                             <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
                                         </Box>
-                                        <span className="text-foreground text-sm font-medium">
+                                        <span className="text-foreground text-sm font-bold">
                                             {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
                                         </span>
                                     </HStack>
-                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-accent px-2 py-1 rounded-md">
+                                    <span className="text-[10px] text-foreground/70 font-bold uppercase tracking-widest bg-white/10 px-2 py-1 rounded-md">
                                         {t('settings.versionBadge', { version })}
                                     </span>
                                 </button>

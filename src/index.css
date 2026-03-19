@@ -41,12 +41,12 @@
   --secondary: oklch(0.2 0.02 260);
   --secondary-foreground: oklch(0.98 0 0);
   --muted: oklch(0.18 0.02 260);
-  --muted-foreground: oklch(0.65 0 0);
+  --muted-foreground: oklch(0.75 0 0);
   --accent: oklch(0.22 0.02 260);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.6 0.18 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
+  --border: oklch(1 0 0 / 16%);
+  --input: oklch(1 0 0 / 20%);
   --ring: oklch(1 0 0 / 40%);
   --glass-tint: oklch(0.3 0.1 260);
   --glass-tint-opacity: 0.35;
@@ -153,12 +153,12 @@
 }
 
 @utility glassy-tinted {
-  @apply backdrop-blur-3xl border border-white/15 shadow-2xl relative;
-  background: color-mix(in oklch, var(--glass-tint), rgba(15, 20, 35, 0.3) 80%);
+  @apply backdrop-blur-3xl border border-white/25 shadow-2xl relative;
+  background: color-mix(in oklch, var(--glass-tint), transparent 80%);
   
   &.dark, .dark & {
-    background: color-mix(in oklch, var(--glass-tint), rgba(0, 0, 0, 0.5) 75%);
-    @apply border-white/15;
+    background: color-mix(in oklch, var(--glass-tint), transparent 75%);
+    @apply border-white/35;
   }
 }
 
