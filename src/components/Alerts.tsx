@@ -11,6 +11,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { GenericAlertCard } from './GenericAlertCard';
@@ -88,23 +89,29 @@ export const Alerts: React.FC = () => {
                                     <TabsTrigger value="incidents" className="gap-2">
                                         <span>{t('alerts.incidents')}</span>
                                         {incidentsCount > 0 && (
-                                            <span className={cn(
-                                                "px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
-                                                activeTab === 'incidents' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/20 text-destructive'
-                                            )}>
+                                            <Badge
+                                                variant={activeTab === 'incidents' ? 'default' : 'destructive'}
+                                                className={cn(
+                                                    "h-4 px-1 rounded-md text-[10px]",
+                                                    activeTab === 'incidents' ? "bg-destructive text-destructive-foreground hover:bg-destructive" : ""
+                                                )}
+                                            >
                                                 {incidentsCount}
-                                            </span>
+                                            </Badge>
                                         )}
                                     </TabsTrigger>
                                     <TabsTrigger value="exclusions" className="gap-2">
                                         <span>{t('alerts.exclusions')}</span>
                                         {exclusionsCount > 0 && (
-                                            <span className={cn(
-                                                "px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors",
-                                                activeTab === 'exclusions' ? 'bg-foreground/20' : 'bg-muted'
-                                            )}>
+                                            <Badge
+                                                variant="status"
+                                                className={cn(
+                                                    "h-4 px-1 rounded-md text-[10px]",
+                                                    activeTab === 'exclusions' ? 'bg-foreground/20' : ''
+                                                )}
+                                            >
                                                 {exclusionsCount}
-                                            </span>
+                                            </Badge>
                                         )}
                                     </TabsTrigger>
                                 </TabsList>

@@ -153,10 +153,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 const isLate = delayVal > 30;
                                 const isEarly = delayVal < -30;
                                 return (
-                                    <Badge
-                                        variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
-                                        className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors duration-200"
-                                    >
+                                    <Badge variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}>
                                         {isLate
                                             ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
                                             : isEarly
@@ -166,12 +163,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 );
                             })()}
                             {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                                    <HStack gap={2} className="px-2.5 py-1 bg-muted/30 rounded-full border border-border">
-                                        <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                                            {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
-                                        </span>
-                                    </HStack>
+                                <Badge variant="status">
+                                    <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                    <span>
+                                        {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
+                                    </span>
+                                </Badge>
                             )}
                         </HStack>
                     </Stack>
