@@ -162,7 +162,7 @@ export const SettingsModal: React.FC = () => {
                                         className="ml-3 sm:ml-4"
                                     />
                                 </button>
-                                {showVehicles && <Separator className="mx-4 w-auto bg-white/5!" />}
+                                {showVehicles && <Separator className="mx-4 w-auto bg-white/15!" />}
 
                                 <AnimatePresence>
                                     {showVehicles && (
