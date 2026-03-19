@@ -117,20 +117,31 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 <VehicleDetailSkeleton />
             )}
 
-            {/* Warning: Before Track / Previous Trip */}
-            {((['before_track', 'before_track_delayed'] as (string | undefined)[]).includes(selectedVehicle.state_position) || (['before_track', 'before_track_delayed'] as (string | undefined)[]).includes(vehicleDetail?.state_position)) && (
-                <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
-                    <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
-                        <Info size={20} />
-                    </Box>
-                    <Stack gap={1}>
-                        <h4 className="text-amber-500 font-bold text-sm">{t('map.vehicleDetails.previousTrip')}</h4>
-                        <p className="text-amber-500/80 text-xs leading-relaxed">
-                            {t('map.vehicleDetails.previousTripDescription')}
-                        </p>
-                    </Stack>
-                </Surface>
-            )}
+            {/* Warning Banner: State-specific messaging */}
+            {(() => {
+                const state = vehicleDetail?.state_position || selectedVehicle.state_position;
+                const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
+                const isOffTrack = state === 'off_track';
+
+                if (!isBeforeTrack && !isOffTrack) return null;
+
+                const title = isBeforeTrack ? t('map.vehicleDetails.previousTrip') : t('map.vehicleDetails.offTrack');
+                const description = isBeforeTrack ? t('map.vehicleDetails.previousTripDescription') : t('map.vehicleDetails.offTrackDescription');
+
+                return (
+                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
+                        <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
+                            <Info size={20} />
+                        </Box>
+                        <Stack gap={1}>
+                            <h4 className="text-amber-500 font-bold text-sm">{title}</h4>
+                            <p className="text-amber-500/80 text-xs leading-relaxed">
+                                {description}
+                            </p>
+                        </Stack>
+                    </Surface>
+                );
+            })()}
 
             {/* Header Hero Section */}
             <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
