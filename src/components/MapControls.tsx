@@ -91,12 +91,12 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden border border-white/20!">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/20!">
                     <Button
-                        variant="tinted"
+                        variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none border-none!"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-all border-none!"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
@@ -104,10 +104,10 @@ export const MapControls = React.memo(() => {
                     </Button>
                     <ButtonGroupSeparator orientation="horizontal" className="mx-2" />
                     <Button
-                        variant="tinted"
+                        variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none border-none!"
+                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-all border-none!"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >

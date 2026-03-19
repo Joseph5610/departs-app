@@ -286,7 +286,7 @@ export const SettingsModal: React.FC = () => {
                         </HStack>
 
                         {/* Footer Actions & Info */}
-                        <Stack gap={6} className="pt-4 border-t border-border">
+                        <Stack gap={6}>
                             <Stack gap={3}>
                                 {searchHistory.length > 0 && (
                                     <button
