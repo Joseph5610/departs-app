@@ -98,21 +98,22 @@ export const DepartureBoardHeader = React.memo(() => {
                     <ToggleGroup
                         value={[departureSort]}
                         onValueChange={(val) => val?.[0] && setDepartureSort(val[0] as 'line' | 'departure')}
-                        className="bg-muted/30 p-0.5 rounded-xl border border-border h-8"
+                        spacing={1}
+                        className="bg-muted/20 p-1 rounded-2xl border border-white/10 h-10 overflow-hidden"
                     >
                         <ToggleGroupItem
                             value="line"
-                            className="h-full px-2 rounded-lg data-[state=on]:bg-accent data-[state=on]:text-foreground data-[state=on]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
+                            className="h-full px-3 rounded-xl aria-pressed:bg-white/15 aria-pressed:text-foreground text-muted-foreground hover:text-foreground transition-all"
                             title={t('map.departures.sortByLine')}
                         >
-                            <ArrowDownAz size={14} />
+                            <ArrowDownAz size={18} />
                         </ToggleGroupItem>
                         <ToggleGroupItem
                             value="departure"
-                            className="h-full px-2 rounded-lg data-[state=on]:bg-accent data-[state=on]:text-foreground data-[state=on]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
+                            className="h-full px-3 rounded-xl aria-pressed:bg-white/15 aria-pressed:text-foreground text-muted-foreground hover:text-foreground transition-all"
                             title={t('map.departures.sortByDeparture')}
                         >
-                            <Clock size={14} />
+                            <Clock size={18} />
                         </ToggleGroupItem>
                     </ToggleGroup>
                 </HStack>
