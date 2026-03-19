@@ -7,6 +7,7 @@ import { calculateDistance } from '../../utils/transitLogic';
 import { useShare } from '../../hooks/useShare';
 import { HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 /**
@@ -94,32 +95,26 @@ export const DepartureBoardHeader = React.memo(() => {
                         <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                     </Button>
 
-                    <HStack padding="none" className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDepartureSort('line')}
-                            className={cn(
-                                "h-full w-8 rounded-lg",
-                                departureSort === 'line' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                            )}
+                    <ToggleGroup
+                        value={[departureSort]}
+                        onValueChange={(val) => val?.[0] && setDepartureSort(val[0] as 'line' | 'departure')}
+                        className="bg-muted/30 p-0.5 rounded-xl border border-border h-8"
+                    >
+                        <ToggleGroupItem
+                            value="line"
+                            className="h-full px-2 rounded-lg data-[state=on]:bg-accent data-[state=on]:text-foreground data-[state=on]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
                             title={t('map.departures.sortByLine')}
                         >
                             <ArrowDownAz size={14} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDepartureSort('departure')}
-                            className={cn(
-                                "h-full w-8 rounded-lg",
-                                departureSort === 'departure' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                            )}
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                            value="departure"
+                            className="h-full px-2 rounded-lg data-[state=on]:bg-accent data-[state=on]:text-foreground data-[state=on]:shadow-sm text-muted-foreground hover:text-foreground transition-all"
                             title={t('map.departures.sortByDeparture')}
                         >
                             <Clock size={14} />
-                        </Button>
-                    </HStack>
+                        </ToggleGroupItem>
+                    </ToggleGroup>
                 </HStack>
             </HStack>
         </div>
