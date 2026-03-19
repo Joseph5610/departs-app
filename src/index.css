@@ -153,12 +153,12 @@
 }
 
 @utility glassy-tinted {
-  @apply backdrop-blur-3xl border border-white/20 shadow-2xl relative;
-  background: color-mix(in oklch, var(--glass-tint), rgba(15, 20, 35, 0.3) 80%);
+  @apply backdrop-blur-3xl border border-white/25 shadow-2xl relative;
+  background: color-mix(in oklch, var(--glass-tint), transparent 80%);
   
   &.dark, .dark & {
-    background: color-mix(in oklch, var(--glass-tint), rgba(0, 0, 0, 0.5) 75%);
-    @apply border-white/25;
+    background: color-mix(in oklch, var(--glass-tint), transparent 75%);
+    @apply border-white/35;
   }
 }
 

@@ -69,14 +69,14 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 {showStatus && (isFuture ? (
                     <HStack gap={1} className="mb-0.5">
                         <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
-                        <span className="text-[8px] font-black text-destructive/80 uppercase tracking-widest">
+                        <span className="text-[8px] font-bold text-destructive/80 uppercase tracking-widest">
                             {t('alerts.planned')}
                         </span>
                     </HStack>
                 ) : isActive ? (
                     <HStack gap={1} className="mb-0.5">
                         <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)] animate-pulse" />
-                        <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+                        <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
                             {t('alerts.active')}
                         </span>
                     </HStack>
@@ -105,7 +105,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                                 {lines.map(line => (
                                     <span
                                         key={line}
-                                        className="px-2.5 py-1 rounded-md text-[10px] font-black text-white shadow-sm ring-1 ring-white/10"
+                                        className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm ring-1 ring-white/10"
                                         style={{ backgroundColor: lineColors(line) }}
                                     >
                                         {line}
@@ -115,7 +115,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                         )}
 
                         {validFrom && (
-                            <Box className="text-[10px] font-black text-foreground/60 mt-0.5">
+                            <Box className="text-[10px] font-semibold text-foreground/60 mt-0.5">
                                 {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
                             </Box>
                         )}

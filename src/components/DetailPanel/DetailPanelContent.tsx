@@ -157,11 +157,11 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full h-auto py-2 text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground"
+                                    className="w-full h-auto py-2 text-foreground/70 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground group"
                                 >
-                                    <Box className="h-[1px] flex-1 bg-border" />
+                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
                                     <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <Box className="h-[1px] flex-1 bg-border" />
+                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
                                 </Button>
                             )}
                         </Stack>

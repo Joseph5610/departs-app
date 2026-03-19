@@ -133,7 +133,7 @@ export const SettingsModal: React.FC = () => {
                                 {t('settings.sections.display')}
                             </Box>
 
-                            <Surface variant="tinted" className="overflow-hidden border-white/5!">
+                            <Surface variant="tinted" className="overflow-hidden border-white/15!">
                                 <button
                                     onClick={() => setShowVehicles(!showVehicles)}
                                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group border-b border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -192,7 +192,7 @@ export const SettingsModal: React.FC = () => {
                                                                 data-testid={`vehicle-type-${id}`}
                                                             >
                                                                 <Icon size={18} className={cn("transition-transform duration-300", routeTypeFilter.includes(id) ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
-                                                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider">
                                                                     {t(`settings.vehicleTypes.${id}`)}
                                                                 </span>
 
@@ -209,7 +209,7 @@ export const SettingsModal: React.FC = () => {
                                                             )}
                                                         >
                                                             <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
-                                                            <span className="text-[10px] font-black uppercase tracking-wider">
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider">
                                                                 {t('common.all')}
                                                             </span>
                                                         </button>
@@ -221,7 +221,7 @@ export const SettingsModal: React.FC = () => {
                                 </AnimatePresence>
                             </Surface>
 
-                            <Surface variant="tinted" className="overflow-hidden mt-3 border-white/5!">
+                            <Surface variant="tinted" className="overflow-hidden mt-3 border-white/15!">
                                 <button
                                     onClick={() => setShowStops(!showStops)}
                                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -281,7 +281,7 @@ export const SettingsModal: React.FC = () => {
                                 <Info size={16} />
                             </Box>
                             <Box className="text-foreground/90 text-xs leading-relaxed font-medium">
-                                <span className="text-amber-200 font-black">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
+                                <span className="text-amber-200 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
                             </Box>
                         </HStack>
 
@@ -318,7 +318,7 @@ export const SettingsModal: React.FC = () => {
                                             {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
                                         </span>
                                     </HStack>
-                                    <span className="text-[10px] text-foreground/70 font-black uppercase tracking-widest bg-white/10 px-2 py-1 rounded-md">
+                                    <span className="text-[10px] text-foreground/70 font-bold uppercase tracking-widest bg-white/10 px-2 py-1 rounded-md">
                                         {t('settings.versionBadge', { version })}
                                     </span>
                                 </button>
