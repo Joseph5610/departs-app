@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import {
     Eye,
     EyeOff,
@@ -162,7 +161,6 @@ export const SettingsModal: React.FC = () => {
                                         className="ml-3 sm:ml-4"
                                     />
                                 </button>
-                                {showVehicles && <Separator className="mx-4 w-auto bg-white/15!" />}
 
                                 <AnimatePresence>
                                     {showVehicles && (
@@ -288,8 +286,7 @@ export const SettingsModal: React.FC = () => {
                         </HStack>
 
                         {/* Footer Actions & Info */}
-                        <Separator />
-                        <Stack gap={6} className="pt-4">
+                        <Stack gap={6} className="pt-4 border-t border-border">
                             <Stack gap={3}>
                                 {searchHistory.length > 0 && (
                                     <button
