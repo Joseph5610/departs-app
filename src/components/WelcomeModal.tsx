@@ -36,7 +36,7 @@ export const WelcomeModal: React.FC = () => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <DialogContent variant="tinted" showCloseButton={false}>
-                <DialogHeader className="border-none! pb-0">
+                <DialogHeader>
                     <DialogTitle className="text-center flex items-center justify-center gap-2">
                         {t('welcome.title')}
                         <Badge variant="secondary" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary border-primary/20">
