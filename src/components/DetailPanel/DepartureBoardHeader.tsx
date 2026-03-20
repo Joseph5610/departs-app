@@ -76,20 +76,20 @@ export const DepartureBoardHeader = React.memo(() => {
                 </span>
                 <HStack gap={2}>
                     <Button
-                        variant="outline"
+                        variant="tinted"
                         size="icon"
                         onClick={handleShare}
-                        className="h-8 w-8 rounded-xl bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                        className="h-8 w-8 rounded-xl"
                     >
                         <Share2 size={14} />
                     </Button>
                     <Button
-                        variant="outline"
+                        variant="tinted"
                         size="icon"
                         onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
                         className={cn(
                             "h-8 w-8 rounded-xl transition-all",
-                            isFavorite ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                            isFavorite && "bg-amber-500/10 border-amber-500/20! text-amber-500 hover:bg-amber-500/20!"
                         )}
                     >
                         <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
@@ -102,14 +102,14 @@ export const DepartureBoardHeader = React.memo(() => {
                     >
                         <ToggleGroupItem
                             value="line"
-                            className="h-full px-2.5 aria-pressed:bg-white/15 aria-pressed:text-foreground text-muted-foreground hover:text-foreground transition-all"
+                            className="h-full px-2.5"
                             title={t('map.departures.sortByLine')}
                         >
                             <ArrowDownAz size={16} />
                         </ToggleGroupItem>
                         <ToggleGroupItem
                             value="departure"
-                            className="h-full px-2.5 aria-pressed:bg-white/15 aria-pressed:text-foreground text-muted-foreground hover:text-foreground transition-all"
+                            className="h-full px-2.5"
                             title={t('map.departures.sortByDeparture')}
                         >
                             <Clock size={16} />

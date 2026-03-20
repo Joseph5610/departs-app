@@ -136,7 +136,7 @@ export const SettingsModal: React.FC = () => {
                             <Surface variant="tinted" className="overflow-hidden border-white/15!">
                                 <button
                                     onClick={() => setShowVehicles(!showVehicles)}
-                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                                 >
                                     <HStack gap={4} className="min-w-0 flex-1">
                                         <Box className={cn(
@@ -224,7 +224,7 @@ export const SettingsModal: React.FC = () => {
                             <Surface variant="tinted" className="overflow-hidden mt-3 border-white/15!">
                                 <button
                                     onClick={() => setShowStops(!showStops)}
-                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-accent/50 active:bg-accent transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                                 >
                                     <HStack gap={4} className="min-w-0 flex-1">
                                         <Box className={cn(
@@ -294,7 +294,7 @@ export const SettingsModal: React.FC = () => {
                                             clearHistory();
                                             showToast(t('settings.clearHistory.success'), 'success');
                                         }}
-                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-accent active:scale-[0.98] rounded-2xl border-2 border-white/10 hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border-2 border-white/10 hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         <HStack gap={3}>
                                             <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
@@ -308,7 +308,7 @@ export const SettingsModal: React.FC = () => {
                                 <button
                                     onClick={handleCheckUpdate}
                                     disabled={isChecking}
-                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-accent active:scale-[0.98] rounded-2xl border-2 border-white/10 transition-all text-left outline-none"
+                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border-2 border-white/10 transition-all text-left outline-none"
                                 >
                                     <HStack gap={3}>
                                         <Box className="p-2 rounded-lg bg-white/10 text-foreground">

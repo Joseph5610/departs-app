@@ -96,18 +96,18 @@ export const MapControls = React.memo(() => {
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-all border-none! text-foreground"
+                        className="h-11 w-11 rounded-none border-none!"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} />
                     </Button>
-                    <div className="h-px w-auto mx-2 bg-white/10" />
+                    <div className="h-px w-auto mx-2 bg-white/10 shrink-0" />
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none hover:bg-white/10 active:bg-white/20 transition-all border-none! text-foreground"
+                        className="h-11 w-11 rounded-none border-none!"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
