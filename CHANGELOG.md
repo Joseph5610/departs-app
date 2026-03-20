@@ -2,6 +2,20 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.18.1] - 2026-03-20
+
+### Added
+- **Modal Visual Structure**: Introduced a subtle horizontal separator to modal headers (`DialogHeader`) for improved visual hierarchy and balance.
+
+### Changed
+- **UI Refinement**: Darkened and desaturated the global glassy tints (`--glass-tint`) for a deeper, more premium aesthetic that is less blue in dark mode.
+- **ToggleGroup Standardization**: Standardized the height of the departure sorting `ToggleGroup` to `h-8`, perfectly aligning it with the Share and Favorite buttons.
+- **Clean Modal Layouts**: Removed redundant bottom separators from `Settings`, `Alerts`, and `Welcome` modals to provide a cleaner, more focused content area.
+
+### Fixed
+- **Map Bleed Prevention**: Resolved an issue in map zoom controls where a transparent gap allowed the map to "bleed through" the button group. Replaced with a solid 1px divider.
+- **Welcome Modal Polish**: Removed an accidental separator from the Welcome Modal header to restore its clean, friendly appearance.
+
 ## [0.18.0] - 2026-03-10
 
 ### Changed
