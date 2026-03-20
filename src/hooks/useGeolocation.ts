@@ -57,7 +57,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     }, [flyToLocation]);
 
     const startWatcher = useCallback(() => {
-        if (!navigator.geolocation || watchId.current !== null) return;
+        if (typeof navigator === 'undefined' || !navigator.geolocation || watchId.current !== null) return;
 
         watchId.current = navigator.geolocation.watchPosition(
             (pos) => {
@@ -85,12 +85,27 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
     useEffect(() => {
         startWatcher();
         return () => {
-            if (watchId.current !== null) {
+            if (typeof navigator !== 'undefined' && navigator.geolocation && watchId.current !== null) {
                 navigator.geolocation.clearWatch(watchId.current);
                 watchId.current = null;
             }
         };
     }, [startWatcher]);
+
+    const getFallbackLocation = useCallback((): [number, number] | null => {
+        const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
+        if (saved) {
+            try {
+                const { lat, lng } = JSON.parse(saved);
+                if (typeof lat === 'number' && typeof lng === 'number') {
+                    return [lng, lat];
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        }
+        return null;
+    }, []);
 
     const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -100,29 +115,39 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>) => {
 
         if (userLocation && !isStale) {
             flyToLocation(userLocation);
-        } else {
-            setIsGeoPending(true);
-
-            // "Searching for location" toast removed per user request
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
-                    updateLocation(pos);
-                    setIsGeoPending(false);
-                    flyToLocation(coords);
-                },
-                () => {
-                    setIsGeoPending(false);
-                    showToast(t('toasts.geoError'), 'error');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
+            // Ensure watcher is still active
+            if (watchId.current === null) startWatcher();
+            return;
         }
+
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            showToast(t('toasts.geoNotSupported'), 'error');
+            const fallback = getFallbackLocation();
+            if (fallback) flyToLocation(fallback);
+            return;
+        }
+
+        setIsGeoPending(true);
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+                updateLocation(pos);
+                setIsGeoPending(false);
+                flyToLocation(coords);
+            },
+            () => {
+                setIsGeoPending(false);
+                showToast(t('toasts.geoError'), 'error');
+                const fallback = getFallbackLocation();
+                if (fallback) flyToLocation(fallback);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
 
         // Ensure watcher is still active
         if (watchId.current === null) startWatcher();
-    }, [userLocation, flyToLocation, updateLocation, startWatcher, showToast, t]);
+    }, [userLocation, flyToLocation, updateLocation, startWatcher, showToast, t, getFallbackLocation]);
 
     return {
         userLocation,
