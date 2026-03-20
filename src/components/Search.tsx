@@ -174,7 +174,7 @@ export const Search: React.FC = React.memo(() => {
                         <Stack gap={0}>
                             {showHistory && (
                                 <>
-                                    <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
+                                    <Box className="px-4 py-2 bg-white/5">
                                         <HStack className="gap-2">
                                             <Clock size={10} className="text-muted-foreground" />
                                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
@@ -217,7 +217,7 @@ export const Search: React.FC = React.memo(() => {
                             )}
 
                             {query === '' && results.length > 0 && (
-                                <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
+                                <Box className="px-4 py-2 bg-white/5">
                                     <HStack className="gap-2">
                                         <Star size={10} fill="currentColor" className="text-muted-foreground" />
                                         <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
@@ -274,7 +274,7 @@ const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highl
         asChild
         variant="ghost"
         className={cn(
-            "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left border-b border-border last:border-none outline-none focus-visible:bg-muted/50 rounded-none",
+            "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left outline-none focus-visible:bg-muted/50 rounded-none",
             variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-accent/50 active:bg-accent"
         )}
     >

@@ -47,9 +47,6 @@ export const useMapUrlSync = (
             selectVehicle({
                 vehicle_id: vehicleId,
                 gtfs_trip_id: tripId,
-                route_short_name: p.get('line') || '',
-                trip_headsign: p.get('headsign') || '',
-                delay: Number(p.get('delay') || 0),
                 state_position: 'on_track',
                 geometry: { type: 'Point', coordinates: [0, 0] }
             } as VehicleDetail, !!stopId);
@@ -81,9 +78,6 @@ export const useMapUrlSync = (
         if (selectedVehicle) {
             url.searchParams.set('vehicleId', selectedVehicle.vehicle_id);
             url.searchParams.set('tripId', selectedVehicle.gtfs_trip_id || '');
-            if (selectedVehicle.route_short_name) url.searchParams.set('line', selectedVehicle.route_short_name);
-            if (selectedVehicle.trip_headsign) url.searchParams.set('headsign', selectedVehicle.trip_headsign);
-            if (selectedVehicle.delay !== undefined) url.searchParams.set('delay', String(selectedVehicle.delay));
         } else {
             url.searchParams.delete('vehicleId');
             url.searchParams.delete('tripId');
