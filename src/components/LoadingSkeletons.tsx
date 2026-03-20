@@ -10,22 +10,18 @@ export const VehicleDetailSkeleton: React.FC = () => {
     return (
         <Stack gap={4} className="animate-in fade-in duration-500">
             {/* Header Hero Skeleton */}
-            <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
-                <HStack align="center" gap={4} className="flex-col text-center">
-                    {/* Route Icon Skeleton */}
-                    <Skeleton className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl" />
+            <Surface variant="tinted" padding="md" className="relative overflow-hidden border-white/10!">
+                <Stack gap={3}>
+                    {/* Status Row Skeleton */}
+                    <HStack align="center" gap={2}>
+                        <Skeleton className="h-9 w-24 rounded-xl" />
+                        <Skeleton className="h-9 w-20 rounded-full" />
+                        <Skeleton className="h-9 w-28 rounded-full" />
+                    </HStack>
                     
-                    <Stack align="center" gap={3} className="flex-1 w-full">
-                        {/* Title/Headsign Skeleton */}
-                        <Skeleton className="h-6 md:h-7 w-3/4 max-w-[200px]" />
-                        
-                        {/* Status Pillars Skeleton */}
-                        <HStack justify="center" gap={2}>
-                            <Skeleton className="h-5 w-16 rounded-full" />
-                            <Skeleton className="h-5 w-24 rounded-full" />
-                        </HStack>
-                    </Stack>
-                </HStack>
+                    {/* Title/Headsign Skeleton */}
+                    <Skeleton className="h-8 w-3/4 max-w-[300px]" />
+                </Stack>
             </Surface>
 
             {/* Metadata Grid Skeleton */}

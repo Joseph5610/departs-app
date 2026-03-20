@@ -133,57 +133,57 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             })()}
 
             {/* Header Hero Section */}
-            <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
+            <Surface variant="tinted" padding="md" className="relative overflow-hidden border-white/10!">
                 <Box
                     className="absolute inset-0 opacity-10"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
-                <HStack align="center" gap={4} className="relative z-10 flex-col text-center">
-                    <button
-                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
-                        onClick={onToggleFollow}
-                    >
-                        <span className="text-2xl md:text-3xl font-black text-white leading-none">{routeName}</span>
-                                <Box className={cn(
-                                    "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-background flex items-center justify-center transition-colors",
-                                    isFollowing ? "bg-primary" : "bg-muted"
-                                )}>
-                                    <MapPin size={isFollowing ? 10 : 12} className="text-white" />
-                                </Box>
-                            </button>
-                            <Stack align="center" gap={1} className="flex-1 min-w-0 w-full">
-                                <h3 className="text-lg md:text-xl font-bold text-foreground truncate w-full text-center">
-                                    {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
-                                </h3>
-                                <HStack justify="center" gap={2} className="flex-wrap">
-                            {(() => {
-                                const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
-                                const delayVal = Number(rawDelay);
-                                const delayMinutes = Math.round(Math.abs(delayVal) / 60);
-                                const isLate = delayVal > 30;
-                                const isEarly = delayVal < -30;
-                                return (
-                                    <Badge variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}>
-                                        {isLate
-                                            ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
-                                            : isEarly
-                                                ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
-                                                : t('map.vehicleDetails.onTime')}
-                                    </Badge>
-                                );
-                            })()}
-                            {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                                <Badge variant="status">
-                                    <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                    <span>
-                                        {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
-                                    </span>
+                <Stack gap={3} className="relative z-10">
+                    <HStack align="center" gap={2} className="flex-wrap">
+                        <button
+                            className="h-9 px-3 shrink-0 rounded-xl flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
+                            onClick={onToggleFollow}
+                        >
+                            <span className="text-xl font-black text-white leading-none">{routeName}</span>
+                            <Box className={cn(
+                                "ml-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 border-white/20",
+                                isFollowing ? "bg-white text-primary" : "bg-white/10 text-white"
+                            )}>
+                                <MapPin size={10} className={cn(isFollowing ? "fill-current" : "")} />
+                            </Box>
+                        </button>
+
+                        {(() => {
+                            const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
+                            const delayVal = Number(rawDelay);
+                            const delayMinutes = Math.round(Math.abs(delayVal) / 60);
+                            const isLate = delayVal > 30;
+                            const isEarly = delayVal < -30;
+                            return (
+                                <Badge variant={isLate ? 'danger' : isEarly ? 'info' : 'success'} className="h-9 px-3 text-sm">
+                                    {isLate
+                                        ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
+                                        : isEarly
+                                            ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
+                                            : t('map.vehicleDetails.onTime')}
                                 </Badge>
-                            )}
-                        </HStack>
-                    </Stack>
-                </HStack>
+                            );
+                        })()}
+                        {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
+                            <Badge variant="status" className="h-9 px-3 text-sm">
+                                <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                <span>
+                                    {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
+                                </span>
+                            </Badge>
+                        )}
+                    </HStack>
+
+                    <h3 className="text-xl md:text-2xl font-bold text-foreground truncate leading-tight">
+                        {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
+                    </h3>
+                </Stack>
             </Surface>
 
             {/* Metadata Grid */}
@@ -305,7 +305,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 });
 
 const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
-    stop: any,
+    stop: Required<Required<VehicleDetailType>['stop_times']>['features'][number],
     isPast: boolean,
     effectiveSequence: number | null,
     nextStopSequence: number | null
