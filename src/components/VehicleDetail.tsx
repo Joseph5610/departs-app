@@ -133,25 +133,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             })()}
 
             {/* Header Hero Section */}
-            <Surface variant="tinted" padding="md" className="relative overflow-hidden border-white/10!">
+            <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/10! rounded-[2.5rem] bg-slate-950/20 backdrop-blur-2xl">
                 <Box
-                    className="absolute inset-0 opacity-10"
+                    className="absolute inset-0 opacity-5"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
-                <Stack gap={4} className="relative z-10">
+                <Stack gap={6} className="relative z-10 px-7 py-8">
                     <Stack gap={3}>
-                        <HStack align="center" gap={2} className="flex-wrap">
+                        <HStack align="center" gap={3} className="flex-wrap">
                             <button
-                                className="h-10 px-3.5 shrink-0 rounded-2xl flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                                className="h-11 px-4 shrink-0 rounded-[1.25rem] flex items-center justify-center shadow-2xl relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
                                 style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                                 onClick={onToggleFollow}
                             >
-                                <span className="text-xl font-black text-white leading-none tracking-tight">{routeName}</span>
+                                <span className="text-2xl font-black text-white leading-none tracking-tighter pr-1.5">{routeName}</span>
                                 <Box className={cn(
-                                    "ml-3 w-5 h-5 rounded-full flex items-center justify-center transition-colors border-2 border-white/30",
-                                    isFollowing ? "bg-white text-primary" : "bg-white/10 text-white"
+                                    "w-6 h-6 rounded-full flex items-center justify-center transition-colors border-2 border-white/30 bg-white shadow-inner",
+                                    isFollowing ? "text-primary" : "text-slate-300"
                                 )}>
-                                    <MapPin size={10} className={cn(isFollowing ? "fill-current" : "")} />
+                                    <MapPin size={11} className={cn(isFollowing ? "fill-current" : "")} />
                                 </Box>
                             </button>
 
@@ -164,7 +164,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 return (
                                     <Badge
                                         variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
-                                        className="h-10 px-4 text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-sm"
+                                        className="h-11 px-5 text-[12px] font-black uppercase tracking-[0.1em] rounded-[1.25rem] shadow-xl border-white/5"
                                     >
                                         {isLate
                                             ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
@@ -177,17 +177,17 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         </HStack>
 
                         {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                            <Box className="flex items-center w-fit gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/90">
+                            <Box className="flex items-center w-fit gap-2 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 shadow-lg text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                                 <Box className={cn(
-                                    "w-1 h-1 rounded-full",
-                                    liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--color-primary),0.5)]" : "bg-muted-foreground/40"
+                                    "w-1.5 h-1.5 rounded-full",
+                                    liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--color-primary),0.6)]" : "bg-muted-foreground/40"
                                 )} />
                                 <span>{liveDataAgeSeconds}s ago</span>
                             </Box>
                         )}
                     </Stack>
 
-                    <h3 className="text-2xl font-bold text-foreground truncate leading-none tracking-tight">
+                    <h3 className="text-[2.25rem] font-bold text-foreground leading-[1] tracking-tighter">
                         {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                     </h3>
                 </Stack>

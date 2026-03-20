@@ -138,7 +138,7 @@ export const Search: React.FC = React.memo(() => {
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted border-white/10! transition-all placeholder:text-sm",
+                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted border-white/15! transition-all placeholder:text-sm",
                             activeFilter && "ring-1 ring-primary/50"
                         )}
                         data-testid="search-input"
