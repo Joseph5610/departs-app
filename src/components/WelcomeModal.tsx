@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -24,8 +24,23 @@ export const WelcomeModal: React.FC = () => {
     const { actions } = useMap();
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('skipTutorial')) return false;
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('skipTutorial')) {
+            localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
+            actions.handleLocate();
+
+            // Clean up the URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('skipTutorial');
+            window.history.replaceState({}, '', url.toString());
+        }
+    }, [actions]);
 
     const handleClose = () => {
         localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
