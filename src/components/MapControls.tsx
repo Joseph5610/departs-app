@@ -7,7 +7,7 @@ import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
-import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import { ButtonGroup } from '@/components/ui/button-group';
 
 /**
  * MapControls Component
