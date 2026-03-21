@@ -118,7 +118,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 const description = isBeforeTrack ? t('map.vehicleDetails.previousTripDescription') : t('map.vehicleDetails.offTrackDescription');
 
                 return (
-                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
+                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4 rounded-2xl">
                         <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                             <Info size={20} />
                         </Box>
@@ -133,14 +133,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             })()}
 
             {/* Header Hero Section */}
-            <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/10! rounded-3xl bg-slate-950/20 backdrop-blur-2xl">
+            <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
                 <Box
                     className="absolute inset-0 opacity-5"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
                 <Stack gap={1} className="relative z-10 px-6 py-6">
                     <button
-                        className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                        className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
                         style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                         onClick={onToggleFollow}
                     >
@@ -179,7 +179,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         })()}
 
                         {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                            <Box className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                            <Box className="flex items-center gap-1.5 px-2.5 h-6 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
                                 <Box className={cn(
                                     "w-1 h-1 rounded-full",
                                     liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
@@ -193,7 +193,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
             {/* Metadata Grid */}
             <HStack align="stretch" gap={2}>
-                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 border-white/10!">
+                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 border-white/15! rounded-2xl">
                     <HStack gap={2} className="min-w-0 flex-1 pr-2">
                         <Info size={14} className="text-muted-foreground shrink-0" />
                         <Stack gap={0} className="min-w-0 flex-1">
@@ -223,7 +223,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     </HStack>
                 </Surface>
                 {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                    <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3 border-white/10!">
+                    <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3 border-white/15! rounded-2xl">
                         <Navigation size={14} className="text-muted-foreground shrink-0" />
                         <Stack gap={0} className="min-w-0">
                             <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>

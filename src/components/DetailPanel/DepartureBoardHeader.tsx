@@ -57,7 +57,7 @@ export const DepartureBoardHeader = React.memo(() => {
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
             {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/10! px-3 py-1.5 self-start">
+                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/15! px-3 py-1.5 self-start rounded-xl">
                     <MapPin size={12} className="text-muted-foreground/60" />
                     <span className="font-medium text-foreground text-[11px]">
                         {stopDistanceInfo.isAtStop
