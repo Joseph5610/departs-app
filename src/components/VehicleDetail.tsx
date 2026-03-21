@@ -184,7 +184,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                     "w-1 h-1 rounded-full",
                                     liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
                                 )} />
-                                <span>{liveDataAgeSeconds}s ago</span>
+                                <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
                             </Box>
                         )}
                     </HStack>
