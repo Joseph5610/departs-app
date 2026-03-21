@@ -30,7 +30,7 @@ export const getVehicleColor = (routeType: string | number, routeName: string): 
 
     // 2. Night Routes (Trams 90-99, Buses 900+)
     if (isNightRoute(nameStr)) {
-        return '#111827'; // Dark Night
+        return '#1e293b'; // Slate 800 - dark but visible on black
     }
 
     // 3. Fallback by Type
@@ -91,7 +91,7 @@ export const vehicleColorExpression: ExpressionSpecification = [
     ], '#E31E24',
 
     // 2. Night Routes Detection (90-99 or 9xx)
-    isNightRouteExpression, '#111827',
+    isNightRouteExpression, '#1e293b',
 
     // 3. Type-based fallback
     ['match', ['to-string', ['coalesce', ['get', 'route_type'], '']],

@@ -7,6 +7,7 @@ import { calculateDistance } from '../../utils/transitLogic';
 import { useShare } from '../../hooks/useShare';
 import { HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 /**
@@ -56,7 +57,7 @@ export const DepartureBoardHeader = React.memo(() => {
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
             {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/10! px-3 py-1.5 self-start">
+                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/15! px-3 py-1.5 self-start rounded-xl">
                     <MapPin size={12} className="text-muted-foreground/60" />
                     <span className="font-medium text-foreground text-[11px]">
                         {stopDistanceInfo.isAtStop
@@ -75,51 +76,45 @@ export const DepartureBoardHeader = React.memo(() => {
                 </span>
                 <HStack gap={2}>
                     <Button
-                        variant="outline"
+                        variant="tinted"
                         size="icon"
                         onClick={handleShare}
-                        className="h-8 w-8 rounded-xl bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                        className="h-8 w-8 rounded-lg"
                     >
                         <Share2 size={14} />
                     </Button>
                     <Button
-                        variant="outline"
+                        variant="tinted"
                         size="icon"
                         onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
                         className={cn(
-                            "h-8 w-8 rounded-xl transition-all",
-                            isFavorite ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                            "h-8 w-8 rounded-lg transition-all",
+                            isFavorite && "bg-amber-500/10 border-amber-500/20! text-amber-500 hover:bg-amber-500/20!"
                         )}
                     >
                         <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} />
                     </Button>
 
-                    <HStack padding="none" className="h-8 bg-muted/30 p-0.5 rounded-xl border border-border">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDepartureSort('line')}
-                            className={cn(
-                                "h-full w-8 rounded-lg",
-                                departureSort === 'line' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                            )}
+                    <ToggleGroup
+                        value={[departureSort]}
+                        onValueChange={(val) => val?.[0] && setDepartureSort(val[0] as 'line' | 'departure')}
+                        className="bg-muted/30 rounded-lg h-8 overflow-hidden"
+                    >
+                        <ToggleGroupItem
+                            value="line"
+                            className="h-full px-2.5"
                             title={t('map.departures.sortByLine')}
                         >
-                            <ArrowDownAz size={14} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDepartureSort('departure')}
-                            className={cn(
-                                "h-full w-8 rounded-lg",
-                                departureSort === 'departure' ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                            )}
+                            <ArrowDownAz size={16} />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                            value="departure"
+                            className="h-full px-2.5"
                             title={t('map.departures.sortByDeparture')}
                         >
-                            <Clock size={14} />
-                        </Button>
-                    </HStack>
+                            <Clock size={16} />
+                        </ToggleGroupItem>
+                    </ToggleGroup>
                 </HStack>
             </HStack>
         </div>

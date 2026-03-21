@@ -69,7 +69,7 @@ export const DepartureItem = ({
             variant="tinted"
             padding="md"
             className={cn(
-                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/15!",
+                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/15! rounded-2xl",
                 dep.tripId ? "hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]" : "cursor-default"
             )}
         >

@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
@@ -118,7 +118,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 const description = isBeforeTrack ? t('map.vehicleDetails.previousTripDescription') : t('map.vehicleDetails.offTrackDescription');
 
                 return (
-                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4">
+                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4 rounded-2xl">
                         <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
                             <Info size={20} />
                         </Box>
@@ -133,100 +133,97 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             })()}
 
             {/* Header Hero Section */}
-            <Surface variant="tinted" padding="md" className="relative overflow-hidden md:p-6 border-white/10!">
+            <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
                 <Box
-                    className="absolute inset-0 opacity-10"
+                    className="absolute inset-0 opacity-5"
                     style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                 />
-                <HStack align="center" gap={4} className="relative z-10 flex-col text-center">
+                <Stack gap={1} className="relative z-10 px-6 py-6">
                     <button
-                        className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex flex-col items-center justify-center shadow-2xl relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
                         style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
                         onClick={onToggleFollow}
                     >
-                        <span className="text-2xl md:text-3xl font-black text-white leading-none">{routeName}</span>
-                                <Box className={cn(
-                                    "absolute -bottom-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-background flex items-center justify-center transition-colors",
-                                    isFollowing ? "bg-primary" : "bg-muted"
-                                )}>
-                                    <MapPin size={isFollowing ? 10 : 12} className="text-white" />
-                                </Box>
-                            </button>
-                            <Stack align="center" gap={1} className="flex-1 min-w-0 w-full">
-                                <h3 className="text-lg md:text-xl font-bold text-foreground truncate w-full text-center">
-                                    {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
-                                </h3>
-                                <HStack justify="center" gap={2} className="flex-wrap">
-                            {(() => {
-                                const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
-                                const delayVal = Number(rawDelay);
-                                const delayMinutes = Math.round(Math.abs(delayVal) / 60);
-                                const isLate = delayVal > 30;
-                                const isEarly = delayVal < -30;
-                                return (
-                                    <Badge variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}>
-                                        {isLate
-                                            ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
-                                            : isEarly
-                                                ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
-                                                : t('map.vehicleDetails.onTime')}
-                                    </Badge>
-                                );
-                            })()}
-                            {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
-                                <Badge variant="status">
-                                    <Box className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                    <span>
-                                        {t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}
-                                    </span>
-                                </Badge>
-                            )}
-                        </HStack>
-                    </Stack>
-                </HStack>
-            </Surface>
+                        <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{routeName}</span>
+                        <Box className={cn(
+                            "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
+                            isFollowing ? "text-primary" : "text-slate-300"
+                        )}>
+                            <MapPin size={8} className={cn(isFollowing ? "fill-current" : "")} />
+                        </Box>
+                    </button>
 
-            {/* Metadata Grid */}
-            <HStack align="stretch" gap={2}>
-                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 border-white/10!">
-                    <HStack gap={2} className="min-w-0 flex-1 pr-2">
-                        <Info size={14} className="text-muted-foreground shrink-0" />
+                    <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5">
+                        {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
+                    </h3>
+
+                    <HStack gap={2} className="flex-wrap">
+                        {(() => {
+                            const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
+                            const delayVal = Number(rawDelay);
+                            const delayMinutes = Math.round(Math.abs(delayVal) / 60);
+                            const isLate = delayVal > 30;
+                            const isEarly = delayVal < -30;
+                            return (
+                                <Badge
+                                    variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
+                                    className="h-6 px-2.5 text-[9px] font-bold uppercase tracking-wider rounded-md border-white/5"
+                                >
+                                    {isLate
+                                        ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
+                                        : isEarly
+                                            ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
+                                            : t('map.vehicleDetails.onTime')}
+                                </Badge>
+                            );
+                        })()}
+
+                        {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
+                            <Box className="flex items-center gap-1.5 px-2.5 h-6 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                                <Box className={cn(
+                                    "w-1 h-1 rounded-full",
+                                    liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
+                                )} />
+                                <span>{liveDataAgeSeconds}s ago</span>
+                            </Box>
+                        )}
+                    </HStack>
+
+                    {/* Metadata Footer */}
+                    <HStack gap={2} className="mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end">
                         <Stack gap={0} className="min-w-0 flex-1">
-                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate block w-full">
+                            <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
                                 {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
                             </span>
-                            <HStack gap={1} align="center" className="min-w-0 w-full">
-                                <span className="text-foreground text-[11px] font-bold truncate shrink">
+                            <HStack gap={2} align="center" className="min-w-0 w-full">
+                                <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
                                     {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
                                 </span>
-                                <span className="text-muted-foreground text-[10px] font-semibold shrink-0">
+                                <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
                                     #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
                                 </span>
+                                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
+                                    <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
+                                        {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
+                                    </span>
+                                )}
                             </HStack>
                         </Stack>
+
+                        <HStack gap={3} className="shrink-0 pb-0.5">
+                            {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
+                                <Snowflake size={13} className="text-sky-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
+                                <Zap size={13} className="text-amber-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
+                                <Accessibility size={13} className="text-primary" />
+                            )}
+                        </HStack>
                     </HStack>
-                    <HStack gap={2} className="shrink-0">
-                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
-                            <Snowflake size={14} className="text-sky-400" />
-                        )}
-                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
-                            <Zap size={14} className="text-amber-400" />
-                        )}
-                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
-                            <Accessibility size={14} className="text-primary" />
-                        )}
-                    </HStack>
-                </Surface>
-                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                    <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3 border-white/10!">
-                        <Navigation size={14} className="text-muted-foreground shrink-0" />
-                        <Stack gap={0} className="min-w-0">
-                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>
-                            <span className="text-foreground text-[11px] font-bold">{vehicleDetail?.run_number || selectedVehicle?.run_number}</span>
-                        </Stack>
-                    </Surface>
-                )}
-            </HStack>
+                </Stack>
+            </Surface>
 
             {/* Alerts */}
             {relevantAlerts.length > 0 && (
@@ -305,7 +302,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 });
 
 const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
-    stop: any,
+    stop: Required<Required<VehicleDetailType>['stop_times']>['features'][number],
     isPast: boolean,
     effectiveSequence: number | null,
     nextStopSequence: number | null

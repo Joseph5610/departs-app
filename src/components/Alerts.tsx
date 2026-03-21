@@ -63,12 +63,12 @@ export const Alerts: React.FC = () => {
                 size="icon"
                 onClick={() => setIsOpen(true)}
                 title={t('alerts.title')}
-                className="relative"
+                className="relative h-11 w-11"
                 data-testid="map-alerts-btn"
             >
                 <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "transition-transform group-hover:scale-110")} />
                 {incidentsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-background min-w-[20px] text-center">
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#151515] min-w-[20px] text-center">
                         {incidentsCount}
                     </span>
                 )}
@@ -76,7 +76,7 @@ export const Alerts: React.FC = () => {
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
-                    <DialogHeader className="px-6 pt-6 mb-3 shrink-0">
+                    <DialogHeader className="px-6 pt-6 shrink-0">
                         <DialogTitle>
                             {t('alerts.title')}
                         </DialogTitle>

@@ -138,8 +138,8 @@ export const Search: React.FC = React.memo(() => {
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted border-white/10! transition-all placeholder:text-sm",
-                            activeFilter && "ring-1 ring-primary/50"
+                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted border-white/15! transition-all placeholder:text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20",
+                            activeFilter && "border-primary/50 ring-1 ring-primary/20"
                         )}
                         data-testid="search-input"
                         readOnly={!!activeFilter}
@@ -170,11 +170,11 @@ export const Search: React.FC = React.memo(() => {
                 </div>
 
                 {isOpen && (results.length > 0 || isLineLike || showHistory) && (
-                    <Surface variant="tinted" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto border-white/10!">
+                    <Surface variant="tinted" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto border-white/15! rounded-2xl">
                         <Stack gap={0}>
                             {showHistory && (
                                 <>
-                                    <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
+                                    <Box className="px-4 py-2 bg-white/5">
                                         <HStack className="gap-2">
                                             <Clock size={10} className="text-muted-foreground" />
                                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
@@ -217,7 +217,7 @@ export const Search: React.FC = React.memo(() => {
                             )}
 
                             {query === '' && results.length > 0 && (
-                                <Box className="px-4 py-2 bg-white/5 border-b border-white/5">
+                                <Box className="px-4 py-2 bg-white/5">
                                     <HStack className="gap-2">
                                         <Star size={10} fill="currentColor" className="text-muted-foreground" />
                                         <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
@@ -274,8 +274,8 @@ const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highl
         asChild
         variant="ghost"
         className={cn(
-            "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left border-b border-border last:border-none outline-none focus-visible:bg-muted/50 rounded-none",
-            variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-accent/50 active:bg-accent"
+            "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left outline-none focus-visible:bg-white/10 rounded-none",
+            variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-white/10 active:bg-white/15"
         )}
     >
         <button 

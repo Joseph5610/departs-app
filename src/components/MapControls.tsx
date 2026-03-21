@@ -91,9 +91,9 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden border border-white/20!">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/15!">
                     <Button
-                        variant="tinted"
+                        variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
                         className="h-11 w-11 rounded-none border-none!"
@@ -102,9 +102,9 @@ export const MapControls = React.memo(() => {
                     >
                         <Plus size={20} />
                     </Button>
-                    <ButtonGroupSeparator orientation="horizontal" className="mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" className="mx-2 bg-white/10" />
                     <Button
-                        variant="tinted"
+                        variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
                         className="h-11 w-11 rounded-none border-none!"
@@ -119,6 +119,7 @@ export const MapControls = React.memo(() => {
                     <ControlButton
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
+                        className="border-white/15!"
                     >
                         <Compass size={20} className="transition-transform group-hover:rotate-12" />
                     </ControlButton>
@@ -128,14 +129,14 @@ export const MapControls = React.memo(() => {
     );
 });
 
-const ControlButton = ({ children, onClick, title, testId }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string }) => (
+const ControlButton = ({ children, onClick, title, testId, className }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string, className?: string }) => (
     <Button
         variant="tinted"
         size="icon"
         onClick={onClick}
         title={title}
         aria-label={title}
-        className="h-11 w-11 border-white/20!"
+        className={cn("h-11 w-11", className)}
         data-testid={testId}
     >
         {children}

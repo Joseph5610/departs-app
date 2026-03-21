@@ -26,7 +26,7 @@ import {
 const MapEngine: React.FC = () => {
     const { state, actions, mapRef } = useMap();
     const { selectedStop, selectedVehicle, isFollowing, selectedId } = state;
-    const { setSelectedStop, setSelectedVehicle } = actions;
+    const { setSelectedStop, setSelectedVehicle, selectVehicle } = actions;
 
     // Data needed for sync hooks
     const { vehicles: rawVehicles } = useVehicles();
@@ -34,7 +34,7 @@ const MapEngine: React.FC = () => {
     const { _raw_data: stopsRawData } = useStops();
 
     // Sync Background Logic
-    useMapUrlSync(selectedStop, setSelectedStop);
+    useMapUrlSync(selectedStop, setSelectedStop, selectedVehicle, selectVehicle);
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
