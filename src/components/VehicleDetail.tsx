@@ -115,11 +115,21 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 const state = vehicleDetail?.state_position || selectedVehicle.state_position;
                 const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
                 const isOffTrack = state === 'off_track';
+                const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
 
-                if (!isBeforeTrack && !isOffTrack) return null;
+                if (!isBeforeTrack && !isOffTrack && !isStaticFallback) return null;
 
-                const title = isBeforeTrack ? t('map.vehicleDetails.previousTrip') : t('map.vehicleDetails.offTrack');
-                const description = isBeforeTrack ? t('map.vehicleDetails.previousTripDescription') : t('map.vehicleDetails.offTrackDescription');
+                const title = isStaticFallback
+                    ? t('map.vehicleDetails.staticFallback')
+                    : isBeforeTrack
+                        ? t('map.vehicleDetails.previousTrip')
+                        : t('map.vehicleDetails.offTrack');
+
+                const description = isStaticFallback
+                    ? t('map.vehicleDetails.staticFallbackDescription')
+                    : isBeforeTrack
+                        ? t('map.vehicleDetails.previousTripDescription')
+                        : t('map.vehicleDetails.offTrackDescription');
 
                 return (
                     <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4 rounded-2xl">
