@@ -104,7 +104,7 @@
       "vehicle": "Vozidlo",
       "ac": "Klima",
       "runNumber": "Pořadí",
-      "liveDataAge": "{{seconds}}s",
+      "liveDataAge": "před {{seconds}}s",
       "currentStop": "Aktuální / Poslední projetá",
       "nextStop": "Příští zastávka",
       "showPastStops": "Zobrazit předchozí zastávky",
