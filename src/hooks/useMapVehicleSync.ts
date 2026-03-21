@@ -107,11 +107,18 @@ export const useMapVehicleSync = (
                     ...newProps,
                     gtfs_trip_id: vehicleDetail.gtfs_trip_id || newProps.gtfs_trip_id,
                     delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
-                    bearing: isFallback ? (newProps.bearing ?? selectedVehicle.bearing) : (vehicleDetail.bearing ?? newProps.bearing),
-                    state_position: isFallback ? (newProps.state_position ?? selectedVehicle.state_position) : (vehicleDetail.state_position || newProps.state_position),
+                    bearing: isFallback
+                        ? (tripIdChanged ? null : (newProps.bearing ?? selectedVehicle.bearing))
+                        : (vehicleDetail.bearing ?? newProps.bearing),
+                    state_position: isFallback
+                        ? (tripIdChanged ? 'on_track' : (newProps.state_position ?? selectedVehicle.state_position))
+                        : (vehicleDetail.state_position || newProps.state_position),
                     last_stop_sequence: isFallback
-                        ? (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence)
+                        ? (tripIdChanged ? null : (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence))
                         : (vehicleDetail.last_stop_sequence ?? (tripIdChanged ? null : newProps.last_stop_sequence)),
+                    origin_timestamp: isFallback
+                        ? (tripIdChanged ? undefined : (newProps.origin_timestamp ?? selectedVehicle.origin_timestamp))
+                        : (vehicleDetail.origin_timestamp || newProps.origin_timestamp),
                     vehicle_descriptor: {
                         ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
                         vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
@@ -130,9 +137,10 @@ export const useMapVehicleSync = (
                 const hasBearingChanged = newProps.bearing !== undefined && prev.bearing !== newProps.bearing;
                 const hasSequenceChanged = newProps.last_stop_sequence !== undefined && prev.last_stop_sequence !== newProps.last_stop_sequence;
                 const hasStateChanged = newProps.state_position !== undefined && prev.state_position !== newProps.state_position;
+                const hasOriginChanged = newProps.origin_timestamp !== undefined && prev.origin_timestamp !== newProps.origin_timestamp;
                 const hasTripChanged = newProps.gtfs_trip_id !== undefined && prev.gtfs_trip_id !== newProps.gtfs_trip_id;
 
-                if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged && !hasTripChanged) {
+                if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged && !hasTripChanged && !hasOriginChanged) {
                     return prev;
                 }
 

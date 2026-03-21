@@ -83,9 +83,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     // Safety: Coerce sequence to number, handle strings from MapLibre
     const effectiveSequence = useMemo(() => {
+        // If we are on a static fallback (no real-time), never show a "current" stop highlight
+        const isFallback = vehicleDetail?.is_static_fallback || selectedVehicle?.is_static_fallback;
+        if (isFallback) return null;
+
         const seq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
         return (seq !== null && seq !== undefined) ? Number(seq) : null;
-    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence]);
+    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence, selectedVehicle?.is_static_fallback, vehicleDetail?.is_static_fallback]);
 
     const nextStopSequence = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features || effectiveSequence === null) return null;
