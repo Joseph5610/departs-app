@@ -7,7 +7,7 @@ import { useMap } from '../hooks/useMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
-import { ButtonGroup } from '@/components/ui/button-group';
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 
 /**
  * MapControls Component
@@ -91,7 +91,7 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/15!">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -102,7 +102,7 @@ export const MapControls = React.memo(() => {
                     >
                         <Plus size={20} />
                     </Button>
-                    <div className="h-px w-auto mx-2 bg-white/10 shrink-0" />
+                    <ButtonGroupSeparator orientation="horizontal" className="mx-2 bg-white/10" />
                     <Button
                         variant="ghost"
                         size="icon"
