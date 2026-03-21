@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Navigation, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
 import { useRSS } from '../hooks/useRSS';
@@ -188,50 +188,42 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             </Box>
                         )}
                     </HStack>
-                </Stack>
-            </Surface>
 
-            {/* Metadata Grid */}
-            <HStack align="stretch" gap={2}>
-                <Surface variant="tinted" padding="sm" className="flex-1 min-w-0 justify-between flex flex-row items-center px-3 border-white/15! rounded-2xl">
-                    <HStack gap={2} className="min-w-0 flex-1 pr-2">
-                        <Info size={14} className="text-muted-foreground shrink-0" />
+                    {/* Metadata Footer */}
+                    <HStack gap={2} className="mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end">
                         <Stack gap={0} className="min-w-0 flex-1">
-                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate block w-full">
+                            <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
                                 {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
                             </span>
-                            <HStack gap={1} align="center" className="min-w-0 w-full">
-                                <span className="text-foreground text-[11px] font-bold truncate shrink">
+                            <HStack gap={2} align="center" className="min-w-0 w-full">
+                                <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
                                     {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
                                 </span>
-                                <span className="text-muted-foreground text-[10px] font-semibold shrink-0">
+                                <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
                                     #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
                                 </span>
+                                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
+                                    <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
+                                        {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
+                                    </span>
+                                )}
                             </HStack>
                         </Stack>
+
+                        <HStack gap={3} className="shrink-0 pb-0.5">
+                            {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
+                                <Snowflake size={13} className="text-sky-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
+                                <Zap size={13} className="text-amber-400" />
+                            )}
+                            {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
+                                <Accessibility size={13} className="text-primary" />
+                            )}
+                        </HStack>
                     </HStack>
-                    <HStack gap={2} className="shrink-0">
-                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
-                            <Snowflake size={14} className="text-sky-400" />
-                        )}
-                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
-                            <Zap size={14} className="text-amber-400" />
-                        )}
-                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
-                            <Accessibility size={14} className="text-primary" />
-                        )}
-                    </HStack>
-                </Surface>
-                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                    <Surface variant="tinted" padding="sm" className="flex-initial min-w-[70px] gap-2 flex flex-row items-center px-3 border-white/15! rounded-2xl">
-                        <Navigation size={14} className="text-muted-foreground shrink-0" />
-                        <Stack gap={0} className="min-w-0">
-                            <span className="text-muted-foreground text-[9px] uppercase font-bold tracking-wider truncate">{t('map.vehicleDetails.runNumber')}</span>
-                            <span className="text-foreground text-[11px] font-bold">{vehicleDetail?.run_number || selectedVehicle?.run_number}</span>
-                        </Stack>
-                    </Surface>
-                )}
-            </HStack>
+                </Stack>
+            </Surface>
 
             {/* Alerts */}
             {relevantAlerts.length > 0 && (

@@ -79,7 +79,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         variant="tinted"
                         size="icon"
                         onClick={handleShare}
-                        className="h-8 w-8 rounded-xl"
+                        className="h-8 w-8 rounded-lg"
                     >
                         <Share2 size={14} />
                     </Button>
@@ -88,7 +88,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         size="icon"
                         onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
                         className={cn(
-                            "h-8 w-8 rounded-xl transition-all",
+                            "h-8 w-8 rounded-lg transition-all",
                             isFavorite && "bg-amber-500/10 border-amber-500/20! text-amber-500 hover:bg-amber-500/20!"
                         )}
                     >
@@ -98,7 +98,7 @@ export const DepartureBoardHeader = React.memo(() => {
                     <ToggleGroup
                         value={[departureSort]}
                         onValueChange={(val) => val?.[0] && setDepartureSort(val[0] as 'line' | 'departure')}
-                        className="bg-muted/30 rounded-xl border border-border h-8 overflow-hidden"
+                        className="bg-muted/30 rounded-lg h-8 overflow-hidden"
                     >
                         <ToggleGroupItem
                             value="line"

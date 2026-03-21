@@ -91,7 +91,7 @@ export const MapControls = React.memo(() => {
 
                 <Alerts />
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/15!">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -136,7 +136,7 @@ const ControlButton = ({ children, onClick, title, testId, className }: { childr
         onClick={onClick}
         title={title}
         aria-label={title}
-        className={cn("h-11 w-11 border-white/15!", className)}
+        className={cn("h-11 w-11", className)}
         data-testid={testId}
     >
         {children}

@@ -184,10 +184,10 @@ export const SettingsModal: React.FC = () => {
                                                                 key={id}
                                                                 onClick={() => toggleRouteType(id)}
                                                                 className={cn(
-                                                                    "group relative px-3 py-2.5 rounded-2xl border-2 transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
+                                                                    "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                                     routeTypeFilter.includes(id)
                                                                         ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(var(--color-primary),0.1)]"
-                                                                        : "bg-muted/40 border-white/10 text-foreground/80 hover:bg-accent hover:border-accent hover:text-foreground"
+                                                                        : "bg-muted/40 border-white/15! text-foreground/80 hover:bg-white/10 hover:border-white/25! hover:text-foreground"
                                                                 )}
                                                                 data-testid={`vehicle-type-${id}`}
                                                             >
@@ -202,10 +202,10 @@ export const SettingsModal: React.FC = () => {
                                                         <button
                                                             onClick={() => setRouteTypeFilter([])}
                                                             className={cn(
-                                                                "px-3 py-2.5 rounded-2xl border-2 transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
+                                                                "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                                 routeTypeFilter.length === 0
                                                                     ? "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
-                                                                    : "bg-muted/40 border-white/10 text-foreground/80 hover:bg-accent hover:border-accent hover:text-foreground"
+                                                                    : "bg-muted/40 border-white/15! text-foreground/80 hover:bg-white/10 hover:border-white/25! hover:text-foreground"
                                                             )}
                                                         >
                                                             <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
@@ -294,7 +294,7 @@ export const SettingsModal: React.FC = () => {
                                             clearHistory();
                                             showToast(t('settings.clearHistory.success'), 'success');
                                         }}
-                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border-2 border-white/10 hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border border-white/15! hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         <HStack gap={3}>
                                             <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
@@ -308,7 +308,7 @@ export const SettingsModal: React.FC = () => {
                                 <button
                                     onClick={handleCheckUpdate}
                                     disabled={isChecking}
-                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border-2 border-white/10 transition-all text-left outline-none"
+                                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border border-white/15! transition-all text-left outline-none"
                                 >
                                     <HStack gap={3}>
                                         <Box className="p-2 rounded-lg bg-white/10 text-foreground">
