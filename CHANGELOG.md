@@ -2,6 +2,11 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.19.0] - 2026-03-20
+
+### Changed
+- **Distance Formatting**: Fixed pluralization for "minute" in distance display.
+
 ## [0.18.1] - 2026-03-20
 
 ### Changed

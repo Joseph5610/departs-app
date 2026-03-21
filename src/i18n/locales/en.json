@@ -122,13 +122,15 @@
         "description": "Please use night trams and buses which provide transportation until the early morning hours."
       },
       "delay": "+{{minutes}}min delay",
-      "moreConnections": "+ {{count}} more connections",
+      "moreConnections_one": "+ {{count}} more connection",
+      "moreConnections_other": "+ {{count}} more connections",
       "showLess": "Show less",
       "now": "Now",
       "minutes": "{{count}} min",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
-      "distance": "{{distance}}m • {{time}} min walk",
+      "distance_one": "{{distance}}m • {{count}} minute walk",
+      "distance_other": "{{distance}}m • {{count}} minutes walk",
       "atStop": "You are at the stop",
       "catchStatus": {
         "success": "You'll catch it",

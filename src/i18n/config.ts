@@ -15,6 +15,7 @@ i18n
     fallbackLng: 'en',
     supportedLngs: ['en', 'cs'],
     nonExplicitSupportedLngs: true,
+    compatibilityJSON: 'v4',
     interpolation: {
       escapeValue: false,
     },

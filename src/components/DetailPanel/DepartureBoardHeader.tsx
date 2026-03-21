@@ -37,6 +37,7 @@ export const DepartureBoardHeader = React.memo(() => {
 
         return {
             distance: Math.round(distance),
+            time: Math.ceil(distance / 60),
             isAtStop,
             showCatchIndicator: distance < 750 && !isMovingFast
         };
@@ -64,7 +65,7 @@ export const DepartureBoardHeader = React.memo(() => {
                             ? t('map.departures.atStop')
                             : t('map.departures.distance', {
                                 distance: stopDistanceInfo.distance,
-                                time: Math.ceil(stopDistanceInfo.distance / 60)
+                                count: stopDistanceInfo.time
                             })}
                     </span>
                 </Surface>
