@@ -11,6 +11,8 @@ import { useMap } from '../../hooks/useMap';
 import { useVehicleDetail } from '../../hooks/useVehicleDetail';
 import { useDepartures } from '../../hooks/useDepartures';
 import { useGlobalAlerts } from '../../hooks/useGlobalAlerts';
+import { useSelectedStop } from '../../hooks/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/useSelectedVehicle';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
@@ -34,20 +36,26 @@ export const DetailPanelContent = memo(() => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
+    // Derived State
+    const selectedStop = useSelectedStop();
+    const selectedVehicle = useSelectedVehicle();
+
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
     const { isLoading: loadingDeps, groupedDepartures } = useDepartures();
     const { infotexts } = useGlobalAlerts();
     const allInfotexts = infotexts.data;
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, userLocation, userSpeed } = state;
-    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
+    const { isFollowing, expandedGroups, userLocation, userSpeed } = state;
+    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, setIsFollowing } = actions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
     const stopDistanceInfo = useMemo(() => {
         const coords = selectedStop?.coordinates;
-        if (!coords || !userLocation) return null;
+        if (!coords || !userLocation) {
+            return null;
+        }
         const distance = calculateDistance(userLocation, coords);
 
         const isAtStop = distance < 20;
@@ -62,16 +70,18 @@ export const DetailPanelContent = memo(() => {
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
 
     const relevantInfotexts = useMemo(() => {
-        if (!showDepartureBoard || !selectedStop || !allInfotexts) return [];
+        if (!showDepartureBoard || !selectedStop || !allInfotexts) {
+            return [];
+        }
 
         const stopIds = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
-        return allInfotexts.filter(info =>
-            info.relatedStopIds.some(id => stopIds.includes(id))
-        );
+        return allInfotexts.filter(info => info.relatedStopIds.some(id => stopIds.includes(id)));
     }, [showDepartureBoard, selectedStop, allInfotexts]);
 
     const showMetroNightMessage = useMemo(() => {
-        if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
+        if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) {
+            return false;
+        }
 
         const isMetroStation = selectedStop.stop_name ? !!METRO_STATIONS[selectedStop.stop_name] : false;
         const hour = new Date().getHours();
@@ -108,7 +118,7 @@ export const DetailPanelContent = memo(() => {
                 vehicleDetail={vehicleDetail || null}
                 loadingDetail={loadingDetail}
                 isFollowing={isFollowing}
-                onToggleFollow={() => { actions.setIsFollowing(!isFollowing); }}
+                onToggleFollow={() => setIsFollowing(!isFollowing)}
             />
 
             {showDepartureBoard && groupedDepartures.map((group, index) => {
@@ -138,7 +148,7 @@ export const DetailPanelContent = memo(() => {
                                 <DepartureItem
                                     key={idx}
                                     departure={dep}
-                                    onDepartureClick={onDepartureClick}
+                                    onDepartureClick={(tid, vid, data) => onDepartureClick(tid, vid, data)}
                                     stopDistanceInfo={stopDistanceInfo}
                                     isTrainStop={selectedStop?.is_train}
                                     locale={locale}

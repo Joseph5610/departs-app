@@ -18,7 +18,7 @@ export interface DepartureGroup {
  */
 export const useDepartures = () => {
     const { state } = useMap();
-    const stopId = state.selectedStop?.stop_id || null;
+    const stopId = state.selectedStopId;
     const departureSort = state.departureSort;
 
     // Store previous data to calculate deltas without effects

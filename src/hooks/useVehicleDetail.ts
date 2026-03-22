@@ -5,21 +5,24 @@ import { useMap } from '../hooks/useMap';
 const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const url = new URL('/api/vehicle-detail', window.location.origin);
     url.searchParams.set('tripId', tripId);
-    if (vehicleId) url.searchParams.set('vehicleId', vehicleId);
+    if (vehicleId) {
+        url.searchParams.set('vehicleId', vehicleId);
+    }
 
     const res = await fetch(url.toString());
-    if (!res.ok) throw new Error('Failed to fetch vehicle detail');
+    if (!res.ok) {
+        throw new Error('Failed to fetch vehicle detail');
+    }
     return res.json();
 };
 
 export const useVehicleDetail = () => {
     const { state } = useMap();
-    const { selectedVehicle, selectedId } = state;
-    const tripId = selectedVehicle?.gtfs_trip_id;
+    const { selectedTripId: tripId, selectedVehicleId: vehicleId } = state;
 
     return useQuery({
-        queryKey: ['vehicle-detail', selectedId, tripId],
-        queryFn: () => fetchVehicleDetail(selectedId, tripId!),
+        queryKey: ['vehicle-detail', vehicleId, tripId],
+        queryFn: () => { return fetchVehicleDetail(vehicleId, tripId!); },
         enabled: !!tripId,
         staleTime: 10000,
         refetchInterval: 10000, // 10s - matches vehicle update frequency

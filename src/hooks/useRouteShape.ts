@@ -1,16 +1,15 @@
 
 import { useMemo } from 'react';
-import { useMap } from '../hooks/useMap';
 import { useVehicleDetail } from './useVehicleDetail';
+import { useSelectedVehicle } from './useSelectedVehicle';
 import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
 
 export const useRouteShape = () => {
-    const { state } = useMap();
     const { data: vehicleDetail } = useVehicleDetail();
-    const vId = state.selectedId;
+    const selectedVehicle = useSelectedVehicle();
 
     return useMemo(() => {
-        if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) {
+        if (!selectedVehicle || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) {
             return null;
         }
 
@@ -19,8 +18,8 @@ export const useRouteShape = () => {
             return null;
         }
 
-        const routeName = state.selectedVehicle?.route_short_name || '';
-        const routeType = state.selectedVehicle?.route_type || 0;
+        const routeName = selectedVehicle.route_short_name || '';
+        const routeType = selectedVehicle.route_type || 0;
         const color = isNightRoute(routeName) ? '#ffffff' : getVehicleColor(routeType, routeName);
 
         return {
@@ -36,5 +35,5 @@ export const useRouteShape = () => {
                 }
             }]
         };
-    }, [vId, vehicleDetail, state.selectedVehicle]);
+    }, [selectedVehicle, vehicleDetail]);
 };

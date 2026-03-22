@@ -5,6 +5,8 @@ import { ArrowDownAz, Clock, Star, MapPin, Share2 } from 'lucide-react';
 import { useMap } from '../../hooks/useMap';
 import { calculateDistance } from '../../utils/transitLogic';
 import { useShare } from '../../hooks/useShare';
+import { useSelectedStop } from '../../hooks/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/useSelectedVehicle';
 import { HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -21,7 +23,11 @@ export const DepartureBoardHeader = React.memo(() => {
     const { state, actions } = useMap();
     const { share } = useShare();
 
-    const { selectedStop, selectedVehicle, departureSort, userLocation, userSpeed, favoriteStops } = state;
+    // Derived state
+    const selectedStop = useSelectedStop();
+    const selectedVehicle = useSelectedVehicle();
+
+    const { departureSort, userLocation, userSpeed, favoriteStops } = state;
     const { setDepartureSort, toggleFavorite } = actions;
 
     const showHeader = !!selectedStop && !selectedVehicle;
@@ -29,7 +35,9 @@ export const DepartureBoardHeader = React.memo(() => {
 
     const stopDistanceInfo = useMemo(() => {
         const coords = selectedStop?.coordinates;
-        if (!coords || !userLocation) return null;
+        if (!coords || !userLocation) {
+            return null;
+        }
         const distance = calculateDistance(userLocation, coords);
 
         const isAtStop = distance < 20;
@@ -53,7 +61,9 @@ export const DepartureBoardHeader = React.memo(() => {
         }
     }, [selectedStop, share, t]);
 
-    if (!showHeader) return null;
+    if (!showHeader) {
+        return null;
+    }
 
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
@@ -87,7 +97,7 @@ export const DepartureBoardHeader = React.memo(() => {
                     <Button
                         variant="tinted"
                         size="icon"
-                        onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
+                        onClick={() => { if (selectedStop) { toggleFavorite(selectedStop.stop_id); } }}
                         className={cn(
                             "h-8 w-8 rounded-lg transition-all",
                             isFavorite && "bg-amber-500/10 border-amber-500/20! text-amber-500 hover:bg-amber-500/20!"

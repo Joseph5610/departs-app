@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from './useMap';
+import { useSelectedStop } from './useSelectedStop';
+import { useSelectedVehicle } from './useSelectedVehicle';
 import {
     MAP_VEHICLE_SELECT_ZOOM,
     MAP_ANIMATION_DURATION,
@@ -12,23 +14,19 @@ import {
  * useMapInterface
  *
  * The "User Experience Layer" hook.
- *
- * It manages the bridge between the application's internal state and the physical map interface.
- * This hook is purely reactive—it observes state changes and triggers side effects like
- * camera movement, URL updates, and MapLibre animations.
  */
 export const useMapInterface = () => {
     const { state, actions, mapRef } = useMap();
-    const { selectedId, selectedVehicle, selectedStop, isFollowing } = state;
-    const { updateStop, selectVehicle } = actions;
+    const { selectedStopId, selectedTripId, selectedVehicleId, isFollowing } = state;
+    const { selectStop, selectVehicle } = actions;
+
+    const selectedStop = useSelectedStop();
+    const selectedVehicle = useSelectedVehicle();
 
     const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
 
     // --- 1. URL SYNC (Initial Load) ---
-    /**
-     * Reads selection state from the URL on application startup.
-     */
     useEffect(() => {
         if (initialized.current) {
             return;
@@ -36,57 +34,46 @@ export const useMapInterface = () => {
         const p = new URLSearchParams(window.location.search);
 
         const stopId = p.get('stopId');
-        if (stopId && !selectedStop) {
-            updateStop({ stop_id: stopId });
+        if (stopId && !selectedStopId) {
+            selectStop(stopId);
         }
 
         const tripId = p.get('tripId');
         const vehicleId = p.get('vehicleId');
-        if (tripId && !selectedVehicle) {
-            selectVehicle({
-                vehicle_id: vehicleId || null,
-                gtfs_trip_id: tripId,
-                bearing: null,
-                delay: 0
-            } as any, !!stopId);
+        if (tripId && !selectedTripId) {
+            selectVehicle(tripId, vehicleId, !!stopId);
         }
 
         initialized.current = true;
-    }, [updateStop, selectedStop, selectedVehicle, selectVehicle]);
+    }, [selectedStopId, selectedTripId, selectStop, selectVehicle]);
 
     // --- 2. URL SYNC (Write) ---
-    /**
-     * Persists the current selection state back to the browser's URL.
-     */
     useEffect(() => {
         const url = new URL(window.location.href);
         const sp = url.searchParams;
 
-        if (selectedStop) {
-            sp.set('stopId', selectedStop.stop_id);
+        if (selectedStopId) {
+            sp.set('stopId', selectedStopId);
         } else {
             sp.delete('stopId');
         }
 
-        if (selectedVehicle) {
-            if (selectedVehicle.vehicle_id) {
-                sp.set('vehicleId', selectedVehicle.vehicle_id);
+        if (selectedTripId) {
+            sp.set('tripId', selectedTripId);
+            if (selectedVehicleId) {
+                sp.set('vehicleId', selectedVehicleId);
             } else {
                 sp.delete('vehicleId');
             }
-            sp.set('tripId', selectedVehicle.gtfs_trip_id);
         } else {
-            sp.delete('vehicleId');
             sp.delete('tripId');
+            sp.delete('vehicleId');
         }
 
         window.history.replaceState({}, '', url.toString());
-    }, [selectedStop, selectedVehicle]);
+    }, [selectedStopId, selectedTripId, selectedVehicleId]);
 
     // --- 3. CAMERA FOLLOW ---
-    /**
-     * Manages the map camera based on selections and 'following' state.
-     */
     useEffect(() => {
         if (!mapRef.current) {
             return;
@@ -98,11 +85,10 @@ export const useMapInterface = () => {
             : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 };
 
         const currentMap = mapRef.current;
-        const currentId = selectedId || selectedVehicle?.gtfs_trip_id;
+        const currentId = selectedVehicleId || selectedTripId;
         const coords = selectedVehicle?.geometry?.coordinates;
         const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
 
-        // A) Initial "Fly To" on selection
         if (isFollowing && hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId || null;
             currentMap.flyTo({
@@ -115,7 +101,6 @@ export const useMapInterface = () => {
             return;
         }
 
-        // B) Continuous Ease To
         if (isFollowing && hasCoords) {
             currentMap.easeTo({
                 center: coords as [number, number],
@@ -126,7 +111,6 @@ export const useMapInterface = () => {
             return;
         }
 
-        // C) Center on Stop
         if (!isFollowing && selectedStop?.coordinates) {
             currentMap.easeTo({
                 center: selectedStop.coordinates,
@@ -135,12 +119,9 @@ export const useMapInterface = () => {
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedId, selectedVehicle?.gtfs_trip_id]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId]);
 
-    // --- 4. PERFORMANCE VISUALS (NON-REACT) ---
-    /**
-     * Orchestrates high-frequency MapLibre animations directly to bypass React overhead.
-     */
+    // --- 4. PERFORMANCE VISUALS ---
     useEffect(() => {
         let frame: number;
         const currentMapRef = mapRef.current;
