@@ -16,7 +16,8 @@ import type { Departure } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
-    MAP_BOUNDS_DEBOUNCE
+    MAP_BOUNDS_DEBOUNCE,
+    STORAGE_KEYS
 } from '../config/constants';
 
 /**
@@ -151,7 +152,13 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setDebouncedBounds(initialBounds);
         }
 
-        performGeolocation();
+        const params = new URLSearchParams(window.location.search);
+        const skipTutorial = params.has('skipTutorial');
+        const welcomeSeen = localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
+
+        if (welcomeSeen || skipTutorial) {
+            performGeolocation();
+        }
     }, [performGeolocation, setBounds, setDebouncedBounds]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
