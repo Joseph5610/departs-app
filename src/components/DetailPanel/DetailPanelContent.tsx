@@ -80,7 +80,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
     const showMetroNightMessage = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
 
-        const isMetroStation = !!METRO_STATIONS[selectedStop.stop_name];
+        const isMetroStation = selectedStop.stop_name ? !!METRO_STATIONS[selectedStop.stop_name] : false;
         const hour = new Date().getHours();
         const isNightTime = hour >= 0 && hour < 5;
 
