@@ -90,6 +90,8 @@
       "previousTripDescription": "The vehicle hasn't started this specific trip yet. The location shown might be from its previous service.",
       "offTrack": "Vehicle is off-route",
       "offTrackDescription": "The vehicle is not on its regular track, check alerts for incidents.",
+      "staticFallback": "Live position not available",
+      "staticFallbackDescription": "This trip currently does not have active real-time tracking. Showing scheduled timetable.",
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
       "delayLabel": "Delay {{minutes}} min",

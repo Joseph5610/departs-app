@@ -83,9 +83,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     // Safety: Coerce sequence to number, handle strings from MapLibre
     const effectiveSequence = useMemo(() => {
+        // If we are on a static fallback (no real-time), never show a "current" stop highlight
+        const isFallback = vehicleDetail?.is_static_fallback || selectedVehicle?.is_static_fallback;
+        if (isFallback) return null;
+
         const seq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
         return (seq !== null && seq !== undefined) ? Number(seq) : null;
-    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence]);
+    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence, selectedVehicle?.is_static_fallback, vehicleDetail?.is_static_fallback]);
 
     const nextStopSequence = useMemo(() => {
         if (!vehicleDetail?.stop_times?.features || effectiveSequence === null) return null;
@@ -98,6 +102,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     if (!selectedVehicle) return null;
 
     const routeType = selectedVehicle.route_type ?? 0;
+    const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
 
     return (
         <Stack gap={4}>
@@ -105,32 +110,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             {loadingDetail && !vehicleDetail && (
                 <VehicleDetailSkeleton />
             )}
-
-            {/* Warning Banner: State-specific messaging */}
-            {(() => {
-                const state = vehicleDetail?.state_position || selectedVehicle.state_position;
-                const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
-                const isOffTrack = state === 'off_track';
-
-                if (!isBeforeTrack && !isOffTrack) return null;
-
-                const title = isBeforeTrack ? t('map.vehicleDetails.previousTrip') : t('map.vehicleDetails.offTrack');
-                const description = isBeforeTrack ? t('map.vehicleDetails.previousTripDescription') : t('map.vehicleDetails.offTrackDescription');
-
-                return (
-                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4 rounded-2xl">
-                        <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
-                            <Info size={20} />
-                        </Box>
-                        <Stack gap={1}>
-                            <h4 className="text-amber-500 font-bold text-sm">{title}</h4>
-                            <p className="text-amber-500/80 text-xs leading-relaxed">
-                                {description}
-                            </p>
-                        </Stack>
-                    </Surface>
-                );
-            })()}
 
             {/* Header Hero Section */}
             <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
@@ -189,39 +168,76 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         )}
                     </HStack>
 
-                    {/* Metadata Footer */}
-                    <HStack gap={2} className="mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end">
-                        <Stack gap={0} className="min-w-0 flex-1">
-                            <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
-                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
-                            </span>
-                            <HStack gap={2} align="center" className="min-w-0 w-full">
-                                <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
-                                    {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
-                                </span>
-                                <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
-                                    #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
-                                </span>
-                                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                                    <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
-                                        {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
-                                    </span>
-                                )}
-                            </HStack>
-                        </Stack>
+                    {/* Warning Banner & Metadata Footer */}
+                    {(() => {
+                        const state = vehicleDetail?.state_position || selectedVehicle.state_position;
+                        const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
+                        const isOffTrack = state === 'off_track';
+                        const isShowBanner = isBeforeTrack || isOffTrack || isStaticFallback;
 
-                        <HStack gap={3} className="shrink-0 pb-0.5">
-                            {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
-                                <Snowflake size={13} className="text-sky-400" />
-                            )}
-                            {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
-                                <Zap size={13} className="text-amber-400" />
-                            )}
-                            {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
-                                <Accessibility size={13} className="text-primary" />
-                            )}
-                        </HStack>
-                    </HStack>
+                        const title = isStaticFallback
+                            ? t('map.vehicleDetails.staticFallback')
+                            : isBeforeTrack
+                                ? t('map.vehicleDetails.previousTrip')
+                                : t('map.vehicleDetails.offTrack');
+
+                        const description = isStaticFallback
+                            ? t('map.vehicleDetails.staticFallbackDescription')
+                            : isBeforeTrack
+                                ? t('map.vehicleDetails.previousTripDescription')
+                                : t('map.vehicleDetails.offTrackDescription');
+
+                        return (
+                            <>
+                                {isShowBanner && (
+                                    <HStack gap={3} className="mt-4 items-start">
+                                        <Box className="p-2 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
+                                            <Info size={14} />
+                                        </Box>
+                                        <Stack gap={1}>
+                                            <span className="text-amber-500 font-bold text-[10px] uppercase tracking-wider leading-none">{title}</span>
+                                            <p className="text-amber-500/80 text-[11px] leading-snug font-medium">
+                                                {description}
+                                            </p>
+                                        </Stack>
+                                    </HStack>
+                                )}
+
+                                <HStack gap={2} className="mt-4 pt-4 border-t border-white/5 flex-wrap justify-between items-end">
+                                    <Stack gap={0} className="min-w-0 flex-1">
+                                        <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
+                                            {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
+                                        </span>
+                                        <HStack gap={2} align="center" className="min-w-0 w-full">
+                                            <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
+                                                {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
+                                            </span>
+                                            <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
+                                                #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
+                                            </span>
+                                            {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
+                                                <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
+                                                    {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
+                                                </span>
+                                            )}
+                                        </HStack>
+                                    </Stack>
+
+                                    <HStack gap={3} className="shrink-0 pb-0.5">
+                                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
+                                            <Snowflake size={13} className="text-sky-400" />
+                                        )}
+                                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
+                                            <Zap size={13} className="text-amber-400" />
+                                        )}
+                                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
+                                            <Accessibility size={13} className="text-primary" />
+                                        )}
+                                    </HStack>
+                                </HStack>
+                            </>
+                        );
+                    })()}
                 </Stack>
             </Surface>
 
@@ -250,16 +266,18 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <Stack gap={3}>
                         <HStack justify="between" className="px-1">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                            <CollapsibleTrigger render={
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
-                                />
-                            }>
-                                {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                                {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                            </CollapsibleTrigger>
+                            {effectiveSequence !== null && (
+                                <CollapsibleTrigger render={
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
+                                    />
+                                }>
+                                    {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
+                                    {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </CollapsibleTrigger>
+                            )}
                         </HStack>
                         <Box className="relative pl-6 overflow-hidden!">
                             <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />

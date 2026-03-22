@@ -90,6 +90,8 @@
       "previousTripDescription": "Vozidlo ještě nezahájilo tento konkrétní spoj. Zobrazená poloha může být z jeho předchozí jízdy.",
       "offTrack": "Vozidlo je mimo trasu",
       "offTrackDescription": "Vozidlo není na své pravidelné trase, zkontrolujte mimořádnosti a výluky.",
+      "staticFallback": "Poloha není k dispozici",
+      "staticFallbackDescription": "Tento spoj momentálně nemá aktivní sledování polohy. Zobrazen je plánovaný jízdní řád.",
       "headingToDestination": "Směr",
       "onTime": "Na čas",
       "delayLabel": "Zpoždění {{minutes}} min",
