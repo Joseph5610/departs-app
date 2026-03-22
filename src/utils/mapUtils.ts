@@ -46,7 +46,7 @@ import type { VehicleDescriptor } from '../types/transit';
  * Safely extracts vehicle properties from a MapLibre feature.
  * Handles stringified JSON and ensures correct numeric types.
  */
-export const extractVehicleProperties = (feature: { properties: Record<string, any>; geometry: VehicleDetail['geometry'] }): VehicleDetail => {
+export const extractVehicleProperties = (feature: { properties: Record<string, any> | null; geometry?: any }): VehicleDetail => {
     const rawProps = feature.properties || {};
 
     let vehicle_descriptor: VehicleDescriptor | undefined = undefined;
@@ -84,9 +84,10 @@ export const extractVehicleProperties = (feature: { properties: Record<string, a
 /**
  * Safely extracts stop properties from a MapLibre feature.
  */
-export const extractStopProperties = (feature: { properties: Record<string, any>; geometry: SelectedStop['coordinates'] | { type: 'Point'; coordinates: [number, number] } }): SelectedStop => {
+export const extractStopProperties = (feature: { properties: Record<string, any> | null; geometry?: any }): SelectedStop => {
     const p = feature.properties || {};
-    const coordinates = 'coordinates' in feature.geometry ? feature.geometry.coordinates : feature.geometry;
+    const geom = feature.geometry;
+    const coordinates = geom && 'coordinates' in geom ? geom.coordinates : geom;
 
     return {
         stop_id: String(p.stop_id),
