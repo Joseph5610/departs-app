@@ -101,7 +101,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     if (!selectedVehicle) return null;
 
-    const routeType = selectedVehicle.route_type ?? 0;
+    const routeType = vehicleDetail?.route_type ?? selectedVehicle.route_type ?? 0;
     const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
 
     return (
