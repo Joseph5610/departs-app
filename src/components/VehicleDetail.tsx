@@ -266,7 +266,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <Stack gap={3}>
                         <HStack justify="between" className="px-1">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                            {!isStaticFallback && (
+                            {effectiveSequence !== null && (
                                 <CollapsibleTrigger render={
                                     <Button
                                         variant="outline"
