@@ -1,11 +1,11 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2 } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, Share2 } from 'lucide-react';
 import { useMap } from '../../hooks/useMap';
 import { calculateDistance } from '../../utils/transitLogic';
 import { useShare } from '../../hooks/useShare';
-import { HStack, Surface } from '@/components/ui/layout';
+import { HStack, Surface, Box } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ export const DepartureBoardHeader = React.memo(() => {
     return (
         <div className="px-6 pb-4 shrink-0 flex flex-col gap-4">
             {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="none" className="flex flex-row items-center gap-2.5 border-white/10! px-3.5 py-2 self-start rounded-full bg-white/5 backdrop-blur-md">
+                <Surface variant="tinted" padding="none" className="flex flex-row items-center gap-2 border-white/10! px-3.5 py-2 self-start rounded-full bg-white/5 backdrop-blur-md">
                     <Box className={cn(
                         "w-1.5 h-1.5 rounded-full",
                         stopDistanceInfo.isAtStop ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/60"
@@ -78,7 +78,7 @@ export const DepartureBoardHeader = React.memo(() => {
                 <span className="text-muted-foreground/60 text-[10px] uppercase font-bold tracking-[0.2em]">
                     {t('map.departures.upcoming')}
                 </span>
-                <HStack gap={1.5}>
+                <HStack gap={2}>
                     <Button
                         variant="tinted"
                         size="icon"
@@ -100,7 +100,7 @@ export const DepartureBoardHeader = React.memo(() => {
                     </Button>
 
                     <ToggleGroup
-                        value={departureSort}
+                        value={[departureSort]}
                         onValueChange={(val) => {
                             if (typeof val === 'string') {
                                 setDepartureSort(val as 'line' | 'departure');

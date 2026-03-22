@@ -9,7 +9,6 @@ import { getVehicleColor } from '../../utils/vehicleColors';
 import type { Departure } from '../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-import { Badge } from '@/components/ui/badge';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -88,11 +87,11 @@ export const DepartureItem = ({
                 />
 
                 <HStack gap={4} className="min-w-0 flex-1">
-                    <Stack gap={0.5} className="min-w-0 flex-1">
+                    <Stack gap={1} className="min-w-0 flex-1">
                         <div className="text-foreground font-bold text-[15px] leading-tight truncate tracking-tight">
                             {dep.headsign}
                         </div>
-                        <HStack gap={2.5} align="center" className="text-muted-foreground/80 text-[10px]">
+                        <HStack gap={3} align="center" className="text-muted-foreground/80 text-[10px]">
                             <HStack gap={1} align="center">
                                 <span className="font-bold tabular-nums">
                                     {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
@@ -105,7 +104,7 @@ export const DepartureItem = ({
                                 </Box>
                             )}
 
-                            <HStack gap={1.5} align="center">
+                            <HStack gap={2} align="center">
                                 {typeof dep.delay === 'number' && dep.delay !== 0 && (
                                     <span className={cn(
                                         "font-bold tabular-nums tracking-wide",
@@ -124,14 +123,14 @@ export const DepartureItem = ({
                     </Stack>
                 </HStack>
 
-                <Stack gap={1.5} align="end" justify="center" className="shrink-0 pl-4 border-l border-white/5">
+                <Stack gap={2} align="end" justify="center" className="shrink-0 pl-4 border-l border-white/5">
                     <Box className="text-xl font-black text-primary tabular-nums leading-none tracking-tighter drop-shadow-[0_0_8px_var(--color-primary)]">
                         <Countdown timestamp={dep.timestamp} />
                     </Box>
 
                     {stopDistanceInfo?.showCatchIndicator && catchStatus && (
                         <HStack
-                            gap={1.5}
+                            gap={2}
                             align="center"
                             className={cn(
                                 "px-1.5 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider",
