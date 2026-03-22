@@ -111,41 +111,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 <VehicleDetailSkeleton />
             )}
 
-            {/* Warning Banner: State-specific messaging */}
-            {(() => {
-                const state = vehicleDetail?.state_position || selectedVehicle.state_position;
-                const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
-                const isOffTrack = state === 'off_track';
-
-                if (!isBeforeTrack && !isOffTrack && !isStaticFallback) return null;
-
-                const title = isStaticFallback
-                    ? t('map.vehicleDetails.staticFallback')
-                    : isBeforeTrack
-                        ? t('map.vehicleDetails.previousTrip')
-                        : t('map.vehicleDetails.offTrack');
-
-                const description = isStaticFallback
-                    ? t('map.vehicleDetails.staticFallbackDescription')
-                    : isBeforeTrack
-                        ? t('map.vehicleDetails.previousTripDescription')
-                        : t('map.vehicleDetails.offTrackDescription');
-
-                return (
-                    <Surface variant="tinted" padding="md" className="bg-amber-500/10 border-amber-500/20! flex flex-row items-start gap-4 rounded-2xl">
-                        <Box className="p-2 bg-amber-500/20 rounded-full text-amber-500 shrink-0">
-                            <Info size={20} />
-                        </Box>
-                        <Stack gap={1}>
-                            <h4 className="text-amber-500 font-bold text-sm">{title}</h4>
-                            <p className="text-amber-500/80 text-xs leading-relaxed">
-                                {description}
-                            </p>
-                        </Stack>
-                    </Surface>
-                );
-            })()}
-
             {/* Header Hero Section */}
             <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
                 <Box
@@ -202,6 +167,41 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             </Box>
                         )}
                     </HStack>
+
+                    {/* Warning Banner: Integrated State-specific messaging */}
+                    {(() => {
+                        const state = vehicleDetail?.state_position || selectedVehicle.state_position;
+                        const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
+                        const isOffTrack = state === 'off_track';
+
+                        if (!isBeforeTrack && !isOffTrack && !isStaticFallback) return null;
+
+                        const title = isStaticFallback
+                            ? t('map.vehicleDetails.staticFallback')
+                            : isBeforeTrack
+                                ? t('map.vehicleDetails.previousTrip')
+                                : t('map.vehicleDetails.offTrack');
+
+                        const description = isStaticFallback
+                            ? t('map.vehicleDetails.staticFallbackDescription')
+                            : isBeforeTrack
+                                ? t('map.vehicleDetails.previousTripDescription')
+                                : t('map.vehicleDetails.offTrackDescription');
+
+                        return (
+                            <Box className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20! flex flex-row items-start gap-3 rounded-xl">
+                                <Box className="p-1.5 bg-amber-500/20 rounded-full text-amber-500 shrink-0 mt-0.5">
+                                    <Info size={16} />
+                                </Box>
+                                <Stack gap={1}>
+                                    <h4 className="text-amber-500 font-bold text-[13px] leading-tight">{title}</h4>
+                                    <p className="text-amber-500/80 text-[11px] leading-snug">
+                                        {description}
+                                    </p>
+                                </Stack>
+                            </Box>
+                        );
+                    })()}
 
                     {/* Metadata Footer */}
                     <HStack gap={2} className="mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end">
