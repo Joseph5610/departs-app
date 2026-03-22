@@ -44,30 +44,27 @@ export const useMapUrlSync = (
     // 2. State Change: Write to URL
     useEffect(() => {
         const url = new URL(window.location.href);
+        const sp = url.searchParams;
+
+        // Cleanup legacy params
+        ['stopName', 'stopPlatform', 'line', 'headsign', 'delay'].forEach(p => sp.delete(p));
 
         // Stop params
         if (selectedStop) {
-            url.searchParams.set('stopId', selectedStop.stop_id);
+            sp.set('stopId', selectedStop.stop_id);
         } else {
-            url.searchParams.delete('stopId');
+            sp.delete('stopId');
         }
-        url.searchParams.delete('stopName');
-        url.searchParams.delete('stopPlatform');
 
         // Vehicle params
         if (selectedVehicle) {
-            if (selectedVehicle.vehicle_id) {
-                url.searchParams.set('vehicleId', selectedVehicle.vehicle_id);
-            } else {
-                url.searchParams.delete('vehicleId');
-            }
-            url.searchParams.set('tripId', selectedVehicle.gtfs_trip_id || '');
+            const vid = selectedVehicle.vehicle_id;
+            const tid = selectedVehicle.gtfs_trip_id;
+            vid ? sp.set('vehicleId', vid) : sp.delete('vehicleId');
+            sp.set('tripId', tid);
         } else {
-            url.searchParams.delete('vehicleId');
-            url.searchParams.delete('tripId');
-            url.searchParams.delete('line');
-            url.searchParams.delete('headsign');
-            url.searchParams.delete('delay');
+            sp.delete('vehicleId');
+            sp.delete('tripId');
         }
 
         window.history.replaceState({}, '', url.toString());
