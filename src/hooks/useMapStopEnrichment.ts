@@ -13,21 +13,31 @@ export const useMapStopEnrichment = (
     const lastCheckedId = useRef<string | null>(null);
 
     useEffect(() => {
-        if (!selectedStop || !stopsData || selectedStop.coordinates) {
+        if (!selectedStop || !stopsData) {
             lastCheckedId.current = selectedStop?.stop_id || null;
             return;
         }
 
         const sid = selectedStop.stop_id;
+        const hasCoords = !!selectedStop.coordinates;
+        const hasName = !!selectedStop.stop_name;
+
+        // If we have both, we're good
+        if (hasCoords && hasName) {
+            lastCheckedId.current = sid;
+            return;
+        }
 
         // Only run if the stop ID has changed or we haven't successfully enriched it yet
-        if (lastCheckedId.current === sid) return;
+        if (lastCheckedId.current === sid && hasCoords && hasName) return;
 
         const feature = stopsData.features.find(f => f.properties.stop_id === sid);
         if (feature) {
             setSelectedStop((prev: SelectedStop | null) => prev?.stop_id === sid ? {
                 ...prev,
-                coordinates: feature.geometry.coordinates as [number, number],
+                stop_name: prev.stop_name || feature.properties.stop_name,
+                platform_code: prev.platform_code || feature.properties.platform_code,
+                coordinates: prev.coordinates || (feature.geometry.coordinates as [number, number]),
                 all_ids: feature.properties.all_ids
             } : prev);
             lastCheckedId.current = sid;
@@ -37,7 +47,8 @@ export const useMapStopEnrichment = (
              if (centroid) {
                 setSelectedStop((prev: SelectedStop | null) => prev?.stop_id === sid ? {
                     ...prev,
-                    coordinates: centroid.geometry.coordinates as [number, number],
+                    stop_name: prev.stop_name || centroid.properties.stop_name,
+                    coordinates: prev.coordinates || (centroid.geometry.coordinates as [number, number]),
                     all_ids: centroid.properties.all_ids
                 } : prev);
                 lastCheckedId.current = sid;

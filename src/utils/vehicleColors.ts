@@ -15,9 +15,9 @@ export const isNightRoute = (routeName: string | number): boolean => {
  * Returns a hex color string for a given route type and name.
  * Uses PID official branding colors for Metro, Trams, and Buses.
  */
-export const getVehicleColor = (routeType: string | number, routeName: string): string => {
-    const type = String(routeType).toLowerCase();
-    const nameStr = String(routeName);
+export const getVehicleColor = (routeType: string | number | undefined, routeName: string | undefined): string => {
+    const type = String(routeType ?? '').toLowerCase();
+    const nameStr = String(routeName ?? '');
 
     // 1. Metro Specifics (Priority)
     if (type === '1' || type === 'metro') {

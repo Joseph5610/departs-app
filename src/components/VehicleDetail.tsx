@@ -42,9 +42,34 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const [showPastStops, setShowPastStops] = useState(false);
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
 
-    const originTs = vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp;
+    const displayVehicle = useMemo(() => {
+        if (!selectedVehicle) return null;
+        // Merge strategy: prioritize API detail but never let it override critical state with null/empty
+        const merged = {
+            ...selectedVehicle,
+            ...vehicleDetail,
+            route_short_name: vehicleDetail?.route_short_name || selectedVehicle.route_short_name,
+            route_type: vehicleDetail?.route_type ?? selectedVehicle.route_type,
+            trip_headsign: vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign
+        };
+        const routeName = String(merged.route_short_name || '');
+        const isStaticFallback = !!merged.is_static_fallback;
+
+        // Effective sequence: suppress highlight if static fallback
+        const rawSeq = merged.last_stop_sequence;
+        const effectiveSequence = (isStaticFallback || rawSeq === null || rawSeq === undefined) ? null : Number(rawSeq);
+
+        return {
+            ...merged,
+            routeName,
+            isStaticFallback,
+            effectiveSequence,
+            routeType: merged.route_type ?? 0
+        };
+    }, [selectedVehicle, vehicleDetail]);
 
     React.useEffect(() => {
+        const originTs = displayVehicle?.origin_timestamp;
         if (!originTs) {
             setLiveDataAgeSeconds(null);
             return;
@@ -65,44 +90,28 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         updateAge();
         const interval = setInterval(updateAge, 1000);
         return () => clearInterval(interval);
-    }, [originTs]);
-
-    // Safety: Ensure routeName is always a string and not "undefined"
-    const rawRouteName = selectedVehicle?.route_short_name || vehicleDetail?.route_short_name;
-    const routeName = (rawRouteName !== undefined && rawRouteName !== null) ? String(rawRouteName) : '';
+    }, [displayVehicle?.origin_timestamp]);
 
     const relevantAlerts = useMemo(() => {
         const allItems = rssData?.alerts || [];
+        const routeName = displayVehicle?.routeName;
         if (!routeName) return [];
         const upperRouteName = routeName.toUpperCase();
         return allItems.filter(item =>
             item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName) &&
             item.isActive
         );
-    }, [rssData, routeName]);
-
-    // Safety: Coerce sequence to number, handle strings from MapLibre
-    const effectiveSequence = useMemo(() => {
-        // If we are on a static fallback (no real-time), never show a "current" stop highlight
-        const isFallback = vehicleDetail?.is_static_fallback || selectedVehicle?.is_static_fallback;
-        if (isFallback) return null;
-
-        const seq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence ?? null;
-        return (seq !== null && seq !== undefined) ? Number(seq) : null;
-    }, [selectedVehicle?.last_stop_sequence, vehicleDetail?.last_stop_sequence, selectedVehicle?.is_static_fallback, vehicleDetail?.is_static_fallback]);
+    }, [rssData, displayVehicle?.routeName]);
 
     const nextStopSequence = useMemo(() => {
-        if (!vehicleDetail?.stop_times?.features || effectiveSequence === null) return null;
-        const futureStops = vehicleDetail.stop_times.features
-            .filter((s) => Number(s.properties.stop_sequence) > effectiveSequence)
+        if (!displayVehicle?.stop_times?.features || displayVehicle.effectiveSequence === null) return null;
+        const futureStops = displayVehicle.stop_times.features
+            .filter((s) => Number(s.properties.stop_sequence) > (displayVehicle.effectiveSequence ?? 0))
             .sort((a, b) => Number(a.properties.stop_sequence) - Number(b.properties.stop_sequence));
         return futureStops.length > 0 ? Number(futureStops[0].properties.stop_sequence) : null;
-    }, [vehicleDetail, effectiveSequence]);
+    }, [displayVehicle]);
 
-    if (!selectedVehicle) return null;
-
-    const routeType = selectedVehicle.route_type ?? 0;
-    const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
+    if (!displayVehicle) return null;
 
     return (
         <Stack gap={4}>
@@ -115,15 +124,15 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
                 <Box
                     className="absolute inset-0 opacity-5"
-                    style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
+                    style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
                 />
                 <Stack gap={1} className="relative z-10 px-6 py-6">
                     <button
                         className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
-                        style={{ backgroundColor: getVehicleColor(routeType, routeName) }}
+                        style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
                         onClick={onToggleFollow}
                     >
-                        <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{routeName}</span>
+                        <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{displayVehicle.routeName}</span>
                         <Box className={cn(
                             "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
                             isFollowing ? "text-primary" : "text-slate-300"
@@ -133,13 +142,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     </button>
 
                     <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5">
-                        {vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign || selectedVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
+                        {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                     </h3>
 
                     <HStack gap={2} className="flex-wrap">
                         {(() => {
-                            const rawDelay = vehicleDetail?.delay ?? selectedVehicle.delay ?? 0;
-                            const delayVal = Number(rawDelay);
+                            const delayVal = Number(displayVehicle.delay || 0);
                             const delayMinutes = Math.round(Math.abs(delayVal) / 60);
                             const isLate = delayVal > 30;
                             const isEarly = delayVal < -30;
@@ -157,7 +165,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             );
                         })()}
 
-                        {(vehicleDetail?.origin_timestamp || selectedVehicle?.origin_timestamp) && liveDataAgeSeconds !== null && (
+                        {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
                             <Box className="flex items-center gap-1.5 px-2.5 h-6 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
                                 <Box className={cn(
                                     "w-1 h-1 rounded-full",
@@ -170,18 +178,18 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                     {/* Warning Banner & Metadata Footer */}
                     {(() => {
-                        const state = vehicleDetail?.state_position || selectedVehicle.state_position;
+                        const state = displayVehicle.state_position;
                         const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
                         const isOffTrack = state === 'off_track';
-                        const isShowBanner = isBeforeTrack || isOffTrack || isStaticFallback;
+                        const isShowBanner = isBeforeTrack || isOffTrack || displayVehicle.isStaticFallback;
 
-                        const title = isStaticFallback
+                        const title = displayVehicle.isStaticFallback
                             ? t('map.vehicleDetails.staticFallback')
                             : isBeforeTrack
                                 ? t('map.vehicleDetails.previousTrip')
                                 : t('map.vehicleDetails.offTrack');
 
-                        const description = isStaticFallback
+                        const description = displayVehicle.isStaticFallback
                             ? t('map.vehicleDetails.staticFallbackDescription')
                             : isBeforeTrack
                                 ? t('map.vehicleDetails.previousTripDescription')
@@ -206,31 +214,31 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 <HStack gap={2} className="mt-4 pt-4 border-t border-white/5 flex-wrap justify-between items-end">
                                     <Stack gap={0} className="min-w-0 flex-1">
                                         <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
-                                            {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
+                                            {displayVehicle.vehicle_descriptor?.operator}
                                         </span>
                                         <HStack gap={2} align="center" className="min-w-0 w-full">
                                             <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
-                                                {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
+                                                {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
                                             </span>
                                             <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
-                                                #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
+                                                #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
                                             </span>
-                                            {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
+                                            {displayVehicle.run_number && (
                                                 <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
-                                                    {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
+                                                    {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
                                                 </span>
                                             )}
                                         </HStack>
                                     </Stack>
 
                                     <HStack gap={3} className="shrink-0 pb-0.5">
-                                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
+                                        {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
                                             <Snowflake size={13} className="text-sky-400" />
                                         )}
-                                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
+                                        {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
                                             <Zap size={13} className="text-amber-400" />
                                         )}
-                                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
+                                        {displayVehicle.vehicle_descriptor?.is_wheelchair_accessible && (
                                             <Accessibility size={13} className="text-primary" />
                                         )}
                                     </HStack>
@@ -261,12 +269,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             )}
 
             {/* Schedule / Stop List */}
-            {vehicleDetail?.stop_times?.features && vehicleDetail.stop_times.features.length > 0 && (
+            {displayVehicle.stop_times?.features && displayVehicle.stop_times.features.length > 0 && (
                 <Collapsible open={showPastStops} onOpenChange={setShowPastStops}>
                     <Stack gap={3}>
                         <HStack justify="between" className="px-1">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                            {effectiveSequence !== null && (
+                            {displayVehicle.effectiveSequence !== null && (
                                 <CollapsibleTrigger render={
                                     <Button
                                         variant="outline"
@@ -284,14 +292,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                             {/* Past Stops (Collapsible) */}
                             <CollapsibleContent className="transition-[height] duration-300 ease-in-out data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
-                                {vehicleDetail.stop_times.features
-                                    .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
+                                {displayVehicle.stop_times.features
+                                    .filter(stop => Number(stop.properties.stop_sequence) < (displayVehicle.effectiveSequence ?? 0))
                                     .map((stop, idx: number) => (
                                         <StopItem
                                             key={`past-${idx}`}
                                             stop={stop}
                                             isPast={true}
-                                            effectiveSequence={effectiveSequence}
+                                            effectiveSequence={displayVehicle.effectiveSequence}
                                             nextStopSequence={nextStopSequence}
                                         />
                                     ))
@@ -299,14 +307,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             </CollapsibleContent>
 
                             {/* Current & Future Stops */}
-                            {vehicleDetail.stop_times.features
-                                .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
+                            {displayVehicle.stop_times.features
+                                .filter(stop => Number(stop.properties.stop_sequence) >= (displayVehicle.effectiveSequence ?? 0))
                                 .map((stop, idx: number) => (
                                     <StopItem
                                         key={`future-${idx}`}
                                         stop={stop}
                                         isPast={false}
-                                        effectiveSequence={effectiveSequence}
+                                        effectiveSequence={displayVehicle.effectiveSequence}
                                         nextStopSequence={nextStopSequence}
                                     />
                                 ))

@@ -21,31 +21,17 @@ export const useMapUrlSync = (
 
         // Stop Sync
         const stopId = p.get('stopId');
-        const stopName = p.get('stopName');
-        const stopPlatform = p.get('stopPlatform');
 
-        if (stopId && stopName && !selectedStop) {
-            let finalName = stopName;
-            let finalPlatform = stopPlatform;
-
-            // Backward compatibility: Extract platform from name if it follows "Name (A)" format
-            if (!finalPlatform) {
-                const match = stopName.match(/(.+)\s\((.+)\)$/);
-                if (match) {
-                    finalName = match[1];
-                    finalPlatform = match[2];
-                }
-            }
-
-            setSelectedStop({ stop_id: stopId, stop_name: finalName, platform_code: finalPlatform || undefined });
+        if (stopId && !selectedStop) {
+            setSelectedStop({ stop_id: stopId, stop_name: '' }); // stop_name will be enriched by useMapStopEnrichment
         }
 
         // Vehicle Sync
         const vehicleId = p.get('vehicleId');
         const tripId = p.get('tripId');
-        if (vehicleId && tripId && !selectedVehicle) {
+        if (tripId && !selectedVehicle) {
             selectVehicle({
-                vehicle_id: vehicleId,
+                vehicle_id: vehicleId || null,
                 gtfs_trip_id: tripId,
                 state_position: 'on_track',
                 geometry: { type: 'Point', coordinates: [0, 0] }
@@ -58,32 +44,24 @@ export const useMapUrlSync = (
     // 2. State Change: Write to URL
     useEffect(() => {
         const url = new URL(window.location.href);
+        const sp = url.searchParams;
 
         // Stop params
         if (selectedStop) {
-            url.searchParams.set('stopId', selectedStop.stop_id);
-            url.searchParams.set('stopName', selectedStop.stop_name);
-            if (selectedStop.platform_code) {
-                url.searchParams.set('stopPlatform', selectedStop.platform_code);
-            } else {
-                url.searchParams.delete('stopPlatform');
-            }
+            sp.set('stopId', selectedStop.stop_id);
         } else {
-            url.searchParams.delete('stopId');
-            url.searchParams.delete('stopName');
-            url.searchParams.delete('stopPlatform');
+            sp.delete('stopId');
         }
 
         // Vehicle params
         if (selectedVehicle) {
-            url.searchParams.set('vehicleId', selectedVehicle.vehicle_id);
-            url.searchParams.set('tripId', selectedVehicle.gtfs_trip_id || '');
+            const vid = selectedVehicle.vehicle_id;
+            const tid = selectedVehicle.gtfs_trip_id;
+            vid ? sp.set('vehicleId', vid) : sp.delete('vehicleId');
+            sp.set('tripId', tid);
         } else {
-            url.searchParams.delete('vehicleId');
-            url.searchParams.delete('tripId');
-            url.searchParams.delete('line');
-            url.searchParams.delete('headsign');
-            url.searchParams.delete('delay');
+            sp.delete('vehicleId');
+            sp.delete('tripId');
         }
 
         window.history.replaceState({}, '', url.toString());

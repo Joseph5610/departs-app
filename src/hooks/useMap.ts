@@ -16,7 +16,7 @@ export interface MapContextType {
         userLocation: [number, number] | null;
         userSpeed: number | null;
         isGeoPending: boolean;
-        selectedId: string | number | null;
+        selectedId: string | null;
     };
     actions: Omit<ReturnType<typeof useMapReducer>, 'state' | 'dispatch'> & {
         setShowStops: (val: boolean) => void;

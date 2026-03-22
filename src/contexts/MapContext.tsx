@@ -155,10 +155,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     }, [performGeolocation, setBounds, setDebouncedBounds]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
-        const activeVehId = vehicleId || `trip-${tripId}`;
-
         selectVehicle({
-            vehicle_id: activeVehId,
+            vehicle_id: vehicleId || null,
             gtfs_trip_id: tripId,
             route_short_name: initialData?.line,
             route_type: initialData?.type,

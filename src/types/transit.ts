@@ -1,5 +1,5 @@
 interface BaseVehicleProperties {
-    vehicle_id: string;
+    vehicle_id: string | null;
     gtfs_trip_id: string;
     route_short_name?: string;
     route_type?: string | number;
@@ -69,7 +69,7 @@ export interface StopCollection {
 
 export interface SelectedStop {
     stop_id: string;
-    stop_name: string;
+    stop_name?: string;
     platform_code?: string;
     coordinates?: [number, number];
     is_train?: boolean;

@@ -154,7 +154,7 @@ export interface AppDeparture {
 }
 
 export interface AppVehicleProperties {
-    vehicle_id: string;
+    vehicle_id?: string;
     gtfs_trip_id?: string;
     route_short_name?: string;
     route_type?: string;

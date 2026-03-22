@@ -14,7 +14,7 @@ import { MAP_VEHICLE_SELECT_ZOOM, MAP_ANIMATION_DURATION, MOBILE_BREAKPOINT, MOB
  */
 export const useMapVehicleSync = (
     mapRef: React.RefObject<MapRef | null>,
-    selectedId: string | number | null,
+    selectedId: string | null,
     selectedVehicle: VehicleDetail | null,
     setSelectedVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void,
     isFollowing: boolean,
@@ -24,10 +24,10 @@ export const useMapVehicleSync = (
     const lastFlownId = useRef<string | null>(null);
 
     useEffect(() => {
-        if (!selectedId || !selectedVehicle) return;
+        if (!selectedVehicle) return;
 
-        const sid = String(selectedId);
-        const stid = String(selectedVehicle.gtfs_trip_id || 'NONE');
+        const sid = selectedId;
+        const stid = selectedVehicle.gtfs_trip_id;
 
         let updated = false;
         let newProps: Partial<VehicleDetail> = {};
@@ -40,23 +40,23 @@ export const useMapVehicleSync = (
         if (rawVehicles?.features) {
             const match = rawVehicles.features.find(f => {
                 const props = f.properties;
-                const fid = String(props.vehicle_id);
-                const ftid = String(props.gtfs_trip_id || '');
-                if (sid !== 'NONE' && !sid.startsWith('trip-')) return fid === sid;
-                return ftid === stid && stid !== 'NONE';
+                const fid = props.vehicle_id;
+                const ftid = props.gtfs_trip_id;
+                if (sid) return fid === sid;
+                return ftid === stid;
             });
 
             if (match && match.geometry) {
                 const p = match.properties;
                 const coords = match.geometry.coordinates as [number, number];
-                const matchId = String(p.vehicle_id);
+                const matchId = p.vehicle_id;
                 const tripIdChanged = p.gtfs_trip_id !== selectedVehicle.gtfs_trip_id;
 
                 const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
                 if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay || tripIdChanged) {
                     updated = true;
-                    newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
+                    newProps = { ...p, vehicle_id: sid || matchId };
 
                     // TRIP TRANSITION SAFETY:
                     // If the trip ID changed and the stream doesn't provide a sequence,
@@ -96,7 +96,12 @@ export const useMapVehicleSync = (
 
             const sequenceChanged = !isFallback && vehicleDetail.last_stop_sequence !== undefined && selectedVehicle.last_stop_sequence !== vehicleDetail.last_stop_sequence;
 
-            if (coordsChanged || delayChanged || bearingChanged || sequenceChanged || tripIdChanged) {
+            const routeInfoChanged =
+                (vehicleDetail.route_short_name !== undefined && selectedVehicle.route_short_name !== vehicleDetail.route_short_name) ||
+                (vehicleDetail.route_type !== undefined && selectedVehicle.route_type !== vehicleDetail.route_type) ||
+                (vehicleDetail.trip_headsign !== undefined && selectedVehicle.trip_headsign !== vehicleDetail.trip_headsign);
+
+            if (coordsChanged || delayChanged || bearingChanged || sequenceChanged || tripIdChanged || routeInfoChanged) {
                 updated = true;
                 // Only update coordinates if they are valid, or if we currently have invalid ones
                 if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
@@ -119,6 +124,9 @@ export const useMapVehicleSync = (
                     origin_timestamp: isFallback
                         ? (tripIdChanged ? undefined : (newProps.origin_timestamp ?? selectedVehicle.origin_timestamp))
                         : (vehicleDetail.origin_timestamp || newProps.origin_timestamp),
+                    route_short_name: vehicleDetail.route_short_name || newProps.route_short_name || selectedVehicle.route_short_name,
+                    route_type: vehicleDetail.route_type ?? newProps.route_type ?? selectedVehicle.route_type,
+                    trip_headsign: vehicleDetail.trip_headsign || newProps.trip_headsign || selectedVehicle.trip_headsign,
                     vehicle_descriptor: {
                         ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
                         vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
@@ -139,8 +147,11 @@ export const useMapVehicleSync = (
                 const hasStateChanged = newProps.state_position !== undefined && prev.state_position !== newProps.state_position;
                 const hasOriginChanged = newProps.origin_timestamp !== undefined && prev.origin_timestamp !== newProps.origin_timestamp;
                 const hasTripChanged = newProps.gtfs_trip_id !== undefined && prev.gtfs_trip_id !== newProps.gtfs_trip_id;
+                const hasRouteInfoChanged =
+                    (newProps.route_short_name !== undefined && prev.route_short_name !== newProps.route_short_name) ||
+                    (newProps.route_type !== undefined && prev.route_type !== newProps.route_type);
 
-                if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged && !hasTripChanged && !hasOriginChanged) {
+                if (!hasGeometryChanged && !hasDelayChanged && !hasBearingChanged && !hasSequenceChanged && !hasStateChanged && !hasTripChanged && !hasOriginChanged && !hasRouteInfoChanged) {
                     return prev;
                 }
 
@@ -157,7 +168,7 @@ export const useMapVehicleSync = (
 
         // Map movement: Focus on vehicle when coordinates are found
         const hasCoords = newCoords[0] !== 0 || newCoords[1] !== 0;
-        const currentId = String(selectedId);
+        const currentId = selectedId || selectedVehicle.gtfs_trip_id;
         if (hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId;
             const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
