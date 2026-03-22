@@ -50,19 +50,43 @@ export const useMapVehicleSync = (
                 const p = match.properties;
                 const coords = match.geometry.coordinates as [number, number];
                 const matchId = p.vehicle_id;
-                const tripIdChanged = p.gtfs_trip_id !== selectedVehicle.gtfs_trip_id;
+                const incomingTripId = p.gtfs_trip_id;
+                const selectedTripId = selectedVehicle.gtfs_trip_id;
+                const tripIdChanged = incomingTripId !== selectedTripId;
+
+                // CHRONOLOGICAL TRIP PROTECTION:
+                // If the user selected a specific trip (via departure board) and the stream reports a different trip,
+                // we check if the reported trip is chronologically EARLIER than our selection.
+                // If it is, we treat it as "before_track" (still finishing previous work).
+                let isIncomingTripEarlier = false;
+                if (tripIdChanged && p.origin_timestamp && selectedVehicle.origin_timestamp) {
+                    try {
+                        isIncomingTripEarlier = new Date(p.origin_timestamp).getTime() < new Date(selectedVehicle.origin_timestamp).getTime();
+                    } catch (e) { /* ignore */ }
+                }
 
                 const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
                 if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay || tripIdChanged) {
                     updated = true;
-                    newProps = { ...p, vehicle_id: sid || matchId };
 
-                    // TRIP TRANSITION SAFETY:
-                    // If the trip ID changed and the stream doesn't provide a sequence,
-                    // we must explicitly clear the sequence to avoid showing the old trip's stop.
-                    if (tripIdChanged && (p as any).last_stop_sequence === undefined) {
-                        newProps.last_stop_sequence = null;
+                    if (isIncomingTripEarlier) {
+                        // Protect the selected trip's identity but update the vehicle's physical position
+                        newProps = {
+                            ...selectedVehicle,
+                            vehicle_id: sid || matchId,
+                            bearing: p.bearing,
+                            state_position: 'before_track'
+                        };
+                    } else {
+                        newProps = { ...p, vehicle_id: sid || matchId };
+
+                        // TRIP TRANSITION SAFETY:
+                        // If the trip ID changed and the stream doesn't provide a sequence,
+                        // we must explicitly clear the sequence to avoid showing the old trip's stop.
+                        if (tripIdChanged && (p as any).last_stop_sequence === undefined) {
+                            newProps.last_stop_sequence = null;
+                        }
                     }
 
                     // Only update coordinates if they are valid, or if we currently have invalid ones
@@ -84,7 +108,17 @@ export const useMapVehicleSync = (
             // Update if coordinates, delay, bearing, trip or sequence changed in the detail API
             const coordsChanged = detailCoords && (newCoords[0] !== detailCoords[0] || newCoords[1] !== detailCoords[1]);
             const bearingChanged = !isFallback && vehicleDetail.bearing !== undefined && selectedVehicle.bearing !== vehicleDetail.bearing;
-            const tripIdChanged = vehicleDetail.gtfs_trip_id !== selectedVehicle.gtfs_trip_id;
+            const incomingTripId = vehicleDetail.gtfs_trip_id;
+            const selectedTripId = selectedVehicle.gtfs_trip_id;
+            const tripIdChanged = incomingTripId !== selectedTripId;
+
+            // CHRONOLOGICAL TRIP PROTECTION (API):
+            let isIncomingTripEarlier = false;
+            if (!isFallback && tripIdChanged && vehicleDetail.origin_timestamp && selectedVehicle.origin_timestamp) {
+                try {
+                    isIncomingTripEarlier = new Date(vehicleDetail.origin_timestamp).getTime() < new Date(selectedVehicle.origin_timestamp).getTime();
+                } catch (e) { /* ignore */ }
+            }
 
             // LOSSLESS DELAY SYNC:
             // We only trust a "0" delay from the detail API if we don't already have a non-zero delay
@@ -108,30 +142,39 @@ export const useMapVehicleSync = (
                     if (detailCoords) newCoords = detailCoords;
                 }
 
-                newProps = {
-                    ...newProps,
-                    gtfs_trip_id: vehicleDetail.gtfs_trip_id || newProps.gtfs_trip_id,
-                    delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
-                    bearing: isFallback
-                        ? (tripIdChanged ? null : (newProps.bearing ?? selectedVehicle.bearing))
-                        : (vehicleDetail.bearing ?? newProps.bearing),
-                    state_position: isFallback
-                        ? (tripIdChanged ? 'on_track' : (newProps.state_position ?? selectedVehicle.state_position))
-                        : (vehicleDetail.state_position || newProps.state_position),
-                    last_stop_sequence: isFallback
-                        ? (tripIdChanged ? null : (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence))
-                        : (vehicleDetail.last_stop_sequence ?? (tripIdChanged ? null : newProps.last_stop_sequence)),
-                    origin_timestamp: isFallback
-                        ? (tripIdChanged ? undefined : (newProps.origin_timestamp ?? selectedVehicle.origin_timestamp))
-                        : (vehicleDetail.origin_timestamp || newProps.origin_timestamp),
-                    route_short_name: vehicleDetail.route_short_name || newProps.route_short_name || selectedVehicle.route_short_name,
-                    route_type: vehicleDetail.route_type ?? newProps.route_type ?? selectedVehicle.route_type,
-                    trip_headsign: vehicleDetail.trip_headsign || newProps.trip_headsign || selectedVehicle.trip_headsign,
-                    vehicle_descriptor: {
-                        ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
-                        vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
-                    }
-                };
+                if (isIncomingTripEarlier) {
+                    // protect selected trip but update position from API if possible
+                    newProps = {
+                        ...newProps,
+                        bearing: vehicleDetail.bearing ?? newProps.bearing,
+                        state_position: 'before_track'
+                    };
+                } else {
+                    newProps = {
+                        ...newProps,
+                        gtfs_trip_id: vehicleDetail.gtfs_trip_id || newProps.gtfs_trip_id,
+                        delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
+                        bearing: isFallback
+                            ? (tripIdChanged ? null : (newProps.bearing ?? selectedVehicle.bearing))
+                            : (vehicleDetail.bearing ?? newProps.bearing),
+                        state_position: isFallback
+                            ? (tripIdChanged ? 'on_track' : (newProps.state_position ?? selectedVehicle.state_position))
+                            : (vehicleDetail.state_position || newProps.state_position),
+                        last_stop_sequence: isFallback
+                            ? (tripIdChanged ? null : (newProps.last_stop_sequence ?? selectedVehicle.last_stop_sequence))
+                            : (vehicleDetail.last_stop_sequence ?? (tripIdChanged ? null : newProps.last_stop_sequence)),
+                        origin_timestamp: isFallback
+                            ? (tripIdChanged ? undefined : (newProps.origin_timestamp ?? selectedVehicle.origin_timestamp))
+                            : (vehicleDetail.origin_timestamp || newProps.origin_timestamp),
+                        route_short_name: vehicleDetail.route_short_name || newProps.route_short_name || selectedVehicle.route_short_name,
+                        route_type: vehicleDetail.route_type ?? newProps.route_type ?? selectedVehicle.route_type,
+                        trip_headsign: vehicleDetail.trip_headsign || newProps.trip_headsign || selectedVehicle.trip_headsign,
+                        vehicle_descriptor: {
+                            ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
+                            vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
+                        }
+                    };
+                }
             }
         }
 

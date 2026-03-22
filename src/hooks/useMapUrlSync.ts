@@ -29,10 +29,12 @@ export const useMapUrlSync = (
         // Vehicle Sync
         const vehicleId = p.get('vehicleId');
         const tripId = p.get('tripId');
+        const ots = p.get('ots'); // origin_timestamp (scheduled time)
         if (tripId && !selectedVehicle) {
             selectVehicle({
                 vehicle_id: vehicleId || null,
                 gtfs_trip_id: tripId,
+                origin_timestamp: ots || undefined,
                 state_position: 'on_track',
                 geometry: { type: 'Point', coordinates: [0, 0] }
             } as VehicleDetail, !!stopId);
@@ -57,11 +59,14 @@ export const useMapUrlSync = (
         if (selectedVehicle) {
             const vid = selectedVehicle.vehicle_id;
             const tid = selectedVehicle.gtfs_trip_id;
+            const ots = selectedVehicle.origin_timestamp;
             vid ? sp.set('vehicleId', vid) : sp.delete('vehicleId');
             sp.set('tripId', tid);
+            ots ? sp.set('ots', ots) : sp.delete('ots');
         } else {
             sp.delete('vehicleId');
             sp.delete('tripId');
+            sp.delete('ots');
         }
 
         window.history.replaceState({}, '', url.toString());
