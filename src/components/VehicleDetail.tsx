@@ -44,7 +44,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     const displayVehicle = useMemo(() => {
         if (!selectedVehicle) return null;
-        const merged = { ...selectedVehicle, ...vehicleDetail };
+        // Merge strategy: prioritize API detail but never let it override critical state with null/empty
+        const merged = {
+            ...selectedVehicle,
+            ...vehicleDetail,
+            route_short_name: vehicleDetail?.route_short_name || selectedVehicle.route_short_name,
+            route_type: vehicleDetail?.route_type ?? selectedVehicle.route_type,
+            trip_headsign: vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign
+        };
         const routeName = String(merged.route_short_name || '');
         const isStaticFallback = !!merged.is_static_fallback;
 
@@ -57,7 +64,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             routeName,
             isStaticFallback,
             effectiveSequence,
-            routeType: Number(merged.route_type || 0)
+            routeType: merged.route_type ?? 0
         };
     }, [selectedVehicle, vehicleDetail]);
 

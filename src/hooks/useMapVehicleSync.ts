@@ -124,9 +124,9 @@ export const useMapVehicleSync = (
                     origin_timestamp: isFallback
                         ? (tripIdChanged ? undefined : (newProps.origin_timestamp ?? selectedVehicle.origin_timestamp))
                         : (vehicleDetail.origin_timestamp || newProps.origin_timestamp),
-                    route_short_name: vehicleDetail.route_short_name || newProps.route_short_name,
-                    route_type: vehicleDetail.route_type ?? newProps.route_type,
-                    trip_headsign: vehicleDetail.trip_headsign || newProps.trip_headsign,
+                    route_short_name: vehicleDetail.route_short_name || newProps.route_short_name || selectedVehicle.route_short_name,
+                    route_type: vehicleDetail.route_type ?? newProps.route_type ?? selectedVehicle.route_type,
+                    trip_headsign: vehicleDetail.trip_headsign || newProps.trip_headsign || selectedVehicle.trip_headsign,
                     vehicle_descriptor: {
                         ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
                         vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
