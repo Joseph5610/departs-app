@@ -1,33 +1,50 @@
-import { useReducer, useCallback } from 'react';
+import { useReducer, useCallback, useMemo } from 'react';
 import { STORAGE_KEYS } from '../config/constants';
 import type { VehicleDetail, SelectedStop, SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 
 /**
- * State managed by the map reducer
+ * Global Map State
  */
 export interface MapState {
+    /**
+     * The currently selected public transport stop.
+     * Initialized with ID only, then enriched with name and coordinates by useMapSync.
+     */
     selectedStop: SelectedStop | null;
+    /**
+     * Detailed data for the currently tracked vehicle.
+     * Contains real-time position, delay, and static schedule information.
+     */
     selectedVehicle: VehicleDetail | null;
+    /** Whether the map camera is actively following the selected vehicle */
     isFollowing: boolean;
+    /** Visibility toggle for all vehicle icons on the map */
     showVehicles: boolean;
+    /** Visibility toggle for all stop icons on the map */
     showStops: boolean;
+    /** Controls the visibility of the settings modal */
     isSettingsOpen: boolean;
+    /** List of line IDs whose departure groups are expanded in the UI */
     expandedGroups: string[];
+    /** Preferred sorting method for departure boards */
     departureSort: 'line' | 'departure';
+    /** Current filters applied to the visible lines (null means no filter) */
     routeFilter: string[] | null;
+    /** Current filters applied to vehicle types (metro, bus, etc.) */
     routeTypeFilter: string[];
+    /** Current map viewport bounds string "south,west,north,east" */
     bounds: string | null;
+    /** Debounced version of the map bounds to reduce API pressure */
     debouncedBounds: string | null;
+    /** List of user's favorite stop IDs */
     favoriteStops: string[];
+    /** Recently searched stops and lines */
     searchHistory: SearchHistoryItem[];
 }
 
-/**
- * Available actions for the map reducer
- */
 export type MapAction =
-    | { type: 'SET_SELECTED_STOP'; payload: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null) }
-    | { type: 'SET_SELECTED_VEHICLE'; payload: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null) }
+    | { type: 'UPDATE_STOP'; payload: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null) }
+    | { type: 'UPDATE_VEHICLE'; payload: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null) }
     | { type: 'SELECT_STOP'; payload: SelectedStop | null }
     | { type: 'SELECT_VEHICLE'; payload: VehicleDetail | null; keepStop?: boolean }
     | { type: 'CLEAR_SELECTION' }
@@ -46,19 +63,12 @@ export type MapAction =
     | { type: 'ADD_TO_HISTORY'; payload: SearchHistoryBase }
     | { type: 'CLEAR_HISTORY' };
 
-/**
- * Initial state factory
- */
 const getInitialState = (): MapState => ({
     selectedStop: null,
     selectedVehicle: null,
     isFollowing: false,
-    showVehicles: typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false'
-        : true,
-    showStops: typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false'
-        : true,
+    showVehicles: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false' : true,
+    showStops: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false' : true,
     isSettingsOpen: false,
     expandedGroups: [],
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
@@ -66,59 +76,28 @@ const getInitialState = (): MapState => ({
     routeTypeFilter: [],
     bounds: null,
     debouncedBounds: null,
-    favoriteStops: typeof window !== 'undefined'
-        ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[])
-        : [],
-    searchHistory: typeof window !== 'undefined'
-        ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY) || '[]') as SearchHistoryItem[])
-        : []
+    favoriteStops: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[]) : [],
+    searchHistory: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY) || '[]') as SearchHistoryItem[]) : []
 });
 
-/**
- * Map Reducer function
- */
 function mapReducer(state: MapState, action: MapAction): MapState {
     switch (action.type) {
-        case 'SET_SELECTED_STOP': {
-            return {
-                ...state,
-                selectedStop: typeof action.payload === 'function'
-                    ? action.payload(state.selectedStop)
-                    : action.payload
-            };
+        case 'UPDATE_STOP': {
+            const payload = typeof action.payload === 'function' ? action.payload(state.selectedStop) : action.payload;
+            return { ...state, selectedStop: payload };
         }
-        case 'SET_SELECTED_VEHICLE': {
-            return {
-                ...state,
-                selectedVehicle: typeof action.payload === 'function'
-                    ? action.payload(state.selectedVehicle)
-                    : action.payload
-            };
+        case 'UPDATE_VEHICLE': {
+            const payload = typeof action.payload === 'function' ? action.payload(state.selectedVehicle) : action.payload;
+            return { ...state, selectedVehicle: payload };
         }
         case 'SELECT_STOP': {
-            return {
-                ...state,
-                selectedStop: action.payload,
-                selectedVehicle: null,
-                isFollowing: false,
-                expandedGroups: []
-            };
+            return { ...state, selectedStop: action.payload, selectedVehicle: null, isFollowing: false, expandedGroups: [] };
         }
         case 'SELECT_VEHICLE': {
-            return {
-                ...state,
-                selectedVehicle: action.payload,
-                selectedStop: action.keepStop ? state.selectedStop : null,
-                isFollowing: true
-            };
+            return { ...state, selectedVehicle: action.payload, selectedStop: action.keepStop ? state.selectedStop : null, isFollowing: true };
         }
         case 'CLEAR_SELECTION': {
-            return {
-                ...state,
-                selectedStop: null,
-                selectedVehicle: null,
-                isFollowing: false
-            };
+            return { ...state, selectedStop: null, selectedVehicle: null, isFollowing: false };
         }
         case 'SET_IS_FOLLOWING': {
             return { ...state, isFollowing: action.payload };
@@ -196,108 +175,41 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 }
 
 /**
- * Hook to use the map state reducer
+ * useMapReducer Hook
+ *
+ * Provides a structured way to interact with the map state.
  */
 export const useMapReducer = () => {
     const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    const setSelectedStop = useCallback((payload: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => {
-        dispatch({ type: 'SET_SELECTED_STOP', payload });
-    }, []);
+    const selectedId = useMemo(() => {
+        return state.selectedVehicle?.vehicle_id || null;
+    }, [state.selectedVehicle?.vehicle_id]);
 
-    const setSelectedVehicle = useCallback((payload: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => {
-        dispatch({ type: 'SET_SELECTED_VEHICLE', payload });
-    }, []);
-
-    const selectStop = useCallback((payload: SelectedStop | null) => {
-        dispatch({ type: 'SELECT_STOP', payload });
-    }, []);
-
-    const selectVehicle = useCallback((payload: VehicleDetail | null, keepStop = false) => {
-        dispatch({ type: 'SELECT_VEHICLE', payload, keepStop });
-    }, []);
-
-    const clearSelection = useCallback(() => {
-        dispatch({ type: 'CLEAR_SELECTION' });
-    }, []);
-
-    const setIsFollowing = useCallback((payload: boolean) => {
-        dispatch({ type: 'SET_IS_FOLLOWING', payload });
-    }, []);
-
-    const setShowVehicles = useCallback((payload: boolean) => {
-        dispatch({ type: 'SET_SHOW_VEHICLES', payload });
-    }, []);
-
-    const setShowStops = useCallback((payload: boolean) => {
-        dispatch({ type: 'SET_SHOW_STOPS', payload });
-    }, []);
-
-    const setIsSettingsOpen = useCallback((payload: boolean) => {
-        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload });
-    }, []);
-
-    const setExpandedGroups = useCallback((payload: string[]) => {
-        dispatch({ type: 'SET_EXPANDED_GROUPS', payload });
-    }, []);
-
-    const toggleGroup = useCallback((payload: string) => {
-        dispatch({ type: 'TOGGLE_GROUP', payload });
-    }, []);
-
-    const setDepartureSort = useCallback((payload: 'line' | 'departure') => {
-        dispatch({ type: 'SET_DEPARTURE_SORT', payload });
-    }, []);
-
-    const setRouteFilter = useCallback((payload: string[] | null) => {
-        dispatch({ type: 'SET_ROUTE_FILTER', payload });
-    }, []);
-
-    const setRouteTypeFilter = useCallback((payload: string[]) => {
-        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload });
-    }, []);
-
-    const setBounds = useCallback((payload: string | null) => {
-        dispatch({ type: 'SET_BOUNDS', payload });
-    }, []);
-
-    const setDebouncedBounds = useCallback((payload: string | null) => {
-        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload });
-    }, []);
-
-    const toggleFavorite = useCallback((payload: string) => {
-        dispatch({ type: 'TOGGLE_FAVORITE', payload });
-    }, []);
-
-    const addToHistory = useCallback((payload: SearchHistoryBase) => {
-        dispatch({ type: 'ADD_TO_HISTORY', payload });
-    }, []);
-
-    const clearHistory = useCallback(() => {
-        dispatch({ type: 'CLEAR_HISTORY' });
+    const createAction = useCallback((type: MapAction['type']) => {
+        return (payload: any) => { dispatch({ type, payload } as MapAction); };
     }, []);
 
     return {
-        state,
-        dispatch,
-        setSelectedStop,
-        setSelectedVehicle,
-        selectStop,
-        selectVehicle,
-        clearSelection,
-        setIsFollowing,
-        setShowVehicles,
-        setShowStops,
-        setIsSettingsOpen,
-        setExpandedGroups,
-        toggleGroup,
-        setDepartureSort,
-        setRouteFilter,
-        setRouteTypeFilter,
-        setBounds,
-        setDebouncedBounds,
-        toggleFavorite,
-        addToHistory,
-        clearHistory
+        state: { ...state, selectedId },
+        updateStop: createAction('UPDATE_STOP'),
+        updateVehicle: createAction('UPDATE_VEHICLE'),
+        selectStop: createAction('SELECT_STOP'),
+        selectVehicle: (payload: VehicleDetail | null, keepStop = false) => { dispatch({ type: 'SELECT_VEHICLE', payload, keepStop }); },
+        clearSelection: () => { dispatch({ type: 'CLEAR_SELECTION' }); },
+        setIsFollowing: createAction('SET_IS_FOLLOWING'),
+        setShowVehicles: createAction('SET_SHOW_VEHICLES'),
+        setShowStops: createAction('SET_SHOW_STOPS'),
+        setIsSettingsOpen: createAction('SET_IS_SETTINGS_OPEN'),
+        setExpandedGroups: createAction('SET_EXPANDED_GROUPS'),
+        toggleGroup: createAction('TOGGLE_GROUP'),
+        setDepartureSort: createAction('SET_DEPARTURE_SORT'),
+        setRouteFilter: createAction('SET_ROUTE_FILTER'),
+        setRouteTypeFilter: createAction('SET_ROUTE_TYPE_FILTER'),
+        setBounds: createAction('SET_BOUNDS'),
+        setDebouncedBounds: createAction('SET_DEBOUNCED_BOUNDS'),
+        toggleFavorite: createAction('TOGGLE_FAVORITE'),
+        addToHistory: createAction('ADD_TO_HISTORY'),
+        clearHistory: () => { dispatch({ type: 'CLEAR_HISTORY' }); }
     };
 };

@@ -46,7 +46,7 @@ const MapInner: React.FC = () => {
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId ? String(state.selectedId) : null);
 
     const handleBack = useCallback(() => {
-        actions.setSelectedVehicle(null);
+        actions.updateVehicle(null);
         actions.setIsFollowing(false);
     }, [actions]);
 

@@ -9,7 +9,7 @@ import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
 import { addAllIcons } from '../utils/mapIcons';
-import type { Departure } from '../types/transit';
+import type { Departure, VehicleDetail } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
@@ -23,7 +23,7 @@ import {
 const MapEngine: React.FC = () => {
     const { state, actions, mapRef } = useMap();
     const { selectedStop, selectedVehicle, isFollowing, selectedId } = state;
-    const { setSelectedStop, setSelectedVehicle, selectVehicle } = actions;
+    const { updateVehicle, updateStop, selectVehicle } = actions;
 
     // Data needed for sync hooks
     const { vehicles: rawVehicles } = useVehicles();
@@ -33,14 +33,14 @@ const MapEngine: React.FC = () => {
     // Sync Background Logic
     useMapSync(
         { selectedId, selectedVehicle, selectedStop },
-        { setSelectedVehicle, setSelectedStop },
+        { updateVehicle, updateStop },
         { rawVehicles, vehicleDetail, stopsData: stopsRawData || null }
     );
 
     useMapInterface(
         mapRef,
         { selectedId, selectedVehicle, selectedStop, isFollowing },
-        { setSelectedStop, selectVehicle }
+        { updateStop, selectVehicle }
     );
 
     return null;
@@ -53,8 +53,8 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
 
     const {
         state,
-        setSelectedStop,
-        setSelectedVehicle,
+        updateStop,
+        updateVehicle,
         selectStop,
         selectVehicle,
         clearSelection,
@@ -80,20 +80,26 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     const getRoundedBounds = useCallback((map: Map) => {
         const b = map.getBounds();
         const zoom = map.getZoom();
-        const round = (num: number) => Math.round(num * 1000) / 1000;
+        const round = (num: number) => { return Math.round(num * 1000) / 1000; };
         return b && zoom >= MAP_MIN_ZOOM_FOR_DATA
             ? `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`
             : null;
     }, []);
 
     const onMove = useCallback((evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => {
-        if (state.isFollowing) return;
-        if (!evt.originalEvent) return;
+        if (state.isFollowing) {
+            return;
+        }
+        if (!evt.originalEvent) {
+            return;
+        }
 
         const { zoom } = evt.viewState;
         const currentBounds = getRoundedBounds(evt.target);
 
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
         debounceRef.current = setTimeout(() => {
             setDebouncedBounds(currentBounds);
             setBounds(currentBounds);
@@ -105,7 +111,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
     }, [state.bounds, state.isFollowing, getRoundedBounds, setBounds, setDebouncedBounds]);
 
     const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => {
-        if (state.isFollowing) return;
+        if (state.isFollowing) {
+            return;
+        }
 
         const { latitude, longitude, zoom } = evt.viewState;
         const currentBounds = getRoundedBounds(evt.target);
@@ -117,7 +125,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         window.history.replaceState({}, '', url.toString());
 
         if (evt.originalEvent) {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
             setBounds(currentBounds);
             setDebouncedBounds(currentBounds);
         }
@@ -134,10 +144,10 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {
-            const firstLabelLayer = layers.find((layer) =>
-                layer.type === 'symbol' &&
-                (layer as maplibregl.SymbolLayerSpecification).layout?.['text-field']
-            );
+            const firstLabelLayer = layers.find((layer) => {
+                return layer.type === 'symbol' &&
+                (layer as maplibregl.SymbolLayerSpecification).layout?.['text-field'];
+            });
             if (firstLabelLayer) {
                 setLabelLayerId(firstLabelLayer.id);
             }
@@ -148,7 +158,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         const b = map.getBounds();
         const z = map.getZoom();
         if (b && z >= MAP_MIN_ZOOM_FOR_DATA) {
-            const round = (num: number) => Math.round(num * 1000) / 1000;
+            const round = (num: number) => { return Math.round(num * 1000) / 1000; };
             const initialBounds = `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`;
             setBounds(initialBounds);
             setDebouncedBounds(initialBounds);
@@ -170,55 +180,56 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
                 coordinates: [0, 0]
             },
             bearing: null
-        }, true); // keep stop
+        } as VehicleDetail, true); // keep stop
     }, [selectVehicle]);
 
-    const value = useMemo(() => ({
-        mapRef,
-        state: {
-            ...state,
-            mapLoaded,
-            labelLayerId,
-            userLocation,
-            userSpeed,
-            isGeoPending,
-            selectedId: state.selectedVehicle?.vehicle_id || null
-        },
-        actions: {
-            setSelectedStop,
-            setSelectedVehicle,
-            selectStop,
-            selectVehicle,
-            clearSelection,
-            setIsFollowing,
-            setShowVehicles,
-            setShowStops,
-            setIsSettingsOpen,
-            setExpandedGroups,
-            toggleGroup,
-            setDepartureSort,
-            setRouteFilter,
-            setRouteTypeFilter,
-            setBounds,
-            setDebouncedBounds,
-            toggleFavorite,
-            addToHistory,
-            clearHistory,
-            handleLocate,
-            handleDepartureClick,
-            performGeolocation,
-            setMapLoaded,
-            setLabelLayerId
-        },
-        mapEvents: {
-            onMove,
-            onMoveEnd,
-            onLoad,
-            onDragStart
-        }
-    }), [
+    const value = useMemo(() => {
+        return {
+            mapRef,
+            state: {
+                ...state,
+                mapLoaded,
+                labelLayerId,
+                userLocation,
+                userSpeed,
+                isGeoPending
+            },
+            actions: {
+                updateStop,
+                updateVehicle,
+                selectStop,
+                selectVehicle,
+                clearSelection,
+                setIsFollowing,
+                setShowVehicles,
+                setShowStops,
+                setIsSettingsOpen,
+                setExpandedGroups,
+                toggleGroup,
+                setDepartureSort,
+                setRouteFilter,
+                setRouteTypeFilter,
+                setBounds,
+                setDebouncedBounds,
+                toggleFavorite,
+                addToHistory,
+                clearHistory,
+                handleLocate,
+                handleDepartureClick,
+                performGeolocation,
+                setMapLoaded,
+                setLabelLayerId
+            },
+            mapEvents: {
+                onMove,
+                onMoveEnd,
+                onLoad,
+                onDragStart
+            }
+        };
+    }, [
         mapRef, state, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
-        setSelectedStop, setSelectedVehicle, selectStop, selectVehicle, clearSelection,
+        updateStop, updateVehicle, selectStop, selectVehicle, clearSelection,
         setIsFollowing, setShowVehicles, setShowStops,
         setIsSettingsOpen, setExpandedGroups, toggleGroup, setDepartureSort,
         setRouteFilter, setRouteTypeFilter, setBounds, setDebouncedBounds,

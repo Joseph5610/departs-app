@@ -12,10 +12,11 @@ import {
 /**
  * useMapInterface
  *
- * Handles UI/UX side effects based on map state:
- * 1. URL synchronization (Read/Write)
- * 2. Camera movement (Following vehicles or stops)
- * 3. Selected vehicle animations (Pulse effect)
+ * The "User Experience Layer" hook.
+ * Responsibilities:
+ * 1. URL SYNC: Persists stop/vehicle selection to the browser address bar.
+ * 2. CAMERA: Smoothly follows selected vehicles or centers on stops.
+ * 3. VISUALS: Handles MapLibre pulse animations for selection feedback.
  */
 export const useMapInterface = (
     mapRef: React.RefObject<MapRef | null>,
@@ -26,17 +27,17 @@ export const useMapInterface = (
         isFollowing: boolean;
     },
     actions: {
-        setSelectedStop: (stop: SelectedStop | null) => void;
+        updateStop: (stop: SelectedStop | null) => void;
         selectVehicle: (vehicle: VehicleDetail | null, keepStop?: boolean) => void;
     }
 ) => {
     const { selectedId, selectedVehicle, selectedStop, isFollowing } = state;
-    const { setSelectedStop, selectVehicle } = actions;
+    const { updateStop, selectVehicle } = actions;
 
     const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
 
-    // --- 1. URL SYNC (Initial Load) ---
+    // --- 1. INITIAL URL LOAD ---
     useEffect(() => {
         if (initialized.current) {
             return;
@@ -45,7 +46,7 @@ export const useMapInterface = (
 
         const stopId = p.get('stopId');
         if (stopId && !selectedStop) {
-            setSelectedStop({ stop_id: stopId, stop_name: '' });
+            updateStop({ stop_id: stopId });
         }
 
         const tripId = p.get('tripId');
@@ -54,13 +55,13 @@ export const useMapInterface = (
             selectVehicle({
                 vehicle_id: vehicleId || null,
                 gtfs_trip_id: tripId,
-                state_position: 'on_track',
-                geometry: { type: 'Point', coordinates: [0, 0] }
+                bearing: null,
+                delay: 0
             } as VehicleDetail, !!stopId);
         }
 
         initialized.current = true;
-    }, [setSelectedStop, selectedStop, selectedVehicle, selectVehicle]);
+    }, [updateStop, selectedStop, selectedVehicle, selectVehicle]);
 
     // --- 2. URL SYNC (State Change) ---
     useEffect(() => {
@@ -101,14 +102,14 @@ export const useMapInterface = (
 
         const currentMap = mapRef.current;
         const currentId = selectedId || selectedVehicle?.gtfs_trip_id;
-        const coords = selectedVehicle?.geometry?.coordinates as [number, number] | undefined;
+        const coords = selectedVehicle?.geometry?.coordinates;
         const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
 
-        // A) Initial "Fly To" when a vehicle is first found with coordinates
+        // A) Initial "Fly To" on selection
         if (isFollowing && hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId || null;
             currentMap.flyTo({
-                center: coords,
+                center: coords as [number, number],
                 zoom: MAP_VEHICLE_SELECT_ZOOM,
                 duration: MAP_ANIMATION_DURATION,
                 essential: true,
@@ -117,10 +118,10 @@ export const useMapInterface = (
             return;
         }
 
-        // B) Smooth "Ease To" for continuous following
+        // B) Continuous Ease To
         if (isFollowing && hasCoords) {
             currentMap.easeTo({
-                center: coords,
+                center: coords as [number, number],
                 duration: 1000,
                 essential: true,
                 padding
@@ -128,7 +129,7 @@ export const useMapInterface = (
             return;
         }
 
-        // C) Center on Stop if enriched and not following
+        // C) Center on Stop
         if (!isFollowing && selectedStop?.coordinates) {
             currentMap.easeTo({
                 center: selectedStop.coordinates,
@@ -147,7 +148,9 @@ export const useMapInterface = (
         const animate = () => {
             const map = mapRef.current?.getMap();
             const coords = selectedVehicle?.geometry?.coordinates;
-            if (map && coords && (coords[0] !== 0 || coords[1] !== 0)) {
+            const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
+
+            if (map && hasCoords) {
                 const time = Date.now() / 350;
                 const radius = 20 + Math.sin(time) * 15;
                 const opacity = 0.6 - ((radius - 5) / 50);
@@ -157,7 +160,9 @@ export const useMapInterface = (
                         map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', radius);
                         map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', Math.max(0.1, opacity));
                     }
-                } catch { /* Fail silently */ }
+                } catch {
+                    /* Silent fail */
+                }
             }
             frame = requestAnimationFrame(animate);
         };
@@ -175,7 +180,9 @@ export const useMapInterface = (
                 try {
                     map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', 0);
                     map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', 0);
-                } catch { /* Fail silently */ }
+                } catch {
+                    /* Silent fail */
+                }
             }
         };
     }, [selectedVehicle, mapRef]);

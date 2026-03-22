@@ -15,9 +15,11 @@ export const useMapFilters = (
     selectedId: string | null
 ) => {
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
-        const coords = selectedVehicle?.geometry?.coordinates;
-        if (!selectedVehicle || !coords) return EMPTY_GEOJSON;
+        if (!selectedVehicle || !selectedVehicle.geometry) {
+            return EMPTY_GEOJSON;
+        }
 
+        const coords = selectedVehicle.geometry.coordinates;
         const [lng, lat] = coords;
         const hasValidLocation = lng !== 0 || lat !== 0;
 

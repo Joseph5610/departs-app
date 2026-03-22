@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 import type { VehicleCollection, VehicleDetail, SelectedStop, StopCollection } from '../types/transit';
-import { syncVehicleProperties } from '../utils/vehicleSyncUtils';
 
 /**
  * useMapSync
  *
- * Synchronizes the internal map state with external data sources:
- * 1. Merges real-time vehicle stream data with detail API data.
- * 2. Enriches selected stop data with coordinates and names from the local GeoJSON cache.
+ * The "Data Coordinator" hook.
+ * Responsibilities:
+ * 1. VEHICLE SYNC: Merges live map stream (high-frequency) with detail API (low-frequency).
+ *    Uses a declarative spread: Current State -> Stream Props -> Detail API Props.
+ * 2. STOP ENRICHMENT: Hydrates stops loaded from URLs with full metadata from the GeoJSON cache.
  */
 export const useMapSync = (
     state: {
@@ -16,8 +17,8 @@ export const useMapSync = (
         selectedStop: SelectedStop | null;
     },
     actions: {
-        setSelectedVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void;
-        setSelectedStop: (stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => void;
+        updateVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void;
+        updateStop: (stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => void;
     },
     data: {
         rawVehicles?: VehicleCollection | null;
@@ -26,30 +27,75 @@ export const useMapSync = (
     }
 ) => {
     const { selectedId, selectedVehicle, selectedStop } = state;
-    const { setSelectedVehicle, setSelectedStop } = actions;
+    const { updateVehicle, updateStop } = actions;
     const { rawVehicles, vehicleDetail, stopsData } = data;
 
     const lastEnrichedId = useRef<string | null>(null);
 
     // --- 1. VEHICLE DATA SYNC ---
+    /**
+     * Synchronizes the currently selected vehicle with the latest real-time data.
+     * It uses a declarative merge strategy:
+     * - Base: Current selected vehicle state
+     * - Layer 1: Properties from the high-frequency Map Stream (rawVehicles)
+     * - Layer 2: Properties from the low-frequency Detail API (vehicleDetail)
+     *
+     * Special logic is applied for 'static fallbacks' where real-time data is missing,
+     * ensuring we don't overwrite live positions with outdated static schedule info.
+     */
     useEffect(() => {
         if (!selectedVehicle) {
             return;
         }
 
-        const { updated, merged } = syncVehicleProperties(
-            selectedVehicle,
-            rawVehicles,
-            vehicleDetail,
-            selectedId
-        );
+        const liveMatch = rawVehicles?.features?.find((f) => {
+            if (selectedId) {
+                return f.properties.vehicle_id === selectedId;
+            }
+            return f.properties.gtfs_trip_id === selectedVehicle.gtfs_trip_id;
+        });
 
-        if (updated) {
-            setSelectedVehicle(() => {
-                return merged;
-            });
+        const isFallback = !!vehicleDetail?.is_static_fallback;
+
+        // Declarative merge: Base -> Live Stream -> API Detail
+        const merged: VehicleDetail = {
+            ...selectedVehicle,
+            ...(liveMatch?.properties || {}),
+            ...(vehicleDetail || {}),
+            // Safety: Never nullify essential identifiers
+            vehicle_id: selectedId || vehicleDetail?.vehicle_id || liveMatch?.properties.vehicle_id || selectedVehicle.vehicle_id,
+            gtfs_trip_id: vehicleDetail?.gtfs_trip_id || liveMatch?.properties.gtfs_trip_id || selectedVehicle.gtfs_trip_id,
+            // Safety: Deep descriptor merge
+            vehicle_descriptor: {
+                ...(selectedVehicle.vehicle_descriptor || {}),
+                ...(liveMatch?.properties.vehicle_descriptor || {}),
+                ...(vehicleDetail?.vehicle_descriptor || {})
+            }
+        };
+
+        // Static Fallback overrides: Preserve current live state if API return is just static data
+        if (isFallback) {
+            merged.delay = selectedVehicle.delay;
+            merged.bearing = selectedVehicle.bearing;
+            merged.state_position = selectedVehicle.state_position;
+            merged.last_stop_sequence = selectedVehicle.last_stop_sequence;
         }
-    }, [rawVehicles, vehicleDetail, selectedId, selectedVehicle, setSelectedVehicle]);
+
+        // Geometry: Prioritize newest valid coordinates
+        const dg = vehicleDetail?.geometry;
+        const sg = liveMatch?.geometry;
+        const isValid = (g: any) => { return g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0); };
+
+        if (isValid(dg)) {
+            merged.geometry = dg;
+        } else if (isValid(sg)) {
+            merged.geometry = sg;
+        }
+
+        if (JSON.stringify(selectedVehicle) !== JSON.stringify(merged)) {
+            updateVehicle(merged);
+        }
+    }, [rawVehicles, vehicleDetail, selectedId, selectedVehicle, updateVehicle]);
 
     // --- 2. STOP DATA ENRICHMENT ---
     useEffect(() => {
@@ -57,28 +103,29 @@ export const useMapSync = (
             return;
         }
 
-        const { stop_id, stop_name, coordinates } = selectedStop;
-        if (stop_name && coordinates) {
-            lastEnrichedId.current = stop_id;
+        if (selectedStop.stop_name && selectedStop.coordinates) {
+            lastEnrichedId.current = selectedStop.stop_id;
             return;
         }
 
         const feature = stopsData.features.find((f) => {
-            return f.properties.stop_id === stop_id || f.properties.all_ids?.includes(stop_id);
+            return f.properties.stop_id === selectedStop.stop_id || f.properties.all_ids?.includes(selectedStop.stop_id);
         });
 
         if (feature) {
-            const { stop_name: name, platform_code, all_ids } = feature.properties;
-            setSelectedStop((prev) => {
-                return prev?.stop_id === stop_id ? {
+            updateStop((prev) => {
+                if (prev?.stop_id !== selectedStop.stop_id) {
+                    return prev;
+                }
+                return {
                     ...prev,
-                    stop_name: prev.stop_name || name,
-                    platform_code: prev.platform_code || platform_code,
+                    stop_name: prev.stop_name || feature.properties.stop_name,
+                    platform_code: prev.platform_code || feature.properties.platform_code,
                     coordinates: prev.coordinates || (feature.geometry.coordinates as [number, number]),
-                    all_ids: all_ids
-                } : prev;
+                    all_ids: feature.properties.all_ids
+                };
             });
-            lastEnrichedId.current = stop_id;
+            lastEnrichedId.current = selectedStop.stop_id;
         }
-    }, [selectedStop, stopsData, setSelectedStop]);
+    }, [selectedStop, stopsData, updateStop]);
 };

@@ -2,21 +2,19 @@ import React, { createContext, useContext } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import type { useMapReducer } from './useMapReducer';
-import type { Departure, SelectedStop, SearchHistoryBase } from '../types/transit';
+import type { Departure, SearchHistoryBase } from '../types/transit';
 
 /**
  * Context type defining state and actions available to the entire map component tree.
  */
 export interface MapContextType {
     mapRef: React.RefObject<MapRef | null>;
-    state: Omit<ReturnType<typeof useMapReducer>['state'], 'selectedStop'> & {
-        selectedStop: SelectedStop | null;
+    state: ReturnType<typeof useMapReducer>['state'] & {
         mapLoaded: boolean;
         labelLayerId: string | undefined;
         userLocation: [number, number] | null;
         userSpeed: number | null;
         isGeoPending: boolean;
-        selectedId: string | null;
     };
     actions: Omit<ReturnType<typeof useMapReducer>, 'state' | 'dispatch'> & {
         setShowStops: (val: boolean) => void;
