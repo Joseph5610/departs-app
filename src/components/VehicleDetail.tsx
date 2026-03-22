@@ -190,7 +190,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         return (
                             <>
                                 {isShowBanner && (
-                                    <HStack gap={3} className="mt-4 pt-4 border-t border-white/5 items-start">
+                                    <HStack gap={3} className="mt-4 items-start">
                                         <Box className="p-2 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
                                             <Info size={14} />
                                         </Box>
@@ -203,10 +203,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                     </HStack>
                                 )}
 
-                                <HStack gap={2} className={cn(
-                                    "mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end",
-                                    isShowBanner && "border-t-0 mt-0 pt-0"
-                                )}>
+                                <HStack gap={2} className="mt-4 pt-4 border-t border-white/5 flex-wrap justify-between items-end">
                                     <Stack gap={0} className="min-w-0 flex-1">
                                         <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
                                             {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
