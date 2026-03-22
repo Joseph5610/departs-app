@@ -181,19 +181,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         const state = displayVehicle.state_position;
                         const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
                         const isOffTrack = state === 'off_track';
+                        // If we are before track, show the previous trip warning even if we have a static fallback
+                        // because it's more descriptive of WHY the schedule is static.
                         const isShowBanner = isBeforeTrack || isOffTrack || displayVehicle.isStaticFallback;
 
-                        const title = displayVehicle.isStaticFallback
-                            ? t('map.vehicleDetails.staticFallback')
-                            : isBeforeTrack
-                                ? t('map.vehicleDetails.previousTrip')
-                                : t('map.vehicleDetails.offTrack');
+                        const title = isBeforeTrack
+                            ? t('map.vehicleDetails.previousTrip')
+                            : displayVehicle.isStaticFallback
+                                ? t('map.vehicleDetails.staticFallback')
+                                : isOffTrack
+                                    ? t('map.vehicleDetails.offTrack')
+                                    : '';
 
-                        const description = displayVehicle.isStaticFallback
-                            ? t('map.vehicleDetails.staticFallbackDescription')
-                            : isBeforeTrack
-                                ? t('map.vehicleDetails.previousTripDescription')
-                                : t('map.vehicleDetails.offTrackDescription');
+                        const description = isBeforeTrack
+                            ? t('map.vehicleDetails.previousTripDescription')
+                            : displayVehicle.isStaticFallback
+                                ? t('map.vehicleDetails.staticFallbackDescription')
+                                : isOffTrack
+                                    ? t('map.vehicleDetails.offTrackDescription')
+                                    : '';
 
                         return (
                             <>

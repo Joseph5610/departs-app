@@ -60,10 +60,12 @@ export const useMapVehicleSync = (
 
                     if (tripIdChanged && selectedStop) {
                         // TRIP LOCK (DEPARTURE BOARD): If the user clicked a specific departure,
-                        // we stay on that trip ID even if the vehicle is still finishing a previous one.
+                        // we stay on that trip ID but we UPDATE the live properties (position, bearing, delay)
+                        // so the map and "minutes late" remain live.
                         newProps = {
                             ...selectedVehicle,
                             vehicle_id: sid || matchId,
+                            delay: p.delay,
                             bearing: p.bearing,
                             state_position: 'before_track',
                             last_stop_sequence: null
@@ -116,9 +118,10 @@ export const useMapVehicleSync = (
                 }
 
                 if (tripIdChanged && selectedStop) {
-                    // TRIP LOCK (API): Preserve selected trip identity but update position.
+                    // TRIP LOCK (API): Preserve selected trip identity but update position, bearing and delay.
                     newProps = {
                         ...newProps,
+                        delay: detailDelayValue,
                         bearing: vehicleDetail.bearing ?? newProps.bearing,
                         state_position: 'before_track',
                         last_stop_sequence: null
