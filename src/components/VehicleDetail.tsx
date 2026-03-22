@@ -168,13 +168,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         )}
                     </HStack>
 
-                    {/* Warning Banner: Integrated State-specific messaging */}
+                    {/* Warning Banner & Metadata Footer */}
                     {(() => {
                         const state = vehicleDetail?.state_position || selectedVehicle.state_position;
                         const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
                         const isOffTrack = state === 'off_track';
-
-                        if (!isBeforeTrack && !isOffTrack && !isStaticFallback) return null;
+                        const isShowBanner = isBeforeTrack || isOffTrack || isStaticFallback;
 
                         const title = isStaticFallback
                             ? t('map.vehicleDetails.staticFallback')
@@ -189,53 +188,59 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                 : t('map.vehicleDetails.offTrackDescription');
 
                         return (
-                            <Box className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20! flex flex-row items-start gap-3 rounded-xl">
-                                <Box className="p-1.5 bg-amber-500/20 rounded-full text-amber-500 shrink-0 mt-0.5">
-                                    <Info size={16} />
-                                </Box>
-                                <Stack gap={1}>
-                                    <h4 className="text-amber-500 font-bold text-[13px] leading-tight">{title}</h4>
-                                    <p className="text-amber-500/80 text-[11px] leading-snug">
-                                        {description}
-                                    </p>
-                                </Stack>
-                            </Box>
+                            <>
+                                {isShowBanner && (
+                                    <HStack gap={3} className="mt-4 pt-4 border-t border-white/5 items-start">
+                                        <Box className="p-2 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
+                                            <Info size={14} />
+                                        </Box>
+                                        <Stack gap={1}>
+                                            <span className="text-amber-500 font-bold text-[10px] uppercase tracking-wider leading-none">{title}</span>
+                                            <p className="text-amber-500/80 text-[11px] leading-snug font-medium">
+                                                {description}
+                                            </p>
+                                        </Stack>
+                                    </HStack>
+                                )}
+
+                                <HStack gap={2} className={cn(
+                                    "mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end",
+                                    isShowBanner && "border-t-0 mt-0 pt-0"
+                                )}>
+                                    <Stack gap={0} className="min-w-0 flex-1">
+                                        <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
+                                            {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
+                                        </span>
+                                        <HStack gap={2} align="center" className="min-w-0 w-full">
+                                            <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
+                                                {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
+                                            </span>
+                                            <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
+                                                #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
+                                            </span>
+                                            {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
+                                                <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
+                                                    {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
+                                                </span>
+                                            )}
+                                        </HStack>
+                                    </Stack>
+
+                                    <HStack gap={3} className="shrink-0 pb-0.5">
+                                        {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
+                                            <Snowflake size={13} className="text-sky-400" />
+                                        )}
+                                        {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
+                                            <Zap size={13} className="text-amber-400" />
+                                        )}
+                                        {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
+                                            <Accessibility size={13} className="text-primary" />
+                                        )}
+                                    </HStack>
+                                </HStack>
+                            </>
                         );
                     })()}
-
-                    {/* Metadata Footer */}
-                    <HStack gap={2} className="mt-3 pt-3 border-t border-white/5 flex-wrap justify-between items-end">
-                        <Stack gap={0} className="min-w-0 flex-1">
-                            <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
-                                {vehicleDetail?.vehicle_descriptor?.operator || selectedVehicle?.vehicle_descriptor?.operator}
-                            </span>
-                            <HStack gap={2} align="center" className="min-w-0 w-full">
-                                <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
-                                    {vehicleDetail?.vehicle_descriptor?.vehicle_type || selectedVehicle?.vehicle_descriptor?.vehicle_type || '---'}
-                                </span>
-                                <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
-                                    #{vehicleDetail?.vehicle_descriptor?.vehicle_registration_number || selectedVehicle?.vehicle_descriptor?.vehicle_registration_number}
-                                </span>
-                                {(vehicleDetail?.run_number || selectedVehicle?.run_number) && (
-                                    <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
-                                        {t('map.vehicleDetails.runNumber')} {vehicleDetail?.run_number || selectedVehicle?.run_number}
-                                    </span>
-                                )}
-                            </HStack>
-                        </Stack>
-
-                        <HStack gap={3} className="shrink-0 pb-0.5">
-                            {(vehicleDetail?.vehicle_descriptor?.is_air_conditioned || selectedVehicle?.vehicle_descriptor?.is_air_conditioned) && (
-                                <Snowflake size={13} className="text-sky-400" />
-                            )}
-                            {(vehicleDetail?.vehicle_descriptor?.has_usb_chargers || selectedVehicle?.vehicle_descriptor?.has_usb_chargers) && (
-                                <Zap size={13} className="text-amber-400" />
-                            )}
-                            {(vehicleDetail?.vehicle_descriptor?.is_wheelchair_accessible || selectedVehicle?.vehicle_descriptor?.is_wheelchair_accessible) && (
-                                <Accessibility size={13} className="text-primary" />
-                            )}
-                        </HStack>
-                    </HStack>
                 </Stack>
             </Surface>
 
