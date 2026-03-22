@@ -54,10 +54,12 @@ export const useMapVehicleSync = (
                 const selectedTripId = selectedVehicle.gtfs_trip_id;
                 const tripIdChanged = incomingTripId !== selectedTripId;
 
-                // CHRONOLOGICAL TRIP PROTECTION:
+                // TRIP PROTECTION:
                 // If the user selected a specific trip (via departure board) and the stream reports a different trip,
                 // we check if the reported trip is chronologically EARLIER than our selection.
                 // If it is, we treat it as "before_track" (still finishing previous work).
+                // However, if the selection was EXPLICIT (is_explicit_trip), we NEVER hijack the trip ID
+                // if it's earlier or if it's just different but the user wants to stay on their selection.
                 let isIncomingTripEarlier = false;
                 if (tripIdChanged && p.origin_timestamp && selectedVehicle.origin_timestamp) {
                     try {
@@ -65,12 +67,14 @@ export const useMapVehicleSync = (
                     } catch (e) { /* ignore */ }
                 }
 
+                const shouldProtectTrip = selectedVehicle.is_explicit_trip && (tripIdChanged && isIncomingTripEarlier);
+
                 const hasValidLocation = coords[0] !== 0 || coords[1] !== 0;
 
                 if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay || tripIdChanged) {
                     updated = true;
 
-                    if (isIncomingTripEarlier) {
+                    if (shouldProtectTrip) {
                         // Protect the selected trip's identity but update the vehicle's physical position
                         newProps = {
                             ...selectedVehicle,
@@ -120,6 +124,8 @@ export const useMapVehicleSync = (
                 } catch (e) { /* ignore */ }
             }
 
+            const shouldProtectTrip = selectedVehicle.is_explicit_trip && (tripIdChanged && isIncomingTripEarlier);
+
             // LOSSLESS DELAY SYNC:
             // We only trust a "0" delay from the detail API if we don't already have a non-zero delay
             // from the map stream or departure board. This prevents the "reverts to on-time" bug.
@@ -142,7 +148,7 @@ export const useMapVehicleSync = (
                     if (detailCoords) newCoords = detailCoords;
                 }
 
-                if (isIncomingTripEarlier) {
+                if (shouldProtectTrip) {
                     // protect selected trip but update position from API if possible
                     newProps = {
                         ...newProps,

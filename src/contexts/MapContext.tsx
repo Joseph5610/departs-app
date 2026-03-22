@@ -163,6 +163,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
             origin_timestamp: initialData?.scheduled,
+            is_explicit_trip: true,
             state_position: 'on_track',
             geometry: {
                 type: 'Point',

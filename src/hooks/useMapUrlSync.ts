@@ -30,11 +30,13 @@ export const useMapUrlSync = (
         const vehicleId = p.get('vehicleId');
         const tripId = p.get('tripId');
         const ots = p.get('ots'); // origin_timestamp (scheduled time)
+        const isExp = p.get('exp') === 'true'; // is_explicit_trip
         if (tripId && !selectedVehicle) {
             selectVehicle({
                 vehicle_id: vehicleId || null,
                 gtfs_trip_id: tripId,
                 origin_timestamp: ots || undefined,
+                is_explicit_trip: isExp,
                 state_position: 'on_track',
                 geometry: { type: 'Point', coordinates: [0, 0] }
             } as VehicleDetail, !!stopId);
@@ -60,9 +62,11 @@ export const useMapUrlSync = (
             const vid = selectedVehicle.vehicle_id;
             const tid = selectedVehicle.gtfs_trip_id;
             const ots = selectedVehicle.origin_timestamp;
+            const isExp = selectedVehicle.is_explicit_trip;
             vid ? sp.set('vehicleId', vid) : sp.delete('vehicleId');
             sp.set('tripId', tid);
             ots ? sp.set('ots', ots) : sp.delete('ots');
+            isExp ? sp.set('exp', 'true') : sp.delete('exp');
         } else {
             sp.delete('vehicleId');
             sp.delete('tripId');

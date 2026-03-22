@@ -7,6 +7,7 @@ interface BaseVehicleProperties {
     bearing: number | null | undefined;
     delay: number;
     origin_timestamp?: string;
+    is_explicit_trip?: boolean;
     state_position?: string;
     next_stop_name?: string;
     run_number?: number | string;
