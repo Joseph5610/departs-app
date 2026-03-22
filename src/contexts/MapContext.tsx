@@ -16,8 +16,7 @@ import type { Departure } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
-    MAP_BOUNDS_DEBOUNCE,
-    STORAGE_KEYS
+    MAP_BOUNDS_DEBOUNCE
 } from '../config/constants';
 
 /**
