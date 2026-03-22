@@ -6,8 +6,6 @@ interface BaseVehicleProperties {
     trip_headsign?: string;
     bearing: number | null | undefined;
     delay: number;
-    origin_timestamp?: string;
-    is_explicit_trip?: boolean;
     state_position?: string;
     next_stop_name?: string;
     run_number?: number | string;
@@ -125,6 +123,7 @@ export interface Infotext {
 
 export interface VehicleDetail extends BaseVehicleProperties {
     last_stop_sequence?: number | null;
+    origin_timestamp?: string;
     geometry?: {
         type: "Point";
         coordinates: [number, number];

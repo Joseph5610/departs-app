@@ -38,7 +38,7 @@ const MapEngine: React.FC = () => {
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
     useMapAnimation(mapRef, selectedVehicle, isFollowing);
     useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
-    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles, vehicleDetail);
+    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles, vehicleDetail, selectedStop);
 
     return null;
 };
@@ -162,8 +162,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             route_type: initialData?.type,
             trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
-            origin_timestamp: initialData?.scheduled,
-            is_explicit_trip: true,
             state_position: 'on_track',
             geometry: {
                 type: 'Point',
