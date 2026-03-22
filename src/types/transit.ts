@@ -1,4 +1,13 @@
-interface BaseVehicleProperties {
+export interface VehicleDescriptor {
+    operator?: string;
+    vehicle_type?: string;
+    is_wheelchair_accessible?: boolean | null;
+    is_air_conditioned?: boolean | null;
+    has_usb_chargers?: boolean | null;
+    vehicle_registration_number?: string | number;
+}
+
+export interface BaseVehicleProperties {
     vehicle_id: string | null;
     gtfs_trip_id: string;
     route_short_name?: string;
@@ -9,14 +18,9 @@ interface BaseVehicleProperties {
     state_position?: string;
     next_stop_name?: string;
     run_number?: number | string;
-    vehicle_descriptor?: {
-        operator?: string;
-        vehicle_type?: string;
-        is_wheelchair_accessible?: boolean;
-        is_air_conditioned?: boolean;
-        has_usb_chargers?: boolean;
-        vehicle_registration_number?: string;
-    };
+    last_stop_sequence?: number | null;
+    origin_timestamp?: string;
+    vehicle_descriptor?: VehicleDescriptor;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
@@ -122,8 +126,6 @@ export interface Infotext {
 }
 
 export interface VehicleDetail extends BaseVehicleProperties {
-    last_stop_sequence?: number | null;
-    origin_timestamp?: string;
     geometry?: {
         type: "Point";
         coordinates: [number, number];

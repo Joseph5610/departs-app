@@ -58,29 +58,32 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = (await response.json()) as Record<string, unknown>;
+        const data = (await response.json()) as any;
 
         // Standardize output structure: handle FeatureCollection, Feature, or flat object
         let normalizedFeature: GolemioVehicleFeature;
 
-        const features = data.features as GolemioVehicleFeature[] | undefined;
-        if (data.type === 'FeatureCollection' && features && features.length > 0) {
-            normalizedFeature = normalizeVehicleFeature(features[0], tripId);
+        if (data.type === 'FeatureCollection' && Array.isArray(data.features) && data.features.length > 0) {
+            normalizedFeature = normalizeVehicleFeature(data.features[0], tripId);
         } else if (data.type === 'Feature') {
-            normalizedFeature = normalizeVehicleFeature(data as unknown as GolemioVehicleFeature, tripId);
+            normalizedFeature = normalizeVehicleFeature(data as GolemioVehicleFeature, tripId);
         } else {
             // Flat object (typical for gtfs/trips)
-            const mockFeature = { type: 'Feature', geometry: data.geometry || null, properties: data } as unknown as GolemioVehicleFeature;
+            const mockFeature: GolemioVehicleFeature = {
+                type: 'Feature',
+                geometry: data.geometry || null,
+                properties: data as GolemioVehicleFeature['properties']
+            };
             normalizedFeature = normalizeVehicleFeature(mockFeature, tripId);
         }
 
         // Final vehicle data: core properties from normalization, plus expanded scope data
-        const vehicleData: Record<string, unknown> = {
+        const vehicleData: Record<string, any> = {
             ...normalizedFeature.properties,
             geometry: normalizedFeature.geometry,
             // Merge root-level metadata often provided alongside FeatureCollection when using scopes
-            stop_times: data.stop_times || normalizedFeature.properties?.stop_times,
-            shapes: data.shapes || normalizedFeature.properties?.shapes,
+            stop_times: data.stop_times || (normalizedFeature.properties as any).stop_times,
+            shapes: data.shapes || (normalizedFeature.properties as any).shapes,
         };
 
         // If upstream provided expanded descriptors/metadata at root, use them

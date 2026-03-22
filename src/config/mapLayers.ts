@@ -1,8 +1,7 @@
 import type {
     CircleLayerSpecification,
     SymbolLayerSpecification,
-    LineLayerSpecification,
-    ExpressionSpecification
+    LineLayerSpecification
 } from 'maplibre-gl';
 import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
@@ -92,7 +91,8 @@ export const stopPointLayer: CircleLayerSpecification = {
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 9.5, 5.7],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 26.6, 20.9]
         ],
-        'circle-color': ['case',
+        'circle-color': [
+            'case',
             // Only apply custom colors for Stations (Type 1)
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             ['match', ['get', 'stop_name'],
@@ -102,7 +102,7 @@ export const stopPointLayer: CircleLayerSpecification = {
 
             // Default for Stops (Type 0 or null)
             LINE_COLORS.Default
-        ] as unknown as ExpressionSpecification,
+        ] as any,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
             // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
@@ -152,7 +152,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
                 LINE_COLORS.Unknown
             ],
             '#000000' // Shadow for regular stops
-        ] as unknown as ExpressionSpecification,
+        ] as any,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.35, 0.2]
@@ -374,7 +374,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as ExpressionSpecification,
+        'icon-color': vehicleColorExpression as any,
         'icon-opacity': [
             'case',
             ['any',
@@ -384,7 +384,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
             ],
             0,
             1
-        ] as unknown as ExpressionSpecification
+        ] as any
     }
 };
 
@@ -441,7 +441,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as ExpressionSpecification,
+        'icon-color': vehicleColorExpression as any,
         'icon-opacity': [
             'case',
             ['any',
@@ -451,7 +451,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
             ],
             0,
             1
-        ] as unknown as ExpressionSpecification
+        ] as any
     }
 };
 

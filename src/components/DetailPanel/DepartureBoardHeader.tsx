@@ -98,7 +98,11 @@ export const DepartureBoardHeader = React.memo(() => {
 
                     <ToggleGroup
                         value={[departureSort]}
-                        onValueChange={(val) => val?.[0] && setDepartureSort(val[0] as 'line' | 'departure')}
+                        onValueChange={(val) => {
+                            if (Array.isArray(val) && val[0]) {
+                                setDepartureSort(val[0] as 'line' | 'departure');
+                            }
+                        }}
                         className="bg-muted/30 rounded-lg h-8 overflow-hidden"
                     >
                         <ToggleGroupItem

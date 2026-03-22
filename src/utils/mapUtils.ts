@@ -1,4 +1,5 @@
 import { MAP_DEFAULT_COORDS, STORAGE_KEYS } from '../config/constants';
+import type { VehicleDetail, SelectedStop, VehicleDescriptor } from '../types/transit';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -35,5 +36,61 @@ export const getInitialViewState = () => {
         latitude: parseFloat(p.get('lat') || lat.toString()),
         longitude: parseFloat(p.get('lng') || lng.toString()),
         zoom: parseFloat(p.get('z') || z.toString())
+    };
+};
+
+/**
+ * Safely extracts vehicle properties from a MapLibre feature.
+ * Handles stringified JSON and ensures correct numeric types.
+ */
+export const extractVehicleProperties = (feature: { properties: Record<string, unknown> | null; geometry?: unknown }): VehicleDetail => {
+    const rawProps = (feature.properties || {}) as Record<string, unknown>;
+
+    let vehicle_descriptor: VehicleDescriptor | undefined = undefined;
+    if (typeof rawProps.vehicle_descriptor === 'string') {
+        try {
+            vehicle_descriptor = JSON.parse(rawProps.vehicle_descriptor);
+        } catch {
+            // Fallback if parsing fails
+        }
+    } else if (typeof rawProps.vehicle_descriptor === 'object') {
+        vehicle_descriptor = rawProps.vehicle_descriptor as VehicleDescriptor;
+    }
+
+    const vehicle_id = String(rawProps.vehicle_id || rawProps.id || '');
+    const gtfs_trip_id = String(rawProps.gtfs_trip_id || '');
+
+    return {
+        vehicle_id,
+        gtfs_trip_id,
+        route_short_name: rawProps.route_short_name !== undefined ? String(rawProps.route_short_name) : undefined,
+        route_type: rawProps.route_type !== undefined ? (isNaN(Number(rawProps.route_type)) ? String(rawProps.route_type) : Number(rawProps.route_type)) : undefined,
+        trip_headsign: rawProps.trip_headsign !== undefined ? String(rawProps.trip_headsign) : undefined,
+        bearing: rawProps.bearing !== undefined && rawProps.bearing !== null && rawProps.bearing !== '' ? Number(rawProps.bearing) : null,
+        delay: Number(rawProps.delay || 0),
+        state_position: rawProps.state_position !== undefined ? String(rawProps.state_position) : undefined,
+        next_stop_name: rawProps.next_stop_name !== undefined ? String(rawProps.next_stop_name) : undefined,
+        run_number: rawProps.run_number !== undefined ? (isNaN(Number(rawProps.run_number)) ? String(rawProps.run_number) : Number(rawProps.run_number)) : undefined,
+        last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
+        origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
+        vehicle_descriptor,
+        geometry: feature.geometry as VehicleDetail['geometry']
+    };
+};
+
+/**
+ * Safely extracts stop properties from a MapLibre feature.
+ */
+export const extractStopProperties = (feature: { properties: Record<string, unknown> | null; geometry?: unknown }): SelectedStop => {
+    const p = (feature.properties || {}) as Record<string, unknown>;
+    const geom = feature.geometry;
+    const coordinates = (geom && typeof geom === 'object' && 'coordinates' in geom) ? (geom as any).coordinates : geom;
+
+    return {
+        stop_id: String(p.stop_id),
+        stop_name: String(p.stop_name),
+        platform_code: p.platform_code ? String(p.platform_code) : undefined,
+        is_train: Number(p.is_train) === 1,
+        coordinates: coordinates as [number, number]
     };
 };

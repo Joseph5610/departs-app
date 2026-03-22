@@ -102,8 +102,7 @@ export const Search: React.FC = React.memo(() => {
         selectStop(selectedStop);
         addToHistory({
             type: 'stop',
-            ...selectedStop,
-            coordinates: stop.geometry.coordinates as [number, number]
+            ...selectedStop
         });
         setQuery('');
         setIsOpen(false);
