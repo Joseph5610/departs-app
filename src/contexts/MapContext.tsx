@@ -3,7 +3,8 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { useMapEngine } from '../hooks/useMapEngine';
+import { useMapSync } from '../hooks/useMapSync';
+import { useMapInterface } from '../hooks/useMapInterface';
 import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
@@ -30,11 +31,16 @@ const MapEngine: React.FC = () => {
     const { _raw_data: stopsRawData } = useStops();
 
     // Sync Background Logic
-    useMapEngine(
+    useMapSync(
+        { selectedId, selectedVehicle, selectedStop },
+        { setSelectedVehicle, setSelectedStop },
+        { rawVehicles, vehicleDetail, stopsData: stopsRawData || null }
+    );
+
+    useMapInterface(
         mapRef,
         { selectedId, selectedVehicle, selectedStop, isFollowing },
-        { setSelectedVehicle, setSelectedStop, selectVehicle },
-        { rawVehicles, vehicleDetail, stopsData: stopsRawData || null }
+        { setSelectedStop, selectVehicle }
     );
 
     return null;
