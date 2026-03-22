@@ -3,8 +3,12 @@ import { useMemo } from 'react';
 import type { VehicleDetail } from '../types/transit';
 import { useMap } from '../hooks/useMap';
 
-const fetchVehicleDetail = async (vehicleId: string, tripId: string): Promise<VehicleDetail> => {
-    const res = await fetch(`/api/vehicle-detail?vehicleId=${vehicleId}&tripId=${tripId}`);
+const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
+    const url = new URL('/api/vehicle-detail', window.location.origin);
+    url.searchParams.set('tripId', tripId);
+    if (vehicleId) url.searchParams.set('vehicleId', vehicleId);
+
+    const res = await fetch(url.toString());
     if (!res.ok) throw new Error('Failed to fetch vehicle detail');
     return res.json();
 };
@@ -23,8 +27,8 @@ export const useVehicleDetail = () => {
 
     return useQuery({
         queryKey: ['vehicle-detail', vehicleIdStr, tripIdStr],
-        queryFn: () => fetchVehicleDetail(vehicleIdStr!, tripIdStr!),
-        enabled: !!vehicleIdStr && !!tripIdStr,
+        queryFn: () => fetchVehicleDetail(vehicleIdStr, tripIdStr!),
+        enabled: !!tripIdStr,
         staleTime: 10000,
         refetchInterval: 10000, // 10s - matches vehicle update frequency
         gcTime: 60000,

@@ -42,7 +42,7 @@ export const useMapVehicleSync = (
                 const props = f.properties;
                 const fid = String(props.vehicle_id);
                 const ftid = String(props.gtfs_trip_id || '');
-                if (sid !== 'NONE' && !sid.startsWith('trip-')) return fid === sid;
+                if (sid !== 'NONE' && sid !== 'null') return fid === sid;
                 return ftid === stid && stid !== 'NONE';
             });
 
@@ -56,7 +56,7 @@ export const useMapVehicleSync = (
 
                 if (currentCoords[0] !== coords[0] || selectedVehicle.delay !== p.delay || tripIdChanged) {
                     updated = true;
-                    newProps = { ...p, vehicle_id: sid.startsWith('trip-') ? matchId : sid };
+                    newProps = { ...p, vehicle_id: (sid === 'null' || sid === 'NONE') ? matchId : sid };
 
                     // TRIP TRANSITION SAFETY:
                     // If the trip ID changed and the stream doesn't provide a sequence,

@@ -14,7 +14,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const p = feature.properties;
 
     // Identify format and extract core fields
-    const vehicle_id = String(p.vehicle_id || p.id || `trip-${p.trip?.gtfs?.trip_id || tripIdFallback || 'unknown'}`);
+    const vehicle_id = p.vehicle_id !== undefined && p.vehicle_id !== null ? String(p.vehicle_id) : (p.id !== undefined && p.id !== null ? String(p.id) : undefined);
     const gtfs_trip_id = p.gtfs_trip_id || p.trip?.gtfs?.trip_id || tripIdFallback;
     const route_short_name = p.route_short_name || p.gtfs_route_short_name || p.trip?.gtfs?.route_short_name;
     const route_type = p.route_type || p.gtfs_route_type || p.trip?.gtfs?.route_type;

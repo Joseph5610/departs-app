@@ -2,6 +2,18 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.20.0] - 2026-03-21
+
+### Added
+- **Refactored Vehicle Detail API**: Significantly improved the robustness and clarity of the vehicle details endpoint. The API now explicitly handles static fallbacks based on the presence of a vehicle ID.
+
+### Changed
+- **Cleaner Frontend Identifiers**: Removed artificial `trip-` prefixed vehicle IDs. The frontend now correctly handles departures without real-time vehicle IDs by using the trip ID and requesting a static fallback from the backend.
+- **Improved Data Consistency**: The `is_static_fallback` flag is now always present in the vehicle detail response, ensuring predictable behavior for the UI.
+- **Enhanced Vehicle Sync**: Updated the map synchronization logic to reliably track vehicles even when they transition between real-time and static states.
+- **Simplified URL Sync**: Refactored URL synchronization to only include essential identifiers (`stopId`, `tripId`, `vehicleId`). Removed display strings like `stopName` and `stopPlatform` from the URL to improve security and data integrity.
+- **Robust Stop Enrichment**: Enhanced the stop enrichment logic to automatically fetch missing stop names and platform codes from the cached GeoJSON data when a stop is loaded from a minimal URL.
+
 ## [0.19.0] - 2026-03-20
 
 ### Changed

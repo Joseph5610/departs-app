@@ -19,22 +19,27 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const vehicleId = searchParams.get("vehicleId");
     const tripId = searchParams.get("tripId");
 
-    if (!vehicleId || !tripId) {
+    if (!tripId) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
-    const isPlaceholder = vehicleId.startsWith('trip-');
     const scopes = ['info', 'stop_times', 'shapes', 'vehicle_descriptor'];
+
+    const fetchStaticTrip = async () => {
+        const res = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
+            cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
+            searchParams: { scopes }
+        });
+        return { response: res, isStatic: true };
+    };
 
     try {
         let response: Response;
-        let usedStaticFallback = false;
+        let isStatic = false;
 
-        if (isPlaceholder) {
-            response = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
-                cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                searchParams: { scopes }
-            });
+        if (!vehicleId) {
+            // No vehicle ID provided - direct static fallback
+            ({ response, isStatic } = await fetchStaticTrip());
         } else {
             // Try real-time first with matrix parameter (essential for some Golemio endpoints to link trip data)
             response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
@@ -45,11 +50,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             // If real-time fails (e.g. 404), fall back to static GTFS trip data
             if (!response.ok) {
                 console.warn(`Real-time fetch failed (${response.status}), falling back to static GTFS for trip ${tripId}`);
-                response = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
-                    cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                    searchParams: { scopes }
-                });
-                usedStaticFallback = true;
+                ({ response, isStatic } = await fetchStaticTrip());
             }
         }
 
@@ -89,9 +90,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         if (data.last_stop_sequence !== undefined) vehicleData.last_stop_sequence = data.last_stop_sequence;
         if (data.next_stop_name) vehicleData.next_stop_name = data.next_stop_name;
 
-        if (usedStaticFallback) {
-            vehicleData.is_static_fallback = true;
-        }
+        vehicleData.is_static_fallback = isStatic;
 
         // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates
         if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
