@@ -102,6 +102,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     if (!selectedVehicle) return null;
 
     const routeType = selectedVehicle.route_type ?? 0;
+    const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
 
     return (
         <Stack gap={4}>
@@ -115,7 +116,6 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 const state = vehicleDetail?.state_position || selectedVehicle.state_position;
                 const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
                 const isOffTrack = state === 'off_track';
-                const isStaticFallback = vehicleDetail?.is_static_fallback || selectedVehicle.is_static_fallback;
 
                 if (!isBeforeTrack && !isOffTrack && !isStaticFallback) return null;
 
@@ -264,16 +264,18 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     <Stack gap={3}>
                         <HStack justify="between" className="px-1">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                            <CollapsibleTrigger render={
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
-                                />
-                            }>
-                                {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                                {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                            </CollapsibleTrigger>
+                            {!isStaticFallback && (
+                                <CollapsibleTrigger render={
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 rounded-xl text-[10px] bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-2 gap-1.5"
+                                    />
+                                }>
+                                    {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
+                                    {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </CollapsibleTrigger>
+                            )}
                         </HStack>
                         <Box className="relative pl-6 overflow-hidden!">
                             <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
