@@ -1,34 +1,27 @@
 import { useEffect, useRef } from 'react';
-import type { VehicleCollection, VehicleDetail, SelectedStop, StopCollection } from '../types/transit';
+import { useMap } from './useMap';
+import { useVehicles } from './useVehicles';
+import type { SelectedStop } from '../types/transit';
+import { useVehicleDetail } from './useVehicleDetail';
+import { useStops } from './useStops';
 
 /**
  * useMapSync
  *
  * The "Data Coordinator" hook.
- * Responsibilities:
- * 1. VEHICLE SYNC: Merges live map stream (high-frequency) with detail API (low-frequency).
- *    Uses a declarative spread: Current State -> Stream Props -> Detail API Props.
- * 2. STOP ENRICHMENT: Hydrates stops loaded from URLs with full metadata from the GeoJSON cache.
+ *
+ * Semantically, this hook acts as a bridge between asynchronous external data sources
+ * and the application's central state. It ensures that the 'selected' objects in the
+ * reducer are always enriched with the latest available information.
  */
-export const useMapSync = (
-    state: {
-        selectedId: string | null;
-        selectedVehicle: VehicleDetail | null;
-        selectedStop: SelectedStop | null;
-    },
-    actions: {
-        updateVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void;
-        updateStop: (stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => void;
-    },
-    data: {
-        rawVehicles?: VehicleCollection | null;
-        vehicleDetail?: VehicleDetail | null;
-        stopsData?: StopCollection | null;
-    }
-) => {
+export const useMapSync = () => {
+    const { state, actions } = useMap();
     const { selectedId, selectedVehicle, selectedStop } = state;
     const { updateVehicle, updateStop } = actions;
-    const { rawVehicles, vehicleDetail, stopsData } = data;
+
+    const { vehicles: rawVehicles } = useVehicles();
+    const { data: vehicleDetail } = useVehicleDetail();
+    const { _raw_data: stopsData } = useStops();
 
     const lastEnrichedId = useRef<string | null>(null);
 
@@ -58,7 +51,7 @@ export const useMapSync = (
         const isFallback = !!vehicleDetail?.is_static_fallback;
 
         // Declarative merge: Base -> Live Stream -> API Detail
-        const merged: VehicleDetail = {
+        const merged = {
             ...selectedVehicle,
             ...(liveMatch?.properties || {}),
             ...(vehicleDetail || {}),
@@ -84,7 +77,9 @@ export const useMapSync = (
         // Geometry: Prioritize newest valid coordinates
         const dg = vehicleDetail?.geometry;
         const sg = liveMatch?.geometry;
-        const isValid = (g: any) => { return g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0); };
+        const isValid = (g: any) => {
+            return g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
+        };
 
         if (isValid(dg)) {
             merged.geometry = dg;
@@ -98,6 +93,10 @@ export const useMapSync = (
     }, [rawVehicles, vehicleDetail, selectedId, selectedVehicle, updateVehicle]);
 
     // --- 2. STOP DATA ENRICHMENT ---
+    /**
+     * Hydrates a partially loaded stop (e.g. from a URL or minimal search result)
+     * with full metadata from the GeoJSON stop collection once it's available.
+     */
     useEffect(() => {
         if (!selectedStop || !stopsData || lastEnrichedId.current === selectedStop.stop_id) {
             return;
@@ -113,7 +112,7 @@ export const useMapSync = (
         });
 
         if (feature) {
-            updateStop((prev) => {
+            updateStop((prev: SelectedStop | null) => {
                 if (prev?.stop_id !== selectedStop.stop_id) {
                     return prev;
                 }

@@ -8,11 +8,13 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
 
     // 1. Pre-calculate search index (run only once when stops load)
     const searchIndex = useMemo(() => {
-        if (!stops?.features) return [];
+        if (!stops?.features) {
+            return [];
+        }
 
         return stops.features
-            .filter(stop => stop.properties.location_type !== 2)
-            .map(stop => {
+            .filter((stop) => { return stop.properties.location_type !== 2; })
+            .map((stop) => {
                 const normalizedName = normalizeString(stop.properties.stop_name);
                 const stopId = stop.properties.stop_id.toUpperCase();
                 return {
@@ -26,21 +28,25 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
 
     // 2. Search logic (runs when query changes, but using pre-calculated index)
     const results = useMemo(() => {
-        if (deferredQuery.length < 2) return [];
+        if (deferredQuery.length < 2) {
+            return [];
+        }
 
         const normalizedQuery = normalizeString(deferredQuery).trim();
         const upperQuery = deferredQuery.trim().toUpperCase();
         const queryTokens = normalizedQuery.split(/[-\s/]+/);
 
         const matches = searchIndex
-            .filter(item => {
+            .filter((item) => {
                 // Match by stop ID prefix
-                if (item.stopId.startsWith(upperQuery)) return true;
+                if (item.stopId.startsWith(upperQuery)) {
+                    return true;
+                }
 
                 // Every query token must match at least one name token (as prefix)
-                return queryTokens.every(qToken =>
-                    item.nameTokens.some(nToken => nToken.startsWith(qToken))
-                );
+                return queryTokens.every((qToken) => {
+                    return item.nameTokens.some((nToken) => { return nToken.startsWith(qToken); });
+                });
             })
             .map(item => {
                 let score = 0;
@@ -82,7 +88,9 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
 
         // Sort by score and name
         matches.sort((a, b) => {
-            if (b.score !== a.score) return b.score - a.score;
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
             return a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name);
         });
 
@@ -94,7 +102,9 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
                 seen.add(match.stop.properties.stop_name);
                 uniqueMatches.push(match.stop);
             }
-            if (uniqueMatches.length >= 10) break;
+            if (uniqueMatches.length >= 10) {
+                break;
+            }
         }
 
         return uniqueMatches;

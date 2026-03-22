@@ -9,11 +9,15 @@ const EMPTY_GEOJSON: VehicleCollection = {
 
 /**
  * Provides memoized GeoJSON and filter expressions for map layers.
+ *
+ * useMapFilters separates the rendering of the "selected vehicle" from
+ * the main vehicle stream to allow for different styling and animations.
  */
 export const useMapFilters = (
     selectedVehicle: VehicleDetail | null,
     selectedId: string | null
 ) => {
+    // 1. Create a standalone GeoJSON for the selected vehicle
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
         if (!selectedVehicle || !selectedVehicle.geometry) {
             return EMPTY_GEOJSON;
@@ -33,19 +37,21 @@ export const useMapFilters = (
                         coordinates: hasValidLocation ? coords : [0, 0]
                     },
                     properties: {
-                        ...selectedVehicle,
-                        route_type: selectedVehicle.route_type,
-                        route_short_name: selectedVehicle.route_short_name
+                        ...selectedVehicle
                     }
                 } as VehicleFeature
             ]
         };
     }, [selectedVehicle]);
 
-    const vehiclesFilter = useMemo<FilterSpecification>(() => ['!', ['any',
-        ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], selectedId || 'NOMATCH'],
-        ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
-    ]] as FilterSpecification, [selectedId, selectedVehicle?.gtfs_trip_id]);
+    // 2. Create a filter to hide the selected vehicle from the main stream layer
+    // This prevents "double rendering" of the same vehicle.
+    const vehiclesFilter = useMemo<FilterSpecification>(() => {
+        return ['!', ['any',
+            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], selectedId || 'NOMATCH'],
+            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
+        ]] as FilterSpecification;
+    }, [selectedId, selectedVehicle?.gtfs_trip_id]);
 
     return {
         selectedVehicleFeature,

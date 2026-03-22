@@ -9,9 +9,8 @@ import { getVehicleColor } from '../../utils/vehicleColors';
 import type { Departure } from '../../types/transit';
 import { useMap } from '../../hooks/useMap';
 import { useVehicleDetail } from '../../hooks/useVehicleDetail';
-import { useGroupedDepartures } from '../../hooks/useGroupedDepartures';
 import { useDepartures } from '../../hooks/useDepartures';
-import { useInfotexts } from '../../hooks/useInfotexts';
+import { useGlobalAlerts } from '../../hooks/useGlobalAlerts';
 import { METRO_STATIONS } from '../../config/stations';
 import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
@@ -37,9 +36,9 @@ export const DetailPanelContent = memo(() => {
 
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
-    const { isLoading: loadingDeps } = useDepartures();
-    const { data: allInfotexts } = useInfotexts();
-    const groupedDepartures = useGroupedDepartures();
+    const { isLoading: loadingDeps, groupedDepartures } = useDepartures();
+    const { infotexts } = useGlobalAlerts();
+    const allInfotexts = infotexts.data;
 
     const { selectedStop, selectedVehicle, isFollowing, expandedGroups, userLocation, userSpeed } = state;
     const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;

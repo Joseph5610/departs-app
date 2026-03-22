@@ -1,64 +1,127 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import type { Departure } from '../types/transit';
 import { useMap } from '../hooks/useMap';
 
+export interface DepartureGroup {
+    groupId: string;
+    line: string;
+    type: string | number;
+    departures: Departure[];
+    firstTime: number;
+}
+
+/**
+ * useDepartures
+ *
+ * Fetches, enriches, and groups departure data for the selected stop.
+ */
 export const useDepartures = () => {
     const { state } = useMap();
     const stopId = state.selectedStop?.stop_id || null;
-    const prevDelaysRef = useRef<Record<string, number>>({});
-    const lastUpdateRef = useRef<Record<string, number>>({});
+    const departureSort = state.departureSort;
 
-    const query = useQuery<{ departures: Departure[] }>({
+    // Store previous data to calculate deltas without effects
+    const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});
+
+    const selectFn = useCallback((data: { departures: Departure[] }) => {
+        if (!data?.departures) {
+            return data;
+        }
+
+        const now = Date.now();
+        const enriched = data.departures.map((dep) => {
+            const key = `${dep.tripId}-${dep.scheduled}`;
+            const prev = prevDataRef.current[key];
+
+            let delta: number | undefined = undefined;
+            let lastUpdate: number | undefined = undefined;
+
+            if (prev && prev.delay !== dep.delay) {
+                delta = dep.delay - prev.delay;
+                lastUpdate = now;
+            } else if (prev) {
+                lastUpdate = prev.timestamp;
+            }
+
+            // Update ref for next run
+            prevDataRef.current[key] = { delay: dep.delay, timestamp: lastUpdate || now };
+
+            return {
+                ...dep,
+                delayDelta: delta,
+                lastDelayUpdate: lastUpdate
+            };
+        });
+
+        return { departures: enriched };
+    }, []);
+
+    const query = useQuery({
         queryKey: ['departures', stopId],
         queryFn: async () => {
-            if (!stopId) return null;
+            if (!stopId) {
+                return null;
+            }
             const res = await fetch(`/api/departures?stopId=${encodeURIComponent(stopId)}`);
-            if (!res.ok) throw new Error('Failed to fetch departures');
+            if (!res.ok) {
+                throw new Error('Failed to fetch departures');
+            }
             return res.json();
         },
+        select: selectFn,
         enabled: !!stopId,
         refetchInterval: 10000,
         staleTime: 10000,
     });
 
-    const enrichedData = useMemo(() => {
-        if (!query.data?.departures) return query.data;
-
-        return {
-            // We use refs for tracking deltas across query refreshes.
-            // This is safe because refs are only updated in useEffect.
-            // eslint-disable-next-line react-hooks/refs
-            departures: query.data.departures.map(dep => {
-                const key = `${dep.tripId}-${dep.scheduled}`;
-                const prevDelay = prevDelaysRef.current[key];
-                const lastUpdate = lastUpdateRef.current[key];
-                const delta = (prevDelay !== undefined && prevDelay !== dep.delay) ? dep.delay - prevDelay : 0;
-
-                return {
-                    ...dep,
-                    delayDelta: delta || undefined,
-                    lastDelayUpdate: delta !== 0 ? query.dataUpdatedAt : lastUpdate
-                };
-            })
-        };
-    }, [query.data, query.dataUpdatedAt]);
-
-    // Update tracking refs in an effect to maintain render purity.
-    useEffect(() => {
-        if (query.data?.departures) {
-            const now = query.dataUpdatedAt;
-            query.data.departures.forEach(dep => {
-                const key = `${dep.tripId}-${dep.scheduled}`;
-                const prevDelay = prevDelaysRef.current[key];
-
-                if (prevDelay !== undefined && prevDelay !== dep.delay) {
-                    lastUpdateRef.current[key] = now;
-                }
-                prevDelaysRef.current[key] = dep.delay;
-            });
+    const groupedDepartures = useMemo((): DepartureGroup[] => {
+        if (!query.data?.departures) {
+            return [];
         }
-    }, [query.data, query.dataUpdatedAt]);
+        const groups: Record<string, Departure[]> = {};
+        query.data.departures.forEach((dep) => {
+            // Metro (type 1) is grouped by line AND direction
+            const lineName = String(dep.line).toUpperCase();
+            const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
+            const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(dep);
+        });
 
-    return { ...query, data: enrichedData };
+        const result = Object.entries(groups).map(([key, deps]) => {
+            return {
+                groupId: key,
+                line: deps[0].line,
+                type: deps[0].type,
+                departures: deps,
+                firstTime: new Date(deps[0].timestamp).getTime()
+            };
+        });
+
+        if (departureSort === 'line') {
+            result.sort((a, b) => {
+                const typeA = Number(a.type) || 0;
+                const typeB = Number(b.type) || 0;
+                if (typeA !== typeB) {
+                    return typeA - typeB;
+                }
+
+                const lineA = String(a.line);
+                const lineB = String(b.line);
+                if (lineA !== lineB) {
+                    return lineA.localeCompare(lineB, undefined, { numeric: true, sensitivity: 'base' });
+                }
+
+                return a.firstTime - b.firstTime;
+            });
+        } else {
+            result.sort((a, b) => { return a.firstTime - b.firstTime; });
+        }
+        return result;
+    }, [query.data, departureSort]);
+
+    return { ...query, groupedDepartures };
 };

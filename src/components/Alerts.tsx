@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
-import { useRSS } from '../hooks/useRSS';
+import { useGlobalAlerts } from '../hooks/useGlobalAlerts';
 import type { RSSItem } from '../types/transit';
 import {
     Dialog,
@@ -32,13 +32,14 @@ export const Alerts: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'incidents' | 'exclusions'>('incidents');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { data: rssData, isLoading: loadingRSS } = useRSS();
+    const { rss } = useGlobalAlerts();
+    const { data: rssData, isLoading: loadingRSS } = rss;
 
-    const incidentsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'incident').length || 0, [rssData]);
-    const exclusionsCount = useMemo(() => rssData?.alerts?.filter(a => a.type === 'exclusion').length || 0, [rssData]);
+    const incidentsCount = useMemo(() => { return rssData?.alerts?.filter((a) => { return a.type === 'incident'; }).length || 0; }, [rssData]);
+    const exclusionsCount = useMemo(() => { return rssData?.alerts?.filter((a) => { return a.type === 'exclusion'; }).length || 0; }, [rssData]);
 
     const currentItems = useMemo(() => {
-        const items = rssData?.alerts?.filter(a => activeTab === 'incidents' ? a.type === 'incident' : a.type === 'exclusion');
+        const items = rssData?.alerts?.filter((a) => { return activeTab === 'incidents' ? a.type === 'incident' : a.type === 'exclusion'; });
         if (!items) return [];
 
         const filtered = searchQuery.trim()

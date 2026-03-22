@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { VehicleDetail, SelectedStop } from '../types/transit';
+import { useMap } from './useMap';
 import {
     MAP_VEHICLE_SELECT_ZOOM,
     MAP_ANIMATION_DURATION,
@@ -13,31 +12,23 @@ import {
  * useMapInterface
  *
  * The "User Experience Layer" hook.
- * Responsibilities:
- * 1. URL SYNC: Persists stop/vehicle selection to the browser address bar.
- * 2. CAMERA: Smoothly follows selected vehicles or centers on stops.
- * 3. VISUALS: Handles MapLibre pulse animations for selection feedback.
+ *
+ * It manages the bridge between the application's internal state and the physical map interface.
+ * This hook is purely reactive—it observes state changes and triggers side effects like
+ * camera movement, URL updates, and MapLibre animations.
  */
-export const useMapInterface = (
-    mapRef: React.RefObject<MapRef | null>,
-    state: {
-        selectedId: string | null;
-        selectedVehicle: VehicleDetail | null;
-        selectedStop: SelectedStop | null;
-        isFollowing: boolean;
-    },
-    actions: {
-        updateStop: (stop: SelectedStop | null) => void;
-        selectVehicle: (vehicle: VehicleDetail | null, keepStop?: boolean) => void;
-    }
-) => {
+export const useMapInterface = () => {
+    const { state, actions, mapRef } = useMap();
     const { selectedId, selectedVehicle, selectedStop, isFollowing } = state;
     const { updateStop, selectVehicle } = actions;
 
     const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
 
-    // --- 1. INITIAL URL LOAD ---
+    // --- 1. URL SYNC (Initial Load) ---
+    /**
+     * Reads selection state from the URL on application startup.
+     */
     useEffect(() => {
         if (initialized.current) {
             return;
@@ -57,13 +48,16 @@ export const useMapInterface = (
                 gtfs_trip_id: tripId,
                 bearing: null,
                 delay: 0
-            } as VehicleDetail, !!stopId);
+            } as any, !!stopId);
         }
 
         initialized.current = true;
     }, [updateStop, selectedStop, selectedVehicle, selectVehicle]);
 
-    // --- 2. URL SYNC (State Change) ---
+    // --- 2. URL SYNC (Write) ---
+    /**
+     * Persists the current selection state back to the browser's URL.
+     */
     useEffect(() => {
         const url = new URL(window.location.href);
         const sp = url.searchParams;
@@ -90,6 +84,9 @@ export const useMapInterface = (
     }, [selectedStop, selectedVehicle]);
 
     // --- 3. CAMERA FOLLOW ---
+    /**
+     * Manages the map camera based on selections and 'following' state.
+     */
     useEffect(() => {
         if (!mapRef.current) {
             return;
@@ -140,7 +137,10 @@ export const useMapInterface = (
         }
     }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedId, selectedVehicle?.gtfs_trip_id]);
 
-    // --- 4. PULSE ANIMATION ---
+    // --- 4. PERFORMANCE VISUALS (NON-REACT) ---
+    /**
+     * Orchestrates high-frequency MapLibre animations directly to bypass React overhead.
+     */
     useEffect(() => {
         let frame: number;
         const currentMapRef = mapRef.current;

@@ -5,43 +5,25 @@ import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useMapSync } from '../hooks/useMapSync';
 import { useMapInterface } from '../hooks/useMapInterface';
-import { useVehicles } from '../hooks/useVehicles';
-import { useVehicleDetail } from '../hooks/useVehicleDetail';
-import { useStops } from '../hooks/useStops';
 import { addAllIcons } from '../utils/mapIcons';
 import type { Departure, VehicleDetail } from '../types/transit';
-import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
+import { MapContext, type MapContextType } from '../hooks/useMap';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
     MAP_BOUNDS_DEBOUNCE
 } from '../config/constants';
 
 /**
- * Internal component to handle background sync processes.
- * It consumes the context it's placed in.
+ * Internal component to handle background sync and interface processes.
+ * It is isolated from the Provider to avoid full context re-renders
+ * for minor background updates.
  */
 const MapEngine: React.FC = () => {
-    const { state, actions, mapRef } = useMap();
-    const { selectedStop, selectedVehicle, isFollowing, selectedId } = state;
-    const { updateVehicle, updateStop, selectVehicle } = actions;
+    // 1. Data Coordination (Sync state with APIs)
+    useMapSync();
 
-    // Data needed for sync hooks
-    const { vehicles: rawVehicles } = useVehicles();
-    const { data: vehicleDetail } = useVehicleDetail();
-    const { _raw_data: stopsRawData } = useStops();
-
-    // Sync Background Logic
-    useMapSync(
-        { selectedId, selectedVehicle, selectedStop },
-        { updateVehicle, updateStop },
-        { rawVehicles, vehicleDetail, stopsData: stopsRawData || null }
-    );
-
-    useMapInterface(
-        mapRef,
-        { selectedId, selectedVehicle, selectedStop, isFollowing },
-        { updateStop, selectVehicle }
-    );
+    // 2. User Experience (Sync Map interface with state)
+    useMapInterface();
 
     return null;
 };
@@ -174,11 +156,6 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             route_type: initialData?.type,
             trip_headsign: initialData?.headsign,
             delay: initialData?.delay ?? 0,
-            state_position: 'on_track',
-            geometry: {
-                type: 'Point',
-                coordinates: [0, 0]
-            },
             bearing: null
         } as VehicleDetail, true); // keep stop
     }, [selectVehicle]);

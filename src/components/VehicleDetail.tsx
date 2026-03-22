@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
-import { useRSS } from '../hooks/useRSS';
+import { useGlobalAlerts } from '../hooks/useGlobalAlerts';
 import { parseISO } from 'date-fns';
 import { GenericAlertCard } from './GenericAlertCard';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
@@ -38,7 +38,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     onToggleFollow
 }) => {
     const { t } = useTranslation();
-    const { data: rssData } = useRSS();
+    const { rss } = useGlobalAlerts();
+    const rssData = rss.data;
     const [showPastStops, setShowPastStops] = useState(false);
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
 

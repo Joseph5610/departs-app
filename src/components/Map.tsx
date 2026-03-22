@@ -43,7 +43,7 @@ const MapInner: React.FC = () => {
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
-    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId ? String(state.selectedId) : null);
+    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId);
 
     const handleBack = useCallback(() => {
         actions.updateVehicle(null);
