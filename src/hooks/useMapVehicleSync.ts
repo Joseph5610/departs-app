@@ -59,19 +59,25 @@ export const useMapVehicleSync = (
                     updated = true;
 
                     if (tripIdChanged && selectedStop) {
-                        // TRIP LOCK (DEPARTURE BOARD): If the user clicked a specific departure,
-                        // we stay on that trip ID but we UPDATE the live properties (position, bearing, delay)
-                        // so the map and "minutes late" remain live.
+                        // TRIP LOCK (DEPARTURE BOARD): Preserve selected trip identity but update vehicle position, delay and live age info.
                         newProps = {
                             ...selectedVehicle,
                             vehicle_id: sid || matchId,
                             delay: p.delay,
                             bearing: p.bearing,
+                            origin_timestamp: p.origin_timestamp,
                             state_position: 'before_track',
-                            last_stop_sequence: null
+                            last_stop_sequence: null,
+                            shapes: vehicleDetail?.shapes || selectedVehicle.shapes,
+                            stop_times: vehicleDetail?.stop_times || selectedVehicle.stop_times
                         };
                     } else {
                         newProps = { ...p, vehicle_id: sid || matchId };
+
+                        // TRIP TRANSITION SAFETY:
+                        if (tripIdChanged && (p as any).last_stop_sequence === undefined) {
+                            newProps.last_stop_sequence = null;
+                        }
                     }
 
                     // Only update coordinates if they are valid, or if we currently have invalid ones
@@ -118,13 +124,22 @@ export const useMapVehicleSync = (
                 }
 
                 if (tripIdChanged && selectedStop) {
-                    // TRIP LOCK (API): Preserve selected trip identity but update position, bearing and delay.
+                    // TRIP LOCK (API): Preserve selected trip identity but update position, bearing, delay and live age.
                     newProps = {
+                        ...selectedVehicle,
                         ...newProps,
-                        delay: detailDelayValue,
+                        delay: shouldUpdateDelay ? detailDelayValue : currentDelay,
                         bearing: vehicleDetail.bearing ?? newProps.bearing,
+                        origin_timestamp: vehicleDetail.origin_timestamp || newProps.origin_timestamp,
                         state_position: 'before_track',
-                        last_stop_sequence: null
+                        last_stop_sequence: null,
+                        // Ensure we keep the shape and stop times for the selected trip
+                        shapes: vehicleDetail.shapes || selectedVehicle.shapes,
+                        stop_times: vehicleDetail.stop_times || selectedVehicle.stop_times,
+                        vehicle_descriptor: {
+                            ...(newProps.vehicle_descriptor || selectedVehicle.vehicle_descriptor),
+                            vehicle_registration_number: vehicleDetail.vehicle_descriptor?.vehicle_registration_number || newProps.vehicle_descriptor?.vehicle_registration_number || selectedVehicle.vehicle_descriptor?.vehicle_registration_number
+                        }
                     };
                 } else {
                     newProps = {
