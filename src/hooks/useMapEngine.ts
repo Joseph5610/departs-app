@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import type { VehicleCollection, VehicleDetail, SelectedStop } from '../types/transit';
+import type { VehicleCollection, VehicleDetail, SelectedStop, StopCollection } from '../types/transit';
 import {
     MAP_VEHICLE_SELECT_ZOOM,
     MAP_ANIMATION_DURATION,
@@ -16,6 +16,8 @@ import {
  * 1. Vehicle State Sync (between stream and detail API)
  * 2. Camera Following (tracking selected vehicle or stop)
  * 3. Vehicle Animations (pulsing effect)
+ * 4. URL Synchronization (initial load and updates)
+ * 5. Stop Data Enrichment (filling missing info for stopId from URL)
  */
 export const useMapEngine = (
     mapRef: React.RefObject<MapRef | null>,
@@ -27,19 +29,107 @@ export const useMapEngine = (
     },
     actions: {
         setSelectedVehicle: (vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => void;
+        setSelectedStop: (stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => void;
+        selectVehicle: (vehicle: VehicleDetail | null, keepStop?: boolean) => void;
     },
     data: {
         rawVehicles?: VehicleCollection | null;
         vehicleDetail?: VehicleDetail | null;
+        stopsData?: StopCollection | null;
     }
 ) => {
     const { selectedId, selectedVehicle, selectedStop, isFollowing } = state;
-    const { setSelectedVehicle } = actions;
-    const { rawVehicles, vehicleDetail } = data;
+    const { setSelectedVehicle, setSelectedStop, selectVehicle } = actions;
+    const { rawVehicles, vehicleDetail, stopsData } = data;
 
     const lastFlownId = useRef<string | null>(null);
+    const initialized = useRef(false);
+    const lastEnrichedId = useRef<string | null>(null);
 
-    // --- 1. VEHICLE STATE SYNC ---
+    // --- 1. INITIAL URL LOAD ---
+    useEffect(() => {
+        if (initialized.current) {
+            return;
+        }
+        const p = new URLSearchParams(window.location.search);
+
+        const stopId = p.get('stopId');
+        if (stopId && !selectedStop) {
+            setSelectedStop({ stop_id: stopId, stop_name: '' });
+        }
+
+        const tripId = p.get('tripId');
+        const vehicleId = p.get('vehicleId');
+        if (tripId && !selectedVehicle) {
+            selectVehicle({
+                vehicle_id: vehicleId || null,
+                gtfs_trip_id: tripId,
+                state_position: 'on_track',
+                geometry: { type: 'Point', coordinates: [0, 0] }
+            } as VehicleDetail, !!stopId);
+        }
+
+        initialized.current = true;
+    }, [setSelectedStop, selectedStop, selectedVehicle, selectVehicle]);
+
+    // --- 2. URL SYNC (Write) ---
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        const sp = url.searchParams;
+
+        if (selectedStop) {
+            sp.set('stopId', selectedStop.stop_id);
+        } else {
+            sp.delete('stopId');
+        }
+
+        if (selectedVehicle) {
+            if (selectedVehicle.vehicle_id) {
+                sp.set('vehicleId', selectedVehicle.vehicle_id);
+            } else {
+                sp.delete('vehicleId');
+            }
+            sp.set('tripId', selectedVehicle.gtfs_trip_id);
+        } else {
+            sp.delete('vehicleId');
+            sp.delete('tripId');
+        }
+
+        window.history.replaceState({}, '', url.toString());
+    }, [selectedStop, selectedVehicle]);
+
+    // --- 3. STOP DATA ENRICHMENT ---
+    useEffect(() => {
+        if (!selectedStop || !stopsData || lastEnrichedId.current === selectedStop.stop_id) {
+            return;
+        }
+
+        const { stop_id, stop_name, coordinates } = selectedStop;
+        if (stop_name && coordinates) {
+            lastEnrichedId.current = stop_id;
+            return;
+        }
+
+        const feature = stopsData.features.find((f) => {
+            return f.properties.stop_id === stop_id || f.properties.all_ids?.includes(stop_id);
+        });
+
+        if (feature) {
+            const { stop_name: name, platform_code, all_ids } = feature.properties;
+            setSelectedStop((prev) => {
+                return prev?.stop_id === stop_id ? {
+                    ...prev,
+                    stop_name: prev.stop_name || name,
+                    platform_code: prev.platform_code || platform_code,
+                    coordinates: prev.coordinates || (feature.geometry.coordinates as [number, number]),
+                    all_ids: all_ids
+                } : prev;
+            });
+            lastEnrichedId.current = stop_id;
+        }
+    }, [selectedStop, stopsData, setSelectedStop]);
+
+    // --- 4. VEHICLE STATE SYNC ---
     useEffect(() => {
         if (!selectedVehicle) {
             return;
@@ -107,7 +197,9 @@ export const useMapEngine = (
             if (coordsChanged || delayChanged || bearingChanged || sequenceChanged || tripIdChanged || routeInfoChanged) {
                 updated = true;
                 if (hasValidDetailLocation || (newCoords[0] === 0 && newCoords[1] === 0)) {
-                    if (detailCoords) newCoords = detailCoords;
+                    if (detailCoords) {
+                        newCoords = detailCoords;
+                    }
                 }
 
                 newProps = {
@@ -172,7 +264,7 @@ export const useMapEngine = (
         }
     }, [rawVehicles, vehicleDetail, selectedId, selectedVehicle, setSelectedVehicle, mapRef]);
 
-    // --- 2. CAMERA FOLLOW ---
+    // --- 5. CAMERA FOLLOW ---
     useEffect(() => {
         if (!mapRef.current) {
             return;
@@ -209,7 +301,7 @@ export const useMapEngine = (
         });
     }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates]);
 
-    // --- 3. PULSE ANIMATION ---
+    // --- 6. PULSE ANIMATION ---
     useEffect(() => {
         let frame: number;
         const currentMapRef = mapRef.current;

@@ -26,18 +26,12 @@ const dateLocales: Record<string, Locale> = {
     en: enUS
 };
 
-interface DetailPanelContentProps {
-    onToggleFollow: () => void;
-}
-
 /**
  * DetailPanelContent
  *
  * Re-architected with semantic layout components.
  */
-export const DetailPanelContent = memo<DetailPanelContentProps>(({
-    onToggleFollow
-}) => {
+export const DetailPanelContent = memo(() => {
     const { t, i18n } = useTranslation();
     const { state, actions } = useMap();
 
@@ -115,7 +109,7 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 vehicleDetail={vehicleDetail || null}
                 loadingDetail={loadingDetail}
                 isFollowing={isFollowing}
-                onToggleFollow={onToggleFollow}
+                onToggleFollow={() => { actions.setIsFollowing(!isFollowing); }}
             />
 
             {showDepartureBoard && groupedDepartures.map((group, index) => {

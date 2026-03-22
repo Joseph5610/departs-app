@@ -43,10 +43,6 @@ const MapInner: React.FC = () => {
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
-    const handleToggleFollow = useCallback(() => {
-        actions.setIsFollowing(!state.isFollowing);
-    }, [state.isFollowing, actions]);
-
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(state.selectedVehicle, state.selectedId ? String(state.selectedId) : null);
 
     const handleBack = useCallback(() => {
@@ -161,9 +157,7 @@ const MapInner: React.FC = () => {
                 platformCode={!state.selectedVehicle ? state.selectedStop?.platform_code : undefined}
                 subHeader={<DepartureBoardHeader />}
             >
-                <DetailPanelContent
-                    onToggleFollow={handleToggleFollow}
-                />
+                <DetailPanelContent />
             </DetailPanel>
         </>
     );

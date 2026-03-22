@@ -138,9 +138,10 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             return { ...state, expandedGroups: action.payload };
         }
         case 'TOGGLE_GROUP': {
+            const exists = state.expandedGroups.includes(action.payload);
             return {
                 ...state,
-                expandedGroups: state.expandedGroups.includes(action.payload)
+                expandedGroups: exists
                     ? state.expandedGroups.filter((g) => { return g !== action.payload; })
                     : [...state.expandedGroups, action.payload]
             };
@@ -162,7 +163,8 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             return { ...state, debouncedBounds: action.payload };
         }
         case 'TOGGLE_FAVORITE': {
-            const newFavorites = state.favoriteStops.includes(action.payload)
+            const exists = state.favoriteStops.includes(action.payload);
+            const newFavorites = exists
                 ? state.favoriteStops.filter((id) => { return id !== action.payload; })
                 : [...state.favoriteStops, action.payload];
             localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
@@ -199,76 +201,76 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 export const useMapReducer = () => {
     const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    const setSelectedStop = useCallback((stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => {
-        dispatch({ type: 'SET_SELECTED_STOP', payload: stop });
+    const setSelectedStop = useCallback((payload: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => {
+        dispatch({ type: 'SET_SELECTED_STOP', payload });
     }, []);
 
-    const setSelectedVehicle = useCallback((vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => {
-        dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle });
+    const setSelectedVehicle = useCallback((payload: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => {
+        dispatch({ type: 'SET_SELECTED_VEHICLE', payload });
     }, []);
 
-    const selectStop = useCallback((stop: SelectedStop | null) => {
-        dispatch({ type: 'SELECT_STOP', payload: stop });
+    const selectStop = useCallback((payload: SelectedStop | null) => {
+        dispatch({ type: 'SELECT_STOP', payload });
     }, []);
 
-    const selectVehicle = useCallback((vehicle: VehicleDetail | null, keepStop = false) => {
-        dispatch({ type: 'SELECT_VEHICLE', payload: vehicle, keepStop });
+    const selectVehicle = useCallback((payload: VehicleDetail | null, keepStop = false) => {
+        dispatch({ type: 'SELECT_VEHICLE', payload, keepStop });
     }, []);
 
     const clearSelection = useCallback(() => {
         dispatch({ type: 'CLEAR_SELECTION' });
     }, []);
 
-    const setIsFollowing = useCallback((val: boolean) => {
-        dispatch({ type: 'SET_IS_FOLLOWING', payload: val });
+    const setIsFollowing = useCallback((payload: boolean) => {
+        dispatch({ type: 'SET_IS_FOLLOWING', payload });
     }, []);
 
-    const setShowVehicles = useCallback((val: boolean) => {
-        dispatch({ type: 'SET_SHOW_VEHICLES', payload: val });
+    const setShowVehicles = useCallback((payload: boolean) => {
+        dispatch({ type: 'SET_SHOW_VEHICLES', payload });
     }, []);
 
-    const setShowStops = useCallback((val: boolean) => {
-        dispatch({ type: 'SET_SHOW_STOPS', payload: val });
+    const setShowStops = useCallback((payload: boolean) => {
+        dispatch({ type: 'SET_SHOW_STOPS', payload });
     }, []);
 
-    const setIsSettingsOpen = useCallback((val: boolean) => {
-        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val });
+    const setIsSettingsOpen = useCallback((payload: boolean) => {
+        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload });
     }, []);
 
-    const setExpandedGroups = useCallback((groups: string[]) => {
-        dispatch({ type: 'SET_EXPANDED_GROUPS', payload: groups });
+    const setExpandedGroups = useCallback((payload: string[]) => {
+        dispatch({ type: 'SET_EXPANDED_GROUPS', payload });
     }, []);
 
-    const toggleGroup = useCallback((groupId: string) => {
-        dispatch({ type: 'TOGGLE_GROUP', payload: groupId });
+    const toggleGroup = useCallback((payload: string) => {
+        dispatch({ type: 'TOGGLE_GROUP', payload });
     }, []);
 
-    const setDepartureSort = useCallback((sort: 'line' | 'departure') => {
-        dispatch({ type: 'SET_DEPARTURE_SORT', payload: sort });
+    const setDepartureSort = useCallback((payload: 'line' | 'departure') => {
+        dispatch({ type: 'SET_DEPARTURE_SORT', payload });
     }, []);
 
-    const setRouteFilter = useCallback((filter: string[] | null) => {
-        dispatch({ type: 'SET_ROUTE_FILTER', payload: filter });
+    const setRouteFilter = useCallback((payload: string[] | null) => {
+        dispatch({ type: 'SET_ROUTE_FILTER', payload });
     }, []);
 
-    const setRouteTypeFilter = useCallback((filter: string[]) => {
-        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload: filter });
+    const setRouteTypeFilter = useCallback((payload: string[]) => {
+        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload });
     }, []);
 
-    const setBounds = useCallback((bounds: string | null) => {
-        dispatch({ type: 'SET_BOUNDS', payload: bounds });
+    const setBounds = useCallback((payload: string | null) => {
+        dispatch({ type: 'SET_BOUNDS', payload });
     }, []);
 
-    const setDebouncedBounds = useCallback((bounds: string | null) => {
-        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds });
+    const setDebouncedBounds = useCallback((payload: string | null) => {
+        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload });
     }, []);
 
-    const toggleFavorite = useCallback((stopId: string) => {
-        dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId });
+    const toggleFavorite = useCallback((payload: string) => {
+        dispatch({ type: 'TOGGLE_FAVORITE', payload });
     }, []);
 
-    const addToHistory = useCallback((item: SearchHistoryBase) => {
-        dispatch({ type: 'ADD_TO_HISTORY', payload: item });
+    const addToHistory = useCallback((payload: SearchHistoryBase) => {
+        dispatch({ type: 'ADD_TO_HISTORY', payload });
     }, []);
 
     const clearHistory = useCallback(() => {

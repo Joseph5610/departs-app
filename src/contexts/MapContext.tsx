@@ -3,12 +3,10 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { useMapUrlSync } from '../hooks/useMapUrlSync';
 import { useMapEngine } from '../hooks/useMapEngine';
 import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
-import { useMapStopEnrichment } from '../hooks/useMapStopEnrichment';
 import { addAllIcons } from '../utils/mapIcons';
 import type { Departure } from '../types/transit';
 import { MapContext, type MapContextType, useMap } from '../hooks/useMap';
@@ -32,14 +30,11 @@ const MapEngine: React.FC = () => {
     const { _raw_data: stopsRawData } = useStops();
 
     // Sync Background Logic
-    useMapUrlSync(selectedStop, setSelectedStop, selectedVehicle, selectVehicle);
-    useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
-
     useMapEngine(
         mapRef,
         { selectedId, selectedVehicle, selectedStop, isFollowing },
-        { setSelectedVehicle },
-        { rawVehicles, vehicleDetail }
+        { setSelectedVehicle, setSelectedStop, selectVehicle },
+        { rawVehicles, vehicleDetail, stopsData: stopsRawData || null }
     );
 
     return null;
