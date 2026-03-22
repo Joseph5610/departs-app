@@ -72,7 +72,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
         clearHistory
     } = useMapReducer();
 
-    const { userLocation, userSpeed, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef);
+    const { userLocation, userSpeed, isGeoPending, handleLocate, performGeolocation } = useGeolocation(mapRef, mapLoaded);
 
     // Map Event Handlers
     const getRoundedBounds = useCallback((map: Map) => {
@@ -152,14 +152,7 @@ export const MapProvider: React.FC<{ children: React.ReactNode; mapRef: React.Re
             setDebouncedBounds(initialBounds);
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const skipTutorial = params.has('skipTutorial');
-        const welcomeSeen = localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
-
-        if (welcomeSeen || skipTutorial) {
-            performGeolocation();
-        }
-    }, [performGeolocation, setBounds, setDebouncedBounds]);
+    }, [setBounds, setDebouncedBounds]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => {
         selectVehicle({
