@@ -1,4 +1,5 @@
 import { MAP_DEFAULT_COORDS, STORAGE_KEYS } from '../config/constants';
+import type { VehicleDetail, SelectedStop, VehicleDescriptor } from '../types/transit';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -38,16 +39,12 @@ export const getInitialViewState = () => {
     };
 };
 
-import type { VehicleDetail, SelectedStop } from '../types/transit';
-
-import type { VehicleDescriptor } from '../types/transit';
-
 /**
  * Safely extracts vehicle properties from a MapLibre feature.
  * Handles stringified JSON and ensures correct numeric types.
  */
-export const extractVehicleProperties = (feature: { properties: Record<string, any> | null; geometry?: any }): VehicleDetail => {
-    const rawProps = feature.properties || {};
+export const extractVehicleProperties = (feature: { properties: Record<string, unknown> | null; geometry?: unknown }): VehicleDetail => {
+    const rawProps = (feature.properties || {}) as Record<string, unknown>;
 
     let vehicle_descriptor: VehicleDescriptor | undefined = undefined;
     if (typeof rawProps.vehicle_descriptor === 'string') {
@@ -57,7 +54,7 @@ export const extractVehicleProperties = (feature: { properties: Record<string, a
             // Fallback if parsing fails
         }
     } else if (typeof rawProps.vehicle_descriptor === 'object') {
-        vehicle_descriptor = rawProps.vehicle_descriptor;
+        vehicle_descriptor = rawProps.vehicle_descriptor as VehicleDescriptor;
     }
 
     const vehicle_id = String(rawProps.vehicle_id || rawProps.id || '');
@@ -77,17 +74,17 @@ export const extractVehicleProperties = (feature: { properties: Record<string, a
         last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
         origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
         vehicle_descriptor,
-        geometry: feature.geometry
+        geometry: feature.geometry as VehicleDetail['geometry']
     };
 };
 
 /**
  * Safely extracts stop properties from a MapLibre feature.
  */
-export const extractStopProperties = (feature: { properties: Record<string, any> | null; geometry?: any }): SelectedStop => {
-    const p = feature.properties || {};
+export const extractStopProperties = (feature: { properties: Record<string, unknown> | null; geometry?: unknown }): SelectedStop => {
+    const p = (feature.properties || {}) as Record<string, unknown>;
     const geom = feature.geometry;
-    const coordinates = geom && 'coordinates' in geom ? geom.coordinates : geom;
+    const coordinates = (geom && typeof geom === 'object' && 'coordinates' in geom) ? (geom as any).coordinates : geom;
 
     return {
         stop_id: String(p.stop_id),
