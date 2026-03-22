@@ -61,7 +61,7 @@ export const useMapVehicleSync = (
                     // TRIP TRANSITION SAFETY:
                     // If the trip ID changed and the stream doesn't provide a sequence,
                     // we must explicitly clear the sequence to avoid showing the old trip's stop.
-                    if (tripIdChanged && (p as any).last_stop_sequence === undefined) {
+                    if (tripIdChanged && p.last_stop_sequence === undefined) {
                         newProps.last_stop_sequence = null;
                     }
 

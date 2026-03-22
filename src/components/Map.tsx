@@ -10,7 +10,7 @@ import { DetailPanel } from './DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from './DetailPanel/DepartureBoardHeader';
 
 import { LiveStatus } from './LiveStatus';
-import { getInitialViewState } from '../utils/mapUtils';
+import { getInitialViewState, extractVehicleProperties, extractStopProperties } from '../utils/mapUtils';
 const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
 import { Search } from './Search';
@@ -23,7 +23,6 @@ import { useVehicles } from '../hooks/useVehicles';
 import { useStops } from '../hooks/useStops';
 import { useRouteShape } from '../hooks/useRouteShape';
 import { useMapFilters } from '../hooks/useMapFilters';
-import type { VehicleDetail } from '../types/transit';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -113,47 +112,15 @@ const MapInner: React.FC = () => {
                     }
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
-                        const rawProps = f.properties || {};
-                        const props = { ...rawProps };
+                        const vehicle = extractVehicleProperties(f);
+                        if (!vehicle.vehicle_id) return;
 
-                        // MapLibre stringifies objects in properties. Safely parse them.
-                        if (typeof props.vehicle_descriptor === 'string') {
-                            try {
-                                props.vehicle_descriptor = JSON.parse(props.vehicle_descriptor);
-                            } catch {
-                                // Fallback if parsing fails
-                            }
-                        }
-
-                        // Ensure numeric types for properties that might be stringified
-                        const numericProps = ['delay', 'bearing', 'last_stop_sequence', 'route_type'];
-                        numericProps.forEach(key => {
-                            if (props[key] !== undefined && props[key] !== null && props[key] !== '') {
-                                props[key] = Number(props[key]);
-                            }
-                        });
-
-                        const vehicleId = String(props.vehicle_id || props.id || '');
-                        if (!vehicleId) return;
-
-                        actions.selectVehicle({
-                            ...props,
-                            vehicle_id: vehicleId,
-                            geometry: f.geometry
-                        } as unknown as VehicleDetail, false); // clear stop
+                        actions.selectVehicle(vehicle, false); // clear stop
                         return;
                     }
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
-                        if (f.properties) {
-                            actions.selectStop({
-                                stop_id: String(f.properties.stop_id),
-                                stop_name: String(f.properties.stop_name),
-                                platform_code: f.properties.platform_code ? String(f.properties.platform_code) : undefined,
-                                is_train: Number(f.properties.is_train) === 1,
-                                coordinates: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-                            });
-                        }
+                        actions.selectStop(extractStopProperties(f));
                     }
                 }}
                 interactiveLayerIds={['unclustered-point', 'train-stations', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}

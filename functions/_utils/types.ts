@@ -7,10 +7,10 @@ export interface Env {
 export interface GolemioVehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
-    is_wheelchair_accessible?: boolean;
-    is_air_conditioned?: boolean;
-    has_usb_chargers?: boolean;
-    vehicle_registration_number?: number;
+    is_wheelchair_accessible?: boolean | null;
+    is_air_conditioned?: boolean | null;
+    has_usb_chargers?: boolean | null;
+    vehicle_registration_number?: string | number;
 }
 
 export interface GolemioVehicleFeature {
