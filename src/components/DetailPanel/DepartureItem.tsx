@@ -5,6 +5,7 @@ import { DelayDelta } from './DelayDelta';
 import { cn } from '@/lib/utils';
 import { getCatchStatus } from '../../utils/transitLogic';
 import { formatDelay } from '../../utils/dateUtils';
+import { getVehicleColor } from '../../utils/vehicleColors';
 import type { Departure } from '../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
@@ -63,76 +64,92 @@ export const DepartureItem = ({
         clickStartPos.current = null;
     };
 
+    const lineColor = getVehicleColor(dep.type, dep.line);
+
     return (
         <Surface
             asChild
             variant="tinted"
-            padding="md"
+            padding="none"
             className={cn(
-                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/15! rounded-2xl",
+                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring border-white/15! rounded-2xl relative overflow-hidden group/item",
                 dep.tripId ? "hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-[0.98]" : "cursor-default"
             )}
         >
             <button
                 onPointerDown={handlePointerDown}
                 onClick={handleClick}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between px-5 py-4 relative z-10"
             >
-            <HStack gap={4}>
-                <Stack gap={0}>
-                    <div className="text-foreground font-semibold leading-tight">{dep.headsign}</div>
-                    <HStack gap={2} className="text-muted-foreground text-[10px] mt-1">
-                        <span className="tabular-nums">
-                            {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
-                        </span>
-                        {isTrainStop && dep.platform && (
-                            <Badge variant="outline" className="h-4 px-1 rounded text-[10px] font-bold tracking-wider">
-                                {dep.platform}
-                            </Badge>
-                        )}
-                        <HStack gap={1}>
-                            {typeof dep.delay === 'number' && dep.delay !== 0 && (
-                                <span className={cn(
-                                    "font-bold tabular-nums",
-                                    dep.delay > 0 ? "text-rose-400" : "text-sky-400"
-                                )}>
-                                    {formatDelay(dep.delay)}
-                                </span>
-                            )}
-                            <DelayDelta
-                                delta={dep.delayDelta || 0}
-                                lastUpdate={dep.lastDelayUpdate}
-                                isInline={typeof dep.delay === 'number' && dep.delay !== 0}
-                            />
-                        </HStack>
-                    </HStack>
-                </Stack>
-            </HStack>
+                {/* Subtle background color bleed */}
+                <Box
+                    className="absolute inset-0 opacity-[0.03] group-hover/item:opacity-[0.06] transition-opacity pointer-events-none"
+                    style={{ backgroundColor: lineColor }}
+                />
 
-            <Stack gap={0} align="end" justify="center" className="min-w-[100px]">
-                <Box className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
-                    <Countdown timestamp={dep.timestamp} />
-                </Box>
-                {stopDistanceInfo?.showCatchIndicator && catchStatus && (
-                    <Box className="mt-2">
-                        <Badge
-                            variant={
-                                catchStatus.status === 'success' ? 'success' :
-                                catchStatus.status === 'warning' ? 'warning' : 'danger'
-                            }
-                            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap gap-1"
-                        >
-                            <span className="text-[8px] leading-none">
-                                {catchStatus.status === 'success' ? '🟢' :
-                                    catchStatus.status === 'warning' ? '🟡' : '🔴'}
-                            </span>
-                            <span className="uppercase tracking-tighter">
-                                {t(`map.departures.catchStatusCompact.${catchStatus.status}`)}
-                            </span>
-                        </Badge>
+                <HStack gap={4} className="min-w-0 flex-1">
+                    <Stack gap={0.5} className="min-w-0 flex-1">
+                        <div className="text-foreground font-bold text-[15px] leading-tight truncate tracking-tight">
+                            {dep.headsign}
+                        </div>
+                        <HStack gap={2.5} align="center" className="text-muted-foreground/80 text-[10px]">
+                            <HStack gap={1} align="center">
+                                <span className="font-bold tabular-nums">
+                                    {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
+                                </span>
+                            </HStack>
+
+                            {isTrainStop && dep.platform && (
+                                <Box className="h-4 px-1.5 flex items-center bg-white/5 rounded text-[9px] font-bold tracking-widest text-muted-foreground border border-white/10">
+                                    {dep.platform}
+                                </Box>
+                            )}
+
+                            <HStack gap={1.5} align="center">
+                                {typeof dep.delay === 'number' && dep.delay !== 0 && (
+                                    <span className={cn(
+                                        "font-bold tabular-nums tracking-wide",
+                                        dep.delay > 0 ? "text-rose-400" : "text-sky-400"
+                                    )}>
+                                        {formatDelay(dep.delay)}
+                                    </span>
+                                )}
+                                <DelayDelta
+                                    delta={dep.delayDelta || 0}
+                                    lastUpdate={dep.lastDelayUpdate}
+                                    isInline={typeof dep.delay === 'number' && dep.delay !== 0}
+                                />
+                            </HStack>
+                        </HStack>
+                    </Stack>
+                </HStack>
+
+                <Stack gap={1.5} align="end" justify="center" className="shrink-0 pl-4 border-l border-white/5">
+                    <Box className="text-xl font-black text-primary tabular-nums leading-none tracking-tighter drop-shadow-[0_0_8px_var(--color-primary)]">
+                        <Countdown timestamp={dep.timestamp} />
                     </Box>
-                )}
-            </Stack>
+
+                    {stopDistanceInfo?.showCatchIndicator && catchStatus && (
+                        <HStack
+                            gap={1.5}
+                            align="center"
+                            className={cn(
+                                "px-1.5 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider",
+                                catchStatus.status === 'success' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                                catchStatus.status === 'warning' ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
+                                "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                            )}
+                        >
+                            <Box className={cn(
+                                "w-1 h-1 rounded-full",
+                                catchStatus.status === 'success' ? "bg-emerald-400 shadow-[0_0_4px_var(--color-emerald-400)]" :
+                                catchStatus.status === 'warning' ? "bg-amber-400 shadow-[0_0_4px_var(--color-amber-400)]" :
+                                "bg-rose-400 shadow-[0_0_4px_var(--color-rose-400)]"
+                            )} />
+                            <span>{t(`map.departures.catchStatusCompact.${catchStatus.status}`)}</span>
+                        </HStack>
+                    )}
+                </Stack>
             </button>
         </Surface>
     );

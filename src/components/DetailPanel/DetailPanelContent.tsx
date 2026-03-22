@@ -118,56 +118,63 @@ export const DetailPanelContent = memo<DetailPanelContentProps>(({
                 onToggleFollow={onToggleFollow}
             />
 
-            {showDepartureBoard && groupedDepartures.map((group, index) => {
-                const isExpanded = expandedGroups.includes(group.groupId);
-                const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
-                const hasMore = group.departures.length > 1;
+            <Stack gap={1}>
+                {showDepartureBoard && groupedDepartures.map((group, index) => {
+                    const isExpanded = expandedGroups.includes(group.groupId);
+                    const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
+                    const hasMore = group.departures.length > 1;
 
-                const prevGroup = index > 0 ? groupedDepartures[index - 1] : null;
-                const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
+                    const prevGroup = index > 0 ? groupedDepartures[index - 1] : null;
+                    const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
 
-                return (
-                    <Stack key={group.groupId} gap={3} className={cn(!showHeader && "-mt-1")}>
-                        {showHeader && (
-                            <HStack gap={3} className="px-1">
-                                <Box
-                                    className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
-                                    style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
-                                >
-                                    {group.line}
-                                </Box>
-                                <Box className="h-[1px] flex-1 bg-border" />
-                            </HStack>
-                        )}
-
-                        <Stack className="gap-2">
-                            {visibleDepartures.map((dep: Departure, idx: number) => (
-                                <DepartureItem
-                                    key={idx}
-                                    departure={dep}
-                                    onDepartureClick={onDepartureClick}
-                                    stopDistanceInfo={stopDistanceInfo}
-                                    isTrainStop={selectedStop?.is_train}
-                                    locale={locale}
-                                />
-                            ))}
-
-                            {hasMore && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full h-auto py-2 text-foreground/70 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground group"
-                                >
-                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
-                                    <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
-                                </Button>
+                    return (
+                        <Stack key={group.groupId} gap={3} className={cn(!showHeader && "mt-1", showHeader && "mt-4")}>
+                            {showHeader && (
+                                <HStack gap={4} className="px-1 items-center">
+                                    <Box
+                                        className="h-6 min-w-[32px] px-2 rounded-md font-black text-white text-[11px] flex items-center justify-center shadow-lg ring-1 ring-white/10"
+                                        style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
+                                    >
+                                        {group.line}
+                                    </Box>
+                                    <Box className="h-[1px] flex-1 bg-white/10" />
+                                </HStack>
                             )}
+
+                            <Stack className="gap-2">
+                                {visibleDepartures.map((dep: Departure, idx: number) => (
+                                    <DepartureItem
+                                        key={idx}
+                                        departure={dep}
+                                        onDepartureClick={onDepartureClick}
+                                        stopDistanceInfo={stopDistanceInfo}
+                                        isTrainStop={selectedStop?.is_train}
+                                        locale={locale}
+                                    />
+                                ))}
+
+                                {hasMore && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onToggleGroup(group.groupId)}
+                                        className="w-full h-9 text-muted-foreground/60 hover:text-foreground text-[10px] font-bold uppercase tracking-[0.15em] flex items-center justify-center gap-3 group px-4 transition-all"
+                                    >
+                                        <Box className="h-[1px] flex-1 bg-white/5 group-hover:bg-white/10 transition-colors" />
+                                        <span>
+                                            {isExpanded
+                                                ? t('map.departures.showLess')
+                                                : t('map.departures.moreConnections', { count: group.departures.length - 1 })
+                                            }
+                                        </span>
+                                        <Box className="h-[1px] flex-1 bg-white/5 group-hover:bg-white/10 transition-colors" />
+                                    </Button>
+                                )}
+                            </Stack>
                         </Stack>
-                    </Stack>
-                );
-            })}
+                    );
+                })}
+            </Stack>
             {showMetroNightMessage ? (
                 <Surface variant="tinted" padding="xl" className="items-center text-center flex flex-col gap-4 border-white/10!">
                     <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">

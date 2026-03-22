@@ -56,11 +56,14 @@ export const DepartureBoardHeader = React.memo(() => {
     if (!showHeader) return null;
 
     return (
-        <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
+        <div className="px-6 pb-4 shrink-0 flex flex-col gap-4">
             {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/15! px-3 py-1.5 self-start rounded-xl">
-                    <MapPin size={12} className="text-muted-foreground/60" />
-                    <span className="font-medium text-foreground text-[11px]">
+                <Surface variant="tinted" padding="none" className="flex flex-row items-center gap-2.5 border-white/10! px-3.5 py-2 self-start rounded-full bg-white/5 backdrop-blur-md">
+                    <Box className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        stopDistanceInfo.isAtStop ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/60"
+                    )} />
+                    <span className="font-bold text-foreground text-[10px] uppercase tracking-widest leading-none">
                         {stopDistanceInfo.isAtStop
                             ? t('map.departures.atStop')
                             : t('map.departures.distance', {
@@ -71,16 +74,16 @@ export const DepartureBoardHeader = React.memo(() => {
                 </Surface>
             )}
 
-            <HStack justify="between">
-                <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
+            <HStack justify="between" align="center">
+                <span className="text-muted-foreground/60 text-[10px] uppercase font-bold tracking-[0.2em]">
                     {t('map.departures.upcoming')}
                 </span>
-                <HStack gap={2}>
+                <HStack gap={1.5}>
                     <Button
                         variant="tinted"
                         size="icon"
                         onClick={handleShare}
-                        className="h-8 w-8 rounded-lg"
+                        className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all"
                     >
                         <Share2 size={14} />
                     </Button>
@@ -89,7 +92,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         size="icon"
                         onClick={() => selectedStop && toggleFavorite(selectedStop.stop_id)}
                         className={cn(
-                            "h-8 w-8 rounded-lg transition-all",
+                            "h-8 w-8 rounded-lg transition-all border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20",
                             isFavorite && "bg-amber-500/10 border-amber-500/20! text-amber-500 hover:bg-amber-500/20!"
                         )}
                     >
@@ -97,24 +100,24 @@ export const DepartureBoardHeader = React.memo(() => {
                     </Button>
 
                     <ToggleGroup
-                        value={[departureSort]}
+                        value={departureSort}
                         onValueChange={(val) => {
-                            if (Array.isArray(val) && val[0]) {
-                                setDepartureSort(val[0] as 'line' | 'departure');
+                            if (typeof val === 'string') {
+                                setDepartureSort(val as 'line' | 'departure');
                             }
                         }}
-                        className="bg-muted/30 rounded-lg h-8 overflow-hidden"
+                        className="bg-white/5 rounded-lg h-8 overflow-hidden border border-white/10"
                     >
                         <ToggleGroupItem
                             value="line"
-                            className="h-full px-2.5"
+                            className="h-full px-2.5 hover:bg-white/5 data-[state=on]:bg-white/10 data-[state=on]:text-primary"
                             title={t('map.departures.sortByLine')}
                         >
                             <ArrowDownAz size={16} />
                         </ToggleGroupItem>
                         <ToggleGroupItem
                             value="departure"
-                            className="h-full px-2.5"
+                            className="h-full px-2.5 hover:bg-white/5 data-[state=on]:bg-white/10 data-[state=on]:text-primary"
                             title={t('map.departures.sortByDeparture')}
                         >
                             <Clock size={16} />
