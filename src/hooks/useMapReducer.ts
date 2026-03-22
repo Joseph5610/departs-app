@@ -79,21 +79,23 @@ const getInitialState = (): MapState => ({
  */
 function mapReducer(state: MapState, action: MapAction): MapState {
     switch (action.type) {
-        case 'SET_SELECTED_STOP':
+        case 'SET_SELECTED_STOP': {
             return {
                 ...state,
                 selectedStop: typeof action.payload === 'function'
                     ? action.payload(state.selectedStop)
                     : action.payload
             };
-        case 'SET_SELECTED_VEHICLE':
+        }
+        case 'SET_SELECTED_VEHICLE': {
             return {
                 ...state,
                 selectedVehicle: typeof action.payload === 'function'
                     ? action.payload(state.selectedVehicle)
                     : action.payload
             };
-        case 'SELECT_STOP':
+        }
+        case 'SELECT_STOP': {
             return {
                 ...state,
                 selectedStop: action.payload,
@@ -101,60 +103,74 @@ function mapReducer(state: MapState, action: MapAction): MapState {
                 isFollowing: false,
                 expandedGroups: []
             };
-        case 'SELECT_VEHICLE':
+        }
+        case 'SELECT_VEHICLE': {
             return {
                 ...state,
                 selectedVehicle: action.payload,
                 selectedStop: action.keepStop ? state.selectedStop : null,
                 isFollowing: true
             };
-        case 'CLEAR_SELECTION':
+        }
+        case 'CLEAR_SELECTION': {
             return {
                 ...state,
                 selectedStop: null,
                 selectedVehicle: null,
                 isFollowing: false
             };
-        case 'SET_IS_FOLLOWING':
+        }
+        case 'SET_IS_FOLLOWING': {
             return { ...state, isFollowing: action.payload };
-        case 'SET_SHOW_VEHICLES':
+        }
+        case 'SET_SHOW_VEHICLES': {
             localStorage.setItem(STORAGE_KEYS.SHOW_VEHICLES, String(action.payload));
             return { ...state, showVehicles: action.payload };
-        case 'SET_SHOW_STOPS':
+        }
+        case 'SET_SHOW_STOPS': {
             localStorage.setItem(STORAGE_KEYS.SHOW_STOPS, String(action.payload));
             return { ...state, showStops: action.payload };
-        case 'SET_IS_SETTINGS_OPEN':
+        }
+        case 'SET_IS_SETTINGS_OPEN': {
             return { ...state, isSettingsOpen: action.payload };
-        case 'SET_EXPANDED_GROUPS':
+        }
+        case 'SET_EXPANDED_GROUPS': {
             return { ...state, expandedGroups: action.payload };
-        case 'TOGGLE_GROUP':
+        }
+        case 'TOGGLE_GROUP': {
             return {
                 ...state,
                 expandedGroups: state.expandedGroups.includes(action.payload)
-                    ? state.expandedGroups.filter(g => g !== action.payload)
+                    ? state.expandedGroups.filter((g) => { return g !== action.payload; })
                     : [...state.expandedGroups, action.payload]
             };
-        case 'SET_DEPARTURE_SORT':
+        }
+        case 'SET_DEPARTURE_SORT': {
             localStorage.setItem(STORAGE_KEYS.DEPARTURE_SORT, action.payload);
             return { ...state, departureSort: action.payload };
-        case 'SET_ROUTE_FILTER':
+        }
+        case 'SET_ROUTE_FILTER': {
             return { ...state, routeFilter: action.payload };
-        case 'SET_ROUTE_TYPE_FILTER':
+        }
+        case 'SET_ROUTE_TYPE_FILTER': {
             return { ...state, routeTypeFilter: action.payload };
-        case 'SET_BOUNDS':
+        }
+        case 'SET_BOUNDS': {
             return { ...state, bounds: action.payload };
-        case 'SET_DEBOUNCED_BOUNDS':
+        }
+        case 'SET_DEBOUNCED_BOUNDS': {
             return { ...state, debouncedBounds: action.payload };
+        }
         case 'TOGGLE_FAVORITE': {
             const newFavorites = state.favoriteStops.includes(action.payload)
-                ? state.favoriteStops.filter(id => id !== action.payload)
+                ? state.favoriteStops.filter((id) => { return id !== action.payload; })
                 : [...state.favoriteStops, action.payload];
             localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
             return { ...state, favoriteStops: newFavorites };
         }
         case 'ADD_TO_HISTORY': {
             const newItem = { ...action.payload, timestamp: Date.now() } as SearchHistoryItem;
-            let newHistory = state.searchHistory.filter(item => {
+            let newHistory = state.searchHistory.filter((item) => {
                 if (item.type === 'stop' && newItem.type === 'stop') {
                     return item.stop_id !== newItem.stop_id;
                 }
@@ -167,11 +183,13 @@ function mapReducer(state: MapState, action: MapAction): MapState {
             localStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(newHistory));
             return { ...state, searchHistory: newHistory };
         }
-        case 'CLEAR_HISTORY':
+        case 'CLEAR_HISTORY': {
             localStorage.removeItem(STORAGE_KEYS.SEARCH_HISTORY);
             return { ...state, searchHistory: [] };
-        default:
+        }
+        default: {
             return state;
+        }
     }
 }
 
@@ -181,62 +199,81 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 export const useMapReducer = () => {
     const [state, dispatch] = useReducer(mapReducer, undefined, getInitialState);
 
-    const setSelectedStop = useCallback((stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) =>
-        dispatch({ type: 'SET_SELECTED_STOP', payload: stop }), []);
+    const setSelectedStop = useCallback((stop: SelectedStop | null | ((prev: SelectedStop | null) => SelectedStop | null)) => {
+        dispatch({ type: 'SET_SELECTED_STOP', payload: stop });
+    }, []);
 
-    const setSelectedVehicle = useCallback((vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) =>
-        dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle }), []);
+    const setSelectedVehicle = useCallback((vehicle: VehicleDetail | null | ((prev: VehicleDetail | null) => VehicleDetail | null)) => {
+        dispatch({ type: 'SET_SELECTED_VEHICLE', payload: vehicle });
+    }, []);
 
-    const selectStop = useCallback((stop: SelectedStop | null) =>
-        dispatch({ type: 'SELECT_STOP', payload: stop }), []);
+    const selectStop = useCallback((stop: SelectedStop | null) => {
+        dispatch({ type: 'SELECT_STOP', payload: stop });
+    }, []);
 
-    const selectVehicle = useCallback((vehicle: VehicleDetail | null, keepStop = false) =>
-        dispatch({ type: 'SELECT_VEHICLE', payload: vehicle, keepStop }), []);
+    const selectVehicle = useCallback((vehicle: VehicleDetail | null, keepStop = false) => {
+        dispatch({ type: 'SELECT_VEHICLE', payload: vehicle, keepStop });
+    }, []);
 
-    const clearSelection = useCallback(() =>
-        dispatch({ type: 'CLEAR_SELECTION' }), []);
+    const clearSelection = useCallback(() => {
+        dispatch({ type: 'CLEAR_SELECTION' });
+    }, []);
 
-    const setIsFollowing = useCallback((val: boolean) =>
-        dispatch({ type: 'SET_IS_FOLLOWING', payload: val }), []);
+    const setIsFollowing = useCallback((val: boolean) => {
+        dispatch({ type: 'SET_IS_FOLLOWING', payload: val });
+    }, []);
 
-    const setShowVehicles = useCallback((val: boolean) =>
-        dispatch({ type: 'SET_SHOW_VEHICLES', payload: val }), []);
+    const setShowVehicles = useCallback((val: boolean) => {
+        dispatch({ type: 'SET_SHOW_VEHICLES', payload: val });
+    }, []);
 
-    const setShowStops = useCallback((val: boolean) =>
-        dispatch({ type: 'SET_SHOW_STOPS', payload: val }), []);
+    const setShowStops = useCallback((val: boolean) => {
+        dispatch({ type: 'SET_SHOW_STOPS', payload: val });
+    }, []);
 
-    const setIsSettingsOpen = useCallback((val: boolean) =>
-        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val }), []);
+    const setIsSettingsOpen = useCallback((val: boolean) => {
+        dispatch({ type: 'SET_IS_SETTINGS_OPEN', payload: val });
+    }, []);
 
-    const setExpandedGroups = useCallback((groups: string[]) =>
-        dispatch({ type: 'SET_EXPANDED_GROUPS', payload: groups }), []);
+    const setExpandedGroups = useCallback((groups: string[]) => {
+        dispatch({ type: 'SET_EXPANDED_GROUPS', payload: groups });
+    }, []);
 
-    const toggleGroup = useCallback((groupId: string) =>
-        dispatch({ type: 'TOGGLE_GROUP', payload: groupId }), []);
+    const toggleGroup = useCallback((groupId: string) => {
+        dispatch({ type: 'TOGGLE_GROUP', payload: groupId });
+    }, []);
 
-    const setDepartureSort = useCallback((sort: 'line' | 'departure') =>
-        dispatch({ type: 'SET_DEPARTURE_SORT', payload: sort }), []);
+    const setDepartureSort = useCallback((sort: 'line' | 'departure') => {
+        dispatch({ type: 'SET_DEPARTURE_SORT', payload: sort });
+    }, []);
 
-    const setRouteFilter = useCallback((filter: string[] | null) =>
-        dispatch({ type: 'SET_ROUTE_FILTER', payload: filter }), []);
+    const setRouteFilter = useCallback((filter: string[] | null) => {
+        dispatch({ type: 'SET_ROUTE_FILTER', payload: filter });
+    }, []);
 
-    const setRouteTypeFilter = useCallback((filter: string[]) =>
-        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload: filter }), []);
+    const setRouteTypeFilter = useCallback((filter: string[]) => {
+        dispatch({ type: 'SET_ROUTE_TYPE_FILTER', payload: filter });
+    }, []);
 
-    const setBounds = useCallback((bounds: string | null) =>
-        dispatch({ type: 'SET_BOUNDS', payload: bounds }), []);
+    const setBounds = useCallback((bounds: string | null) => {
+        dispatch({ type: 'SET_BOUNDS', payload: bounds });
+    }, []);
 
-    const setDebouncedBounds = useCallback((bounds: string | null) =>
-        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds }), []);
+    const setDebouncedBounds = useCallback((bounds: string | null) => {
+        dispatch({ type: 'SET_DEBOUNCED_BOUNDS', payload: bounds });
+    }, []);
 
-    const toggleFavorite = useCallback((stopId: string) =>
-        dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId }), []);
+    const toggleFavorite = useCallback((stopId: string) => {
+        dispatch({ type: 'TOGGLE_FAVORITE', payload: stopId });
+    }, []);
 
-    const addToHistory = useCallback((item: SearchHistoryBase) =>
-        dispatch({ type: 'ADD_TO_HISTORY', payload: item }), []);
+    const addToHistory = useCallback((item: SearchHistoryBase) => {
+        dispatch({ type: 'ADD_TO_HISTORY', payload: item });
+    }, []);
 
-    const clearHistory = useCallback(() =>
-        dispatch({ type: 'CLEAR_HISTORY' }), []);
+    const clearHistory = useCallback(() => {
+        dispatch({ type: 'CLEAR_HISTORY' });
+    }, []);
 
     return {
         state,

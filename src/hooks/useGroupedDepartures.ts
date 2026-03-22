@@ -10,14 +10,18 @@ export const useGroupedDepartures = () => {
     const departureSort = state.departureSort;
 
     return useMemo(() => {
-        if (!departures?.departures) return [];
+        if (!departures?.departures) {
+            return [];
+        }
         const groups: Record<string, Departure[]> = {};
         departures.departures.forEach((dep) => {
             // Metro (type 1) is grouped by line AND direction
             const lineName = String(dep.line).toUpperCase();
             const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
             const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
-            if (!groups[key]) groups[key] = [];
+            if (!groups[key]) {
+                groups[key] = [];
+            }
             groups[key].push(dep);
         });
 

@@ -4,9 +4,7 @@ import type { Map } from 'maplibre-gl';
 import { useMapReducer } from '../hooks/useMapReducer';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useMapUrlSync } from '../hooks/useMapUrlSync';
-import { useMapAnimation } from '../hooks/useMapAnimation';
-import { useMapCameraFollow } from '../hooks/useMapCameraFollow';
-import { useMapVehicleSync } from '../hooks/useMapVehicleSync';
+import { useMapEngine } from '../hooks/useMapEngine';
 import { useVehicles } from '../hooks/useVehicles';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useStops } from '../hooks/useStops';
@@ -36,9 +34,13 @@ const MapEngine: React.FC = () => {
     // Sync Background Logic
     useMapUrlSync(selectedStop, setSelectedStop, selectedVehicle, selectVehicle);
     useMapStopEnrichment(selectedStop, setSelectedStop, stopsRawData || null);
-    useMapAnimation(mapRef, selectedVehicle, isFollowing);
-    useMapCameraFollow(mapRef, selectedVehicle, isFollowing, selectedStop);
-    useMapVehicleSync(mapRef, selectedId, selectedVehicle, setSelectedVehicle, isFollowing, rawVehicles, vehicleDetail);
+
+    useMapEngine(
+        mapRef,
+        { selectedId, selectedVehicle, selectedStop, isFollowing },
+        { setSelectedVehicle },
+        { rawVehicles, vehicleDetail }
+    );
 
     return null;
 };

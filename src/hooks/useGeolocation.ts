@@ -1,7 +1,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToast } from './useToast';
+import { toast } from 'sonner';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../config/constants';
 
@@ -13,7 +13,6 @@ import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../conf
  */
 export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded: boolean = false) => {
     const { t } = useTranslation();
-    const { showToast } = useToast();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [userSpeed, setUserSpeed] = useState<number | null>(null);
     const [isGeoPending, setIsGeoPending] = useState(false);
@@ -132,7 +131,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
         }
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
-            showToast(t('toasts.geoNotSupported'), 'error');
+            toast.error(t('toasts.geoNotSupported'));
             const fallback = getFallbackLocation();
             if (fallback) flyToLocation(fallback);
             return;
@@ -149,7 +148,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
             },
             () => {
                 setIsGeoPending(false);
-                showToast(t('toasts.geoError'), 'error');
+                toast.error(t('toasts.geoError'));
                 const fallback = getFallbackLocation();
                 if (fallback) flyToLocation(fallback);
             },
@@ -158,7 +157,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
 
         // Ensure watcher is still active
         if (watchId.current === null) startWatcher();
-    }, [userLocation, flyToLocation, updateLocation, startWatcher, showToast, t, getFallbackLocation]);
+    }, [userLocation, flyToLocation, updateLocation, startWatcher, t, getFallbackLocation]);
 
     return {
         userLocation,

@@ -7,15 +7,23 @@ const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | n
     try {
         const url = new URL('/api/vehicles', window.location.origin);
 
-        if (bounds) url.searchParams.set('bounds', bounds);
+        if (bounds) {
+            url.searchParams.set('bounds', bounds);
+        }
         if (routeFilter && routeFilter.length > 0) {
-            routeFilter.forEach(line => url.searchParams.append('routeShortName', line));
+            routeFilter.forEach((line) => {
+                url.searchParams.append('routeShortName', line);
+            });
         }
         if (routeTypeFilter.length > 0) {
-            routeTypeFilter.forEach(type => url.searchParams.append('routeType', type));
+            routeTypeFilter.forEach((type) => {
+                url.searchParams.append('routeType', type);
+            });
         }
 
-        if (url.searchParams.toString() === '') return [];
+        if (url.searchParams.toString() === '') {
+            return [];
+        }
 
         const response = await fetch(url.toString());
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

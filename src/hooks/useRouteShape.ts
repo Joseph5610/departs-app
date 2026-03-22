@@ -10,10 +10,14 @@ export const useRouteShape = () => {
     const vId = state.selectedId;
 
     return useMemo(() => {
-        if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) return null;
+        if (!vId || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) {
+            return null;
+        }
 
         const coordinates = vehicleDetail.shapes as [number, number][];
-        if (coordinates.length < 2) return null;
+        if (coordinates.length < 2) {
+            return null;
+        }
 
         const routeName = state.selectedVehicle?.route_short_name || '';
         const routeType = state.selectedVehicle?.route_type || 0;

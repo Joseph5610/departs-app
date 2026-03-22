@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { version } from '../../package.json';
 import { usePWA } from '../contexts/PWAContext';
-import { useToast } from '../hooks/useToast';
+import { toast } from 'sonner';
 import { useMap } from '../hooks/useMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,6 @@ export const SettingsModal: React.FC = () => {
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
     }, [setIsSettingsOpen]);
-    const { showToast } = useToast();
     const [isChecking, setIsChecking] = useState(false);
 
     const { needRefresh } = usePWA();
@@ -100,7 +99,7 @@ export const SettingsModal: React.FC = () => {
                     setTimeout(() => {
                         setIsChecking((currentChecking) => {
                             if (currentChecking) {
-                                showToast(t('settings.updates.upToDate'), 'success');
+                                toast.success(t('settings.updates.upToDate'));
                                 return false;
                             }
                             return false;
@@ -114,7 +113,7 @@ export const SettingsModal: React.FC = () => {
         }
         
         setIsChecking(false);
-        showToast(t('settings.updates.upToDate'), 'success');
+        toast.success(t('settings.updates.upToDate'));
     };
 
     return (
@@ -292,7 +291,7 @@ export const SettingsModal: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             clearHistory();
-                                            showToast(t('settings.clearHistory.success'), 'success');
+                                            toast.success(t('settings.clearHistory.success'));
                                         }}
                                         className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border border-white/15! hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                                     >

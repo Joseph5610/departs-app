@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToast } from './useToast';
+import { toast } from 'sonner';
 
 interface ShareOptions {
     title?: string;
@@ -10,7 +10,6 @@ interface ShareOptions {
 
 export const useShare = () => {
     const { t } = useTranslation();
-    const { showToast } = useToast();
 
     const share = useCallback(async (options: ShareOptions) => {
         const shareData = {
@@ -35,13 +34,13 @@ export const useShare = () => {
             // Fallback to clipboard
             try {
                 await navigator.clipboard.writeText(shareData.url);
-                showToast(t('common.linkCopied'), 'success');
+                toast.success(t('common.linkCopied'));
             } catch (err) {
                 console.error('Error copying to clipboard:', err);
-                showToast(t('common.copyError'), 'error');
+                toast.error(t('common.copyError'));
             }
         }
-    }, [showToast, t]);
+    }, [t]);
 
     return { share };
 };

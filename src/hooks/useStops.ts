@@ -72,18 +72,26 @@ export const useStops = () => {
     });
 
     const stops = useMemo(() => {
-        if (!query.data) return null;
+        if (!query.data) {
+            return null;
+        }
         return {
             type: 'FeatureCollection',
-            features: query.data.features.filter(f => !f.properties.is_centroid)
+            features: query.data.features.filter((f) => {
+                return !f.properties.is_centroid;
+            })
         } as StopCollection;
     }, [query.data]);
 
     const centroids = useMemo(() => {
-        if (!query.data) return null;
+        if (!query.data) {
+            return null;
+        }
         return {
             type: 'FeatureCollection',
-            features: query.data.features.filter(f => f.properties.is_centroid)
+            features: query.data.features.filter((f) => {
+                return f.properties.is_centroid;
+            })
         } as StopCollection;
     }, [query.data]);
 
