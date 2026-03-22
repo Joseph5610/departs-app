@@ -375,7 +375,16 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
     },
     paint: {
         'icon-color': vehicleColorExpression as ExpressionSpecification,
-        'icon-opacity': 1
+        'icon-opacity': [
+            'case',
+            ['any',
+                ['!', ['has', 'bearing']],
+                ['==', ['get', 'bearing'], null],
+                ['==', ['to-string', ['get', 'bearing']], '']
+            ],
+            0,
+            1
+        ] as unknown as ExpressionSpecification
     }
 };
 
@@ -433,7 +442,16 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
     },
     paint: {
         'icon-color': vehicleColorExpression as ExpressionSpecification,
-        'icon-opacity': 1
+        'icon-opacity': [
+            'case',
+            ['any',
+                ['!', ['has', 'bearing']],
+                ['==', ['get', 'bearing'], null],
+                ['==', ['to-string', ['get', 'bearing']], '']
+            ],
+            0,
+            1
+        ] as unknown as ExpressionSpecification
     }
 };
 
