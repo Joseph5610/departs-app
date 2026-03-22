@@ -46,9 +46,6 @@ export const useMapUrlSync = (
         const url = new URL(window.location.href);
         const sp = url.searchParams;
 
-        // Cleanup legacy params
-        ['stopName', 'stopPlatform', 'line', 'headsign', 'delay'].forEach(p => sp.delete(p));
-
         // Stop params
         if (selectedStop) {
             sp.set('stopId', selectedStop.stop_id);
