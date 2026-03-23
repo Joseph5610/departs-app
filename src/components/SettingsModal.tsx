@@ -28,7 +28,7 @@ import {
 import { version } from '../../package.json';
 import { usePWA } from '../contexts/PWAContext';
 import { toast } from 'sonner';
-import { useMap } from '../hooks/useMap';
+import { usePreferences } from '../state/MapStateProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
@@ -40,7 +40,7 @@ import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
  */
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
-    const { state, actions } = useMap();
+    const { state, actions } = usePreferences();
 
     const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter, searchHistory } = state;
     const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter, clearHistory } = actions;

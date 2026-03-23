@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { useMap } from './useMap';
-import { useVehicles } from './useVehicles';
-import { useVehicleDetail } from './useVehicleDetail';
-import type { VehicleDetail } from '../types/transit';
+import { useSelection } from '../../state/MapStateProvider';
+import { useVehicles } from '../data/useVehicles';
+import { useVehicleDetail } from '../useVehicleDetail';
+import type { VehicleDetail } from '../../types/transit';
 
 /**
  * useSelectedVehicle
@@ -13,7 +13,7 @@ import type { VehicleDetail } from '../types/transit';
  * 3. Detail API (low-frequency metadata from useVehicleDetail)
  */
 export const useSelectedVehicle = () => {
-    const { state } = useMap();
+    const { state } = useSelection();
     const { selectedTripId: tripId, selectedVehicleId: vehicleId } = state;
 
     const { vehicles: rawVehicles } = useVehicles();

@@ -2,16 +2,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import type { MapRef } from 'react-map-gl/maplibre';
-import { MAP_FLY_DURATION, MAP_VEHICLE_SELECT_ZOOM, STORAGE_KEYS } from '../config/constants';
+import { STORAGE_KEYS } from '../../config/constants';
 
 /**
  * useGeolocation
  *
- * Handles user position tracking and map focus.
- * Updated to remove "searching" toast as per user request.
+ * Handles user position tracking and auto-location logic.
+ * No longer directly mutates the map (control inverted through onFlyRequest).
  */
-export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded: boolean = false) => {
+export const useGeolocation = (onFlyRequest: (location: [number, number], isJump?: boolean) => void, mapLoaded: boolean = false) => {
     const { t } = useTranslation();
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [userSpeed, setUserSpeed] = useState<number | null>(null);
@@ -20,22 +19,6 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
     const watchId = useRef<number | null>(null);
     const lastUpdatedAt = useRef<number>(0);
     const isInitialFocused = useRef(false);
-
-    // Helper to fly the map to a location
-    const flyToLocation = useCallback((location: [number, number], isJump: boolean = false) => {
-        const map = mapRef.current?.getMap();
-        if (!map) return;
-
-        if (isJump) {
-            map.jumpTo({ center: location, zoom: MAP_VEHICLE_SELECT_ZOOM });
-        } else {
-            map.flyTo({
-                center: location,
-                zoom: MAP_VEHICLE_SELECT_ZOOM,
-                duration: MAP_FLY_DURATION
-            });
-        }
-    }, [mapRef]);
 
     const updateLocation = useCallback((pos: GeolocationPosition) => {
         const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
@@ -96,11 +79,11 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
             const p = new URLSearchParams(window.location.search);
             const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
             if (!hasExplicitLocation) {
-                flyToLocation(userLocation, true);
+                onFlyRequest(userLocation, true);
             }
             isInitialFocused.current = true;
         }
-    }, [mapLoaded, userLocation, flyToLocation]);
+    }, [mapLoaded, userLocation, onFlyRequest]);
 
     const getFallbackLocation = useCallback((): [number, number] | null => {
         const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
@@ -124,7 +107,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
         const isStale = now - lastUpdatedAt.current > 20000; // 20 seconds threshold
 
         if (userLocation && !isStale) {
-            flyToLocation(userLocation);
+            onFlyRequest(userLocation);
             // Ensure watcher is still active
             if (watchId.current === null) startWatcher();
             return;
@@ -133,7 +116,7 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             toast.error(t('toasts.geoNotSupported'));
             const fallback = getFallbackLocation();
-            if (fallback) flyToLocation(fallback);
+            if (fallback) onFlyRequest(fallback);
             return;
         }
 
@@ -144,20 +127,20 @@ export const useGeolocation = (mapRef: React.RefObject<MapRef | null>, mapLoaded
                 const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
                 updateLocation(pos);
                 setIsGeoPending(false);
-                flyToLocation(coords);
+                onFlyRequest(coords);
             },
             () => {
                 setIsGeoPending(false);
                 toast.error(t('toasts.geoError'));
                 const fallback = getFallbackLocation();
-                if (fallback) flyToLocation(fallback);
+                if (fallback) onFlyRequest(fallback);
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
 
         // Ensure watcher is still active
         if (watchId.current === null) startWatcher();
-    }, [userLocation, flyToLocation, updateLocation, startWatcher, t, getFallbackLocation]);
+    }, [userLocation, onFlyRequest, updateLocation, startWatcher, t, getFallbackLocation]);
 
     return {
         userLocation,

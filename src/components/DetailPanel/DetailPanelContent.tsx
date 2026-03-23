@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MoonStar } from 'lucide-react';
 import { type Locale } from 'date-fns';
@@ -7,14 +7,14 @@ import { enUS } from 'date-fns/locale/en-US';
 import { VehicleDetail } from '../VehicleDetail';
 import { getVehicleColor } from '../../utils/vehicleColors';
 import type { Departure } from '../../types/transit';
-import { useMap } from '../../hooks/useMap';
+import { useSelection, useViewport } from '../../state/MapStateProvider';
 import { useVehicleDetail } from '../../hooks/useVehicleDetail';
-import { useDepartures } from '../../hooks/useDepartures';
-import { useGlobalAlerts } from '../../hooks/useGlobalAlerts';
-import { useSelectedStop } from '../../hooks/useSelectedStop';
-import { useSelectedVehicle } from '../../hooks/useSelectedVehicle';
+import { useDepartures } from '../../hooks/data/useDepartures';
+import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
+import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { useStopDistance } from '../../hooks/useStopDistance';
 import { METRO_STATIONS } from '../../config/stations';
-import { calculateDistance } from '../../utils/transitLogic';
 import { DepartureItem } from './DepartureItem';
 import { GenericAlertCard } from '../GenericAlertCard';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
@@ -34,7 +34,8 @@ const dateLocales: Record<string, Locale> = {
  */
 export const DetailPanelContent = memo(() => {
     const { t, i18n } = useTranslation();
-    const { state, actions } = useMap();
+    const { state: selectionState, actions: selectionActions } = useSelection();
+    const { isFollowing } = selectionState;
 
     // Derived State
     const selectedStop = useSelectedStop();
@@ -46,28 +47,19 @@ export const DetailPanelContent = memo(() => {
     const { infotexts } = useGlobalAlerts();
     const allInfotexts = infotexts.data;
 
-    const { isFollowing, expandedGroups, userLocation, userSpeed } = state;
-    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick, setIsFollowing } = actions;
+    const { actions: vpActions } = useViewport();
+    const { handleDepartureClick: onDepartureClick } = vpActions;
+    const { setIsFollowing } = selectionActions;
+
+    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+    
+    const onToggleGroup = useCallback((group: string) => {
+        setExpandedGroups(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]);
+    }, []);
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
-    const stopDistanceInfo = useMemo(() => {
-        const coords = selectedStop?.coordinates;
-        if (!coords || !userLocation) {
-            return null;
-        }
-        const distance = calculateDistance(userLocation, coords);
-
-        const isAtStop = distance < 20;
-        const isMovingFast = userSpeed !== null && userSpeed > 4;
-
-        return {
-            distance: Math.round(distance),
-            time: Math.ceil(distance / 60),
-            isAtStop,
-            showCatchIndicator: distance < 750 && !isMovingFast
-        };
-    }, [selectedStop?.coordinates, userLocation, userSpeed]);
+    const stopDistanceInfo = useStopDistance();
 
     const relevantInfotexts = useMemo(() => {
         if (!showDepartureBoard || !selectedStop || !allInfotexts) {

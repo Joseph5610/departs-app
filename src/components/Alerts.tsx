@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Search as SearchIcon, X } from 'lucide-react';
-import { useGlobalAlerts } from '../hooks/useGlobalAlerts';
+import { useGlobalAlerts } from '../hooks/data/useGlobalAlerts';
 import type { RSSItem } from '../types/transit';
 import {
     Dialog,

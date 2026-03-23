@@ -1,7 +1,7 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
-import type { VehicleCollection, VehicleFeature } from '../types/transit';
-import { useMap } from '../hooks/useMap';
+import type { VehicleCollection, VehicleFeature } from '../../types/transit';
+import { useViewport, usePreferences } from '../../state/MapStateProvider';
 
 const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
     try {
@@ -35,9 +35,18 @@ const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | n
     }
 };
 
+/**
+ * useVehicles
+ * 
+ * Subscribes to the live vehicle API and handles high-frequency location updates.
+ * Synchronizes backend details (low-frequency) with live map stream (high-frequency).
+ * Disables polling automatically while the map is dragged or the user is tracking.
+ */
 export const useVehicles = () => {
-    const { state } = useMap();
-    const { debouncedBounds: bounds, routeFilter, routeTypeFilter } = state;
+    const { state: vpState } = useViewport();
+    const { state: prefState } = usePreferences();
+    const { debouncedBounds: bounds, routeFilter } = vpState;
+    const { routeTypeFilter } = prefState;
 
     const selectFn = useCallback((allFeatures: VehicleFeature[]): VehicleCollection => {
         return {

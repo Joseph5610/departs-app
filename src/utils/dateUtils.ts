@@ -1,9 +1,3 @@
-
-/**
- * Generic date utilities for the transit application.
- */
-
-
 /**
  * Formats a delay in seconds into a human readable string (±M:SS or ±Ss).
  */

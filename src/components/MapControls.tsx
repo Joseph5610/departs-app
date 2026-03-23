@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { Alerts } from './Alerts';
-import { useMap } from '../hooks/useMap';
+import { usePreferences, useViewport } from '../state/MapStateProvider';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
@@ -17,10 +17,11 @@ import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group'
  */
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
-    const { state, actions, mapRef } = useMap();
+    const { actions: prefActions } = usePreferences();
+    const { actions: vpActions, mapRef, mapLoaded, isGeoPending } = useViewport();
 
-    const { mapLoaded, isGeoPending } = state;
-    const { handleLocate: onLocate, setIsSettingsOpen } = actions;
+    const { setIsSettingsOpen } = prefActions;
+    const { handleLocate: onLocate } = vpActions;
 
     const onSettings = React.useCallback(() => {
         setIsSettingsOpen(true);

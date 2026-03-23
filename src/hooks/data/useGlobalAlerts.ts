@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { RSSResponse, Infotext } from '../types/transit';
+import type { RSSResponse, Infotext } from '../../types/transit';
 
 /**
  * useGlobalAlerts

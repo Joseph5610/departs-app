@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMap } from '../hooks/useMap';
-import { useVehicles } from '../hooks/useVehicles';
+import { useViewport } from '../state/MapStateProvider';
+import { useVehicles } from '../hooks/data/useVehicles';
 import { cn } from '@/lib/utils';
 import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
 
@@ -13,10 +13,10 @@ import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
-    const { state } = useMap();
+    const { state: vpState } = useViewport();
     const { isFetching: fetching, dataUpdatedAt: lastUpdate } = useVehicles();
 
-    const { bounds } = state;
+    const { bounds } = vpState;
     const [nextRefreshIn, setNextRefreshIn] = useState(10);
 
     useEffect(() => {

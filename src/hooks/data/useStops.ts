@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
-import type { StopCollection, StopFeature } from '../types/transit';
-import { METRO_STATIONS } from '../config/stations';
+import type { StopCollection, StopFeature } from '../../types/transit';
+import { METRO_STATIONS } from '../../config/stations';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -15,6 +15,13 @@ const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 import { useMemo } from 'react';
 
+/**
+ * useStops
+ * 
+ * Fetches and caches Prague transit stop data from the backend.
+ * Provides GeoJSON features for map rendering and indexing for stop searching.
+ * Utilizes localForage for IndexedDB caching to improve startup time.
+ */
 export const useStops = () => {
     const query = useQuery<StopCollection>({
         queryKey: ['stops'],
@@ -24,26 +31,34 @@ export const useStops = () => {
             const enrichData = (data: StopCollection): StopCollection => {
                 if (!data || !data.features) return data;
 
-                data.features.forEach((f: StopFeature) => {
-                    const name = f.properties.stop_name;
-                    const stopId = String(f.properties.stop_id || '');
-                    const lines = METRO_STATIONS[name] || [];
+                return {
+                    ...data,
+                    features: data.features.map((f: StopFeature) => {
+                        const name = f.properties.stop_name;
+                        const stopId = String(f.properties.stop_id || '');
+                        const lines = METRO_STATIONS[name] || [];
 
-                    // Use a deterministic seed based on stop ID to keep variant styles stable
-                    let hash = 0;
-                    for (let i = 0; i < stopId.length; i++) {
-                        hash = ((hash << 5) - hash) + stopId.charCodeAt(i);
-                        hash |= 0;
-                    }
-                    const seed = Math.abs(hash % 1000) / 1000;
+                        // Use a deterministic seed based on stop ID to keep variant styles stable
+                        let hash = 0;
+                        for (let i = 0; i < stopId.length; i++) {
+                            hash = ((hash << 5) - hash) + stopId.charCodeAt(i);
+                            hash |= 0;
+                        }
+                        const seed = Math.abs(hash % 1000) / 1000;
 
-                    f.properties.metro_a = lines.includes('A') ? 1 : 0;
-                    f.properties.metro_b = lines.includes('B') ? 1 : 0;
-                    f.properties.metro_c = lines.includes('C') ? 1 : 0;
-                    f.properties.is_train = stopId.endsWith('Z301') ? 1 : 0;
-                    f.properties.variant_seed = seed;
-                });
-                return data;
+                        return {
+                            ...f,
+                            properties: {
+                                ...f.properties,
+                                metro_a: lines.includes('A') ? 1 : 0,
+                                metro_b: lines.includes('B') ? 1 : 0,
+                                metro_c: lines.includes('C') ? 1 : 0,
+                                is_train: stopId.endsWith('Z301') ? 1 : 0,
+                                variant_seed: seed
+                            }
+                        };
+                    })
+                };
             };
 
             const cached = await localforage.getItem<StopCollection>(CACHE_KEY);

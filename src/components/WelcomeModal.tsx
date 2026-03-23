@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../config/constants';
-import { useMap } from '../hooks/useMap';
+import { useViewport } from '../state/MapStateProvider';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 
@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
  */
 export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();
-    const { actions } = useMap();
+    const { actions } = useViewport();
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         const params = new URLSearchParams(window.location.search);

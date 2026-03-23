@@ -2,10 +2,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X, MapPin, Star, Clock } from 'lucide-react';
-import { useStopSearch } from '../hooks/useStopSearch';
-import { useMap } from '../hooks/useMap';
+import { useStopSearch } from '../hooks/features/useStopSearch';
+import { useSelection, usePreferences, useViewport } from '../state/MapStateProvider';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../config/constants';
-import { useStops } from '../hooks/useStops';
+import { useStops } from '../hooks/data/useStops';
 import type { StopFeature } from '../types/transit';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -20,11 +20,16 @@ import { Kbd } from '@/components/ui/kbd';
  */
 export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const { state, actions, mapRef } = useMap();
+    const { actions: selActions } = useSelection();
+    const { state: prefState, actions: prefActions } = usePreferences();
+    const { state: vpState, actions: vpActions, mapRef } = useViewport();
     const { data: stops } = useStops();
 
-    const { routeFilter: activeFilter, favoriteStops, searchHistory } = state;
-    const { setRouteFilter: onLineSelect, selectStop, addToHistory } = actions;
+    const { favoriteStops, searchHistory } = prefState;
+    const { routeFilter: activeFilter } = vpState;
+    const { addToHistory } = prefActions;
+    const { selectStop } = selActions;
+    const { setRouteFilter: onLineSelect } = vpActions;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +104,7 @@ export const Search: React.FC = React.memo(() => {
             is_train: stop.properties.is_train === 1,
             coordinates: stop.geometry.coordinates as [number, number]
         };
-        selectStop(selectedStop);
+        selectStop(selectedStop.stop_id);
         addToHistory({
             type: 'stop',
             ...selectedStop
@@ -195,13 +200,7 @@ export const Search: React.FC = React.memo(() => {
                                                         zoom: MAP_STOP_SELECT_ZOOM,
                                                         duration: MAP_FLY_DURATION
                                                     });
-                                                    selectStop({
-                                                        stop_id: item.stop_id,
-                                                        stop_name: item.stop_name,
-                                                        platform_code: item.platform_code,
-                                                        coordinates: item.coordinates,
-                                                        is_train: item.is_train
-                                                    });
+                                                    selectStop(item.stop_id);
                                                     addToHistory(item);
                                                 } else {
                                                     onLineSelect(item.lines);

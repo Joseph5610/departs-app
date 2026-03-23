@@ -16,7 +16,7 @@ You are a senior software engineer working on the `departs-app`, a real-time pub
 3. **Coding Standards**:
     - **Brackets**: Always use full curly brackets for all conditional blocks like `if`, `else`, `for`, `while` (no one-liner `if` without `{}`).
     - **Arrow Functions**: For one-liner lambdas, do **not** use brackets or explicit `return` statements (e.g., `(x) => x + 1`). Only use `{}` and `return` for complex, multi-line logic.
-    - **Type Safety**: Avoid `any`. Leverage existing interfaces in `src/types/transit.ts`.
+    - **Type Safety**: Avoid `any`. Use generic extraction to enforce payload type safety in reducer actions. Leverage existing interfaces in `src/types/`.
     - **JSDoc**: Document every hook and complex utility explaining the "why" and its role in the system.
 
 4. **UI Performance**:
@@ -28,9 +28,19 @@ You are a senior software engineer working on the `departs-app`, a real-time pub
     - **Derived**: Hooks that resolve IDs into full objects (e.g., `useSelectedVehicle`).
     - **Interface**: `useMapInterface` manages side effects that bridge state to the physical map (URL, Camera, Animations).
 
+6. **Strict visual Non-Interference**:
+    - When performing architectural refactoring (hooks, contexts, types), **do not modify visual part of components** unless explicitly directed to do so.
+
+7. **Inversion of Control for Hooks**:
+    - React hooks (like `useGeolocation`) should not directly access or manipulate Mapbox/MapLibre references (`map.flyTo()`). Pass callback functions from the parent Context to the hook to keep side-effects centralized.
+
+8. **Pure Utility Extractions**:
+    - Separate complex, non-React logic (like fuzzy search algorithms) out of monolithic hooks into pure, testable utility functions (e.g., `utils/searchAlgorithm.ts`).
+
 ## Specific Patterns
 
 - **Vehicle Synchronization**: When merging vehicle data, the priority is: `API Detail (low frequency) > Live Map Stream (high frequency) > Reducer State`.
+- **Immutability in Selectors**: Never mutate cached React Query data inline (e.g. `enrichData`). Always map to new object/array structures to maintain immutability and prevent cache corruption.
 - **Static Fallback**: If real-time data is missing, the backend provides static GTFS data. In this mode, preserve any existing real-time position/delay if available.
 - **Safe Area Insets**: Layouts must account for mobile notches and home indicators using `env(safe-area-inset-*)`.
 

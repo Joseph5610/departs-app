@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
-import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../types/transit';
+import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',

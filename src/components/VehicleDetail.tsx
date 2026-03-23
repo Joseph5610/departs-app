@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../utils/vehicleColors';
-import { useGlobalAlerts } from '../hooks/useGlobalAlerts';
+import { useGlobalAlerts } from '../hooks/data/useGlobalAlerts';
 import { parseISO } from 'date-fns';
 import { GenericAlertCard } from './GenericAlertCard';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useCallback, useMemo } from 'react';
-import type { Departure } from '../types/transit';
-import { useMap } from '../hooks/useMap';
+import type { Departure } from '../../types/transit';
+import { useSelection, usePreferences } from '../../state/MapStateProvider';
 
 export interface DepartureGroup {
     groupId: string;
@@ -17,9 +17,10 @@ export interface DepartureGroup {
  * Fetches, enriches, and groups departure data for the selected stop.
  */
 export const useDepartures = () => {
-    const { state } = useMap();
-    const stopId = state.selectedStopId;
-    const departureSort = state.departureSort;
+    const { state: selState } = useSelection();
+    const { state: prefState } = usePreferences();
+    const stopId = selState.selectedStopId;
+    const departureSort = prefState.departureSort;
 
     // Store previous data to calculate deltas without effects
     const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});

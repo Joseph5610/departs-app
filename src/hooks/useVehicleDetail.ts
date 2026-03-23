@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../types/transit';
-import { useMap } from '../hooks/useMap';
+import { useSelection } from '../state/MapStateProvider';
 
 const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const url = new URL('/api/vehicle-detail', window.location.origin);
@@ -17,7 +17,7 @@ const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Pro
 };
 
 export const useVehicleDetail = () => {
-    const { state } = useMap();
+    const { state } = useSelection();
     const { selectedTripId: tripId, selectedVehicleId: vehicleId } = state;
 
     return useQuery({

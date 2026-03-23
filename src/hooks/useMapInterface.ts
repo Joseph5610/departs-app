@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { useMap } from './useMap';
-import { useSelectedStop } from './useSelectedStop';
-import { useSelectedVehicle } from './useSelectedVehicle';
+import { useSelection, useViewport } from '../state/MapStateProvider';
+import { useSelectedStop } from './derived/useSelectedStop';
+import { useSelectedVehicle } from './derived/useSelectedVehicle';
 import {
     MAP_VEHICLE_SELECT_ZOOM,
     MAP_ANIMATION_DURATION,
@@ -16,9 +16,10 @@ import {
  * The "User Experience Layer" hook.
  */
 export const useMapInterface = () => {
-    const { state, actions, mapRef } = useMap();
-    const { selectedStopId, selectedTripId, selectedVehicleId, isFollowing } = state;
-    const { selectStop, selectVehicle } = actions;
+    const { state: selState, actions: selActions } = useSelection();
+    const { mapRef } = useViewport();
+    const { selectedStopId, selectedTripId, selectedVehicleId, isFollowing } = selState;
+    const { selectStop, selectVehicle } = selActions;
 
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();

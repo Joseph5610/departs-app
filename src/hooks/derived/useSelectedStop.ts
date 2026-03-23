@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useMap } from './useMap';
-import { useStops } from './useStops';
-import type { SelectedStop } from '../types/transit';
+import { useSelection } from '../../state/MapStateProvider';
+import { useStops } from '../data/useStops';
+import type { SelectedStop } from '../../types/transit';
 
 /**
  * useSelectedStop
@@ -10,7 +10,7 @@ import type { SelectedStop } from '../types/transit';
  * into a full SelectedStop object using the local GeoJSON cache.
  */
 export const useSelectedStop = () => {
-    const { state } = useMap();
+    const { state } = useSelection();
     const { _raw_data: stopsData } = useStops();
     const stopId = state.selectedStopId;
 

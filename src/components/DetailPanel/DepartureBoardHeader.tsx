@@ -1,12 +1,12 @@
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, Star, MapPin, Share2 } from 'lucide-react';
-import { useMap } from '../../hooks/useMap';
-import { calculateDistance } from '../../utils/transitLogic';
-import { useShare } from '../../hooks/useShare';
-import { useSelectedStop } from '../../hooks/useSelectedStop';
-import { useSelectedVehicle } from '../../hooks/useSelectedVehicle';
+import { usePreferences } from '../../state/MapStateProvider';
+import { useShare } from '../../hooks/features/useShare';
+import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { useStopDistance } from '../../hooks/useStopDistance';
 import { HStack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -20,36 +20,20 @@ import { cn } from '@/lib/utils';
  */
 export const DepartureBoardHeader = React.memo(() => {
     const { t } = useTranslation();
-    const { state, actions } = useMap();
+    const { state, actions } = usePreferences();
     const { share } = useShare();
 
     // Derived state
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
-    const { departureSort, userLocation, userSpeed, favoriteStops } = state;
+    const { departureSort, favoriteStops } = state;
     const { setDepartureSort, toggleFavorite } = actions;
 
     const showHeader = !!selectedStop && !selectedVehicle;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
-    const stopDistanceInfo = useMemo(() => {
-        const coords = selectedStop?.coordinates;
-        if (!coords || !userLocation) {
-            return null;
-        }
-        const distance = calculateDistance(userLocation, coords);
-
-        const isAtStop = distance < 20;
-        const isMovingFast = userSpeed !== null && userSpeed > 4;
-
-        return {
-            distance: Math.round(distance),
-            time: Math.ceil(distance / 60),
-            isAtStop,
-            showCatchIndicator: distance < 750 && !isMovingFast
-        };
-    }, [selectedStop?.coordinates, userLocation, userSpeed]);
+    const stopDistanceInfo = useStopDistance();
 
     const handleShare = useCallback(() => {
         if (selectedStop) {

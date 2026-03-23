@@ -1,8 +1,8 @@
 
 import { useMemo } from 'react';
-import { useVehicleDetail } from './useVehicleDetail';
+import { useVehicleDetail } from '../useVehicleDetail';
 import { useSelectedVehicle } from './useSelectedVehicle';
-import { getVehicleColor, isNightRoute } from '../utils/vehicleColors';
+import { getVehicleColor, isNightRoute } from '../../utils/vehicleColors';
 
 export const useRouteShape = () => {
     const { data: vehicleDetail } = useVehicleDetail();
