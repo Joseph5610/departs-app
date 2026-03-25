@@ -64,9 +64,6 @@ components/
 ### Modals
 Modals are pure controlled components in `Modals/`. Triggers (map buttons, etc.) are decoupled and manage open/close via context state.
 
-### State Reset
-Use the React `key` prop to force-reset component state (e.g., `key={title}` on drawer content) instead of manual `useEffect` cleanups.
-
 ## 3. Performance
 
 ### Map Layer Rules

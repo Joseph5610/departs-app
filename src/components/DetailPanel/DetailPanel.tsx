@@ -89,12 +89,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
     const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
 
-    // Reset snap point when selection changes (title changes)
+    // Reset snap point only when the drawer opens (not on title changes within a session)
     useEffect(() => {
         if (isOpen) {
             setActiveSnapPoint(0.60);
         }
-    }, [isOpen, title]);
+    }, [isOpen]);
 
     if (isMobile) {
         return (
@@ -115,7 +115,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 noBodyStyles={true}
             >
                 <DrawerContent
-                    key={title || 'empty'}
                     className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
                     hideOverlay={true}
                 >
