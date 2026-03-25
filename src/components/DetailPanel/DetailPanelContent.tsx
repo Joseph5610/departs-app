@@ -1,190 +1,51 @@
-import { memo, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { MoonStar } from 'lucide-react';
-import { type Locale } from 'date-fns';
-import { cs } from 'date-fns/locale/cs';
-import { enUS } from 'date-fns/locale/en-US';
-import { VehicleDetail } from '../VehicleDetail';
-import { getVehicleColor } from '../../utils/vehicleColors';
-import type { Departure } from '../../types/transit';
-import { useMap } from '../../hooks/useMap';
-import { useVehicleDetail } from '../../hooks/useVehicleDetail';
-import { useGroupedDepartures } from '../../hooks/useGroupedDepartures';
-import { useDepartures } from '../../hooks/useDepartures';
-import { useInfotexts } from '../../hooks/useInfotexts';
-import { METRO_STATIONS } from '../../config/stations';
-import { calculateDistance } from '../../utils/transitLogic';
-import { DepartureItem } from './DepartureItem';
-import { GenericAlertCard } from '../GenericAlertCard';
-import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { DepartureListSkeleton } from '../LoadingSkeletons';
-
-const dateLocales: Record<string, Locale> = {
-    cs: cs,
-    en: enUS
-};
-
-interface DetailPanelContentProps {
-    onToggleFollow: () => void;
-}
+import { memo } from 'react';
+import { VehicleDetail } from './VehicleDetail/VehicleDetail';
+import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useVehicleDetail } from '../../hooks/data/useVehicleDetail';
+import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { DepartureBoard } from './DepartureBoard/DepartureBoard';
+import { Stack } from '@/components/ui/layout';
 
 /**
  * DetailPanelContent
  *
- * Re-architected with semantic layout components.
+ * Orchestrator for the content area of the DetailPanel.
+ * Switches between VehicleDetail and DepartureBoard based on selection.
  */
-export const DetailPanelContent = memo<DetailPanelContentProps>(({
-    onToggleFollow
-}) => {
-    const { t, i18n } = useTranslation();
-    const { state, actions } = useMap();
+export const DetailPanelContent = memo(() => {
+    const { state: selectionState, actions: selectionActions } = useSelection();
+    const { isFollowing } = selectionState;
+
+    // Derived State
+    const selectedStop = useSelectedStop();
+    const selectedVehicle = useSelectedVehicle();
 
     // Data Hooks
     const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
-    const { isLoading: loadingDeps } = useDepartures();
-    const { data: allInfotexts } = useInfotexts();
-    const groupedDepartures = useGroupedDepartures();
 
-    const { selectedStop, selectedVehicle, isFollowing, expandedGroups, userLocation, userSpeed } = state;
-    const { toggleGroup: onToggleGroup, handleDepartureClick: onDepartureClick } = actions;
+    const { actions: vpActions } = useViewport();
+    const { handleDepartureClick: onDepartureClick } = vpActions;
+    const { setIsFollowing } = selectionActions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
-    const stopDistanceInfo = useMemo(() => {
-        const coords = selectedStop?.coordinates;
-        if (!coords || !userLocation) return null;
-        const distance = calculateDistance(userLocation, coords);
-
-        const isAtStop = distance < 20;
-        const isMovingFast = userSpeed !== null && userSpeed > 4;
-
-        return {
-            distance: Math.round(distance),
-            time: Math.ceil(distance / 60),
-            isAtStop,
-            showCatchIndicator: distance < 750 && !isMovingFast
-        };
-    }, [selectedStop?.coordinates, userLocation, userSpeed]);
-
-    const relevantInfotexts = useMemo(() => {
-        if (!showDepartureBoard || !selectedStop || !allInfotexts) return [];
-
-        const stopIds = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
-        return allInfotexts.filter(info =>
-            info.relatedStopIds.some(id => stopIds.includes(id))
-        );
-    }, [showDepartureBoard, selectedStop, allInfotexts]);
-
-    const showMetroNightMessage = useMemo(() => {
-        if (!showDepartureBoard || !selectedStop || groupedDepartures.length > 0 || loadingDeps) return false;
-
-        const isMetroStation = selectedStop.stop_name ? !!METRO_STATIONS[selectedStop.stop_name] : false;
-        const hour = new Date().getHours();
-        const isNightTime = hour >= 0 && hour < 5;
-
-        return isMetroStation && isNightTime;
-    }, [showDepartureBoard, selectedStop, groupedDepartures.length, loadingDeps]);
-
-    const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
-
     return (
         <Stack gap={4} className="pt-1">
-            {showDepartureBoard && (
-                <Stack gap={4}>
-                    {relevantInfotexts.length > 0 && (
-                        <Stack gap={2}>
-                            {relevantInfotexts.map(info => (
-                                <GenericAlertCard
-                                    key={info.id}
-                                    title={i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text}
-                                    priority={info.priority}
-                                    validFrom={info.valid_from}
-                                    validTo={info.valid_to}
-                                    isActive={true}
-                                />
-                            ))}
-                        </Stack>
-                    )}
-                </Stack>
-            )}
-
             <VehicleDetail
                 selectedVehicle={selectedVehicle}
                 vehicleDetail={vehicleDetail || null}
                 loadingDetail={loadingDetail}
                 isFollowing={isFollowing}
-                onToggleFollow={onToggleFollow}
+                onToggleFollow={() => setIsFollowing(!isFollowing)}
             />
 
-            {showDepartureBoard && groupedDepartures.map((group, index) => {
-                const isExpanded = expandedGroups.includes(group.groupId);
-                const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
-                const hasMore = group.departures.length > 1;
-
-                const prevGroup = index > 0 ? groupedDepartures[index - 1] : null;
-                const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
-
-                return (
-                    <Stack key={group.groupId} gap={3} className={cn(!showHeader && "-mt-1")}>
-                        {showHeader && (
-                            <HStack gap={3} className="px-1">
-                                <Box
-                                    className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
-                                    style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
-                                >
-                                    {group.line}
-                                </Box>
-                                <Box className="h-[1px] flex-1 bg-border" />
-                            </HStack>
-                        )}
-
-                        <Stack className="gap-2">
-                            {visibleDepartures.map((dep: Departure, idx: number) => (
-                                <DepartureItem
-                                    key={idx}
-                                    departure={dep}
-                                    onDepartureClick={onDepartureClick}
-                                    stopDistanceInfo={stopDistanceInfo}
-                                    isTrainStop={selectedStop?.is_train}
-                                    locale={locale}
-                                />
-                            ))}
-
-                            {hasMore && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onToggleGroup(group.groupId)}
-                                    className="w-full h-auto py-2 text-foreground/70 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:text-foreground group"
-                                >
-                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
-                                    <span>{isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: group.departures.length - 1 })}</span>
-                                    <Box className="h-[1px] flex-1 bg-border/40 group-hover:bg-border/80 transition-colors" />
-                                </Button>
-                            )}
-                        </Stack>
-                    </Stack>
-                );
-            })}
-            {showMetroNightMessage ? (
-                <Surface variant="tinted" padding="xl" className="items-center text-center flex flex-col gap-4 border-white/10!">
-                    <Box className="p-4 bg-indigo-500/10 rounded-full shadow-[0_0_20px_rgba(99,102,241,0.1)]">
-                        <MoonStar size={32} className="text-indigo-400" />
-                    </Box>
-                    <Stack gap={2}>
-                        <h3 className="text-foreground font-bold text-lg">{t('map.departures.metroNight.title')}</h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                            {t('map.departures.metroNight.description')}
-                        </p>
-                    </Stack>
-                </Surface>
-            ) : showDepartureBoard && groupedDepartures.length === 0 && !loadingDeps ? (
-                <Box className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</Box>
-            ) : showDepartureBoard && groupedDepartures.length === 0 && loadingDeps ? (
-                <DepartureListSkeleton />
-            ) : null}
+            {showDepartureBoard && (
+                <DepartureBoard 
+                    selectedStop={selectedStop}
+                    onDepartureClick={onDepartureClick}
+                />
+            )}
         </Stack>
     );
 });
