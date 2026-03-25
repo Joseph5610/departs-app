@@ -37,6 +37,17 @@ You are a senior software engineer working on the `departs-app`, a real-time pub
 8. **Pure Utility Extractions**:
     - Separate complex, non-React logic (like fuzzy search algorithms) out of monolithic hooks into pure, testable utility functions (e.g., `utils/searchAlgorithm.ts`).
 
+9. **Domain-Driven Structure**:
+    - Organize components into strict domain directories: `Map/`, `Modals/`, `DetailPanel/`.
+    - UI skeletons should reside within the domain folder they represent (e.g., `VehicleDetailSkeleton.tsx` inside `VehicleDetail/`).
+
+10. **Controlled Modal Pattern**:
+    - Modals (Dialogs) must be pure, controlled components located in the `Modals/` directory.
+    - Trigger buttons (e.g., Map buttons) must be decoupled from the modal component and managed via global state (PreferencesContext).
+
+11. **State Reset via Keys**:
+    - Prefer using the `key` prop to force-reset complex component states (e.g., `key={selectedId}` on a drawer content) over manual `useEffect` cleanups or `setTimeout` hacks.
+
 ## Specific Patterns
 
 - **Vehicle Synchronization**: When merging vehicle data, the priority is: `API Detail (low frequency) > Live Map Stream (high frequency) > Reducer State`.
@@ -48,7 +59,9 @@ You are a senior software engineer working on the `departs-app`, a real-time pub
 
 - **No Utils Junk**: Avoid creating small utility files for logic that is only used within a single hook. Keep logic localized and declarative.
 - **Pre-commit**: Always run `npm run build` to verify type safety before submitting.
-- **Versioning**:
-    - Increment the **patch** version (e.g., `0.21.0` -> `0.21.1`) for small bug fixes or minor refactors.
-    - Increment the **minor** version (e.g., `0.21.0` -> `0.22.0`) for significant architectural changes or new features.
-    - Always update the version in `package.json` before submitting.
+- **Versioning**: 
+    - **Avoid Incremental Noise**: Only increment the version **once per cohesive session** or set of changes, rather than for every single fix.
+    - **Increment Strategy**: 
+      - **Patch** (e.g., `0.21.0` -> `0.21.1`) for small bug fixes or minor refactors.
+      - **Minor** (e.g., `0.21.0` -> `0.22.0`) for significant architectural changes or new features.
+    - Always update the version in `package.json` at the conclusion of your work before providing the final summary.

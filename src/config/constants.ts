@@ -24,8 +24,20 @@ export const MAP_MIN_ZOOM_FOR_DATA = 9;
  */
 export const MAP_ANIMATION_DURATION = 1500;
 export const MAP_FLY_DURATION = 2000;
+export const MAP_EASE_DURATION = 1000;
 export const MAP_STOP_SELECT_ZOOM = 16;
 export const MAP_VEHICLE_SELECT_ZOOM = 15;
+export const MAP_MIN_STOP_ZOOM = 14;
+
+/**
+ * Pulse animation constants for the selected vehicle indicator.
+ * Controls the pulsing ring effect around the selected vehicle on the map.
+ */
+export const PULSE_SPEED_DIVISOR = 350;
+export const PULSE_BASE_RADIUS = 20;
+export const PULSE_RADIUS_AMPLITUDE = 15;
+export const PULSE_BASE_OPACITY = 0.6;
+export const PULSE_OPACITY_DIVISOR = 50;
 
 /**
  * Local Storage Keys

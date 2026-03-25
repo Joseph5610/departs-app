@@ -44,3 +44,5 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
         </span>
     );
 };
+
+Countdown.displayName = 'Countdown';

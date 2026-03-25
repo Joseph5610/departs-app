@@ -3,7 +3,7 @@ import React from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FilterSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
-import type { VehicleCollection, StopCollection } from '../types/transit';
+import type { VehicleCollection, StopCollection } from '../../types/transit';
 import {
     clusterLayer,
     clusterCountLayer,
@@ -23,7 +23,7 @@ import {
     vehiclesDirectionLayer,
     vehiclesLabelLayer,
     routeLineLayer
-} from '../config/mapLayers';
+} from '../../config/mapLayers';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */

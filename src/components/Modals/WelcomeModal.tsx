@@ -7,8 +7,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
-import { STORAGE_KEYS } from '../config/constants';
-import { useViewport } from '../state/MapStateProvider';
+import { STORAGE_KEYS } from '../../config/constants';
+import { useViewport } from '../../state/MapStateProvider';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 
@@ -103,3 +103,5 @@ export const WelcomeModal: React.FC = () => {
         </Dialog>
     );
 };
+
+WelcomeModal.displayName = 'WelcomeModal';

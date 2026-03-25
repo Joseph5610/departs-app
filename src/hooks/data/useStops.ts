@@ -114,6 +114,6 @@ export const useStops = () => {
         ...query,
         stops,
         centroids,
-        _raw_data: query.data
+        allFeatures: query.data
     };
 };

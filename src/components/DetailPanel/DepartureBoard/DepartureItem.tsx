@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { format, parseISO, type Locale } from 'date-fns';
-import { Countdown } from '../Countdown';
+import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
 import { cn } from '@/lib/utils';
-import { getCatchStatus } from '../../utils/transitLogic';
-import { formatDelay } from '../../utils/dateUtils';
-import type { Departure } from '../../types/transit';
+import { getCatchStatus } from '../../../utils/transitUtils';
+import { formatDelay } from '../../../utils/dateUtils';
+import type { Departure } from '../../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';

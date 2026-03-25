@@ -2,24 +2,25 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { DetailPanel } from './DetailPanel/DetailPanel';
-import { DepartureBoardHeader } from './DetailPanel/DepartureBoardHeader';
+import { DetailPanel } from '../DetailPanel/DetailPanel';
+import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
 
 import { LiveStatus } from './LiveStatus';
-import { getInitialViewState } from '../utils/mapUtils';
+import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapStateProvider, useSelection, useViewport, usePreferences } from '../state/MapStateProvider';
+import { MapStateProvider, useSelection, useViewport, usePreferences } from '../../state/MapStateProvider';
 import { MapControls } from './MapControls';
-import { DetailPanelContent } from './DetailPanel/DetailPanelContent';
-import { useVehicles } from '../hooks/data/useVehicles';
-import { useStops } from '../hooks/data/useStops';
-import { useRouteShape } from '../hooks/derived/useRouteShape';
-import { useMapFilters } from '../hooks/derived/useMapFilters';
-import { useSelectedStop } from '../hooks/derived/useSelectedStop';
-import { useSelectedVehicle } from '../hooks/derived/useSelectedVehicle';
-import { Search } from './Search';
-const SettingsModal = React.lazy(() => import('./SettingsModal').then(module => ({ default: module.SettingsModal })));
-const WelcomeModal = React.lazy(() => import('./WelcomeModal').then(module => ({ default: module.WelcomeModal })));
+import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
+import { useVehicles } from '../../hooks/data/useVehicles';
+import { useStops } from '../../hooks/data/useStops';
+import { useRouteShape } from '../../hooks/derived/useRouteShape';
+import { useMapFilters } from '../../hooks/derived/useMapFilters';
+import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { Search } from './Search/Search';
+const SettingsModal = React.lazy(() => import('../Modals/SettingsModal/SettingsModal').then(module => ({ default: module.SettingsModal })));
+const WelcomeModal = React.lazy(() => import('../Modals/WelcomeModal').then(module => ({ default: module.WelcomeModal })));
+const AlertsModal = React.lazy(() => import('../Modals/AlertsModal').then(module => ({ default: module.AlertsModal })));
 
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
@@ -153,6 +154,7 @@ const MapInner: React.FC = () => {
             <React.Suspense fallback={null}>
                 <WelcomeModal />
                 <SettingsModal />
+                <AlertsModal />
             </React.Suspense>
 
             <DetailPanel

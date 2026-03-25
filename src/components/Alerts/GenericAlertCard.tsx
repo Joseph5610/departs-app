@@ -141,3 +141,5 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
     return CardContent;
 };
+
+GenericAlertCard.displayName = 'GenericAlertCard';

@@ -7,7 +7,7 @@ import { usePreferencesReducer } from './usePreferencesReducer';
 import { useViewportReducer } from './useViewportReducer';
 
 import { useGeolocation } from '../hooks/features/useGeolocation';
-import { useMapInterface } from '../hooks/useMapInterface';
+import { useMapInterface } from '../hooks/features/useMapInterface';
 import { addAllIcons } from '../utils/mapIcons';
 import {
     MAP_MIN_ZOOM_FOR_DATA,

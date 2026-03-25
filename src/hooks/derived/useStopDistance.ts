@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { useViewport } from '../state/MapStateProvider';
-import { useSelectedStop } from './derived/useSelectedStop';
-import { calculateDistance } from '../utils/transitLogic';
+import { useViewport } from '../../state/MapStateProvider';
+import { useSelectedStop } from './useSelectedStop';
+import { calculateDistance } from '../../utils/transitUtils';
 
 /**
  * useStopDistance

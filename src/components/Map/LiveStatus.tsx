@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useViewport } from '../state/MapStateProvider';
-import { useVehicles } from '../hooks/data/useVehicles';
+import { useViewport } from '../../state/MapStateProvider';
+import { useVehicles } from '../../hooks/data/useVehicles';
 import { cn } from '@/lib/utils';
 import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
 
@@ -70,3 +70,5 @@ export const LiveStatus: React.FC = () => {
         </Overlay>
     );
 };
+
+LiveStatus.displayName = 'LiveStatus';

@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
-import { Alerts } from './Alerts';
-import { usePreferences, useViewport } from '../state/MapStateProvider';
+import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
+import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
+import { usePreferences, useViewport } from '../../state/MapStateProvider';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
@@ -20,12 +20,19 @@ export const MapControls = React.memo(() => {
     const { actions: prefActions } = usePreferences();
     const { actions: vpActions, mapRef, mapLoaded, isGeoPending } = useViewport();
 
-    const { setIsSettingsOpen } = prefActions;
+    const { setIsSettingsOpen, setIsAlertsOpen } = prefActions;
     const { handleLocate: onLocate } = vpActions;
+
+    const { rss } = useGlobalAlerts();
+    const incidentsCount = useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
 
     const onSettings = React.useCallback(() => {
         setIsSettingsOpen(true);
     }, [setIsSettingsOpen]);
+
+    const onAlerts = React.useCallback(() => {
+        setIsAlertsOpen(true);
+    }, [setIsAlertsOpen]);
 
     const onZoomIn = React.useCallback(() => {
         mapRef.current?.zoomIn();
@@ -90,7 +97,19 @@ export const MapControls = React.memo(() => {
                     <Settings size={20} className="transition-transform group-hover:rotate-45" />
                 </ControlButton>
 
-                <Alerts />
+                <ControlButton
+                    onClick={onAlerts}
+                    title={t('alerts.title')}
+                    testId="map-alerts-btn"
+                    className="relative"
+                >
+                    <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "transition-transform group-hover:scale-110")} />
+                    {incidentsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#151515] min-w-[20px] text-center">
+                            {incidentsCount}
+                        </span>
+                    )}
+                </ControlButton>
 
                 <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/15!">
                     <Button
@@ -143,5 +162,8 @@ const ControlButton = ({ children, onClick, title, testId, className }: { childr
         {children}
     </Button>
 );
+
+ControlButton.displayName = 'ControlButton';
+
 
 MapControls.displayName = 'MapControls';

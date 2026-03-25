@@ -11,7 +11,7 @@ import type { SelectedStop } from '../../types/transit';
  */
 export const useSelectedStop = () => {
     const { state } = useSelection();
-    const { _raw_data: stopsData } = useStops();
+    const { allFeatures: stopsData } = useStops();
     const stopId = state.selectedStopId;
 
     return useMemo((): SelectedStop | null => {

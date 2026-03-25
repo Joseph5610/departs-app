@@ -1,14 +1,21 @@
 import { useEffect, useRef } from 'react';
-import { useSelection, useViewport } from '../state/MapStateProvider';
-import { useSelectedStop } from './derived/useSelectedStop';
-import { useSelectedVehicle } from './derived/useSelectedVehicle';
+import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useSelectedStop } from '../derived/useSelectedStop';
+import { useSelectedVehicle } from '../derived/useSelectedVehicle';
 import {
     MAP_VEHICLE_SELECT_ZOOM,
     MAP_ANIMATION_DURATION,
+    MAP_EASE_DURATION,
+    MAP_MIN_STOP_ZOOM,
     MOBILE_BREAKPOINT,
     MOBILE_BOTTOM_SHEET_RATIO,
-    SIDEBAR_WIDTH
-} from '../config/constants';
+    SIDEBAR_WIDTH,
+    PULSE_SPEED_DIVISOR,
+    PULSE_BASE_RADIUS,
+    PULSE_RADIUS_AMPLITUDE,
+    PULSE_BASE_OPACITY,
+    PULSE_OPACITY_DIVISOR
+} from '../../config/constants';
 
 /**
  * useMapInterface
@@ -105,7 +112,7 @@ export const useMapInterface = () => {
         if (isFollowing && hasCoords) {
             currentMap.easeTo({
                 center: coords as [number, number],
-                duration: 1000,
+                duration: MAP_EASE_DURATION,
                 essential: true,
                 padding
             });
@@ -115,8 +122,8 @@ export const useMapInterface = () => {
         if (!isFollowing && selectedStop?.coordinates) {
             currentMap.easeTo({
                 center: selectedStop.coordinates,
-                zoom: Math.max(currentMap.getZoom(), 14),
-                duration: 1000,
+                zoom: Math.max(currentMap.getZoom(), MAP_MIN_STOP_ZOOM),
+                duration: MAP_EASE_DURATION,
                 padding
             });
         }
@@ -133,9 +140,9 @@ export const useMapInterface = () => {
             const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
 
             if (map && hasCoords) {
-                const time = Date.now() / 350;
-                const radius = 20 + Math.sin(time) * 15;
-                const opacity = 0.6 - ((radius - 5) / 50);
+                const time = Date.now() / PULSE_SPEED_DIVISOR;
+                const radius = PULSE_BASE_RADIUS + Math.sin(time) * PULSE_RADIUS_AMPLITUDE;
+                const opacity = PULSE_BASE_OPACITY - ((radius - 5) / PULSE_OPACITY_DIVISOR);
 
                 try {
                     if (map.getLayer('selected-vehicle-pulse')) {

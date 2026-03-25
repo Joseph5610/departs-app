@@ -1,3 +1,28 @@
+import { WALKING_SPEED, CATCH_BUFFER } from '../config/constants';
+
+/**
+ * guessType
+ * 
+ * Heuristic to guess the transit type (metro, tram, bus) from a line name/number.
+ * Used for visual styling of alerts and other elements where explicit routeType is missing.
+ */
+export const guessType = (line: string): 'metro' | 'tram' | 'bus' => {
+    const upperLine = line.toUpperCase();
+    if (['A', 'B', 'C'].includes(upperLine)) {
+        return 'metro';
+    }
+    const n = parseInt(line);
+    if (!isNaN(n)) {
+        if (n < 40) {
+            return 'tram';
+        }
+        if (n >= 100) {
+            return 'bus';
+        }
+    }
+    return 'bus';
+};
+
 /**
  * Calculates the Haversine distance between two points in meters.
  */
@@ -17,8 +42,6 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
 
     return R * c;
 };
-
-import { WALKING_SPEED, CATCH_BUFFER } from '../config/constants';
 
 export type CatchStatus = 'success' | 'warning' | 'error';
 

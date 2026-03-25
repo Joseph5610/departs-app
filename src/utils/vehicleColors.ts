@@ -1,6 +1,22 @@
 import type { ExpressionSpecification } from 'maplibre-gl';
 
 /**
+ * Official PID Branding Colors
+ */
+export const VEHICLE_COLORS = {
+    METRO_A: '#00A651',
+    METRO_B: '#F9B233',
+    METRO_C: '#E31E24',
+    METRO_DEFAULT: '#AD0B00',
+    TRAM: '#8b0511',
+    BUS: '#1C6078',
+    TROLLEYBUS: '#A21CAF',
+    TRAIN: '#002D5A',
+    NIGHT: '#180B5C',
+    FALLBACK: '#5A5A5A'
+} as const;
+
+/**
  * Determines if a route is a night route based on its number.
  * Trams 90-99 and Buses 900+ are considered night routes.
  */
@@ -8,7 +24,14 @@ export const isNightRoute = (routeName: string | number): boolean => {
     const nameStr = String(routeName);
     const nameNum = parseInt(nameStr, 10);
     if (isNaN(nameNum)) return false;
-    return (nameNum >= 90 && nameNum <= 99) || nameNum >= 900;
+
+    // Trams 90-99 (Exactly 2 digits)
+    if (nameStr.length === 2 && nameNum >= 90 && nameNum <= 99) return true;
+
+    // Buses 900-999 (Exactly 3 digits)
+    if (nameStr.length === 3 && nameNum >= 900 && nameNum <= 999) return true;
+
+    return false;
 };
 
 /**
@@ -22,36 +45,36 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
     // 1. Metro Specifics (Priority)
     if (type === '1' || type === 'metro') {
         switch (nameStr.toUpperCase()) {
-            case 'A': return '#00A651'; // Green
-            case 'B': return '#F9B233'; // Yellow
-            case 'C': return '#E31E24'; // Red
+            case 'A': return VEHICLE_COLORS.METRO_A;
+            case 'B': return VEHICLE_COLORS.METRO_B;
+            case 'C': return VEHICLE_COLORS.METRO_C;
         }
     }
 
     // 2. Night Routes (Trams 90-99, Buses 900+)
     if (isNightRoute(nameStr)) {
-        return '#1e293b'; // Slate 800 - dark but visible on black
+        return VEHICLE_COLORS.NIGHT;
     }
 
     // 3. Fallback by Type
     switch (type) {
         case '0':
         case 'tram':
-            return '#930019'; // Tram Red/Bordeaux
+            return VEHICLE_COLORS.TRAM;
         case '1':
         case 'metro':
-            return '#AD0B00'; // Default Metro Red
+            return VEHICLE_COLORS.METRO_DEFAULT;
         case '11':
         case 'trolleybus':
-            return '#A21CAF'; // Trolleybus Purple
+            return VEHICLE_COLORS.TROLLEYBUS;
         case '3':
         case 'bus':
-            return '#005CBF'; // Bus Blue
+            return VEHICLE_COLORS.BUS;
         case '109':
         case 'train':
-            return '#002D5A'; // Train Navy Blue
+            return VEHICLE_COLORS.TRAIN;
         default:
-            return '#5A5A5A'; // Grey fallback
+            return VEHICLE_COLORS.FALLBACK;
     }
 };
 
@@ -80,26 +103,26 @@ export const vehicleColorExpression: ExpressionSpecification = [
     ['any',
         ['==', ['to-string', ['get', 'route_short_name']], 'A'],
         ['==', ['to-string', ['get', 'n']], 'A']
-    ], '#00A651',
+    ], VEHICLE_COLORS.METRO_A,
     ['any',
         ['==', ['to-string', ['get', 'route_short_name']], 'B'],
         ['==', ['to-string', ['get', 'n']], 'B']
-    ], '#F9B233',
+    ], VEHICLE_COLORS.METRO_B,
     ['any',
         ['==', ['to-string', ['get', 'route_short_name']], 'C'],
         ['==', ['to-string', ['get', 'n']], 'C']
-    ], '#E31E24',
+    ], VEHICLE_COLORS.METRO_C,
 
     // 2. Night Routes Detection (90-99 or 9xx)
-    isNightRouteExpression, '#1e293b',
+    isNightRouteExpression, VEHICLE_COLORS.NIGHT,
 
     // 3. Type-based fallback
     ['match', ['to-string', ['coalesce', ['get', 'route_type'], '']],
-        '0', '#930019', 'tram', '#930019',
-        '1', '#AD0B00', 'metro', '#AD0B00',
-        '3', '#005CBF', 'bus', '#005CBF',
-        '11', '#A21CAF', 'trolleybus', '#A21CAF',
-        '109', '#002D5A', 'train', '#002D5A',
-        '#5A5A5A'
+        '0', VEHICLE_COLORS.TRAM, 'tram', VEHICLE_COLORS.TRAM,
+        '1', VEHICLE_COLORS.METRO_DEFAULT, 'metro', VEHICLE_COLORS.METRO_DEFAULT,
+        '3', VEHICLE_COLORS.BUS, 'bus', VEHICLE_COLORS.BUS,
+        '11', VEHICLE_COLORS.TROLLEYBUS, 'trolleybus', VEHICLE_COLORS.TROLLEYBUS,
+        '109', VEHICLE_COLORS.TRAIN, 'train', VEHICLE_COLORS.TRAIN,
+        VEHICLE_COLORS.FALLBACK
     ]
 ];

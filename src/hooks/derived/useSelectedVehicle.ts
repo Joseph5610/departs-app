@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSelection } from '../../state/MapStateProvider';
 import { useVehicles } from '../data/useVehicles';
-import { useVehicleDetail } from '../useVehicleDetail';
+import { useVehicleDetail } from '../data/useVehicleDetail';
 import type { VehicleDetail } from '../../types/transit';
 
 /**

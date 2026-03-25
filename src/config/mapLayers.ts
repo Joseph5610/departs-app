@@ -402,7 +402,7 @@ export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
     },
     paint: {
         'text-color': '#f8fafc',
-        'text-halo-color': '#000000',
+        'text-halo-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
         'text-halo-width': 1.2,
         'text-halo-blur': 0.4,
         'text-opacity': 1

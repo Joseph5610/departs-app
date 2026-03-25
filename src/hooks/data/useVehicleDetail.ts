@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import type { VehicleDetail } from '../types/transit';
-import { useSelection } from '../state/MapStateProvider';
+import type { VehicleDetail } from '../../types/transit';
+import { useSelection } from '../../state/MapStateProvider';
 
 const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const url = new URL('/api/vehicle-detail', window.location.origin);

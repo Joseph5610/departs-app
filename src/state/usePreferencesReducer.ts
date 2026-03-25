@@ -6,6 +6,7 @@ export interface PreferencesState {
     showVehicles: boolean;
     showStops: boolean;
     isSettingsOpen: boolean;
+    isAlertsOpen: boolean;
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
     favoriteStops: string[];
@@ -16,6 +17,7 @@ export type PreferencesAction =
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
     | { type: 'SET_SHOW_STOPS'; payload: boolean }
     | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
+    | { type: 'SET_IS_ALERTS_OPEN'; payload: boolean }
     | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
     | { type: 'SET_ROUTE_TYPE_FILTER'; payload: string[] }
     | { type: 'TOGGLE_FAVORITE'; payload: string }
@@ -26,6 +28,7 @@ const getInitialState = (): PreferencesState => ({
     showVehicles: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false' : true,
     showStops: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false' : true,
     isSettingsOpen: false,
+    isAlertsOpen: false,
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeTypeFilter: [],
     favoriteStops: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[]) : [],
@@ -42,6 +45,8 @@ function preferencesReducer(state: PreferencesState, action: PreferencesAction):
             return { ...state, showStops: action.payload };
         case 'SET_IS_SETTINGS_OPEN':
             return { ...state, isSettingsOpen: action.payload };
+        case 'SET_IS_ALERTS_OPEN':
+            return { ...state, isAlertsOpen: action.payload };
         case 'SET_DEPARTURE_SORT':
             localStorage.setItem(STORAGE_KEYS.DEPARTURE_SORT, action.payload);
             return { ...state, departureSort: action.payload };
@@ -91,6 +96,7 @@ export const usePreferencesReducer = () => {
             setShowVehicles: createAction('SET_SHOW_VEHICLES'),
             setShowStops: createAction('SET_SHOW_STOPS'),
             setIsSettingsOpen: createAction('SET_IS_SETTINGS_OPEN'),
+            setIsAlertsOpen: createAction('SET_IS_ALERTS_OPEN'),
             setDepartureSort: createAction('SET_DEPARTURE_SORT'),
             setRouteTypeFilter: createAction('SET_ROUTE_TYPE_FILTER'),
             toggleFavorite: createAction('TOGGLE_FAVORITE'),
