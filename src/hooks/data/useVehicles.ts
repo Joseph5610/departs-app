@@ -2,6 +2,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useViewport, usePreferences } from '../../state/MapStateProvider';
+import { TRANSIT_REFRESH_MS } from '../../config/constants';
 
 const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
     try {
@@ -60,7 +61,7 @@ export const useVehicles = () => {
         queryFn: () => fetchRawVehicles(bounds, routeFilter, routeTypeFilter),
         select: selectFn,
         enabled: !!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
-        refetchInterval: 10000,
+        refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: 5000,
         gcTime: 60000,
         placeholderData: keepPreviousData,

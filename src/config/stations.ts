@@ -1,11 +1,13 @@
+import { VEHICLE_COLORS } from '../utils/vehicleColors';
+
 export const LINE_COLORS = {
-    A: '#00A562',
-    B: '#DEBD29',
-    C: '#C6242D',
+    A: VEHICLE_COLORS.METRO_A,
+    B: VEHICLE_COLORS.METRO_B,
+    C: VEHICLE_COLORS.METRO_C,
     Transfer: '#FFFFFF',
     Unknown: '#38bdf8',
     Default: '#1e293b',
-    Train: '#002D5A'
+    Train: VEHICLE_COLORS.TRAIN
 };
 
 export const METRO_STATIONS: Record<string, string[]> = {

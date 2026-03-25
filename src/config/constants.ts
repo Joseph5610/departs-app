@@ -66,3 +66,9 @@ export const WALKING_SPEED = 1.0;
  * Buffer time in seconds to account for platform navigation, ticket validation, etc.
  */
 export const CATCH_BUFFER = 120;
+
+/**
+ * Transit data refresh intervals
+ */
+export const TRANSIT_REFRESH_S = 10;
+export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;

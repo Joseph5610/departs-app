@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewport } from '../../state/MapStateProvider';
 import { useVehicles } from '../../hooks/data/useVehicles';
+import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
 import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
 
@@ -17,13 +18,13 @@ export const LiveStatus: React.FC = () => {
     const { isFetching: fetching, dataUpdatedAt: lastUpdate } = useVehicles();
 
     const { bounds } = vpState;
-    const [nextRefreshIn, setNextRefreshIn] = useState(10);
+    const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
 
     useEffect(() => {
         const calculateRemaining = () => {
             const now = Date.now();
             const elapsed = Math.floor((now - lastUpdate) / 1000);
-            const remaining = Math.max(0, 10 - elapsed);
+            const remaining = Math.max(0, TRANSIT_REFRESH_S - elapsed);
             setNextRefreshIn(remaining);
         };
 

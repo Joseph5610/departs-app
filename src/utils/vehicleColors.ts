@@ -4,9 +4,9 @@ import type { ExpressionSpecification } from 'maplibre-gl';
  * Official PID Branding Colors
  */
 export const VEHICLE_COLORS = {
-    METRO_A: '#00A651',
-    METRO_B: '#F9B233',
-    METRO_C: '#E31E24',
+    METRO_A: '#4EB370',
+    METRO_B: '#EEAD00',
+    METRO_C: '#C10141',
     METRO_DEFAULT: '#AD0B00',
     TRAM: '#8b0511',
     BUS: '#1C6078',

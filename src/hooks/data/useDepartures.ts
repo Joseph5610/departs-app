@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRef, useCallback, useMemo } from 'react';
 import type { Departure } from '../../types/transit';
 import { useSelection, usePreferences } from '../../state/MapStateProvider';
+import { TRANSIT_REFRESH_MS } from '../../config/constants';
 
 export interface DepartureGroup {
     groupId: string;
@@ -72,8 +73,8 @@ export const useDepartures = () => {
         },
         select: selectFn,
         enabled: !!stopId,
-        refetchInterval: 10000,
-        staleTime: 10000,
+        refetchInterval: TRANSIT_REFRESH_MS,
+        staleTime: TRANSIT_REFRESH_MS,
     });
 
     const groupedDepartures = useMemo((): DepartureGroup[] => {

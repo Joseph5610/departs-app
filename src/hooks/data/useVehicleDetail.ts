@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../../types/transit';
 import { useSelection } from '../../state/MapStateProvider';
+import { TRANSIT_REFRESH_MS } from '../../config/constants';
 
 const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const url = new URL('/api/vehicle-detail', window.location.origin);
@@ -24,8 +25,8 @@ export const useVehicleDetail = () => {
         queryKey: ['vehicle-detail', vehicleId, tripId],
         queryFn: () => { return fetchVehicleDetail(vehicleId, tripId!); },
         enabled: !!tripId,
-        staleTime: 10000,
-        refetchInterval: 10000, // 10s - matches vehicle update frequency
+        staleTime: TRANSIT_REFRESH_MS,
+        refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
         gcTime: 60000,
     });
 };
