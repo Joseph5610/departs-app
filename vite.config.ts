@@ -41,6 +41,55 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            // Cache CARTO Map Style JSON
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/gl\/.*\.json$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'carto-map-styles',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 Days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // Cache CARTO Sprites & Fonts
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(gl|fonts)\/.*\.(png|pbf|json)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'carto-map-resources',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 180 * 24 * 60 * 60 // 180 Days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // Cache CARTO Vector Tiles
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(vector|vectortiles)\/.*\.(mvt|pbf)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'carto-vector-tiles',
+              expiration: {
+                maxEntries: 1000,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 Days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       }
     })
   ],
