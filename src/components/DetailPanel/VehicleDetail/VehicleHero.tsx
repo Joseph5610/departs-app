@@ -26,7 +26,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                 style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
             />
             <Stack gap={1} className="relative z-10 px-6 py-6">
-                <HStack justify="between" align="start">
+                <HStack justify="between" align="center" className="w-full">
                     <button
                         className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
                         style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
@@ -42,7 +42,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </button>
                     
                     <button
-                        className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors border border-white/5 text-white/80 active:scale-95"
+                        className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg w-7 h-7 backdrop-blur-md transition-colors flex items-center justify-center text-white/90 active:scale-90"
                         onClick={(e) => {
                             e.stopPropagation();
                             share({

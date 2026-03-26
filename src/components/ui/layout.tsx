@@ -158,7 +158,7 @@ const surfaceVariants = cva('rounded-3xl border transition-all', {
         variant: {
             default: 'bg-background border-border',
             muted: 'bg-muted border-border',
-            glassy: 'bg-white/20 dark:bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl',
+            glassy: 'glassy',
             tinted: 'glassy-tinted',
             subtle: 'bg-muted/30 border-border',
             ghost: 'bg-transparent border-transparent',

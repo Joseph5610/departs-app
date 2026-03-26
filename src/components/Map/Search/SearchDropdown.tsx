@@ -41,7 +41,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
     return (
-        <Surface variant="tinted" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto border-white/15! rounded-2xl">
+        <Surface variant="tinted" className="mt-2 overflow-hidden max-h-[60vh] overflow-y-auto rounded-2xl">
             <Stack gap={0}>
                 {showHistory && (
                     <>

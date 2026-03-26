@@ -20,7 +20,7 @@ export const DepartureBoardSkeleton: React.FC = () => {
                     {/* Departure Items Skeletons */}
                     <Stack gap={2}>
                         {[1, 2].map((item) => (
-                            <Surface key={item} variant="tinted" padding="md" className="flex flex-row items-center justify-between h-[68px] border-white/10! rounded-2xl">
+                            <Surface key={item} variant="tinted" padding="md" className="flex flex-row items-center justify-between h-[68px] rounded-2xl">
                                 <HStack gap={3}>
                                     <Stack gap={2}>
                                         <Skeleton className="h-4 w-40 sm:w-48" />

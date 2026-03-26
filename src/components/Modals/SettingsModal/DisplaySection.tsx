@@ -66,7 +66,7 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                 {t('settings.sections.display')}
             </Box>
 
-            <Surface variant="tinted" className="overflow-hidden border-white/15!">
+            <Surface variant="tinted" className="overflow-hidden">
                 <button
                     onClick={() => setShowVehicles(!showVehicles)}
                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -120,7 +120,7 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                                                     "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                     routeTypeFilter.includes(id)
                                                         ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(var(--color-primary),0.1)]"
-                                                        : "bg-muted/40 border-white/15! text-foreground/80 hover:bg-white/10 hover:border-white/25! hover:text-foreground"
+                                                        : "bg-muted/40 border text-foreground/80 hover:bg-white/10 hover:text-foreground"
                                                 )}
                                                 data-testid={`vehicle-type-${id}`}
                                             >
@@ -138,7 +138,7 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                                                 "px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
                                                 routeTypeFilter.length === 0
                                                     ? "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
-                                                    : "bg-muted/40 border-white/15! text-foreground/80 hover:bg-white/10 hover:border-white/25! hover:text-foreground"
+                                                    : "bg-muted/40 border text-foreground/80 hover:bg-white/10 hover:text-foreground"
                                             )}
                                         >
                                             <CircleSlash size={18} className={routeTypeFilter.length === 0 ? 'opacity-100' : 'opacity-70'} />
@@ -154,7 +154,7 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                 </AnimatePresence>
             </Surface>
 
-            <Surface variant="tinted" className="overflow-hidden mt-3 border-white/15!">
+            <Surface variant="tinted" className="overflow-hidden mt-3">
                 <button
                     onClick={() => setShowStops(!showStops)}
                     className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"

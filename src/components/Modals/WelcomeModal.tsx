@@ -61,8 +61,8 @@ export const WelcomeModal: React.FC = () => {
                 </DialogHeader>
                 <Stack gap={8}>
                     <Stack align="center" gap={4} className="text-center">
-                        <Box className="w-24 h-24 bg-muted/20 rounded-[2rem] flex items-center justify-center p-4 border border-border shadow-2xl">
-                            <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-contain" />
+                        <Box className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden">
+                            <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-3xl" />
                         </Box>
                         <Box>
                             <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">
@@ -72,7 +72,7 @@ export const WelcomeModal: React.FC = () => {
                     </Stack>
 
                     <Stack gap={4}>
-                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4 border-white/5!">
+                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
@@ -80,7 +80,7 @@ export const WelcomeModal: React.FC = () => {
                             </Stack>
                         </Surface>
 
-                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4 border-white/5!">
+                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
                                 <div className="font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>

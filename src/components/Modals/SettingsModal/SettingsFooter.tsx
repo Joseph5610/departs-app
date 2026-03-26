@@ -75,7 +75,7 @@ export const SettingsFooter: React.FC<SettingsFooterProps> = ({ searchHistory, c
                             clearHistory();
                             toast.success(t('settings.clearHistory.success'));
                         }}
-                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border border-white/15! hover:border-destructive/30 transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         <HStack gap={3}>
                             <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
@@ -89,7 +89,7 @@ export const SettingsFooter: React.FC<SettingsFooterProps> = ({ searchHistory, c
                 <button
                     onClick={handleCheckUpdate}
                     disabled={isChecking}
-                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border border-white/15! transition-all text-left outline-none"
+                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border transition-all text-left outline-none"
                 >
                     <HStack gap={3}>
                         <Box className="p-2 rounded-lg bg-white/10 text-foreground">

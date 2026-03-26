@@ -180,7 +180,7 @@ export const Search: React.FC = React.memo(() => {
                     </div>
                     {!query && !activeFilter && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                            <Kbd className="bg-white/10 border-white/10 text-white/50 h-5 min-w-5 rounded-md px-1.5 font-bold">
+                            <Kbd className="bg-white/10 border-white/10 text-white/50 px-1.5 font-bold">
                                 /
                             </Kbd>
                         </div>
