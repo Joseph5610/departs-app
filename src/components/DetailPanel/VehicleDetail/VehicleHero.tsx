@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap } from 'lucide-react';
+import { Info, MapPin, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVehicleColor } from '../../../utils/vehicleColors';
+import { useShare } from '../../../hooks/features/useShare';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
 import type { VehicleHeroProps } from './types';
@@ -14,29 +15,46 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     liveDataAgeSeconds
 }) => {
     const { t } = useTranslation();
+    const { share } = useShare();
 
     if (!displayVehicle) return null;
 
     return (
-        <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
+        <Surface variant="tinted" padding="none" className="overflow-hidden rounded-2xl">
             <Box
                 className="absolute inset-0 opacity-5"
                 style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
             />
             <Stack gap={1} className="relative z-10 px-6 py-6">
-                <button
-                    className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
-                    style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
-                    onClick={onToggleFollow}
-                >
-                    <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{displayVehicle.routeName}</span>
-                    <Box className={cn(
-                        "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
-                        isFollowing ? "text-primary" : "text-slate-300"
-                    )}>
-                        <MapPin size={8} className={cn(isFollowing ? "fill-current" : "")} />
-                    </Box>
-                </button>
+                <HStack justify="between" align="start">
+                    <button
+                        className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
+                        style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
+                        onClick={onToggleFollow}
+                    >
+                        <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{displayVehicle.routeName}</span>
+                        <Box className={cn(
+                            "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
+                            isFollowing ? "text-primary" : "text-slate-300"
+                        )}>
+                            <MapPin size={8} className={cn(isFollowing ? "fill-current" : "")} />
+                        </Box>
+                    </button>
+                    
+                    <button
+                        className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors border border-white/5 text-white/80 active:scale-95"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            share({
+                                title: t('map.vehicleDetails.shareTitle', { line: displayVehicle.routeName }),
+                                text: t('map.vehicleDetails.shareText', { line: displayVehicle.routeName }),
+                                url: window.location.href
+                            });
+                        }}
+                    >
+                        <Share2 size={13} />
+                    </button>
+                </HStack>
 
                 <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5">
                     {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}

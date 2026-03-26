@@ -10,7 +10,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
     return (
         <Stack gap={4} className="animate-in fade-in duration-500">
             {/* Header Hero Skeleton - Matches VehicleHero.tsx */}
-            <Surface variant="tinted" padding="none" className="relative overflow-hidden border-white/15! rounded-2xl bg-slate-950/20 backdrop-blur-2xl">
+            <Surface variant="tinted" padding="none" className="overflow-hidden rounded-2xl">
                 <Stack gap={2} className="relative z-10 px-6 py-6">
                     {/* Route Badge Skeleton */}
                     <Skeleton className="h-7 w-12 rounded-lg" />

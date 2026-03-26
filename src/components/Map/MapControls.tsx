@@ -111,7 +111,7 @@ export const MapControls = React.memo(() => {
                     )}
                 </ControlButton>
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted border-white/15!">
+                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -139,7 +139,7 @@ export const MapControls = React.memo(() => {
                     <ControlButton
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
-                        className="border-white/15!"
+                        className=""
                     >
                         <Compass size={20} className="transition-transform group-hover:rotate-12" />
                     </ControlButton>

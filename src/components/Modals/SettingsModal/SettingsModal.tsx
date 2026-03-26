@@ -62,10 +62,10 @@ export const SettingsModal: React.FC = () => {
                                         key={lang}
                                         onClick={() => i18n.changeLanguage(lang)}
                                         className={cn(
-                                            "py-3 px-4 rounded-2xl border transition-all text-sm font-semibold outline-none glassy-tinted",
+                                            "py-3 px-4 rounded-2xl text-sm font-semibold outline-none glassy-tinted",
                                             (i18n.resolvedLanguage || i18n.language).startsWith(lang)
                                                 ? "ring-1 ring-primary/40 text-primary border-primary/20"
-                                                : "border-white/5 text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                                                : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                                         )}
                                     >
                                         {t(`settings.language.${lang}`)}

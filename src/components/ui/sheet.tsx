@@ -65,8 +65,8 @@ function SheetContent({
           "data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10",
           "data-closed:animate-out data-closed:fade-out-0",
           "data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
-          variant === 'glassy' && "bg-white/20 dark:bg-white/10 backdrop-blur-3xl border-white/20!",
-          variant === 'tinted' && "glassy-tinted border-white/20!",
+          variant === 'glassy' && "bg-white/20 dark:bg-white/10 backdrop-blur-3xl",
+          variant === 'tinted' && "glassy-tinted",
           className
         )}
         {...props}

@@ -115,7 +115,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 noBodyStyles={true}
             >
                 <DrawerContent
-                    className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]! border-t border-white/10"
+                    className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]!"
                     hideOverlay={true}
                 >
                     {/* 

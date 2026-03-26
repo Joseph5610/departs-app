@@ -112,6 +112,8 @@
       "showPastStops": "Show past stops",
       "hidePastStops": "Hide past stops",
       "scheduledTime": "sched.",
+      "shareTitle": "Line {{line}}",
+      "shareText": "Track line {{line}} live on departs.app",
       "zone": "Zone"
     },
     "departures": {

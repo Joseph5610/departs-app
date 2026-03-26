@@ -53,7 +53,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert 
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl border-white/15!",
+                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl",
                 isHigh && "!bg-destructive/20 !border-destructive/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]",
                 isNormal && "!bg-amber-500/15 !border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.15)]",
                 link && "hover:brightness-125 cursor-pointer group",

@@ -55,8 +55,8 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-[3000] grid w-full max-w-lg max-h-[calc(100dvh-2.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-3xl bg-background p-6 text-foreground shadow-2xl border border-border duration-100 outline-none overflow-y-auto pointer-events-auto custom-scrollbar data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          variant === 'glassy' && "bg-white/20 dark:bg-white/10 backdrop-blur-3xl border-white/20!",
-          variant === 'tinted' && "glassy-tinted border-white/20!",
+          variant === 'glassy' && "bg-white/20 dark:bg-white/10 backdrop-blur-3xl",
+          variant === 'tinted' && "glassy-tinted",
           className
         )}
         {...props}
