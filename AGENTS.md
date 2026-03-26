@@ -105,3 +105,8 @@ Always run `npm run build` to verify type safety and build stability before comm
 Increment the version in `package.json` once per session:
 - **Patch** (`0.26.0` → `0.26.1`): Bug fixes, minor refactors.
 - **Minor** (`0.26.0` → `0.27.0`): New features or significant architectural changes.
+
+## 6. Stability Rules
+- **No Decorative Loops**: Never use repetitive emojis, icons, or long blocks of visual filler (e.g., 🚀🏁 loop).
+- **Concatenation Priority**: Prioritize tool execution over explanatory text.
+- **Strict Response**: If the user indicates frustration, switch to zero-fluff technical responses only.
