@@ -40,9 +40,9 @@ export const DepartureBoardHeader = React.memo(() => {
 
         const [lon, lat] = selectedStop.coordinates;
         const name = encodeURIComponent(selectedStop.stop_name || '');
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
 
-        if (isIOS) {
+        if (isAppleDevice) {
             // Apple Maps
             window.open(`maps://?q=${name}&ll=${lat},${lon}`, '_blank');
         } else {
