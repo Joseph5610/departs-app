@@ -18,15 +18,15 @@ export const useNavigate = () => {
         if (!selectedStop?.coordinates) return;
 
         const [lon, lat] = selectedStop.coordinates;
-        const name = encodeURIComponent(selectedStop.stop_name || '');
         const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
 
         if (isAppleDevice) {
-            // Apple Maps - use location.href to avoid blank tabs for deep links
-            window.location.href = `maps://?q=${name}&ll=${lat},${lon}`;
+            // Apple Maps - Directions to address with walking mode
+            window.location.href = `maps://?daddr=${lat},${lon}&dirflg=w`;
         } else {
-            // Google Maps
-            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}${name ? `&query_place_id=${name}` : ''}`, '_blank');
+            // Google Maps - Directions to destination with walking mode
+            // Use location.href for deep links to avoid unnecessary blank tabs
+            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
         }
     }, [selectedStop]);
 
