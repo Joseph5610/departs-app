@@ -139,7 +139,7 @@
       "distance_other": "{{distance}}m • {{count}} minut pěšky",
       "meters": "{{distance}} m",
       "kilometers": "{{distance}} km",
-      "navigate": "Navigovat",
+      "openMaps": "Otevřít Mapy",
       "atStop": "Jste na zastávce",
       "catchStatus": {
         "success": "Stíháš to",

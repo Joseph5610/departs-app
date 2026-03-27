@@ -137,7 +137,7 @@
       "distance_other": "{{distance}}m • {{count}} minutes walk",
       "meters": "{{distance}} m",
       "kilometers": "{{distance}} km",
-      "navigate": "Navigate",
+      "openMaps": "Open Maps",
       "atStop": "You are at the stop",
       "catchStatus": {
         "success": "You'll catch it",

@@ -1,7 +1,7 @@
 
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2 } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, ChevronRight } from 'lucide-react';
 import { usePreferences } from '../../../state/MapStateProvider';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
@@ -55,12 +55,13 @@ export const DepartureBoardHeader = React.memo(() => {
                 variant="tinted"
                 size="sm"
                 onClick={handleNavigate}
-                className="h-8 rounded-lg px-3 gap-2 self-start"
+                className="h-8 rounded-xl px-3 gap-2 self-start border-white/20!"
             >
                 <MapPin size={12} className="text-muted-foreground/60" />
                 <span className="font-bold text-foreground text-[11px]">
                     {distanceLabel}
                 </span>
+                <ChevronRight size={10} className="text-muted-foreground/40" />
             </Button>
 
             <HStack justify="between">
