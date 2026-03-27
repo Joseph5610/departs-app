@@ -6,7 +6,7 @@ import { usePreferences } from '../../../state/MapStateProvider';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
-import { useStopDistance } from '../../../hooks/derived/useStopDistance';
+import { useNavigate } from '../../../hooks/features/useNavigate';
 import { HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -33,47 +33,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const showHeader = !!selectedStop && !selectedVehicle;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
-    const stopDistanceInfo = useStopDistance();
-
-    const handleNavigate = useCallback(() => {
-        if (!selectedStop?.coordinates) return;
-
-        const [lon, lat] = selectedStop.coordinates;
-        const name = encodeURIComponent(selectedStop.stop_name || '');
-        const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
-
-        if (isAppleDevice) {
-            // Apple Maps
-            window.open(`maps://?q=${name}&ll=${lat},${lon}`, '_blank');
-        } else {
-            // Google Maps
-            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}${name ? `&query_place_id=${name}` : ''}`, '_blank');
-        }
-    }, [selectedStop]);
-
-    const distanceLabel = React.useMemo(() => {
-        if (!stopDistanceInfo) return t('map.departures.navigate');
-        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
-
-        const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
-
-        if (isReasonableWalkingDistance) {
-            return t('map.departures.distance', {
-                distance,
-                count: time
-            });
-        }
-
-        if (distance >= 1000) {
-            return t('map.departures.kilometers', {
-                distance: (distance / 1000).toFixed(1)
-            });
-        }
-
-        return t('map.departures.meters', {
-            distance
-        });
-    }, [stopDistanceInfo, t]);
+    const { handleNavigate, distanceLabel } = useNavigate();
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
