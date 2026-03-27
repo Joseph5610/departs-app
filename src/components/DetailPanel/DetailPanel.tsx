@@ -127,11 +127,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     <div className="shrink-0 flex flex-col">
                         {/* Visual Handle Bar (purely cosmetic, not a DrawerHandle) */}
                         <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-white/20 mb-2" />
-                        
+
                         <div className="mt-2 px-6 pb-2">
                             {headerContent}
                         </div>
-                        
+
                         {subHeader && (
                             <div className="w-full">
                                 {subHeader}
@@ -144,11 +144,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         data-vaul-no-drag prevents scrolling here from triggering drawer drag.
                         This is the standard vaul pattern for large drag areas.
                     */}
-                    <div 
+                    <div
                         data-vaul-no-drag
                         className="flex-1 min-h-0 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
                     >
-                        <div className="pb-[40dvh]">
+                        <div className="pb-[45dvh]">
                             {children}
                         </div>
                     </div>
