@@ -62,20 +62,20 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         >
             <AlertTriangle className={cn(
                 "h-4 w-4 mt-0.5 shrink-0",
-                isHigh ? "!text-destructive animate-pulse" : isNormal ? "!text-amber-500" : "text-muted-foreground"
+                isHigh ? "!text-destructive" : isNormal ? "!text-amber-500" : "text-muted-foreground"
             )} />
             
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
                 {showStatus && (isFuture ? (
                     <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+                        <Box className="w-1 h-1 rounded-full bg-destructive" />
                         <span className="text-[8px] font-bold text-destructive/80 uppercase tracking-widest">
                             {t('alerts.planned')}
                         </span>
                     </HStack>
                 ) : isActive ? (
                     <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)] animate-pulse" />
+                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" />
                         <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
                             {t('alerts.active')}
                         </span>

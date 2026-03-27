@@ -103,7 +103,7 @@ export const MapControls = React.memo(() => {
                     testId="map-alerts-btn"
                     className="relative"
                 >
-                    <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive animate-pulse" : "transition-transform group-hover:scale-110")} />
+                    <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform group-hover:scale-110")} />
                     {incidentsCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#151515] min-w-[20px] text-center">
                             {incidentsCount}

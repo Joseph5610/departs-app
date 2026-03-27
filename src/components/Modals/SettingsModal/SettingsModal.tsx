@@ -34,7 +34,7 @@ export const SettingsModal: React.FC = () => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent variant="tinted" data-testid="settings-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
-                <DialogHeader className="px-6 pt-8 pb-4 shrink-0">
+                <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('settings.title')}
                     </DialogTitle>
