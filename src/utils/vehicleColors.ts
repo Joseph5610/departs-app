@@ -8,11 +8,11 @@ export const VEHICLE_COLORS = {
     METRO_B: '#EEAD00',
     METRO_C: '#C10141',
     METRO_DEFAULT: '#AD0B00',
-    TRAM: '#8b0511',
-    BUS: '#1C6078',
-    TROLLEYBUS: '#A21CAF',
-    TRAIN: '#002D5A',
-    NIGHT: '#180B5C',
+    TRAM: '#7a0200',
+    BUS: '#0076a3',
+    TROLLEYBUS: '#80166F',
+    TRAIN: '#1c1745',
+    NIGHT: '#262050',
     FALLBACK: '#5A5A5A'
 } as const;
 
