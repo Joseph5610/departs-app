@@ -56,7 +56,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </button>
                 </HStack>
 
-                <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5">
+                <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5 line-clamp-3">
                     {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                 </h3>
 
@@ -128,11 +128,11 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
                             <HStack gap={2} className="mt-4 pt-4 border-t border-white/5 flex-wrap justify-between items-end">
                                 <Stack gap={0} className="min-w-0 flex-1">
-                                    <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] truncate block w-full mb-0.5">
+                                    <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] line-clamp-1 block w-full mb-0.5">
                                         {displayVehicle.vehicle_descriptor?.operator}
                                     </span>
                                     <HStack gap={2} align="center" className="min-w-0 w-full">
-                                        <span className="text-foreground text-[10px] font-bold truncate shrink leading-none">
+                                        <span className="text-foreground text-[10px] font-bold line-clamp-1 shrink leading-none">
                                             {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
                                         </span>
                                         <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">

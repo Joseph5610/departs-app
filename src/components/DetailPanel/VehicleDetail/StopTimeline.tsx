@@ -109,7 +109,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
             )} />
             <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
                 <span className={cn(
-                    "text-sm truncate w-full",
+                    "text-sm line-clamp-2 w-full leading-snug",
                     isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                 )}>
                     {stop.properties.stop_name}

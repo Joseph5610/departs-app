@@ -3,6 +3,15 @@ import { METRO_STATIONS } from "./metro-data";
 import { TRANSIT_CONFIG } from "./api-utils";
 
 /**
+ * Fixes missing spaces after commas (common in Golemio data).
+ * e.g., "Tuchoměřice,Špejchar" -> "Tuchoměřice, Špejchar"
+ */
+function fixCommaSpacing(text: string | undefined | null): string | undefined {
+    if (!text) return text as any;
+    return text.replace(/,([^\s])/g, ', $1');
+}
+
+/**
  * Normalizes Golemio vehicle feature to application-specific flat properties.
  * Handles both "Public" (already flat) and "Private/V2" (nested) formats.
  *
@@ -18,7 +27,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const gtfs_trip_id = p.gtfs_trip_id || p.trip?.gtfs?.trip_id || tripIdFallback;
     const route_short_name = p.route_short_name || p.gtfs_route_short_name || p.trip?.gtfs?.route_short_name;
     const route_type = p.route_type || p.gtfs_route_type || p.trip?.gtfs?.route_type;
-    const trip_headsign = p.trip_headsign || p.gtfs_trip_headsign || p.trip?.gtfs?.trip_headsign;
+    const trip_headsign = fixCommaSpacing(p.trip_headsign || p.gtfs_trip_headsign || p.trip?.gtfs?.trip_headsign);
 
     // Position and status data
     const last_pos = p.last_position;
@@ -29,10 +38,10 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const state_position = p.state_position || last_pos?.state_position;
 
     // Extract next stop info - check various nested structures used by Golemio
-    const next_stop_name = p.next_stop_name ||
+    const next_stop_name = fixCommaSpacing(p.next_stop_name ||
                           last_pos?.next_stop?.name ||
                           last_pos?.next_stop?.id ||
-                          trip?.next_stop_name;
+                          trip?.next_stop_name);
 
     // Metadata / Amenities
     const vehicle_descriptor = (p.vehicle_descriptor || trip?.vehicle_descriptor || last_pos?.vehicle_descriptor || {});
@@ -200,7 +209,7 @@ export function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
         line,
         type,
         directionId: String(directionId),
-        headsign: item.trip?.headsign || 'Unknown',
+        headsign: fixCommaSpacing(item.trip?.headsign) || 'Unknown',
         isCanceled: item.trip?.is_canceled || false,
         tripId: item.trip?.id,
         vehicleId: item.vehicle?.id,
@@ -263,8 +272,10 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
         // Collect for centroid calculation
         if (type !== 2 && p.stop_name) {
-            if (!nameGroups.has(p.stop_name)) nameGroups.set(p.stop_name, []);
-            nameGroups.get(p.stop_name)!.push(enrichedFeature);
+            const fixedName = fixCommaSpacing(p.stop_name)!;
+            enrichedFeature.properties.stop_name = fixedName;
+            if (!nameGroups.has(fixedName)) nameGroups.set(fixedName, []);
+            nameGroups.get(fixedName)!.push(enrichedFeature);
         }
 
         // Handle Metro Stations (Type 1)
