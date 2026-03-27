@@ -31,28 +31,28 @@ export const useNavigate = () => {
     }, [selectedStop]);
 
     const distanceLabel = useMemo(() => {
-        const prefix = t('map.departures.openMaps');
-        if (!stopDistanceInfo) return prefix;
-        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
+        const suffix = t('map.departures.openInMaps');
+        if (!stopDistanceInfo) return suffix;
+        if (stopDistanceInfo.isAtStop) return `${t('map.departures.atStop')} • ${suffix}`;
 
         const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
 
         if (isReasonableWalkingDistance) {
-            return `${prefix} • ${t('map.departures.distance', {
+            return `${t('map.departures.distance', {
                 distance,
                 count: time
-            })}`;
+            })} • ${suffix}`;
         }
 
         if (distance >= 1000) {
-            return `${prefix} • ${t('map.departures.kilometers', {
+            return `${t('map.departures.kilometers', {
                 distance: (distance / 1000).toFixed(1)
-            })}`;
+            })} • ${suffix}`;
         }
 
-        return `${prefix} • ${t('map.departures.meters', {
+        return `${t('map.departures.meters', {
             distance
-        })}`;
+        })} • ${suffix}`;
     }, [stopDistanceInfo, t]);
 
     return {
