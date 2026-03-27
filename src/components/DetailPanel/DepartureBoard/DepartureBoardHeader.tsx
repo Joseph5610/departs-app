@@ -7,7 +7,7 @@ import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useStopDistance } from '../../../hooks/derived/useStopDistance';
-import { HStack, Surface } from '@/components/ui/layout';
+import { HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,46 @@ export const DepartureBoardHeader = React.memo(() => {
 
     const stopDistanceInfo = useStopDistance();
 
+    const handleNavigate = useCallback(() => {
+        if (!selectedStop?.coordinates) return;
+
+        const [lon, lat] = selectedStop.coordinates;
+        const name = encodeURIComponent(selectedStop.stop_name || '');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        if (isIOS) {
+            // Apple Maps
+            window.open(`maps://?q=${name}&ll=${lat},${lon}`, '_blank');
+        } else {
+            // Google Maps
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}${name ? `&query_place_id=${name}` : ''}`, '_blank');
+        }
+    }, [selectedStop]);
+
+    const distanceLabel = React.useMemo(() => {
+        if (!stopDistanceInfo) return t('map.departures.navigate');
+        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
+
+        const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
+
+        if (isReasonableWalkingDistance) {
+            return t('map.departures.distance', {
+                distance,
+                count: time
+            });
+        }
+
+        if (distance >= 1000) {
+            return t('map.departures.kilometers', {
+                distance: (distance / 1000).toFixed(1)
+            });
+        }
+
+        return t('map.departures.meters', {
+            distance
+        });
+    }, [stopDistanceInfo, t]);
+
     const handleShare = useCallback(() => {
         if (selectedStop) {
             share({
@@ -51,19 +91,17 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
-            {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/15! px-3 py-1.5 self-start rounded-xl">
-                    <MapPin size={12} className="text-muted-foreground/60" />
-                    <span className="font-medium text-foreground text-[11px]">
-                        {stopDistanceInfo.isAtStop
-                            ? t('map.departures.atStop')
-                            : t('map.departures.distance', {
-                                distance: stopDistanceInfo.distance,
-                                count: stopDistanceInfo.time
-                            })}
-                    </span>
-                </Surface>
-            )}
+            <Button
+                variant="tinted"
+                size="sm"
+                onClick={handleNavigate}
+                className="h-8 rounded-lg px-3 gap-2 self-start"
+            >
+                <MapPin size={12} className="text-muted-foreground/60" />
+                <span className="font-bold text-foreground text-[11px]">
+                    {distanceLabel}
+                </span>
+            </Button>
 
             <HStack justify="between">
                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">

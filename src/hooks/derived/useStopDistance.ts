@@ -28,7 +28,8 @@ export const useStopDistance = () => {
             distance: Math.round(distance),
             time: Math.ceil(distance / 60),
             isAtStop,
-            showCatchIndicator: distance < 750 && !isMovingFast
+            showCatchIndicator: distance < 750 && !isMovingFast,
+            isReasonableWalkingDistance: distance < 750
         };
     }, [selectedStop?.coordinates, userLocation, userSpeed]);
 };
