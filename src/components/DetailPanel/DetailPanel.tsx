@@ -146,9 +146,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     */}
                     <div 
                         data-vaul-no-drag
-                        className="flex-1 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
+                        className="flex-1 min-h-0 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
                     >
-                        <div className="pb-[50dvh]">
+                        <div className="pb-[40dvh]">
                             {children}
                         </div>
                     </div>
