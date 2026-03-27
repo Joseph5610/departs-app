@@ -135,6 +135,9 @@
       "sortByDeparture": "Sort by departure time",
       "distance_one": "{{distance}}m • {{count}} minute walk",
       "distance_other": "{{distance}}m • {{count}} minutes walk",
+      "meters": "{{distance}} m",
+      "kilometers": "{{distance}} km",
+      "openInMaps": "Open in Maps",
       "atStop": "You are at the stop",
       "catchStatus": {
         "success": "You'll catch it",

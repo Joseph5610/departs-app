@@ -137,6 +137,9 @@
       "distance_one": "{{distance}}m • {{count}} minuta pěšky",
       "distance_few": "{{distance}}m • {{count}} minuty pěšky",
       "distance_other": "{{distance}}m • {{count}} minut pěšky",
+      "meters": "{{distance}} m",
+      "kilometers": "{{distance}} km",
+      "openInMaps": "Otevřít v Mapách",
       "atStop": "Jste na zastávce",
       "catchStatus": {
         "success": "Stíháš to",

@@ -1,13 +1,13 @@
 
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2 } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, ChevronRight } from 'lucide-react';
 import { usePreferences } from '../../../state/MapStateProvider';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
-import { useStopDistance } from '../../../hooks/derived/useStopDistance';
-import { HStack, Surface } from '@/components/ui/layout';
+import { useNavigate } from '../../../hooks/features/useNavigate';
+import { HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const showHeader = !!selectedStop && !selectedVehicle;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
-    const stopDistanceInfo = useStopDistance();
+    const { handleNavigate, distanceLabel } = useNavigate();
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
@@ -51,19 +51,18 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
-            {stopDistanceInfo && (stopDistanceInfo.showCatchIndicator || stopDistanceInfo.isAtStop) && (
-                <Surface variant="tinted" padding="xs" className="flex flex-row items-center gap-2 border-white/15! px-3 py-1.5 self-start rounded-xl">
-                    <MapPin size={12} className="text-muted-foreground/60" />
-                    <span className="font-medium text-foreground text-[11px]">
-                        {stopDistanceInfo.isAtStop
-                            ? t('map.departures.atStop')
-                            : t('map.departures.distance', {
-                                distance: stopDistanceInfo.distance,
-                                count: stopDistanceInfo.time
-                            })}
-                    </span>
-                </Surface>
-            )}
+            <Button
+                variant="tinted"
+                size="sm"
+                onClick={handleNavigate}
+                className="h-8 rounded-xl px-3 gap-2 self-start border-white/20!"
+            >
+                <MapPin size={12} className="text-muted-foreground/60" />
+                <span className="font-bold text-foreground text-[11px]">
+                    {distanceLabel}
+                </span>
+                <ChevronRight size={10} className="text-muted-foreground/40" />
+            </Button>
 
             <HStack justify="between">
                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
