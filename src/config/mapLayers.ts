@@ -313,7 +313,7 @@ export const entranceLayer: SymbolLayerSpecification = {
         ['!', ['has', 'point_count']],
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
     ],
-    minzoom: 17.5, // Only show when very zoomed in
+    minzoom: 15.0, // Only show when very zoomed in
     layout: {
         'text-field': ['get', 'stop_name'],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
