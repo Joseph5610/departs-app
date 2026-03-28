@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Train } from 'lucide-react';
 import { format, parseISO, type Locale } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
@@ -86,8 +87,13 @@ export const DepartureItem = ({
                             {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
                         </span>
                         {isTrainStop && dep.platform && (
-                            <Badge variant="outline" className="h-4 px-1 rounded text-[10px] font-bold tracking-wider">
-                                {dep.platform}
+                            <Badge
+                                variant="outline"
+                                className="h-5 px-2 rounded-lg text-[10px] font-bold tracking-wider flex items-center gap-1.5 bg-foreground/5 border-foreground/10! text-foreground"
+                                title={t('search.platform', { code: dep.platform })}
+                            >
+                                <Train size={12} strokeWidth={2.5} className="shrink-0 opacity-60" />
+                                <span className="tabular-nums">{dep.platform}</span>
                             </Badge>
                         )}
                         <HStack gap={1}>
