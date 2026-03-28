@@ -79,10 +79,10 @@ export const DepartureItem = ({
                 onClick={handleClick}
                 className="flex items-center justify-between"
             >
-            <HStack gap={4}>
-                <Stack gap={0}>
-                    <div className="text-foreground font-semibold leading-tight">{dep.headsign}</div>
-                    <HStack gap={2} className="text-muted-foreground text-[10px] mt-1">
+            <HStack gap={4} className="min-w-0 flex-1">
+                <Stack gap={0} className="min-w-0 flex-1">
+                    <div className="text-foreground font-semibold leading-snug line-clamp-2">{dep.headsign}</div>
+                    <HStack gap={2} className="text-muted-foreground text-[10px] mt-1 flex-wrap">
                         <span className="tabular-nums">
                             {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
                         </span>

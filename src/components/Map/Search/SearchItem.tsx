@@ -38,9 +38,9 @@ export const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default'
             )}>
                 {icon}
             </Box>
-            <Stack gap={0} className="min-w-0">
-                <span className="text-foreground font-medium truncate">{title}</span>
-                {subtitle && <span className="text-muted-foreground text-xs truncate">{subtitle}</span>}
+            <Stack gap={0} className="min-w-0 flex-1">
+                <span className="text-foreground font-medium line-clamp-2 leading-snug">{title}</span>
+                {subtitle && <span className="text-muted-foreground text-xs line-clamp-1 mt-0.5">{subtitle}</span>}
             </Stack>
         </button>
     </Surface>

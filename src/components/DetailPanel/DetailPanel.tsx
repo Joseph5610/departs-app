@@ -65,11 +65,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 {backButton}
                 <HStack className="gap-2 min-w-0 flex-1">
                     {isMobile ? (
-                        <DrawerTitle className="text-xl font-bold text-foreground truncate tracking-tight">
+                        <DrawerTitle className="text-xl font-bold text-foreground line-clamp-2 tracking-tight">
                             {title || ''}
                         </DrawerTitle>
                     ) : (
-                        <SheetTitle className="text-xl font-bold text-foreground truncate tracking-tight text-left">
+                        <SheetTitle className="text-xl font-bold text-foreground line-clamp-2 tracking-tight text-left">
                             {title || ''}
                         </SheetTitle>
                     )}
