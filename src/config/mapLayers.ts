@@ -3,7 +3,6 @@ import type {
     SymbolLayerSpecification,
     LineLayerSpecification
 } from 'maplibre-gl';
-import { LINE_COLORS, getStationColorMatchPairs } from './stations';
 
 // 1. The GLOW Layer (Background)
 export const clusterLayer: CircleLayerSpecification = {
@@ -79,11 +78,10 @@ export const stopPointLayer: CircleLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        ['!=', ['get', 'is_train'], 1],
-        // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
+        // Only exclude Stations (Type 1) with transfer icons, keeping Stops (Type 0) visible
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+            ['!=', ['get', 'transfer_icon'], '']
         ]]
     ],
     paint: {
@@ -91,29 +89,21 @@ export const stopPointLayer: CircleLayerSpecification = {
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 9.5, 5.7],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 26.6, 20.9]
         ],
-        'circle-color': [
-            'case',
-            // Only apply custom colors for Stations (Type 1)
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'],
-                ...getStationColorMatchPairs(),
-                LINE_COLORS.Unknown // Default for unknown stations
-            ],
-
-            // Default for Stops (Type 0 or null)
-            LINE_COLORS.Default
-        ] as any,
+        'circle-color': ['get', 'stop_color'],
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
-            // 1. Transfer Stations (Type 1 + Special Name) -> BLACK stroke
+            // 1. Transfer Stations (Type 1 + Icon) -> BLACK stroke
             ['all',
                 ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+                ['!=', ['get', 'transfer_icon'], '']
             ],
             '#000000',
 
-            // 2. Other Stations (Type 1) -> WHITE stroke
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            // 2. Other Stations (Type 1) or Trains -> WHITE stroke
+            ['any',
+                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['==', ['get', 'is_train'], 1]
+            ],
             '#ffffff',
 
             // 3. Regular Stops (Type 0) -> BLUE stroke
@@ -136,8 +126,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        ['!=', ['get', 'is_train'], 1]
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
@@ -146,13 +135,13 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
         ],
         'circle-color': [
             'case',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'],
-                ...getStationColorMatchPairs(),
-                LINE_COLORS.Unknown
+            ['any',
+                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+                ['==', ['get', 'is_train'], 1]
             ],
+            ['get', 'stop_color'],
             '#000000' // Shadow for regular stops
-        ] as any,
+        ],
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
             17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.35, 0.2]
@@ -162,48 +151,6 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
 };
 
 
-export const trainStationLayer: CircleLayerSpecification = {
-    id: 'train-stations',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', ['get', 'is_train'], 1]
-    ],
-    paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 9.5,
-            17, 26.6
-        ],
-        'circle-color': LINE_COLORS.Train,
-        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
-        'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.7,
-        'circle-stroke-opacity': 1
-    }
-};
-
-export const trainStationGlowLayer: CircleLayerSpecification = {
-    id: 'train-stations-glow',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', ['get', 'is_train'], 1]
-    ],
-    paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 14.2,
-            17, 43.7
-        ],
-        'circle-color': LINE_COLORS.Train,
-        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
-            13, 0.2,
-            17, 0.35
-        ],
-        'circle-blur': 0.8
-    }
-};
 
 export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
@@ -211,23 +158,18 @@ export const transferStationLayer: SymbolLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+        ['!=', ['get', 'transfer_icon'], '']
     ],
     minzoom: 10,
     layout: {
-        'icon-image': ['match', ['get', 'stop_name'],
-            'Můstek', 'transfer-A-B',
-            'Muzeum', 'transfer-A-C',
-            'Florenc', 'transfer-B-C',
-            ''
-        ],
+        'icon-image': ['get', 'transfer_icon'],
         'icon-size': ['interpolate', ['linear'], ['zoom'],
             13, 0.875,
             17, 1.5
         ],
         'icon-allow-overlap': true,
-        'icon-offset': ['match', ['get', 'stop_name'],
-            'Muzeum', ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
+        'icon-offset': ['case',
+            ['==', ['get', 'transfer_icon'], 'transfer-A-C'], ['literal', [0, -15]], // Shift Muzeum UP to avoid overlap
             ['literal', [0, 0]]
         ]
     },
@@ -263,14 +205,7 @@ export const stopLabelLayer: SymbolLayerSpecification = {
         ]
     },
     paint: {
-        'text-color': ['case',
-            ['any',
-                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['==', ['get', 'is_train'], 1]
-            ],
-            '#ffffff',
-            '#bdbdbd'
-        ],
+        'text-color': '#bdbdbd',
         'text-halo-color': '#111111',
         'text-halo-width': 1, // Sharper halo like map labels
         'text-halo-blur': 0.5

@@ -96,6 +96,9 @@ export const extractStopProperties = (feature: { properties: Record<string, unkn
         stop_name: String(p.stop_name),
         platform_code: p.platform_code ? String(p.platform_code) : undefined,
         is_train: Number(p.is_train) === 1,
+        metro_a: p.metro_a ? Number(p.metro_a) : undefined,
+        metro_b: p.metro_b ? Number(p.metro_b) : undefined,
+        metro_c: p.metro_c ? Number(p.metro_c) : undefined,
         coordinates: coordinates as [number, number]
     };
 };

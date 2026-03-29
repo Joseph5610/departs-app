@@ -13,7 +13,6 @@ import { DepartureItem } from './DepartureItem';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
-import { METRO_STATIONS } from '../../../config/stations';
 
 const dateLocales: Record<string, Locale> = {
     cs: cs,
@@ -46,10 +45,10 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
-        const isMetroStation = selectedStop.stop_name ? !!METRO_STATIONS[selectedStop.stop_name] : false;
+        const isMetroStation = selectedStop.metro_a || selectedStop.metro_b || selectedStop.metro_c;
         const hour = new Date().getHours();
         const isNightTime = hour >= 0 && hour < 5;
-        return isMetroStation && isNightTime;
+        return !!isMetroStation && isNightTime;
     }, [selectedStop, groupedDepartures.length]);
 
     if (isLoading && groupedDepartures.length === 0) {

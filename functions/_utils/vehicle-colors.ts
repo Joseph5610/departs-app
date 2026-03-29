@@ -12,7 +12,10 @@ export const VEHICLE_COLORS = {
     TRAIN: '#1c1745',
     FERRY: '#00b1b0',
     NIGHT: '#262050',
-    FALLBACK: '#5A5A5A'
+    FALLBACK: '#5A5A5A',
+
+    // Stop & Station Styling
+    STOP_DEFAULT: '#1e293b'
 } as const;
 
 /**

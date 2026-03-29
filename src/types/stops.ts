@@ -19,6 +19,8 @@ export interface StopFeature {
         metro_lines?: string[];
         variant_seed?: number;
         all_ids?: string[];
+        stop_color?: string;
+        transfer_icon?: string;
     };
 }
 
@@ -33,5 +35,8 @@ export interface SelectedStop {
     platform_code?: string;
     coordinates?: [number, number];
     is_train?: boolean;
+    metro_a?: number;
+    metro_b?: number;
+    metro_c?: number;
     all_ids?: string[];
 }

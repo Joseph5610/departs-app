@@ -264,6 +264,31 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
         const metroLines = p.stop_name ? (METRO_STATIONS[p.stop_name] || []) : [];
         const isTrain = String(stopId).endsWith('Z301') ? 1 : 0;
+
+        let stop_color = VEHICLE_COLORS.STOP_DEFAULT;
+        let transfer_icon = '';
+
+        if (type === 1) {
+            const name = p.stop_name;
+            if (name === 'Můstek') transfer_icon = 'transfer-A-B';
+            else if (name === 'Muzeum') transfer_icon = 'transfer-A-C';
+            else if (name === 'Florenc') transfer_icon = 'transfer-B-C';
+
+            if (transfer_icon) {
+                stop_color = '#ffffff';
+            } else if (metroLines.includes('A')) {
+                stop_color = VEHICLE_COLORS.METRO_A;
+            } else if (metroLines.includes('B')) {
+                stop_color = VEHICLE_COLORS.METRO_B;
+            } else if (metroLines.includes('C')) {
+                stop_color = VEHICLE_COLORS.METRO_C;
+            } else {
+                stop_color = '#38bdf8'; // Unknown station
+            }
+        } else if (isTrain) {
+            stop_color = VEHICLE_COLORS.TRAIN;
+        }
+
         const enrichedProperties = {
             ...p,
             metro_lines: metroLines,
@@ -271,6 +296,8 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             metro_b: metroLines.includes('B') ? 1 : 0,
             metro_c: metroLines.includes('C') ? 1 : 0,
             is_train: isTrain,
+            stop_color,
+            transfer_icon,
             variant_seed: Math.random()
         };
 

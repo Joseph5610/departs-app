@@ -1,5 +1,21 @@
 import type { Map } from 'maplibre-gl';
-import { LINE_COLORS } from '../config/stations';
+
+/**
+ * Official PID Branding Colors
+ */
+export const VEHICLE_COLORS = {
+    METRO_A: '#00A562',
+    METRO_B: '#F8B322',
+    METRO_C: '#CF003D',
+    METRO_DEFAULT: '#AD0B00',
+    TRAM: '#7A0603',
+    BUS: '#007DA8',
+    TROLLEYBUS: '#80166F',
+    TRAIN: '#1c1745',
+    FERRY: '#00b1b0',
+    NIGHT: '#262050',
+    FALLBACK: '#5A5A5A'
+} as const;
 
 export const addArrowIcon = (map: Map) => {
     const size = 64;
@@ -55,7 +71,7 @@ export const addSplitIcon = (map: Map, id: string, c1: string, c2: string) => {
 
 export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
-    addSplitIcon(map, 'transfer-A-B', LINE_COLORS.A, LINE_COLORS.B);
-    addSplitIcon(map, 'transfer-A-C', LINE_COLORS.A, LINE_COLORS.C);
-    addSplitIcon(map, 'transfer-B-C', LINE_COLORS.B, LINE_COLORS.C);
+    addSplitIcon(map, 'transfer-A-B', VEHICLE_COLORS.METRO_A, VEHICLE_COLORS.METRO_B);
+    addSplitIcon(map, 'transfer-A-C', VEHICLE_COLORS.METRO_A, VEHICLE_COLORS.METRO_C);
+    addSplitIcon(map, 'transfer-B-C', VEHICLE_COLORS.METRO_B, VEHICLE_COLORS.METRO_C);
 };

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
 import type { StopCollection, StopFeature } from '../../types/transit';
-import { METRO_STATIONS } from '../../config/stations';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -34,9 +33,7 @@ export const useStops = () => {
                 return {
                     ...data,
                     features: data.features.map((f: StopFeature) => {
-                        const name = f.properties.stop_name;
                         const stopId = String(f.properties.stop_id || '');
-                        const lines = METRO_STATIONS[name] || [];
 
                         // Use a deterministic seed based on stop ID to keep variant styles stable
                         let hash = 0;
@@ -50,10 +47,6 @@ export const useStops = () => {
                             ...f,
                             properties: {
                                 ...f.properties,
-                                metro_a: lines.includes('A') ? 1 : 0,
-                                metro_b: lines.includes('B') ? 1 : 0,
-                                metro_c: lines.includes('C') ? 1 : 0,
-                                is_train: stopId.endsWith('Z301') ? 1 : 0,
                                 variant_seed: seed
                             }
                         };
