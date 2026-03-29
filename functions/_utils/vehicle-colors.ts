@@ -10,6 +10,7 @@ export const VEHICLE_COLORS = {
     BUS: '#007DA8',
     TROLLEYBUS: '#80166F',
     TRAIN: '#1c1745',
+    FERRY: '#00b1b0',
     NIGHT: '#262050',
     FALLBACK: '#5A5A5A'
 } as const;
@@ -92,6 +93,9 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
         case '109':
         case 'train':
             return VEHICLE_COLORS.TRAIN;
+        case '4':
+        case 'ferry':
+            return VEHICLE_COLORS.FERRY;
         default:
             return VEHICLE_COLORS.FALLBACK;
     }
