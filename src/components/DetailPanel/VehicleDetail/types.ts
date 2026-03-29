@@ -1,4 +1,4 @@
-import type { VehicleDetail } from '../../../types/transit';
+import type { VehicleDetailProperties } from '../../../types/transit';
 
 /**
  * DisplayVehicle
@@ -7,7 +7,7 @@ import type { VehicleDetail } from '../../../types/transit';
  * Created by merging `selectedVehicle` (from map stream) with `vehicleDetail` (from API),
  * then adding derived fields like `routeName`, `effectiveSequence`, etc.
  */
-export interface DisplayVehicle extends VehicleDetail {
+export interface DisplayVehicle extends VehicleDetailProperties {
     routeName: string;
     isStaticFallback: boolean;
     effectiveSequence: number | null;

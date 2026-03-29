@@ -1,4 +1,4 @@
-import { VEHICLE_COLORS } from '../utils/vehicleColors';
+import { VEHICLE_COLORS } from './colors';
 
 export const LINE_COLORS = {
     A: VEHICLE_COLORS.METRO_A,

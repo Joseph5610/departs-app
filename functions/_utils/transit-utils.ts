@@ -1,6 +1,7 @@
 import { AppDeparture, GolemioDepartureItem, GolemioStopFeature, GolemioVehicleFeature } from "./types";
 import { METRO_STATIONS } from "./metro-data";
 import { TRANSIT_CONFIG } from "./api-utils";
+import { getVehicleColor, isNightRoute } from "./vehicle-colors";
 
 /**
  * Fixes missing spaces after commas (common in Golemio data).
@@ -70,6 +71,9 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const last_stop_sequence = (p.last_stop_sequence as number | undefined) ?? last_pos?.last_stop?.sequence ?? last_pos?.last_stop_sequence;
     const origin_timestamp = (p.origin_timestamp as string | undefined) || last_pos?.origin_timestamp || trip?.origin_timestamp || last_pos?.timestamp;
 
+    const line_color = getVehicleColor(route_type, route_short_name);
+    const is_night = isNightRoute(route_short_name) ? 1 : 0;
+
     return {
         type: 'Feature',
         geometry: feature.geometry,
@@ -86,6 +90,8 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             last_stop_sequence,
             origin_timestamp,
             run_number,
+            line_color,
+            is_night,
             vehicle_descriptor: {
                 operator,
                 vehicle_type: (p.vehicle_type as string | undefined) || p.trip?.vehicle_type || vehicle_descriptor.vehicle_type,

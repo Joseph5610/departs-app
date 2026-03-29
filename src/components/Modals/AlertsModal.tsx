@@ -14,8 +14,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
-import { getVehicleColor } from '../../utils/vehicleColors';
 import { GenericAlertCard } from '../Alerts/GenericAlertCard';
+import { getVehicleColor } from '../../utils/transitUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';

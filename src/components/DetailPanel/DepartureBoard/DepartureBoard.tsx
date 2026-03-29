@@ -6,7 +6,6 @@ import { enUS } from 'date-fns/locale/en-US';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getVehicleColor } from '../../../utils/vehicleColors';
 import type { Departure, SelectedStop } from '../../../types/transit';
 import { useDepartures } from '../../../hooks/data/useDepartures';
 import { useStopDistance } from '../../../hooks/derived/useStopDistance';
@@ -82,7 +81,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                 <HStack gap={3} className="px-1">
                                     <Box
                                         className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
-                                        style={{ backgroundColor: getVehicleColor(group.type, group.line) }}
+                                        style={{ backgroundColor: group.departures[0]?.line_color }}
                                     >
                                         {group.line}
                                     </Box>

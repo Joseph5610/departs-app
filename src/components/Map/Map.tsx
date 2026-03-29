@@ -59,7 +59,7 @@ const MapInner: React.FC = () => {
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {
-            return t('map.vehicleDetails.lineLabel', { line: selectedVehicle.route_short_name });
+            return t('map.vehicleDetails.lineLabel', { line: selectedVehicle.properties.route_short_name });
         }
         if (selectedStop) {
             return selectedStop.stop_name;
@@ -118,7 +118,7 @@ const MapInner: React.FC = () => {
                         if (!props?.vehicle_id) {
                             return;
                         }
-                        selActions.selectVehicle(props.gtfs_trip_id, props.vehicle_id, false);
+                        selActions.selectVehicle(String(props.gtfs_trip_id), String(props.vehicle_id), false);
                         return;
                     }
 

@@ -61,20 +61,25 @@ export const extractVehicleProperties = (feature: { properties: Record<string, u
     const gtfs_trip_id = String(rawProps.gtfs_trip_id || '');
 
     return {
-        vehicle_id,
-        gtfs_trip_id,
-        route_short_name: rawProps.route_short_name !== undefined ? String(rawProps.route_short_name) : undefined,
-        route_type: rawProps.route_type !== undefined ? (isNaN(Number(rawProps.route_type)) ? String(rawProps.route_type) : Number(rawProps.route_type)) : undefined,
-        trip_headsign: rawProps.trip_headsign !== undefined ? String(rawProps.trip_headsign) : undefined,
-        bearing: rawProps.bearing !== undefined && rawProps.bearing !== null && rawProps.bearing !== '' ? Number(rawProps.bearing) : null,
-        delay: Number(rawProps.delay || 0),
-        state_position: rawProps.state_position !== undefined ? String(rawProps.state_position) : undefined,
-        next_stop_name: rawProps.next_stop_name !== undefined ? String(rawProps.next_stop_name) : undefined,
-        run_number: rawProps.run_number !== undefined ? (isNaN(Number(rawProps.run_number)) ? String(rawProps.run_number) : Number(rawProps.run_number)) : undefined,
-        last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
-        origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
-        vehicle_descriptor,
-        geometry: feature.geometry as VehicleDetail['geometry']
+        type: 'Feature',
+        geometry: (feature.geometry || { type: 'Point', coordinates: [0, 0] }) as VehicleDetail['geometry'],
+        properties: {
+            vehicle_id,
+            gtfs_trip_id,
+            route_short_name: rawProps.route_short_name !== undefined ? String(rawProps.route_short_name) : undefined,
+            route_type: rawProps.route_type !== undefined ? (isNaN(Number(rawProps.route_type)) ? String(rawProps.route_type) : Number(rawProps.route_type)) : undefined,
+            trip_headsign: rawProps.trip_headsign !== undefined ? String(rawProps.trip_headsign) : undefined,
+            bearing: rawProps.bearing !== undefined && rawProps.bearing !== null && rawProps.bearing !== '' ? Number(rawProps.bearing) : null,
+            delay: Number(rawProps.delay || 0),
+            state_position: rawProps.state_position !== undefined ? String(rawProps.state_position) : undefined,
+            next_stop_name: rawProps.next_stop_name !== undefined ? String(rawProps.next_stop_name) : undefined,
+            run_number: rawProps.run_number !== undefined ? (isNaN(Number(rawProps.run_number)) ? String(rawProps.run_number) : Number(rawProps.run_number)) : undefined,
+            last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
+            origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
+            line_color: rawProps.line_color !== undefined ? String(rawProps.line_color) : undefined,
+            is_night: rawProps.is_night !== undefined ? Number(rawProps.is_night) : undefined,
+            vehicle_descriptor,
+        }
     };
 };
 

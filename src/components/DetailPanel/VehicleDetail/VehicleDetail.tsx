@@ -40,26 +40,26 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const displayVehicle = useMemo<DisplayVehicle | null>(() => {
         if (!selectedVehicle) return null;
         // Merge strategy: prioritize API detail but never let it override critical state with null/empty
-        const merged = {
-            ...selectedVehicle,
-            ...vehicleDetail,
-            route_short_name: vehicleDetail?.route_short_name || selectedVehicle.route_short_name,
-            route_type: vehicleDetail?.route_type ?? selectedVehicle.route_type,
-            trip_headsign: vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign
+        const mergedProperties = {
+            ...selectedVehicle.properties,
+            ...vehicleDetail?.properties,
+            route_short_name: vehicleDetail?.properties?.route_short_name || selectedVehicle.properties.route_short_name,
+            route_type: vehicleDetail?.properties?.route_type ?? selectedVehicle.properties.route_type,
+            trip_headsign: vehicleDetail?.properties?.trip_headsign || selectedVehicle.properties.trip_headsign
         };
-        const routeName = String(merged.route_short_name || '');
-        const isStaticFallback = !!merged.is_static_fallback;
+        const routeName = String(mergedProperties.route_short_name || '');
+        const isStaticFallback = !!mergedProperties.is_static_fallback;
 
         // Effective sequence: suppress highlight if static fallback
-        const rawSeq = merged.last_stop_sequence;
+        const rawSeq = mergedProperties.last_stop_sequence;
         const effectiveSequence = (isStaticFallback || rawSeq === null || rawSeq === undefined) ? null : Number(rawSeq);
 
         return {
-            ...merged,
+            ...mergedProperties,
             routeName,
             isStaticFallback,
             effectiveSequence,
-            routeType: merged.route_type ?? 0
+            routeType: mergedProperties.route_type ?? 0
         };
     }, [selectedVehicle, vehicleDetail]);
 

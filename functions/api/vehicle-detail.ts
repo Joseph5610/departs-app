@@ -78,38 +78,60 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         // Final vehicle data: core properties from normalization, plus expanded scope data
-        const vehicleData: Record<string, any> = {
+        const properties: Record<string, any> = {
             ...normalizedFeature.properties,
-            geometry: normalizedFeature.geometry,
             // Merge root-level metadata often provided alongside FeatureCollection when using scopes
             stop_times: data.stop_times || (normalizedFeature.properties as any).stop_times,
             shapes: data.shapes || (normalizedFeature.properties as any).shapes,
         };
 
         // If upstream provided expanded descriptors/metadata at root, use them
-        if (data.vehicle_descriptor) vehicleData.vehicle_descriptor = data.vehicle_descriptor;
-        if (data.run_number !== undefined) vehicleData.run_number = data.run_number;
-        if (data.origin_timestamp) vehicleData.origin_timestamp = data.origin_timestamp;
-        if (data.last_stop_sequence !== undefined) vehicleData.last_stop_sequence = data.last_stop_sequence;
-        if (data.next_stop_name) vehicleData.next_stop_name = data.next_stop_name;
+        if (data.vehicle_descriptor) properties.vehicle_descriptor = data.vehicle_descriptor;
+        if (data.run_number !== undefined) properties.run_number = data.run_number;
+        if (data.origin_timestamp) properties.origin_timestamp = data.origin_timestamp;
+        if (data.last_stop_sequence !== undefined) properties.last_stop_sequence = data.last_stop_sequence;
+        if (data.next_stop_name) properties.next_stop_name = data.next_stop_name;
 
-        vehicleData.is_static_fallback = isStatic;
+        properties.is_static_fallback = isStatic;
 
-        // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates
-        if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
-            const shapesObj = vehicleData.shapes as { features?: ShapeFeature[] };
+        // Route Shape Optimization: Transform Point collection into a single LineString Feature
+        let routeShapeCoordinates: [number, number][] = [];
+        if (properties.shapes && !Array.isArray(properties.shapes) && typeof properties.shapes === 'object') {
+            const shapesObj = properties.shapes as { features?: ShapeFeature[] };
             if (shapesObj.features) {
-                vehicleData.shapes = shapesObj.features
+                routeShapeCoordinates = shapesObj.features
                     .filter((f: ShapeFeature) => f.geometry.type === 'Point')
                     .map((f: ShapeFeature) => f.geometry.coordinates);
-            } else {
-                vehicleData.shapes = [];
             }
-        } else if (!vehicleData.shapes) {
-            vehicleData.shapes = [];
+        } else if (Array.isArray(properties.shapes)) {
+            routeShapeCoordinates = properties.shapes;
         }
 
-        return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
+        if (routeShapeCoordinates.length >= 2) {
+            properties.route_shape = {
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: routeShapeCoordinates
+                },
+                properties: {
+                    line_color: properties.line_color
+                }
+            };
+        } else {
+            properties.route_shape = null;
+        }
+
+        // Cleanup raw shapes
+        delete properties.shapes;
+
+        const responseFeature = {
+            type: 'Feature',
+            geometry: normalizedFeature.geometry,
+            properties: properties
+        };
+
+        return createSuccessResponse(responseFeature, CACHE_TTL.VEHICLE_DETAIL);
     } catch (error) {
         console.error("Vehicle Detail API Error:", error);
         return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);

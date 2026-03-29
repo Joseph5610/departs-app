@@ -1,6 +1,7 @@
 import { Env } from "../_utils/types";
 import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
+import { getVehicleColor } from "../_utils/vehicle-colors";
 
 /**
  * Retrieves the departure board for a given stop ID or multiple stop IDs.
@@ -41,7 +42,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const allGroups = Array.isArray(data) ? data : [];
         const flattened = allGroups.flat();
 
-        const departures = flattened.map(normalizeDeparture);
+        const departures = flattened.map((item: any) => {
+            const normalized = normalizeDeparture(item);
+            return {
+                ...normalized,
+                line_color: getVehicleColor(normalized.type, normalized.line)
+            };
+        });
 
         // 3. Sort by predicted time (falling back to scheduled time)
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());

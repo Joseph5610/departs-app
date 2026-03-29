@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getVehicleColor } from '../../../utils/vehicleColors';
 import { useShare } from '../../../hooks/features/useShare';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
@@ -23,13 +22,13 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
         <Surface variant="tinted" padding="none" className="overflow-hidden rounded-2xl">
             <Box
                 className="absolute inset-0 opacity-5"
-                style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
+                style={{ backgroundColor: displayVehicle.line_color }}
             />
             <Stack gap={1} className="relative z-10 px-6 py-6">
                 <HStack justify="between" align="center" className="w-full">
                     <button
                         className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
-                        style={{ backgroundColor: getVehicleColor(displayVehicle.routeType, displayVehicle.routeName) }}
+                        style={{ backgroundColor: displayVehicle.line_color }}
                         onClick={onToggleFollow}
                     >
                         <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{displayVehicle.routeName}</span>

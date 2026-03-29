@@ -166,6 +166,8 @@ export interface AppVehicleProperties {
     last_stop_sequence?: number;
     origin_timestamp?: string;
     run_number?: number | string;
+    line_color?: string;
+    is_night?: number;
     vehicle_descriptor?: GolemioVehicleDescriptor;
 }
 

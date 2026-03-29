@@ -333,7 +333,6 @@ export const entranceLayer: SymbolLayerSpecification = {
 };
 
 // 4. Vehicle Layers
-import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
 export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     id: 'selected-vehicle-pulse',
@@ -342,7 +341,7 @@ export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     paint: {
         'circle-radius': 0, // Animated in component
         'circle-opacity': 0, // Animated in component
-        'circle-color': vehicleColorExpression
+        'circle-color': ['get', 'line_color']
     }
 };
 
@@ -352,9 +351,9 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
     source: 'selected-vehicle',
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression,
+        'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['==', ['get', 'is_night'], 1], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -374,7 +373,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': ['get', 'line_color'],
         'icon-opacity': [
             'case',
             ['any',
@@ -417,9 +416,9 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     // Filter handled dynamically in component to exclude selected
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression,
+        'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['==', ['get', 'is_night'], 1], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -441,7 +440,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': ['get', 'line_color'],
         'icon-opacity': [
             'case',
             ['any',

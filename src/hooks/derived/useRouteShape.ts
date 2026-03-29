@@ -2,38 +2,25 @@
 import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useSelectedVehicle } from './useSelectedVehicle';
-import { getVehicleColor } from '../../utils/vehicleColors';
 
+/**
+ * useRouteShape
+ *
+ * Provides the GeoJSON FeatureCollection for the selected vehicle's route shape.
+ * Leverages the pre-formatted route_shape provided by the detail API.
+ */
 export const useRouteShape = () => {
     const { data: vehicleDetail } = useVehicleDetail();
     const selectedVehicle = useSelectedVehicle();
 
     return useMemo(() => {
-        if (!selectedVehicle || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) {
+        if (!selectedVehicle || !vehicleDetail?.properties?.route_shape) {
             return null;
         }
-
-        const coordinates = vehicleDetail.shapes as [number, number][];
-        if (coordinates.length < 2) {
-            return null;
-        }
-
-        const routeName = selectedVehicle.route_short_name || '';
-        const routeType = selectedVehicle.route_type || 0;
-        const color = getVehicleColor(routeType, routeName);
 
         return {
             type: 'FeatureCollection' as const,
-            features: [{
-                type: 'Feature' as const,
-                geometry: {
-                    type: 'LineString' as const,
-                    coordinates: coordinates
-                },
-                properties: {
-                    line_color: color
-                }
-            }]
+            features: [vehicleDetail.properties.route_shape]
         };
     }, [selectedVehicle, vehicleDetail]);
 };

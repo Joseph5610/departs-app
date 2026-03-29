@@ -12,4 +12,5 @@ export interface Departure {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
+    line_color?: string;
 }

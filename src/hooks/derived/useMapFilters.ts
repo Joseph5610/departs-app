@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
-import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
+import type { VehicleDetail, VehicleCollection } from '../../types/transit';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
@@ -17,30 +17,15 @@ export const useMapFilters = (
     selectedVehicle: VehicleDetail | null,
     selectedId: string | null
 ) => {
-    // 1. Create a standalone GeoJSON for the selected vehicle
+    // 1. Return the selected vehicle wrapped in a collection for the map
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
-        if (!selectedVehicle || !selectedVehicle.geometry) {
+        if (!selectedVehicle) {
             return EMPTY_GEOJSON;
         }
 
-        const coords = selectedVehicle.geometry.coordinates;
-        const [lng, lat] = coords;
-        const hasValidLocation = lng !== 0 || lat !== 0;
-
         return {
             type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: hasValidLocation ? coords : [0, 0]
-                    },
-                    properties: {
-                        ...selectedVehicle
-                    }
-                } as VehicleFeature
-            ]
+            features: [selectedVehicle]
         };
     }, [selectedVehicle]);
 
@@ -49,9 +34,9 @@ export const useMapFilters = (
     const vehiclesFilter = useMemo<FilterSpecification>(() => {
         return ['!', ['any',
             ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], selectedId || 'NOMATCH'],
-            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
+            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], selectedVehicle?.properties?.gtfs_trip_id || 'NOMATCH']
         ]] as FilterSpecification;
-    }, [selectedId, selectedVehicle?.gtfs_trip_id]);
+    }, [selectedId, selectedVehicle?.properties?.gtfs_trip_id]);
 
     return {
         selectedVehicleFeature,

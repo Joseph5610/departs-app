@@ -20,12 +20,25 @@ export interface BaseVehicleProperties {
     run_number?: number | string;
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
+    line_color?: string;
+    is_night?: number;
     vehicle_descriptor?: VehicleDescriptor;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
-    state_position: string; // Required in map features
+    state_position?: string;
     last_updated?: string;
+}
+
+export interface RouteShapeFeature {
+    type: "Feature";
+    geometry: {
+        type: "LineString";
+        coordinates: [number, number][];
+    };
+    properties: {
+        line_color?: string;
+    };
 }
 
 export interface VehicleFeature {
@@ -42,11 +55,7 @@ export interface VehicleCollection {
     features: VehicleFeature[];
 }
 
-export interface VehicleDetail extends BaseVehicleProperties {
-    geometry?: {
-        type: "Point";
-        coordinates: [number, number];
-    };
+export interface VehicleDetailProperties extends BaseVehicleProperties {
     stop_times?: {
         type: "FeatureCollection";
         features: Array<{
@@ -68,6 +77,10 @@ export interface VehicleDetail extends BaseVehicleProperties {
             };
         }>;
     };
-    shapes?: number[][];
+    route_shape?: RouteShapeFeature | null;
     is_static_fallback?: boolean;
+}
+
+export interface VehicleDetail extends VehicleFeature {
+    properties: VehicleDetailProperties;
 }

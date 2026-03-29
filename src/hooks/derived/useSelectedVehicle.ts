@@ -11,6 +11,8 @@ import type { VehicleDetail } from '../../types/transit';
  * 1. Current State (IDs from reducer)
  * 2. Live Stream (high-frequency location from useVehicles)
  * 3. Detail API (low-frequency metadata from useVehicleDetail)
+ *
+ * Returns a GeoJSON Feature representing the selected vehicle.
  */
 export const useSelectedVehicle = () => {
     const { state } = useSelection();
@@ -26,32 +28,40 @@ export const useSelectedVehicle = () => {
 
         const liveMatch = rawVehicles?.features?.find(f => vehicleId ? f.properties.vehicle_id === vehicleId : f.properties.gtfs_trip_id === tripId);
 
-        const isFallback = !!vehicleDetail?.is_static_fallback;
+        const isFallback = !!vehicleDetail?.properties?.is_static_fallback;
 
-        const merged: VehicleDetail = {
+        const mergedProperties = {
             vehicle_id: vehicleId,
             gtfs_trip_id: tripId,
-            bearing: null,
+            bearing: null as number | null,
             delay: 0,
             ...liveMatch?.properties,
-            ...vehicleDetail,
+            ...vehicleDetail?.properties,
         };
 
         if (isFallback && liveMatch) {
-            merged.delay = liveMatch.properties.delay;
-            merged.bearing = liveMatch.properties.bearing;
-            merged.state_position = liveMatch.properties.state_position;
-            merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
+            mergedProperties.delay = liveMatch.properties.delay;
+            mergedProperties.bearing = liveMatch.properties.bearing ?? null;
+            mergedProperties.state_position = liveMatch.properties.state_position;
+            mergedProperties.last_stop_sequence = liveMatch.properties.last_stop_sequence;
         }
+
+        let geometry = vehicleDetail?.geometry;
 
         const isValid = (g: any) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
 
-        if (isValid(vehicleDetail?.geometry)) {
-            merged.geometry = vehicleDetail!.geometry;
-        } else if (isValid(liveMatch?.geometry)) {
-            merged.geometry = liveMatch!.geometry;
+        if (!isValid(geometry) && isValid(liveMatch?.geometry)) {
+            geometry = liveMatch!.geometry;
         }
 
-        return merged;
+        if (!geometry) {
+            return null;
+        }
+
+        return {
+            type: 'Feature',
+            geometry: geometry,
+            properties: mergedProperties as any
+        };
     }, [tripId, vehicleId, rawVehicles, vehicleDetail]);
 };
