@@ -12,8 +12,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     /**
      * Fetches all stops using pagination.
      */
-    const fetchAllStops = async () => {
-        let allFeatures: GolemioStopFeature[] = [];
+    const fetchAllStops = async (): Promise<GolemioStopFeature[]> => {
+        const allFeatures: GolemioStopFeature[] = [];
         let offset = 0;
         const limit = TRANSIT_CONFIG.STOPS_FETCH_LIMIT;
 
@@ -27,12 +27,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 }
             });
 
-            if (!res.ok) break;
+            if (!res.ok) {
+                // If we already have some data, we can try to proceed with partial data
+                // instead of failing the whole request.
+                if (allFeatures.length > 0) break;
+                return [];
+            }
 
             const data = await res.json() as { features: GolemioStopFeature[] };
             if (!data.features || data.features.length === 0) break;
 
-            allFeatures = [...allFeatures, ...data.features];
+            // Use push for better memory efficiency with large arrays
+            for (let i = 0; i < data.features.length; i++) {
+                allFeatures.push(data.features[i]);
+            }
 
             if (data.features.length < limit) break;
             offset += limit;
