@@ -73,7 +73,7 @@ export const MapControls = React.memo(() => {
     }, [mapRef, mapLoaded]);
 
     return (
-        <Overlay position="top-right" className="safe-top safe-right p-4 md:p-5 z-40" data-testid="map-controls">
+        <Overlay position="top-right" className="safe-top safe-right p-4 md:p-0 md:top-5 md:right-5 z-40" data-testid="map-controls">
             <Stack gap={2}>
                 <ControlButton
                     onClick={(e) => onLocate(e)}
