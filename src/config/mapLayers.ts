@@ -353,7 +353,7 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
         'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', ['==', ['get', 'is_night'], 1], '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['to-boolean', ['get', 'is_night']], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -418,7 +418,7 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
         'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', ['==', ['get', 'is_night'], 1], '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['to-boolean', ['get', 'is_night']], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };

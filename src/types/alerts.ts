@@ -8,6 +8,7 @@ export interface RSSItem {
     guid?: string;
     priority?: string;
     lines?: string[];
+    lineColors?: Record<string, string>;
     isActive?: boolean;
     isFuture?: boolean;
 }

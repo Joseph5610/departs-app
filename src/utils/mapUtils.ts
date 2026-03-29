@@ -77,7 +77,7 @@ export const extractVehicleProperties = (feature: { properties: Record<string, u
             last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
             origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
             line_color: rawProps.line_color !== undefined ? String(rawProps.line_color) : undefined,
-            is_night: rawProps.is_night !== undefined ? Number(rawProps.is_night) : undefined,
+            is_night: rawProps.is_night !== undefined ? Boolean(rawProps.is_night) : undefined,
             vehicle_descriptor,
         }
     };

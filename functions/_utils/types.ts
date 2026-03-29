@@ -167,7 +167,7 @@ export interface AppVehicleProperties {
     origin_timestamp?: string;
     run_number?: number | string;
     line_color?: string;
-    is_night?: number;
+    is_night?: boolean;
     vehicle_descriptor?: GolemioVehicleDescriptor;
 }
 
@@ -194,6 +194,7 @@ export interface AppRSSItem {
     guid?: string;
     priority?: string;
     lines?: string[];
+    lineColors?: Record<string, string>;
     isActive?: boolean;
     isFuture?: boolean;
 }

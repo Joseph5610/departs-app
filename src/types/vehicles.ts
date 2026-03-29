@@ -21,7 +21,7 @@ export interface BaseVehicleProperties {
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
     line_color?: string;
-    is_night?: number;
+    is_night?: boolean;
     vehicle_descriptor?: VehicleDescriptor;
 }
 

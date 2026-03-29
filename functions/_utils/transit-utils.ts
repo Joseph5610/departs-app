@@ -72,7 +72,7 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const origin_timestamp = (p.origin_timestamp as string | undefined) || last_pos?.origin_timestamp || trip?.origin_timestamp || last_pos?.timestamp;
 
     const line_color = getVehicleColor(route_type, route_short_name);
-    const is_night = isNightRoute(route_short_name) ? 1 : 0;
+    const is_night = isNightRoute(route_short_name);
 
     return {
         type: 'Feature',

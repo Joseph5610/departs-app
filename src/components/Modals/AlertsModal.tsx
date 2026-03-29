@@ -15,13 +15,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
 import { GenericAlertCard } from '../Alerts/GenericAlertCard';
-import { getVehicleColor } from '../../utils/transitUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Stack, Box, Surface } from '@/components/ui/layout';
 import { cn } from '@/lib/utils';
-import { guessType } from '../../utils/transitUtils';
 
 /**
  * Alerts Component
@@ -177,7 +175,7 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             isFuture={item.isFuture}
             showStatus={true}
             lines={item.lines}
-            lineColors={(line) => getVehicleColor(guessType(line), line)}
+            lineColors={(line) => item.lineColors?.[line] || '#5A5A5A'}
         />
     );
 };

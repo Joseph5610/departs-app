@@ -1,6 +1,7 @@
 import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse, formatPragueDate } from "../_utils/api-utils";
 import { getXMLTagContent } from "../_utils/rss-utils";
 import { AppRSSItem, AppRSSResponse } from "../_utils/types";
+import { getVehicleColor, guessType } from "../_utils/vehicle-colors";
 
 export const onRequest: PagesFunction = async () => {
     try {
@@ -161,6 +162,11 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
         // Remove trailing semicolons or dots if they are left over
         cleanedDescription = cleanedDescription.replace(/^[;\s.]+|[;\s.]+$/g, '');
 
+        const lineColors: Record<string, string> = {};
+        for (const line of lines) {
+            lineColors[line] = getVehicleColor(guessType(line), line);
+        }
+
         items.push({
             type: itemType,
             title,
@@ -171,6 +177,7 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,
+            lineColors,
             isActive,
             isFuture
         });
