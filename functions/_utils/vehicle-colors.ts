@@ -9,7 +9,7 @@ export const VEHICLE_COLORS = {
     TRAM: '#7A0603',
     BUS: '#007DA8',
     TROLLEYBUS: '#80166F',
-    TRAIN: '#010002ff',
+    TRAIN: '#1c1745',
     NIGHT: '#262050',
     FALLBACK: '#5A5A5A'
 } as const;
