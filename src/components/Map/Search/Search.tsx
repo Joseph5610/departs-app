@@ -22,7 +22,7 @@ import { SearchDropdown } from './SearchDropdown';
  */
 export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const { actions: selActions } = useSelection();
+    const { state: selState, actions: selActions } = useSelection();
     const { state: prefState, actions: prefActions } = usePreferences();
     const { state: vpState, actions: vpActions, mapRef } = useViewport();
     const { data: stops } = useStops();
@@ -32,6 +32,8 @@ export const Search: React.FC = React.memo(() => {
     const { addToHistory } = prefActions;
     const { selectStop } = selActions;
     const { setRouteFilter: onLineSelect } = vpActions;
+
+    const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -143,7 +145,10 @@ export const Search: React.FC = React.memo(() => {
     return (
         <Overlay
             position="top-left"
-            className="w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:pt-5 z-[2000]"
+            className={cn(
+                "w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-[2000] transition-all duration-300 ease-in-out",
+                isSidebarOpen && "md:left-[calc(220px+50%)] md:w-[360px]"
+            )}
             data-vaul-no-drag
         >
             <Box ref={containerRef}>

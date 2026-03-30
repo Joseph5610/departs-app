@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useViewport } from '../../state/MapStateProvider';
+import { useSelection, useViewport } from '../../state/MapStateProvider';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,11 @@ import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
+    const { state: selState } = useSelection();
     const { state: vpState } = useViewport();
     const { isFetching: fetching, dataUpdatedAt: lastUpdate } = useVehicles();
 
+    const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
     const { bounds } = vpState;
     const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
 
@@ -36,7 +38,14 @@ export const LiveStatus: React.FC = () => {
     if (!bounds) return null;
 
     return (
-        <Overlay position="top-center" className="pt-[calc(4.75rem+env(safe-area-inset-top,0px))] md:pt-[calc(5.25rem+env(safe-area-inset-top,0px))]">
+        <Overlay
+            position="top-center"
+            data-testid="live-status"
+            className={cn(
+                "pt-[calc(4.75rem+env(safe-area-inset-top,0px))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0px))]",
+                isSidebarOpen && "md:left-[calc(220px+50%)]"
+            )}
+        >
             <AnimatePresence mode="wait">
                 <motion.div
                     key="live-pill"
