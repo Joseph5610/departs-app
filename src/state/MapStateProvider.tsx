@@ -113,6 +113,10 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
     }, []);
 
     const onMove = useCallback((evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => {
+        if (evt.originalEvent && selState.isFollowing) {
+            selActions.setIsFollowing(false);
+        }
+
         if (selState.isFollowing) return;
         if (!evt.originalEvent) return;
 
@@ -128,7 +132,7 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         if (zoom < MAP_MIN_ZOOM_FOR_DATA && vpState.bounds !== null) {
             vpActions.setBounds(null);
         }
-    }, [vpState.bounds, selState.isFollowing, getRoundedBounds, vpActions]);
+    }, [vpState.bounds, selState.isFollowing, getRoundedBounds, vpActions, selActions]);
 
     const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => {
         if (selState.isFollowing) return;
@@ -197,7 +201,7 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         mapEvents: { onMove, onMoveEnd, onLoad, onDragStart }
     }), [
         viewportContext, mapRef, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
-        handleLocate, performGeolocation, handleDepartureClick,
+        handleLocate, performGeolocation, handleDepartureClick, vpActions,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);
 
