@@ -33,6 +33,7 @@ export const useMapInterface = () => {
 
     const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
+    const lastFlownStopId = useRef<string | null>(null);
 
     // --- 1. URL SYNC (Initial Load) ---
     useEffect(() => {
@@ -97,6 +98,12 @@ export const useMapInterface = () => {
         const coords = selectedVehicle?.geometry?.coordinates;
         const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
 
+        // If we are following a vehicle or just have one selected,
+        // we reset the last flown stop ID so that returning to the stop triggers a re-center.
+        if (selectedTripId) {
+            lastFlownStopId.current = null;
+        }
+
         if (isFollowing && hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId || null;
             currentMap.flyTo({
@@ -119,7 +126,8 @@ export const useMapInterface = () => {
             return;
         }
 
-        if (!isFollowing && selectedStop?.coordinates) {
+        if (!isFollowing && !selectedTripId && selectedStop?.coordinates && lastFlownStopId.current !== selectedStopId) {
+            lastFlownStopId.current = selectedStopId || null;
             currentMap.easeTo({
                 center: selectedStop.coordinates,
                 zoom: Math.max(currentMap.getZoom(), MAP_MIN_STOP_ZOOM),
@@ -127,7 +135,7 @@ export const useMapInterface = () => {
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId]);
 
     // --- 4. PERFORMANCE VISUALS ---
     useEffect(() => {
