@@ -127,8 +127,8 @@ export const PWAInstallPrompt: React.FC = () => {
                     </Surface>
                 </Box>
 
-                <DrawerFooter className="pt-2 pb-6 px-4">
-                    {platform !== 'ios' && deferredPrompt ? (
+                {platform !== 'ios' && deferredPrompt && (
+                    <DrawerFooter className="pt-2 pb-6 px-4">
                         <Button
                             onClick={handleInstall}
                             size="lg"
@@ -136,17 +136,8 @@ export const PWAInstallPrompt: React.FC = () => {
                         >
                             {t('pwa.button')}
                         </Button>
-                    ) : (
-                        <Button
-                            onClick={handleDismiss}
-                            variant="tinted"
-                            size="lg"
-                            className="w-full font-bold rounded-xl h-11"
-                        >
-                            {t('pwa.dismiss')}
-                        </Button>
-                    )}
-                </DrawerFooter>
+                    </DrawerFooter>
+                )}
 
                 <button
                     onClick={handleDismiss}
@@ -163,7 +154,7 @@ const IOSMockupAnimation: React.FC = () => {
     const { t } = useTranslation();
 
     return (
-        <Box className="h-[180px] relative bg-neutral-900 flex flex-col items-center justify-end p-4 overflow-hidden">
+        <Box className="h-[200px] relative bg-neutral-900 flex flex-col items-center justify-end p-4 overflow-hidden">
             {/* Safari Address Bar Mockup */}
             <motion.div
                 className="w-full max-w-[280px] h-11 bg-white/10 backdrop-blur-md rounded-full border border-white/10 flex items-center px-4 mb-4 relative z-10 shadow-2xl"
@@ -182,58 +173,94 @@ const IOSMockupAnimation: React.FC = () => {
                 {/* Tap Circle Animation on the 3 dots */}
                 <motion.div
                     className="absolute right-3.5 w-7 h-7 bg-white/30 rounded-full border border-white/50 pointer-events-none"
-                    initial={{ scale: 0, opacity: 0 }}
                     animate={{
-                        scale: [0, 1.2, 0],
-                        opacity: [0, 1, 0],
+                        scale: [0, 1.2, 0, 0, 0, 0],
+                        opacity: [0, 1, 0, 0, 0, 0],
                     }}
                     transition={{
-                        duration: 1.5,
+                        duration: 6,
                         repeat: Infinity,
-                        repeatDelay: 2.5,
-                        times: [0, 0.2, 0.4]
+                        times: [0, 0.05, 0.1, 0.15, 0.9, 1]
                     }}
                 />
             </motion.div>
 
-            {/* Context Menu Animation */}
-            <AnimatePresence>
-                <motion.div
-                    className="absolute bottom-20 right-6 w-52 bg-neutral-800/98 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-20"
-                    initial={{ scale: 0.7, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
-                    animate={{
-                        scale: [0.7, 1, 1, 0.7],
-                        opacity: [0, 1, 1, 0],
-                        y: [20, 0, 0, 20]
-                    }}
-                    transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        times: [0, 0.1, 0.9, 1],
-                        ease: [0.16, 1, 0.3, 1]
-                    }}
-                >
-                    <Stack gap={0} className="divide-y divide-white/10">
-                        <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white/90">
-                            <span>Share...</span>
-                            <Share size={14} className="text-white/60" />
-                        </HStack>
-                        <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white bg-primary/20">
-                            <span className="font-bold text-primary">Add to Home Screen</span>
-                            <PlusSquare size={14} className="text-primary" />
-                        </HStack>
-                        <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white/90">
-                            <span>Find in Page</span>
-                            <ExternalLink size={14} className="text-white/60" />
-                        </HStack>
-                    </Stack>
-                </motion.div>
-            </AnimatePresence>
+            {/* Menu 1 (Share...) */}
+            <motion.div
+                className="absolute bottom-20 right-6 w-48 bg-neutral-800/98 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-20"
+                initial={{ scale: 0.7, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
+                animate={{
+                    scale: [0.7, 1, 1, 0.7, 0.7, 0.7],
+                    opacity: [0, 1, 1, 0, 0, 0],
+                    y: [20, 0, 0, 20, 20, 20]
+                }}
+                transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    times: [0.08, 0.12, 0.4, 0.44, 0.9, 1],
+                    ease: [0.16, 1, 0.3, 1]
+                }}
+            >
+                <Stack gap={0} className="divide-y divide-white/10">
+                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white bg-primary/20 relative">
+                        <span className="font-bold text-primary">Share...</span>
+                        <Share size={14} className="text-primary" />
+
+                        {/* Tap Circle Animation on Share */}
+                        <motion.div
+                            className="absolute right-2 w-8 h-8 bg-white/30 rounded-full border border-white/50 pointer-events-none"
+                            animate={{
+                                scale: [0, 0, 1.2, 0, 0],
+                                opacity: [0, 0, 1, 0, 0],
+                            }}
+                            transition={{
+                                duration: 6,
+                                repeat: Infinity,
+                                times: [0, 0.35, 0.38, 0.42, 1]
+                            }}
+                        />
+                    </HStack>
+                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white/40">
+                        <span>Find in Page</span>
+                        <ExternalLink size={14} />
+                    </HStack>
+                </Stack>
+            </motion.div>
+
+            {/* Menu 2 (Add to Home Screen) */}
+            <motion.div
+                className="absolute bottom-20 right-6 w-56 bg-neutral-800/98 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-20"
+                initial={{ scale: 0.7, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
+                animate={{
+                    scale: [0.7, 0.7, 1, 1, 0.7],
+                    opacity: [0, 0, 1, 1, 0],
+                    y: [20, 20, 0, 0, 20]
+                }}
+                transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    times: [0, 0.42, 0.46, 0.9, 0.95],
+                    ease: [0.16, 1, 0.3, 1]
+                }}
+            >
+                <Stack gap={0} className="divide-y divide-white/10">
+                    <HStack justify="between" align="center" className="px-4 py-3 text-[11px] text-white/40">
+                        <span>Copy Link</span>
+                    </HStack>
+                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white bg-primary/20">
+                        <span className="font-bold text-primary">Add to Home Screen</span>
+                        <PlusSquare size={14} className="text-primary" />
+                    </HStack>
+                    <HStack justify="between" align="center" className="px-4 py-3 text-[11px] text-white/40">
+                        <span>Add to Bookmarks</span>
+                    </HStack>
+                </Stack>
+            </motion.div>
 
             {/* Instruction Text */}
             <Box className="absolute top-4 left-0 right-0 text-center px-4">
                  <p className="text-[11px] text-white/40 font-medium uppercase tracking-wider">
-                    {t('pwa.instructions.ios_guide', 'Click Menu → Add to Home Screen')}
+                    {t('pwa.instructions.ios_guide', 'Click Menu → Share → Add to Home Screen')}
                  </p>
             </Box>
         </Box>

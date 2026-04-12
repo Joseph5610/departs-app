@@ -173,7 +173,7 @@
     "description": "Přidejte si aplikaci na plochu pro okamžitý přístup a čistější prostředí.",
     "instructions": {
       "ios": "Klepněte na tlačítko sdílení <icon /> v dolní liště a vyberte „Přidat na plochu“.",
-      "ios_guide": "Menu → Přidat na plochu",
+      "ios_guide": "Menu → Sdílet → Přidat na plochu",
       "android": "Klepněte na tlačítko menu a vyberte „Instalovat aplikaci“.",
       "desktop": "Klikněte na ikonu instalace v adresním řádku."
     },

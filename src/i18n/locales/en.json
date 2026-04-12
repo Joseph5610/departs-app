@@ -171,7 +171,7 @@
     "description": "Add it to your home screen for instant access and a cleaner interface.",
     "instructions": {
       "ios": "Tap the share button <icon /> in the bottom bar and select \"Add to Home Screen\".",
-      "ios_guide": "Click Menu → Add to Home Screen",
+      "ios_guide": "Click Menu → Share → Add to Home Screen",
       "android": "Tap the menu button and select \"Install app\".",
       "desktop": "Click the install icon in the address bar."
     },
