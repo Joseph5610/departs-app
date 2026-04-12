@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import { motion } from 'framer-motion';
 import {
     Drawer,
     DrawerContent,
@@ -13,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Box, Stack, Surface, HStack } from '@/components/ui/layout';
 import { Share, Download, X } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
-import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * PWAInstallPrompt
