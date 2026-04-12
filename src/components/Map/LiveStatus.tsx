@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelection, useViewport } from '../../state/MapStateProvider';
 import { useVehicles } from '../../hooks/data/useVehicles';
+import { useNetworkStatus } from '../../hooks/features/useNetworkStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
 import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
@@ -17,6 +18,7 @@ export const LiveStatus: React.FC = () => {
     const { state: selState } = useSelection();
     const { state: vpState } = useViewport();
     const { isFetching: fetching, dataUpdatedAt: lastUpdate } = useVehicles();
+    const isOnline = useNetworkStatus();
 
     const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
     const { bounds } = vpState;
@@ -61,10 +63,12 @@ export const LiveStatus: React.FC = () => {
                         <HStack gap={2}>
                             <Box className={cn(
                                 "w-2 h-2 rounded-full transition-colors duration-500",
-                                fetching ? "bg-amber-500 animate-pulse" : "bg-primary"
+                                !isOnline ? "bg-neutral-500" : fetching ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
                             )} />
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
-                                {fetching ? (
+                                {!isOnline ? (
+                                    <span className="text-neutral-500">{t('liveStatus.offline')}</span>
+                                ) : fetching ? (
                                     <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
                                 ) : (
                                     <>

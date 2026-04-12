@@ -160,7 +160,8 @@
   },
   "liveStatus": {
     "refreshing": "Refreshing",
-    "live": "Live"
+    "live": "Live",
+    "offline": "Offline"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",
