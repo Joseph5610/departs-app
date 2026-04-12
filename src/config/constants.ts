@@ -48,6 +48,7 @@ export const STORAGE_KEYS = {
     DEPARTURE_SORT: 'departureSort',
     LAST_LOCATION: 'lastUserLocation',
     WELCOME_SEEN: 'departs_welcome_seen',
+    PWA_PROMPT_SEEN: 'departs_pwa_prompt_seen',
     FAVORITES: 'favoriteStops',
     SEARCH_HISTORY: 'searchHistory'
 };

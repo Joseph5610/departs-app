@@ -6,7 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Info, ArrowRight } from 'lucide-react';
+import { Info, ArrowRight, Share } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
 import { useViewport } from '../../state/MapStateProvider';
 import { Box, Stack, Surface } from '@/components/ui/layout';
@@ -28,6 +28,11 @@ export const WelcomeModal: React.FC = () => {
         if (params.has('skipTutorial')) return false;
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });
+
+    const isStandalone = typeof window !== 'undefined' &&
+        (window.matchMedia('(display-mode: standalone)').matches ||
+            (window.navigator as any).standalone ||
+            document.referrer.includes('android-app://'));
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -87,6 +92,16 @@ export const WelcomeModal: React.FC = () => {
                                 <div className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</div>
                             </Stack>
                         </Surface>
+
+                        {!isStandalone && (
+                            <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
+                                <Box className="mt-1 text-primary"><Share size={18} /></Box>
+                                <Stack gap={1}>
+                                    <div className="font-semibold text-sm">{t('welcome.steps.install.title')}</div>
+                                    <div className="text-muted-foreground text-xs">{t('welcome.steps.install.description')}</div>
+                                </Stack>
+                            </Surface>
+                        )}
                     </Stack>
 
                     <Button

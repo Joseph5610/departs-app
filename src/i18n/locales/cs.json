@@ -71,6 +71,10 @@
       "trackVehicles": {
         "title": "Sledujte vozidla",
         "description": "Šipka u vozidla ukazuje jeho aktuální směr."
+      },
+      "install": {
+        "title": "Přidat na plochu",
+        "description": "Nainstalujte si aplikaci pro nejlepší zážitek a rychlý přístup."
       }
     },
     "cta": "Začínáme",
@@ -163,6 +167,17 @@
   "liveStatus": {
     "refreshing": "Aktualizace",
     "live": "Živě"
+  },
+  "pwa": {
+    "title": "Nainstalovat Departs.app",
+    "description": "Přidejte si aplikaci na plochu pro okamžitý přístup a čistější prostředí.",
+    "instructions": {
+      "ios": "Klepněte na tlačítko sdílení <icon /> v dolní liště a vyberte „Přidat na plochu“.",
+      "android": "Klepněte na tlačítko menu a vyberte „Instalovat aplikaci“.",
+      "desktop": "Klikněte na ikonu instalace v adresním řádku."
+    },
+    "button": "Instalovat",
+    "dismiss": "Možná později"
   },
   "toasts": {
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",

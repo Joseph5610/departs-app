@@ -20,6 +20,7 @@ import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
 const SettingsModal = React.lazy(() => import('../Modals/SettingsModal/SettingsModal').then(module => ({ default: module.SettingsModal })));
 const WelcomeModal = React.lazy(() => import('../Modals/WelcomeModal').then(module => ({ default: module.WelcomeModal })));
+const PWAInstallPrompt = React.lazy(() => import('../Modals/PWAInstallPrompt').then(module => ({ default: module.PWAInstallPrompt })));
 const AlertsModal = React.lazy(() => import('../Modals/AlertsModal').then(module => ({ default: module.AlertsModal })));
 
 
@@ -153,6 +154,7 @@ const MapInner: React.FC = () => {
 
             <React.Suspense fallback={null}>
                 <WelcomeModal />
+                <PWAInstallPrompt />
                 <SettingsModal />
                 <AlertsModal />
             </React.Suspense>

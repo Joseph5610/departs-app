@@ -71,6 +71,10 @@
       "trackVehicles": {
         "title": "Track vehicles",
         "description": "The arrow next to a vehicle shows its current direction."
+      },
+      "install": {
+        "title": "Add to Home Screen",
+        "description": "Install the app for the best experience and quick access."
       }
     },
     "cta": "Get Started",
@@ -161,6 +165,17 @@
   "liveStatus": {
     "refreshing": "Refreshing",
     "live": "Live"
+  },
+  "pwa": {
+    "title": "Install Departs.app",
+    "description": "Add it to your home screen for instant access and a cleaner interface.",
+    "instructions": {
+      "ios": "Tap the share button <icon /> in the bottom bar and select \"Add to Home Screen\".",
+      "android": "Tap the menu button and select \"Install app\".",
+      "desktop": "Click the install icon in the address bar."
+    },
+    "button": "Install",
+    "dismiss": "Maybe later"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",
