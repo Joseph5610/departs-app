@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Box, Stack, Surface, HStack } from '@/components/ui/layout';
-import { Share, Download, X, MoreHorizontal, PlusSquare, RefreshCw } from 'lucide-react';
+import { Share, Download, MoreHorizontal, PlusSquare, RefreshCw } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
 
 /**
