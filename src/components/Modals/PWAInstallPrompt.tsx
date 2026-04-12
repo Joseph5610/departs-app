@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Box, Stack, Surface, HStack } from '@/components/ui/layout';
-import { Share, Download, X, MoreHorizontal, PlusSquare, ExternalLink, RefreshCw } from 'lucide-react';
+import { Share, Download, X, MoreHorizontal, PlusSquare, RefreshCw } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
 
 /**
@@ -39,7 +39,15 @@ export const PWAInstallPrompt: React.FC = () => {
 
         // Check if seen
         const isSeen = localStorage.getItem(STORAGE_KEYS.PWA_PROMPT_SEEN);
-        if (isSeen) return;
+        if (isSeen) {
+            if (isSeen === 'permanent' || isSeen === 'true') return;
+
+            const lastSeenDate = new Date(isSeen);
+            const now = new Date();
+            const diffDays = (now.getTime() - lastSeenDate.getTime()) / (1000 * 3600 * 24);
+
+            if (diffDays < 7) return;
+        }
 
         // Platform detection
         const ua = window.navigator.userAgent;
@@ -72,8 +80,11 @@ export const PWAInstallPrompt: React.FC = () => {
         };
     }, []);
 
-    const handleDismiss = useCallback(() => {
-        localStorage.setItem(STORAGE_KEYS.PWA_PROMPT_SEEN, 'true');
+    const handleDismiss = useCallback((permanent: boolean = false) => {
+        localStorage.setItem(
+            STORAGE_KEYS.PWA_PROMPT_SEEN,
+            permanent ? 'permanent' : new Date().toISOString()
+        );
         setIsOpen(false);
     }, []);
 
@@ -82,41 +93,41 @@ export const PWAInstallPrompt: React.FC = () => {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
-                handleDismiss();
+                handleDismiss(true);
             }
             setDeferredPrompt(null);
         }
     };
 
     return (
-        <Drawer open={isOpen} onOpenChange={(open) => !open && handleDismiss()} handleOnly={true}>
-            <DrawerContent className="max-w-md mx-auto">
+        <Drawer open={isOpen} onOpenChange={(open) => !open && handleDismiss(false)}>
+            <DrawerContent className="max-w-md mx-auto focus:outline-none">
                 <DrawerHandle />
-                <DrawerHeader className="pt-6 pb-2">
-                    <HStack gap={4} align="center" justify="center">
-                        <Box className="w-12 h-12 bg-black rounded-xl flex items-center justify-center p-0 border border-white/10 shadow-lg overflow-hidden shrink-0">
+                <DrawerHeader className="pt-6 pb-4">
+                    <Stack gap={4} align="center">
+                        <Box className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden shrink-0">
                             <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover" />
                         </Box>
-                        <Stack gap={0}>
-                            <DrawerTitle className="text-lg font-bold leading-tight">{t('pwa.title')}</DrawerTitle>
-                            <DrawerDescription className="text-sm">
+                        <Stack gap={1} align="center" className="text-center">
+                            <DrawerTitle className="text-xl font-bold tracking-tight">{t('pwa.title')}</DrawerTitle>
+                            <DrawerDescription className="text-sm text-muted-foreground px-4">
                                 {t('pwa.description')}
                             </DrawerDescription>
                         </Stack>
-                    </HStack>
+                    </Stack>
                 </DrawerHeader>
 
                 <Box className="px-4 pb-2">
-                    <Surface variant="tinted" padding="none" className="relative overflow-hidden rounded-2xl border border-white/5">
+                    <Surface variant="tinted" padding="none" className="relative overflow-hidden rounded-2xl border border-white/10 shadow-inner">
                         {platform === 'ios' ? (
                             <IOSMockupAnimation />
                         ) : (
-                            <Box className="p-4">
-                                <HStack gap={3} align="start">
-                                    <Box className="mt-1 text-primary">
+                            <Box className="p-5">
+                                <HStack gap={3} align="center" justify="center" className="text-center">
+                                    <Box className="text-primary shrink-0">
                                         <Download size={20} />
                                     </Box>
-                                    <Box className="text-sm leading-relaxed">
+                                    <Box className="text-sm font-medium leading-relaxed">
                                         <Trans
                                             i18nKey={`pwa.instructions.${platform}`}
                                         />
@@ -127,24 +138,37 @@ export const PWAInstallPrompt: React.FC = () => {
                     </Surface>
                 </Box>
 
-                {platform !== 'ios' && deferredPrompt && (
-                    <DrawerFooter className="pt-2 pb-6 px-4">
-                        <Button
-                            onClick={handleInstall}
-                            size="lg"
-                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl h-11"
-                        >
-                            {t('pwa.button')}
-                        </Button>
-                    </DrawerFooter>
-                )}
+                <DrawerFooter className="pt-4 pb-12 px-8">
+                    <Stack gap={4}>
+                        {platform !== 'ios' && deferredPrompt && (
+                            <Button
+                                onClick={handleInstall}
+                                size="lg"
+                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl h-12 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                            >
+                                {t('pwa.button')}
+                            </Button>
+                        )}
 
-                <button
-                    onClick={handleDismiss}
-                    className="absolute top-3 right-3 p-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    <X size={18} />
-                </button>
+                        <HStack gap={4} className="w-full" justify="center">
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleDismiss(false)}
+                                className="text-muted-foreground hover:text-foreground h-10 px-4 rounded-xl font-medium transition-colors"
+                            >
+                                {t('pwa.snooze')}
+                            </Button>
+                            <Box className="w-px h-4 bg-white/10" />
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleDismiss(true)}
+                                className="text-muted-foreground/40 hover:text-muted-foreground h-10 px-4 rounded-xl text-xs font-normal transition-colors"
+                            >
+                                {t('pwa.never')}
+                            </Button>
+                        </HStack>
+                    </Stack>
+                </DrawerFooter>
             </DrawerContent>
         </Drawer>
     );
@@ -152,18 +176,33 @@ export const PWAInstallPrompt: React.FC = () => {
 
 const IOSMockupAnimation: React.FC = () => {
     const { t } = useTranslation();
+    const duration = 10;
 
     return (
-        <Box className="h-[200px] relative bg-neutral-900 flex flex-col items-center justify-end p-4 overflow-hidden">
+        <Box className="h-[220px] relative bg-[#0a0a0a] flex flex-col items-center justify-end pb-6 pt-12 px-4 overflow-hidden">
+            {/* Instruction Text - Background layer */}
+            <Box className="absolute top-4 left-0 right-0 text-center px-4 z-0">
+                 <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
+                    {t('pwa.instructions.ios_guide', 'Click Menu → Share → Add to Home Screen')}
+                 </p>
+            </Box>
+
             {/* Safari Address Bar Mockup */}
             <motion.div
-                className="w-full max-w-[280px] h-11 bg-white/10 backdrop-blur-md rounded-full border border-white/10 flex items-center px-4 mb-4 relative z-10 shadow-2xl"
-                initial={{ y: 0 }}
+                className="w-full max-w-[280px] h-12 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 flex items-center px-4 relative z-10 shadow-2xl"
+                animate={{
+                    scale: [1, 0.98, 1, 1, 1, 1],
+                }}
+                transition={{
+                    duration,
+                    repeat: Infinity,
+                    times: [0, 0.05, 0.1, 0.4, 0.9, 1]
+                }}
             >
                 <span className="text-[10px] text-white/40 font-bold mr-3">AA</span>
                 <Box className="flex-1 flex items-center justify-center gap-1.5 ml-2">
-                    <Box className="w-2.5 h-2.5 bg-green-500 rounded-full" />
-                    <span className="text-[12px] text-white/90 font-medium">departs.app</span>
+                    <Box className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                    <span className="text-[13px] text-white/90 font-medium">departs.app</span>
                 </Box>
                 <Box className="flex items-center gap-3 ml-2">
                     <RefreshCw size={14} className="text-white/60" />
@@ -172,97 +211,125 @@ const IOSMockupAnimation: React.FC = () => {
 
                 {/* Tap Circle Animation on the 3 dots */}
                 <motion.div
-                    className="absolute right-3.5 w-7 h-7 bg-white/30 rounded-full border border-white/50 pointer-events-none"
+                    className="absolute right-3 w-8 h-8 bg-white/20 rounded-full border border-white/40 pointer-events-none"
                     animate={{
-                        scale: [0, 1.2, 0, 0, 0, 0],
-                        opacity: [0, 1, 0, 0, 0, 0],
+                        scale: [0, 1.2, 0, 0, 0, 0, 0],
+                        opacity: [0, 1, 0, 0, 0, 0, 0],
                     }}
                     transition={{
-                        duration: 6,
+                        duration,
                         repeat: Infinity,
-                        times: [0, 0.05, 0.1, 0.15, 0.9, 1]
+                        times: [0, 0.05, 0.1, 0.15, 0.4, 0.9, 1]
                     }}
                 />
             </motion.div>
 
-            {/* Menu 1 (Share...) */}
+            {/* Menu 1 (Safari Menu) */}
             <motion.div
-                className="absolute bottom-20 right-6 w-48 bg-neutral-800/98 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-20"
-                initial={{ scale: 0.7, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
+                className="absolute bottom-20 right-6 w-52 bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-20"
+                initial={{ scale: 0.8, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
                 animate={{
-                    scale: [0.7, 1, 1, 0.7, 0.7, 0.7],
-                    opacity: [0, 1, 1, 0, 0, 0],
-                    y: [20, 0, 0, 20, 20, 20]
+                    scale: [0.8, 1, 1, 1, 0.8, 0.8],
+                    opacity: [0, 1, 1, 1, 0, 0],
+                    y: [20, 0, 0, 0, 20, 20]
                 }}
                 transition={{
-                    duration: 6,
+                    duration,
                     repeat: Infinity,
-                    times: [0.08, 0.12, 0.4, 0.44, 0.9, 1],
+                    times: [0.08, 0.12, 0.4, 0.44, 0.48, 1],
                     ease: [0.16, 1, 0.3, 1]
                 }}
             >
-                <Stack gap={0} className="divide-y divide-white/10">
-                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white bg-primary/20 relative">
-                        <span className="font-bold text-primary">Share...</span>
-                        <Share size={14} className="text-primary" />
+                <Stack gap={0} className="divide-y divide-white/5">
+                    <HStack justify="between" align="center" className="px-4 py-3.5 text-[13px] text-white/40">
+                        <span>Show Bookmarks</span>
+                    </HStack>
+                    <motion.div
+                        animate={{
+                            backgroundColor: ['rgba(59, 130, 246, 0)', 'rgba(59, 130, 246, 0)', 'rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0)']
+                        }}
+                        transition={{
+                            duration,
+                            repeat: Infinity,
+                            times: [0, 0.3, 0.35, 0.43, 0.5]
+                        }}
+                    >
+                        <HStack justify="between" align="center" className="px-4 py-3.5 text-[13px] text-white relative">
+                            <span className="font-semibold text-primary">Share...</span>
+                            <Share size={16} className="text-primary" />
 
-                        {/* Tap Circle Animation on Share */}
-                        <motion.div
-                            className="absolute right-2 w-8 h-8 bg-white/30 rounded-full border border-white/50 pointer-events-none"
-                            animate={{
-                                scale: [0, 0, 1.2, 0, 0],
-                                opacity: [0, 0, 1, 0, 0],
-                            }}
-                            transition={{
-                                duration: 6,
-                                repeat: Infinity,
-                                times: [0, 0.35, 0.38, 0.42, 1]
-                            }}
-                        />
-                    </HStack>
-                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white/40">
-                        <span>Find in Page</span>
-                        <ExternalLink size={14} />
-                    </HStack>
+                            {/* Tap Circle Animation on Share */}
+                            <motion.div
+                                className="absolute right-2 w-9 h-9 bg-white/20 rounded-full border border-white/40 pointer-events-none"
+                                animate={{
+                                    scale: [0, 0, 1.2, 0, 0],
+                                    opacity: [0, 0, 1, 0, 0],
+                                }}
+                                transition={{
+                                    duration,
+                                    repeat: Infinity,
+                                    times: [0, 0.35, 0.38, 0.42, 1]
+                                }}
+                            />
+                        </HStack>
+                    </motion.div>
                 </Stack>
             </motion.div>
 
-            {/* Menu 2 (Add to Home Screen) */}
+            {/* Menu 2 (Share Sheet Mockup) */}
             <motion.div
-                className="absolute bottom-20 right-6 w-56 bg-neutral-800/98 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-20"
-                initial={{ scale: 0.7, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
+                className="absolute bottom-20 right-6 w-64 bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-20"
+                initial={{ scale: 0.8, opacity: 0, y: 20, originX: '90%', originY: '100%' }}
                 animate={{
-                    scale: [0.7, 0.7, 1, 1, 0.7],
-                    opacity: [0, 0, 1, 1, 0],
-                    y: [20, 20, 0, 0, 20]
+                    scale: [0.8, 0.8, 1, 1, 1, 0.8],
+                    opacity: [0, 0, 1, 1, 1, 0],
+                    y: [20, 20, 0, 0, 0, 20]
                 }}
                 transition={{
-                    duration: 6,
+                    duration,
                     repeat: Infinity,
-                    times: [0, 0.42, 0.46, 0.9, 0.95],
+                    times: [0, 0.45, 0.49, 0.85, 0.89, 1],
                     ease: [0.16, 1, 0.3, 1]
                 }}
             >
-                <Stack gap={0} className="divide-y divide-white/10">
-                    <HStack justify="between" align="center" className="px-4 py-3 text-[11px] text-white/40">
+                <Stack gap={0} className="divide-y divide-white/5">
+                    <HStack justify="between" align="center" className="px-4 py-3.5 text-[12px] text-white/30">
                         <span>Copy Link</span>
                     </HStack>
-                    <HStack justify="between" align="center" className="px-4 py-3 text-[12px] text-white bg-primary/20">
-                        <span className="font-bold text-primary">Add to Home Screen</span>
-                        <PlusSquare size={14} className="text-primary" />
-                    </HStack>
-                    <HStack justify="between" align="center" className="px-4 py-3 text-[11px] text-white/40">
+                    <motion.div
+                        animate={{
+                            backgroundColor: ['rgba(59, 130, 246, 0)', 'rgba(59, 130, 246, 0)', 'rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0)']
+                        }}
+                        transition={{
+                            duration,
+                            repeat: Infinity,
+                            times: [0, 0.75, 0.78, 0.85, 0.9]
+                        }}
+                    >
+                        <HStack justify="between" align="center" className="px-4 py-3.5 text-[13px] text-white relative">
+                            <span className="font-semibold text-primary">Add to Home Screen</span>
+                            <PlusSquare size={16} className="text-primary" />
+
+                            {/* Tap Circle Animation on Add to Home Screen */}
+                            <motion.div
+                                className="absolute right-2 w-9 h-9 bg-white/20 rounded-full border border-white/40 pointer-events-none"
+                                animate={{
+                                    scale: [0, 0, 1.2, 0, 0],
+                                    opacity: [0, 0, 1, 0, 0],
+                                }}
+                                transition={{
+                                    duration,
+                                    repeat: Infinity,
+                                    times: [0, 0.78, 0.81, 0.84, 1]
+                                }}
+                            />
+                        </HStack>
+                    </motion.div>
+                    <HStack justify="between" align="center" className="px-4 py-3.5 text-[12px] text-white/30">
                         <span>Add to Bookmarks</span>
                     </HStack>
                 </Stack>
             </motion.div>
-
-            {/* Instruction Text */}
-            <Box className="absolute top-4 left-0 right-0 text-center px-4">
-                 <p className="text-[11px] text-white/40 font-medium uppercase tracking-wider">
-                    {t('pwa.instructions.ios_guide', 'Click Menu → Share → Add to Home Screen')}
-                 </p>
-            </Box>
         </Box>
     );
 };

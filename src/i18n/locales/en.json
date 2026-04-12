@@ -176,7 +176,9 @@
       "desktop": "Click the install icon in the address bar."
     },
     "button": "Install",
-    "dismiss": "Maybe later"
+    "dismiss": "Maybe later",
+    "snooze": "Not now",
+    "never": "Don't show again"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",

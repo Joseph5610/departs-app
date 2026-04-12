@@ -178,7 +178,9 @@
       "desktop": "Klikněte na ikonu instalace v adresním řádku."
     },
     "button": "Instalovat",
-    "dismiss": "Možná později"
+    "dismiss": "Možná později",
+    "snooze": "Teď ne",
+    "never": "Už nezobrazovat"
   },
   "toasts": {
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",
