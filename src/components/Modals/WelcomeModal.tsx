@@ -13,6 +13,7 @@ import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 
 import { Badge } from '@/components/ui/badge';
+import { isStandalone } from '@/utils/pwaUtils';
 
 /**
  * WelcomeModal
@@ -29,12 +30,10 @@ export const WelcomeModal: React.FC = () => {
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });
 
-    const isStandalone = typeof window !== 'undefined' &&
-        (window.matchMedia('(display-mode: standalone)').matches ||
-            (window.navigator as any).standalone ||
-            document.referrer.includes('android-app://'));
+    const [standalone, setStandalone] = useState(false);
 
     useEffect(() => {
+        setStandalone(isStandalone());
         const params = new URLSearchParams(window.location.search);
         if (params.has('skipTutorial')) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
@@ -93,7 +92,7 @@ export const WelcomeModal: React.FC = () => {
                             </Stack>
                         </Surface>
 
-                        {!isStandalone && (
+                        {!standalone && (
                             <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
                                 <Box className="mt-1 text-primary"><Share size={18} /></Box>
                                 <Stack gap={1}>
