@@ -7,10 +7,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Info } from 'lucide-react';
 import { usePreferences } from '../../../state/MapStateProvider';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack } from '@/components/ui/layout';
+import { Box, Stack } from '@/components/ui/layout';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
 
@@ -64,7 +63,7 @@ export const SettingsModal: React.FC = () => {
                                         className={cn(
                                             "py-3 px-4 rounded-2xl text-sm font-semibold outline-none glassy-tinted",
                                             (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                                ? "ring-1 ring-primary/40 text-primary border-primary/20"
+                                                ? "ring-1 ring-inset ring-primary/40 text-primary border-primary/20"
                                                 : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                                         )}
                                     >
@@ -74,15 +73,6 @@ export const SettingsModal: React.FC = () => {
                             </Box>
                         </Stack>
 
-                        {/* Tip Box */}
-                        <HStack className="p-3.5 sm:p-4 bg-amber-500/10 rounded-2xl border border-amber-500/30 gap-2.5 sm:gap-3 items-start">
-                            <Box className="shrink-0 text-amber-500/70 mt-0.5">
-                                <Info size={16} />
-                            </Box>
-                            <Box className="text-foreground/90 text-xs leading-relaxed font-medium">
-                                <span className="text-amber-200 font-bold">{t('settings.tip.prefix')}</span> {t('settings.tip.text')}
-                            </Box>
-                        </HStack>
 
                         {/* Footer: Clear History, Update Check, External Links */}
                         <SettingsFooter

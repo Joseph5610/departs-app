@@ -36,10 +36,6 @@
       "ferry": "Ferry",
       "funicular": "Funicular"
     },
-    "tip": {
-      "prefix": "Tip:",
-      "text": "Hiding vehicles can speed up map loading in areas with poor connection."
-    },
     "language": {
       "title": "Language",
       "en": "English",

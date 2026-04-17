@@ -36,10 +36,6 @@
       "ferry": "Přívoz",
       "funicular": "Lanovka"
     },
-    "tip": {
-      "prefix": "Tip:",
-      "text": "Skrytí vozidel může zrychlit načítání mapy v oblastech se slabým připojením."
-    },
     "language": {
       "title": "Jazyk",
       "en": "English",
