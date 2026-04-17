@@ -47,6 +47,7 @@
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "dataSource": "Zdroj dat",
+    "license": "Data PID (CC BY 4.0)",
     "version": "Verze {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {

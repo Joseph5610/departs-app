@@ -47,6 +47,7 @@
     },
     "viewSource": "View source on GitHub",
     "dataSource": "Data Source",
+    "license": "Data PID (CC BY 4.0)",
     "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Github } from 'lucide-react';
+import { RefreshCw, Clock, Database, Github, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWA } from '../../../contexts/PWAContext';
 import { toast } from 'sonner';
@@ -104,27 +104,38 @@ export const SettingsFooter: React.FC<SettingsFooterProps> = ({ searchHistory, c
                     </span>
                 </button>
 
-                <HStack justify="center" gap={6}>
-                    <a
-                        href="https://golemio.cz"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                    >
-                        <Database size={14} />
-                        {t('settings.dataSource')}
-                    </a>
+                <Stack align="center" gap={0} className="w-full">
+                    <HStack justify="center" gap={6}>
+                        <a
+                            href="https://golemio.cz"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                        >
+                            <Database size={14} />
+                            {t('settings.dataSource')}
+                        </a>
 
+                        <a
+                            href="https://github.com/joseph5610/departs-app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                        >
+                            <Github size={14} />
+                            {t('settings.viewSource')}
+                        </a>
+                    </HStack>
                     <a
-                        href="https://github.com/joseph5610/departs-app"
+                        href="https://creativecommons.org/licenses/by/4.0/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                        className="flex items-center gap-2 py-2 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                     >
-                        <Github size={14} />
-                        {t('settings.viewSource')}
+                        <Scale size={14} />
+                        {t('settings.license')}
                     </a>
-                </HStack>
+                </Stack>
             </Stack>
         </Stack>
     );
