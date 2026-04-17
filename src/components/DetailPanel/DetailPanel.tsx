@@ -117,6 +117,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 <DrawerContent
                     className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]!"
                     hideOverlay={true}
+                    aria-describedby={undefined}
                 >
                     {/* 
                         Draggable Header Area:
@@ -173,6 +174,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 hideOverlay={true}
                 variant="tinted"
                 className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
+                aria-describedby={undefined}
                 data-testid="detail-panel"
             >
                 <div className="shrink-0 flex flex-col">

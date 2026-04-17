@@ -1,7 +1,7 @@
 import { Env, GolemioVehicleFeature } from "../_utils/types";
 import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
 import { normalizeVehicleFeature } from "../_utils/transit-utils";
-
+import { getVehicleColor } from "../_utils/vehicle-colors";
 interface ShapeFeature {
     geometry: {
         type: string;
@@ -95,19 +95,36 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         vehicleData.is_static_fallback = isStatic;
 
-        // Shape optimization: Flatten FeatureCollection of Points into a simple array of coordinates
+        // Shape processing: Build a GeoJSON LineString directly
         if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
             const shapesObj = vehicleData.shapes as { features?: ShapeFeature[] };
-            if (shapesObj.features) {
-                vehicleData.shapes = shapesObj.features
+            if (shapesObj.features && shapesObj.features.length >= 2) {
+                const coordinates = shapesObj.features
                     .filter((f: ShapeFeature) => f.geometry.type === 'Point')
                     .map((f: ShapeFeature) => f.geometry.coordinates);
-            } else {
-                vehicleData.shapes = [];
+                
+                const routeName = vehicleData.route_short_name || '';
+                const routeType = vehicleData.route_type || 0;
+                
+                // Important: Need to import getVehicleColor dynamically or statically in this file now
+                // Wait, it's better to just use getVehicleColor which we can import at the top of the file!
+                
+                vehicleData.route_geojson = {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: coordinates
+                        },
+                        properties: {
+                            line_color: getVehicleColor(routeType, routeName)
+                        }
+                    }]
+                };
             }
-        } else if (!vehicleData.shapes) {
-            vehicleData.shapes = [];
         }
+        delete vehicleData.shapes;
 
         return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
     } catch (error) {

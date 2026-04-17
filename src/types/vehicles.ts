@@ -1,3 +1,5 @@
+import type { FeatureCollection, LineString } from 'geojson';
+
 export interface VehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
@@ -21,6 +23,8 @@ export interface BaseVehicleProperties {
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
     vehicle_descriptor?: VehicleDescriptor;
+    line_color?: string;
+    is_night?: boolean;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
@@ -68,6 +72,6 @@ export interface VehicleDetail extends BaseVehicleProperties {
             };
         }>;
     };
-    shapes?: number[][];
+    route_geojson?: FeatureCollection<LineString>;
     is_static_fallback?: boolean;
 }

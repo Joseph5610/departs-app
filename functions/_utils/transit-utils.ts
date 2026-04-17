@@ -1,14 +1,27 @@
 import { AppDeparture, GolemioDepartureItem, GolemioStopFeature, GolemioVehicleFeature } from "./types";
 import { METRO_STATIONS } from "./metro-data";
 import { TRANSIT_CONFIG } from "./api-utils";
+import { getVehicleColor, isNightRoute, VEHICLE_COLORS } from "./vehicle-colors";
 
 /**
  * Fixes missing spaces after commas (common in Golemio data).
  * e.g., "Tuchoměřice,Špejchar" -> "Tuchoměřice, Špejchar"
  */
 function fixCommaSpacing(text: string | undefined | null): string | undefined {
-    if (!text) return text as any;
+    if (!text) return undefined;
     return text.replace(/,([^\s])/g, ', $1');
+}
+
+/**
+ * Deterministic hash for a string, returns a value in [0, 1).
+ * Used for variant_seed so stops get consistent visual variation across API calls.
+ */
+function hashSeed(str: string): number {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+    }
+    return (Math.abs(h) % 1000) / 1000;
 }
 
 /**
@@ -39,29 +52,29 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
 
     // Extract next stop info - check various nested structures used by Golemio
     const next_stop_name = fixCommaSpacing(p.next_stop_name ||
-                          last_pos?.next_stop?.name ||
-                          last_pos?.next_stop?.id ||
-                          trip?.next_stop_name);
+        last_pos?.next_stop?.name ||
+        last_pos?.next_stop?.id ||
+        trip?.next_stop_name);
 
     // Metadata / Amenities
     const vehicle_descriptor = (p.vehicle_descriptor || trip?.vehicle_descriptor || last_pos?.vehicle_descriptor || {});
 
     const is_wheelchair_accessible = p.is_wheelchair_accessible ??
-                                   trip?.wheelchair_accessible ??
-                                   vehicle_descriptor.is_wheelchair_accessible;
+        trip?.wheelchair_accessible ??
+        vehicle_descriptor.is_wheelchair_accessible;
 
     const is_air_conditioned = p.is_air_conditioned ??
-                               trip?.air_conditioned ??
-                               vehicle_descriptor.is_air_conditioned;
+        trip?.air_conditioned ??
+        vehicle_descriptor.is_air_conditioned;
 
     const has_usb_chargers = (p.has_usb_chargers as boolean | undefined) ??
-                            (p.usb_chargers as boolean | undefined) ??
-                            vehicle_descriptor.has_usb_chargers;
+        (p.usb_chargers as boolean | undefined) ??
+        vehicle_descriptor.has_usb_chargers;
 
     const vehicle_registration_number = p.vehicle_registration_number ??
-                                      trip?.vehicle_registration_number ??
-                                      last_pos?.vehicle_registration_number ??
-                                      vehicle_descriptor.vehicle_registration_number;
+        trip?.vehicle_registration_number ??
+        last_pos?.vehicle_registration_number ??
+        vehicle_descriptor.vehicle_registration_number;
 
     const operator = (p.operator as string | undefined) || trip?.operator || vehicle_descriptor.operator || last_pos?.operator;
 
@@ -69,6 +82,9 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
     const run_number = p.run_number ?? trip?.run_number ?? trip?.gtfs?.run_number ?? last_pos?.run_number ?? p.service_number ?? trip?.service_number;
     const last_stop_sequence = (p.last_stop_sequence as number | undefined) ?? last_pos?.last_stop?.sequence ?? last_pos?.last_stop_sequence;
     const origin_timestamp = (p.origin_timestamp as string | undefined) || last_pos?.origin_timestamp || trip?.origin_timestamp || last_pos?.timestamp;
+
+    const line_color = getVehicleColor(String(route_type ?? ''), route_short_name);
+    const is_night = isNightRoute(route_short_name || '');
 
     return {
         type: 'Feature',
@@ -86,6 +102,8 @@ export function normalizeVehicleFeature(feature: GolemioVehicleFeature, tripIdFa
             last_stop_sequence,
             origin_timestamp,
             run_number,
+            line_color,
+            is_night,
             vehicle_descriptor: {
                 operator,
                 vehicle_type: (p.vehicle_type as string | undefined) || p.trip?.vehicle_type || vehicle_descriptor.vehicle_type,
@@ -202,6 +220,8 @@ export function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
         directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
     }
 
+    const color = getVehicleColor(type, line);
+
     return {
         timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
         scheduled: item.departure.timestamp_scheduled,
@@ -213,14 +233,15 @@ export function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
         isCanceled: item.trip?.is_canceled || false,
         tripId: item.trip?.id,
         vehicleId: item.vehicle?.id,
-        platform: item.stop?.platform_code || undefined
+        platform: item.stop?.platform_code || undefined,
+        color
     };
 }
 
 /**
  * Groups and processes raw GTFS stops for map display.
  * Handles metro stations, stop grouping by name/platform, and centroid calculation.
- *
+  *
  * @param allStops List of all raw stop features from GTFS
  * @returns Processed features for the map
  */
@@ -318,7 +339,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
                         all_ids: [stopId]
                     }
                 };
-            } else {
+        } else {
                 const currentIds = groups[key].properties.all_ids || [];
                 groups[key].properties.all_ids = [...currentIds, stopId];
             }
@@ -336,7 +357,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             geometry: f.geometry,
             properties: { ...f.properties, stop_id: finalId }
         });
-    }
+        }
 
     // 4. Calculate centroids for each stop name group
     for (const [, groupFeatures] of nameGroups) {
@@ -346,6 +367,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         if (station) {
             features.push({
                 type: "Feature",
+                id: `centroid-${station.properties.stop_id}`,
                 geometry: station.geometry,
                 properties: {
                     ...station.properties,

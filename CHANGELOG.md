@@ -2,6 +2,16 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.27.0] - 2026-04-17
+
+### Added
+- **Centralized Transit Colors**: Transferred all transit color assignments to the backend. The API now returns a unified `color` and `line_color` property for both vehicles and departures, removing frontend guesswork and duplicates.
+
+### Changed
+- **Unified Map Styles**: Stripped down mapping files (`stations.ts` and `mapLayers.ts`) and completely eliminated the heavy 20+ condition evaluation `vehicleColorExpression` block from MapLibre. This noticeably improves rendering performance when zooming and panning.
+- **Calm Train Station rendering**: Train stations on the map now use the standard, calm grey (`#bdbdbd`) label color to match standard bus/tram stops instead of flashing bright white.
+- **Frontend Refactoring**: Cleaned up the `VehicleHero` and `DepartureBoard` components to directly consume backend-assigned hex colors, drastically simplifying the codebase.
+
 ## [0.20.0] - 2026-03-21
 
 ### Added

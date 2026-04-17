@@ -8,8 +8,6 @@ import {
     clusterLayer,
     clusterCountLayer,
     stopPointLayer,
-    trainStationGlowLayer,
-    trainStationLayer,
     transferStationLayer,
     stopLabelLayer,
     platformLabelLayer,
@@ -174,8 +172,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 )}
                 <Layer {...stopPointGlowLayer} />
                 <Layer {...stopPointLayer} />
-                <Layer {...trainStationGlowLayer} />
-                <Layer {...trainStationLayer} />
                 <Layer {...transferStationLayer} />
                 <Layer {...platformLabelLayer} />
                 <Layer {...entranceLayer} />

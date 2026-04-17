@@ -1,5 +1,3 @@
-import type { ExpressionSpecification } from 'maplibre-gl';
-
 /**
  * Official PID Branding Colors
  */
@@ -11,7 +9,8 @@ export const VEHICLE_COLORS = {
     TRAM: '#7A0603',
     BUS: '#007DA8',
     TROLLEYBUS: '#80166F',
-    TRAIN: '#010002ff',
+    TRAIN: '#1c1745',
+    FERRY: '#00b1b0',
     NIGHT: '#262050',
     FALLBACK: '#5A5A5A'
 } as const;
@@ -70,59 +69,14 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
         case '3':
         case 'bus':
             return VEHICLE_COLORS.BUS;
+        case '2':
         case '109':
         case 'train':
             return VEHICLE_COLORS.TRAIN;
+        case '4':
+        case 'ferry':
+            return VEHICLE_COLORS.FERRY;
         default:
             return VEHICLE_COLORS.FALLBACK;
     }
 };
-
-/**
- * MapLibre expression to detect night routes in vector layers.
- * Synchronized with isNightRoute logic.
- */
-export const isNightRouteExpression: ExpressionSpecification = [
-    'any',
-    // Trams 90-99
-    ['match', ['to-string', ['coalesce', ['get', 'route_short_name'], '']], ['90', '91', '92', '93', '94', '95', '96', '97', '98', '99'], true, false],
-    // Buses 9xx (Length 3, Starts with 9)
-    ['all',
-        ['==', ['length', ['to-string', ['coalesce', ['get', 'route_short_name'], '']]], 3],
-        ['==', ['slice', ['to-string', ['coalesce', ['get', 'route_short_name'], '']], 0, 1], '9']
-    ]
-];
-
-/**
- * MapLibre expression for dynamic vehicle coloring based on route type and name.
- * Used for styling 'pid-vehicles' and 'selected-vehicle' sources.
- */
-export const vehicleColorExpression: ExpressionSpecification = [
-    'case',
-    // 1. Metro Specifics (Priority)
-    ['any',
-        ['==', ['to-string', ['get', 'route_short_name']], 'A'],
-        ['==', ['to-string', ['get', 'n']], 'A']
-    ], VEHICLE_COLORS.METRO_A,
-    ['any',
-        ['==', ['to-string', ['get', 'route_short_name']], 'B'],
-        ['==', ['to-string', ['get', 'n']], 'B']
-    ], VEHICLE_COLORS.METRO_B,
-    ['any',
-        ['==', ['to-string', ['get', 'route_short_name']], 'C'],
-        ['==', ['to-string', ['get', 'n']], 'C']
-    ], VEHICLE_COLORS.METRO_C,
-
-    // 2. Night Routes Detection (90-99 or 9xx)
-    isNightRouteExpression, VEHICLE_COLORS.NIGHT,
-
-    // 3. Type-based fallback
-    ['match', ['to-string', ['coalesce', ['get', 'route_type'], '']],
-        '0', VEHICLE_COLORS.TRAM, 'tram', VEHICLE_COLORS.TRAM,
-        '1', VEHICLE_COLORS.METRO_DEFAULT, 'metro', VEHICLE_COLORS.METRO_DEFAULT,
-        '3', VEHICLE_COLORS.BUS, 'bus', VEHICLE_COLORS.BUS,
-        '11', VEHICLE_COLORS.TROLLEYBUS, 'trolleybus', VEHICLE_COLORS.TROLLEYBUS,
-        '109', VEHICLE_COLORS.TRAIN, 'train', VEHICLE_COLORS.TRAIN,
-        VEHICLE_COLORS.FALLBACK
-    ]
-];

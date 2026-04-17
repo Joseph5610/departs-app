@@ -79,7 +79,6 @@ export const stopPointLayer: CircleLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        ['!=', ['get', 'is_train'], 1],
         // Only exclude Stations (Type 1) with transfer names, keeping Stops (Type 0) visible
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
@@ -100,8 +99,12 @@ export const stopPointLayer: CircleLayerSpecification = {
                 LINE_COLORS.Unknown // Default for unknown stations
             ],
 
-            // Default for Stops (Type 0 or null)
-            LINE_COLORS.Default
+            // 2. Train Stations
+            ['==', ['get', 'is_train'], 1],
+            LINE_COLORS.TrainStation,
+
+            // 3. Default for Stops (Type 0 or null)
+            LINE_COLORS.DefaultStation
         ] as any,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
         'circle-stroke-color': ['case',
@@ -116,7 +119,11 @@ export const stopPointLayer: CircleLayerSpecification = {
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
             '#ffffff',
 
-            // 3. Regular Stops (Type 0) -> BLUE stroke
+            // 3. Train Stations -> White stroke for high contrast
+            ['==', ['get', 'is_train'], 1],
+            '#ffffff',
+
+            // 4. Regular Stops (Type 0) -> BLUE stroke
             '#3b82f6'
         ],
         'circle-opacity': [
@@ -136,8 +143,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        ['!=', ['get', 'is_train'], 1]
+        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
@@ -151,7 +157,13 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
                 ...getStationColorMatchPairs(),
                 LINE_COLORS.Unknown
             ],
-            '#000000' // Shadow for regular stops
+            
+            // 2. Train Stations glow
+            ['==', ['get', 'is_train'], 1],
+            LINE_COLORS.TrainStation,
+
+            // 3. Shadow for regular stops
+            '#000000'
         ] as any,
         'circle-opacity': ['interpolate', ['linear'], ['zoom'],
             13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.2, 0.1],
@@ -162,48 +174,6 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
 };
 
 
-export const trainStationLayer: CircleLayerSpecification = {
-    id: 'train-stations',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', ['get', 'is_train'], 1]
-    ],
-    paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 9.5,
-            17, 26.6
-        ],
-        'circle-color': LINE_COLORS.Train,
-        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5],
-        'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.7,
-        'circle-stroke-opacity': 1
-    }
-};
-
-export const trainStationGlowLayer: CircleLayerSpecification = {
-    id: 'train-stations-glow',
-    type: 'circle',
-    source: 'pid-stops',
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', ['get', 'is_train'], 1]
-    ],
-    paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            13, 14.2,
-            17, 43.7
-        ],
-        'circle-color': LINE_COLORS.Train,
-        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
-            13, 0.2,
-            17, 0.35
-        ],
-        'circle-blur': 0.8
-    }
-};
 
 export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
@@ -263,14 +233,7 @@ export const stopLabelLayer: SymbolLayerSpecification = {
         ]
     },
     paint: {
-        'text-color': ['case',
-            ['any',
-                ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-                ['==', ['get', 'is_train'], 1]
-            ],
-            '#ffffff',
-            '#bdbdbd'
-        ],
+        'text-color': '#bdbdbd',
         'text-halo-color': '#111111',
         'text-halo-width': 1, // Sharper halo like map labels
         'text-halo-blur': 0.5
@@ -333,7 +296,6 @@ export const entranceLayer: SymbolLayerSpecification = {
 };
 
 // 4. Vehicle Layers
-import { vehicleColorExpression, isNightRouteExpression } from '../utils/vehicleColors';
 
 export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     id: 'selected-vehicle-pulse',
@@ -342,7 +304,7 @@ export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     paint: {
         'circle-radius': 0, // Animated in component
         'circle-opacity': 0, // Animated in component
-        'circle-color': vehicleColorExpression
+        'circle-color': ['get', 'line_color']
     }
 };
 
@@ -352,9 +314,9 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
     source: 'selected-vehicle',
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression,
+        'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['to-boolean', ['get', 'is_night']], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -374,7 +336,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': ['get', 'line_color'],
         'icon-opacity': [
             'case',
             ['any',
@@ -417,9 +379,9 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     // Filter handled dynamically in component to exclude selected
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': vehicleColorExpression,
+        'circle-color': ['get', 'line_color'],
         'circle-stroke-width': 1.5,
-        'circle-stroke-color': ['case', isNightRouteExpression, '#ffffff', '#000000'],
+        'circle-stroke-color': ['case', ['to-boolean', ['get', 'is_night']], '#ffffff', '#000000'],
         'circle-opacity': 1
     }
 };
@@ -441,7 +403,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': vehicleColorExpression as any,
+        'icon-color': ['get', 'line_color'],
         'icon-opacity': [
             'case',
             ['any',

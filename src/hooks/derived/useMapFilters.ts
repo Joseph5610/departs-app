@@ -48,8 +48,8 @@ export const useMapFilters = (
     // This prevents "double rendering" of the same vehicle.
     const vehiclesFilter = useMemo<FilterSpecification>(() => {
         return ['!', ['any',
-            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], ['get', 'id'], '']], selectedId || 'NOMATCH'],
-            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], ['get', 'trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
+            ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], '']], selectedId || 'NOMATCH'],
+            ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
         ]] as FilterSpecification;
     }, [selectedId, selectedVehicle?.gtfs_trip_id]);
 

@@ -1,39 +1,35 @@
-
 import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useSelectedVehicle } from './useSelectedVehicle';
-import { getVehicleColor } from '../../utils/vehicleColors';
+import type { FeatureCollection, LineString } from 'geojson';
 
 export const useRouteShape = () => {
     const { data: vehicleDetail } = useVehicleDetail();
     const selectedVehicle = useSelectedVehicle();
 
     return useMemo(() => {
-        if (!selectedVehicle || !vehicleDetail?.shapes || !Array.isArray(vehicleDetail.shapes)) {
+        if (!selectedVehicle || !vehicleDetail?.route_geojson) {
             return null;
         }
 
-        const coordinates = vehicleDetail.shapes as [number, number][];
-        if (coordinates.length < 2) {
+        const geojson = vehicleDetail.route_geojson as FeatureCollection<LineString>;
+        if (!geojson.features || geojson.features.length === 0) {
             return null;
         }
 
-        const routeName = selectedVehicle.route_short_name || '';
-        const routeType = selectedVehicle.route_type || 0;
-        const color = getVehicleColor(routeType, routeName);
+        // The backend now provides line_color directly in the first feature's properties
+        const color = geojson.features[0].properties?.line_color || '#AD0B00';
 
+        // Ensure all segments have the correct color injected (safety)
         return {
-            type: 'FeatureCollection' as const,
-            features: [{
-                type: 'Feature' as const,
-                geometry: {
-                    type: 'LineString' as const,
-                    coordinates: coordinates
-                },
+            ...geojson,
+            features: geojson.features.map(feature => ({
+                ...feature,
                 properties: {
+                    ...feature.properties,
                     line_color: color
                 }
-            }]
+            }))
         };
     }, [selectedVehicle, vehicleDetail]);
 };

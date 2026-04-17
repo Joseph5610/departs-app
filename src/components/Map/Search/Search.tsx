@@ -25,7 +25,7 @@ export const Search: React.FC = React.memo(() => {
     const { state: selState, actions: selActions } = useSelection();
     const { state: prefState, actions: prefActions } = usePreferences();
     const { state: vpState, actions: vpActions, mapRef } = useViewport();
-    const { data: stops } = useStops();
+    const stops = useStops();
 
     const { favoriteStops, searchHistory } = prefState;
     const { routeFilter: activeFilter } = vpState;
@@ -38,7 +38,7 @@ export const Search: React.FC = React.memo(() => {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const { query, setQuery, results: searchResults } = useStopSearch(stops || null);
+    const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,8 +58,8 @@ export const Search: React.FC = React.memo(() => {
     }, []);
 
     const favoriteStopFeatures = React.useMemo(() => {
-        if (!stops?.features || favoriteStops.length === 0) return [];
-        return stops.features.filter(s => favoriteStops.includes(s.properties.stop_id));
+        if (!stops?.allFeatures?.features || favoriteStops.length === 0) return [];
+        return stops.allFeatures.features.filter((s: StopFeature) => favoriteStops.includes(s.properties.stop_id));
     }, [stops, favoriteStops]);
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;

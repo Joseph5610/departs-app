@@ -151,6 +151,7 @@ export interface AppDeparture {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
+    color?: string;
 }
 
 export interface AppVehicleProperties {

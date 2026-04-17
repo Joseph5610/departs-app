@@ -50,7 +50,7 @@ export const WelcomeModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent variant="tinted" showCloseButton={false}>
+            <DialogContent aria-describedby={undefined} variant="tinted" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle className="text-center flex items-center justify-center gap-2">
                         {t('welcome.title')}

@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
-import { getVehicleColor } from '../../utils/vehicleColors';
+import { getVehicleColor } from '../../../functions/_utils/vehicle-colors';
 import { GenericAlertCard } from '../Alerts/GenericAlertCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,7 @@ export const AlertsModal: React.FC = () => {
 
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
-            <DialogContent variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+            <DialogContent aria-describedby={undefined} variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('alerts.title')}

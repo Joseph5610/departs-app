@@ -1,10 +1,10 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
-import type { VehicleCollection, VehicleFeature } from '../../types/transit';
+import { useMemo } from 'react';
+import type { VehicleCollection } from '../../types/transit';
 import { useViewport, usePreferences } from '../../state/MapStateProvider';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 
-const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleFeature[]> => {
+const fetchVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
     try {
         const url = new URL('/api/vehicles', window.location.origin);
 
@@ -23,16 +23,15 @@ const fetchRawVehicles = async (bounds: string | null, routeFilter: string[] | n
         }
 
         if (url.searchParams.toString() === '') {
-            return [];
+            return null;
         }
 
         const response = await fetch(url.toString());
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-        const json = await response.json();
-        return json.features || [];
+        return await response.json();
     } catch {
-        return [];
+        return null;
     }
 };
 
@@ -49,17 +48,9 @@ export const useVehicles = () => {
     const { debouncedBounds: bounds, routeFilter } = vpState;
     const { routeTypeFilter } = prefState;
 
-    const selectFn = useCallback((allFeatures: VehicleFeature[]): VehicleCollection => {
-        return {
-            type: 'FeatureCollection',
-            features: allFeatures
-        };
-    }, []);
-
-    const query = useQuery<VehicleFeature[], Error, VehicleCollection>({
+    const query = useQuery<VehicleCollection | null, Error>({
         queryKey: ['vehicles', bounds, routeFilter, routeTypeFilter],
-        queryFn: () => fetchRawVehicles(bounds, routeFilter, routeTypeFilter),
-        select: selectFn,
+        queryFn: () => fetchVehicles(bounds, routeFilter, routeTypeFilter),
         enabled: !!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
         refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: 5000,
