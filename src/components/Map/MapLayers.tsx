@@ -6,7 +6,6 @@ import type { FeatureCollection } from 'geojson';
 import type { VehicleCollection, StopCollection } from '../../types/transit';
 import {
     clusterLayer,
-    clusterCountLayer,
     stopPointLayer,
     transferStationLayer,
     stopLabelLayer,
@@ -152,7 +151,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 }}
             >
                 <Layer {...clusterLayer} />
-                <Layer {...clusterCountLayer} />
                 {/* Favorite stop highlight */}
                 {favoriteStops.length > 0 && (
                     <Layer

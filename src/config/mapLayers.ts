@@ -58,19 +58,6 @@ export const clusterLayer: CircleLayerSpecification = {
     }
 };
 
-export const clusterCountLayer: SymbolLayerSpecification = {
-    id: 'cluster-count',
-    type: 'symbol',
-    source: 'pid-stops',
-    filter: ['has', 'point_count'],
-    layout: {
-        'text-field': '', // Empty text - we just want the circle
-        'text-size': 0
-    },
-    paint: {
-        'text-color': 'transparent'
-    }
-};
 
 export const stopPointLayer: CircleLayerSpecification = {
     id: 'unclustered-point',
@@ -157,7 +144,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
                 ...getStationColorMatchPairs(),
                 LINE_COLORS.Unknown
             ],
-            
+
             // 2. Train Stations glow
             ['==', ['get', 'is_train'], 1],
             LINE_COLORS.TrainStation,
@@ -172,8 +159,6 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
         'circle-blur': ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 0.8, 1]
     }
 };
-
-
 
 export const transferStationLayer: SymbolLayerSpecification = {
     id: 'transfer-stations',
