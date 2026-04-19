@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
-import type { StopCollection, StopFeature } from '../../types/transit';
-import { METRO_STATIONS } from '../../config/stations';
+import type { StopCollection } from '../../types/transit';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -28,59 +27,21 @@ export const useStops = () => {
         queryFn: async () => {
             const now = Date.now();
 
-            const enrichData = (data: StopCollection): StopCollection => {
-                if (!data || !data.features) return data;
-
-                return {
-                    ...data,
-                    features: data.features.map((f: StopFeature) => {
-                        const name = f.properties.stop_name;
-                        const stopId = String(f.properties.stop_id || '');
-                        const lines = METRO_STATIONS[name] || [];
-
-                        // Use a deterministic seed based on stop ID to keep variant styles stable
-                        let hash = 0;
-                        for (let i = 0; i < stopId.length; i++) {
-                            hash = ((hash << 5) - hash) + stopId.charCodeAt(i);
-                            hash |= 0;
-                        }
-                        const seed = Math.abs(hash % 1000) / 1000;
-
-                        return {
-                            ...f,
-                            properties: {
-                                ...f.properties,
-                                metro_a: lines.includes('A') ? 1 : 0,
-                                metro_b: lines.includes('B') ? 1 : 0,
-                                metro_c: lines.includes('C') ? 1 : 0,
-                                is_train: stopId.endsWith('Z301') ? 1 : 0,
-                                variant_seed: seed
-                            }
-                        };
-                    })
-                };
-            };
 
             const cached = await localforage.getItem<StopCollection>(CACHE_KEY);
             const lastUpdate = await localforage.getItem<number>(CACHE_TS_KEY);
 
             if (cached && lastUpdate && (now - lastUpdate < TWENTY_FOUR_HOURS)) {
-                return enrichData(cached);
+                return cached;
             }
 
             const res = await fetch('/api/stops');
-            if (!res.ok) {
-                if (cached) return enrichData(cached);
-                throw new Error('Failed to fetch stops');
-            }
-
             const data = await res.json();
-            const enrichedData = enrichData(data);
 
-            await localforage.setItem(CACHE_KEY, enrichedData);
+            await localforage.setItem(CACHE_KEY, data);
             await localforage.setItem(CACHE_TS_KEY, now);
 
-            return enrichedData;
+            return data;
         },
         staleTime: Infinity,
         gcTime: Infinity,

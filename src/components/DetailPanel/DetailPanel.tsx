@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
-import { MOBILE_BREAKPOINT } from '../../config/constants';
 import {
     Drawer,
     DrawerContent,
@@ -14,6 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/layout';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -34,13 +34,7 @@ interface DetailPanelProps {
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, subHeader, children }) => {
-    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false);
-
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const isMobile = useIsMobile();
 
     const backButton = onBack && (
         <Button
@@ -105,7 +99,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.60, 0.80]}
+                snapPoints={[0.18, 0.60, 0.80]}
                 activeSnapPoint={activeSnapPoint}
                 setActiveSnapPoint={setActiveSnapPoint}
                 modal={false}
@@ -173,7 +167,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 showCloseButton={false}
                 hideOverlay={true}
                 variant="tinted"
-                className="w-[420px] sm:max-w-[420px] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
+                className="w-[var(--sidebar-width)] sm:max-w-[var(--sidebar-width)] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

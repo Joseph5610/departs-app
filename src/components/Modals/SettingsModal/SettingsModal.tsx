@@ -23,8 +23,8 @@ export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { state, actions } = usePreferences();
 
-    const { isSettingsOpen: isOpen, showVehicles, showStops, routeTypeFilter, searchHistory } = state;
-    const { setIsSettingsOpen, setShowVehicles, setShowStops, setRouteTypeFilter, clearHistory } = actions;
+    const { isSettingsOpen: isOpen } = state;
+    const { setIsSettingsOpen } = actions;
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -41,20 +41,13 @@ export const SettingsModal: React.FC = () => {
                 <ScrollArea className="flex-1 min-h-0 px-6">
                     <Stack gap={8} className="py-2 pb-8">
                         {/* Display Toggles & Vehicle Type Filters */}
-                        <DisplaySection
-                            showVehicles={showVehicles}
-                            showStops={showStops}
-                            routeTypeFilter={routeTypeFilter}
-                            setShowVehicles={setShowVehicles}
-                            setShowStops={setShowStops}
-                            setRouteTypeFilter={setRouteTypeFilter}
-                        />
+                        <DisplaySection />
 
                         {/* Language Selection */}
                         <Stack gap={3}>
-                            <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.language')}
-                            </Box>
+                            </h3>
                             <Box className="grid grid-cols-2 gap-3">
                                 {(['en', 'cs'] as const).map((lang) => (
                                     <button
@@ -75,10 +68,7 @@ export const SettingsModal: React.FC = () => {
 
 
                         {/* Footer: Clear History, Update Check, External Links */}
-                        <SettingsFooter
-                            searchHistory={searchHistory}
-                            clearHistory={clearHistory}
-                        />
+                        <SettingsFooter />
                     </Stack>
                 </ScrollArea>
             </DialogContent>

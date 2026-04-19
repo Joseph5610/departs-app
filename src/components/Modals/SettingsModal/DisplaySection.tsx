@@ -16,15 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-
-interface DisplaySectionProps {
-    showVehicles: boolean;
-    showStops: boolean;
-    routeTypeFilter: string[];
-    setShowVehicles: (v: boolean) => void;
-    setShowStops: (v: boolean) => void;
-    setRouteTypeFilter: (v: string[]) => void;
-}
+import { usePreferences } from '../../../state/MapStateProvider';
 
 const vehicleTypes = [
     { id: 'metro', icon: Subway },
@@ -42,15 +34,11 @@ const vehicleTypes = [
  * Renders vehicle/stop visibility toggles and the vehicle type filter grid.
  * The filter grid is animated inside the vehicle toggle via framer-motion.
  */
-export const DisplaySection: React.FC<DisplaySectionProps> = ({
-    showVehicles,
-    showStops,
-    routeTypeFilter,
-    setShowVehicles,
-    setShowStops,
-    setRouteTypeFilter
-}) => {
+export const DisplaySection: React.FC = () => {
     const { t } = useTranslation();
+    const { state, actions } = usePreferences();
+    const { showVehicles, showStops, routeTypeFilter } = state;
+    const { setShowVehicles, setShowStops, setRouteTypeFilter } = actions;
 
     const toggleRouteType = (type: string) => {
         if (routeTypeFilter.includes(type)) {
@@ -62,9 +50,9 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
 
     return (
         <Stack gap={3}>
-            <Box padding="none" className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                 {t('settings.sections.display')}
-            </Box>
+            </h3>
 
             <Surface variant="tinted" className="overflow-hidden">
                 <button
@@ -79,12 +67,12 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                             {showVehicles ? <Eye size={22} /> : <EyeOff size={22} />}
                         </Box>
                         <Stack gap={1} className="min-w-0 flex-1">
-                            <div className="font-semibold leading-snug">
+                            <h4 className="font-semibold leading-snug">
                                 {t('settings.liveVehicles.title')}
-                            </div>
-                            <div className="text-muted-foreground text-xs leading-tight">
+                            </h4>
+                            <p className="text-muted-foreground text-xs leading-tight">
                                 {t('settings.liveVehicles.description')}
-                            </div>
+                            </p>
                         </Stack>
                     </HStack>
 
@@ -167,12 +155,12 @@ export const DisplaySection: React.FC<DisplaySectionProps> = ({
                             <MapPin size={22} />
                         </Box>
                         <Stack gap={1} className="min-w-0 flex-1">
-                            <div className="font-semibold leading-snug">
+                            <h4 className="font-semibold leading-snug">
                                 {t('settings.showStops.title')}
-                            </div>
-                            <div className="text-muted-foreground text-xs leading-tight">
+                            </h4>
+                            <p className="text-muted-foreground text-xs leading-tight">
                                 {t('settings.showStops.description')}
-                            </div>
+                            </p>
                         </Stack>
                     </HStack>
 

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Train } from 'lucide-react';
-import { format, parseISO, type Locale } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,6 @@ interface DepartureItemProps {
         showCatchIndicator: boolean;
     } | null;
     isTrainStop?: boolean;
-    locale: Locale;
 }
 
 /**
@@ -33,8 +32,7 @@ export const DepartureItem = ({
     departure,
     onDepartureClick,
     stopDistanceInfo,
-    isTrainStop,
-    locale
+    isTrainStop
 }: DepartureItemProps) => {
     const { t } = useTranslation();
     const dep = departure;
@@ -84,7 +82,7 @@ export const DepartureItem = ({
                     <div className="text-foreground font-semibold leading-snug line-clamp-2">{dep.headsign}</div>
                     <HStack gap={2} className="text-muted-foreground text-[10px] mt-1 flex-wrap">
                         <span className="tabular-nums">
-                            {format(parseISO(dep.scheduled), 'HH:mm', { locale })}
+                            {format(parseISO(dep.scheduled), 'HH:mm')}
                         </span>
                         {isTrainStop && dep.platform && (
                             <Badge

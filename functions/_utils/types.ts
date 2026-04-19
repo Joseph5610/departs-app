@@ -119,6 +119,7 @@ export interface GolemioInfotext {
 
 export interface GolemioStopFeature {
     type: 'Feature';
+    id?: string | number;
     geometry: {
         type: 'Point';
         coordinates: [number, number];

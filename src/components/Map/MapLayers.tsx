@@ -19,7 +19,10 @@ import {
     vehiclesPointLayer,
     vehiclesDirectionLayer,
     vehiclesLabelLayer,
-    routeLineLayer
+    routeLineLayer,
+    userLocationPulseLayer,
+    userLocationPointLayer,
+    favoriteStopsGlowLayer
 } from '../../config/mapLayers';
 
 interface MapLayersProps {
@@ -98,25 +101,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                     properties: {}
                 }]
             } : EMPTY_GEOJSON}>
-                <Layer
-                    id="user-location-pulse"
-                    type="circle"
-                    paint={{
-                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
-                        'circle-color': '#3b82f6',
-                        'circle-opacity': 0.15,
-                    }}
-                />
-                <Layer
-                    id="user-location-point"
-                    type="circle"
-                    paint={{
-                        'circle-radius': 7,
-                        'circle-color': '#3b82f6',
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#FFFFFF'
-                    }}
-                />
+                <Layer {...userLocationPulseLayer} />
+                <Layer {...userLocationPointLayer} />
             </Source>
 
             <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
@@ -154,18 +140,11 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 {/* Favorite stop highlight */}
                 {favoriteStops.length > 0 && (
                     <Layer
-                        id="favorite-stops-glow"
-                        type="circle"
+                        {...favoriteStopsGlowLayer}
                         filter={['all',
                             ['!', ['has', 'point_count']],
                             ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
                         ]}
-                        paint={{
-                            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
-                            'circle-color': '#f59e0b',
-                            'circle-opacity': 0.4,
-                            'circle-blur': 0.8
-                        }}
                     />
                 )}
                 <Layer {...stopPointGlowLayer} />

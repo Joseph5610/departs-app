@@ -145,7 +145,7 @@ export const AlertsModal: React.FC = () => {
 
                                         {currentItems.length === 0 && !loadingRSS && (
                                             <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
-                                                {t('alerts.noAlerts')}
+                                                <p>{t('alerts.noAlerts')}</p>
                                             </Stack>
                                         )}
                                     </Stack>

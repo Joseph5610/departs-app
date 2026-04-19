@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { CATCH_BUFFER } from '@/config/constants';
 
 interface CountdownProps {
     timestamp: string;
@@ -10,21 +11,27 @@ interface CountdownProps {
 /**
  * Countdown
  *
- * Logic-only component for time display.
+ * Optimized component for real-time time display.
+ * Memoizes timestamp parsing and uses global constants for state logic.
  */
 export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     const { t } = useTranslation();
+    
+    // Memoize the target date so we don't re-parse the ISO string every second
+    const targetDate = useMemo(() => parseISO(timestamp), [timestamp]);
+
     const [secondsLeft, setSecondsLeft] = useState(() =>
-        differenceInSeconds(parseISO(timestamp), new Date())
+        differenceInSeconds(targetDate, new Date())
     );
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setSecondsLeft(differenceInSeconds(parseISO(timestamp), new Date()));
-        }, 1000);
+        const calculateRemaining = () => {
+            setSecondsLeft(differenceInSeconds(targetDate, new Date()));
+        };
 
+        const interval = setInterval(calculateRemaining, 1000);
         return () => clearInterval(interval);
-    }, [timestamp]);
+    }, [targetDate]);
 
     if (secondsLeft <= 0) {
         return <span className="text-emerald-400 animate-pulse">{t('map.departures.now')}</span>;
@@ -39,7 +46,7 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
         : `${mins}:${secs.toString().padStart(2, '0')}`;
 
     return (
-        <span className={cn(secondsLeft < 120 ? 'text-emerald-400' : 'text-foreground')}>
+        <span className={cn(secondsLeft < CATCH_BUFFER ? 'text-emerald-400' : 'text-foreground')}>
             {formatted}
         </span>
     );

@@ -4,7 +4,6 @@ import MapGL, { type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
-
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
@@ -18,10 +17,9 @@ import { useMapFilters } from '../../hooks/derived/useMapFilters';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
-const SettingsModal = React.lazy(() => import('../Modals/SettingsModal/SettingsModal').then(module => ({ default: module.SettingsModal })));
-const WelcomeModal = React.lazy(() => import('../Modals/WelcomeModal').then(module => ({ default: module.WelcomeModal })));
-const AlertsModal = React.lazy(() => import('../Modals/AlertsModal').then(module => ({ default: module.AlertsModal })));
-
+import { SettingsModal } from '../Modals/SettingsModal/SettingsModal';
+import { WelcomeModal } from '../Modals/WelcomeModal';
+import { AlertsModal } from '../Modals/AlertsModal';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
 
@@ -151,11 +149,9 @@ const MapInner: React.FC = () => {
             <Search />
             <MapControls />
 
-            <React.Suspense fallback={null}>
-                <WelcomeModal />
-                <SettingsModal />
-                <AlertsModal />
-            </React.Suspense>
+            <WelcomeModal />
+            <SettingsModal />
+            <AlertsModal />
 
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}

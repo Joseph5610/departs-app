@@ -3,21 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { RefreshCw, Clock, Database, Github, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWA } from '../../../contexts/PWAContext';
+import { usePreferences } from '../../../state/MapStateProvider';
 import { toast } from 'sonner';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 
-interface SettingsFooterProps {
-    searchHistory: unknown[];
-    clearHistory: () => void;
-}
 
-/**
- * SettingsFooter
- *
- * Renders the bottom section of settings: clear history, update check, and external links.
- */
-export const SettingsFooter: React.FC<SettingsFooterProps> = ({ searchHistory, clearHistory }) => {
+export const SettingsFooter: React.FC = () => {
     const { t } = useTranslation();
+    const { state, actions } = usePreferences();
+    const { searchHistory } = state;
+    const { clearHistory } = actions;
     const [isChecking, setIsChecking] = useState(false);
     const { needRefresh } = usePWA();
 

@@ -45,7 +45,7 @@ The map MUST run at 60fps. React renders are too slow for high-frequency updates
 - **DetailPanel Abstraction**: Mobile UI (Vaul drawer) and Desktop UI (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break this responsive switch logic.
 - **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` Trolleybus.
 - **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` as lines A/B/C have distinct directional identities.
-- **Branding Authority**: All transit colors MUST originate from `src/utils/vehicleColors.ts` or backend-provided branding.
+- **Branding Authority**: All transit colors MUST originate from `src/config/stations.ts` (static) or backend-provided branding.
 - **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts to account for notches.
 - **i18n**: Czech (`cs`) and English (`en`) via `react-i18next`. Translation files live in `src/i18n/locales/`.
 - **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache.

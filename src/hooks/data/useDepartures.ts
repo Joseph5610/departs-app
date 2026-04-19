@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import type { Departure } from '../../types/transit';
 import { useSelection, usePreferences } from '../../state/MapStateProvider';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
@@ -26,38 +26,6 @@ export const useDepartures = () => {
     // Store previous data to calculate deltas without effects
     const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});
 
-    const selectFn = useCallback((data: { departures: Departure[] }) => {
-        if (!data?.departures) {
-            return data;
-        }
-
-        const now = Date.now();
-        const enriched = data.departures.map((dep) => {
-            const key = `${dep.tripId}-${dep.scheduled}`;
-            const prev = prevDataRef.current[key];
-
-            let delta: number | undefined = undefined;
-            let lastUpdate: number | undefined = undefined;
-
-            if (prev && prev.delay !== dep.delay) {
-                delta = dep.delay - prev.delay;
-                lastUpdate = now;
-            } else if (prev) {
-                lastUpdate = prev.timestamp;
-            }
-
-            // Update ref for next run
-            prevDataRef.current[key] = { delay: dep.delay, timestamp: lastUpdate || now };
-
-            return {
-                ...dep,
-                delayDelta: delta,
-                lastDelayUpdate: lastUpdate
-            };
-        });
-
-        return { departures: enriched };
-    }, []);
 
     const query = useQuery({
         queryKey: ['departures', stopId],
@@ -71,18 +39,60 @@ export const useDepartures = () => {
             }
             return res.json();
         },
-        select: selectFn,
         enabled: !!stopId,
         refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: TRANSIT_REFRESH_MS,
     });
 
+    const enrichedDepartures = useMemo((): Departure[] => {
+        if (!query.data?.departures) return [];
+
+        const now = Date.now();
+        return query.data.departures.map((dep: Departure) => {
+            const key = `${dep.tripId}-${dep.scheduled}`;
+            const prev = prevDataRef.current[key];
+
+            let delta: number | undefined = undefined;
+            let lastUpdate: number | undefined = undefined;
+
+            if (prev && prev.delay !== dep.delay) {
+                delta = dep.delay - prev.delay;
+                lastUpdate = now;
+            } else if (prev) {
+                lastUpdate = prev.timestamp;
+            }
+
+            return {
+                ...dep,
+                delayDelta: delta,
+                lastDelayUpdate: lastUpdate
+            };
+        });
+    }, [query.data, query.dataUpdatedAt]);
+
+    // Synchronize ref AFTER render to maintain purity
+    useEffect(() => {
+        if (!query.data?.departures) return;
+
+        const now = Date.now();
+        query.data.departures.forEach((dep: Departure) => {
+            const key = `${dep.tripId}-${dep.scheduled}`;
+            const prev = prevDataRef.current[key];
+            const lastUpdate = (prev && prev.delay !== dep.delay) ? now : prev?.timestamp;
+
+            prevDataRef.current[key] = {
+                delay: dep.delay,
+                timestamp: lastUpdate || now
+            };
+        });
+    }, [query.data]);
+
     const groupedDepartures = useMemo((): DepartureGroup[] => {
-        if (!query.data?.departures) {
+        if (enrichedDepartures.length === 0) {
             return [];
         }
         const groups: Record<string, Departure[]> = {};
-        query.data.departures.forEach((dep) => {
+        enrichedDepartures.forEach((dep) => {
             // Metro (type 1) is grouped by line AND direction
             const lineName = String(dep.line).toUpperCase();
             const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);

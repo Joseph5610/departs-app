@@ -5,6 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --sidebar-width: 420px;
+  --sidebar-offset: calc(var(--sidebar-width) / 2);
+  --visible-center-x: calc(50% + var(--sidebar-offset));
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -53,6 +56,7 @@
 }
 
 @theme inline {
+  --breakpoint-mobile: 768px;
   --font-sans: 'Geist Variable', sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -231,7 +235,7 @@
   margin: 0 0.5rem 0.5rem 0 !important;
 }
 
-@media (max-width: 768px) {
+@media (width < theme(--breakpoint-mobile)) {
   .maplibregl-ctrl-bottom-right {
     margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }

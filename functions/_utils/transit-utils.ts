@@ -286,17 +286,23 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             metro_b: metroLines.includes('B') ? 1 : 0,
             metro_c: metroLines.includes('C') ? 1 : 0,
             is_train: isTrain,
-            variant_seed: Math.random()
+            variant_seed: hashSeed(String(stopId))
         };
 
         const enrichedFeature = { ...f, properties: enrichedProperties };
 
         // Collect for centroid calculation
-        if (type !== 2 && p.stop_name) {
+        // Only include actual stops (type 0) and stations (type 1) in centroids
+        if ((type === 0 || type === 1 || isNaN(type)) && p.stop_name) {
             const fixedName = fixCommaSpacing(p.stop_name)!;
             enrichedFeature.properties.stop_name = fixedName;
-            if (!nameGroups.has(fixedName)) nameGroups.set(fixedName, []);
-            nameGroups.get(fixedName)!.push(enrichedFeature);
+
+            // Extract base node ID (e.g. from U31773Z1 -> U31773) to prevent merging identical names from different cities
+            const nodeId = stopId.includes('Z') ? stopId.split('Z')[0] : stopId;
+            const centroidKey = `${fixedName}_${nodeId}`;
+
+            if (!nameGroups.has(centroidKey)) nameGroups.set(centroidKey, []);
+            nameGroups.get(centroidKey)!.push(enrichedFeature);
         }
 
         // Handle Metro Stations (Type 1)
@@ -328,8 +334,9 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             if (p.parent_station && stationAnchors.has(p.parent_station)) continue;
             if (!p.stop_name) continue;
 
-            // Group by name and platform code
-            const key = `stop_${p.stop_name.toLowerCase()}_${p.platform_code || ''}`;
+            // Group by name, node ID, and platform code to avoid merging identical names across cities
+            const nodeId = stopId.includes('Z') ? stopId.split('Z')[0] : stopId;
+            const key = `stop_${p.stop_name.toLowerCase()}_${nodeId}_${p.platform_code || ''}`;
             if (!groups[key]) {
                 groups[key] = {
                     ...enrichedFeature,
@@ -339,7 +346,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
                         all_ids: [stopId]
                     }
                 };
-        } else {
+            } else {
                 const currentIds = groups[key].properties.all_ids || [];
                 groups[key].properties.all_ids = [...currentIds, stopId];
             }
@@ -388,6 +395,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
             features.push({
                 type: "Feature",
+                id: `centroid-${groupFeatures[0].properties.stop_id}`,
                 geometry: { type: "Point", coordinates: [avgLng, avgLat] },
                 properties: {
                     ...groupFeatures[0].properties,

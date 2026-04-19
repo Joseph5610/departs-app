@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useMemo } from 'react';
 
 export interface SelectionState {
     selectedStopId: string | null;
@@ -9,7 +9,7 @@ export interface SelectionState {
 
 export type SelectionAction =
     | { type: 'SELECT_STOP'; payload: string | null }
-    | { type: 'SELECT_VEHICLE'; tripId: string | null; vehicleId: string | null; keepStop?: boolean }
+    | { type: 'SELECT_VEHICLE'; payload: { tripId: string | null; vehicleId: string | null; keepStop?: boolean } }
     | { type: 'CLEAR_SELECTION' }
     | { type: 'SET_IS_FOLLOWING'; payload: boolean };
 
@@ -33,9 +33,9 @@ function selectionReducer(state: SelectionState, action: SelectionAction): Selec
         case 'SELECT_VEHICLE':
             return {
                 ...state,
-                selectedTripId: action.tripId,
-                selectedVehicleId: action.vehicleId,
-                selectedStopId: action.keepStop ? state.selectedStopId : null,
+                selectedTripId: action.payload.tripId,
+                selectedVehicleId: action.payload.vehicleId,
+                selectedStopId: action.payload.keepStop ? state.selectedStopId : null,
                 isFollowing: true
             };
         case 'CLEAR_SELECTION':
@@ -57,18 +57,22 @@ export const useSelectionReducer = () => {
     const [state, dispatch] = useReducer(selectionReducer, undefined, getInitialState);
     const selectedId = useMemo(() => state.selectedVehicleId || state.selectedTripId, [state.selectedVehicleId, state.selectedTripId]);
 
-    const createAction = useCallback(<T extends SelectionAction['type']>(type: T) => 
-        (payload: Extract<SelectionAction, { type: T }> extends { payload: infer P } ? P : never) => 
-            dispatch({ type, payload } as unknown as SelectionAction), []);
+    const actions = useMemo(() => ({
+        selectStop: (stopId: string | null) =>
+            dispatch({ type: 'SELECT_STOP', payload: stopId }),
+
+        selectVehicle: (tripId: string | null, vehicleId: string | null, keepStop = false) =>
+            dispatch({ type: 'SELECT_VEHICLE', payload: { tripId, vehicleId, keepStop } }),
+
+        clearSelection: () =>
+            dispatch({ type: 'CLEAR_SELECTION' }),
+
+        setIsFollowing: (isFollowing: boolean) =>
+            dispatch({ type: 'SET_IS_FOLLOWING', payload: isFollowing }),
+    }), [dispatch]);
 
     return {
         state: { ...state, selectedId },
-        actions: {
-            selectStop: createAction('SELECT_STOP'),
-            selectVehicle: useCallback((tripId: string | null, vehicleId: string | null = null, keepStop = false) => 
-                dispatch({ type: 'SELECT_VEHICLE', tripId, vehicleId, keepStop }), []),
-            clearSelection: useCallback(() => dispatch({ type: 'CLEAR_SELECTION' }), []),
-            setIsFollowing: createAction('SET_IS_FOLLOWING')
-        }
+        actions
     };
 };

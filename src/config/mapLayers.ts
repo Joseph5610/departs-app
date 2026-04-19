@@ -123,6 +123,7 @@ export const stopPointLayer: CircleLayerSpecification = {
     }
 };
 
+
 // 3a. ATMOSPHERIC GLOW for Stations
 export const stopPointGlowLayer: CircleLayerSpecification = {
     id: 'unclustered-point-glow',
@@ -438,5 +439,40 @@ export const routeLineLayer: LineLayerSpecification = {
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5
+    }
+};
+
+export const userLocationPulseLayer: CircleLayerSpecification = {
+    id: 'user-location-pulse',
+    type: 'circle',
+    source: 'user-location',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
+        'circle-color': '#3b82f6',
+        'circle-opacity': 0.15,
+    }
+};
+
+export const userLocationPointLayer: CircleLayerSpecification = {
+    id: 'user-location-point',
+    type: 'circle',
+    source: 'user-location',
+    paint: {
+        'circle-radius': 7,
+        'circle-color': '#3b82f6',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#FFFFFF'
+    }
+};
+
+export const favoriteStopsGlowLayer: CircleLayerSpecification = {
+    id: 'favorite-stops-glow',
+    type: 'circle',
+    source: 'pid-stops',
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
+        'circle-color': '#f59e0b',
+        'circle-opacity': 0.4,
+        'circle-blur': 0.8
     }
 };

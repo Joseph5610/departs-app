@@ -1,8 +1,5 @@
 import { memo, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type Locale } from 'date-fns';
-import { cs } from 'date-fns/locale/cs';
-import { enUS } from 'date-fns/locale/en-US';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,11 +11,6 @@ import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { METRO_STATIONS } from '../../../config/stations';
-
-const dateLocales: Record<string, Locale> = {
-    cs: cs,
-    en: enUS
-};
 
 interface DepartureBoardProps {
     selectedStop: SelectedStop;
@@ -32,7 +24,7 @@ interface DepartureBoardProps {
  * grouped by line and type.
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { isLoading, groupedDepartures } = useDepartures();
     const stopDistanceInfo = useStopDistance();
 
@@ -41,8 +33,6 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const onToggleGroup = useCallback((group: string) => {
         setExpandedGroups(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]);
     }, []);
-
-    const locale = dateLocales[i18n.resolvedLanguage || i18n.language] || enUS;
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
@@ -97,7 +87,6 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                     onDepartureClick={onDepartureClick}
                                     stopDistanceInfo={stopDistanceInfo}
                                     isTrainStop={selectedStop.is_train}
-                                    locale={locale}
                                 />
                             ))}
 

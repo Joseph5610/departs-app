@@ -53,6 +53,7 @@ export const addSplitIcon = (map: Map, id: string, c1: string, c2: string) => {
     }
 };
 
+
 export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
     addSplitIcon(map, 'transfer-A-B', LINE_COLORS.A, LINE_COLORS.B);

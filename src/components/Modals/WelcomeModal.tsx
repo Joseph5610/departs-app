@@ -11,7 +11,6 @@ import { STORAGE_KEYS } from '../../config/constants';
 import { useViewport } from '../../state/MapStateProvider';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
-
 import { Badge } from '@/components/ui/badge';
 
 /**
@@ -30,12 +29,14 @@ export const WelcomeModal: React.FC = () => {
     });
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
         const params = new URLSearchParams(window.location.search);
+        
         if (params.has('skipTutorial')) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
+            setIsOpen(false);
             actions.handleLocate();
 
-            // Clean up the URL
             const url = new URL(window.location.href);
             url.searchParams.delete('skipTutorial');
             window.history.replaceState({}, '', url.toString());
@@ -75,16 +76,16 @@ export const WelcomeModal: React.FC = () => {
                         <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
-                                <div className="font-semibold text-sm">{t('welcome.steps.clickStop.title')}</div>
-                                <div className="text-muted-foreground text-xs">{t('welcome.steps.clickStop.description')}</div>
+                                <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.clickStop.title')}</h3>
+                                <p className="text-muted-foreground text-xs">{t('welcome.steps.clickStop.description')}</p>
                             </Stack>
                         </Surface>
 
                         <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
                             <Box className="mt-1 text-primary"><Info size={18} /></Box>
                             <Stack gap={1}>
-                                <div className="font-semibold text-sm">{t('welcome.steps.trackVehicles.title')}</div>
-                                <div className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</div>
+                                <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.trackVehicles.title')}</h3>
+                                <p className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</p>
                             </Stack>
                         </Surface>
                     </Stack>

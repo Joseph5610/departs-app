@@ -2,7 +2,7 @@
 /**
  * UI and Layout constants
  */
-export const SIDEBAR_WIDTH = 450;
+export const SIDEBAR_WIDTH = 420;
 export const MOBILE_BREAKPOINT = 768;
 export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
 

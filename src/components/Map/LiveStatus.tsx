@@ -43,7 +43,7 @@ export const LiveStatus: React.FC = () => {
             data-testid="live-status"
             className={cn(
                 "pt-[calc(4.75rem+env(safe-area-inset-top,0px))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0px))]",
-                isSidebarOpen && "md:left-[calc(220px+50%)]"
+                isSidebarOpen && "md:left-[var(--visible-center-x)]"
             )}
         >
             <AnimatePresence mode="wait">

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useIsMobile } from '../useIsMobile';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useSelectedVehicle } from '../derived/useSelectedVehicle';
 import {
@@ -7,7 +8,6 @@ import {
     MAP_ANIMATION_DURATION,
     MAP_EASE_DURATION,
     MAP_MIN_STOP_ZOOM,
-    MOBILE_BREAKPOINT,
     MOBILE_BOTTOM_SHEET_RATIO,
     SIDEBAR_WIDTH,
     PULSE_SPEED_DIVISOR,
@@ -30,6 +30,7 @@ export const useMapInterface = () => {
 
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
+    const isMobile = useIsMobile();
 
     const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
@@ -88,7 +89,6 @@ export const useMapInterface = () => {
             return;
         }
 
-        const isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false;
         const padding = isMobile
             ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
             : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 };
