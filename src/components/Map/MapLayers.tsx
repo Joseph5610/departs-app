@@ -22,7 +22,7 @@ import {
     routeLineLayer,
     userLocationPulseLayer,
     userLocationPointLayer,
-    favoriteStopsGlowLayer
+    favoriteStopsLayer
 } from '../../config/mapLayers';
 
 interface MapLayersProps {
@@ -137,18 +137,19 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 }}
             >
                 <Layer {...clusterLayer} />
-                {/* Favorite stop highlight */}
+                <Layer {...stopPointGlowLayer} />
+                <Layer {...stopPointLayer} />
+                {/* Favorite stop highlight (drawn on top of regular stop point) */}
                 {favoriteStops.length > 0 && (
                     <Layer
-                        {...favoriteStopsGlowLayer}
+                        {...favoriteStopsLayer}
                         filter={['all',
                             ['!', ['has', 'point_count']],
+                            ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
                             ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
                         ]}
                     />
                 )}
-                <Layer {...stopPointGlowLayer} />
-                <Layer {...stopPointLayer} />
                 <Layer {...transferStationLayer} />
                 <Layer {...platformLabelLayer} />
                 <Layer {...entranceLayer} />

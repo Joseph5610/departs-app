@@ -465,14 +465,37 @@ export const userLocationPointLayer: CircleLayerSpecification = {
     }
 };
 
-export const favoriteStopsGlowLayer: CircleLayerSpecification = {
-    id: 'favorite-stops-glow',
+export const favoriteStopsLayer: CircleLayerSpecification = {
+    id: 'favorite-stops-layer',
     type: 'circle',
     source: 'pid-stops',
     paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 20, 17, 40],
-        'circle-color': '#f59e0b',
-        'circle-opacity': 0.4,
-        'circle-blur': 0.8
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+            13, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 9.5, 5.7],
+            17, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 26.6, 20.9]
+        ],
+        'circle-color': [
+            'case',
+            // Stations keep their brand color
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            ['match', ['get', 'stop_name'],
+                ...getStationColorMatchPairs(),
+                LINE_COLORS.Unknown
+            ],
+            // Train Stations keep their dark blue
+            ['==', ['get', 'is_train'], 1],
+            LINE_COLORS.TrainStation,
+            // Regular Stops get a subtle amber tinted background (like bg-amber-500/10 from the list)
+            'rgba(245, 158, 11, 0.2)' 
+        ] as any,
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.5, 17, 2.5], 
+        'circle-stroke-color': '#f59e0b', // amber-500
+        'circle-opacity': [
+            'case',
+            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            0.7,
+            0.9
+        ],
+        'circle-stroke-opacity': 0.9 // Slightly transparent stroke so it blends better
     }
 };
