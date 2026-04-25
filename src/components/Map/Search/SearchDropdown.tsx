@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock } from 'lucide-react';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { SearchItem } from './SearchItem';
+import { METRO_STATIONS } from '@/config/stations';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 
 interface SearchDropdownProps {
@@ -59,6 +60,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 icon={item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
                                 title={item.type === 'stop' ? item.stop_name : t('search.lineFilter', { line: item.lines.join(', ') })}
                                 subtitle={item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) : undefined}
+                                metroLines={item.type === 'stop' ? METRO_STATIONS[item.stop_name] : undefined}
                                 testId={item.type === 'stop' ? `search-item-stop-${item.stop_name}` : `search-item-line-${item.lines.join('-')}`}
                                 onClick={() => onHistorySelect(item)}
                             />
@@ -93,6 +95,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
                         title={stop.properties.stop_name}
                         subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+                        metroLines={METRO_STATIONS[stop.properties.stop_name]}
                         highlight={favoriteStops.includes(stop.properties.stop_id)}
                         testId={`search-item-stop-${stop.properties.stop_name}${stop.properties.platform_code ? '-' + stop.properties.platform_code : ''}`}
                         onClick={() => onStopSelect(stop)}

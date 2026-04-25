@@ -67,3 +67,5 @@ The map MUST run at 60fps. React renders are too slow for high-frequency updates
 ### Final Checklist
 Before completing: 1. Build Integrity? 2. State Purity (ID-only)? 3. Responsive Check? 4. Data Integrity (GTFS/Colors)?
 
+### Local Environment
+- **Port:** The development server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.

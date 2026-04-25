@@ -7,11 +7,13 @@ import type { VehicleCollection, StopCollection } from '../../types/transit';
 import {
     clusterLayer,
     stopPointLayer,
-    transferStationLayer,
+    transferOuterLayer,
+    transferInnerLayer,
     stopLabelLayer,
     platformLabelLayer,
     entranceLayer,
     stopPointGlowLayer,
+    favoriteStarLayer,
     selectedVehiclePulseLayer,
     selectedVehiclePointLayer,
     selectedVehicleDirectionLayer,
@@ -22,7 +24,7 @@ import {
     routeLineLayer,
     userLocationPulseLayer,
     userLocationPointLayer,
-    favoriteStopsLayer
+    stationIconLayer
 } from '../../config/mapLayers';
 
 interface MapLayersProps {
@@ -130,28 +132,26 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 clusterMaxZoom={13}
                 clusterRadius={25}
                 clusterProperties={{
-                    has_metro_a: ['max', ['get', 'metro_a']],
-                    has_metro_b: ['max', ['get', 'metro_b']],
-                    has_metro_c: ['max', ['get', 'metro_c']],
-                    cluster_seed: ['max', ['get', 'variant_seed']]
+                    has_metro_a: ['max', ['coalesce', ['get', 'metro_a'], 0]],
+                    has_metro_b: ['max', ['coalesce', ['get', 'metro_b'], 0]],
+                    has_metro_c: ['max', ['coalesce', ['get', 'metro_c'], 0]],
+                    cluster_seed: ['max', ['coalesce', ['get', 'variant_seed'], 0]]
                 }}
             >
                 <Layer {...clusterLayer} />
                 <Layer {...stopPointGlowLayer} />
                 <Layer {...stopPointLayer} />
-                {/* Favorite stop highlight (drawn on top of regular stop point) */}
+                <Layer {...transferOuterLayer} />
+                <Layer {...transferInnerLayer} />
+                <Layer {...stationIconLayer} />
+                <Layer {...platformLabelLayer} />
+                {/* Favorite Star Badge - Drawn last to be on top of everything */}
                 {favoriteStops.length > 0 && (
                     <Layer
-                        {...favoriteStopsLayer}
-                        filter={['all',
-                            ['!', ['has', 'point_count']],
-                            ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-                            ['in', ['get', 'stop_id'], ['literal', favoriteStops]]
-                        ]}
+                        {...favoriteStarLayer}
+                        filter={['any', ...favoriteStops.map(id => ['==', ['get', 'stop_id'], id])] as FilterSpecification}
                     />
                 )}
-                <Layer {...transferStationLayer} />
-                <Layer {...platformLabelLayer} />
                 <Layer {...entranceLayer} />
             </Source>
         </>

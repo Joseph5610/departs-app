@@ -2,9 +2,9 @@ export const LINE_COLORS = {
     A: '#00A562',
     B: '#F8B322',
     C: '#CF003D',
-    Transfer: '#FFFFFF',
+    Transfer: '#0f172a',
     Unknown: '#38bdf8',
-    DefaultStation: '#1e293b',
+    DefaultStation: '#1e3a8a',
     TrainStation: '#1c1745'
 };
 

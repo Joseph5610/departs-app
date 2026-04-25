@@ -1,11 +1,13 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Box, Stack, Surface } from '@/components/ui/layout';
+import { LINE_COLORS } from '@/config/stations';
 
 interface SearchItemProps {
     icon: React.ReactNode;
     title: string;
     subtitle?: string;
+    metroLines?: string[];
     onClick: () => void;
     variant?: 'default' | 'primary';
     highlight?: boolean;
@@ -18,7 +20,7 @@ interface SearchItemProps {
  * A single row in the search dropdown. Supports default, primary (line filter),
  * and highlighted (favorite) visual variants.
  */
-export const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => (
+export const SearchItem = ({ icon, title, subtitle, metroLines, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => (
     <Surface
         asChild
         variant="ghost"
@@ -39,7 +41,18 @@ export const SearchItem = ({ icon, title, subtitle, onClick, variant = 'default'
                 {icon}
             </Box>
             <Stack gap={0} className="min-w-0 flex-1">
-                <span className="text-foreground font-medium line-clamp-2 leading-snug">{title}</span>
+                <span className="text-foreground font-medium line-clamp-2 leading-normal">
+                    {title}
+                    {metroLines?.map((line: string) => (
+                        <span 
+                            key={line} 
+                            className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
+                            style={{ backgroundColor: LINE_COLORS[line as keyof typeof LINE_COLORS] }}
+                        >
+                            {line}
+                        </span>
+                    ))}
+                </span>
                 {subtitle && <span className="text-muted-foreground text-xs line-clamp-1 mt-0.5">{subtitle}</span>}
             </Stack>
         </button>

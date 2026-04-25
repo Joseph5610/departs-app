@@ -10,6 +10,7 @@ import type { Departure } from '../../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
+import { METRO_STATIONS, LINE_COLORS } from '@/config/stations';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -79,7 +80,18 @@ export const DepartureItem = ({
             >
             <HStack gap={4} className="min-w-0 flex-1">
                 <Stack gap={0} className="min-w-0 flex-1">
-                    <div className="text-foreground font-semibold leading-snug line-clamp-2">{dep.headsign}</div>
+                    <div className="text-foreground font-semibold leading-normal line-clamp-2">
+                        {dep.headsign}
+                        {METRO_STATIONS[dep.headsign]?.map((line: string) => (
+                            <span 
+                                key={line} 
+                                className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
+                                style={{ backgroundColor: LINE_COLORS[line as keyof typeof LINE_COLORS] }}
+                            >
+                                {line}
+                            </span>
+                        ))}
+                    </div>
                     <HStack gap={2} className="text-muted-foreground text-[10px] mt-1 flex-wrap">
                         <span className="tabular-nums">
                             {format(parseISO(dep.scheduled), 'HH:mm')}

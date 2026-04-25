@@ -249,6 +249,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
     // 1. Filter out internal technical stops and prepare data structures
     const stationAnchors = new Map<string, GolemioStopFeature>();
     const stationChildren = new Map<string, string[]>();
+    const stationChildrenFeatures = new Map<string, GolemioStopFeature[]>();
     const publicStops: GolemioStopFeature[] = [];
 
     for (const f of allStops) {
@@ -262,9 +263,14 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
         if (type === 1) {
             stationAnchors.set(p.stop_id, f);
-        } else if (p.parent_station && type !== 2) {
-            if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
-            stationChildren.get(p.parent_station)!.push(p.stop_id);
+        } else if (p.parent_station) {
+            if (!stationChildrenFeatures.has(p.parent_station)) stationChildrenFeatures.set(p.parent_station, []);
+            stationChildrenFeatures.get(p.parent_station)!.push(f);
+            
+            if (type !== 2) {
+                if (!stationChildren.has(p.parent_station)) stationChildren.set(p.parent_station, []);
+                stationChildren.get(p.parent_station)!.push(p.stop_id);
+            }
         }
     }
 
@@ -297,8 +303,9 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             const fixedName = fixCommaSpacing(p.stop_name)!;
             enrichedFeature.properties.stop_name = fixedName;
 
-            // Extract base node ID (e.g. from U31773Z1 -> U31773) to prevent merging identical names from different cities
-            const nodeId = stopId.includes('Z') ? stopId.split('Z')[0] : stopId;
+            // Extract base node ID (e.g. from U31773Z1 -> U31773, U410M -> U410) to prevent merging identical names from different cities
+            const nodeIdMatch = stopId.match(/^([A-Za-z]*\d+)/);
+            const nodeId = nodeIdMatch ? nodeIdMatch[1] : stopId;
             const centroidKey = `${fixedName}_${nodeId}`;
 
             if (!nameGroups.has(centroidKey)) nameGroups.set(centroidKey, []);
@@ -307,13 +314,30 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
         // Handle Metro Stations (Type 1)
         if (type === 1) {
-            const children = stationChildren.get(stopId) || [];
+            const childrenList = stationChildren.get(stopId) || [];
+            const childFeatures = stationChildrenFeatures.get(stopId) || [];
+            
+            let finalGeometry = enrichedFeature.geometry;
+            if (childFeatures.length > 0) {
+                let sumLng = 0;
+                let sumLat = 0;
+                for (const child of childFeatures) {
+                    sumLng += child.geometry.coordinates[0];
+                    sumLat += child.geometry.coordinates[1];
+                }
+                finalGeometry = {
+                    type: "Point",
+                    coordinates: [sumLng / childFeatures.length, sumLat / childFeatures.length]
+                };
+            }
+
             groups[`metro_station_${stopId}`] = {
                 ...enrichedFeature,
+                geometry: finalGeometry,
                 properties: {
                     ...enrichedProperties,
                     location_type: 1,
-                    stop_id: children.length > 0 ? children.join(',') : stopId
+                    stop_id: childrenList.length > 0 ? childrenList.join(',') : stopId
                 }
             };
             continue;
@@ -368,42 +392,30 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
 
     // 4. Calculate centroids for each stop name group
     for (const [, groupFeatures] of nameGroups) {
-        // Preference: If there's a station (type 1) in the group, use it as the centroid anchor
+        // Find if there's a station (type 1) to inherit its properties (like metro lines for styling)
         const station = groupFeatures.find(f => Number(f.properties.location_type) === 1);
+        const baseFeature = station || groupFeatures[0];
 
-        if (station) {
-            features.push({
-                type: "Feature",
-                id: `centroid-${station.properties.stop_id}`,
-                geometry: station.geometry,
-                properties: {
-                    ...station.properties,
-                    is_centroid: true,
-                    stop_id: `centroid-${station.properties.stop_id}`
-                }
-            });
-        } else {
-            // Otherwise, calculate average coordinates
-            let sumLng = 0;
-            let sumLat = 0;
-            for (const f of groupFeatures) {
-                sumLng += f.geometry.coordinates[0];
-                sumLat += f.geometry.coordinates[1];
-            }
-            const avgLng = sumLng / groupFeatures.length;
-            const avgLat = sumLat / groupFeatures.length;
-
-            features.push({
-                type: "Feature",
-                id: `centroid-${groupFeatures[0].properties.stop_id}`,
-                geometry: { type: "Point", coordinates: [avgLng, avgLat] },
-                properties: {
-                    ...groupFeatures[0].properties,
-                    is_centroid: true,
-                    stop_id: `centroid-${groupFeatures[0].properties.stop_id}`
-                }
-            });
+        // Always calculate average coordinates so the label is mathematically centered
+        let sumLng = 0;
+        let sumLat = 0;
+        for (const f of groupFeatures) {
+            sumLng += f.geometry.coordinates[0];
+            sumLat += f.geometry.coordinates[1];
         }
+        const avgLng = sumLng / groupFeatures.length;
+        const avgLat = sumLat / groupFeatures.length;
+
+        features.push({
+            type: "Feature",
+            id: `centroid-${baseFeature.properties.stop_id}`,
+            geometry: { type: "Point", coordinates: [avgLng, avgLat] },
+            properties: {
+                ...baseFeature.properties,
+                is_centroid: true,
+                stop_id: `centroid-${baseFeature.properties.stop_id}`
+            }
+        });
     }
 
     return features;

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { METRO_STATIONS, LINE_COLORS } from '@/config/stations';
 import type { StopFeature, StopTimelineProps } from './types';
 
 /**
@@ -109,10 +110,19 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
             )} />
             <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
                 <span className={cn(
-                    "text-sm line-clamp-2 w-full leading-snug",
+                    "text-sm line-clamp-2 w-full leading-normal",
                     isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                 )}>
                     {stop.properties.stop_name}
+                    {METRO_STATIONS[stop.properties.stop_name]?.map((line: string) => (
+                        <span 
+                            key={line} 
+                            className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
+                            style={{ backgroundColor: LINE_COLORS[line as keyof typeof LINE_COLORS] }}
+                        >
+                            {line}
+                        </span>
+                    ))}
                 </span>
                 <HStack gap={2} align="center" className="flex-wrap">
                     {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}

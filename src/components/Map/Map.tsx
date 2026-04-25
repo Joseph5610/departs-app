@@ -63,7 +63,7 @@ const MapInner: React.FC = () => {
             return selectedStop.stop_name;
         }
         return '';
-    }, [selectedVehicle, selectedStop]);
+    }, [selectedVehicle, selectedStop, t]);
 
     return (
         <>
@@ -120,14 +120,14 @@ const MapInner: React.FC = () => {
                         return;
                     }
 
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'train-stations' || f.layer.id === 'transfer-stations') {
+                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'station-icons' || f.layer.id === 'transfer-outer' || f.layer.id === 'transfer-inner') {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
                             selActions.selectStop(stopId);
                         }
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'train-stations', 'clusters', 'transfer-stations', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
+                interactiveLayerIds={['unclustered-point', 'station-icons', 'transfer-outer', 'transfer-inner', 'clusters', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
             >
                 <MapLayers
                     mapLoaded={mapLoaded}

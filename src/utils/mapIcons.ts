@@ -1,5 +1,5 @@
 import type { Map } from 'maplibre-gl';
-import { LINE_COLORS } from '../config/stations';
+
 
 export const addArrowIcon = (map: Map) => {
     const size = 64;
@@ -18,45 +18,125 @@ export const addArrowIcon = (map: Map) => {
         ctx.closePath();
         ctx.fill();
 
-        if (!map.hasImage('v-arrow-centered')) {
-            const imageData = ctx.getImageData(0, 0, size, size);
-            map.addImage('v-arrow-centered', imageData, { sdf: true });
-        }
+        if (map.hasImage('v-arrow-centered')) map.removeImage('v-arrow-centered');
+        const imageData = ctx.getImageData(0, 0, size, size);
+        map.addImage('v-arrow-centered', imageData, { sdf: true });
     }
 };
 
-export const addSplitIcon = (map: Map, id: string, c1: string, c2: string) => {
+// Removed canvas-based transfer logic in favor of native WebGL circles
+
+
+
+
+export const addTrainIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-        const cx = size / 2;
-        const cy = size / 2;
-        const r = size / 2 - 2;
+        ctx.clearRect(0, 0, size, size);
+        ctx.strokeStyle = 'black'; // for SDF mask
+        ctx.fillStyle = 'black';
+        ctx.lineWidth = 2 * (64 / 24);
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        const s = 64 / 24;
+
         ctx.beginPath();
-        ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-        ctx.fillStyle = 'white';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, Math.PI * 0.5, Math.PI * 1.5);
-        ctx.fillStyle = c1;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, Math.PI * 1.5, Math.PI * 2.5);
-        ctx.fillStyle = c2;
-        ctx.fill();
-        if (!map.hasImage(id)) {
-            map.addImage(id, ctx.getImageData(0, 0, size, size), { pixelRatio: 2 });
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(4 * s, 3 * s, 16 * s, 16 * s, 2 * s);
+        } else {
+            ctx.rect(4 * s, 3 * s, 16 * s, 16 * s);
         }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(4 * s, 11 * s);
+        ctx.lineTo(20 * s, 11 * s);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(12 * s, 3 * s);
+        ctx.lineTo(12 * s, 11 * s);
+        ctx.stroke();
+
+        // Left leg
+        ctx.beginPath();
+        ctx.moveTo(8 * s, 19 * s);
+        ctx.lineTo(6 * s, 22 * s);
+        ctx.stroke();
+
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(16 * s, 19 * s);
+        ctx.lineTo(18 * s, 22 * s);
+        ctx.stroke();
+
+        // Lights
+        ctx.beginPath();
+        ctx.arc(8 * s, 15 * s, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(16 * s, 15 * s, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (map.hasImage('train-icon')) map.removeImage('train-icon');
+        const imageData = ctx.getImageData(0, 0, size, size);
+        map.addImage('train-icon', imageData, { sdf: true });
     }
 };
 
+export const addStarIcon = (map: Map) => {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.clearRect(0, 0, size, size);
+        ctx.fillStyle = 'black'; // for SDF mask
+        
+        const cx = 32;
+        const cy = 32;
+        const spikes = 5;
+        const outerRadius = 24;
+        const innerRadius = 12;
+
+        ctx.beginPath();
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            ctx.lineTo(x, y);
+            rot += step;
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            ctx.lineTo(x, y);
+            rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fill();
+
+        if (map.hasImage('favorite-star')) map.removeImage('favorite-star');
+        const imageData = ctx.getImageData(0, 0, size, size);
+        map.addImage('favorite-star', imageData, { sdf: true });
+    }
+};
 
 export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
-    addSplitIcon(map, 'transfer-A-B', LINE_COLORS.A, LINE_COLORS.B);
-    addSplitIcon(map, 'transfer-A-C', LINE_COLORS.A, LINE_COLORS.C);
-    addSplitIcon(map, 'transfer-B-C', LINE_COLORS.B, LINE_COLORS.C);
+    addTrainIcon(map);
+    addStarIcon(map);
 };
