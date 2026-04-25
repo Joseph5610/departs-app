@@ -159,7 +159,8 @@
   },
   "liveStatus": {
     "refreshing": "Aktualizace",
-    "live": "Živě"
+    "live": "Živě",
+    "offline": "Offline"
   },
   "toasts": {
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",
