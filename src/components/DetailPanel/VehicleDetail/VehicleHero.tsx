@@ -49,7 +49,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             share({
                                 title: t('map.vehicleDetails.shareTitle', { line: displayVehicle.routeName }),
                                 text: t('map.vehicleDetails.shareText', { line: displayVehicle.routeName }),
-                                url: window.location.href
+                                tripId: displayVehicle.gtfs_trip_id,
+                                vehicleId: displayVehicle.vehicle_id || undefined
                             });
                         }}
                     >

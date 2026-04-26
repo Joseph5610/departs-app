@@ -5,17 +5,41 @@ import { toast } from 'sonner';
 interface ShareOptions {
     title?: string;
     text?: string;
-    url?: string;
+    // Explicit entity IDs for clean URL construction
+    stopId?: string;
+    tripId?: string;
+    vehicleId?: string;
 }
 
 export const useShare = () => {
     const { t } = useTranslation();
 
+    const getConstructedUrl = useCallback((options: ShareOptions) => {
+        // Build from scratch ONLY if we have entity IDs
+        if (options.stopId || options.tripId || options.vehicleId) {
+            const url = new URL(window.location.origin);
+            if (options.stopId) url.searchParams.set('stopId', options.stopId);
+            if (options.tripId) url.searchParams.set('tripId', options.tripId);
+            if (options.vehicleId) url.searchParams.set('vehicleId', options.vehicleId);
+            return url.toString();
+        }
+
+        // No valid entity IDs provided - strictly forbidden to fallback for privacy
+        return null;
+    }, []);
+
     const share = useCallback(async (options: ShareOptions) => {
+        const url = getConstructedUrl(options);
+        
+        if (!url) {
+            console.error('Share attempted without entity IDs (stopId, tripId, or vehicleId). Fallback is disabled for privacy.');
+            return;
+        }
+
         const shareData = {
             title: options.title || 'departs.app',
             text: options.text,
-            url: options.url || window.location.href,
+            url: url,
         };
 
         const canShare = typeof navigator !== 'undefined' &&
@@ -40,7 +64,7 @@ export const useShare = () => {
                 toast.error(t('common.copyError'));
             }
         }
-    }, [t]);
+    }, [t, getConstructedUrl]);
 
     return { share };
 };

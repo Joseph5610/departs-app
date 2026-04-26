@@ -102,13 +102,15 @@ export const useGeolocation = (onFlyRequest: (location: [number, number], isJump
 
     const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
+        if (isGeoPending) return;
 
         const now = Date.now();
-        const isStale = now - lastUpdatedAt.current > 20000; // 20 seconds threshold
+        // Trust the watcher more: if we have a location from the last 10 seconds, use it.
+        const isFreshEnough = now - lastUpdatedAt.current < 10000;
 
-        if (userLocation && !isStale) {
+        if (userLocation && isFreshEnough) {
             onFlyRequest(userLocation);
-            // Ensure watcher is still active
+            // Ensure watcher is still active (it should be, but just in case)
             if (watchId.current === null) startWatcher();
             return;
         }
@@ -135,12 +137,16 @@ export const useGeolocation = (onFlyRequest: (location: [number, number], isJump
                 const fallback = getFallbackLocation();
                 if (fallback) onFlyRequest(fallback);
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { 
+                enableHighAccuracy: true, 
+                timeout: 10000, 
+                maximumAge: 5000 // 5 seconds grace period to avoid triggering OS privacy prompts and cold-starting GPS
+            }
         );
 
         // Ensure watcher is still active
         if (watchId.current === null) startWatcher();
-    }, [userLocation, onFlyRequest, updateLocation, startWatcher, t, getFallbackLocation]);
+    }, [userLocation, isGeoPending, onFlyRequest, updateLocation, startWatcher, t, getFallbackLocation]);
 
     return {
         userLocation,

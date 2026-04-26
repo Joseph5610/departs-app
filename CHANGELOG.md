@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.31.3] - 2026-04-26
+
+### Changed
+- **Smarter Geolocation**: Optimized the geolocation watcher to be less aggressive. Manual "Locate Me" requests now use a 5s grace period and trust recent cached positions, drastically reducing the frequency of intrusive iOS/macOS system permission prompts.
+
+### Fixed
+- **Sharing Privacy**: Implemented URL sanitization that automatically strips user viewport coordinates (`lat`, `lng`, `z`) when sharing links to specific transit stops or vehicles. This ensures you only share the intended transit entity without leaking your current map center.
+
 ## [0.31.2] - 2026-04-26
 
 ### Added

@@ -24,6 +24,14 @@ export const WelcomeModal: React.FC = () => {
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         const params = new URLSearchParams(window.location.search);
+        
+        // If the user arrives via a deep link to a specific entity, skip the welcome modal
+        const hasDeepLink = params.has('stopId') || params.has('tripId') || params.has('vehicleId');
+        if (hasDeepLink) {
+            localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
+            return false;
+        }
+
         if (params.has('skipTutorial')) return false;
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });

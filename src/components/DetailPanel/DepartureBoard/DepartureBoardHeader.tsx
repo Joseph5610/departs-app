@@ -40,7 +40,7 @@ export const DepartureBoardHeader = React.memo(() => {
             share({
                 title: t('map.departures.shareTitle', { name: selectedStop.stop_name }),
                 text: t('map.departures.shareText', { name: selectedStop.stop_name }),
-                url: window.location.href
+                stopId: selectedStop.stop_id
             });
         }
     }, [selectedStop, share, t]);
