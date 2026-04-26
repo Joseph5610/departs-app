@@ -28,17 +28,27 @@ export type PreferencesAction =
     | { type: 'ADD_TO_HISTORY'; payload: SearchHistoryBase }
     | { type: 'CLEAR_HISTORY' };
 
+const safeJsonParse = <T>(key: string, fallback: T): T => {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? (JSON.parse(item) as T) : fallback;
+    } catch (e) {
+        console.warn(`Failed to parse localStorage key "${key}":`, e);
+        return fallback;
+    }
+};
+
 const getInitialState = (): PreferencesState => ({
     showVehicles: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false' : true,
     showStops: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false' : true,
     showStopLabels: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOP_LABELS) !== 'false' : true,
-    stopTypeFilter: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.STOP_TYPE_FILTER) || '[]') as string[]) : [],
+    stopTypeFilter: typeof window !== 'undefined' ? safeJsonParse<string[]>(STORAGE_KEYS.STOP_TYPE_FILTER, []) : [],
     isSettingsOpen: false,
     isAlertsOpen: false,
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeTypeFilter: [],
-    favoriteStops: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES) || '[]') as string[]) : [],
-    searchHistory: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.SEARCH_HISTORY) || '[]') as SearchHistoryItem[]) : []
+    favoriteStops: typeof window !== 'undefined' ? safeJsonParse<string[]>(STORAGE_KEYS.FAVORITES, []) : [],
+    searchHistory: typeof window !== 'undefined' ? safeJsonParse<SearchHistoryItem[]>(STORAGE_KEYS.SEARCH_HISTORY, []) : []
 });
 
 function preferencesReducer(state: PreferencesState, action: PreferencesAction): PreferencesState {

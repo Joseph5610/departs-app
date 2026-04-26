@@ -1,5 +1,5 @@
 import { Env } from "../_utils/types";
-import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
+import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, sanitizeId } from "../_utils/api-utils";
 import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transit-utils";
 
 /**
@@ -8,7 +8,7 @@ import { filterStopIdsForDepartures, normalizeDeparture } from "../_utils/transi
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
-    const stopId = searchParams.get("stopId");
+    const stopId = sanitizeId(searchParams.get("stopId"));
 
     if (!stopId) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);

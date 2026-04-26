@@ -166,3 +166,12 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
         }
     });
 }
+
+/**
+ * Sanitizes an ID parameter to prevent path traversal or parameter injection.
+ * Allows alphanumeric characters, dashes, underscores, and commas.
+ */
+export function sanitizeId(id: string | null): string | null {
+    if (!id) return null;
+    return id.replace(/[^a-zA-Z0-9_,-]/g, '');
+}

@@ -1,5 +1,5 @@
 import { Env, GolemioVehicleFeature } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch } from "../_utils/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, sanitizeId } from "../_utils/api-utils";
 import { normalizeVehicleFeature } from "../_utils/transit-utils";
 import { getVehicleColor } from "../_utils/vehicle-colors";
 interface ShapeFeature {
@@ -16,8 +16,8 @@ interface ShapeFeature {
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
-    const vehicleId = searchParams.get("vehicleId");
-    const tripId = searchParams.get("tripId");
+    const vehicleId = sanitizeId(searchParams.get("vehicleId"));
+    const tripId = sanitizeId(searchParams.get("tripId"));
 
     if (!tripId) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);

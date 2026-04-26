@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.31.4] - 2026-04-26
+
+### Security
+- **Path Traversal / Proxy SSRF Prevention**: Hardened `vehicleId`, `tripId`, and `stopId` parsing in API handlers (`vehicle-detail.ts`, `departures.ts`) using a new strict `sanitizeId` utility to prevent unauthorized upstream Golemio API calls.
+- **LocalStorage Hardening**: Wrapped `JSON.parse` operations in `usePreferencesReducer.ts` with a secure try-catch helper (`safeJsonParse`) to prevent application crashes (Self-DoS) if storage data becomes corrupted.
+- **Dependency Update**: Updated `vite` to resolve high-severity developer-environment vulnerabilities (Path Traversal, Arbitrary File Read).
+- **Security Headers**: Added basic Content-Security-Policy-like headers (`X-Frame-Options`, `X-Content-Type-Options`) to static assets via Cloudflare `_headers` config.
+
 ## [0.31.3] - 2026-04-26
 
 ### Changed
