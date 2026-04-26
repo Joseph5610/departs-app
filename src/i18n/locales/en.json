@@ -25,7 +25,9 @@
     },
     "showStops": {
       "title": "Show stops",
-      "description": "Show transport stops and stations"
+      "description": "Show transport stops and stations",
+      "labels": "Show labels",
+      "labelsDescription": "Show stop name labels on the map"
     },
     "vehicleTypes": {
       "metro": "Metro",

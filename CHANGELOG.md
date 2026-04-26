@@ -2,6 +2,23 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.31.2] - 2026-04-26
+
+### Added
+- **Stop Type Map Filters**: New filtering system in the Settings modal to toggle specific stop types (Metro, Tram, Bus, Rail, etc.) on the map.
+- **Custom Train Station Icons**: Implementation of custom "S" (Esko) logos for train stations, providing better visual distinction from generic bus/tram stops.
+- **Metro Transfer Labels**: Added visual labels for metro transfer stations (A, B, C) directly to the map to improve transit hub navigation.
+
+### Changed
+- **Map Visual Hierarchy**: Optimized station label and icon rendering to prevent overlapping and improve clarity at various zoom levels.
+- **Improved Data Normalization**: Enhanced backend handlers to better validate and normalize station names and centroids.
+- **Polished UI Elements**: Refined the positioning of favorite stars and other micro-UI elements for better consistency.
+
+### Fixed
+- **Drawer Snapping Logic**: Fixed a UX issue where the detail drawer would remain in the lowest peek position when switching between items. It now correctly expands to the middle snap point for new selections.
+- **Stop Centroid Accuracy**: Corrected geographic data for several stations that were appearing in incorrect locations.
+- **Map De-cluttering**: Removed redundant "gold glow" effects from favorite stops to maintain a more premium and clean map aesthetic.
+
 ## [0.27.0] - 2026-04-17
 
 ### Added

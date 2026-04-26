@@ -25,7 +25,9 @@
     },
     "showStops": {
       "title": "Zobrazit zastávky",
-      "description": "Zobrazit zastávky a stanice"
+      "description": "Zobrazit zastávky a stanice",
+      "labels": "Zobrazit popisky",
+      "labelsDescription": "Zobrazit názvy zastávek na mapě"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -102,7 +104,7 @@
       "operator": "{{operator}} • ",
       "vehicle": "Vozidlo",
       "ac": "Klima",
-      "runNumber": "Pořadí",
+      "runNumber": "Oběh",
       "liveDataAge": "před {{seconds}}s",
       "currentStop": "Aktuální / Poslední projetá",
       "nextStop": "Příští zastávka",

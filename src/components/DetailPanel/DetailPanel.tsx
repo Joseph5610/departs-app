@@ -22,6 +22,7 @@ interface DetailPanelProps {
     onClose: () => void;
     onBack?: () => void;
     title?: string;
+    id?: string;
     platformCode?: string;
     subHeader?: React.ReactNode;
     children: React.ReactNode;
@@ -33,7 +34,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
-export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, platformCode, subHeader, children }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, children }) => {
     const isMobile = useIsMobile();
 
     const backButton = onBack && (
@@ -83,12 +84,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
     const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
 
-    // Reset snap point only when the drawer opens (not on title changes within a session)
+    // Reset snap point when the drawer opens or when the selection changes (id change)
     useEffect(() => {
         if (isOpen) {
             setActiveSnapPoint(0.60);
         }
-    }, [isOpen]);
+    }, [isOpen, id]);
 
     if (isMobile) {
         return (

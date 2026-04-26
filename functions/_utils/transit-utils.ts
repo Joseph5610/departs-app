@@ -283,8 +283,17 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         const type = Number(p.location_type);
         const stopId = p.stop_id;
 
-        const metroLines = p.stop_name ? (METRO_STATIONS[p.stop_name] || []) : [];
-        const isTrain = String(stopId).endsWith('Z301') ? 1 : 0;
+        const isMetroName = p.stop_name ? !!METRO_STATIONS[p.stop_name] : false;
+        const parentAnchor = p.parent_station ? stationAnchors.get(p.parent_station) : null;
+        const isParentMetro = parentAnchor ? (parentAnchor.properties.stop_name ? !!METRO_STATIONS[parentAnchor.properties.stop_name] : false) : false;
+        
+        // A stop is "metro" only if it's a hub itself, or belongs to a metro hub, or has a metro-specific ID
+        const isMetro = isMetroName && (type === 1 || isParentMetro || String(stopId).includes('M'));
+        const metroLines = isMetro ? (METRO_STATIONS[p.stop_name!] || []) : [];
+        
+        // A stop is "train" if its ID or parent station ID contains the Z301 marker (standard for PID trains)
+        const isTrain = String(stopId).includes('Z301') || (p.parent_station && String(p.parent_station).includes('Z301')) ? 1 : 0;
+        
         const enrichedProperties = {
             ...p,
             metro_lines: metroLines,
@@ -406,12 +415,21 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         const avgLng = sumLng / groupFeatures.length;
         const avgLat = sumLat / groupFeatures.length;
 
+        // Aggregate flags from all grouped features
+        const allMetroLines = Array.from(new Set(groupFeatures.flatMap(f => f.properties.metro_lines || [])));
+        const aggregatedIsTrain = groupFeatures.some(f => f.properties.is_train === 1) ? 1 : 0;
+
         features.push({
             type: "Feature",
             id: `centroid-${baseFeature.properties.stop_id}`,
             geometry: { type: "Point", coordinates: [avgLng, avgLat] },
             properties: {
                 ...baseFeature.properties,
+                metro_lines: allMetroLines,
+                metro_a: allMetroLines.includes('A') ? 1 : 0,
+                metro_b: allMetroLines.includes('B') ? 1 : 0,
+                metro_c: allMetroLines.includes('C') ? 1 : 0,
+                is_train: aggregatedIsTrain,
                 is_centroid: true,
                 stop_id: `centroid-${baseFeature.properties.stop_id}`
             }

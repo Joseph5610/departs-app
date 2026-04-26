@@ -5,6 +5,8 @@ import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 export interface PreferencesState {
     showVehicles: boolean;
     showStops: boolean;
+    showStopLabels: boolean;
+    stopTypeFilter: string[]; // empty = show all, ['metro'] = show only metro, etc.
     isSettingsOpen: boolean;
     isAlertsOpen: boolean;
     departureSort: 'line' | 'departure';
@@ -16,6 +18,8 @@ export interface PreferencesState {
 export type PreferencesAction =
     | { type: 'SET_SHOW_VEHICLES'; payload: boolean }
     | { type: 'SET_SHOW_STOPS'; payload: boolean }
+    | { type: 'SET_SHOW_STOP_LABELS'; payload: boolean }
+    | { type: 'SET_STOP_TYPE_FILTER'; payload: string[] }
     | { type: 'SET_IS_SETTINGS_OPEN'; payload: boolean }
     | { type: 'SET_IS_ALERTS_OPEN'; payload: boolean }
     | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
@@ -27,6 +31,8 @@ export type PreferencesAction =
 const getInitialState = (): PreferencesState => ({
     showVehicles: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false' : true,
     showStops: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false' : true,
+    showStopLabels: typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SHOW_STOP_LABELS) !== 'false' : true,
+    stopTypeFilter: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem(STORAGE_KEYS.STOP_TYPE_FILTER) || '[]') as string[]) : [],
     isSettingsOpen: false,
     isAlertsOpen: false,
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
@@ -41,6 +47,10 @@ function preferencesReducer(state: PreferencesState, action: PreferencesAction):
             return { ...state, showVehicles: action.payload };
         case 'SET_SHOW_STOPS':
             return { ...state, showStops: action.payload };
+        case 'SET_SHOW_STOP_LABELS':
+            return { ...state, showStopLabels: action.payload };
+        case 'SET_STOP_TYPE_FILTER':
+            return { ...state, stopTypeFilter: action.payload };
         case 'SET_IS_SETTINGS_OPEN':
             return { ...state, isSettingsOpen: action.payload };
         case 'SET_IS_ALERTS_OPEN':
@@ -88,16 +98,20 @@ export const usePreferencesReducer = () => {
     useEffect(() => {
         localStorage.setItem(STORAGE_KEYS.SHOW_VEHICLES, String(state.showVehicles));
         localStorage.setItem(STORAGE_KEYS.SHOW_STOPS, String(state.showStops));
+        localStorage.setItem(STORAGE_KEYS.SHOW_STOP_LABELS, String(state.showStopLabels));
+        localStorage.setItem(STORAGE_KEYS.STOP_TYPE_FILTER, JSON.stringify(state.stopTypeFilter));
         localStorage.setItem(STORAGE_KEYS.DEPARTURE_SORT, state.departureSort);
         localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(state.favoriteStops));
         localStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
-    }, [state.showVehicles, state.showStops, state.departureSort, state.favoriteStops, state.searchHistory]);
+    }, [state.showVehicles, state.showStops, state.showStopLabels, state.stopTypeFilter, state.departureSort, state.favoriteStops, state.searchHistory]);
 
     return {
         state,
         actions: {
             setShowVehicles: createAction('SET_SHOW_VEHICLES'),
             setShowStops: createAction('SET_SHOW_STOPS'),
+            setShowStopLabels: createAction('SET_SHOW_STOP_LABELS'),
+            setStopTypeFilter: createAction('SET_STOP_TYPE_FILTER'),
             setIsSettingsOpen: createAction('SET_IS_SETTINGS_OPEN'),
             setIsAlertsOpen: createAction('SET_IS_ALERTS_OPEN'),
             setDepartureSort: createAction('SET_DEPARTURE_SORT'),

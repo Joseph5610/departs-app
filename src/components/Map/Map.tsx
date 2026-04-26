@@ -32,7 +32,7 @@ const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const { state: selState, actions: selActions } = useSelection();
     const { mapEvents, mapRef, mapLoaded, labelLayerId, userLocation } = useViewport();
-    const { state: { showVehicles, showStops, favoriteStops } } = usePreferences();
+    const { state: { showVehicles, showStops, showStopLabels, stopTypeFilter, favoriteStops } } = usePreferences();
 
     const { selectedId } = selState;
 
@@ -133,6 +133,8 @@ const MapInner: React.FC = () => {
                     mapLoaded={mapLoaded}
                     showVehicles={showVehicles}
                     showStops={showStops}
+                    showStopLabels={showStopLabels}
+                    stopTypeFilter={stopTypeFilter}
                     displayVehicles={displayVehicles || null}
                     stopsData={stopsData}
                     labelData={labelData}
@@ -155,6 +157,7 @@ const MapInner: React.FC = () => {
 
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}
+                id={selectedId || selectedStop?.stop_id || undefined}
                 onClose={() => selActions.clearSelection()}
                 onBack={(selectedVehicle && selectedStop) ? handleBack : undefined}
                 title={panelTitle}

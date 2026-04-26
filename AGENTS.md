@@ -63,6 +63,7 @@ The map MUST run at 60fps. React renders are too slow for high-frequency updates
 2. **Frustration Pivot**: If the user shows frustration, switch to a "Zero-Fluff" technical-only style.
 3. **Build-Centricity**: Run `npm run build` before confirming any architectural change.
 4. **Versioning**: Increment `package.json` exactly once per session (Patch: Fixes, Minor: Features/Arch).
+5. **Changelog**: Every time you increment the version, you MUST document all changes in `CHANGELOG.md` under the new version header with the current date.
 
 ### Final Checklist
 Before completing: 1. Build Integrity? 2. State Purity (ID-only)? 3. Responsive Check? 4. Data Integrity (GTFS/Colors)?

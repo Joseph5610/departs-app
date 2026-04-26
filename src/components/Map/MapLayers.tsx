@@ -34,6 +34,10 @@ interface MapLayersProps {
     showVehicles: boolean;
     /** Global visibility toggle for stops */
     showStops: boolean;
+    /** Whether to show stop name labels */
+    showStopLabels: boolean;
+    /** Stop type filter: empty = show all, ['metro'] = metro only, ['train'] = trains only */
+    stopTypeFilter: string[];
     /** Collection of all vehicles to be displayed */
     displayVehicles: VehicleCollection | null;
     /** Collection of physical stop locations (points) */
@@ -73,6 +77,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     mapLoaded,
     showVehicles,
     showStops,
+    showStopLabels,
+    stopTypeFilter,
     displayVehicles,
     stopsData,
     labelData,
@@ -84,6 +90,38 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     labelLayerId
 }) => {
     if (!mapLoaded) return null;
+
+    // Helper: does this feature pass the stop type filter?
+    // Empty filter = show all. Otherwise include only matching types.
+    const passesStopFilter = React.useCallback((props: StopCollection['features'][0]['properties'] | null) => {
+        if (!props || stopTypeFilter.length === 0) return true;
+        const hasMetro = (props.metro_lines?.length ?? 0) > 0;
+        const hasTrain = props.is_train === 1;
+        if (stopTypeFilter.includes('metro') && hasMetro) return true;
+        if (stopTypeFilter.includes('train') && hasTrain) return true;
+        // Stop doesn't match any active filter
+        return false;
+    }, [stopTypeFilter]);
+
+    // Filter GeoJSON based on stop type filters
+    const filterGeoJSON = React.useCallback((data: StopCollection | null, isEnabled: boolean) => {
+        if (!isEnabled || !data) return EMPTY_GEOJSON;
+        if (stopTypeFilter.length === 0) return data;
+        return {
+            ...data,
+            features: data.features.filter(f => passesStopFilter(f.properties))
+        };
+    }, [stopTypeFilter, passesStopFilter]);
+
+    const filteredLabelData = React.useMemo(() => 
+        filterGeoJSON(labelData, showStops && showStopLabels), 
+        [labelData, showStops, showStopLabels, filterGeoJSON]
+    );
+
+    const filteredStopsData = React.useMemo(() => 
+        filterGeoJSON(stopsData, showStops), 
+        [stopsData, showStops, filterGeoJSON]
+    );
 
     return (
         <>
@@ -120,14 +158,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
             </Source>
 
-            <Source id="stop-labels-centroids" type="geojson" data={(showStops && labelData ? labelData : EMPTY_GEOJSON)}>
+            <Source id="stop-labels-centroids" type="geojson" data={filteredLabelData}>
                 <Layer {...stopLabelLayer} />
             </Source>
 
             <Source
                 id="pid-stops"
                 type="geojson"
-                data={(showStops && stopsData ? stopsData : EMPTY_GEOJSON)}
+                data={filteredStopsData}
                 cluster={true}
                 clusterMaxZoom={13}
                 clusterRadius={25}

@@ -45,6 +45,8 @@ export const PULSE_OPACITY_DIVISOR = 50;
 export const STORAGE_KEYS = {
     SHOW_VEHICLES: 'showVehicles',
     SHOW_STOPS: 'showStops',
+    SHOW_STOP_LABELS: 'showStopLabels',
+    STOP_TYPE_FILTER: 'stopTypeFilter',
     DEPARTURE_SORT: 'departureSort',
     LAST_LOCATION: 'lastUserLocation',
     WELCOME_SEEN: 'departs_welcome_seen',
