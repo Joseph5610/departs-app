@@ -3,10 +3,12 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
+import { useGeocoding } from '../../../hooks/data/useGeocoding';
 import { useSelection, usePreferences, useViewport } from '../../../state/MapStateProvider';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../../../config/constants';
 import { useStops } from '../../../hooks/data/useStops';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
+import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Overlay, Box } from '@/components/ui/layout';
@@ -24,7 +26,7 @@ export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
     const { state: selState, actions: selActions } = useSelection();
     const { state: prefState, actions: prefActions } = usePreferences();
-    const { state: vpState, actions: vpActions, mapRef } = useViewport();
+    const { state: vpState, actions: vpActions, mapRef, userLocation } = useViewport();
     const stops = useStops();
 
     const { favoriteStops, searchHistory } = prefState;
@@ -39,6 +41,7 @@ export const Search: React.FC = React.memo(() => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
+    const { results: geocodingResults } = useGeocoding(query, userLocation);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,7 +78,7 @@ export const Search: React.FC = React.memo(() => {
         return linesFromQuery.length > 0;
     }, [query, linesFromQuery]);
 
-    const showDropdown = results.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0);
+    const showDropdown = results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -138,6 +141,16 @@ export const Search: React.FC = React.memo(() => {
     const handleLineSelect = (lines: string[]) => {
         onLineSelect(lines);
         addToHistory({ type: 'line', lines });
+        setQuery('');
+        setIsOpen(false);
+    };
+
+    const handlePlaceSelect = (result: GeocodingResult) => {
+        mapRef.current?.flyTo({
+            center: result.coordinates,
+            zoom: MAP_STOP_SELECT_ZOOM,
+            duration: MAP_FLY_DURATION
+        });
         setQuery('');
         setIsOpen(false);
     };
@@ -214,9 +227,11 @@ export const Search: React.FC = React.memo(() => {
                         activeFilter={activeFilter}
                         isLineLike={isLineLike}
                         linesFromQuery={linesFromQuery}
+                        geocodingResults={geocodingResults}
                         onStopSelect={handleStopSelect}
                         onHistorySelect={handleHistorySelect}
                         onLineSelect={handleLineSelect}
+                        onPlaceSelect={handlePlaceSelect}
                     />
                 )}
             </Box>

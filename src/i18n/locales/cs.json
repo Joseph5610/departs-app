@@ -5,12 +5,13 @@
     "copyError": "Nepodařilo se zkopírovat odkaz"
   },
   "search": {
-    "placeholder": "Hledat zastávky nebo linky...",
+    "placeholder": "Hledat zastávky, adresy nebo linky...",
     "platform": "Nástupiště {{code}}",
     "lineFilter": "Filtrovat linku {{line}}",
     "clearFilter": "Zrušit filtr",
     "favorites": "Oblíbené zastávky",
-    "recent": "Nedávné"
+    "recent": "Nedávné",
+    "places": "Místa a adresy"
   },
   "settings": {
     "title": "Nastavení",

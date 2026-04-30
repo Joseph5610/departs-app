@@ -2,6 +2,15 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.32.0] - 2026-04-30
+
+### Added
+- **Address & POI Search**: The search bar now supports geocoding via the Photon API (powered by OpenStreetMap). Users can search for any address or place (e.g. "Václavské náměstí", "Nemocnice Motol") and the map will fly to that location. Results appear in a distinct "Places & Addresses" section below transit stop results.
+  - Hard-bounded to the PID service area (Praha + Středočeský kraj) via a fixed bounding box.
+  - Uses user geolocation as a soft relevance bias when available.
+  - Silently degrades on network failure — stop/line search is unaffected.
+  - Places are not persisted to search history (only transit stops and line filters are saved).
+
 ## [0.31.4] - 2026-04-26
 
 ### Security

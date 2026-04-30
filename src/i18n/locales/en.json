@@ -5,12 +5,13 @@
     "copyError": "Could not copy link"
   },
   "search": {
-    "placeholder": "Search stops or lines...",
+    "placeholder": "Search stops, addresses or lines...",
     "platform": "Platform {{code}}",
     "lineFilter": "Filter line {{line}}",
     "clearFilter": "Clear filter",
     "favorites": "Favorite Stops",
-    "recent": "Recent"
+    "recent": "Recent",
+    "places": "Places & Addresses"
   },
   "settings": {
     "title": "Settings",

@@ -1,10 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, MapPin, Star, Clock } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Star, Clock, Building2 } from 'lucide-react';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { SearchItem } from './SearchItem';
 import { METRO_STATIONS } from '@/config/stations';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
+import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 
 interface SearchDropdownProps {
     results: StopFeature[];
@@ -14,9 +15,11 @@ interface SearchDropdownProps {
     activeFilter: string[] | null;
     isLineLike: boolean;
     linesFromQuery: string[];
+    geocodingResults: GeocodingResult[];
     onStopSelect: (stop: StopFeature) => void;
     onHistorySelect: (item: SearchHistoryItem) => void;
     onLineSelect: (lines: string[]) => void;
+    onPlaceSelect: (result: GeocodingResult) => void;
 }
 
 /**
@@ -33,9 +36,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     activeFilter,
     isLineLike,
     linesFromQuery,
+    geocodingResults,
     onStopSelect,
     onHistorySelect,
-    onLineSelect
+    onLineSelect,
+    onPlaceSelect
 }) => {
     const { t } = useTranslation();
 
@@ -101,6 +106,29 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         onClick={() => onStopSelect(stop)}
                     />
                 ))}
+
+                {geocodingResults.length > 0 && (
+                    <>
+                        <Box className="px-4 py-2 bg-white/5">
+                            <HStack className="gap-2">
+                                <Building2 size={10} className="text-muted-foreground" />
+                                <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
+                                    {t('search.places')}
+                                </span>
+                            </HStack>
+                        </Box>
+                        {geocodingResults.map((place) => (
+                            <SearchItem
+                                key={place.id}
+                                icon={<Building2 size={16} />}
+                                title={place.name}
+                                subtitle={place.subtitle || undefined}
+                                testId={`search-item-place-${place.id}`}
+                                onClick={() => onPlaceSelect(place)}
+                            />
+                        ))}
+                    </>
+                )}
             </Stack>
         </Surface>
     );
