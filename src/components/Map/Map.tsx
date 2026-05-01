@@ -1,7 +1,8 @@
 import React, { useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import MapGL, { type MapRef } from 'react-map-gl/maplibre';
+import MapGL, { Marker, type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
 import { LiveStatus } from './LiveStatus';
@@ -31,7 +32,7 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-styl
 const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const { state: selState, actions: selActions } = useSelection();
-    const { mapEvents, mapRef, mapLoaded, labelLayerId, userLocation } = useViewport();
+    const { state: vpState, mapEvents, mapRef, mapLoaded, labelLayerId, userLocation } = useViewport();
     const { state: { showVehicles, showStops, showStopLabels, stopTypeFilter, favoriteStops } } = usePreferences();
 
     const { selectedId } = selState;
@@ -145,6 +146,23 @@ const MapInner: React.FC = () => {
                     vehiclesFilter={vehiclesFilter}
                     labelLayerId={labelLayerId}
                 />
+                
+                {vpState.selectedPlace && (
+                    <Marker
+                        longitude={vpState.selectedPlace.coordinates[0]}
+                        latitude={vpState.selectedPlace.coordinates[1]}
+                        anchor="bottom"
+                    >
+                        <div className="flex flex-col items-center">
+                            <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded-md text-sm font-bold shadow-md whitespace-nowrap mb-1">
+                                {vpState.selectedPlace.name}
+                            </div>
+                            <div className="text-primary drop-shadow-md">
+                                <MapPin size={32} fill="currentColor" className="text-primary" />
+                            </div>
+                        </div>
+                    </Marker>
+                )}
             </MapGL>
 
             <LiveStatus />

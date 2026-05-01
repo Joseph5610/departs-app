@@ -1,20 +1,25 @@
 import { useReducer, useCallback } from 'react';
 
+import type { GeocodingResult } from '../hooks/data/useGeocoding';
+
 export interface ViewportState {
     bounds: string | null;
     debouncedBounds: string | null;
     routeFilter: string[] | null;
+    selectedPlace: GeocodingResult | null;
 }
 
 export type ViewportAction =
     | { type: 'SET_BOUNDS'; payload: string | null }
     | { type: 'SET_DEBOUNCED_BOUNDS'; payload: string | null }
-    | { type: 'SET_ROUTE_FILTER'; payload: string[] | null };
+    | { type: 'SET_ROUTE_FILTER'; payload: string[] | null }
+    | { type: 'SET_SELECTED_PLACE'; payload: GeocodingResult | null };
 
 const getInitialState = (): ViewportState => ({
     bounds: null,
     debouncedBounds: null,
     routeFilter: null,
+    selectedPlace: null,
 });
 
 function viewportReducer(state: ViewportState, action: ViewportAction): ViewportState {
@@ -25,6 +30,8 @@ function viewportReducer(state: ViewportState, action: ViewportAction): Viewport
             return { ...state, debouncedBounds: action.payload };
         case 'SET_ROUTE_FILTER':
             return { ...state, routeFilter: action.payload };
+        case 'SET_SELECTED_PLACE':
+            return { ...state, selectedPlace: action.payload };
         default:
             return state;
     }
@@ -42,7 +49,8 @@ export const useViewportReducer = () => {
         actions: {
             setBounds: createAction('SET_BOUNDS'),
             setDebouncedBounds: createAction('SET_DEBOUNCED_BOUNDS'),
-            setRouteFilter: createAction('SET_ROUTE_FILTER')
+            setRouteFilter: createAction('SET_ROUTE_FILTER'),
+            setSelectedPlace: createAction('SET_SELECTED_PLACE')
         }
     };
 };

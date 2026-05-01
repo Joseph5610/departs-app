@@ -78,7 +78,7 @@ export const Search: React.FC = React.memo(() => {
         return linesFromQuery.length > 0;
     }, [query, linesFromQuery]);
 
-    const showDropdown = results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0);
+    const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== vpState.selectedPlace?.name;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -130,11 +130,26 @@ export const Search: React.FC = React.memo(() => {
             });
             selectStop(item.stop_id);
             addToHistory(item);
+        } else if (item.type === 'place') {
+            mapRef.current?.flyTo({
+                center: item.coordinates,
+                zoom: MAP_STOP_SELECT_ZOOM,
+                duration: MAP_FLY_DURATION
+            });
+            vpActions.setSelectedPlace({
+                id: item.place_id,
+                name: item.name,
+                subtitle: item.subtitle || '',
+                coordinates: item.coordinates
+            });
+            addToHistory(item);
+            setQuery(item.name);
         } else {
             onLineSelect(item.lines);
             addToHistory(item);
+            setQuery('');
         }
-        setQuery('');
+        if (item.type !== 'place') setQuery('');
         setIsOpen(false);
     };
 
@@ -151,7 +166,15 @@ export const Search: React.FC = React.memo(() => {
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION
         });
-        setQuery('');
+        vpActions.setSelectedPlace(result);
+        addToHistory({
+            type: 'place',
+            place_id: result.id,
+            name: result.name,
+            subtitle: result.subtitle,
+            coordinates: result.coordinates
+        });
+        setQuery(result.name);
         setIsOpen(false);
     };
 
@@ -176,6 +199,9 @@ export const Search: React.FC = React.memo(() => {
                                 setQuery('');
                             } else {
                                 setQuery(e.target.value);
+                            }
+                            if (vpState.selectedPlace) {
+                                vpActions.setSelectedPlace(null);
                             }
                             setIsOpen(true);
                         }}
@@ -208,7 +234,10 @@ export const Search: React.FC = React.memo(() => {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={clearSearch}
+                                onClick={() => {
+                                    clearSearch();
+                                    if (vpState.selectedPlace) vpActions.setSelectedPlace(null);
+                                }}
                                 className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
                                 aria-label={t('search.clearFilter')}
                             >

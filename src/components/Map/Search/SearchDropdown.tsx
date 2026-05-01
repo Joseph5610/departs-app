@@ -61,12 +61,32 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         </Box>
                         {searchHistory.map((item) => (
                             <SearchItem
-                                key={item.type === 'stop' ? `hist-stop-${item.stop_id}` : `hist-line-${item.lines.join('-')}`}
-                                icon={item.type === 'stop' ? <MapPin size={16} /> : <SearchIcon size={16} />}
-                                title={item.type === 'stop' ? item.stop_name : t('search.lineFilter', { line: item.lines.join(', ') })}
-                                subtitle={item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) : undefined}
+                                key={
+                                    item.type === 'stop' ? `hist-stop-${item.stop_id}` :
+                                    item.type === 'place' ? `hist-place-${item.place_id}` :
+                                    `hist-line-${item.lines.join('-')}`
+                                }
+                                icon={
+                                    item.type === 'stop' ? <MapPin size={16} /> :
+                                    item.type === 'place' ? <Building2 size={16} /> :
+                                    <SearchIcon size={16} />
+                                }
+                                title={
+                                    item.type === 'stop' ? item.stop_name :
+                                    item.type === 'place' ? item.name :
+                                    t('search.lineFilter', { line: item.lines.join(', ') })
+                                }
+                                subtitle={
+                                    item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) :
+                                    item.type === 'place' ? item.subtitle :
+                                    undefined
+                                }
                                 metroLines={item.type === 'stop' ? METRO_STATIONS[item.stop_name] : undefined}
-                                testId={item.type === 'stop' ? `search-item-stop-${item.stop_name}` : `search-item-line-${item.lines.join('-')}`}
+                                testId={
+                                    item.type === 'stop' ? `search-item-stop-${item.stop_name}` :
+                                    item.type === 'place' ? `search-item-place-${item.place_id}` :
+                                    `search-item-line-${item.lines.join('-')}`
+                                }
                                 onClick={() => onHistorySelect(item)}
                             />
                         ))}
