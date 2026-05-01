@@ -137,6 +137,8 @@
       "distance_other": "{{distance}}m • {{count}} minutes walk",
       "meters": "{{distance}} m",
       "kilometers": "{{distance}} km",
+      "onTime": "On time",
+      "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
       "atStop": "You are at the stop",
       "catchStatus": {

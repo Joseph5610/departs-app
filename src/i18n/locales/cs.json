@@ -139,6 +139,8 @@
       "distance_other": "{{distance}}m • {{count}} minut pěšky",
       "meters": "{{distance}} m",
       "kilometers": "{{distance}} km",
+      "onTime": "Načas",
+      "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
       "openInMaps": "Otevřít v Mapách",
       "atStop": "Jste na zastávce",
       "catchStatus": {

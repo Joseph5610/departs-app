@@ -1,14 +1,16 @@
 
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2, ChevronRight } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, ChevronRight, Activity } from 'lucide-react';
 import { usePreferences } from '../../../state/MapStateProvider';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
+import { useDepartures } from '../../../hooks/data/useDepartures';
 import { useNavigate } from '../../../hooks/features/useNavigate';
 import { HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +36,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const { handleNavigate, distanceLabel } = useNavigate();
+    const { delayStats } = useDepartures();
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
@@ -51,18 +54,45 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
-            <Button
-                variant="tinted"
-                size="sm"
-                onClick={handleNavigate}
-                className="h-8 rounded-xl px-3 gap-2 self-start border-white/20!"
-            >
-                <MapPin size={12} className="text-muted-foreground/60" />
-                <span className="font-bold text-foreground text-[11px]">
-                    {distanceLabel}
-                </span>
-                <ChevronRight size={10} className="text-muted-foreground/40" />
-            </Button>
+            <HStack className="w-full gap-2 overflow-x-auto no-scrollbar pb-1" justify="start">
+                <Button
+                    variant="tinted"
+                    size="sm"
+                    onClick={handleNavigate}
+                    className="h-8 rounded-xl px-3 gap-2 shrink-0 border-white/20!"
+                >
+                    <MapPin size={12} className="text-muted-foreground/60" />
+                    <span className="font-bold text-foreground text-[11px]">
+                        {distanceLabel}
+                    </span>
+                    <ChevronRight size={10} className="text-muted-foreground/40" />
+                </Button>
+
+                {delayStats && delayStats.sampleSize >= 2 && (
+                    <Popover>
+                        <PopoverTrigger 
+                            className="h-8 shrink-0 rounded-xl px-3 gap-1.5 flex items-center bg-white/5 border border-white/10 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                            aria-label={t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
+                        >
+                            <Activity size={12} className={cn(
+                                delayStats.trend === 'worsening' ? "text-red-400" :
+                                delayStats.trend === 'improving' ? "text-emerald-400" :
+                                "text-amber-400"
+                            )} />
+                            <span className="font-bold text-foreground text-[11px] whitespace-nowrap opacity-90">
+                                {delayStats.averageDelayMin === 0 
+                                    ? t('map.departures.onTime') 
+                                    : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${delayStats.averageDelayMin} min`}
+                                {delayStats.trend === 'worsening' && <span className="ml-1">↑</span>}
+                                {delayStats.trend === 'improving' && <span className="ml-1">↓</span>}
+                            </span>
+                        </PopoverTrigger>
+                        <PopoverContent side="bottom" sideOffset={8} className="text-xs w-auto px-3 py-2 bg-popover/95 backdrop-blur-md border-white/10 z-[5000]">
+                            {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
+                        </PopoverContent>
+                    </Popover>
+                )}
+            </HStack>
 
             <HStack justify="between">
                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">

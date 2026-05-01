@@ -12,6 +12,14 @@ export interface DepartureGroup {
     firstTime: number;
 }
 
+export type DelayTrend = 'improving' | 'worsening' | 'stable';
+
+export interface DelayStats {
+    averageDelayMin: number;
+    trend: DelayTrend;
+    sampleSize: number;
+}
+
 /**
  * useDepartures
  *
@@ -133,7 +141,37 @@ export const useDepartures = () => {
             result.sort((a, b) => { return a.firstTime - b.firstTime; });
         }
         return result;
-    }, [query.data, departureSort]);
+    }, [enrichedDepartures, departureSort]);
 
-    return { ...query, groupedDepartures };
+    const delayStats = useMemo((): DelayStats | null => {
+        if (!enrichedDepartures || enrichedDepartures.length === 0) return null;
+        
+        const now = Date.now();
+        const thirtyMinsFromNow = now + 30 * 60 * 1000;
+
+        // Only count vehicles that have real-time data and are expected in the next 30 minutes
+        const realTimeDeps = enrichedDepartures.filter(d => {
+            if (typeof d.delay !== 'number') return false;
+            const expectedTime = new Date(d.timestamp).getTime();
+            return expectedTime <= thirtyMinsFromNow;
+        });
+        
+        if (realTimeDeps.length === 0) return null;
+
+        const totalDelay = realTimeDeps.reduce((sum, d) => sum + (d.delay || 0), 0);
+        const averageDelayMin = Math.round(totalDelay / realTimeDeps.length / 60);
+        
+        // Calculate trend based on recent delayDelta > 0 (worsening) vs < 0 (improving)
+        const deltas = realTimeDeps.filter(d => d.delayDelta !== undefined && d.delayDelta !== 0);
+        let trend: DelayTrend = 'stable';
+        if (deltas.length > 0) {
+            const deltaSum = deltas.reduce((sum, d) => sum + (d.delayDelta || 0), 0);
+            if (deltaSum > 30) trend = 'worsening'; // More than 30 seconds total recent worsening
+            else if (deltaSum < -30) trend = 'improving';
+        }
+
+        return { averageDelayMin, trend, sampleSize: realTimeDeps.length };
+    }, [enrichedDepartures]);
+
+    return { ...query, groupedDepartures, delayStats };
 };
