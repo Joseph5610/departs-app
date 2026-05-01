@@ -32,7 +32,7 @@ export const Search: React.FC = React.memo(() => {
     const { favoriteStops, searchHistory } = prefState;
     const { routeFilter: activeFilter } = vpState;
     const { addToHistory } = prefActions;
-    const { selectStop } = selActions;
+    const { selectStop, clearSelection } = selActions;
     const { setRouteFilter: onLineSelect } = vpActions;
 
     const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
@@ -131,6 +131,7 @@ export const Search: React.FC = React.memo(() => {
             selectStop(item.stop_id);
             addToHistory(item);
         } else if (item.type === 'place') {
+            clearSelection();
             mapRef.current?.flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
@@ -161,6 +162,7 @@ export const Search: React.FC = React.memo(() => {
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
+        clearSelection();
         mapRef.current?.flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,
