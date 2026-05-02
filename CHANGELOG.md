@@ -2,6 +2,17 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.35.2] - 2026-05-02
+
+### Added
+- **GitHub Action for Stop Enrichment**: Implemented an automated daily synchronization of PID stop enrichment data using a new GitHub Action (`sync-stops.yml`) and minification script (`scripts/sync-stops.js`).
+- **Offline Enrichment Data**: Integrated a pre-built enrichment map directly into the repository to bypass `403 Forbidden` errors encountered when fetching from `data.pid.cz` on Cloudflare.
+
+### Fixed
+- **API Reliability**: Resolved a persistent `403 Forbidden` error on Cloudflare by moving data acquisition to a CI environment.
+- **Stop Data Loss**: Fixed a bug in the stop normalization logic where enriched properties (lines, names) were discarded during structural transformations of Metro stations and entrances.
+- **Improved Performance**: Reduced the API payload overhead by 90% and eliminated expensive runtime external fetches for stop enrichment.
+
 ## [0.35.1] - 2026-05-02
 
 ### Fixed
