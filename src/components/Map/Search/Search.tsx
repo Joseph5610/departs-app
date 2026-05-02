@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Overlay, Box } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
-import { Kbd } from '@/components/ui/kbd';
 import { SearchDropdown } from './SearchDropdown';
 
 /**
@@ -184,7 +183,7 @@ export const Search: React.FC = React.memo(() => {
         <Overlay
             position="top-left"
             className={cn(
-                "w-[calc(100%-80px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-[2000] transition-all duration-300 ease-in-out",
+                "w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-[2000] transition-all duration-300 ease-in-out",
                 isSidebarOpen && "md:left-[var(--visible-center-x)] md:w-[360px]"
             )}
             data-vaul-no-drag
@@ -194,7 +193,7 @@ export const Search: React.FC = React.memo(() => {
                     <Input
                         ref={inputRef}
                         aria-label={t('search.placeholder')}
-                        value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', ') }) : query}
+                        value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', '), count: activeFilter.length }) : query}
                         onChange={(e) => {
                             if (activeFilter) {
                                 onLineSelect(null);
@@ -215,7 +214,7 @@ export const Search: React.FC = React.memo(() => {
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-10 pr-12 rounded-2xl glassy-tinted transition-all placeholder:text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20",
+                            "h-11 pl-12 pr-4 rounded-2xl glassy-tinted transition-all placeholder:text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20",
                             activeFilter && "border-primary/50 ring-1 ring-primary/20"
                         )}
                         data-testid="search-input"
@@ -224,13 +223,6 @@ export const Search: React.FC = React.memo(() => {
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                         <SearchIcon size={20} className={cn(activeFilter && "text-primary")} />
                     </div>
-                    {!query && !activeFilter && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                            <Kbd className="bg-white/10 border-white/10 text-white/50 px-1.5 font-bold">
-                                /
-                            </Kbd>
-                        </div>
-                    )}
                     {(query || activeFilter) && (
                         <div className="absolute right-0 top-0 h-full flex items-center pr-1">
                             <Button

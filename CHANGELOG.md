@@ -2,6 +2,14 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.33.0] - 2026-05-02
+
+### Changed
+- **Search UX Refinement**: Restored the long search placeholder for better clarity and visibility. Optimized search bar width to minimize the gap between the input and map controls on mobile devices.
+- **Pluralization Engine**: Implemented robust i18next pluralization for Czech and English. The application now grammatically switches between "Filter line" and "Filter lines" (and Czech "Filtrovat linku/linky") in both the search bar and results dropdown based on the number of active filters.
+- **UI Stabilization**: Resolved a focus-induced layout jump where the search bar's border radius would unexpectedly change. The search bar now maintains a consistent `rounded-2xl` shape across all interaction states.
+- **Search Shortcuts Cleanup**: Removed the "/" keyboard shortcut hint (Kbd) from the search bar to maximize space for text and declutter the UI on mobile devices.
+
 ## [0.32.0] - 2026-04-30
 
 ### Added

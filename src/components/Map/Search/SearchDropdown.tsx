@@ -74,7 +74,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 title={
                                     item.type === 'stop' ? item.stop_name :
                                     item.type === 'place' ? item.name :
-                                    t('search.lineFilter', { line: item.lines.join(', ') })
+                                    t('search.lineFilter', { line: item.lines.join(', '), count: item.lines.length })
                                 }
                                 subtitle={
                                     item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) :
@@ -107,7 +107,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {isLineLike && (
                     <SearchItem
                         icon={<SearchIcon size={16} />}
-                        title={t('search.lineFilter', { line: linesFromQuery.join(', ') })}
+                        title={t('search.lineFilter', { line: linesFromQuery.join(', '), count: linesFromQuery.length })}
                         variant="primary"
                         testId={`search-item-line-${linesFromQuery.join('-')}`}
                         onClick={() => onLineSelect(linesFromQuery)}

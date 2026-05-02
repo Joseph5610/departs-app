@@ -8,6 +8,7 @@
     "placeholder": "Search stops, addresses or lines...",
     "platform": "Platform {{code}}",
     "lineFilter": "Filter line {{line}}",
+    "lineFilter_other": "Filter lines {{line}}",
     "clearFilter": "Clear filter",
     "favorites": "Favorite Stops",
     "recent": "Recent",

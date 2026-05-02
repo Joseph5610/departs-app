@@ -33,17 +33,19 @@ export const useNavigate = () => {
     const distanceLabel = useMemo(() => {
         const suffix = t('map.departures.openInMaps');
         if (!stopDistanceInfo) return suffix;
-        if (stopDistanceInfo.isAtStop) return `${t('map.departures.atStop')} • ${suffix}`;
+        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
 
         const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
 
         if (isReasonableWalkingDistance) {
-            return `${t('map.departures.distance', {
+            // Keep it compact for nearby stops to leave room for other metrics
+            return t('map.departures.distance', {
                 distance,
                 count: time
-            })} • ${suffix}`;
+            });
         }
 
+        // For longer distances where we don't show walking time, add the suffix back
         if (distance >= 1000) {
             return `${t('map.departures.kilometers', {
                 distance: (distance / 1000).toFixed(1)

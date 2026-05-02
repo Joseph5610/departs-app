@@ -7,7 +7,9 @@
   "search": {
     "placeholder": "Hledat zastávky, adresy nebo linky...",
     "platform": "Nástupiště {{code}}",
-    "lineFilter": "Filtrovat linku {{line}}",
+    "lineFilter_one": "Filtrovat linku {{line}}",
+    "lineFilter_few": "Filtrovat linky {{line}}",
+    "lineFilter_other": "Filtrovat linky {{line}}",
     "clearFilter": "Zrušit filtr",
     "favorites": "Oblíbené zastávky",
     "recent": "Nedávné",
