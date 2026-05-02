@@ -138,6 +138,55 @@ export interface GolemioStopFeature {
     };
 }
 
+// --- PID Official Stop List Types (data.pid.cz) ---
+
+export interface PidLine {
+    id: number | string;
+    name: string;
+    type: string;
+    isNight?: boolean;
+    exitOnly?: boolean;
+    direction?: string;
+    direction2?: string;
+}
+
+
+export interface PidStop {
+    id: string; // node/stop number (e.g., 1040/1)
+    platform: string;
+    altIdosName?: string;
+    lat: number;
+    lon: number;
+    zone: string;
+    mainTrafficType: string;
+    wheelchairAccess: string;
+    gtfsIds: string[];
+    lines: PidLine[];
+}
+
+export interface PidStopGroup {
+    name: string;
+    districtCode: string;
+    idosCategory: number;
+    idosName: string;
+    fullName: string;
+    uniqueName: string;
+    node: number;
+    cis: number;
+    avgLat: number;
+    avgLon: number;
+    municipality: string;
+    mainTrafficType: string;
+    stops: PidStop[];
+}
+
+export interface PidStopsResponse {
+    generatedAt: string;
+    dataFormatVersion: string;
+    stopGroups: PidStopGroup[];
+}
+
+
 // --- Application Internal Types (Response Structures) ---
 
 export interface AppDeparture {
@@ -180,9 +229,14 @@ export interface AppStopProperties {
     zone_id?: string;
     is_centroid?: boolean;
     is_train?: number;
+    metro_a?: number;
+    metro_b?: number;
+    metro_c?: number;
     metro_lines?: string[];
     all_ids?: string[];
+    lines?: Array<{ name: string; type: string }>;
 }
+
 
 export interface AppRSSItem {
     type: 'incident' | 'exclusion';

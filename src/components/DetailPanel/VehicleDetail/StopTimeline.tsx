@@ -6,6 +6,7 @@ import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { METRO_STATIONS, LINE_COLORS } from '@/config/stations';
+
 import type { StopFeature, StopTimelineProps } from './types';
 
 /**

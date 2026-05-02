@@ -10,7 +10,8 @@ import { DepartureItem } from './DepartureItem';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
-import { METRO_STATIONS } from '../../../config/stations';
+
+
 
 interface DepartureBoardProps {
     selectedStop: SelectedStop;
@@ -36,7 +37,8 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
-        const isMetroStation = selectedStop.stop_name ? !!METRO_STATIONS[selectedStop.stop_name] : false;
+        const isMetroStation = (selectedStop.metro_lines?.length ?? 0) > 0;
+
         const hour = new Date().getHours();
         const isNightTime = hour >= 0 && hour < 5;
         return isMetroStation && isNightTime;
@@ -86,7 +88,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                     departure={dep}
                                     onDepartureClick={onDepartureClick}
                                     stopDistanceInfo={stopDistanceInfo}
-                                    isTrainStop={selectedStop.is_train}
+                                    isTrainStop={!!selectedStop.is_train}
                                 />
                             ))}
 

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2 } from 'lucide-react';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { SearchItem } from './SearchItem';
-import { METRO_STATIONS } from '@/config/stations';
+
+
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 
@@ -81,7 +82,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                     item.type === 'place' ? item.subtitle :
                                     undefined
                                 }
-                                metroLines={item.type === 'stop' ? METRO_STATIONS[item.stop_name] : undefined}
+                                metroLines={item.type === 'stop' ? item.metro_lines : undefined}
+
                                 testId={
                                     item.type === 'stop' ? `search-item-stop-${item.stop_name}` :
                                     item.type === 'place' ? `search-item-place-${item.place_id}` :
@@ -120,7 +122,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
                         title={stop.properties.stop_name}
                         subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
-                        metroLines={METRO_STATIONS[stop.properties.stop_name]}
+                        metroLines={stop.properties.metro_lines}
+
                         highlight={favoriteStops.includes(stop.properties.stop_id)}
                         testId={`search-item-stop-${stop.properties.stop_name}${stop.properties.platform_code ? '-' + stop.properties.platform_code : ''}`}
                         onClick={() => onStopSelect(stop)}

@@ -8,8 +8,8 @@ localforage.config({
     storeName: 'stops_cache'
 });
 
-const CACHE_KEY = 'pid_stops_geojson_v20';
-const CACHE_TS_KEY = 'pid_stops_updated_at_v20';
+const CACHE_KEY = 'pid_stops_geojson_v29';
+const CACHE_TS_KEY = 'pid_stops_updated_at_v29';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 import { useMemo } from 'react';
@@ -36,6 +36,9 @@ export const useStops = () => {
             }
 
             const res = await fetch('/api/stops');
+            if (!res.ok) {
+                throw new Error(`Failed to fetch stops: ${res.status}`);
+            }
             const data = await res.json();
 
             await localforage.setItem(CACHE_KEY, data);
@@ -48,7 +51,7 @@ export const useStops = () => {
     });
 
     const stops = useMemo(() => {
-        if (!query.data) {
+        if (!query.data || !Array.isArray(query.data.features)) {
             return null;
         }
         return {
@@ -60,7 +63,7 @@ export const useStops = () => {
     }, [query.data]);
 
     const centroids = useMemo(() => {
-        if (!query.data) {
+        if (!query.data || !Array.isArray(query.data.features)) {
             return null;
         }
         return {
@@ -70,6 +73,7 @@ export const useStops = () => {
             })
         } as StopCollection;
     }, [query.data]);
+
 
     return {
         ...query,

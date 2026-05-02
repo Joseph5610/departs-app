@@ -169,13 +169,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 cluster={true}
                 clusterMaxZoom={13}
                 clusterRadius={25}
-                clusterProperties={{
-                    has_metro_a: ['max', ['coalesce', ['get', 'metro_a'], 0]],
-                    has_metro_b: ['max', ['coalesce', ['get', 'metro_b'], 0]],
-                    has_metro_c: ['max', ['coalesce', ['get', 'metro_c'], 0]],
-                    cluster_seed: ['max', ['coalesce', ['get', 'variant_seed'], 0]]
-                }}
             >
+
                 <Layer {...clusterLayer} />
                 <Layer {...stopPointGlowLayer} />
                 <Layer {...stopPointLayer} />
