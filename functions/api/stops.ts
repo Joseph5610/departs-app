@@ -47,14 +47,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         };
 
         const pidRes = await fetch(TRANSIT_CONFIG.STOPS_SOURCE_URL, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (compatible; NovaTransitBot/1.0; +https://nova-transit.pages.dev)"
+            },
             cf: {
                 cacheTtl: CACHE_TTL.STOPS,
                 cacheEverything: true,
             }
         });
 
+        console.log(`PID Source Fetch: ${pidRes.status} ${pidRes.statusText}`);
+
         if (pidRes.ok) {
             let rawPid = await pidRes.json() as PidStopsResponse;
+            console.log(`PID Data Received. Groups: ${rawPid.stopGroups?.length || 0}`);
 
             rawPid.stopGroups?.forEach(g => {
                 g.stops?.forEach(s => {
@@ -67,8 +73,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 });
             });
 
+            console.log(`Enrichment Map built: ${pidData.enrichmentMap.size} entries.`);
+
             // CRITICAL: Clear the large raw object from memory
             (rawPid as any) = null;
+        } else {
+            console.error(`Failed to fetch PID enrichment data: ${pidRes.status} ${pidRes.statusText}`);
         }
 
         // 2. Fetch Golemio data SECOND
@@ -79,6 +89,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         // 3. Filter and Enrich
+        let enrichedCount = 0;
         const processedStops = allRawStops
             .filter(f => {
                 const id = f.properties.stop_id;
@@ -98,12 +109,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             .map(f => {
                 const enrichment = pidData.enrichmentMap.get(f.properties.stop_id);
                 if (enrichment) {
+                    enrichedCount++;
                     // Enrich with clean data from PID source
                     f.properties.lines = enrichment.lines;
                     if (enrichment.fullName) f.properties.stop_name = enrichment.fullName;
                 }
                 return f;
             });
+
+        console.log(`Processing complete. Total stops: ${allRawStops.length}, Enriched: ${enrichedCount}, Final: ${processedStops.length}`);
 
         // 4. Transform and group
         const features = processStops(processedStops);
