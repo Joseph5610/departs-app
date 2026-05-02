@@ -23,20 +23,41 @@ export const useSelectedStop = () => {
             return { stop_id: stopId };
         }
 
-        const feature = stopsData.features.find(f => f.properties.stop_id === stopId || f.properties.all_ids?.includes(stopId));
+        const feature = stopsData.features.find(f => {
+            const p = f.properties;
+            if (p.stop_id === stopId) return true;
+
+            try {
+                const allIds = typeof p.all_ids === 'string' ? JSON.parse(p.all_ids) : p.all_ids;
+                return Array.isArray(allIds) && allIds.includes(stopId);
+            } catch {
+                return false;
+            }
+        });
 
         if (!feature) {
             return { stop_id: stopId };
         }
 
-        const { stop_name, platform_code, all_ids, is_train } = feature.properties;
+        const p = feature.properties;
+
+        let metro_lines: string[] | undefined = undefined;
+        try {
+            metro_lines = typeof p.metro_lines === 'string' ? JSON.parse(p.metro_lines) : p.metro_lines;
+        } catch { /* ignore */ }
+
+        let all_ids: string[] | undefined = undefined;
+        try {
+            all_ids = typeof p.all_ids === 'string' ? JSON.parse(p.all_ids) : p.all_ids;
+        } catch { /* ignore */ }
+
         return {
             stop_id: feature.properties.stop_id,
-            stop_name,
-            platform_code,
-            all_ids,
-            is_train: Number(is_train) === 1 ? 1 : 0,
-
+            stop_name: p.stop_name,
+            platform_code: p.platform_code,
+            all_ids: Array.isArray(all_ids) ? all_ids : undefined,
+            is_train: Number(p.is_train) === 1 ? 1 : 0,
+            metro_lines: Array.isArray(metro_lines) ? metro_lines : undefined,
             coordinates: feature.geometry.coordinates as [number, number]
         };
     }, [stopId, stopsData]);

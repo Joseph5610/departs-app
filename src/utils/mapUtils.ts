@@ -86,12 +86,35 @@ export const extractStopProperties = (feature: { properties: Record<string, unkn
     const geom = feature.geometry;
     const coordinates = (geom && typeof geom === 'object' && 'coordinates' in geom) ? (geom as any).coordinates : geom;
 
+    let metro_lines: string[] | undefined = undefined;
+    if (typeof p.metro_lines === 'string') {
+        try {
+            metro_lines = JSON.parse(p.metro_lines);
+        } catch {
+            // Fallback if parsing fails
+        }
+    } else if (Array.isArray(p.metro_lines)) {
+        metro_lines = p.metro_lines as string[];
+    }
+
+    let all_ids: string[] | undefined = undefined;
+    if (typeof p.all_ids === 'string') {
+        try {
+            all_ids = JSON.parse(p.all_ids);
+        } catch {
+            // Fallback if parsing fails
+        }
+    } else if (Array.isArray(p.all_ids)) {
+        all_ids = p.all_ids as string[];
+    }
+
     return {
         stop_id: String(p.stop_id),
         stop_name: String(p.stop_name),
         platform_code: p.platform_code ? String(p.platform_code) : undefined,
         is_train: Number(p.is_train) === 1 ? 1 : 0,
-
+        metro_lines,
+        all_ids,
         coordinates: coordinates as [number, number]
     };
 };
