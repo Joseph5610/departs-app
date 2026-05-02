@@ -1,0 +1,28 @@
+name: Sync PID Stops
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # Run daily at 3:00 AM
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run Sync Script
+        run: node scripts/sync-stops.js
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "data: sync pid stops enrichment data"
+          file_pattern: "functions/_data/stops-enrichment.json"

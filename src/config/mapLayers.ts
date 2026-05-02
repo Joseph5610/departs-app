@@ -429,8 +429,8 @@ export const favoriteStarLayer: SymbolLayerSpecification = {
             17, 0.36
         ],
         'icon-offset': ['case',
-            ['>=', ['length', ['get', 'metro_lines']], 2], ['literal', [34, -64]],
-            ['literal', [34, -49]]
+            ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2], ['literal', [45, -55]],
+            ['literal', [35, -35]]
         ],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true

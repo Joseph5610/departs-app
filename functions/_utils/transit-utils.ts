@@ -366,6 +366,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             groups[`entrance_${stopId}`] = {
                 ...f,
                 properties: { 
+                    ...p,
                     stop_id: p.stop_id,
                     stop_name: p.stop_name,
                     location_type: 2 
