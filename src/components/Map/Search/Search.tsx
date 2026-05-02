@@ -108,9 +108,11 @@ export const Search: React.FC = React.memo(() => {
             stop_id: stop.properties.stop_id,
             stop_name: stop.properties.stop_name,
             platform_code: stop.properties.platform_code,
-            is_train: stop.properties.is_train === 1,
+            is_train: stop.properties.is_train === 1 ? 1 : 0,
+            metro_lines: stop.properties.metro_lines,
             coordinates: stop.geometry.coordinates as [number, number]
         };
+
         selectStop(selectedStop.stop_id);
         addToHistory({
             type: 'stop',

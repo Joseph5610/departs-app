@@ -1,23 +1,24 @@
-import { Env, GolemioStopFeature } from "../_utils/types";
+import { Env, PidStopsResponse, PidLine, GolemioStopFeature } from "../_utils/types";
 import { CACHE_TTL, TRANSIT_CONFIG, ERROR_MESSAGES, golemioFetch, createErrorResponse, createSuccessResponse } from "../_utils/api-utils";
 import { processStops } from "../_utils/transit-utils";
 
+
+
 /**
- * Endpoint for retrieving and processing all GTFS stops.
- * Fetches data in pages from Golemio API and processes them for map display.
+ * Endpoint for retrieving and processing all PID stops from the official source.
+ * This source is pre-filtered for active stops and pre-grouped by node.
  */
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
 
     /**
-     * Fetches all stops using pagination.
+     * Fetches all Golemio stops using pagination.
      */
-    const fetchAllStops = async () => {
+    const fetchAllGolemioStops = async () => {
         let allFeatures: GolemioStopFeature[] = [];
         let offset = 0;
         const limit = TRANSIT_CONFIG.STOPS_FETCH_LIMIT;
 
-        // Continue fetching until we hit the maximum offset or receive fewer features than the limit
         while (offset < TRANSIT_CONFIG.STOPS_MAX_OFFSET) {
             const res = await golemioFetch("/v2/gtfs/stops", env, {
                 cacheTtl: CACHE_TTL.GTFS_DATA,
@@ -33,7 +34,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             if (!data.features || data.features.length === 0) break;
 
             allFeatures = [...allFeatures, ...data.features];
-
             if (data.features.length < limit) break;
             offset += limit;
         }
@@ -41,21 +41,83 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     };
 
     try {
-        const allRawStops = await fetchAllStops();
+        // 1. Fetch PID Data FIRST and extract only what we need
+        let pidData: { enrichmentMap: Map<string, { lines: PidLine[], fullName: string }> } = {
+            enrichmentMap: new Map()
+        };
+
+        const pidRes = await fetch(TRANSIT_CONFIG.STOPS_SOURCE_URL, {
+            cf: {
+                cacheTtl: CACHE_TTL.STOPS,
+                cacheEverything: true,
+            }
+        });
+
+        if (pidRes.ok) {
+            let rawPid = await pidRes.json() as PidStopsResponse;
+
+            rawPid.stopGroups?.forEach(g => {
+                g.stops?.forEach(s => {
+                    s.gtfsIds?.forEach(id => {
+                        pidData.enrichmentMap.set(id, {
+                            lines: s.lines || [],
+                            fullName: g.fullName || g.name
+                        });
+                    });
+                });
+            });
+
+            // CRITICAL: Clear the large raw object from memory
+            (rawPid as any) = null;
+        }
+
+        // 2. Fetch Golemio data SECOND
+        const allRawStops = await fetchAllGolemioStops();
 
         if (allRawStops.length === 0) {
             return createErrorResponse(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
         }
 
-        // Transform and group stops for the frontend
-        const features = processStops(allRawStops);
+        // 3. Filter and Enrich
+        const processedStops = allRawStops
+            .filter(f => {
+                const id = f.properties.stop_id;
+                const enrichment = pidData.enrichmentMap.get(id);
+
+                // If the stop is NOT in the PID list, we keep it as-is (Safety/Fallback for things like Flora)
+                if (!enrichment) return true;
+
+                // If it IS in the PID list, it must have:
+                // 1. At least one line
+                // 2. At least one line that is NOT 'exitOnly' (we want departures!)
+                const hasActiveDepartures = enrichment.lines && enrichment.lines.some(l => !l.exitOnly);
+
+                return hasActiveDepartures;
+            })
+
+            .map(f => {
+                const enrichment = pidData.enrichmentMap.get(f.properties.stop_id);
+                if (enrichment) {
+                    // Enrich with clean data from PID source
+                    f.properties.lines = enrichment.lines;
+                    if (enrichment.fullName) f.properties.stop_name = enrichment.fullName;
+                }
+                return f;
+            });
+
+        // 4. Transform and group
+        const features = processStops(processedStops);
 
         return createSuccessResponse({
             type: "FeatureCollection",
             features
         }, CACHE_TTL.STOPS);
+
     } catch (error) {
         console.error("Stops API Error:", error);
         return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
     }
 };
+
+
+

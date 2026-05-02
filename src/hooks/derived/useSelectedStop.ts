@@ -35,7 +35,8 @@ export const useSelectedStop = () => {
             stop_name,
             platform_code,
             all_ids,
-            is_train: is_train === 1,
+            is_train: Number(is_train) === 1 ? 1 : 0,
+
             coordinates: feature.geometry.coordinates as [number, number]
         };
     }, [stopId, stopsData]);

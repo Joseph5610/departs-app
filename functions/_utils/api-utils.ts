@@ -27,12 +27,14 @@ export const TRANSIT_CONFIG = {
     DEPARTURE_MINUTES_AFTER: 120,
     STOPS_FETCH_LIMIT: 10000,
     STOPS_MAX_OFFSET: 40000,
+    STOPS_SOURCE_URL: "https://data.pid.cz/stops/json/stops.json",
     JITTER_RADIUS: 0.00012,
     RSS_FEEDS: {
         incidents: 'https://pid.cz/feed/rss-mimoradnosti/',
         exclusions: 'https://pid.cz/feed/rss-vyluky/'
     }
 };
+
 
 /**
  * Standardized Error Messages (Public Facing).

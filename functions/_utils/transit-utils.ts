@@ -1,5 +1,5 @@
 import { AppDeparture, GolemioDepartureItem, GolemioStopFeature, GolemioVehicleFeature } from "./types";
-import { METRO_STATIONS } from "./metro-data";
+
 import { TRANSIT_CONFIG } from "./api-utils";
 import { getVehicleColor, isNightRoute, VEHICLE_COLORS } from "./vehicle-colors";
 
@@ -10,18 +10,6 @@ import { getVehicleColor, isNightRoute, VEHICLE_COLORS } from "./vehicle-colors"
 function fixCommaSpacing(text: string | undefined | null): string | undefined {
     if (!text) return undefined;
     return text.replace(/,([^\s])/g, ', $1');
-}
-
-/**
- * Deterministic hash for a string, returns a value in [0, 1).
- * Used for variant_seed so stops get consistent visual variation across API calls.
- */
-function hashSeed(str: string): number {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-        h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-    }
-    return (Math.abs(h) % 1000) / 1000;
 }
 
 /**
@@ -283,39 +271,44 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
         const type = Number(p.location_type);
         const stopId = p.stop_id;
 
-        const isMetroName = p.stop_name ? !!METRO_STATIONS[p.stop_name] : false;
-        const parentAnchor = p.parent_station ? stationAnchors.get(p.parent_station) : null;
-        const isParentMetro = parentAnchor ? (parentAnchor.properties.stop_name ? !!METRO_STATIONS[parentAnchor.properties.stop_name] : false) : false;
+        const lines = (p.lines || []) as any[];
         
-        // A stop is "metro" only if it's a hub itself, or belongs to a metro hub, or has a metro-specific ID
-        const isMetro = isMetroName && (type === 1 || isParentMetro || String(stopId).includes('M'));
-        const metroLines = isMetro ? (METRO_STATIONS[p.stop_name!] || []) : [];
+        // Detect metro lines directly from enriched data
+        const metroLines = Array.from(new Set(
+            lines.filter(l => l.type === 'metro').map(l => l.name)
+        )).sort();
+
+
+        // Detect if it's a train stop directly from enriched data
+        const isTrain = lines.some(l => l.type === 'train' || l.type === 'rail') ? 1 : 0;
         
-        // A stop is "train" if its ID or parent station ID contains the Z301 marker (standard for PID trains)
-        const isTrain = String(stopId).includes('Z301') || (p.parent_station && String(p.parent_station).includes('Z301')) ? 1 : 0;
-        
-        const enrichedProperties = {
-            ...p,
-            metro_lines: metroLines,
+        // Explicitly pick only the properties we need to keep the JSON small
+        const enrichedProperties: any = {
+            stop_id: p.stop_id,
+            stop_name: fixCommaSpacing(p.stop_name) || p.stop_name,
+            platform_code: p.platform_code,
+            location_type: type,
+            zone_id: p.zone_id,
+            is_train: isTrain,
             metro_a: metroLines.includes('A') ? 1 : 0,
             metro_b: metroLines.includes('B') ? 1 : 0,
             metro_c: metroLines.includes('C') ? 1 : 0,
-            is_train: isTrain,
-            variant_seed: hashSeed(String(stopId))
+            metro_lines: metroLines.length > 0 ? metroLines : undefined,
+            lines: lines.map(l => ({ name: l.name, type: l.type }))
         };
 
+        // Extract base node ID (e.g. from U31773Z1 -> U31773, U410M -> U410) to prevent merging identical names from different cities
+        const nodeIdMatch = stopId.match(/^([A-Za-z]*\d+)/);
+        const nodeId = nodeIdMatch ? nodeIdMatch[1] : stopId;
+
         const enrichedFeature = { ...f, properties: enrichedProperties };
+
+
 
         // Collect for centroid calculation
         // Only include actual stops (type 0) and stations (type 1) in centroids
         if ((type === 0 || type === 1 || isNaN(type)) && p.stop_name) {
-            const fixedName = fixCommaSpacing(p.stop_name)!;
-            enrichedFeature.properties.stop_name = fixedName;
-
-            // Extract base node ID (e.g. from U31773Z1 -> U31773, U410M -> U410) to prevent merging identical names from different cities
-            const nodeIdMatch = stopId.match(/^([A-Za-z]*\d+)/);
-            const nodeId = nodeIdMatch ? nodeIdMatch[1] : stopId;
-            const centroidKey = `${fixedName}_${nodeId}`;
+            const centroidKey = `${enrichedProperties.stop_name}_${nodeId}`;
 
             if (!nameGroups.has(centroidKey)) nameGroups.set(centroidKey, []);
             nameGroups.get(centroidKey)!.push(enrichedFeature);
@@ -326,6 +319,14 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             const childrenList = stationChildren.get(stopId) || [];
             const childFeatures = stationChildrenFeatures.get(stopId) || [];
             
+            // Aggregate all lines from child stops
+            const allChildLines = childFeatures.flatMap(cf => (cf.properties.lines || []) as any[]);
+            const aggregatedMetroLines = Array.from(new Set(
+                allChildLines.filter(l => l.type === 'metro').map(l => l.name)
+            )).sort();
+
+            const aggregatedIsTrain = allChildLines.some(l => l.type === 'train' || l.type === 'rail') ? 1 : 0;
+
             let finalGeometry = enrichedFeature.geometry;
             if (childFeatures.length > 0) {
                 let sumLng = 0;
@@ -345,18 +346,30 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
                 geometry: finalGeometry,
                 properties: {
                     ...enrichedProperties,
+                    lines: Array.from(new Map(allChildLines.map(l => [`${l.name}_${l.type}`, { name: l.name, type: l.type }])).values()),
+                    metro_lines: aggregatedMetroLines,
+                    metro_a: aggregatedMetroLines.includes('A') ? 1 : 0,
+                    metro_b: aggregatedMetroLines.includes('B') ? 1 : 0,
+                    metro_c: aggregatedMetroLines.includes('C') ? 1 : 0,
+                    is_train: aggregatedIsTrain || enrichedProperties.is_train,
                     location_type: 1,
                     stop_id: childrenList.length > 0 ? childrenList.join(',') : stopId
                 }
             };
+
             continue;
         }
+
 
         // Handle Entrances (Type 2)
         if (type === 2) {
             groups[`entrance_${stopId}`] = {
                 ...f,
-                properties: { ...p, location_type: 2 }
+                properties: { 
+                    stop_id: p.stop_id,
+                    stop_name: p.stop_name,
+                    location_type: 2 
+                }
             };
             continue;
         }
@@ -368,8 +381,7 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             if (!p.stop_name) continue;
 
             // Group by name, node ID, and platform code to avoid merging identical names across cities
-            const nodeId = stopId.includes('Z') ? stopId.split('Z')[0] : stopId;
-            const key = `stop_${p.stop_name.toLowerCase()}_${nodeId}_${p.platform_code || ''}`;
+            const key = `stop_${enrichedProperties.stop_name.toLowerCase()}_${nodeId}_${p.platform_code || ''}`;
             if (!groups[key]) {
                 groups[key] = {
                     ...enrichedFeature,
@@ -397,7 +409,8 @@ export function processStops(allStops: GolemioStopFeature[]): GolemioStopFeature
             geometry: f.geometry,
             properties: { ...f.properties, stop_id: finalId }
         });
-        }
+    }
+
 
     // 4. Calculate centroids for each stop name group
     for (const [, groupFeatures] of nameGroups) {

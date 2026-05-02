@@ -3,7 +3,8 @@ import type {
     SymbolLayerSpecification,
     LineLayerSpecification
 } from 'maplibre-gl';
-import { LINE_COLORS, getStationColorMatchPairs } from './stations';
+import { LINE_COLORS } from './stations';
+
 
 // 1. The GLOW Layer (Background)
 export const clusterLayer: CircleLayerSpecification = {
@@ -37,7 +38,7 @@ export const stopPointLayer: CircleLayerSpecification = {
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+            ['>=', ['length', ['get', 'metro_lines']], 2]
         ]]
     ],
     paint: {
@@ -47,15 +48,13 @@ export const stopPointLayer: CircleLayerSpecification = {
         ],
         'circle-color': [
             'case',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['match', ['get', 'stop_name'],
-                ...getStationColorMatchPairs(),
-                LINE_COLORS.Unknown
-            ],
-            ['==', ['get', 'is_train'], 1],
-            LINE_COLORS.TrainStation,
+            ['==', ['get', 'metro_a'], 1], LINE_COLORS.A,
+            ['==', ['get', 'metro_b'], 1], LINE_COLORS.B,
+            ['==', ['get', 'metro_c'], 1], LINE_COLORS.C,
+            ['==', ['get', 'is_train'], 1], LINE_COLORS.TrainStation,
             LINE_COLORS.DefaultStation
         ] as any,
+
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.0, 17, 2.0],
         'circle-stroke-color': '#000000',
         'circle-opacity': [
@@ -98,7 +97,7 @@ export const transferOuterLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+        ['>=', ['length', ['get', 'metro_lines']], 2]
     ],
     minzoom: 10,
     paint: {
@@ -106,10 +105,10 @@ export const transferOuterLayer: CircleLayerSpecification = {
             13, 6.5,
             17, 24
         ],
-        'circle-color': ['match', ['get', 'stop_name'],
-            'Můstek', LINE_COLORS.A,
-            'Muzeum', LINE_COLORS.A,
-            'Florenc', LINE_COLORS.B,
+        'circle-color': [
+            'case',
+            ['==', ['get', 'metro_a'], 1], LINE_COLORS.A,
+            ['==', ['get', 'metro_b'], 1], LINE_COLORS.B,
             LINE_COLORS.Transfer
         ],
         'circle-stroke-color': '#000000',
@@ -124,7 +123,7 @@ export const transferInnerLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['match', ['get', 'stop_name'], ['Můstek', 'Muzeum', 'Florenc'], true, false]
+        ['>=', ['length', ['get', 'metro_lines']], 2]
     ],
     minzoom: 10,
     paint: {
@@ -132,15 +131,17 @@ export const transferInnerLayer: CircleLayerSpecification = {
             13, 4.5,
             17, 16
         ],
-        'circle-color': ['match', ['get', 'stop_name'],
-            'Můstek', LINE_COLORS.B,
-            'Muzeum', LINE_COLORS.C,
-            'Florenc', LINE_COLORS.C,
+        'circle-color': [
+            'case',
+            ['all', ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1]], LINE_COLORS.B,
+            ['all', ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_c'], 1]], LINE_COLORS.C,
+            ['all', ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]], LINE_COLORS.C,
             '#ffffff'
         ],
         'circle-opacity': 0.85
     }
 };
+
 
 export const stopLabelLayer: SymbolLayerSpecification = {
     id: 'stop-labels',
@@ -427,9 +428,9 @@ export const favoriteStarLayer: SymbolLayerSpecification = {
             13, 0.18,
             17, 0.36
         ],
-        'icon-offset': ['match', ['get', 'stop_name'],
-            'Muzeum', ['literal', [34, -64]], // Base [34, -49] + station [0, -15]
-            ['literal', [34, -49]] // Nudged back towards center
+        'icon-offset': ['case',
+            ['>=', ['length', ['get', 'metro_lines']], 2], ['literal', [34, -64]],
+            ['literal', [34, -49]]
         ],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true

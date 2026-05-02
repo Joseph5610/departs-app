@@ -2,7 +2,41 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.35.1] - 2026-05-02
+
+### Fixed
+- **Dead Code Removal**: Eliminated `METRO_TRANSFERS` (unused export), `hashSeed` function, and `variant_seed` property — all confirmed as dead code that was generated but never consumed by any map layer expression.
+
+## [0.35.0] - 2026-05-02
+
+### Added
+- **Data-Driven Map Styling**: Completely replaced name-based styling heuristics with a robust, property-based system. Map layers (metro colors, transfer icons, rail badges) now derive their look directly from enriched GeoJSON properties (`metro_lines`, `is_train`).
+- **Backend-Driven Transfers**: Implemented automatic detection and deterministic sorting of metro transfer stations (A/B, A/C, B/C) on the backend, removing the need for hardcoded station lists in the frontend.
+- **Stop Metadata Persistence**: Enriched search history and selection states with transit metadata, ensuring that metro badges and train icons are preserved even when loading from local history or deep links.
+
+### Changed
+- **Stops API Payload Optimization**: Reduced the `/api/stops` JSON payload size by ~60% by explicitly selecting required fields and stripping unused GTFS metadata (like the massive 'lines' array and internal seeds).
+- **Consolidated Metadata**: Merged legacy "metro-data" heuristics into a single, unified PID-based enrichment layer.
+- **Codebase De-bloating**: Deleted the obsolete `METRO_STATIONS` dictionary (500+ lines of hardcoded data) and simplified map layer definitions.
+
+### Fixed
+- **API Robustness**: Resolved a 500 error in the Stops API caused by a missing reference during the property aggregation phase.
+- **Exit-Only Filtering**: Improved the stop filtering logic to correctly hide technical platforms and exit-only stops while preserving all active departure nodes.
+
+## [0.34.0] - 2026-05-02
+
+### Added
+- **Smart Stop Filtering**: Integrated the official PID stop list to filter out "ghost" or zero-traffic stops from the map. This significantly reduces clutter from administrative and technical GTFS markers.
+- **Data Enrichment**: Enriched transit stops with high-quality metadata from the official source, including:
+  - **Passing Lines**: Real-time line service information is now embedded in stop properties.
+  - **Expanded Names**: Automated expansion of abbreviations (e.g., "rozc." to "rozcestí") for better legibility.
+- **Metro Safety Guard**: Implemented a resilient fallback system that ensures major transit hubs like **Metro Flora** remain visible on the map even when temporarily closed and omitted from the official live service feed.
+
+### Changed
+- **Stops API Architecture**: Refactored the backend to perform a high-performance cross-reference between Golemio GTFS data and PID metadata in-memory, with 24-hour aggressive caching.
+
 ## [0.33.0] - 2026-05-02
+
 
 ### Changed
 - **Search UX Refinement**: Restored the long search placeholder for better clarity and visibility. Optimized search bar width to minimize the gap between the input and map controls on mobile devices.
