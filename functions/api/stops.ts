@@ -48,7 +48,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         const pidRes = await fetch(TRANSIT_CONFIG.STOPS_SOURCE_URL, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (compatible; NovaTransitBot/1.0; +https://nova-transit.pages.dev)"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+                "Accept-Language": "cs,en;q=0.9",
+                "Referer": "https://departs.app/"
             },
             cf: {
                 cacheTtl: CACHE_TTL.STOPS,
