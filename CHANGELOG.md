@@ -2,6 +2,12 @@
 
 All notable changes to the **Departs.app** project will be documented in this file.
 
+## [0.35.3] - 2026-05-03
+
+### Fixed
+- **Data Integrity Guard**: Added a validation check to the `sync-stops.js` script to prevent overwriting enrichment data if the source API returns an empty or corrupted response.
+- **Robust Map Expressions**: Hardened MapLibre expressions with `coalesce` guards to prevent rendering errors when metro metadata is missing for specific stops.
+
 ## [0.35.2] - 2026-05-02
 
 ### Added

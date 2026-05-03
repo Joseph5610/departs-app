@@ -38,7 +38,7 @@ export const stopPointLayer: CircleLayerSpecification = {
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
         ['!', ['all',
             ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['>=', ['length', ['get', 'metro_lines']], 2]
+            ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
         ]]
     ],
     paint: {
@@ -97,7 +97,7 @@ export const transferOuterLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['>=', ['length', ['get', 'metro_lines']], 2]
+        ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
     ],
     minzoom: 10,
     paint: {
@@ -123,7 +123,7 @@ export const transferInnerLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['>=', ['length', ['get', 'metro_lines']], 2]
+        ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
     ],
     minzoom: 10,
     paint: {

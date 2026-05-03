@@ -38,6 +38,10 @@ async function syncStops() {
         const count = Object.keys(enrichmentMap).length;
         console.log(`Processed ${count} GTFS IDs into enrichment map.`);
 
+        if (count < 1000) {
+            throw new Error(`Suspiciously low number of entries (${count}). Aborting save to protect existing data.`);
+        }
+
         if (!fs.existsSync(OUTPUT_DIR)) {
             fs.mkdirSync(OUTPUT_DIR, { recursive: true });
         }
