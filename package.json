@@ -44,7 +44,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.37.0",
     "geojson": "^0.5.0",
-    "i18next": "^25.8.18",
+    "i18next": "^26.0.10",
     "i18next-browser-languagedetector": "^8.2.0",
     "localforage": "^1.10.0",
     "lucide-react": "^0.563.0",
