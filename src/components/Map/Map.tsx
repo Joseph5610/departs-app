@@ -8,7 +8,8 @@ import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoa
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapStateProvider, useSelection, useViewport, usePreferences } from '../../state/MapStateProvider';
+import { MapStateProvider } from '../../state/MapStateProvider';
+import { useSelection, useViewport, usePreferences } from '../../state/contexts';
 import { MapControls } from './MapControls';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
 import { useVehicles } from '../../hooks/data/useVehicles';

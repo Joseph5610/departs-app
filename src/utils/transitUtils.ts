@@ -1,26 +1,36 @@
-import { WALKING_SPEED, CATCH_BUFFER } from '../config/constants';
+import { WALKING_SPEED, CATCH_BUFFER, FALLBACK_ROUTE_COLOR } from '../config/constants';
+import type { StopFeature } from '../types/transit';
 
 /**
- * guessType
- * 
- * Heuristic to guess the transit type (metro, tram, bus) from a line name/number.
- * Used for visual styling of alerts and other elements where explicit routeType is missing.
+ * Builds an O(1) lookup map for line metadata from a list of stops.
  */
-export const guessType = (line: string): 'metro' | 'tram' | 'bus' => {
-    const upperLine = line.toUpperCase();
-    if (['A', 'B', 'C'].includes(upperLine)) {
-        return 'metro';
-    }
-    const n = parseInt(line);
-    if (!isNaN(n)) {
-        if (n < 40) {
-            return 'tram';
+export const getLineMetadataMap = (stops: StopFeature[] | null): Map<string, { route_color: string; type: string }> => {
+    const map = new Map<string, { route_color: string; type: string }>();
+    if (!stops) return map;
+
+    for (const stop of stops) {
+        const lines = stop.properties.lines;
+        if (!lines) continue;
+
+        for (const line of lines) {
+            const name = String(line.name).toUpperCase();
+            if (!map.has(name)) {
+                map.set(name, {
+                    route_color: line.route_color || FALLBACK_ROUTE_COLOR,
+                    type: line.type
+                });
+            }
         }
-        if (n >= 100) {
-            return 'bus';
-        }
     }
-    return 'bus';
+    return map;
+};
+
+/**
+ * Finds a line's metadata using an O(1) Map lookup.
+ */
+export const getLineMetadataFromMap = (name: string, metaMap: Map<string, { route_color: string; type: string }>) => {
+    if (!name) return null;
+    return metaMap.get(name.toUpperCase()) || null;
 };
 
 /**
@@ -63,7 +73,6 @@ export const getCatchStatus = (
     let status: CatchStatus = 'success';
 
     if (isAtStop) {
-        // If at stop, it's a success as long as it hasn't left yet
         status = remainingTimeSec >= 0 ? 'success' : 'error';
     } else {
         if (remainingTimeSec < walkingTimeSec) {

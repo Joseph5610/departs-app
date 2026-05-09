@@ -12,5 +12,6 @@ export interface Departure {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
-    color?: string;
+    route_color?: string;
+    headsign_metro_lines?: Array<{ name: string; route_color: string }>;
 }

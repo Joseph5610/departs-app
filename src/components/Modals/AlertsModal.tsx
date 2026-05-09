@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
-import { usePreferences } from '../../state/MapStateProvider';
+import { usePreferences } from '../../state/contexts';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import type { RSSItem } from '../../types/transit';
 import {
@@ -14,14 +14,12 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
-import { getVehicleColor } from '../../../functions/_utils/vehicle-colors';
 import { GenericAlertCard } from '../Alerts/GenericAlertCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Stack, Box, Surface } from '@/components/ui/layout';
 import { cn } from '@/lib/utils';
-import { guessType } from '../../utils/transitUtils';
 
 /**
  * Alerts Component
@@ -176,8 +174,7 @@ const AlertCard: React.FC<{ item: RSSItem }> = ({ item }) => {
             isActive={item.isActive}
             isFuture={item.isFuture}
             showStatus={true}
-            lines={item.lines}
-            lineColors={(line) => getVehicleColor(guessType(line), line)}
+            lines={item.line_metadata}
         />
     );
 };

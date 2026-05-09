@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useViewport } from '../../state/MapStateProvider';
+import { useViewport } from '../../state/contexts';
 import { useSelectedStop } from './useSelectedStop';
 import { calculateDistance } from '../../utils/transitUtils';
 

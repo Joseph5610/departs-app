@@ -2,13 +2,16 @@
   "common": {
     "all": "All",
     "linkCopied": "Link copied to clipboard",
-    "copyError": "Could not copy link"
+    "copyError": "Could not copy link",
+    "retry": "Retry",
+    "loading": "Loading..."
   },
   "search": {
     "placeholder": "Search stops, addresses or lines...",
     "platform": "Platform {{code}}",
     "lineFilter": "Filter line {{line}}",
     "lineFilter_other": "Filter lines {{line}}",
+    "filterByLine": "Filter by line:",
     "clearFilter": "Clear filter",
     "favorites": "Favorite Stops",
     "recent": "Recent",
@@ -120,6 +123,7 @@
     "departures": {
       "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
+      "noUpcomingForLine": "No upcoming departures for line {{line}}.",
       "shareTitle": "Stop: {{name}}",
       "shareText": "Check out departures for {{name}} on departs.app",
       "metroNight": {
@@ -164,7 +168,9 @@
   "liveStatus": {
     "refreshing": "Refreshing",
     "live": "Live",
-    "offline": "Offline"
+    "offline": "Offline",
+    "upstreamError": "Source Offline",
+    "appError": "API Error"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",
@@ -183,5 +189,11 @@
     "active": "Active now",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "network": "Check your internet connection",
+    "timeout": "The request timed out",
+    "upstream": "The data source is currently unavailable"
   }
 }

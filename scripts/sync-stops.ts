@@ -1,12 +1,45 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const SOURCE_URL = "https://data.pid.cz/stops/json/stops.json";
 const OUTPUT_DIR = "functions/_data";
 const OUTPUT_FILE = path.join(OUTPUT_DIR, "stops-enrichment.json");
 
+interface PIDLine {
+    name: string;
+    type: string;
+    direction?: string;
+    exitOnly?: boolean;
+}
+
+interface PIDStop {
+    gtfsIds: string[];
+    lines: PIDLine[];
+}
+
+interface StopGroup {
+    name: string;
+    fullName?: string;
+    stops: PIDStop[];
+}
+
+interface PIDData {
+    stopGroups: StopGroup[];
+}
+
+interface EnrichmentLine {
+    n: string;
+    t: string;
+    e: number;
+}
+
+interface EnrichmentData {
+    l: EnrichmentLine[];
+    n: string;
+}
+
 async function syncStops() {
-    console.log(`Fetching PID stops from ${SOURCE_URL}...`);
+    console.log(`[SYNC] Fetching PID stops from ${SOURCE_URL}...`);
 
     try {
         const res = await fetch(SOURCE_URL, {
@@ -19,16 +52,20 @@ async function syncStops() {
             throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
         }
 
-        const data = await res.json();
-        console.log(`Received ${data.stopGroups?.length || 0} stop groups.`);
+        const data = await res.json() as PIDData;
+        console.log(`[SYNC] Received ${data.stopGroups?.length || 0} stop groups.`);
 
-        const enrichmentMap = {};
+        const enrichmentMap: Record<string, EnrichmentData> = {};
 
         data.stopGroups?.forEach(g => {
             g.stops?.forEach(s => {
                 s.gtfsIds?.forEach(id => {
+                    const lines: EnrichmentLine[] = s.lines?.map(l => {
+                        return { n: l.name, t: l.type, e: l.exitOnly ? 1 : 0 };
+                    }) || [];
+
                     enrichmentMap[id] = {
-                        l: s.lines?.map(l => ({ n: l.name, t: l.type, e: l.exitOnly ? 1 : 0 })) || [],
+                        l: lines,
                         n: g.fullName || g.name
                     };
                 });
@@ -36,7 +73,7 @@ async function syncStops() {
         });
 
         const count = Object.keys(enrichmentMap).length;
-        console.log(`Processed ${count} GTFS IDs into enrichment map.`);
+        console.log(`[SYNC] Processed ${count} GTFS IDs.`);
 
         if (count < 1000) {
             throw new Error(`Suspiciously low number of entries (${count}). Aborting save to protect existing data.`);
@@ -47,10 +84,10 @@ async function syncStops() {
         }
 
         fs.writeFileSync(OUTPUT_FILE, JSON.stringify(enrichmentMap));
-        console.log(`Saved enrichment data to ${OUTPUT_FILE} (${(fs.statSync(OUTPUT_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
+        console.log(`[SYNC] SUCCESS: Saved enrichment data to ${OUTPUT_FILE}`);
 
     } catch (error) {
-        console.error("Sync failed:", error);
+        console.error("[SYNC] FAILED:", error);
         process.exit(1);
     }
 }

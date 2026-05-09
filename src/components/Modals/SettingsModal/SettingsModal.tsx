@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { usePreferences } from '../../../state/MapStateProvider';
+import { usePreferences } from '../../../state/contexts';
 import { cn } from '@/lib/utils';
 import { Box, Stack } from '@/components/ui/layout';
 import { DisplaySection } from './DisplaySection';

@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
 import type { StopCollection } from '../../types/transit';
+import { useMemo } from 'react';
+import { apiFetch } from '../../lib/api-client';
+import type { AppError } from '../../types/error';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -8,11 +11,14 @@ localforage.config({
     storeName: 'stops_cache'
 });
 
-const CACHE_KEY = 'pid_stops_geojson_v29';
-const CACHE_TS_KEY = 'pid_stops_updated_at_v29';
+const STORAGE_VERSION = 'v41';
+const STOP_STORAGE_KEY = `pid_stops_storage_${STORAGE_VERSION}`;
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
-import { useMemo } from 'react';
+interface CachedStops {
+    data: StopCollection;
+    updatedAt: number;
+}
 
 /**
  * useStops
@@ -20,29 +26,26 @@ import { useMemo } from 'react';
  * Fetches and caches Prague transit stop data from the backend.
  * Provides GeoJSON features for map rendering and indexing for stop searching.
  * Utilizes localForage for IndexedDB caching to improve startup time.
+ * Merges data and timestamp into a single storage entry for efficiency.
  */
 export const useStops = () => {
-    const query = useQuery<StopCollection>({
+    const query = useQuery<StopCollection, AppError>({
         queryKey: ['stops'],
         queryFn: async () => {
             const now = Date.now();
+            const cached = await localforage.getItem<CachedStops>(STOP_STORAGE_KEY);
 
-
-            const cached = await localforage.getItem<StopCollection>(CACHE_KEY);
-            const lastUpdate = await localforage.getItem<number>(CACHE_TS_KEY);
-
-            if (cached && lastUpdate && (now - lastUpdate < TWENTY_FOUR_HOURS)) {
-                return cached;
+            if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < TWENTY_FOUR_HOURS)) {
+                return cached.data;
             }
 
-            const res = await fetch('/api/stops');
-            if (!res.ok) {
-                throw new Error(`Failed to fetch stops: ${res.status}`);
-            }
-            const data = await res.json();
+            // Cache busting via query parameter linked to the storage version
+            const data = await apiFetch<StopCollection>(`/api/stops?v=${STORAGE_VERSION}`);
 
-            await localforage.setItem(CACHE_KEY, data);
-            await localforage.setItem(CACHE_TS_KEY, now);
+            await localforage.setItem(STOP_STORAGE_KEY, {
+                data,
+                updatedAt: now
+            });
 
             return data;
         },

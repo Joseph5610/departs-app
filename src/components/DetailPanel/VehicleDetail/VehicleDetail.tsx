@@ -11,10 +11,16 @@ import { StopTimeline } from './StopTimeline';
 import type { VehicleDetail as VehicleDetailType } from '../../../types/transit';
 import type { DisplayVehicle } from './types';
 
+import { ErrorState } from '@/components/ui/ErrorState';
+import type { AppError } from '../../../types/error';
+
 interface VehicleDetailProps {
     selectedVehicle: VehicleDetailType | null;
     vehicleDetail: VehicleDetailType | null;
     loadingDetail: boolean;
+    isError?: boolean;
+    error?: AppError | null;
+    onRetry?: () => void;
     isFollowing: boolean;
     onToggleFollow: () => void;
 }
@@ -30,6 +36,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     selectedVehicle,
     vehicleDetail,
     loadingDetail,
+    isError,
+    error,
+    onRetry,
     isFollowing,
     onToggleFollow
 }) => {
@@ -103,8 +112,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     return (
         <Stack gap={4}>
             {/* Loading State */}
-            {loadingDetail && !vehicleDetail && (
+            {loadingDetail && !vehicleDetail && !isError && (
                 <VehicleDetailSkeleton />
+            )}
+
+            {/* Error State */}
+            {isError && !vehicleDetail && (
+                <ErrorState error={error || null} onRetry={onRetry} />
             )}
 
             {/* Header Hero Section (badge, delay, metadata, warning banners) */}

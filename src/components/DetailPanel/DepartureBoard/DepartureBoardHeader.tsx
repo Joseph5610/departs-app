@@ -1,8 +1,8 @@
-
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, Star, MapPin, Share2, ChevronRight, Activity } from 'lucide-react';
-import { usePreferences } from '../../../state/MapStateProvider';
+import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
+import { usePreferences, useSelection } from '../../../state/contexts';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
@@ -26,17 +26,30 @@ export const DepartureBoardHeader = React.memo(() => {
     const { share } = useShare();
 
     // Derived state
+    const { state: selState, actions: selActions } = useSelection();
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
     const { departureSort, favoriteStops } = state;
     const { setDepartureSort, toggleFavorite } = actions;
+    const { selectedLine } = selState;
+    const { toggleLineFilter } = selActions;
 
     const showHeader = !!selectedStop && !selectedVehicle;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const { handleNavigate, distanceLabel } = useNavigate();
     const { delayStats } = useDepartures();
+
+    const uniqueLines = React.useMemo(() => {
+        if (!selectedStop?.lines) return [];
+        const seen = new Set<string>();
+        return selectedStop.lines.filter(line => {
+            if (seen.has(line.name)) return false;
+            seen.add(line.name);
+            return true;
+        });
+    }, [selectedStop?.lines]);
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
@@ -54,7 +67,7 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-2 shrink-0 flex flex-col gap-3">
-            <HStack className="w-full gap-2 overflow-x-auto no-scrollbar pb-1" justify="start">
+            <HStack className="w-full gap-2 pb-1" justify="start">
                 <Button
                     variant="tinted"
                     size="sm"
@@ -93,6 +106,56 @@ export const DepartureBoardHeader = React.memo(() => {
                     </Popover>
                 )}
             </HStack>
+
+            {selectedStop?.lines && selectedStop.lines.length > 0 && (
+                <div className="relative w-full">
+                    <div 
+                        className="w-full overflow-x-auto no-scrollbar -mx-1 px-1 py-1.5"
+                        style={{ 
+                            maskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)',
+                            WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 40px), transparent 100%)'
+                        }}
+                    >
+                        <HStack className="gap-1.5 px-1" justify="start">
+                            {uniqueLines.map((line) => {
+                                const name = String(line.name || '');
+                                if (!name) return null;
+
+                                const isActive = selectedLine === name;
+                                const isDimmed = !!selectedLine && !isActive;
+
+                                return (
+                                 <button 
+                                 key={name}
+                                 onClick={() => toggleLineFilter(name)}
+                                 className={cn(
+                                     "inline-flex items-center justify-center text-[10.5px] text-white font-bold shrink-0 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
+                                     // Metro lines are circular
+                                     (line.type === '1' || ['A', 'B', 'C'].includes(name)) 
+                                         ? "rounded-full w-[21px] h-[21px]" 
+                                         : "rounded-[4px] h-[21px]",
+                                     // Adjust padding for longer names
+                                     name.length >= 2 
+                                         ? (line.type === '1' ? "" : "px-2 min-w-[21px]") 
+                                         : "w-[21px]",
+                                     isDimmed ? "opacity-25 scale-90" : "opacity-100",
+                                     isActive && "ring-2 ring-white ring-offset-1 ring-offset-background z-10 scale-110 shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                 )}
+                                 style={{ 
+                                     backgroundColor: line.route_color || FALLBACK_ROUTE_COLOR,
+                                     border: '1px solid rgba(255,255,255,0.1)'
+                                 }}
+                             >
+                                 {name}
+                             </button>
+                             );
+                            })}
+                            {/* Spacer to allow scrolling past the mask/fade zone */}
+                            <div className="shrink-0 w-10 h-1" />
+                        </HStack>
+                    </div>
+                </div>
+            )}
 
             <HStack justify="between">
                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
-import { usePreferences, useViewport } from '../../state/MapStateProvider';
+import { usePreferences, useViewport } from '../../state/contexts';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';

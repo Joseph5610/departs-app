@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2 } from 'lucide-react';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { SearchItem } from './SearchItem';
+import { getLineMetadataFromMap } from '@/utils/transitUtils';
 
 
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
@@ -21,6 +22,7 @@ interface SearchDropdownProps {
     onHistorySelect: (item: SearchHistoryItem) => void;
     onLineSelect: (lines: string[]) => void;
     onPlaceSelect: (result: GeocodingResult) => void;
+    lineMetadataMap: Map<string, { route_color: string; type: string }>;
 }
 
 /**
@@ -41,7 +43,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     onStopSelect,
     onHistorySelect,
     onLineSelect,
-    onPlaceSelect
+    onPlaceSelect,
+    lineMetadataMap
 }) => {
     const { t } = useTranslation();
 
@@ -83,6 +86,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                     undefined
                                 }
                                 metroLines={item.type === 'stop' ? item.metro_lines : undefined}
+                                lines={item.type === 'stop' ? item.lines : undefined}
 
                                 testId={
                                     item.type === 'stop' ? `search-item-stop-${item.stop_name}` :
@@ -109,7 +113,15 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {isLineLike && (
                     <SearchItem
                         icon={<SearchIcon size={16} />}
-                        title={t('search.lineFilter', { line: linesFromQuery.join(', '), count: linesFromQuery.length })}
+                        title={t('search.filterByLine')}
+                        lines={linesFromQuery.map(l => {
+                            const meta = getLineMetadataFromMap(l, lineMetadataMap);
+                            return { 
+                                name: l, 
+                                type: meta?.type || 'bus',
+                                route_color: meta?.route_color
+                            };
+                        })}
                         variant="primary"
                         testId={`search-item-line-${linesFromQuery.join('-')}`}
                         onClick={() => onLineSelect(linesFromQuery)}
@@ -123,6 +135,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         title={stop.properties.stop_name}
                         subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
                         metroLines={stop.properties.metro_lines}
+                        lines={stop.properties.lines}
 
                         highlight={favoriteStops.includes(stop.properties.stop_id)}
                         testId={`search-item-stop-${stop.properties.stop_name}${stop.properties.platform_code ? '-' + stop.properties.platform_code : ''}`}

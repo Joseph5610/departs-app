@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelection } from '../../state/MapStateProvider';
+import { useSelection } from '../../state/contexts';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import type { VehicleDetail } from '../../types/transit';
@@ -31,6 +31,11 @@ export const useSelectedVehicle = () => {
         const merged: VehicleDetail = {
             vehicle_id: vehicleId,
             gtfs_trip_id: tripId,
+            route_short_name: vehicleDetail?.route_short_name || liveMatch?.properties.route_short_name || '',
+            route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? '',
+            trip_headsign: vehicleDetail?.trip_headsign || liveMatch?.properties.trip_headsign || '',
+            route_color: vehicleDetail?.route_color || liveMatch?.properties.route_color || '',
+            is_night: vehicleDetail?.is_night ?? liveMatch?.properties.is_night ?? false,
             bearing: null,
             delay: 0,
             ...liveMatch?.properties,
@@ -44,7 +49,7 @@ export const useSelectedVehicle = () => {
             merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
         }
 
-        const isValid = (g: any) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
+        const isValid = (g: VehicleDetail['geometry'] | undefined) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
 
         if (isValid(vehicleDetail?.geometry)) {
             merged.geometry = vehicleDetail!.geometry;

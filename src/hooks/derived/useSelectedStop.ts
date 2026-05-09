@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelection } from '../../state/MapStateProvider';
+import { useSelection } from '../../state/contexts';
 import { useStops } from '../data/useStops';
 import type { SelectedStop } from '../../types/transit';
 
@@ -29,14 +29,15 @@ export const useSelectedStop = () => {
             return { stop_id: stopId };
         }
 
-        const { stop_name, platform_code, all_ids, is_train } = feature.properties;
+        const { stop_name, platform_code, all_ids, is_train, metro_lines, lines } = feature.properties;
         return {
             stop_id: feature.properties.stop_id,
             stop_name,
             platform_code,
             all_ids,
             is_train: Number(is_train) === 1 ? 1 : 0,
-
+            metro_lines,
+            lines,
             coordinates: feature.geometry.coordinates as [number, number]
         };
     }, [stopId, stopsData]);

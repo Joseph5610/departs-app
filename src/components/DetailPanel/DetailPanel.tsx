@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import {
     Drawer,
@@ -84,12 +84,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
     const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
 
-    // Reset snap point when the drawer opens or when the selection changes (id change)
-    useEffect(() => {
-        if (isOpen) {
-            setActiveSnapPoint(0.60);
-        }
-    }, [isOpen, id]);
+    // Reset snap point when selection changes (id change) during render
+    const [prevId, setPrevId] = useState(id);
+    if (id !== prevId) {
+        setPrevId(id);
+        setActiveSnapPoint(0.60);
+    }
 
     if (isMobile) {
         return (

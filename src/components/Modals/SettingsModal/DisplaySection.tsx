@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-import { usePreferences } from '../../../state/MapStateProvider';
+import { usePreferences } from '../../../state/contexts';
 
 const vehicleTypes = [
     { id: 'metro', icon: Subway },

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useSelection, useViewport } from '../../state/contexts';
 import { useIsMobile } from '../useIsMobile';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useSelectedVehicle } from '../derived/useSelectedVehicle';
@@ -135,7 +135,7 @@ export const useMapInterface = () => {
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile]);
 
     // --- 4. PERFORMANCE VISUALS ---
     useEffect(() => {

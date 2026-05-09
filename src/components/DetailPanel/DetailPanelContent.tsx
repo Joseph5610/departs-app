@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import { VehicleDetail } from './VehicleDetail/VehicleDetail';
-import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useSelection, useViewport } from '../../state/contexts';
 import { useVehicleDetail } from '../../hooks/data/useVehicleDetail';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
 import { Stack } from '@/components/ui/layout';
+import type { AppError } from '@/types/error';
 
 /**
  * DetailPanelContent
@@ -22,7 +23,13 @@ export const DetailPanelContent = memo(() => {
     const selectedVehicle = useSelectedVehicle();
 
     // Data Hooks
-    const { data: vehicleDetail, isFetching: loadingDetail } = useVehicleDetail();
+    const { 
+        data: vehicleDetail, 
+        isFetching: loadingDetail,
+        isError: isVehicleError,
+        error: vehicleError,
+        refetch: refetchVehicle
+    } = useVehicleDetail();
 
     const { actions: vpActions } = useViewport();
     const { handleDepartureClick: onDepartureClick } = vpActions;
@@ -36,6 +43,9 @@ export const DetailPanelContent = memo(() => {
                 selectedVehicle={selectedVehicle}
                 vehicleDetail={vehicleDetail || null}
                 loadingDetail={loadingDetail}
+                isError={isVehicleError}
+                error={vehicleError as AppError}
+                onRetry={refetchVehicle}
                 isFollowing={isFollowing}
                 onToggleFollow={() => setIsFollowing(!isFollowing)}
             />

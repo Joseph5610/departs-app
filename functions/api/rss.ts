@@ -1,6 +1,16 @@
 import { CACHE_TTL, ERROR_MESSAGES, TRANSIT_CONFIG, createErrorResponse, formatPragueDate } from "../_utils/api-utils";
 import { getXMLTagContent } from "../_utils/rss-utils";
 import { AppRSSItem, AppRSSResponse } from "../_utils/types";
+import { getVehicleColor } from "../_utils/vehicle-colors";
+
+function guessType(name: string): string {
+    const n = String(name).toUpperCase();
+    if (['A', 'B', 'C'].includes(n)) return 'metro';
+    if (/^[1-9][0-9]?$/.test(n)) return 'tram';
+    if (/^S[0-9]/.test(n) || /^R[0-9]/.test(n)) return 'train';
+    if (/^9[0-9][0-9]?$/.test(n)) return n.length === 2 ? 'tram' : 'bus'; // Night tram 9x, night bus 9xx
+    return 'bus'; // Default
+}
 
 export const onRequest: PagesFunction = async () => {
     try {
@@ -171,6 +181,14 @@ function parseRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSIt
             guid: getXMLTagContent(itemXml, 'guid'),
             priority: getXMLTagContent(itemXml, 'priority'),
             lines,
+            line_metadata: lines.map(name => {
+                const type = guessType(name);
+                return {
+                    name,
+                    type,
+                    route_color: getVehicleColor(type, name)
+                };
+            }),
             isActive,
             isFuture
         });

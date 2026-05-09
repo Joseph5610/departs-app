@@ -5,19 +5,22 @@ export interface SelectionState {
     selectedTripId: string | null;
     selectedVehicleId: string | null;
     isFollowing: boolean;
+    selectedLine: string | null;
 }
 
 export type SelectionAction =
     | { type: 'SELECT_STOP'; payload: string | null }
     | { type: 'SELECT_VEHICLE'; payload: { tripId: string | null; vehicleId: string | null; keepStop?: boolean } }
     | { type: 'CLEAR_SELECTION' }
-    | { type: 'SET_IS_FOLLOWING'; payload: boolean };
+    | { type: 'SET_IS_FOLLOWING'; payload: boolean }
+    | { type: 'TOGGLE_LINE_FILTER'; payload: string | null };
 
 const getInitialState = (): SelectionState => ({
     selectedStopId: null,
     selectedTripId: null,
     selectedVehicleId: null,
     isFollowing: false,
+    selectedLine: null,
 });
 
 function selectionReducer(state: SelectionState, action: SelectionAction): SelectionState {
@@ -28,7 +31,8 @@ function selectionReducer(state: SelectionState, action: SelectionAction): Selec
                 selectedStopId: action.payload,
                 selectedTripId: null,
                 selectedVehicleId: null,
-                isFollowing: false
+                isFollowing: false,
+                selectedLine: null
             };
         case 'SELECT_VEHICLE':
             return {
@@ -36,7 +40,8 @@ function selectionReducer(state: SelectionState, action: SelectionAction): Selec
                 selectedTripId: action.payload.tripId,
                 selectedVehicleId: action.payload.vehicleId,
                 selectedStopId: action.payload.keepStop ? state.selectedStopId : null,
-                isFollowing: true
+                isFollowing: true,
+                selectedLine: action.payload.keepStop ? state.selectedLine : null
             };
         case 'CLEAR_SELECTION':
             return {
@@ -44,10 +49,16 @@ function selectionReducer(state: SelectionState, action: SelectionAction): Selec
                 selectedStopId: null,
                 selectedTripId: null,
                 selectedVehicleId: null,
-                isFollowing: false
+                isFollowing: false,
+                selectedLine: null
             };
         case 'SET_IS_FOLLOWING':
             return { ...state, isFollowing: action.payload };
+        case 'TOGGLE_LINE_FILTER':
+            return { 
+                ...state, 
+                selectedLine: state.selectedLine === action.payload ? null : action.payload 
+            };
         default:
             return state;
     }
@@ -69,6 +80,9 @@ export const useSelectionReducer = () => {
 
         setIsFollowing: (isFollowing: boolean) =>
             dispatch({ type: 'SET_IS_FOLLOWING', payload: isFollowing }),
+
+        toggleLineFilter: (line: string | null) =>
+            dispatch({ type: 'TOGGLE_LINE_FILTER', payload: line }),
     }), [dispatch]);
 
     return {

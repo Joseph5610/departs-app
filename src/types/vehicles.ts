@@ -12,9 +12,9 @@ export interface VehicleDescriptor {
 export interface BaseVehicleProperties {
     vehicle_id: string | null;
     gtfs_trip_id: string;
-    route_short_name?: string;
-    route_type?: string | number;
-    trip_headsign?: string;
+    route_short_name: string;
+    route_type: string | number;
+    trip_headsign: string;
     bearing: number | null | undefined;
     delay: number;
     state_position?: string;
@@ -23,8 +23,8 @@ export interface BaseVehicleProperties {
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
     vehicle_descriptor?: VehicleDescriptor;
-    line_color?: string;
-    is_night?: boolean;
+    route_color: string;
+    is_night: boolean;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
@@ -69,6 +69,8 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 departure_time: string;
                 realtime_arrival_time?: string;
                 realtime_departure_time?: string;
+                stop_id: string;
+                metro_lines?: Array<{ name: string; route_color: string }>;
             };
         }>;
     };

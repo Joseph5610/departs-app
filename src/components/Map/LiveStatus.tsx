@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelection, useViewport } from '../../state/MapStateProvider';
+import { useSelection, useViewport } from '../../state/contexts';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useNetworkStatus } from '../../hooks/features/useNetworkStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
@@ -17,7 +17,7 @@ export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
     const { state: selState } = useSelection();
     const { state: vpState } = useViewport();
-    const { isFetching: fetching, dataUpdatedAt: lastUpdate } = useVehicles();
+    const { isFetching: fetching, dataUpdatedAt: lastUpdate, isError, error } = useVehicles();
     const isOnline = useNetworkStatus();
 
     const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
@@ -63,11 +63,19 @@ export const LiveStatus: React.FC = () => {
                         <HStack gap={2}>
                             <Box className={cn(
                                 "w-2 h-2 rounded-full transition-colors duration-500",
-                                !isOnline ? "bg-neutral-500" : fetching ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
+                                !isOnline ? "bg-neutral-500" :
+                                    isError ? (error?.isUpstream ? "bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]" : "bg-destructive shadow-[0_0_8px_var(--color-destructive)]") :
+                                        fetching ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
                             )} />
                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
                                 {!isOnline ? (
                                     <span className="text-neutral-500">{t('liveStatus.offline')}</span>
+                                ) : isError ? (
+                                    error?.isUpstream ? (
+                                        <span className="text-orange-500">{t('liveStatus.upstreamError')}</span>
+                                    ) : (
+                                        <span className="text-destructive">{t('liveStatus.appError')}</span>
+                                    )
                                 ) : fetching ? (
                                     <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
                                 ) : (

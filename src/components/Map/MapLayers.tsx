@@ -3,7 +3,7 @@ import React from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FilterSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
-import type { VehicleCollection, StopCollection } from '../../types/transit';
+import type { VehicleCollection, StopCollection, StopProperties } from '../../types/transit';
 import {
     clusterLayer,
     stopPointLayer,
@@ -89,11 +89,9 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     vehiclesFilter,
     labelLayerId
 }) => {
-    if (!mapLoaded) return null;
-
     // Helper: does this feature pass the stop type filter?
     // Empty filter = show all. Otherwise include only matching types.
-    const passesStopFilter = React.useCallback((props: StopCollection['features'][0]['properties'] | null) => {
+    const passesStopFilter = React.useCallback((props: StopProperties | null) => {
         if (!props || stopTypeFilter.length === 0) return true;
         const hasMetro = (props.metro_lines?.length ?? 0) > 0;
         const hasTrain = props.is_train === 1;
@@ -122,6 +120,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         filterGeoJSON(stopsData, showStops), 
         [stopsData, showStops, filterGeoJSON]
     );
+
+    if (!mapLoaded) return null;
 
     return (
         <>

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
-import { useViewport } from '../../state/MapStateProvider';
+import { useViewport } from '../../state/contexts';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,6 @@ export const WelcomeModal: React.FC = () => {
         
         if (params.has('skipTutorial')) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
-            setIsOpen(false);
             actions.handleLocate();
 
             const url = new URL(window.location.href);

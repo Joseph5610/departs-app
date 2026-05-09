@@ -10,11 +10,10 @@ import type { Departure } from '../../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
-import { METRO_STATIONS, LINE_COLORS } from '@/config/stations';
 
 interface DepartureItemProps {
     departure: Departure;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => void;
+    onDepartureClick: (tripId: string, vehicleId?: string) => void;
     stopDistanceInfo: {
         distance: number;
         time: number;
@@ -57,7 +56,7 @@ export const DepartureItem = ({
 
         if (dx < threshold && dy < threshold) {
             if (dep.tripId) {
-                onDepartureClick(dep.tripId, dep.vehicleId, dep);
+                onDepartureClick(dep.tripId, dep.vehicleId);
             }
         }
         clickStartPos.current = null;
@@ -82,13 +81,13 @@ export const DepartureItem = ({
                 <Stack gap={0} className="min-w-0 flex-1">
                     <div className="text-foreground font-semibold leading-normal line-clamp-2">
                         {dep.headsign}
-                        {METRO_STATIONS[dep.headsign]?.map((line: string) => (
+                        {dep.headsign_metro_lines?.map((line) => (
                             <span 
-                                key={line} 
-                                className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
-                                style={{ backgroundColor: LINE_COLORS[line as keyof typeof LINE_COLORS] }}
+                                key={line.name} 
+                                className="inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
+                                style={{ backgroundColor: line.route_color }}
                             >
-                                {line}
+                                {line.name}
                             </span>
                         ))}
                     </div>

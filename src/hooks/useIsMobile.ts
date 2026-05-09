@@ -1,34 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { MOBILE_BREAKPOINT } from '../config/constants';
 
 /**
  * useIsMobile
  * 
- * Standardized hook for mobile breakpoint detection using matchMedia.
- * More performant than ResizeObserver or window size listeners.
+ * Standardized hook for mobile breakpoint detection using useSyncExternalStore.
+ * This pattern ensures consistent state between the browser's matchMedia and React,
+ * avoiding hydration mismatches and unnecessary effect-based updates.
  */
 export const useIsMobile = () => {
-    const [isMobile, setIsMobile] = useState<boolean>(
-        typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false
+    const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
+
+    return useSyncExternalStore(
+        (callback) => {
+            if (typeof window === 'undefined') return () => {};
+            const mediaQuery = window.matchMedia(query);
+            mediaQuery.addEventListener('change', callback);
+            return () => mediaQuery.removeEventListener('change', callback);
+        },
+        () => typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
+        () => false // Server-side fallback
     );
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-        
-        const handleQueryChange = (e: MediaQueryListEvent) => {
-            setIsMobile(e.matches);
-        };
-
-        // Initialize
-        setIsMobile(mediaQuery.matches);
-
-        // Modern browsers
-        mediaQuery.addEventListener('change', handleQueryChange);
-        
-        return () => mediaQuery.removeEventListener('change', handleQueryChange);
-    }, []);
-
-    return isMobile;
 };

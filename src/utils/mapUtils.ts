@@ -63,9 +63,9 @@ export const extractVehicleProperties = (feature: { properties: Record<string, u
     return {
         vehicle_id,
         gtfs_trip_id,
-        route_short_name: rawProps.route_short_name !== undefined ? String(rawProps.route_short_name) : undefined,
-        route_type: rawProps.route_type !== undefined ? (isNaN(Number(rawProps.route_type)) ? String(rawProps.route_type) : Number(rawProps.route_type)) : undefined,
-        trip_headsign: rawProps.trip_headsign !== undefined ? String(rawProps.trip_headsign) : undefined,
+        route_short_name: String(rawProps.route_short_name || ''),
+        route_type: isNaN(Number(rawProps.route_type)) ? String(rawProps.route_type || '') : Number(rawProps.route_type),
+        trip_headsign: String(rawProps.trip_headsign || ''),
         bearing: rawProps.bearing !== undefined && rawProps.bearing !== null && rawProps.bearing !== '' ? Number(rawProps.bearing) : null,
         delay: Number(rawProps.delay || 0),
         state_position: rawProps.state_position !== undefined ? String(rawProps.state_position) : undefined,
@@ -74,6 +74,8 @@ export const extractVehicleProperties = (feature: { properties: Record<string, u
         last_stop_sequence: rawProps.last_stop_sequence !== undefined && rawProps.last_stop_sequence !== null && rawProps.last_stop_sequence !== '' ? Number(rawProps.last_stop_sequence) : null,
         origin_timestamp: rawProps.origin_timestamp !== undefined ? String(rawProps.origin_timestamp) : undefined,
         vehicle_descriptor,
+        route_color: String(rawProps.route_color || ''),
+        is_night: Boolean(rawProps.is_night),
         geometry: feature.geometry as VehicleDetail['geometry']
     };
 };
@@ -84,14 +86,15 @@ export const extractVehicleProperties = (feature: { properties: Record<string, u
 export const extractStopProperties = (feature: { properties: Record<string, unknown> | null; geometry?: unknown }): SelectedStop => {
     const p = (feature.properties || {}) as Record<string, unknown>;
     const geom = feature.geometry;
-    const coordinates = (geom && typeof geom === 'object' && 'coordinates' in geom) ? (geom as any).coordinates : geom;
+    const coordinates = (geom && typeof geom === 'object' && 'coordinates' in geom) 
+        ? (geom as { coordinates: [number, number] }).coordinates 
+        : undefined;
 
     return {
         stop_id: String(p.stop_id),
         stop_name: String(p.stop_name),
         platform_code: p.platform_code ? String(p.platform_code) : undefined,
         is_train: Number(p.is_train) === 1 ? 1 : 0,
-
         coordinates: coordinates as [number, number]
     };
 };

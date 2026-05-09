@@ -3,7 +3,8 @@ import type {
     SymbolLayerSpecification,
     LineLayerSpecification
 } from 'maplibre-gl';
-import { LINE_COLORS } from './stations';
+
+
 
 
 // 1. The GLOW Layer (Background)
@@ -13,7 +14,7 @@ export const clusterLayer: CircleLayerSpecification = {
     source: 'pid-stops',
     filter: ['has', 'point_count'],
     paint: {
-        'circle-color': LINE_COLORS.DefaultStation,
+        'circle-color': '#1e3a8a',
         'circle-radius': [
             'interpolate', ['linear'], ['get', 'point_count'],
             1, 6,
@@ -47,13 +48,10 @@ export const stopPointLayer: CircleLayerSpecification = {
             17, 20.9
         ],
         'circle-color': [
-            'case',
-            ['==', ['get', 'metro_a'], 1], LINE_COLORS.A,
-            ['==', ['get', 'metro_b'], 1], LINE_COLORS.B,
-            ['==', ['get', 'metro_c'], 1], LINE_COLORS.C,
-            ['==', ['get', 'is_train'], 1], LINE_COLORS.TrainStation,
-            LINE_COLORS.DefaultStation
-        ] as any,
+            'coalesce',
+            ['get', 'metro_color'],
+            ['case', ['==', ['get', 'is_train'], 1], '#1c1745', '#1e3a8a']
+        ],
 
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1.0, 17, 2.0],
         'circle-stroke-color': '#000000',
@@ -105,12 +103,7 @@ export const transferOuterLayer: CircleLayerSpecification = {
             13, 6.5,
             17, 24
         ],
-        'circle-color': [
-            'case',
-            ['==', ['get', 'metro_a'], 1], LINE_COLORS.A,
-            ['==', ['get', 'metro_b'], 1], LINE_COLORS.B,
-            LINE_COLORS.Transfer
-        ],
+        'circle-color': ['coalesce', ['get', 'metro_color'], '#0f172a'],
         'circle-stroke-color': '#000000',
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 1, 17, 3],
         'circle-opacity': 0.85
@@ -131,13 +124,7 @@ export const transferInnerLayer: CircleLayerSpecification = {
             13, 4.5,
             17, 16
         ],
-        'circle-color': [
-            'case',
-            ['all', ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1]], LINE_COLORS.B,
-            ['all', ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_c'], 1]], LINE_COLORS.C,
-            ['all', ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]], LINE_COLORS.C,
-            '#ffffff'
-        ],
+        'circle-color': ['coalesce', ['get', 'metro_color_2'], '#ffffff'],
         'circle-opacity': 0.85
     }
 };
@@ -247,7 +234,7 @@ export const selectedVehiclePulseLayer: CircleLayerSpecification = {
     paint: {
         'circle-radius': 0,
         'circle-opacity': 0,
-        'circle-color': ['get', 'line_color']
+        'circle-color': ['get', 'route_color']
     }
 };
 
@@ -257,7 +244,7 @@ export const selectedVehiclePointLayer: CircleLayerSpecification = {
     source: 'selected-vehicle',
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': ['get', 'line_color'],
+        'circle-color': ['get', 'route_color'],
         'circle-stroke-width': 1.5,
         'circle-stroke-color': '#000000',
         'circle-opacity': 1
@@ -279,7 +266,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': ['get', 'line_color'],
+        'icon-color': ['get', 'route_color'],
         'icon-opacity': [
             'case',
             ['any',
@@ -289,7 +276,7 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
             ],
             0,
             1
-        ] as any
+        ]
     }
 };
 
@@ -321,7 +308,7 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
     minzoom: 10,
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
-        'circle-color': ['get', 'line_color'],
+        'circle-color': ['get', 'route_color'],
         'circle-stroke-width': 1.5,
         'circle-stroke-color': '#000000',
         'circle-opacity': 1
@@ -344,7 +331,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
         'icon-anchor': 'center'
     },
     paint: {
-        'icon-color': ['get', 'line_color'],
+        'icon-color': ['get', 'route_color'],
         'icon-opacity': [
             'case',
             ['any',
@@ -354,7 +341,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
             ],
             0,
             1
-        ] as any
+        ]
     }
 };
 
@@ -389,7 +376,7 @@ export const routeLineLayer: LineLayerSpecification = {
         'line-cap': 'round'
     },
     paint: {
-        'line-color': ['get', 'line_color'],
+        'line-color': ['get', 'route_color'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 8],
         'line-opacity': 0.8,
         'line-blur': 0.5

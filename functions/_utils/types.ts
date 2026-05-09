@@ -2,8 +2,7 @@ export interface Env {
     GOLEMIO_API_KEY: string;
 }
 
-// --- Golemio API Types ---
-
+// --- Golemio RAW Types ---
 export interface GolemioVehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
@@ -13,68 +12,106 @@ export interface GolemioVehicleDescriptor {
     vehicle_registration_number?: string | number;
 }
 
+export interface GolemioVehicleProperties {
+    vehicle_id?: string | number;
+    id?: string | number;
+    gtfs_trip_id?: string;
+    route_short_name?: string;
+    gtfs_route_short_name?: string;
+    route_type?: string | number;
+    trip_headsign?: string;
+    gtfs_trip_headsign?: string;
+    bearing?: number | string;
+    delay?: number | string;
+    state_position?: string;
+    next_stop_name?: string;
+    last_stop_sequence?: number | string;
+    origin_timestamp?: string;
+    run_number?: number | string;
+    vehicle_descriptor?: GolemioVehicleDescriptor;
+}
+
 export interface GolemioVehicleFeature {
     type: 'Feature';
     geometry: {
         type: 'Point';
         coordinates: [number, number];
+    } | null;
+    properties: GolemioVehicleProperties;
+}
+
+/**
+ * Golemio vehicle response — can be either:
+ *   - A FeatureCollection with `features[]`
+ *   - A bare Feature with properties at the top level
+ * We model both shapes here to avoid `as unknown` casts.
+ */
+export interface GolemioVehiclePayload extends Partial<GolemioVehicleProperties> {
+    type?: string;
+    features?: GolemioVehicleFeature[];
+    geometry?: { type: 'Point'; coordinates: [number, number] } | null;
+    stop_times?: { features: GolemioStopTimeFeature[] };
+    shapes?: GolemioShapeFeature[] | { features: GolemioShapeFeature[] };
+    vehicle_descriptor?: GolemioVehicleDescriptor;
+    last_stop_sequence?: number;
+    origin_timestamp?: string;
+    next_stop_name?: string;
+}
+
+export interface GolemioStopProperties {
+    stop_id: string;
+    stop_name: string;
+    location_type: number;
+    parent_station?: string | null;
+    platform_code?: string | null;
+    zone_id?: string | null;
+    wheelchair_boarding?: number;
+    level_id?: string | null;
+}
+
+export interface GolemioStopFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
     };
-    properties: {
-        vehicle_id?: string | number;
-        id?: string | number;
-        gtfs_trip_id?: string;
-        gtfs_route_short_name?: string;
-        gtfs_route_type?: string;
-        gtfs_trip_headsign?: string;
-        route_short_name?: string;
-        route_type?: string;
-        trip_headsign?: string;
-        bearing?: number;
-        delay?: number;
-        state_position?: string;
-        next_stop_name?: string;
-        is_wheelchair_accessible?: boolean;
-        is_air_conditioned?: boolean;
-        vehicle_registration_number?: number;
-        run_number?: number | string;
-        service_number?: number | string;
-        trip?: {
-            gtfs?: {
-                trip_id?: string;
-                route_short_name?: string;
-                route_type?: string;
-                trip_headsign?: string;
-                run_number?: number | string;
-            };
-            run_number?: number | string;
-            service_number?: number | string;
-            wheelchair_accessible?: boolean;
-            air_conditioned?: boolean;
-            vehicle_registration_number?: number;
-            operator?: string;
-            vehicle_type?: string;
-            next_stop_name?: string;
-            origin_timestamp?: string;
-            vehicle_descriptor?: GolemioVehicleDescriptor;
-        };
-        last_position?: {
-            run_number?: number | string;
-            bearing?: number;
-            delay?: { actual?: number } | number;
-            state_position?: string;
-            next_stop?: { id?: string; name?: string };
-            vehicle_registration_number?: number;
-            operator?: string;
-            vehicle_type?: string;
-            origin_timestamp?: string;
-            timestamp?: string;
-            last_stop?: { sequence?: number };
-            last_stop_sequence?: number;
-            vehicle_descriptor?: GolemioVehicleDescriptor;
-        };
-        vehicle_descriptor?: GolemioVehicleDescriptor;
-        [key: string]: unknown;
+    properties: GolemioStopProperties;
+}
+
+export interface GolemioStopPayload {
+    type: 'FeatureCollection';
+    features: GolemioStopFeature[];
+}
+
+export interface GolemioStopTimeProperties {
+    stop_id: string;
+    stop_name: string;
+    stop_sequence: number;
+    arrival_time: string;
+    departure_time: string;
+    realtime_arrival_time?: string;
+    realtime_departure_time?: string;
+    zone_id?: string;
+    is_wheelchair_accessible?: boolean | null;
+    shape_dist_traveled?: number;
+}
+
+export interface GolemioStopTimeFeature {
+    type: 'Feature';
+    geometry?: {
+        type: string;
+        coordinates: number[] | number[][];
     };
+    properties: GolemioStopTimeProperties;
+}
+
+export interface GolemioShapeFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    properties?: Record<string, unknown>;
 }
 
 export interface GolemioDepartureItem {
@@ -82,6 +119,7 @@ export interface GolemioDepartureItem {
         timestamp_predicted: string | null;
         timestamp_scheduled: string;
         delay_seconds: number | null;
+        minutes?: number;
     };
     route: {
         short_name: string;
@@ -89,16 +127,20 @@ export interface GolemioDepartureItem {
     };
     trip: {
         id: string;
-        direction_id: string | number;
+        direction_id?: string | number;
         headsign: string;
         is_canceled: boolean;
     };
     stop: {
         id: string;
         platform_code: string | null;
+        sequence?: number;
     };
     vehicle?: {
         id: string;
+        is_wheelchair_accessible?: boolean | null;
+        is_air_conditioned?: boolean | null;
+        has_charger?: boolean | null;
     };
 }
 
@@ -117,77 +159,102 @@ export interface GolemioInfotext {
     valid_to: string | null;
 }
 
-export interface GolemioStopFeature {
+// --- Application Internal Types (Response Structures) ---
+export interface AppStopProperties {
+    stop_id: string;
+    stop_name: string;
+    platform_code?: string | null;
+    location_type: number | string;
+    parent_station: string | null;
+    zone_id: string | null;
+    is_centroid?: boolean;
+    is_train?: number;
+    metro_a?: number;
+    metro_b?: number;
+    metro_c?: number;
+    metro_lines?: Array<{ name: string; route_color: string }>;
+    metro_color?: string;
+    metro_color_2?: string;
+    all_ids?: string[];
+    lines?: Array<{
+        name: string;
+        type: string | number;
+        route_color: string;
+    }>;
+}
+
+export interface AppStopFeature {
     type: 'Feature';
     id?: string | number;
     geometry: {
         type: 'Point';
         coordinates: [number, number];
     };
-    properties: {
-        stop_id: string;
-        stop_name: string;
-        platform_code: string | null;
-        location_type: number | string;
-        parent_station: string | null;
-        zone_id: string | null;
-        all_ids?: string[];
-        metro_lines?: string[];
-        is_centroid?: boolean;
-        [key: string]: unknown;
+    properties: AppStopProperties;
+}
+
+export interface AppStopCollection {
+    type: 'FeatureCollection';
+    features: AppStopFeature[];
+}
+
+export interface AppVehicleProperties {
+    vehicle_id: string;
+    gtfs_trip_id: string;
+    route_short_name: string;
+    route_type: string | number;
+    trip_headsign: string;
+    bearing: number | null;
+    delay: number;
+    state_position?: string;
+    next_stop_name?: string;
+    last_stop_sequence?: number | null;
+    origin_timestamp?: string;
+    run_number?: string;
+    vehicle_descriptor?: GolemioVehicleDescriptor;
+    is_static_fallback?: boolean;
+    route_color: string;
+    is_night: boolean;
+}
+
+export interface AppVehicleFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'Point';
+        coordinates: [number, number];
+    } | null;
+    properties: AppVehicleProperties;
+}
+
+export interface AppVehicleDetail extends AppVehicleProperties {
+    geometry?: {
+        type: 'Point';
+        coordinates: [number, number];
+    } | null;
+    stop_times?: {
+        features: Array<{
+            type: 'Feature';
+            properties: GolemioStopTimeProperties & { metro_lines: Array<{ name: string; route_color: string }> };
+            geometry?: {
+                type: string;
+                coordinates: number[] | number[][];
+            };
+        }>;
+    };
+    route_geojson?: {
+        type: 'FeatureCollection';
+        features: Array<{
+            type: 'Feature';
+            geometry: {
+                type: 'LineString';
+                coordinates: [number, number][];
+            };
+            properties: {
+                route_color: string;
+            };
+        }>;
     };
 }
-
-// --- PID Official Stop List Types (data.pid.cz) ---
-
-export interface PidLine {
-    id: number | string;
-    name: string;
-    type: string;
-    isNight?: boolean;
-    exitOnly?: boolean;
-    direction?: string;
-    direction2?: string;
-}
-
-
-export interface PidStop {
-    id: string; // node/stop number (e.g., 1040/1)
-    platform: string;
-    altIdosName?: string;
-    lat: number;
-    lon: number;
-    zone: string;
-    mainTrafficType: string;
-    wheelchairAccess: string;
-    gtfsIds: string[];
-    lines: PidLine[];
-}
-
-export interface PidStopGroup {
-    name: string;
-    districtCode: string;
-    idosCategory: number;
-    idosName: string;
-    fullName: string;
-    uniqueName: string;
-    node: number;
-    cis: number;
-    avgLat: number;
-    avgLon: number;
-    municipality: string;
-    mainTrafficType: string;
-    stops: PidStop[];
-}
-
-export interface PidStopsResponse {
-    generatedAt: string;
-    dataFormatVersion: string;
-    stopGroups: PidStopGroup[];
-}
-
-
-// --- Application Internal Types (Response Structures) ---
 
 export interface AppDeparture {
     timestamp: string;
@@ -201,42 +268,9 @@ export interface AppDeparture {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
-    color?: string;
+    route_color?: string;
+    headsign_metro_lines?: Array<{ name: string; route_color: string }>;
 }
-
-export interface AppVehicleProperties {
-    vehicle_id?: string;
-    gtfs_trip_id?: string;
-    route_short_name?: string;
-    route_type?: string;
-    trip_headsign?: string;
-    bearing?: number;
-    delay: number;
-    state_position?: string;
-    next_stop_name?: string;
-    last_stop_sequence?: number;
-    origin_timestamp?: string;
-    run_number?: number | string;
-    vehicle_descriptor?: GolemioVehicleDescriptor;
-}
-
-export interface AppStopProperties {
-    stop_id: string;
-    stop_name: string;
-    platform_code?: string;
-    location_type: number;
-    parent_station?: string;
-    zone_id?: string;
-    is_centroid?: boolean;
-    is_train?: number;
-    metro_a?: number;
-    metro_b?: number;
-    metro_c?: number;
-    metro_lines?: string[];
-    all_ids?: string[];
-    lines?: Array<{ name: string; type: string }>;
-}
-
 
 export interface AppRSSItem {
     type: 'incident' | 'exclusion';
@@ -248,6 +282,7 @@ export interface AppRSSItem {
     guid?: string;
     priority?: string;
     lines?: string[];
+    line_metadata?: Array<{ name: string; route_color: string; type: string }>;
     isActive?: boolean;
     isFuture?: boolean;
 }

@@ -1,38 +1,33 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { VehicleCollection } from '../../types/transit';
-import { useViewport, usePreferences } from '../../state/MapStateProvider';
+import { useViewport, usePreferences } from '../../state/contexts';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
+import { apiFetch } from '../../lib/api-client';
+import type { AppError } from '../../types/error';
 
 const fetchVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
-    try {
-        const url = new URL('/api/vehicles', window.location.origin);
+    const url = new URL('/api/vehicles', window.location.origin);
 
-        if (bounds) {
-            url.searchParams.set('bounds', bounds);
-        }
-        if (routeFilter && routeFilter.length > 0) {
-            routeFilter.forEach((line) => {
-                url.searchParams.append('routeShortName', line);
-            });
-        }
-        if (routeTypeFilter.length > 0) {
-            routeTypeFilter.forEach((type) => {
-                url.searchParams.append('routeType', type);
-            });
-        }
+    if (bounds) {
+        url.searchParams.set('bounds', bounds);
+    }
+    if (routeFilter && routeFilter.length > 0) {
+        routeFilter.forEach((line) => {
+            url.searchParams.append('routeShortName', line);
+        });
+    }
+    if (routeTypeFilter.length > 0) {
+        routeTypeFilter.forEach((type) => {
+            url.searchParams.append('routeType', type);
+        });
+    }
 
-        if (url.searchParams.toString() === '') {
-            return null;
-        }
-
-        const response = await fetch(url.toString());
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        return await response.json();
-    } catch {
+    if (url.searchParams.toString() === '') {
         return null;
     }
+
+    return apiFetch<VehicleCollection>(url);
 };
 
 /**
@@ -48,7 +43,7 @@ export const useVehicles = () => {
     const { debouncedBounds: bounds, routeFilter } = vpState;
     const { routeTypeFilter } = prefState;
 
-    const query = useQuery<VehicleCollection | null, Error>({
+    const query = useQuery<VehicleCollection | null, AppError>({
         queryKey: ['vehicles', bounds, routeFilter, routeTypeFilter],
         queryFn: () => fetchVehicles(bounds, routeFilter, routeTypeFilter),
         enabled: !!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
@@ -56,11 +51,14 @@ export const useVehicles = () => {
         staleTime: 5000,
         gcTime: 60000,
         placeholderData: keepPreviousData,
+        retry: 1,
     });
 
     return useMemo(() => ({
         vehicles: query.data,
         isFetching: query.isFetching,
+        isError: query.isError,
+        error: query.error,
         dataUpdatedAt: query.dataUpdatedAt
-    }), [query.data, query.isFetching, query.dataUpdatedAt]);
+    }), [query.data, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
 };

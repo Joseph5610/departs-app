@@ -17,8 +17,8 @@ export const useRouteShape = () => {
             return null;
         }
 
-        // The backend now provides line_color directly in the first feature's properties
-        const color = geojson.features[0].properties?.line_color || '#AD0B00';
+        // The backend now provides route_color directly in the first feature's properties
+        const color = geojson.features[0].properties?.route_color || '#AD0B00';
 
         // Ensure all segments have the correct color injected (safety)
         return {
@@ -27,7 +27,7 @@ export const useRouteShape = () => {
                 ...feature,
                 properties: {
                     ...feature.properties,
-                    line_color: color
+                    route_color: color
                 }
             }))
         };

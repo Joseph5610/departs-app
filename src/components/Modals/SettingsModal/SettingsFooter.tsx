@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Clock, Database, Github, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
-import { usePWA } from '../../../contexts/PWAContext';
-import { usePreferences } from '../../../state/MapStateProvider';
+import { usePWA } from '../../../state/pwa-context';
+import { usePreferences } from '../../../state/contexts';
 import { toast } from 'sonner';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 

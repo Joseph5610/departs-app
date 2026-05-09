@@ -10,6 +10,8 @@ import { DepartureItem } from './DepartureItem';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
+import type { AppError } from '@/types/error';
 
 
 
@@ -26,7 +28,7 @@ interface DepartureBoardProps {
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
-    const { isLoading, groupedDepartures } = useDepartures();
+    const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine } = useDepartures();
     const stopDistanceInfo = useStopDistance();
 
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
@@ -37,15 +39,20 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
+        if (isFiltered) return false;
         const isMetroStation = (selectedStop.metro_lines?.length ?? 0) > 0;
 
         const hour = new Date().getHours();
         const isNightTime = hour >= 0 && hour < 5;
         return isMetroStation && isNightTime;
-    }, [selectedStop, groupedDepartures.length]);
+    }, [selectedStop, groupedDepartures.length, isFiltered]);
 
     if (isLoading && groupedDepartures.length === 0) {
         return <DepartureBoardSkeleton />;
+    }
+
+    if (isError && groupedDepartures.length === 0) {
+        return <ErrorState error={error as AppError} onRetry={refetch} />;
     }
 
     return (
@@ -56,13 +63,18 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 showMetroNightMessage ? (
                     <MetroNightMessage />
                 ) : (
-                    <Box className="py-12 text-center text-muted-foreground">{t('map.departures.noUpcoming')}</Box>
+                    <Box className="py-12 text-center text-muted-foreground italic">
+                        {isFiltered 
+                            ? t('map.departures.noUpcomingForLine', { line: selectedLine }) 
+                            : t('map.departures.noUpcoming')}
+                    </Box>
                 )
             ) : (
                 groupedDepartures.map((group, index) => {
-                    const isExpanded = expandedGroups.includes(group.groupId);
+                    // Auto-expand all groups if we are filtering for a specific line
+                    const isExpanded = isFiltered || expandedGroups.includes(group.groupId);
                     const visibleDepartures = isExpanded ? group.departures : [group.departures[0]];
-                    const hasMore = group.departures.length > 1;
+                    const hasMore = group.departures.length > 1 && !isFiltered;
 
                     const prevGroup = index > 0 ? groupedDepartures[index - 1] : null;
                     const showHeader = !prevGroup || String(prevGroup.line) !== String(group.line) || String(prevGroup.type) !== String(group.type);
@@ -71,10 +83,10 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                         <Stack key={group.groupId} gap={3} className={cn(!showHeader && "-mt-1")}>
                             {showHeader && (
                                 <HStack gap={3} className="px-1">
-                                    <Box
-                                        className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
-                                        style={{ backgroundColor: group.departures[0]?.color || '#AD0B00' }}
-                                    >
+                                        <Box
+                                            className="px-3 py-1 rounded-lg font-bold text-white text-xs shadow-md"
+                                            style={{ backgroundColor: group.departures[0]?.route_color || '#AD0B00' }}
+                                        >
                                         {group.line}
                                     </Box>
                                     <Box className="h-[1px] flex-1 bg-border" />

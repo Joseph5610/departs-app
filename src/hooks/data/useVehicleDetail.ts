@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../../types/transit';
-import { useSelection } from '../../state/MapStateProvider';
+import { useSelection } from '../../state/contexts';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
+
+import { apiFetch } from '../../lib/api-client';
 
 const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const url = new URL('/api/vehicle-detail', window.location.origin);
@@ -9,12 +11,7 @@ const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Pro
     if (vehicleId) {
         url.searchParams.set('vehicleId', vehicleId);
     }
-
-    const res = await fetch(url.toString());
-    if (!res.ok) {
-        throw new Error('Failed to fetch vehicle detail');
-    }
-    return res.json();
+    return apiFetch<VehicleDetail>(url.toString());
 };
 
 export const useVehicleDetail = () => {

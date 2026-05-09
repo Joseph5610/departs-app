@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
 import { useGeocoding } from '../../../hooks/data/useGeocoding';
-import { useSelection, usePreferences, useViewport } from '../../../state/MapStateProvider';
+import { useSelection, usePreferences, useViewport } from '../../../state/contexts';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../../../config/constants';
 import { useStops } from '../../../hooks/data/useStops';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Overlay, Box } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { SearchDropdown } from './SearchDropdown';
+import { getLineMetadataMap } from '@/utils/transitUtils';
 
 /**
  * Search Component
@@ -70,12 +71,24 @@ export const Search: React.FC = React.memo(() => {
         query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 10),
     [query]);
 
+    const lineMetadataMap = React.useMemo(() => 
+        getLineMetadataMap(stops.allFeatures?.features || []), 
+    [stops.allFeatures]);
+
     const isLineLike = React.useMemo(() => {
-        const trimmed = query.trim();
+        const trimmed = query.trim().toUpperCase();
         if (trimmed.length === 0) return false;
-        if (!trimmed.includes(',')) return trimmed.length <= 10 && !trimmed.includes(' ');
-        return linesFromQuery.length > 0;
-    }, [query, linesFromQuery]);
+        
+        if (trimmed.includes(',')) {
+            return linesFromQuery.length > 0 && linesFromQuery.every(l => 
+                lineMetadataMap.has(l) || /^[A-C]|S\d+|R\d+|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d$/i.test(l)
+            );
+        }
+        
+        // Match against map OR check if it looks like a PID line (safety net for cache/sync issues)
+        return lineMetadataMap.has(trimmed) || 
+               /^([A-C]|S\d{1,2}|R\d{1,2}|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d|MHD\s?\d{1,2})$/i.test(trimmed);
+    }, [query, linesFromQuery, lineMetadataMap]);
 
     const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== vpState.selectedPlace?.name;
 
@@ -110,6 +123,7 @@ export const Search: React.FC = React.memo(() => {
             platform_code: stop.properties.platform_code,
             is_train: stop.properties.is_train === 1 ? 1 : 0,
             metro_lines: stop.properties.metro_lines,
+            lines: stop.properties.lines,
             coordinates: stop.geometry.coordinates as [number, number]
         };
 
@@ -257,6 +271,7 @@ export const Search: React.FC = React.memo(() => {
                         onHistorySelect={handleHistorySelect}
                         onLineSelect={handleLineSelect}
                         onPlaceSelect={handlePlaceSelect}
+                        lineMetadataMap={lineMetadataMap}
                     />
                 )}
             </Box>

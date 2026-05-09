@@ -1,17 +1,8 @@
-import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
+import React, { useEffect, type ReactNode } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-
-interface PWAContextValue {
-    offlineReady: boolean;
-    setOfflineReady: (ready: boolean) => void;
-    needRefresh: boolean;
-    setNeedRefresh: (refresh: boolean) => void;
-    updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
-}
-
-const PWAContext = createContext<PWAContextValue | null>(null);
+import { PWAContext } from '../state/pwa-context';
 
 export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { t } = useTranslation();
@@ -39,7 +30,6 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [needRefresh, updateServiceWorker, t]);
 
-
     return (
         <PWAContext.Provider
             value={{
@@ -53,12 +43,4 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             {children}
         </PWAContext.Provider>
     );
-};
-
-export const usePWA = (): PWAContextValue => {
-    const context = useContext(PWAContext);
-    if (!context) {
-        throw new Error('usePWA must be used within a PWAProvider');
-    }
-    return context;
 };

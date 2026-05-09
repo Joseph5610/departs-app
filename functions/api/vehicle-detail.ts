@@ -1,18 +1,9 @@
-import { Env, GolemioVehicleFeature } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, sanitizeId } from "../_utils/api-utils";
-import { normalizeVehicleFeature } from "../_utils/transit-utils";
-import { getVehicleColor } from "../_utils/vehicle-colors";
-interface ShapeFeature {
-    geometry: {
-        type: string;
-        coordinates: [number, number];
-    };
-}
+import { Env, GolemioVehiclePayload, AppVehicleDetail, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "../_utils/types";
+import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, sanitizeId, fixCommaSpacing } from "../_utils/api-utils";
+import { getVehicleColor, isNightRoute } from "../_utils/vehicle-colors";
+import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../_utils/enrichment";
 
-/**
- * Retrieves detailed information about a specific vehicle and its current trip.
- * Includes real-time position, scheduled stop times, and the trip's shape.
- */
+
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
@@ -38,16 +29,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         let isStatic = false;
 
         if (!vehicleId) {
-            // No vehicle ID provided - direct static fallback
             ({ response, isStatic } = await fetchStaticTrip());
         } else {
-            // Try real-time first with matrix parameter (essential for some Golemio endpoints to link trip data)
             response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
                 cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
                 searchParams: { scopes }
             });
 
-            // If real-time fails (e.g. 404), fall back to static GTFS trip data
             if (!response.ok) {
                 console.warn(`Real-time fetch failed (${response.status}), falling back to static GTFS for trip ${tripId}`);
                 ({ response, isStatic } = await fetchStaticTrip());
@@ -58,56 +46,94 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = (await response.json()) as any;
+        const data = await response.json() as GolemioVehiclePayload;
 
-        // Standardize output structure: handle FeatureCollection, Feature, or flat object
-        let normalizedFeature: GolemioVehicleFeature;
+        // Golemio returns either a FeatureCollection or a bare Feature.
+        // Extract properties from whichever shape we received.
+        const feature = data.features?.[0];
+        const p: Partial<GolemioVehicleProperties> = feature?.properties ?? data;
+        const geometry = feature?.geometry ?? data.geometry ?? null;
+        const extracted_vehicle_id = p.vehicle_id ? String(p.vehicle_id) : (p.id ? String(p.id) : '');
+        const gtfs_trip_id = p.gtfs_trip_id || tripId;
+        const route_short_name = p.route_short_name || '';
+        const route_type = p.route_type || '';
+        const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
+        const bearing = p.bearing !== undefined ? Number(p.bearing) : null;
+        const delay = p.delay !== undefined ? Number(p.delay) : 0;
+        const state_position = p.state_position;
+        const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name);
+        
+        const vd = data.vehicle_descriptor || p.vehicle_descriptor || {};
 
-        if (data.type === 'FeatureCollection' && Array.isArray(data.features) && data.features.length > 0) {
-            normalizedFeature = normalizeVehicleFeature(data.features[0], tripId);
-        } else if (data.type === 'Feature') {
-            normalizedFeature = normalizeVehicleFeature(data as GolemioVehicleFeature, tripId);
-        } else {
-            // Flat object (typical for gtfs/trips)
-            const mockFeature: GolemioVehicleFeature = {
-                type: 'Feature',
-                geometry: data.geometry || null,
-                properties: data as GolemioVehicleFeature['properties']
-            };
-            normalizedFeature = normalizeVehicleFeature(mockFeature, tripId);
-        }
+        const run_number = String(p.run_number || '');
+        const last_stop_sequence = Number(data.last_stop_sequence || p.last_stop_sequence || 0);
+        const origin_timestamp = data.origin_timestamp || p.origin_timestamp;
 
-        // Final vehicle data: core properties from normalization, plus expanded scope data
-        const vehicleData: Record<string, any> = {
-            ...normalizedFeature.properties,
-            geometry: normalizedFeature.geometry,
-            // Merge root-level metadata often provided alongside FeatureCollection when using scopes
-            stop_times: data.stop_times || (normalizedFeature.properties as any).stop_times,
-            shapes: data.shapes || (normalizedFeature.properties as any).shapes,
+        const routeColor = getVehicleColor(String(route_type), route_short_name);
+        const is_night = isNightRoute(route_short_name);
+
+        const vehicleData: AppVehicleDetail = {
+            vehicle_id: extracted_vehicle_id,
+            gtfs_trip_id,
+            route_short_name,
+            route_type,
+            trip_headsign,
+            bearing,
+            delay,
+            state_position,
+            next_stop_name,
+            last_stop_sequence,
+            origin_timestamp,
+            run_number,
+            route_color: routeColor,
+            is_night,
+            vehicle_descriptor: {
+                operator: vd.operator,
+                vehicle_type: vd.vehicle_type,
+                is_wheelchair_accessible: vd.is_wheelchair_accessible,
+                is_air_conditioned: vd.is_air_conditioned,
+                has_usb_chargers: vd.has_usb_chargers,
+                vehicle_registration_number: vd.vehicle_registration_number
+            },
+            geometry,
+            is_static_fallback: isStatic,
         };
 
-        // If upstream provided expanded descriptors/metadata at root, use them
-        if (data.vehicle_descriptor) vehicleData.vehicle_descriptor = data.vehicle_descriptor;
-        if (data.run_number !== undefined) vehicleData.run_number = data.run_number;
-        if (data.origin_timestamp) vehicleData.origin_timestamp = data.origin_timestamp;
-        if (data.last_stop_sequence !== undefined) vehicleData.last_stop_sequence = data.last_stop_sequence;
-        if (data.next_stop_name) vehicleData.next_stop_name = data.next_stop_name;
+        // Process Stop Times
+        const stopTimesData = data.stop_times;
+        if (stopTimesData?.features) {
+            vehicleData.stop_times = {
+                features: stopTimesData.features.map((st: GolemioStopTimeFeature) => {
+                    const stProps = st.properties;
+                    const stopId = stProps.stop_id;
+                    const stopName = stProps.stop_name;
+                    let metroLines = getMetroLinesForStop(stopId);
+                    
+                    if (metroLines.length === 0 && stopName) {
+                        metroLines = getMetroLinesForHeadsign(stopName);
+                    }
 
-        vehicleData.is_static_fallback = isStatic;
+                    return {
+                        type: 'Feature',
+                        geometry: st.geometry,
+                        properties: {
+                            ...stProps,
+                            metro_lines: metroLines
+                        }
+                    };
+                })
+            };
+        }
 
-        // Shape processing: Build a GeoJSON LineString directly
-        if (vehicleData.shapes && !Array.isArray(vehicleData.shapes) && typeof vehicleData.shapes === 'object') {
-            const shapesObj = vehicleData.shapes as { features?: ShapeFeature[] };
-            if (shapesObj.features && shapesObj.features.length >= 2) {
-                const coordinates = shapesObj.features
-                    .filter((f: ShapeFeature) => f.geometry.type === 'Point')
-                    .map((f: ShapeFeature) => f.geometry.coordinates);
-                
-                const routeName = vehicleData.route_short_name || '';
-                const routeType = vehicleData.route_type || 0;
-                
-                // Important: Need to import getVehicleColor dynamically or statically in this file now
-                // Wait, it's better to just use getVehicleColor which we can import at the top of the file!
+        // Shape processing: Build a GeoJSON LineString
+        const shapes = data.shapes;
+        if (shapes) {
+            const shapesFeatures = 'features' in shapes ? shapes.features : (Array.isArray(shapes) ? shapes : null);
+            
+            if (shapesFeatures && shapesFeatures.length >= 2) {
+                const coordinates = shapesFeatures
+                    .filter((sf: GolemioShapeFeature) => sf.geometry?.type === 'Point')
+                    .map((sf: GolemioShapeFeature) => sf.geometry.coordinates as [number, number]);
                 
                 vehicleData.route_geojson = {
                     type: 'FeatureCollection',
@@ -118,13 +144,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                             coordinates: coordinates
                         },
                         properties: {
-                            line_color: getVehicleColor(routeType, routeName)
+                            route_color: routeColor
                         }
                     }]
                 };
             }
         }
-        delete vehicleData.shapes;
 
         return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
     } catch (error) {

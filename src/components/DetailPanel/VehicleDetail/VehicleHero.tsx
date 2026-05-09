@@ -6,6 +6,7 @@ import { useShare } from '../../../hooks/features/useShare';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { Badge } from '@/components/ui/badge';
 import type { VehicleHeroProps } from './types';
+import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 
 export const VehicleHero: React.FC<VehicleHeroProps> = ({
     displayVehicle,
@@ -18,7 +19,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
     if (!displayVehicle) return null;
 
-    const bgColor = displayVehicle.line_color || '#AD0B00';
+    const bgColor = displayVehicle.route_color || FALLBACK_ROUTE_COLOR;
 
     return (
         <Surface variant="tinted" padding="none" className="overflow-hidden rounded-2xl">
@@ -41,7 +42,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             <MapPin size={8} className={cn(isFollowing ? "fill-current" : "")} />
                         </Box>
                     </button>
-                    
+
                     <button
                         className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg w-7 h-7 backdrop-blur-md transition-colors flex items-center justify-center text-white/90 active:scale-90"
                         onClick={(e) => {

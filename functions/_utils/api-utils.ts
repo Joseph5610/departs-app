@@ -92,21 +92,34 @@ export async function golemioFetch(
         });
     }
 
-    // Some providers expect literal brackets in keys (e.g. stopIds[]).
-    // URLSearchParams automatically encodes them as %5B and %5D.
-    // We convert back to literal brackets ONLY for the keys/params to ensure compatibility.
     const finalUrl = url.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
 
-    return fetch(finalUrl, {
-        headers: {
-            "X-Access-Token": env.GOLEMIO_API_KEY,
-            "Content-Type": "application/json",
-        },
-        cf: {
-            cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
-            cacheEverything: true,
+    // Timeout implementation for Cloudflare Workers
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    try {
+        const response = await fetch(finalUrl, {
+            headers: {
+                "X-Access-Token": env.GOLEMIO_API_KEY,
+                "Content-Type": "application/json",
+            },
+            cf: {
+                cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
+                cacheEverything: true,
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error: unknown) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error("Golemio API request timed out (15s)");
         }
-    });
+        throw error;
+    }
 }
 
 /**
@@ -176,4 +189,11 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
 export function sanitizeId(id: string | null): string | null {
     if (!id) return null;
     return id.replace(/[^a-zA-Z0-9_,-]/g, '');
+}
+/**
+ * Fixes missing spaces after commas (common in Golemio data).
+ */
+export function fixCommaSpacing(text: string | undefined | null): string | undefined {
+    if (!text) return undefined;
+    return text.replace(/,([^\s])/g, ', $1');
 }

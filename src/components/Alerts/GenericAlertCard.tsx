@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack } from '@/components/ui/layout';
-import { 
-    Alert, 
-    AlertDescription, 
-    AlertTitle 
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle
 } from '@/components/ui/alert';
 
 interface GenericAlertCardProps {
@@ -21,8 +20,7 @@ interface GenericAlertCardProps {
     isActive?: boolean;
     isFuture?: boolean;
     showStatus?: boolean;
-    lines?: string[];
-    lineColors?: (line: string) => string;
+    lines?: Array<{ name: string; route_color: string; type: string }>;
 }
 
 /**
@@ -40,17 +38,16 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
     isActive,
     isFuture,
     showStatus = false,
-    lines,
-    lineColors
+    lines
 }) => {
     const { t } = useTranslation();
     const isHigh = priority === 'high' || priority === '1';
     const isNormal = priority === 'normal' || priority === '2';
-    
+
     const alertVariant = isHigh ? 'destructive' : 'default';
 
     const CardContent = (
-        <Alert 
+        <Alert
             variant={alertVariant}
             className={cn(
                 "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl",
@@ -64,7 +61,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 "h-4 w-4 mt-0.5 shrink-0",
                 isHigh ? "!text-destructive" : isNormal ? "!text-amber-500" : "text-muted-foreground"
             )} />
-            
+
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
                 {showStatus && (isFuture ? (
                     <HStack gap={1} className="mb-0.5">
@@ -81,7 +78,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                         </span>
                     </HStack>
                 ) : null)}
-                
+
                 <span className={cn(
                     "font-bold text-sm leading-tight transition-colors",
                     isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
@@ -98,17 +95,17 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                     </p>
                 )}
 
-                {(lines && lines.length > 0 && lineColors) || validFrom ? (
+                {(lines && lines.length > 0) || validFrom ? (
                     <Stack gap={2}>
-                        {lines && lines.length > 0 && lineColors && (
+                        {lines && lines.length > 0 && (
                             <HStack gap={1} className="flex-wrap">
-                                {lines.map(line => (
+                                {lines.map((line, idx) => (
                                     <span
-                                        key={line}
+                                        key={`${line.name}-${idx}`}
                                         className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm ring-1 ring-white/10"
-                                        style={{ backgroundColor: lineColors(line) }}
+                                        style={{ backgroundColor: line.route_color }}
                                     >
-                                        {line}
+                                        {line.name}
                                     </span>
                                 ))}
                             </HStack>
