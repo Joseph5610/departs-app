@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.38.5] - 2026-05-13
+
+### Changed
+- **UI**: Increased touch target sizes and paddings across the departure board components (`DepartureItem`, `DepartureBoard`, `DepartureBoardHeader`) to improve accessibility and interaction on mobile devices.
+- **UI**: Slightly increased font sizes and icon sizes for better legibility on mobile screens.
+
 ## [0.38.4] - 2026-05-12
 
 ### Added

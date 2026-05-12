@@ -237,10 +237,10 @@ export const DepartureBoardHeader = React.memo(() => {
                                     key={name}
                                     onClick={() => toggleLineFilter(name)}
                                     className={cn(
-                                        "inline-flex items-center justify-center text-[10.5px] text-white font-bold shrink-0 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
+                                        "inline-flex items-center justify-center text-[11px] text-white font-bold shrink-0 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
                                         (line.type === '1' || ['A', 'B', 'C'].includes(name)) 
-                                            ? "rounded-full w-[22px] h-[22px]" 
-                                            : "rounded-[4px] h-[22px] px-1.5 min-w-[22px]",
+                                            ? "rounded-full w-[24px] h-[24px]" 
+                                            : "rounded-[4px] h-[24px] px-2 min-w-[24px]",
                                         isDimmed ? "opacity-30 scale-95" : "opacity-100",
                                         isActive && "ring-2 ring-white z-10 shadow-lg"
                                     )}

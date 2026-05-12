@@ -118,10 +118,10 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                             >
                                                 <span
                                                     className={cn(
-                                                        "inline-flex items-center justify-center font-bold text-white text-[11px] shadow-sm shrink-0",
+                                                        "inline-flex items-center justify-center font-bold text-white text-[11.5px] shadow-sm shrink-0",
                                                         (isMetro || ['A', 'B', 'C'].includes(String(lineGroup.line).toUpperCase()))
-                                                            ? "rounded-full w-[22px] h-[22px]"
-                                                            : "rounded-[4px] h-[22px] px-2 min-w-[22px]"
+                                                            ? "rounded-full w-[24px] h-[24px]"
+                                                            : "rounded-[4px] h-[24px] px-2 min-w-[24px]"
                                                     )}
                                                     style={{ 
                                                         backgroundColor: subFirstDep.route_color || '#AD0B00',
@@ -131,7 +131,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                     {lineGroup.line}
                                                 </span>
                                                 <ArrowRight size={12} className="text-muted-foreground/40 shrink-0" />
-                                                <span className="text-foreground/90 text-sm font-semibold truncate min-w-0 flex-1">
+                                                <span className="text-foreground/90 text-[15px] font-semibold truncate min-w-0 flex-1">
                                                     {subGroup.headsign}
                                                     {subFirstDep.headsign_metro_lines?.map((line) => (
                                                         <span 
@@ -159,7 +159,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                             /* Secondary Variant Header - Vibrant Glow Style */
                                             <HStack 
                                                 gap={3} 
-                                                className="px-0 py-2 items-center border-t border-white/5"
+                                                className="px-0 py-2.5 items-center border-t border-white/5"
                                                 style={{
                                                     background: subFirstDep.route_color 
                                                         ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 50%) 0%, transparent 100%)` 
@@ -172,7 +172,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                 />
                                                 <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
                                                     <ArrowRight size={10} className="text-muted-foreground/40 shrink-0" />
-                                                    <span className="text-foreground/90 text-[13px] font-bold truncate">
+                                                    <span className="text-foreground/90 text-[14px] font-bold truncate">
                                                         {subGroup.headsign}
                                                     </span>
                                                 </div>
@@ -202,7 +202,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         {hasMore && (
                                             <button
                                                 onClick={() => onToggleGroup(subGroup.groupId)}
-                                                className="w-full py-2 flex items-center justify-center gap-2 bg-white/2 hover:bg-white/6 transition-colors border-t border-white/5 text-muted-foreground/50 hover:text-foreground text-[10px] font-bold uppercase tracking-wider"
+                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-white/2 hover:bg-white/6 transition-colors border-t border-white/5 text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider"
                                             >
                                                 <ChevronDown 
                                                     size={12} 

@@ -56,7 +56,7 @@ export const DepartureItem = memo(({
             onPointerDown={handlePointerDown}
             onClick={handleClick}
             className={cn(
-                "w-full flex items-center gap-2 py-2 px-3 text-left transition-colors",
+                "w-full flex items-center gap-2 py-2.5 px-3 text-left transition-colors",
                 dep.tripId
                     ? "hover:bg-white/6 cursor-pointer active:bg-white/10"
                     : "cursor-default",
@@ -65,7 +65,7 @@ export const DepartureItem = memo(({
         >
             {/* Time + Delay Block */}
             <HStack gap={1.5} className="shrink-0 w-[82px] items-baseline">
-                <span className="text-muted-foreground text-xs tabular-nums font-medium">
+                <span className="text-muted-foreground text-[12.5px] tabular-nums font-medium">
                     {format(parseISO(dep.scheduled), 'HH:mm')}
                 </span>
                 <HStack gap={0.5} className="items-center">
@@ -88,16 +88,16 @@ export const DepartureItem = memo(({
             {/* Icons Block - before headsign like official PID tables */}
             <div className="flex gap-1.5 opacity-25 items-center min-h-[14px] shrink-0 min-w-[32px] ml-3">
                 {dep.is_wheelchair_accessible && (
-                    <Accessibility size={12} strokeWidth={2.5} />
+                    <Accessibility size={13} strokeWidth={2.5} />
                 )}
                 {dep.is_air_conditioned && (
-                    <Snowflake size={12} strokeWidth={2.5} />
+                    <Snowflake size={13} strokeWidth={2.5} />
                 )}
             </div>
 
             {/* Headsign (shown when not redundant with group header) */}
             {!hideHeadsign && (
-                <span className="text-foreground text-sm font-medium leading-tight min-w-0 flex-1 truncate">
+                <span className="text-foreground text-[14px] font-medium leading-tight min-w-0 flex-1 truncate">
                     {dep.headsign}
                     {dep.headsign_metro_lines?.map((line) => (
                         <span 
@@ -118,16 +118,16 @@ export const DepartureItem = memo(({
                 {/* Platform Badge (trains only, metro is handled in group header) */}
                 {dep.platform && isTrain && (
                     <div 
-                        className="flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1 h-[15px] bg-white/8 rounded-[3px] border border-white/5 shadow-sm mr-1"
+                        className="flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1.5 h-[16px] bg-white/8 rounded-[3px] border border-white/5 shadow-sm mr-1"
                         title={t('map.departures.platform')}
                     >
-                        <Train size={8} strokeWidth={2.5} className="opacity-40" />
-                        <span className="text-[9px] font-bold text-foreground/60 leading-none">{dep.platform}</span>
+                        <Train size={9} strokeWidth={2.5} className="opacity-40" />
+                        <span className="text-[9.5px] font-bold text-foreground/60 leading-none">{dep.platform}</span>
                     </div>
                 )}
 
                 {/* Countdown */}
-                <span className="text-sm font-bold tabular-nums leading-none shrink-0 min-w-[48px] text-right">
+                <span className="text-[14px] font-bold tabular-nums leading-none shrink-0 min-w-[48px] text-right">
                     <Countdown timestamp={dep.timestamp} />
                 </span>
             </HStack>
