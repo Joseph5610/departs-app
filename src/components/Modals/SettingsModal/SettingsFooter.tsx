@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Github, Scale } from 'lucide-react';
+import { RefreshCw, Clock, Database, Code, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWA } from '../../../state/pwa-context';
 import { usePreferences } from '../../../state/contexts';
+import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 
 
 export const SettingsFooter: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { state, actions } = usePreferences();
+    const { updatedAt } = useStops();
     const { searchHistory } = state;
     const { clearHistory } = actions;
     const [isChecking, setIsChecking] = useState(false);
@@ -117,7 +119,7 @@ export const SettingsFooter: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                         >
-                            <Github size={14} />
+                            <Code size={14} />
                             {t('settings.viewSource')}
                         </a>
                     </HStack>
@@ -131,6 +133,20 @@ export const SettingsFooter: React.FC = () => {
                         {t('settings.license')}
                     </a>
                 </Stack>
+
+                {updatedAt && (
+                    <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
+                        {t('settings.lastStopUpdate', { 
+                            date: new Date(updatedAt).toLocaleString(i18n.language, {
+                                day: 'numeric',
+                                month: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) 
+                        })}
+                    </div>
+                )}
             </Stack>
         </Stack>
     );

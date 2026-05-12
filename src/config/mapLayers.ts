@@ -272,7 +272,8 @@ export const selectedVehicleDirectionLayer: SymbolLayerSpecification = {
             ['any',
                 ['!', ['has', 'bearing']],
                 ['==', ['get', 'bearing'], null],
-                ['==', ['to-string', ['get', 'bearing']], '']
+                ['==', ['to-string', ['get', 'bearing']], ''],
+                ['==', ['to-number', ['coalesce', ['get', 'bearing'], 0]], 0]
             ],
             0,
             1
@@ -337,7 +338,8 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
             ['any',
                 ['!', ['has', 'bearing']],
                 ['==', ['get', 'bearing'], null],
-                ['==', ['to-string', ['get', 'bearing']], '']
+                ['==', ['to-string', ['get', 'bearing']], ''],
+                ['==', ['to-number', ['coalesce', ['get', 'bearing'], 0]], 0]
             ],
             0,
             1

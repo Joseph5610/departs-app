@@ -51,15 +51,15 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
             variant={alertVariant}
             className={cn(
                 "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl",
-                isHigh && "!bg-destructive/20 !border-destructive/50 shadow-[0_0_12px_rgba(239,68,68,0.15)]",
-                isNormal && "!bg-amber-500/15 !border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.15)]",
+                isHigh && "bg-destructive/20! border-destructive/50! shadow-[0_0_12px_rgba(239,68,68,0.15)]",
+                isNormal && "bg-amber-500/15! border-amber-500/40! shadow-[0_0_12px_rgba(245,158,11,0.15)]",
                 link && "hover:brightness-125 cursor-pointer group",
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
         >
             <AlertTriangle className={cn(
                 "h-4 w-4 mt-0.5 shrink-0",
-                isHigh ? "!text-destructive" : isNormal ? "!text-amber-500" : "text-muted-foreground"
+                isHigh ? "text-destructive!" : isNormal ? "text-amber-500!" : "text-muted-foreground"
             )} />
 
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>

@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/layout';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import { Badge } from '@/components/ui/badge';
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DetailPanelProps {
@@ -49,35 +49,33 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     );
 
     const platformBadge = platformCode && (
-        <Badge variant="outline" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-muted border border-border text-muted-foreground text-[13px] font-bold tabular-nums p-0">
+        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 border border-white/10 text-foreground text-[13px] font-bold tabular-nums mr-1.5">
             {platformCode}
-        </Badge>
+        </span>
     );
 
     const headerContent = (
-        <HStack justify="between" className="w-full">
-            <HStack className="gap-2 min-w-0 flex-1">
+        <HStack justify="between" className="w-full items-center pt-2">
+            <HStack className="gap-1 min-w-0 flex-1 items-center">
                 {backButton}
-                <HStack className="gap-2 min-w-0 flex-1">
-                    {isMobile ? (
-                        <DrawerTitle className="text-xl font-bold text-foreground line-clamp-2 tracking-tight">
-                            {title || ''}
-                        </DrawerTitle>
-                    ) : (
-                        <SheetTitle className="text-xl font-bold text-foreground line-clamp-2 tracking-tight text-left">
-                            {title || ''}
-                        </SheetTitle>
-                    )}
-                    {platformBadge}
-                </HStack>
+                {platformBadge}
+                {isMobile ? (
+                    <DrawerTitle className="text-xl font-semibold text-foreground line-clamp-2 tracking-tight leading-tight">
+                        {title || ''}
+                    </DrawerTitle>
+                ) : (
+                    <SheetTitle className="text-xl font-semibold text-foreground line-clamp-2 tracking-tight text-left leading-tight">
+                        {title || ''}
+                    </SheetTitle>
+                )}
             </HStack>
             <Button
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground/60 hover:text-foreground"
             >
-                <X size={20} />
+                <X size={24} />
             </Button>
         </HStack>
     );
@@ -168,7 +166,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 showCloseButton={false}
                 hideOverlay={true}
                 variant="tinted"
-                className="w-[var(--sidebar-width)] sm:max-w-[var(--sidebar-width)] !top-5 !left-5 !bottom-5 !h-[calc(100dvh-2.5rem)] p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
+                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

@@ -12,7 +12,7 @@ import { calculateDistance } from '../../utils/transitUtils';
  */
 export const useStopDistance = () => {
     const selectedStop = useSelectedStop();
-    const { userLocation, userSpeed } = useViewport();
+    const { userLocation } = useViewport();
 
     return useMemo(() => {
         const coords = selectedStop?.coordinates;
@@ -22,14 +22,12 @@ export const useStopDistance = () => {
         const distance = calculateDistance(userLocation, coords);
 
         const isAtStop = distance < 20;
-        const isMovingFast = userSpeed !== null && userSpeed > 4;
 
         return {
             distance: Math.round(distance),
             time: Math.ceil(distance / 60),
             isAtStop,
-            showCatchIndicator: distance < 750 && !isMovingFast,
             isReasonableWalkingDistance: distance < 750
         };
-    }, [selectedStop?.coordinates, userLocation, userSpeed]);
+    }, [selectedStop?.coordinates, userLocation]);
 };

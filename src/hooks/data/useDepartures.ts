@@ -1,16 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo } from 'react';
 import type { Departure } from '../../types/transit';
 import { useSelection, usePreferences } from '../../state/contexts';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
-export interface DepartureGroup {
+export interface DepartureSubGroup {
     groupId: string;
-    line: string;
-    type: string | number;
+    headsign: string;
     departures: Departure[];
+    firstTime: number;
+}
+
+export interface DepartureLineGroup {
+    lineGroupId: string;
+    line: string | number;
+    type: string | number;
+    subGroups: DepartureSubGroup[];
     firstTime: number;
 }
 
@@ -47,12 +54,8 @@ export const useDepartures = () => {
             if (!stopId) {
                 return null;
             }
-            return apiFetch<DeparturesResponse>(`/api/departures?stopId=${encodeURIComponent(stopId)}`);
-        },
-        enabled: !!stopId,
-        refetchInterval: TRANSIT_REFRESH_MS,
-        staleTime: TRANSIT_REFRESH_MS,
-        select: (data) => {
+            const data = await apiFetch<DeparturesResponse>(`/api/departures?stopId=${encodeURIComponent(stopId)}`);
+            
             if (!data?.departures) return data;
             
             const now = Date.now();
@@ -70,6 +73,12 @@ export const useDepartures = () => {
                     lastUpdate = prev.timestamp;
                 }
 
+                // Update ref immediately for the next fetch
+                prevDataRef.current[key] = {
+                    delay: dep.delay,
+                    timestamp: lastUpdate || now
+                };
+
                 return {
                     ...dep,
                     delayDelta: delta,
@@ -81,25 +90,11 @@ export const useDepartures = () => {
                 ...data,
                 departures: enriched
             };
-        }
+        },
+        enabled: !!stopId,
+        refetchInterval: TRANSIT_REFRESH_MS,
+        staleTime: TRANSIT_REFRESH_MS
     });
-
-    // Update ref after data changes (impure part moved to effect)
-    useEffect(() => {
-        if (!query.data?.departures) return;
-        
-        const now = Date.now();
-        query.data.departures.forEach((dep: Departure) => {
-            const key = `${dep.tripId}-${dep.scheduled}`;
-            const prev = prevDataRef.current[key];
-            const lastUpdate = (prev && prev.delay !== dep.delay) ? now : prev?.timestamp;
-
-            prevDataRef.current[key] = {
-                delay: dep.delay,
-                timestamp: lastUpdate || now
-            };
-        });
-    }, [query.data]);
 
     const enrichedDepartures = useMemo((): Departure[] => query.data?.departures || [], [query.data]);
     const { selectedLine } = selState;
@@ -109,30 +104,66 @@ export const useDepartures = () => {
         return enrichedDepartures.filter(dep => String(dep.line).toUpperCase() === selectedLine.toUpperCase());
     }, [enrichedDepartures, selectedLine]);
 
-    const groupedDepartures = useMemo((): DepartureGroup[] => {
-        if (filteredDepartures.length === 0) {
-            return [];
-        }
-        const groups: Record<string, Departure[]> = {};
+    const groupedDepartures = useMemo((): DepartureLineGroup[] => {
+        if (filteredDepartures.length === 0) return [];
+
+        // 1. Group by Line -> DirectionId -> Headsign
+        const lineMap = new Map<string, Map<string, Map<string, Departure[]>>>();
         filteredDepartures.forEach((dep) => {
-            // Metro (type 1) is grouped by line AND direction
-            const lineName = String(dep.line).toUpperCase();
-            const isMetro = String(dep.type) === '1' || ['A', 'B', 'C'].includes(lineName);
-            const key = isMetro ? `${lineName}-${dep.directionId}` : lineName;
-            if (!groups[key]) {
-                groups[key] = [];
-            }
-            groups[key].push(dep);
+            const line = String(dep.line).toUpperCase();
+            if (!lineMap.has(line)) lineMap.set(line, new Map());
+            
+            const dirId = String(dep.directionId ?? '');
+            const dirMap = lineMap.get(line)!;
+            if (!dirMap.has(dirId)) dirMap.set(dirId, new Map());
+            
+            const headsignMap = dirMap.get(dirId)!;
+            if (!headsignMap.has(dep.headsign)) headsignMap.set(dep.headsign, []);
+            headsignMap.get(dep.headsign)!.push(dep);
         });
 
-        const result = Object.entries(groups).map(([key, deps]) => {
-            return {
-                groupId: key,
-                line: deps[0].line,
-                type: deps[0].type,
-                departures: deps,
-                firstTime: new Date(deps[0].timestamp).getTime()
-            };
+        // 2. Merge direction groups that share the same headsign for the same line
+        const result: DepartureLineGroup[] = [];
+        lineMap.forEach((dirMap, line) => {
+            const mergedDirs: Array<{ ids: Set<string>; headsigns: Map<string, Departure[]> }> = [];
+            
+            dirMap.forEach((headsignMap, dirId) => {
+                let target = mergedDirs.find(md => 
+                    Array.from(headsignMap.keys()).some(hs => md.headsigns.has(hs))
+                );
+
+                if (!target) {
+                    target = { ids: new Set(), headsigns: new Map() };
+                    mergedDirs.push(target);
+                }
+                
+                target.ids.add(dirId);
+                headsignMap.forEach((deps, hs) => {
+                    if (!target!.headsigns.has(hs)) target!.headsigns.set(hs, []);
+                    target!.headsigns.get(hs)!.push(...deps);
+                });
+            });
+
+            // 3. Convert to final structure
+            mergedDirs.forEach((md) => {
+                const subGroups: DepartureSubGroup[] = Array.from(md.headsigns.entries())
+                    .map(([headsign, deps]) => ({
+                        groupId: `${line}-${Array.from(md.ids).join('_')}-${headsign}`,
+                        headsign,
+                        departures: deps.sort((a, b) => new Date(a.scheduled).getTime() - new Date(b.scheduled).getTime()),
+                        firstTime: Math.min(...deps.map(d => new Date(d.timestamp).getTime()))
+                    }))
+                    .sort((a, b) => a.firstTime - b.firstTime);
+
+                const firstDep = subGroups[0].departures[0];
+                result.push({
+                    lineGroupId: `${line}-${Array.from(md.ids).join('_')}`,
+                    line: firstDep.line,
+                    type: firstDep.type,
+                    subGroups,
+                    firstTime: subGroups[0].firstTime
+                });
+            });
         });
 
         if (departureSort === 'line') {

@@ -59,6 +59,7 @@ export const useNavigate = () => {
 
     return {
         handleNavigate,
-        distanceLabel
+        distanceLabel,
+        stopDistanceInfo
     };
 };

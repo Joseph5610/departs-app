@@ -4,7 +4,8 @@
     "linkCopied": "Odkaz byl zkopírován do schránky",
     "copyError": "Nepodařilo se zkopírovat odkaz",
     "retry": "Zkusit znovu",
-    "loading": "Načítání..."
+    "loading": "Načítání...",
+    "share": "Sdílet"
   },
   "search": {
     "placeholder": "Hledat zastávky, adresy nebo linky...",
@@ -63,7 +64,8 @@
     "clearHistory": {
       "button": "Smazat historii hledání",
       "success": "Historie smazána"
-    }
+    },
+    "lastStopUpdate": "Databáze zastávek aktualizována: {{date}}"
   },
   "welcome": {
     "title": "Vítejte v departs.app",
@@ -132,12 +134,13 @@
         "description": "Využijte noční tramvaje a autobusy, které zajišťujú dopravu až do ranních hodin."
       },
       "delay": "+{{minutes}}min zpoždění",
-      "moreConnections_one": "+ {{count}} další spoj",
-      "moreConnections_few": "+ {{count}} další spoje",
-      "moreConnections_other": "+ {{count}} dalších spojů",
+      "moreConnections_one": "{{count}} další spoj",
+      "moreConnections_few": "{{count}} další spoje",
+      "moreConnections_other": "{{count}} dalších spojů",
       "showLess": "Zobrazit méně",
       "now": "Nyní",
       "minutes": "{{count}} min",
+      "platform": "Nástupiště / Kolej",
       "sortByLine": "Seřadit podle linky",
       "sortByDeparture": "Seřadit podle času odjezdu",
       "distance_one": "{{distance}}m • {{count}} minuta pěšky",
@@ -147,7 +150,8 @@
       "kilometers": "{{distance}} km",
       "onTime": "Načas",
       "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
-      "openInMaps": "Otevřít v Mapách",
+      "openInMaps": "Otevřít Mapy",
+      "officialBoard": "Virtuální tablo",
       "atStop": "Jste na zastávce",
       "catchStatus": {
         "success": "Stíháš to",
@@ -158,7 +162,9 @@
         "success": "Stíháš",
         "warning": "Možná",
         "error": "Nestíháš"
-      }
+      },
+      "addToFavorites": "Přidat do oblíbených",
+      "removeFromFavorites": "Odebrat z oblíbených"
     }
   },
   "update": {

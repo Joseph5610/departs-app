@@ -1,154 +1,138 @@
-import { useRef } from 'react';
-import { Train } from 'lucide-react';
+import { memo, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
 import { cn } from '@/lib/utils';
-import { getCatchStatus } from '../../../utils/transitUtils';
 import { formatDelay } from '../../../utils/dateUtils';
 import type { Departure } from '../../../types/transit';
 import { useTranslation } from 'react-i18next';
-import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-import { Badge } from '@/components/ui/badge';
+import { HStack } from '@/components/ui/layout';
+import { Accessibility, Snowflake, Train } from 'lucide-react';
 
 interface DepartureItemProps {
     departure: Departure;
-    onDepartureClick: (tripId: string, vehicleId?: string) => void;
-    stopDistanceInfo: {
-        distance: number;
-        time: number;
-        isAtStop: boolean;
-        showCatchIndicator: boolean;
-    } | null;
-    isTrainStop?: boolean;
+    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => void;
+    /** When true, the headsign is already displayed in the group header, so we hide it here */
+    hideHeadsign?: boolean;
 }
 
 /**
  * DepartureItem
  *
- * Re-architected with semantic components. Internalizes layout classes.
+ * Compact, single-line tabular row for a departure.
+ * Layout: [Time] [Icons] [Headsign?] [Delay + Delta] [Platform?] [Countdown]
  */
-export const DepartureItem = ({
-    departure,
+export const DepartureItem = memo(({
+    departure: dep,
     onDepartureClick,
-    stopDistanceInfo,
-    isTrainStop
+    hideHeadsign
 }: DepartureItemProps) => {
     const { t } = useTranslation();
-    const dep = departure;
-
-    const catchStatus = stopDistanceInfo
-        ? getCatchStatus(stopDistanceInfo.distance, dep.timestamp, stopDistanceInfo.isAtStop)
-        : null;
-
-    const clickStartPos = useRef<{ x: number; y: number } | null>(null);
+    const clickStartPos = useRef<{ x: number, y: number } | null>(null);
 
     const handlePointerDown = (e: React.PointerEvent) => {
         clickStartPos.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleClick = (e: React.MouseEvent) => {
-        if (!clickStartPos.current) return;
+        if (!dep.tripId) return;
         
-        const dx = Math.abs(e.clientX - clickStartPos.current.x);
-        const dy = Math.abs(e.clientY - clickStartPos.current.y);
-        const threshold = 5; // 5px threshold
-
-        if (dx < threshold && dy < threshold) {
-            if (dep.tripId) {
-                onDepartureClick(dep.tripId, dep.vehicleId);
+        if (clickStartPos.current) {
+            const dx = e.clientX - clickStartPos.current.x;
+            const dy = e.clientY - clickStartPos.current.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 10) {
+                onDepartureClick(dep.tripId, dep.vehicleId, dep);
             }
         }
         clickStartPos.current = null;
     };
 
+    const isTrain = dep.type === '2' || dep.type === 'train';
+
     return (
-        <Surface
-            asChild
-            variant="tinted"
-            padding="md"
+        <button
+            onPointerDown={handlePointerDown}
+            onClick={handleClick}
             className={cn(
-                "transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-ring rounded-2xl",
-                dep.tripId ? "hover:bg-white/10 cursor-pointer active:scale-[0.98]" : "cursor-default"
+                "w-full flex items-center gap-2 py-2 px-3 text-left transition-colors",
+                dep.tripId
+                    ? "hover:bg-white/6 cursor-pointer active:bg-white/10"
+                    : "cursor-default",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30"
             )}
         >
-            <button
-                onPointerDown={handlePointerDown}
-                onClick={handleClick}
-                className="flex items-center justify-between"
-            >
-            <HStack gap={4} className="min-w-0 flex-1">
-                <Stack gap={0} className="min-w-0 flex-1">
-                    <div className="text-foreground font-semibold leading-normal line-clamp-2">
-                        {dep.headsign}
-                        {dep.headsign_metro_lines?.map((line) => (
-                            <span 
-                                key={line.name} 
-                                className="inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
-                                style={{ backgroundColor: line.route_color }}
-                            >
-                                {line.name}
-                            </span>
-                        ))}
-                    </div>
-                    <HStack gap={2} className="text-muted-foreground text-[10px] mt-1 flex-wrap">
-                        <span className="tabular-nums">
-                            {format(parseISO(dep.scheduled), 'HH:mm')}
+            {/* Time + Delay Block */}
+            <HStack gap={1.5} className="shrink-0 w-[82px] items-baseline">
+                <span className="text-muted-foreground text-xs tabular-nums font-medium">
+                    {format(parseISO(dep.scheduled), 'HH:mm')}
+                </span>
+                <HStack gap={0.5} className="items-center">
+                    {typeof dep.delay === 'number' && dep.delay !== 0 && (
+                        <span className={cn(
+                            "text-[10px] font-bold tabular-nums",
+                            dep.delay > 0 ? "text-rose-400" : "text-sky-400"
+                        )}>
+                            {formatDelay(dep.delay)}
                         </span>
-                        {isTrainStop && dep.platform && (
-                            <Badge
-                                variant="outline"
-                                className="h-5 px-2 rounded-lg text-[10px] font-bold tracking-wider flex items-center gap-1.5 bg-foreground/5 border-foreground/10! text-foreground"
-                                title={t('search.platform', { code: dep.platform })}
-                            >
-                                <Train size={12} strokeWidth={2.5} className="shrink-0 opacity-60" />
-                                <span className="tabular-nums">{dep.platform}</span>
-                            </Badge>
-                        )}
-                        <HStack gap={1}>
-                            {typeof dep.delay === 'number' && dep.delay !== 0 && (
-                                <span className={cn(
-                                    "font-bold tabular-nums",
-                                    dep.delay > 0 ? "text-rose-400" : "text-sky-400"
-                                )}>
-                                    {formatDelay(dep.delay)}
-                                </span>
-                            )}
-                            <DelayDelta
-                                delta={dep.delayDelta || 0}
-                                lastUpdate={dep.lastDelayUpdate}
-                                isInline={typeof dep.delay === 'number' && dep.delay !== 0}
-                            />
-                        </HStack>
-                    </HStack>
-                </Stack>
+                    )}
+                    <DelayDelta
+                        delta={dep.delayDelta || 0}
+                        lastUpdate={dep.lastDelayUpdate}
+                        isInline={true}
+                    />
+                </HStack>
             </HStack>
 
-            <Stack gap={0} align="end" justify="center" className="min-w-[100px]">
-                <Box className="text-lg font-bold text-emerald-400 tabular-nums leading-none">
-                    <Countdown timestamp={dep.timestamp} />
-                </Box>
-                {stopDistanceInfo?.showCatchIndicator && catchStatus && (
-                    <Box className="mt-2">
-                        <Badge
-                            variant={
-                                catchStatus.status === 'success' ? 'success' :
-                                catchStatus.status === 'warning' ? 'warning' : 'danger'
-                            }
-                            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap gap-1"
-                        >
-                            <span className="text-[8px] leading-none">
-                                {catchStatus.status === 'success' ? '🟢' :
-                                    catchStatus.status === 'warning' ? '🟡' : '🔴'}
-                            </span>
-                            <span className="uppercase tracking-tighter">
-                                {t(`map.departures.catchStatusCompact.${catchStatus.status}`)}
-                            </span>
-                        </Badge>
-                    </Box>
+            {/* Icons Block - before headsign like official PID tables */}
+            <div className="flex gap-1.5 opacity-25 items-center min-h-[14px] shrink-0 min-w-[32px] ml-3">
+                {dep.is_wheelchair_accessible && (
+                    <Accessibility size={12} strokeWidth={2.5} />
                 )}
-            </Stack>
-            </button>
-        </Surface>
+                {dep.is_air_conditioned && (
+                    <Snowflake size={12} strokeWidth={2.5} />
+                )}
+            </div>
+
+            {/* Headsign (shown when not redundant with group header) */}
+            {!hideHeadsign && (
+                <span className="text-foreground text-sm font-medium leading-tight min-w-0 flex-1 truncate">
+                    {dep.headsign}
+                    {dep.headsign_metro_lines?.map((line) => (
+                        <span 
+                            key={line.name} 
+                            className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-0.5 rounded-sm text-[9px] text-white font-black ml-1 align-baseline -translate-y-px"
+                            style={{ backgroundColor: line.route_color }}
+                        >
+                            {line.name}
+                        </span>
+                    ))}
+                </span>
+            )}
+            {/* Spacer when headsign is hidden */}
+            {hideHeadsign && <div className="flex-1 min-w-0" />}
+
+            {/* Right Side Info Block */}
+            <HStack gap={1.5} className="shrink-0 items-center">
+                {/* Platform Badge (trains only, metro is handled in group header) */}
+                {dep.platform && isTrain && (
+                    <div 
+                        className="flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1 h-[15px] bg-white/8 rounded-[3px] border border-white/5 shadow-sm mr-1"
+                        title={t('map.departures.platform')}
+                    >
+                        <Train size={8} strokeWidth={2.5} className="opacity-40" />
+                        <span className="text-[9px] font-bold text-foreground/60 leading-none">{dep.platform}</span>
+                    </div>
+                )}
+
+                {/* Countdown */}
+                <span className="text-sm font-bold tabular-nums leading-none shrink-0 min-w-[48px] text-right">
+                    <Countdown timestamp={dep.timestamp} />
+                </span>
+            </HStack>
+        </button>
     );
-};
+});
+
+DepartureItem.displayName = 'DepartureItem';

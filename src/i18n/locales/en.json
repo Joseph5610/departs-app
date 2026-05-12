@@ -4,7 +4,8 @@
     "linkCopied": "Link copied to clipboard",
     "copyError": "Could not copy link",
     "retry": "Retry",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "share": "Share"
   },
   "search": {
     "placeholder": "Search stops, addresses or lines...",
@@ -62,7 +63,8 @@
     "clearHistory": {
       "button": "Clear search history",
       "success": "History cleared"
-    }
+    },
+    "lastStopUpdate": "Stop database updated: {{date}}"
   },
   "welcome": {
     "title": "Welcome to departs.app",
@@ -138,6 +140,7 @@
       "minutes": "{{count}} min",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
+      "platform": "Platform / Track",
       "distance_one": "{{distance}}m • {{count}} minute walk",
       "distance_other": "{{distance}}m • {{count}} minutes walk",
       "meters": "{{distance}} m",
@@ -145,6 +148,7 @@
       "onTime": "On time",
       "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
+      "officialBoard": "Virtual Board",
       "atStop": "You are at the stop",
       "catchStatus": {
         "success": "You'll catch it",
@@ -155,7 +159,9 @@
         "success": "Catchable",
         "warning": "Maybe",
         "error": "Too late"
-      }
+      },
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites"
     }
   },
   "update": {

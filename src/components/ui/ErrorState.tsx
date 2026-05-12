@@ -30,7 +30,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
         <Stack className="py-20 px-8 items-center text-center animate-in fade-in zoom-in-95 duration-700">
             <Box className="relative mb-8">
                 {/* Glow effect */}
-                <Box className="absolute inset-0 bg-destructive/20 blur-2xl rounded-full scale-150 animate-pulse duration-[3000ms]" />
+                <Box className="absolute inset-0 bg-destructive/20 blur-2xl rounded-full scale-150 animate-pulse duration-3000" />
                 
                 <Surface 
                     variant="tinted" 

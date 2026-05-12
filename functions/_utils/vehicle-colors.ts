@@ -12,6 +12,7 @@ export const VEHICLE_COLORS = {
     TRAIN: '#1c1745',
     FERRY: '#00b1b0',
     NIGHT: '#262050',
+    SUBSTITUTE: '#FF4500',
     FALLBACK: '#5A5A5A'
 } as const;
 
@@ -40,22 +41,28 @@ export const isNightRoute = (routeName: string | number): boolean => {
 export const getVehicleColor = (routeType: string | number | undefined, routeName: string | undefined): string => {
     const type = String(routeType ?? '').toLowerCase();
     const nameStr = String(routeName ?? '');
+    const nameUpper = nameStr.toUpperCase();
 
     // 1. Metro Specifics (Priority)
     if (type === '1' || type === 'metro') {
-        switch (nameStr.toUpperCase()) {
+        switch (nameUpper) {
             case 'A': return VEHICLE_COLORS.METRO_A;
             case 'B': return VEHICLE_COLORS.METRO_B;
             case 'C': return VEHICLE_COLORS.METRO_C;
         }
     }
 
-    // 2. Night Routes (Trams 90-99, Buses 900+)
+    // 2. Substitute Lines (Lines starting with X)
+    if (nameUpper.startsWith('X')) {
+        return VEHICLE_COLORS.SUBSTITUTE;
+    }
+
+    // 3. Night Routes (Trams 90-99, Buses 900+)
     if (isNightRoute(nameStr)) {
         return VEHICLE_COLORS.NIGHT;
     }
 
-    // 3. Fallback by Type
+    // 4. Fallback by Type
     switch (type) {
         case '0':
         case 'tram':
@@ -80,3 +87,4 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
             return VEHICLE_COLORS.FALLBACK;
     }
 };
+

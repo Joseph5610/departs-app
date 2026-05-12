@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { ErrorBoundary } from './components/Modals/ErrorBoundary'
 import { PWAProvider } from './contexts/PWAContext'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import './index.css'
 import './i18n/config'
 
@@ -35,7 +36,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <PWAProvider>
-          <App />
+          <TooltipProvider delay={300}>
+            <App />
+          </TooltipProvider>
         </PWAProvider>
       </QueryClientProvider>
     </ErrorBoundary>

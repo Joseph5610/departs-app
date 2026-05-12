@@ -109,22 +109,26 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                 isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
             <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
-                <span className={cn(
-                    "text-sm line-clamp-2 w-full leading-normal",
-                    isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
-                )}>
-                    {stop.properties.stop_name}
-                    {stop.properties.metro_lines?.map((line) => (
-                        <span
-                            key={line.name}
-                            className="inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-sm text-[10px] text-white font-black ml-1.5 align-baseline translate-y-[-1px]"
-                            style={{ backgroundColor: line.route_color }}
-                        >
-                            {line.name}
-                        </span>
-                    ))}
-                </span>
-                <HStack gap={2} align="center" className="flex-wrap">
+                <div className="flex items-baseline gap-1.5 w-full">
+                    <span className={cn(
+                        "text-sm line-clamp-1 min-w-0",
+                        isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                    )}>
+                        {stop.properties.stop_name}
+                    </span>
+                    <div className="flex gap-1 shrink-0">
+                        {stop.properties.metro_lines?.map((line) => (
+                            <span
+                                key={line.name}
+                                className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-[10px] text-white font-black leading-none"
+                                style={{ backgroundColor: line.route_color }}
+                            >
+                                {line.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                <HStack gap={2} align="center" className="flex-wrap mt-0.5">
                     {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
                     {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
                 </HStack>

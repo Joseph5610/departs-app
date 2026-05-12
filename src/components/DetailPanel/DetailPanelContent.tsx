@@ -38,7 +38,7 @@ export const DetailPanelContent = memo(() => {
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
     return (
-        <Stack gap={4} className="pt-1">
+        <Stack gap={0} className="pt-0">
             <VehicleDetail
                 selectedVehicle={selectedVehicle}
                 vehicleDetail={vehicleDetail || null}

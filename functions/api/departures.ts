@@ -7,11 +7,12 @@ function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
     const line = String(item.route?.short_name || '?').toUpperCase();
     const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
     const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
+    const isTrain = type === '2' || type === 'rail' || type === 'train';
 
     let directionId: string | number | null | undefined = item.trip?.direction_id;
 
-    // For Metro, we use stop ID (platform) as directionId to group by platform
-    if (isMetro && item.stop?.id) {
+    // For Metro and Trains, we use stop ID (platform) as directionId to group by platform/track
+    if ((isMetro || isTrain) && item.stop?.id) {
         directionId = item.stop.id;
     }
 
@@ -32,8 +33,10 @@ function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
         isCanceled: item.trip?.is_canceled || false,
         tripId: item.trip?.id,
         vehicleId: item.vehicle?.id,
-        platform: item.stop?.platform_code || undefined,
+        platform: item.stop?.platform_code || (isMetro && item.stop?.id ? item.stop.id.match(/Z\d+(\d)P?$/)?.[1] : undefined),
         route_color: getVehicleColor(type, line),
+        is_wheelchair_accessible: item.vehicle?.is_wheelchair_accessible,
+        is_air_conditioned: item.vehicle?.is_air_conditioned,
         headsign_metro_lines: getMetroLinesForHeadsign(headsign).filter(l => l.name !== line)
     };
 }

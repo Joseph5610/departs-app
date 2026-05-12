@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <Box center className="fixed inset-0 bg-background p-6 z-[9999]">
+                <Box center className="fixed inset-0 bg-background p-6 z-9999">
                     <Surface variant="tinted" padding="xl" className="max-w-md w-full border-destructive/20! rounded-[32px] flex flex-col gap-0 items-center">
                         <Box center className="w-16 h-16 bg-destructive/10 rounded-2xl mb-6 shrink-0">
                             <AlertCircle className="text-destructive" size={32} />

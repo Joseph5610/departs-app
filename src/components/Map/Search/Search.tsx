@@ -199,8 +199,8 @@ export const Search: React.FC = React.memo(() => {
         <Overlay
             position="top-left"
             className={cn(
-                "w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-[2000] transition-all duration-300 ease-in-out",
-                isSidebarOpen && "md:left-[var(--visible-center-x)] md:w-[360px]"
+                "w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-2000 transition-all duration-300 ease-in-out",
+                isSidebarOpen && "md:left-(--visible-center-x) md:w-[360px]"
             )}
             data-vaul-no-drag
         >

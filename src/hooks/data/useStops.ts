@@ -29,49 +29,47 @@ interface CachedStops {
  * Merges data and timestamp into a single storage entry for efficiency.
  */
 export const useStops = () => {
-    const query = useQuery<StopCollection, AppError>({
+    const query = useQuery<{ data: StopCollection; updatedAt: number }, AppError>({
         queryKey: ['stops'],
         queryFn: async () => {
             const now = Date.now();
             const cached = await localforage.getItem<CachedStops>(STOP_STORAGE_KEY);
 
             if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < TWENTY_FOUR_HOURS)) {
-                return cached.data;
+                return cached;
             }
 
             // Cache busting via query parameter linked to the storage version
             const data = await apiFetch<StopCollection>(`/api/stops?v=${STORAGE_VERSION}`);
+            const result = { data, updatedAt: now };
 
-            await localforage.setItem(STOP_STORAGE_KEY, {
-                data,
-                updatedAt: now
-            });
+            await localforage.setItem(STOP_STORAGE_KEY, result);
 
-            return data;
+            return result;
         },
         staleTime: Infinity,
         gcTime: Infinity,
     });
 
     const stops = useMemo(() => {
-        if (!query.data || !Array.isArray(query.data.features)) {
+        if (!query.data?.data || !Array.isArray(query.data.data.features)) {
             return null;
         }
         return {
             type: 'FeatureCollection',
-            features: query.data.features.filter((f) => {
+            features: query.data.data.features.filter((f) => {
                 return !f.properties.is_centroid;
             })
         } as StopCollection;
     }, [query.data]);
 
     const centroids = useMemo(() => {
-        if (!query.data || !Array.isArray(query.data.features)) {
+        if (!query.data?.data || !Array.isArray(query.data.data.features)) {
             return null;
         }
         return {
             type: 'FeatureCollection',
-            features: query.data.features.filter((f) => {
+            features: query.data.data.features.filter((f) => {
                 return f.properties.is_centroid;
             })
         } as StopCollection;
@@ -82,6 +80,7 @@ export const useStops = () => {
         ...query,
         stops,
         centroids,
-        allFeatures: query.data
+        allFeatures: query.data?.data || null,
+        updatedAt: query.data?.updatedAt || null
     };
 };

@@ -164,35 +164,33 @@
 
 @utility glassy-tinted {
   @apply border border-white/20 shadow-2xl relative;
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  background: color-mix(in oklch, var(--glass-tint), transparent 50%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: color-mix(in oklch, var(--glass-tint), transparent 15%);
   backface-visibility: hidden;
-  will-change: backdrop-filter;
 
   @supports (-moz-appearance: none) {
-    background: color-mix(in oklch, var(--glass-tint), transparent 10%);
+    background: color-mix(in oklch, var(--glass-tint), transparent 5%);
     backdrop-filter: blur(12px);
   }
 
   &.dark,
   .dark & {
-    background: color-mix(in oklch, var(--glass-tint), transparent 50%);
+    background: color-mix(in oklch, var(--glass-tint), transparent 15%);
     @apply border-white/10;
 
     @supports (-moz-appearance: none) {
-      background: color-mix(in oklch, var(--glass-tint), transparent 10%);
+      background: color-mix(in oklch, var(--glass-tint), transparent 5%);
     }
   }
 }
 
 @utility glassy {
   @apply border border-white/20 shadow-2xl relative;
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   background: color-mix(in oklch, var(--background), transparent 50%);
   backface-visibility: hidden;
-  will-change: backdrop-filter;
 
   @supports (-moz-appearance: none) {
     background: color-mix(in oklch, var(--background), transparent 10%);

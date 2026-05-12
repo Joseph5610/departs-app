@@ -269,6 +269,8 @@ export interface AppDeparture {
     vehicleId?: string;
     platform?: string;
     route_color?: string;
+    is_wheelchair_accessible?: boolean | null;
+    is_air_conditioned?: boolean | null;
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
 }
 

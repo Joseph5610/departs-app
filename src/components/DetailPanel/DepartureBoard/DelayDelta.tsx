@@ -42,11 +42,10 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
                     className={isInline ? "ml-1" : ""}
                 >
                     <HStack className={cn(
-                        "px-1 rounded text-[9px] font-bold tabular-nums gap-0.5",
-                        delta > 0 ? "bg-rose-500/20 text-rose-400" : "bg-emerald-500/20 text-emerald-400"
+                        "font-bold tabular-nums text-[8px] opacity-60",
+                        delta > 0 ? "text-rose-400" : "text-emerald-400"
                     )}>
-                        <span>{delta > 0 ? '↑' : '↓'}</span>
-                        <span>{Math.abs(delta)}s</span>
+                        <span>{delta > 0 ? '▲' : '▼'}</span>
                     </HStack>
                 </motion.div>
             )}

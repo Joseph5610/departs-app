@@ -101,7 +101,7 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-foreground/[0.02]"
+                    className="overflow-hidden bg-foreground/2"
                 >
                     <Stack gap={4} className="relative p-4 pt-2">
                         {children}
