@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { Box, Stack, Surface } from '@/components/ui/layout';
+import { LineBadge } from '../../LineBadge';
 
 interface SearchItemProps {
     icon: React.ReactNode;
@@ -41,24 +42,9 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
                 if (!name) return null;
 
                 return (
-                    <span 
-                        key={`${name}-${idx}`} 
-                        className={cn(
-                            "inline-flex items-center justify-center text-[10px] text-white font-bold shrink-0 mr-1.5 select-none shadow-sm",
-                            (line.type === '1' || line.type === 'metro' || ['A', 'B', 'C'].includes(name)) 
-                                ? "rounded-full w-[17px] h-[17px]" 
-                                : "rounded-[3px] h-[17px]",
-                            name.length >= 2 
-                                ? ((line.type === '1' || line.type === 'metro') ? "" : "px-1 min-w-[17px]") 
-                                : "w-[17px]"
-                        )}
-                        style={{ 
-                            backgroundColor: line.route_color || FALLBACK_ROUTE_COLOR,
-                            border: '1px solid rgba(255,255,255,0.05)'
-                        }}
-                    >
-                        {name}
-                    </span>
+                    <div key={`${name}-${idx}`} className="mr-1.5 flex shrink-0">
+                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} />
+                    </div>
                 );
             })}
             

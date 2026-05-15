@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { LineBadge } from '../../LineBadge';
 
 import type { StopFeature, StopTimelineProps } from './types';
 
@@ -109,22 +110,16 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                 isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
             <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
-                <div className="flex items-baseline gap-1.5 w-full">
+                <div className="flex items-center gap-1.5 w-full">
                     <span className={cn(
-                        "text-sm line-clamp-1 min-w-0",
+                        "text-sm truncate min-w-0",
                         isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                     )}>
                         {stop.properties.stop_name}
                     </span>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex gap-1 shrink-0 translate-y-px">
                         {stop.properties.metro_lines?.map((line) => (
-                            <span
-                                key={line.name}
-                                className="inline-flex items-center justify-center w-4 h-4 rounded-sm text-[10px] text-white font-black leading-none"
-                                style={{ backgroundColor: line.route_color }}
-                            >
-                                {line.name}
-                            </span>
+                            <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                         ))}
                     </div>
                 </div>

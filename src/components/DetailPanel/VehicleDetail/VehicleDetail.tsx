@@ -11,7 +11,7 @@ import { StopTimeline } from './StopTimeline';
 import type { VehicleDetail as VehicleDetailType } from '../../../types/transit';
 import type { DisplayVehicle } from './types';
 
-import { ErrorState } from '@/components/ui/ErrorState';
+import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import type { AppError } from '../../../types/error';
 
 interface VehicleDetailProps {

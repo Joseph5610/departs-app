@@ -10,7 +10,8 @@ import { DepartureItem } from './DepartureItem';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { ErrorState } from '@/components/DetailPanel/ErrorState';
+import { LineBadge } from '../../LineBadge';
 import type { AppError } from '@/types/error';
 
 /** How many departures to show per group before requiring expand */
@@ -131,16 +132,12 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                     {lineGroup.line}
                                                 </span>
                                                 <ArrowRight size={12} className="text-muted-foreground/40 shrink-0" />
-                                                <span className="text-foreground/90 text-[15px] font-semibold truncate min-w-0 flex-1">
-                                                    {subGroup.headsign}
+                                                <span className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                    <span className="text-foreground/90 text-[15px] font-semibold truncate min-w-0">
+                                                        {subGroup.headsign}
+                                                    </span>
                                                     {subFirstDep.headsign_metro_lines?.map((line) => (
-                                                        <span 
-                                                            key={line.name} 
-                                                            className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-0.5 rounded-sm text-[9px] text-white font-black ml-1 align-baseline -translate-y-px"
-                                                            style={{ backgroundColor: line.route_color }}
-                                                        >
-                                                            {line.name}
-                                                        </span>
+                                                        <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                                                     ))}
                                                 </span>
 

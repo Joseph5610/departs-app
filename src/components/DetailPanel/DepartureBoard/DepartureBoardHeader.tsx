@@ -8,9 +8,11 @@ import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
 import { useNavigate } from '../../../hooks/features/useNavigate';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import { HStack } from '@/components/ui/layout';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { LineBadge } from '../../LineBadge';
 
 /**
  * DepartureBoardHeader
@@ -24,6 +26,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const { t } = useTranslation();
     const { state, actions } = usePreferences();
     const { share } = useShare();
+    const isMobile = useIsMobile();
 
     // Derived state
     const { state: selState, actions: selActions } = useSelection();
@@ -152,7 +155,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         <TooltipTrigger render={
                             <button
                                 onClick={() => setDepartureSort(departureSort === 'line' ? 'departure' : 'line')}
-                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground/40 hover:text-foreground"
+                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                             >
                                 {/* Show the ACTION you will take: if sorted by line, show Clock. If sorted by departure, show A-Z. */}
                                 {departureSort === 'line' ? <Clock size={16} /> : <ArrowDownAz size={16} />}
@@ -163,22 +166,24 @@ export const DepartureBoardHeader = React.memo(() => {
                         </TooltipContent>
                     </Tooltip>
 
-                    {/* Official Link */}
-                    <Tooltip>
-                        <TooltipTrigger render={
-                            <a 
-                                href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground/40 hover:text-foreground"
-                            >
-                                <ExternalLink size={16} />
-                            </a>
-                        } />
-                        <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                            {t('map.departures.officialBoard')}
-                        </TooltipContent>
-                    </Tooltip>
+                    {/* Official Link – desktop only (PID web board doesn't work well on mobile) */}
+                    {!isMobile && (
+                        <Tooltip>
+                            <TooltipTrigger render={
+                                <a 
+                                    href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
+                                >
+                                    <ExternalLink size={16} />
+                                </a>
+                            } />
+                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
+                                {t('map.departures.officialBoard')}
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
 
                     {/* Favorite */}
                     <Tooltip>
@@ -186,8 +191,8 @@ export const DepartureBoardHeader = React.memo(() => {
                             <button
                                 onClick={() => { if (selectedStop) { toggleFavorite(selectedStop.stop_id); } }}
                                 className={cn(
-                                    "h-7 w-7 flex items-center justify-center rounded-md transition-all text-muted-foreground/40 hover:text-amber-500",
-                                    isFavorite && "text-amber-500"
+                                    "h-7 w-7 flex items-center justify-center rounded-md transition-all text-muted-foreground opacity-40 hover:opacity-100 hover:text-amber-500",
+                                    isFavorite && "text-amber-500 opacity-100"
                                 )}
                             >
                                 <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
@@ -203,7 +208,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         <TooltipTrigger render={
                             <button
                                 onClick={handleShare}
-                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground/40 hover:text-foreground"
+                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                             >
                                 <Share2 size={16} />
                             </button>
@@ -231,25 +236,23 @@ export const DepartureBoardHeader = React.memo(() => {
 
                             const isActive = selectedLine === name;
                             const isDimmed = !!selectedLine && !isActive;
+                            const isMetro = line.type === '1' || ['A', 'B', 'C'].includes(name);
 
                             return (
                                 <button 
                                     key={name}
                                     onClick={() => toggleLineFilter(name)}
                                     className={cn(
-                                        "inline-flex items-center justify-center text-[11px] text-white font-bold shrink-0 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
-                                        (line.type === '1' || ['A', 'B', 'C'].includes(name)) 
-                                            ? "rounded-full w-[24px] h-[24px]" 
-                                            : "rounded-[4px] h-[24px] px-2 min-w-[24px]",
+                                        "transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
                                         isDimmed ? "opacity-30 scale-95" : "opacity-100",
-                                        isActive && "ring-2 ring-white z-10 shadow-lg"
+                                        isActive && "ring-2 ring-white z-10 shadow-lg rounded-[4px]"
                                     )}
-                                    style={{ 
-                                        backgroundColor: line.route_color || FALLBACK_ROUTE_COLOR,
-                                        border: '1px solid rgba(255,255,255,0.1)'
-                                    }}
                                 >
-                                    {name}
+                                    {isMetro ? (
+                                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
+                                    ) : (
+                                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
+                                    )}
                                 </button>
                             );
                         })}

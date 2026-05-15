@@ -8,6 +8,7 @@ import type { Departure } from '../../../types/transit';
 import { useTranslation } from 'react-i18next';
 import { HStack } from '@/components/ui/layout';
 import { Accessibility, Snowflake, Train } from 'lucide-react';
+import { LineBadge } from '../../LineBadge';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -97,16 +98,12 @@ export const DepartureItem = memo(({
 
             {/* Headsign (shown when not redundant with group header) */}
             {!hideHeadsign && (
-                <span className="text-foreground text-[14px] font-medium leading-tight min-w-0 flex-1 truncate">
-                    {dep.headsign}
+                <span className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <span className="text-foreground text-[14px] font-medium leading-tight truncate min-w-0">
+                        {dep.headsign}
+                    </span>
                     {dep.headsign_metro_lines?.map((line) => (
-                        <span 
-                            key={line.name} 
-                            className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-0.5 rounded-sm text-[9px] text-white font-black ml-1 align-baseline -translate-y-px"
-                            style={{ backgroundColor: line.route_color }}
-                        >
-                            {line.name}
-                        </span>
+                        <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                     ))}
                 </span>
             )}

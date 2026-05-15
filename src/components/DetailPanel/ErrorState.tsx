@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, WifiOff, CloudOff } from 'lucide-react';
-import { Box, Stack, Surface } from './layout';
-import { Button } from './button';
+import { Box, Stack, Surface } from '../ui/layout';
+import { Button } from '../ui/button';
 import { AppErrorCode, type AppError } from '../../types/error';
 
 interface ErrorStateProps {
