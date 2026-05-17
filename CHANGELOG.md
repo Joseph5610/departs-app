@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - **Linter**: Cleaned up code issues flagged by the new ESLint 10 rules:
   - Fixed `preserve-caught-error` in `functions/_utils/api-utils.ts` by appending `{ cause: error }` to the abort timeout error.
   - Fixed `no-useless-assignment` in `src/utils/mapIcons.ts` by correcting unused variables `x` and `y` in the canvas drawing logic.
+  - Fixed `react-hooks/set-state-in-effect` in `src/components/Modals/SettingsModal/SettingsFooter.tsx` by wrapping the synchronous state update inside a deferred `setTimeout`.
 
 ## [0.38.5] - 2026-05-13
 

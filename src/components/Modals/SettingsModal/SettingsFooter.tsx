@@ -21,7 +21,8 @@ export const SettingsFooter: React.FC = () => {
     // Reset checking state if update is found
     React.useEffect(() => {
         if (needRefresh && isChecking) {
-            setIsChecking(false);
+            const timer = setTimeout(() => setIsChecking(false), 0);
+            return () => clearTimeout(timer);
         }
     }, [needRefresh, isChecking]);
 
