@@ -52,6 +52,7 @@ jobs:
       - name: Run Playwright tests
         env:
           GOLEMIO_API_KEY: ${{ secrets.GOLEMIO_API_KEY }}
+          CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"
           CI: true
         run: npm run test
 

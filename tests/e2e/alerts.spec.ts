@@ -25,7 +25,7 @@ test.describe('Alerts tests', () => {
         if (cardCount > 0) {
             // we search for a bogus string and expect 0
             await alertsPage.searchAlert('XyZ123BogusSearch');
-            await expect(alertsPage.container.getByText(/Nejsou aktivní žádné události|No active alerts/i)).toBeVisible({ timeout: 5000 }).catch(() => {});
+            await expect(alertsPage.container.getByText(new RegExp("Nejsou aktivn\u00ed \u017e\u00e1dn\u00e9 ud\u00e1losti|No active alerts", "i"))).toBeVisible({ timeout: 5000 }).catch(() => {});
         }
 
         // Close modal

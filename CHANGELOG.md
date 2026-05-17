@@ -6,12 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **CI/CD**: Created a brand new **Playwright E2E testing GitHub Actions workflow** (`.github/workflows/playwright.yml`) which runs automatically on pull requests and pushes to `main` or `master`.
+- **CI/CD**: Created a brand new **Playwright E2E testing GitHub Actions workflow** (`.github/workflows/playwright.yml`) which runs automatically on pull requests and pushes to `master`.
   - Implemented Node.js setup with automated `npm` dependency caching.
   - Implemented caching for Playwright browser binaries to significantly reduce CI execution times.
-  - Integrated `GOLEMIO_API_KEY` secure environment injection from repository secrets to enable the local Cloudflare Pages dev server (`wrangler dev`) to communicate with the real Prague transport APIs during E2E test runs.
+  - Configured **native process environment variable forwarding** using `CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"`. This allows the local Cloudflare Pages dev server (`wrangler dev`) to directly read the runner's system environment variables (like the securely chrooted `GOLEMIO_API_KEY` secret) without needing any temporary `.dev.vars` files, inline writing scripts, or risking logs/secrets exposure.
   - Added automated frontend/backend builds as part of the pipeline to guarantee build and type-checking integrity.
   - Configured HTML test report upload artifacts on failures to facilitate quick remote troubleshooting.
+- **E2E Tests**: Fixed E2E test failures caused by Mojibake/encoding mismatch in GitHub Actions runners:
+  - Replaced Czech accented text `'Hlavní nádraží'` and regex checks with **safe JavaScript Unicode escape sequences** (e.g. `"Hlavn\u00ed n\u00e1dra\u017e\u00ed"`), making tests completely immune to system/terminal encoding differences.
 
 ## [0.40.1] - 2026-05-17
 

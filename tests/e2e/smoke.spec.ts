@@ -13,10 +13,10 @@ test.describe('Smoke tests', () => {
         await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
 
         // Search for a known stop (example: 'Hlavní nádraží')
-        await searchPage.search('Hlavní nádraží');
+        await searchPage.search("Hlavn\u00ed n\u00e1dra\u017e\u00ed");
         
         // Look for the stop in results
-        const stopItem = page.getByTestId('search-item-stop-Hlavní nádraží');
+        const stopItem = page.getByTestId("search-item-stop-Hlavn\u00ed n\u00e1dra\u017e\u00ed");
         await expect(stopItem).toBeVisible();
         
         // Click the stop
