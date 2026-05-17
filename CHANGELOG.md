@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.41.0] - 2026-05-17
+
+### Added
+
+- **CI/CD**: Created a brand new **Playwright E2E testing GitHub Actions workflow** (`.github/workflows/playwright.yml`) which runs automatically on pull requests and pushes to `main` or `master`.
+  - Implemented Node.js setup with automated `npm` dependency caching.
+  - Implemented caching for Playwright browser binaries to significantly reduce CI execution times.
+  - Integrated `GOLEMIO_API_KEY` secure environment injection from repository secrets to enable the local Cloudflare Pages dev server (`wrangler dev`) to communicate with the real Prague transport APIs during E2E test runs.
+  - Added automated frontend/backend builds as part of the pipeline to guarantee build and type-checking integrity.
+  - Configured HTML test report upload artifacts on failures to facilitate quick remote troubleshooting.
+
 ## [0.40.1] - 2026-05-17
 
 ### Changed
