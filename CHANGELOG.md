@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
   - Configured HTML test report upload artifacts on failures to facilitate quick remote troubleshooting.
 - **E2E Tests**: Fixed E2E test failures caused by Mojibake/encoding mismatch in GitHub Actions runners:
   - Replaced Czech accented text `'Hlavní nádraží'` and regex checks with **safe JavaScript Unicode escape sequences** (e.g. `"Hlavn\u00ed n\u00e1dra\u017e\u00ed"`), making tests completely immune to system/terminal encoding differences.
+  - Added optimized CI Chromium launch flags (`--disable-dev-shm-usage`, `--no-sandbox`, `--disable-gpu`) in `playwright.config.ts` to prevent OOM/sandbox crashes and maximize speed in headless runner containers.
 
 ## [0.40.1] - 2026-05-17
 
