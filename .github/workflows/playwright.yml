@@ -46,9 +46,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps
 
-      - name: Build frontend and backend
-        run: npm run build
-
       - name: Run Playwright tests
         env:
           GOLEMIO_API_KEY: ${{ secrets.GOLEMIO_API_KEY }}

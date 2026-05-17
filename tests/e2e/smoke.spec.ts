@@ -15,8 +15,8 @@ test.describe('Smoke tests', () => {
         // Search for a known stop (example: 'Hlavní nádraží')
         await searchPage.search("Hlavn\u00ed n\u00e1dra\u017e\u00ed");
         
-        // Look for the stop in results (using prefix match to handle optional platform codes like '-C' or similar)
-        const stopItem = page.locator('[data-testid^="search-item-stop-Hlavn\\u00ed n\\u00e1dra\\u017e\\u00ed"]').first();
+        // Look for the stop in results (using regex match to handle optional platform codes like '-C' or similar)
+        const stopItem = page.getByTestId(new RegExp("search-item-stop-Hlavn\u00ed n\u00e1dra\u017e\u00ed")).first();
         await expect(stopItem).toBeVisible();
         
         // Click the stop

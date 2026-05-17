@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
   - Implemented Node.js setup with automated `npm` dependency caching.
   - Implemented caching for Playwright browser binaries to significantly reduce CI execution times.
   - Configured **native process environment variable forwarding** using `CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"`. This allows the local Cloudflare Pages dev server (`wrangler dev`) to directly read the runner's system environment variables (like the securely chrooted `GOLEMIO_API_KEY` secret) without needing any temporary `.dev.vars` files, inline writing scripts, or risking logs/secrets exposure.
-  - Added automated frontend/backend builds as part of the pipeline to guarantee build and type-checking integrity.
+  - Optimized pipeline execution times by removing the redundant production build step, relying on Cloudflare's native deployment previews to validate compile-time integrity on commits.
   - Configured HTML test report upload artifacts on failures to facilitate quick remote troubleshooting.
 - **E2E Tests**: Fixed E2E test failures caused by Mojibake/encoding mismatch in GitHub Actions runners:
   - Replaced Czech accented text `'Hlavní nádraží'` and regex checks with **safe JavaScript Unicode escape sequences** (e.g. `"Hlavn\u00ed n\u00e1dra\u017e\u00ed"`), making tests completely immune to system/terminal encoding differences.
