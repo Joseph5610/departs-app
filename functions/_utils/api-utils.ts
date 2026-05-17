@@ -116,7 +116,7 @@ export async function golemioFetch(
     } catch (error: unknown) {
         clearTimeout(timeoutId);
         if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error("Golemio API request timed out (15s)");
+            throw new Error("Golemio API request timed out (15s)", { cause: error });
         }
         throw error;
     }
