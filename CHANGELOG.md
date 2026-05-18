@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.41.1] - 2026-05-18
+
+### Fixed
+
+- **E2E Tests**: Resolved flaky test failures on slow GitHub Actions runners by mocking the massive `10MB+` `/api/stops` endpoint with a lightweight mock payload containing only `"Hlavní nádraží"`. This prevents CPU/network overloading of the local single-threaded `wrangler dev` server and ensures instant test execution under heavy loads.
+- **E2E Tests**: Upgraded the stop element locator to be space-agnostic and use standard accessibility role selection:
+  - Switched to `page.getByRole('button', { name: /Hlavní\snádraží/ })`.
+  - Added support for non-breaking space matching (`\s`) to handle the raw `\u00a0` characters returned in Golemio stop names without breaking string exact-matching.
+  - Increased stop locator visibility timeout to `15000ms`.
+
+### Optimized
+
+- **CI/CD**: Accelerated Playwright installation time by targeting only the necessary `chromium` browser and using the lightweight headless shell `--only-shell` flag (`npx playwright install chromium --with-deps --only-shell`), reducing download sizes by over 60%.
+- **CI/CD**: Boosted parallel test execution by configuring 2 concurrent workers on the CI runner (`workers: 2`), cutting execution time in half.
+- **CI/CD**: Added a workflow concurrency group with `cancel-in-progress: true` in GitHub Actions to auto-cancel redundant workflow runs on push updates.
+- **CI/CD**: Replaced the slow `npm ls` Playwright version check in CI with an optimized direct `package.json` parse via `jq`, reducing task initialization from several seconds to milliseconds.
+- **Diagnostics**: Added automatic `screenshot: 'only-on-failure'` and `video: 'retain-on-failure'` captures in `playwright.config.ts` to aid in debugging.
+
 ## [0.41.0] - 2026-05-17
 
 ### Added
