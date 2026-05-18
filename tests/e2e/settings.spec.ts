@@ -30,7 +30,11 @@ test.describe('Settings tests', () => {
         await settingsPage.showStopsRow.click({ force: true });
         await page.waitForTimeout(300);
 
-        // Close the modal
-        await page.mouse.click(10, 10); // Click outside or use a close button if available
+        // Close the modal using the Page Object method
+        await expect(settingsPage.closeButton).toBeVisible();
+        await settingsPage.close();
+
+        // Verify the settings modal is closed
+        await expect(settingsPage.container).not.toBeVisible();
     });
 });

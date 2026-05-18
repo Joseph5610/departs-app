@@ -25,10 +25,14 @@ test.describe('Alerts tests', () => {
         if (cardCount > 0) {
             // we search for a bogus string and expect 0
             await alertsPage.searchAlert('XyZ123BogusSearch');
-            await expect(alertsPage.container.getByText(new RegExp("Nejsou aktivn\u00ed \u017e\u00e1dn\u00e9 ud\u00e1losti|No active alerts", "i"))).toBeVisible({ timeout: 5000 }).catch(() => {});
+            await expect(alertsPage.emptyStateMessage).toBeVisible({ timeout: 5000 }).catch(() => {});
         }
 
-        // Close modal
-        await page.mouse.click(10, 10);
+        // Close modal using Page Object method
+        await expect(alertsPage.closeButton).toBeVisible();
+        await alertsPage.close();
+
+        // Verify the modal is closed
+        await expect(alertsPage.container).not.toBeVisible();
     });
 });

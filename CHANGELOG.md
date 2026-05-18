@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
   - Switched to `page.getByRole('button', { name: /Hlavní\snádraží/ })`.
   - Added support for non-breaking space matching (`\s`) to handle the raw `\u00a0` characters returned in Golemio stop names without breaking string exact-matching.
   - Increased stop locator visibility timeout to `15000ms`.
+- **E2E Page Object Model (POM)**: Completely refactored all existing specs to adhere strictly to POM principles:
+  - Encapsulated close button selectors and closing methods (`close()`) inside `SettingsPage` and `AlertsPage` classes, replacing all flaky coordinate-based `page.mouse.click(10, 10)` clicks with robust accessible button clicks.
+  - Encapsulated regex-based and space-agnostic stop locator selection inside `SearchPage` (`getStopSearchItem` and `selectStopByRegex`), keeping specs clean of implementation details.
+  - Encapsulated empty state selectors (`emptyStateMessage`) inside `AlertsPage`.
 
 ### Optimized
 

@@ -12,6 +12,14 @@ export class SearchPage extends BasePage {
         await this.page.getByTestId(`search-item-stop-${name}`).click();
     }
 
+    getStopSearchItem(pattern: RegExp): Locator {
+        return this.page.getByRole('button', { name: pattern }).first();
+    }
+
+    async selectStopByRegex(pattern: RegExp) {
+        await this.getStopSearchItem(pattern).click();
+    }
+
     async selectLine(line: string) {
         await this.page.getByTestId(`search-item-line-${line}`).click();
     }

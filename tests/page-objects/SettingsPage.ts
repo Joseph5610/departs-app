@@ -12,6 +12,9 @@ export class SettingsPage extends BasePage {
     readonly showVehiclesSwitch: Locator = this.container.locator('button[role="switch"]').first();
     readonly showStopsSwitch: Locator = this.container.locator('button[role="switch"]').nth(1);
     
+    // Close Button
+    readonly closeButton: Locator = this.container.getByRole('button', { name: 'Close' });
+    
     // Vehicle Types
     async toggleVehicleType(id: string) {
         await this.container.getByTestId(`vehicle-type-${id}`).click();
@@ -21,5 +24,9 @@ export class SettingsPage extends BasePage {
         const langRegex = lang === 'en' ? /English|Angličtina/i : /Čeština|Czech/i;
         const btn = this.container.locator('button').filter({ hasText: langRegex });
         await btn.click();
+    }
+
+    async close() {
+        await this.closeButton.click();
     }
 }
