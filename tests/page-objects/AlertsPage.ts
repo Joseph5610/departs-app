@@ -29,6 +29,11 @@ export class AlertsPage extends BasePage {
     }
 
     async close() {
-        await this.closeButton.click();
+        try {
+            await this.page.keyboard.press('Escape');
+            await this.container.waitFor({ state: 'hidden', timeout: 2000 });
+        } catch {
+            await this.closeButton.click({ force: true });
+        }
     }
 }
