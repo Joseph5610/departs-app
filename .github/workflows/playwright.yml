@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium --only-shell
+        run: npx playwright install-deps chromium
 
       - name: Run Playwright tests
         env:
