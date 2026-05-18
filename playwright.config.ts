@@ -25,6 +25,12 @@ export default defineConfig({
     
     /* Use data-testid for stable locators */
     testIdAttribute: 'data-testid',
+
+    /* Capture screenshot on failure */
+    screenshot: 'only-on-failure',
+
+    /* Record video on failure */
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers */
