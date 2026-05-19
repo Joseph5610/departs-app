@@ -27,7 +27,7 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev --proxy 5173 -- npm run dev:vite",
+    "dev": "wrangler pages dev --compatibility-date=2026-03-17 --proxy 5173 -- npm run dev:vite",
     "dev:vite": "NODE_OPTIONS='' vite --port 5173 --strictPort --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

@@ -44,6 +44,10 @@
       "ferry": "Ferry",
       "funicular": "Funicular"
     },
+    "mapStyle": {
+      "title": "Base Map",
+      "description": "Show streets, places, and landmarks labels"
+    },
     "language": {
       "title": "Language",
       "en": "English",

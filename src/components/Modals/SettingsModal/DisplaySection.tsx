@@ -12,6 +12,7 @@ import {
     CableCar,
     CircleSlash,
     Type,
+    Map as MapIcon,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,8 +121,8 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
 export const DisplaySection: React.FC = () => {
     const { t } = useTranslation();
     const { state, actions } = usePreferences();
-    const { showVehicles, showStops, routeTypeFilter, stopTypeFilter, showStopLabels } = state;
-    const { setShowVehicles, setShowStops, setRouteTypeFilter, setStopTypeFilter, setShowStopLabels } = actions;
+    const { showVehicles, showStops, routeTypeFilter, stopTypeFilter, showStopLabels, mapBaseStyle } = state;
+    const { setShowVehicles, setShowStops, setRouteTypeFilter, setStopTypeFilter, setShowStopLabels, setMapBaseStyle } = actions;
 
     const toggleFilter = (filter: string[], setFilter: (val: string[]) => void, type: string) => {
         if (filter.includes(type)) {
@@ -236,6 +237,31 @@ export const DisplaySection: React.FC = () => {
                     </Box>
                 </Stack>
             </ToggleSection>
+
+            <Surface variant="tinted" className="overflow-hidden mt-3">
+                <button
+                    onClick={() => setMapBaseStyle(mapBaseStyle === 'labels' ? 'nolabels' : 'labels')}
+                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                >
+                    <HStack gap={4}>
+                        <Box className={cn(
+                            "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
+                            mapBaseStyle === 'labels' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        )}>
+                            <MapIcon size={22} />
+                        </Box>
+                        <Stack gap={1}>
+                            <h4 className="font-semibold leading-snug">{t('settings.mapStyle.title')}</h4>
+                            <p className="text-muted-foreground text-xs leading-tight">{t('settings.mapStyle.description')}</p>
+                        </Stack>
+                    </HStack>
+                    <Switch
+                        checked={mapBaseStyle === 'labels'}
+                        onCheckedChange={(c) => setMapBaseStyle(c ? 'labels' : 'nolabels')}
+                        className="ml-3 sm:ml-4"
+                    />
+                </button>
+            </Surface>
         </Stack>
     );
 };

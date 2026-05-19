@@ -23,7 +23,8 @@ import { SettingsModal } from '../Modals/SettingsModal/SettingsModal';
 import { WelcomeModal } from '../Modals/WelcomeModal';
 import { AlertsModal } from '../Modals/AlertsModal';
 
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+const MAP_STYLE_NOLABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+const MAP_STYLE_LABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 /**
  * MapInner Component
@@ -34,7 +35,7 @@ const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const { state: selState, actions: selActions } = useSelection();
     const { state: vpState, mapEvents, mapRef, mapLoaded, labelLayerId, userLocation } = useViewport();
-    const { state: { showVehicles, showStops, showStopLabels, stopTypeFilter, favoriteStops } } = usePreferences();
+    const { state: { showVehicles, showStops, showStopLabels, stopTypeFilter, favoriteStops, mapBaseStyle } } = usePreferences();
 
     const { selectedId } = selState;
 
@@ -72,7 +73,7 @@ const MapInner: React.FC = () => {
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
-                mapStyle={MAP_STYLE}
+                mapStyle={mapBaseStyle === 'labels' ? MAP_STYLE_LABELS : MAP_STYLE_NOLABELS}
                 onMove={mapEvents.onMove}
                 onMoveEnd={mapEvents.onMoveEnd}
                 onLoad={mapEvents.onLoad}

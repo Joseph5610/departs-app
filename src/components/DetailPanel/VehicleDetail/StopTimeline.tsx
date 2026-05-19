@@ -28,6 +28,11 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
         return futureStops.length > 0 ? Number(futureStops[0].properties.stop_sequence) : null;
     }, [stopTimes, effectiveSequence]);
 
+    const pastStopsCount = useMemo(() => {
+        if (effectiveSequence === null) return 0;
+        return stopTimes.filter((s) => Number(s.properties.stop_sequence) < effectiveSequence).length;
+    }, [stopTimes, effectiveSequence]);
+
     if (!stopTimes.length) return null;
 
     return (
@@ -35,7 +40,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
             <Stack gap={3}>
                 <HStack justify="between" className="px-1">
                     <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
-                    {effectiveSequence !== null && (
+                    {effectiveSequence !== null && pastStopsCount > 0 && (
                         <CollapsibleTrigger render={
                             <Button
                                 variant="outline"

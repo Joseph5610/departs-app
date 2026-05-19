@@ -45,6 +45,10 @@
       "ferry": "Přívoz",
       "funicular": "Lanovka"
     },
+    "mapStyle": {
+      "title": "Podkladová mapa",
+      "description": "Zobrazit popisky ulic, měst a zajímavých míst"
+    },
     "language": {
       "title": "Jazyk",
       "en": "English",

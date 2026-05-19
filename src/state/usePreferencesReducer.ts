@@ -13,6 +13,7 @@ export interface PreferencesState {
     routeTypeFilter: string[];
     favoriteStops: string[];
     searchHistory: SearchHistoryItem[];
+    mapBaseStyle: 'nolabels' | 'labels';
 }
 
 export type PreferencesAction =
@@ -24,6 +25,7 @@ export type PreferencesAction =
     | { type: 'SET_IS_ALERTS_OPEN'; payload: boolean }
     | { type: 'SET_DEPARTURE_SORT'; payload: 'line' | 'departure' }
     | { type: 'SET_ROUTE_TYPE_FILTER'; payload: string[] }
+    | { type: 'SET_MAP_BASE_STYLE'; payload: 'nolabels' | 'labels' }
     | { type: 'TOGGLE_FAVORITE'; payload: string }
     | { type: 'ADD_TO_HISTORY'; payload: SearchHistoryBase }
     | { type: 'CLEAR_HISTORY' };
@@ -48,7 +50,8 @@ const getInitialState = (): PreferencesState => ({
     departureSort: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure')) || 'line',
     routeTypeFilter: [],
     favoriteStops: typeof window !== 'undefined' ? safeJsonParse<string[]>(STORAGE_KEYS.FAVORITES, []) : [],
-    searchHistory: typeof window !== 'undefined' ? safeJsonParse<SearchHistoryItem[]>(STORAGE_KEYS.SEARCH_HISTORY, []) : []
+    searchHistory: typeof window !== 'undefined' ? safeJsonParse<SearchHistoryItem[]>(STORAGE_KEYS.SEARCH_HISTORY, []) : [],
+    mapBaseStyle: (typeof window !== 'undefined' && (localStorage.getItem(STORAGE_KEYS.MAP_BASE_STYLE) as 'nolabels' | 'labels')) || 'labels'
 });
 
 function preferencesReducer(state: PreferencesState, action: PreferencesAction): PreferencesState {
@@ -69,6 +72,8 @@ function preferencesReducer(state: PreferencesState, action: PreferencesAction):
             return { ...state, departureSort: action.payload };
         case 'SET_ROUTE_TYPE_FILTER':
             return { ...state, routeTypeFilter: action.payload };
+        case 'SET_MAP_BASE_STYLE':
+            return { ...state, mapBaseStyle: action.payload };
         case 'TOGGLE_FAVORITE': {
             const exists = state.favoriteStops.includes(action.payload);
             const newFavorites = exists
@@ -111,9 +116,10 @@ export const usePreferencesReducer = () => {
         localStorage.setItem(STORAGE_KEYS.SHOW_STOP_LABELS, String(state.showStopLabels));
         localStorage.setItem(STORAGE_KEYS.STOP_TYPE_FILTER, JSON.stringify(state.stopTypeFilter));
         localStorage.setItem(STORAGE_KEYS.DEPARTURE_SORT, state.departureSort);
+        localStorage.setItem(STORAGE_KEYS.MAP_BASE_STYLE, state.mapBaseStyle);
         localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(state.favoriteStops));
         localStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
-    }, [state.showVehicles, state.showStops, state.showStopLabels, state.stopTypeFilter, state.departureSort, state.favoriteStops, state.searchHistory]);
+    }, [state.showVehicles, state.showStops, state.showStopLabels, state.stopTypeFilter, state.departureSort, state.mapBaseStyle, state.favoriteStops, state.searchHistory]);
 
     return {
         state,
@@ -126,6 +132,7 @@ export const usePreferencesReducer = () => {
             setIsAlertsOpen: createAction('SET_IS_ALERTS_OPEN'),
             setDepartureSort: createAction('SET_DEPARTURE_SORT'),
             setRouteTypeFilter: createAction('SET_ROUTE_TYPE_FILTER'),
+            setMapBaseStyle: createAction('SET_MAP_BASE_STYLE'),
             toggleFavorite: createAction('TOGGLE_FAVORITE'),
             addToHistory: createAction('ADD_TO_HISTORY'),
             clearHistory: useCallback(() => dispatch({ type: 'CLEAR_HISTORY' }), [])
