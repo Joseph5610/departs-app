@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.41.2] - 2026-05-19
+
+### Changed
+
+- **Refactoring**: Extracted magic numbers from `useStopDistance.ts` into centralized constants (`AT_STOP_THRESHOLD_METERS` and `MAX_REASONABLE_WALKING_DISTANCE`) in `src/config/constants.ts`, and updated the walking time calculation to dynamically use the `WALKING_SPEED` constant.
+- **VS Code Settings**: Configured `.vscode/settings.json` to auto-fix code via ESLint on save (`source.fixAll.eslint`) and locked the TypeScript language server (`typescript.tsdk`) to the workspace's `node_modules` version.
+- **VS Code Extensions**: Expanded `.vscode/extensions.json` workspace recommendations to include `dbaeumer.vscode-eslint`, `bradlc.vscode-tailwindcss`, `ms-playwright.playwright`, and `lokalise.i18n-ally`.
+- **Git Config**: Updated `.gitignore` to allow tracking and sharing of workspace `.vscode/` settings with the team while ensuring dependencies and local secrets remain strictly ignored.
+- **DevOps**: Resolved Wrangler startup warnings by explicitly specifying `--compatibility-date=2026-03-17` in the `dev` package script.
+
 ## [0.41.1] - 2026-05-18
 
 ### Fixed

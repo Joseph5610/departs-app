@@ -2,6 +2,11 @@ import { useMemo } from 'react';
 import { useViewport } from '../../state/contexts';
 import { useSelectedStop } from './useSelectedStop';
 import { calculateDistance } from '../../utils/transitUtils';
+import {
+    WALKING_SPEED,
+    AT_STOP_THRESHOLD_METERS,
+    MAX_REASONABLE_WALKING_DISTANCE
+} from '../../config/constants';
 
 /**
  * useStopDistance
@@ -21,13 +26,14 @@ export const useStopDistance = () => {
         }
         const distance = calculateDistance(userLocation, coords);
 
-        const isAtStop = distance < 20;
+        const isAtStop = distance < AT_STOP_THRESHOLD_METERS;
+        const walkingTimeSec = distance / WALKING_SPEED;
 
         return {
             distance: Math.round(distance),
-            time: Math.ceil(distance / 60),
+            time: Math.ceil(walkingTimeSec / 60),
             isAtStop,
-            isReasonableWalkingDistance: distance < 750
+            isReasonableWalkingDistance: distance < MAX_REASONABLE_WALKING_DISTANCE
         };
     }, [selectedStop?.coordinates, userLocation]);
 };

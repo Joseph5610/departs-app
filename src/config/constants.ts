@@ -67,6 +67,16 @@ export const STORAGE_KEYS = {
 export const WALKING_SPEED = 1.0;
 
 /**
+ * Distance in meters under which a user is considered to be at a transit stop.
+ */
+export const AT_STOP_THRESHOLD_METERS = 30;
+
+/**
+ * Maximum reasonable walking distance in meters (approx. 10-12 mins walk).
+ */
+export const MAX_REASONABLE_WALKING_DISTANCE = 750;
+
+/**
  * Buffer time in seconds to account for platform navigation, ticket validation, etc.
  */
 export const CATCH_BUFFER = 120;
