@@ -39,7 +39,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
                             isFollowing ? "text-primary" : "text-slate-300"
                         )}>
-                            <MapPin size={8} className={cn(isFollowing ? "fill-current" : "")} />
+                            <MapPin size={12} className={cn(isFollowing ? "fill-current" : "")}  strokeWidth={1.5} />
                         </Box>
                     </button>
 
@@ -55,7 +55,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             });
                         }}
                     >
-                        <Share2 size={13} />
+                        <Share2 size={14}  strokeWidth={1.5} />
                     </button>
                 </HStack>
 
@@ -118,7 +118,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             {isShowBanner && (
                                 <HStack gap={3} className="mt-4 items-start">
                                     <Box className="p-2 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
-                                        <Info size={14} />
+                                        <Info size={14}  strokeWidth={1.5} />
                                     </Box>
                                     <Stack gap={1}>
                                         <span className="text-amber-500 font-bold text-[10px] uppercase tracking-wider leading-none">{title}</span>
@@ -151,13 +151,13 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
                                 <HStack gap={3} className="shrink-0 pb-0.5">
                                     {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
-                                        <Snowflake size={13} className="text-sky-400" />
+                                        <Snowflake size={14} className="text-sky-400"  strokeWidth={1.5} />
                                     )}
                                     {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
-                                        <Zap size={13} className="text-amber-400" />
+                                        <Zap size={14} className="text-amber-400"  strokeWidth={1.5} />
                                     )}
                                     {displayVehicle.vehicle_descriptor?.is_wheelchair_accessible && (
-                                        <Accessibility size={13} className="text-primary" />
+                                        <Accessibility size={14} className="text-primary"  strokeWidth={1.5} />
                                     )}
                                 </HStack>
                             </HStack>

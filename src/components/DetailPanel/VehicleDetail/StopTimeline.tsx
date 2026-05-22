@@ -49,7 +49,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                             />
                         }>
                             {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                            {showPastStops ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            {showPastStops ? <ChevronUp size={14}  strokeWidth={1.5} /> : <ChevronDown size={14}  strokeWidth={1.5} />}
                         </CollapsibleTrigger>
                     )}
                 </HStack>

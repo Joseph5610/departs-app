@@ -77,7 +77,7 @@ export const SettingsFooter: React.FC = () => {
                     >
                         <HStack gap={3}>
                             <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
-                                <Clock size={18} />
+                                <Clock size={20}  strokeWidth={1.5} />
                             </Box>
                             <span className="text-foreground text-sm font-bold">{t('settings.clearHistory.button')}</span>
                         </HStack>
@@ -91,7 +91,7 @@ export const SettingsFooter: React.FC = () => {
                 >
                     <HStack gap={3}>
                         <Box className="p-2 rounded-lg bg-white/10 text-foreground">
-                            <RefreshCw size={18} className={isChecking ? 'animate-spin' : ''} />
+                            <RefreshCw size={20} className={isChecking ? 'animate-spin' : ''}  strokeWidth={1.5} />
                         </Box>
                         <span className="text-foreground text-sm font-bold">
                             {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
@@ -110,7 +110,7 @@ export const SettingsFooter: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                         >
-                            <Database size={14} />
+                            <Database size={14}  strokeWidth={1.5} />
                             {t('settings.dataSource')}
                         </a>
 
@@ -120,7 +120,7 @@ export const SettingsFooter: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                         >
-                            <Code size={14} />
+                            <Code size={14}  strokeWidth={1.5} />
                             {t('settings.viewSource')}
                         </a>
                     </HStack>
@@ -130,7 +130,7 @@ export const SettingsFooter: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 py-2 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                     >
-                        <Scale size={14} />
+                        <Scale size={14}  strokeWidth={1.5} />
                         {t('settings.license')}
                     </a>
                 </Stack>

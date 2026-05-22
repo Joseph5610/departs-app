@@ -1,10 +1,11 @@
-import React, { useRef, useMemo, useCallback } from 'react';
+import React, { useRef, useMemo, useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import MapGL, { Marker, type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
+import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
@@ -42,6 +43,29 @@ const MapInner: React.FC = () => {
     // Derived State
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
+
+    const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+
+    useEffect(() => {
+        if (selectedStop || selectedVehicle) {
+            const timer = setTimeout(() => {
+                setIsFavoritesOpen(false);
+            }, 0);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedStop, selectedVehicle]);
+
+    const handleToggleFavorites = useCallback(() => {
+        setIsFavoritesOpen(prev => {
+            const next = !prev;
+            if (next) {
+                setTimeout(() => {
+                    selActions.clearSelection();
+                }, 0);
+            }
+            return next;
+        });
+    }, [selActions]);
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
@@ -160,7 +184,7 @@ const MapInner: React.FC = () => {
                                 {vpState.selectedPlace.name}
                             </div>
                             <div className="text-primary drop-shadow-md">
-                                <MapPin size={32} fill="currentColor" className="text-primary" />
+                                <MapPin size={24} fill="currentColor" className="text-primary"  strokeWidth={1.5} />
                             </div>
                         </div>
                     </Marker>
@@ -169,11 +193,23 @@ const MapInner: React.FC = () => {
 
             <LiveStatus />
             <Search />
-            <MapControls />
+            <MapControls
+                onToggleFavorites={handleToggleFavorites}
+                isFavoritesActive={isFavoritesOpen}
+            />
 
             <WelcomeModal />
             <SettingsModal />
             <AlertsModal />
+
+            <DetailPanel
+                isOpen={isFavoritesOpen}
+                id="favorites"
+                onClose={() => setIsFavoritesOpen(false)}
+                title={t('favorites.title')}
+            >
+                <FavoritesPanel />
+            </DetailPanel>
 
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}

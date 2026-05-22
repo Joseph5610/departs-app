@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect } from 'react';
+import { useReducer, useCallback, useEffect, useMemo } from 'react';
 import { STORAGE_KEYS } from '../config/constants';
 import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 
@@ -121,21 +121,25 @@ export const usePreferencesReducer = () => {
         localStorage.setItem(STORAGE_KEYS.SEARCH_HISTORY, JSON.stringify(state.searchHistory));
     }, [state.showVehicles, state.showStops, state.showStopLabels, state.stopTypeFilter, state.departureSort, state.mapBaseStyle, state.favoriteStops, state.searchHistory]);
 
-    return {
+    const actions = useMemo(() => ({
+        setShowVehicles: createAction('SET_SHOW_VEHICLES'),
+        setShowStops: createAction('SET_SHOW_STOPS'),
+        setShowStopLabels: createAction('SET_SHOW_STOP_LABELS'),
+        setStopTypeFilter: createAction('SET_STOP_TYPE_FILTER'),
+        setIsSettingsOpen: createAction('SET_IS_SETTINGS_OPEN'),
+        setIsAlertsOpen: createAction('SET_IS_ALERTS_OPEN'),
+        setDepartureSort: createAction('SET_DEPARTURE_SORT'),
+        setRouteTypeFilter: createAction('SET_ROUTE_TYPE_FILTER'),
+        setMapBaseStyle: createAction('SET_MAP_BASE_STYLE'),
+        toggleFavorite: createAction('TOGGLE_FAVORITE'),
+        addToHistory: createAction('ADD_TO_HISTORY'),
+        clearHistory: () => dispatch({ type: 'CLEAR_HISTORY' })
+    }), [createAction, dispatch]);
+
+    const contextValue = useMemo(() => ({
         state,
-        actions: {
-            setShowVehicles: createAction('SET_SHOW_VEHICLES'),
-            setShowStops: createAction('SET_SHOW_STOPS'),
-            setShowStopLabels: createAction('SET_SHOW_STOP_LABELS'),
-            setStopTypeFilter: createAction('SET_STOP_TYPE_FILTER'),
-            setIsSettingsOpen: createAction('SET_IS_SETTINGS_OPEN'),
-            setIsAlertsOpen: createAction('SET_IS_ALERTS_OPEN'),
-            setDepartureSort: createAction('SET_DEPARTURE_SORT'),
-            setRouteTypeFilter: createAction('SET_ROUTE_TYPE_FILTER'),
-            setMapBaseStyle: createAction('SET_MAP_BASE_STYLE'),
-            toggleFavorite: createAction('TOGGLE_FAVORITE'),
-            addToHistory: createAction('ADD_TO_HISTORY'),
-            clearHistory: useCallback(() => dispatch({ type: 'CLEAR_HISTORY' }), [])
-        }
-    };
+        actions
+    }), [state, actions]);
+
+    return contextValue;
 };

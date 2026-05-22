@@ -122,7 +122,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             {link && (
                 <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
-                    <ExternalLink size={12} />
+                    <ExternalLink size={14}  strokeWidth={1.5} />
                 </div>
             )}
         </Alert>

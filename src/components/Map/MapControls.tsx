@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass } from 'lucide-react';
+import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass, Star } from 'lucide-react';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferences, useViewport } from '../../state/contexts';
 import { cn } from '@/lib/utils';
@@ -9,13 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 
+interface MapControlsProps {
+    onToggleFavorites?: () => void;
+    isFavoritesActive?: boolean;
+}
+
 /**
  * MapControls Component
  *
  * Re-architected with semantic components to remove redundant positioning classes.
  * Applied glassy theme with increased transparency for better backdrop-blur visibility.
  */
-export const MapControls = React.memo(() => {
+export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }: MapControlsProps) => {
     const { t } = useTranslation();
     const { actions: prefActions } = usePreferences();
     const { actions: vpActions, mapRef, mapLoaded, isGeoPending } = useViewport();
@@ -86,7 +91,7 @@ export const MapControls = React.memo(() => {
                             "transition-all",
                             isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
                         )}
-                    />
+                     strokeWidth={1.5} />
                 </ControlButton>
 
                 <ControlButton
@@ -94,7 +99,7 @@ export const MapControls = React.memo(() => {
                     title={t('map.controls.settings')}
                     testId="map-settings-btn"
                 >
-                    <Settings size={20} className="transition-transform group-hover:rotate-45" />
+                    <Settings size={20} className="transition-transform group-hover:rotate-45"  strokeWidth={1.5} />
                 </ControlButton>
 
                 <ControlButton
@@ -111,6 +116,20 @@ export const MapControls = React.memo(() => {
                     )}
                 </ControlButton>
 
+                <ControlButton
+                    onClick={onToggleFavorites || (() => {})}
+                    title={t('favorites.title')}
+                    testId="map-favorites-btn"
+                    className="relative"
+                >
+                    <Star
+                        size={20}
+                        className={cn(
+                            isFavoritesActive ? "fill-primary text-primary" : "transition-transform group-hover:scale-110"
+                        )}
+                     strokeWidth={1.5} />
+                </ControlButton>
+
                 <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted">
                     <Button
                         variant="ghost"
@@ -120,7 +139,7 @@ export const MapControls = React.memo(() => {
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
-                        <Plus size={20} />
+                        <Plus size={20}  strokeWidth={1.5} />
                     </Button>
                     <ButtonGroupSeparator orientation="horizontal" className="mx-2 bg-white/10" />
                     <Button
@@ -131,7 +150,7 @@ export const MapControls = React.memo(() => {
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
-                        <Minus size={20} />
+                        <Minus size={20}  strokeWidth={1.5} />
                     </Button>
                 </ButtonGroup>
 
@@ -141,7 +160,7 @@ export const MapControls = React.memo(() => {
                         title={t('map.controls.resetBearing')}
                         className=""
                     >
-                        <Compass size={20} className="transition-transform group-hover:rotate-12" />
+                        <Compass size={20} className="transition-transform group-hover:rotate-12"  strokeWidth={1.5} />
                     </ControlButton>
                 )}
             </Stack>

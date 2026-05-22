@@ -189,7 +189,8 @@
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",
     "geoError": "Nepodařilo se získat polohu. Zkontrolujte prosím oprávnění prohlížeče.",
     "geoSearching": "Hledám vaši polohu...",
-    "vehicleNotFound": "Vozidlo nebylo nalezeno. Pravděpodobně ještě nevyjelo."
+    "vehicleNotFound": "Vozidlo nebylo nalezeno. Pravděpodobně ještě nevyjelo.",
+    "favoritesLimitReached": "Dosažen maximální limit 20 oblíbených zastávek."
   },
   "alerts": {
     "title": "Mimořádnosti a výluky",
@@ -208,5 +209,10 @@
     "network": "Zkontrolujte připojení k internetu",
     "timeout": "Požadavek vypršel",
     "upstream": "Zdroj dát je momentálně nedostupný"
+  },
+  "favorites": {
+    "title": "Oblíbené zastávky",
+    "empty": "Žádné oblíbené zastávky",
+    "emptySub": "Klepnutím na hvězdičku v detailu zastávky si ji uložíte sem."
   }
 }

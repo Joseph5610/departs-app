@@ -186,7 +186,8 @@
     "geoNotSupported": "Your browser does not support geolocation.",
     "geoError": "Could not retrieve location. Please check browser permissions.",
     "geoSearching": "Searching for your location...",
-    "vehicleNotFound": "Vehicle not found. It probably has not started yet."
+    "vehicleNotFound": "Vehicle not found. It probably has not started yet.",
+    "favoritesLimitReached": "Maximum limit of 20 favorite stops reached."
   },
   "alerts": {
     "title": "Incidents and Exclusions",
@@ -205,5 +206,10 @@
     "network": "Check your internet connection",
     "timeout": "The request timed out",
     "upstream": "The data source is currently unavailable"
+  },
+  "favorites": {
+    "title": "Favorite Stops",
+    "empty": "No favorite stops yet",
+    "emptySub": "Tap the star icon on any stop's departure board to pin it here."
   }
 }

@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <Box center className="fixed inset-0 bg-background p-6 z-9999">
                     <Surface variant="tinted" padding="xl" className="max-w-md w-full border-destructive/20! rounded-[32px] flex flex-col gap-0 items-center">
                         <Box center className="w-16 h-16 bg-destructive/10 rounded-2xl mb-6 shrink-0">
-                            <AlertCircle className="text-destructive" size={32} />
+                            <AlertCircle className="text-destructive" size={24}  strokeWidth={1.5} />
                         </Box>
                         <h1 className="text-foreground text-2xl font-bold mb-2">Oops, something went wrong</h1>
                         <p className="text-muted-foreground text-sm mb-8 leading-relaxed text-center">
@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             onClick={() => window.location.reload()}
                             className="w-full h-auto py-4 font-bold flex items-center justify-center gap-2"
                         >
-                            <RefreshCcw size={18} />
+                            <RefreshCcw size={20}  strokeWidth={1.5} />
                             Refresh Application
                         </Button>
 

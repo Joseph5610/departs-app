@@ -111,7 +111,7 @@ export const AlertsModal: React.FC = () => {
                                     placeholder={t('search.placeholder')}
                                     className="h-10 pl-10 pr-10 text-sm rounded-xl border-2 border-white/10 bg-muted/40"
                                 />
-                                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16}  strokeWidth={1.5} />
                                 {searchQuery && (
                                     <Button
                                         variant="ghost"
@@ -119,7 +119,7 @@ export const AlertsModal: React.FC = () => {
                                         onClick={() => setSearchQuery('')}
                                         className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
                                     >
-                                        <X size={14} />
+                                        <X size={16} strokeWidth={1.5}  />
                                     </Button>
                                 )}
                             </Box>

@@ -85,8 +85,15 @@ export const useSelectionReducer = () => {
             dispatch({ type: 'TOGGLE_LINE_FILTER', payload: line }),
     }), [dispatch]);
 
-    return {
-        state: { ...state, selectedId },
+    const selectionState = useMemo(() => ({
+        ...state,
+        selectedId
+    }), [state, selectedId]);
+
+    const contextValue = useMemo(() => ({
+        state: selectionState,
         actions
-    };
+    }), [selectionState, actions]);
+
+    return contextValue;
 };

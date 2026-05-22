@@ -46,7 +46,9 @@ function normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
  * Removes parent stations (contain 'S') and keeps platforms (contain 'Z').
  */
 export function filterStopIdsForDepartures(stopId: string): string[] {
-    const rawIds = stopId.split(',');
+    // Strip "centroid-" prefix if it exists
+    const cleanStopId = stopId.replace(/^centroid-/, '');
+    const rawIds = cleanStopId.split(',');
     const finalIds = rawIds.filter(id => {
         if (id.includes('S')) return false; // Filter out stations (parent stations)
         if (!id.includes('Z')) return false; // Keep only platform-level stops
@@ -58,20 +60,36 @@ export function filterStopIdsForDepartures(stopId: string): string[] {
 export const onRequest: PagesFunction<Env> = async (context) => {
     const { env } = context;
     const { searchParams } = new URL(context.request.url);
-    const stopId = sanitizeId(searchParams.get("stopId"));
+    
+    // Support multiple stopId parameters (e.g. ?stopId=U718Z1P,U718Z2P&stopId=U717Z5P)
+    let stopIds = searchParams.getAll("stopId").map(sanitizeId).filter((id): id is string => !!id);
+    
+    // Fallback to single stopId parameter for backward compatibility
+    if (stopIds.length === 0) {
+        const singleStopId = sanitizeId(searchParams.get("stopId"));
+        if (singleStopId) {
+            stopIds = [singleStopId];
+        }
+    }
 
-    if (!stopId) {
+    if (stopIds.length === 0) {
         return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
     }
 
     try {
-        const idsToFetch = filterStopIdsForDepartures(stopId);
-        const stopIdsParam = JSON.stringify({ "0": idsToFetch });
+        const stopIdsParams: string[] = [];
+        
+        stopIds.forEach((id, idx) => {
+            const idsToFetch = filterStopIdsForDepartures(id);
+            // Golemio expects an object with group index mapping to an array of platform IDs
+            const groupObj = { [String(idx)]: idsToFetch };
+            stopIdsParams.push(JSON.stringify(groupObj));
+        });
 
         const response = await golemioFetch("/v2/public/departureboards", env, {
             cacheTtl: CACHE_TTL.DEPARTURES,
             searchParams: {
-                "stopIds[]": stopIdsParam,
+                "stopIds[]": stopIdsParams,
                 limit: TRANSIT_CONFIG.DEPARTURE_LIMIT.toString(),
                 minutesAfter: TRANSIT_CONFIG.DEPARTURE_MINUTES_AFTER.toString()
             }
@@ -82,8 +100,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         }
 
         const data = await response.json() as GolemioDepartureItem[][];
-        const flattened = Array.isArray(data) ? data.flat() : [];
-        const departures = flattened.map(normalizeDeparture);
+        const departures: AppDeparture[] = [];
+
+        if (Array.isArray(data)) {
+            data.forEach((groupData, idx) => {
+                if (Array.isArray(groupData)) {
+                    // Match back to the original requested stop ID
+                    const originalStopId = stopIds[idx];
+                    groupData.forEach(item => {
+                        const normalized = normalizeDeparture(item);
+                        normalized.stopId = originalStopId;
+                        departures.push(normalized);
+                    });
+                }
+            });
+        }
 
         // Sort by predicted time (falling back to scheduled time)
         departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());

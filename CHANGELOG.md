@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.41.7] - 2026-05-20
+
+### Fixed
+
+- **Type Safety**: Strongly typed `GolemioShapeFeature.properties` with `{ shape_dist_traveled: number }` per the Golemio OpenAPI schema, eliminating the `Record<string, unknown>` hole (Zero-Hole Policy).
+- **Performance**: Memoized `actions` objects and returned context values in `useViewportReducer`, `usePreferencesReducer`, and `useSelectionReducer` using `useMemo`. This gives stable references to context consumers, preventing unnecessary re-renders across the entire app on every state change.
+- **Performance**: Fixed duplicate bounds-rounding logic in `MapStateProvider.onLoad` by reusing the existing memoized `getRoundedBounds(map)` helper instead of inline duplication. Added `getRoundedBounds` to the `useCallback` dependency array.
+- **Performance**: Narrowed `finalViewportValue` `useMemo` dependencies in `MapStateProvider` from the top-level `viewportContext` object reference (which changed on every render) to stable `vpState` and `vpActions` primitives.
+- **Cleanup**: Removed dead `"use client"` directives from `switch.tsx`, `toggle-group.tsx`, and `scroll-area.tsx`, which are not applicable in this Vite/React PWA project.
+
+## [0.41.6] - 2026-05-20
+
+### Fixed
+
+- **Search History Deduplication**: Resolved the duplicate React key console warning (`Encountered two children with the same key, 'hist-place-photon-W-724672513-0'`) for geocoded places. Added place ID normalization in `usePreferencesReducer.ts` that strips the trailing query result rank index suffix from photon geocoding IDs (`photon-[osm_type]-[osm_id]-[index]`) when hydrating and adding to the search history state. This ensures stable key generation and consolidates duplicate entries representing the same physical location across different searches.
+
+## [0.41.5] - 2026-05-19
+
+### Fixed
+
+- **Map State Management**: Resolved the React warning `Cannot update a component ('MapStateProvider') while rendering a different component ('MapInner')` when clicking the Star/Favorites button. Deferred selection state clearing using a `setTimeout` macrotask inside `handleToggleFavorites` to execute safely outside React's render/reconciliation phase.
+
+## [0.41.4] - 2026-05-19
+
+### Changed
+
+- **Performance Optimization**: Solved the favorite stops N+1 query problem by implementing single-request bulk fetching.
+  - Adapted the backend `/api/departures` endpoint to retrieve multiple `stopId` params via array query parameters and bundle them into Golemio's native grouping format (`stopIds[]={"idx": ["platformId"]}`).
+  - Normalized and associated each fetched departure back to its parent `stopId` before sorting.
+  - Refactored `FavoritesPanel` on the frontend to execute a single react-query fetch for all pinned stops in the background.
+  - Converted `FavoritesStopCard` into a lightweight presentational component that receives departures as props and calculates walking times cleanly without making separate queries.
+
+## [0.41.3] - 2026-05-19
+
+### Changed
+
+- **UI Consistency**: Unified stop platform badges to be circular (`rounded-full`) across components. Updated the platform badge in `<FavoritesStopCard />` to use a high-fidelity, centered circular badge (`w-5 h-5 rounded-full bg-white/10 border-white/10`) to match the style of the stop platform badge inside `<DetailPanel />`.
+
 ## [0.41.2] - 2026-05-19
 
 ### Changed

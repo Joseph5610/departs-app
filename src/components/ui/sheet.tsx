@@ -84,7 +84,7 @@ function SheetContent({
               />
             }
           >
-            <X size={20} />
+            <X size={20} strokeWidth={1.5}  />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

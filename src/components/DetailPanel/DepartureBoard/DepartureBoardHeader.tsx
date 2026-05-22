@@ -13,6 +13,7 @@ import { HStack } from '@/components/ui/layout';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { LineBadge } from '../../LineBadge';
+import { toast } from 'sonner';
 
 /**
  * DepartureBoardHeader
@@ -105,13 +106,13 @@ export const DepartureBoardHeader = React.memo(() => {
                             className="flex items-center h-full px-3 hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer"
                             onClick={handleNavigate}
                         >
-                             <MapPin size={10} className="text-muted-foreground/80 mr-1.5" />
+                             <MapPin size={12} className="text-muted-foreground/80 mr-1.5"  strokeWidth={1.5} />
                              <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap flex items-center">
                                 {stopDistanceInfo?.isReasonableWalkingDistance ? (
                                     <>
                                         <span>{stopDistanceInfo.distance}m</span>
                                         <span className="mx-1.5 opacity-30 font-normal">•</span>
-                                        <Footprints size={11} className="mr-1 text-muted-foreground/60" />
+                                        <Footprints size={14} className="mr-1 text-muted-foreground/60"  strokeWidth={1.5} />
                                         <span>{stopDistanceInfo.time} min</span>
                                     </>
                                 ) : (
@@ -127,12 +128,12 @@ export const DepartureBoardHeader = React.memo(() => {
                                 <Tooltip>
                                     <TooltipTrigger render={
                                         <div className="flex items-center h-full px-3 hover:bg-white/5 transition-colors cursor-help">
-                                            <Activity size={10} className={cn(
+                                            <Activity size={12} className={cn(
                                                 "mr-1.5",
                                                 delayStats.trend === 'worsening' ? "text-red-400" :
                                                 delayStats.trend === 'improving' ? "text-emerald-400" :
                                                 "text-amber-400"
-                                            )} />
+                                            )}  strokeWidth={1.5} />
                                             <span className="font-bold text-foreground text-[11px] tracking-tight opacity-90 whitespace-nowrap">
                                                 {delayStats.averageDelayMin === 0 
                                                     ? t('map.departures.onTime') 
@@ -158,7 +159,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                 className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                             >
                                 {/* Show the ACTION you will take: if sorted by line, show Clock. If sorted by departure, show A-Z. */}
-                                {departureSort === 'line' ? <Clock size={16} /> : <ArrowDownAz size={16} />}
+                                {departureSort === 'line' ? <Clock size={16}  strokeWidth={1.5} /> : <ArrowDownAz size={16}  strokeWidth={1.5} />}
                             </button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
@@ -176,7 +177,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                     rel="noopener noreferrer"
                                     className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                                 >
-                                    <ExternalLink size={16} />
+                                    <ExternalLink size={16}  strokeWidth={1.5} />
                                 </a>
                             } />
                             <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
@@ -189,13 +190,21 @@ export const DepartureBoardHeader = React.memo(() => {
                     <Tooltip>
                         <TooltipTrigger render={
                             <button
-                                onClick={() => { if (selectedStop) { toggleFavorite(selectedStop.stop_id); } }}
+                                onClick={() => {
+                                    if (selectedStop) {
+                                        if (!isFavorite && favoriteStops.length >= 20) {
+                                            toast.error(t('toasts.favoritesLimitReached'));
+                                            return;
+                                        }
+                                        toggleFavorite(selectedStop.stop_id);
+                                    }
+                                }}
                                 className={cn(
                                     "h-7 w-7 flex items-center justify-center rounded-md transition-all text-muted-foreground opacity-40 hover:opacity-100 hover:text-amber-500",
                                     isFavorite && "text-amber-500 opacity-100"
                                 )}
                             >
-                                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+                                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'}  strokeWidth={1.5} />
                             </button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
@@ -210,7 +219,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                 onClick={handleShare}
                                 className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                             >
-                                <Share2 size={16} />
+                                <Share2 size={16}  strokeWidth={1.5} />
                             </button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">

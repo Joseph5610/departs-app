@@ -237,7 +237,7 @@ export const Search: React.FC = React.memo(() => {
                         readOnly={!!activeFilter}
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                        <SearchIcon size={20} className={cn(activeFilter && "text-primary")} />
+                        <SearchIcon size={20} strokeWidth={1.5} className={cn(activeFilter && "text-primary")}  />
                     </div>
                     {(query || activeFilter) && (
                         <div className="absolute right-0 top-0 h-full flex items-center pr-1">
@@ -251,7 +251,7 @@ export const Search: React.FC = React.memo(() => {
                                 className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
                                 aria-label={t('search.clearFilter')}
                             >
-                                <X size={20} />
+                                <X size={20} strokeWidth={1.5}  />
                             </Button>
                         </div>
                     )}

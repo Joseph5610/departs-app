@@ -81,7 +81,7 @@ export const WelcomeModal: React.FC = () => {
 
                     <Stack gap={4}>
                         <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
-                            <Box className="mt-1 text-primary"><Info size={18} /></Box>
+                            <Box className="mt-1 text-primary"><Info size={20}  strokeWidth={1.5} /></Box>
                             <Stack gap={1}>
                                 <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.clickStop.title')}</h3>
                                 <p className="text-muted-foreground text-xs">{t('welcome.steps.clickStop.description')}</p>
@@ -89,7 +89,7 @@ export const WelcomeModal: React.FC = () => {
                         </Surface>
 
                         <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
-                            <Box className="mt-1 text-primary"><Info size={18} /></Box>
+                            <Box className="mt-1 text-primary"><Info size={20}  strokeWidth={1.5} /></Box>
                             <Stack gap={1}>
                                 <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.trackVehicles.title')}</h3>
                                 <p className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</p>
@@ -104,7 +104,7 @@ export const WelcomeModal: React.FC = () => {
                         className="w-full h-auto py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group"
                     >
                         {t('welcome.cta')}
-                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"  strokeWidth={1.5} />
                     </Button>
                 </Stack>
             </DialogContent>

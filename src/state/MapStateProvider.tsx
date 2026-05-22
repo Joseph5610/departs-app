@@ -115,22 +115,19 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         addAllIcons(map);
         setMapLoaded(true);
 
-        const b = map.getBounds();
-        const z = map.getZoom();
-        if (b && z >= MAP_MIN_ZOOM_FOR_DATA) {
-            const round = (num: number) => Math.round(num * 1000) / 1000;
-            const initialBounds = `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`;
+        const initialBounds = getRoundedBounds(map);
+        if (initialBounds) {
             vpActions.setBounds(initialBounds);
             vpActions.setDebouncedBounds(initialBounds);
         }
-    }, [vpActions]);
+    }, [vpActions, getRoundedBounds]);
 
     const handleDepartureClick = useCallback(async (tripId: string, vehicleId?: string) => {
         selActions.selectVehicle(tripId, vehicleId || null, true);
     }, [selActions]);
 
     const finalViewportValue = useMemo<ViewportContextType>(() => ({
-        ...viewportContext,
+        state: vpState,
         mapRef,
         mapLoaded,
         labelLayerId,
@@ -147,8 +144,8 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         },
         mapEvents: { onMove, onMoveEnd, onLoad, onDragStart }
     }), [
-        viewportContext, mapRef, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
-        handleLocate, performGeolocation, handleDepartureClick, vpActions,
+        vpState, vpActions, mapRef, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
+        handleLocate, performGeolocation, handleDepartureClick,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);
 

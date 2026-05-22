@@ -89,10 +89,10 @@ export const DepartureItem = memo(({
             {/* Icons Block - before headsign like official PID tables */}
             <div className="flex gap-1.5 opacity-25 items-center min-h-[14px] shrink-0 min-w-[32px] ml-3">
                 {dep.is_wheelchair_accessible && (
-                    <Accessibility size={13} strokeWidth={2.5} />
+                    <Accessibility size={14} strokeWidth={1.5}  />
                 )}
                 {dep.is_air_conditioned && (
-                    <Snowflake size={13} strokeWidth={2.5} />
+                    <Snowflake size={14} strokeWidth={1.5}  />
                 )}
             </div>
 
@@ -118,7 +118,7 @@ export const DepartureItem = memo(({
                         className="flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1.5 h-[16px] bg-white/8 rounded-[3px] border border-white/5 shadow-sm mr-1"
                         title={t('map.departures.platform')}
                     >
-                        <Train size={9} strokeWidth={2.5} className="opacity-40" />
+                        <Train size={12} strokeWidth={1.5} className="opacity-40"  />
                         <span className="text-[9.5px] font-bold text-foreground/60 leading-none">{dep.platform}</span>
                     </div>
                 )}

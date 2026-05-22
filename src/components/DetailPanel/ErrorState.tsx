@@ -57,7 +57,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
                     onClick={onRetry}
                     className="group gap-2.5 font-bold text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-foreground transition-all rounded-full px-5"
                 >
-                    <RefreshCw size={14} className="opacity-50 group-hover:opacity-100 group-hover:rotate-180 transition-all duration-700 ease-in-out" />
+                    <RefreshCw size={14} className="opacity-50 group-hover:opacity-100 group-hover:rotate-180 transition-all duration-700 ease-in-out"  strokeWidth={1.5} />
                     {t('common.retry')}
                 </Button>
             )}

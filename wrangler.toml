@@ -1,0 +1,8 @@
+name = "departs-app"
+compatibility_date = "2026-03-17"
+
+[secrets]
+required = ["GOLEMIO_API_KEY"]
+
+[observability]
+enabled = true

@@ -1,16 +1,16 @@
 # CRITICAL CONSTRAINTS: departs-app
 
-A real-time Prague public transport (PID) tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui. Backend: Cloudflare Pages Functions.
+Real-time Prague PID tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui. Backend: Cloudflare Pages Functions.
 
 ## 1. ARCHITECTURAL INVARIANTS (MANDATORY)
 
-These rules are non-negotiable. Any violation is a system-level bug.
+Non-negotiable. Any violation is system-level bug.
 
 ### State Model & Contexts
-- **Single Source of Truth**: `MapStateProvider` coordinates the core context.
+- **Single Source of Truth**: `MapStateProvider` coordinates core context.
 - **ID-Only Reducers**: Reducers MUST ONLY store minimal IDs.
-- **Minimal State**: Full objects or computed data MUST NEVER be stored in state; they MUST be derived in hooks.
-- **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure. Side-effects (e.g., updating refs for deltas) MUST live in `useEffect`.
+- **Minimal State**: Full objects/computed data MUST NEVER be stored in state; derive in hooks.
+- **Pure Transformations**: `useMemo`, `select`, data transforms MUST be pure. Side-effects (updating refs for deltas) MUST live in `useEffect`.
 
 | Context | Reducer | Purpose |
 |---|---|---|
@@ -19,67 +19,68 @@ These rules are non-negotiable. Any violation is a system-level bug.
 | `PreferencesContext` | `usePreferencesReducer` | User settings, UI toggles, route type filters |
 
 ### Hook Data Flow (Strict Hierarchy)
-- **Layer 1: `data/` (React Query)**: Talk to the API, own the cache. (e.g., `useVehicles`, `useDepartures`)
+- **Layer 1: `data/` (React Query)**: Talk to API, own cache. (e.g., `useVehicles`, `useDepartures`)
 - **Layer 2: `derived/` (Logic)**: Merge multiple data sources into single objects. (e.g., `useSelectedVehicle`, `useMapFilters`)
 - **Layer 3: `features/` (UI Glue)**: Side-effects, URL sync, camera, animations. (e.g., `useMapInterface`)
-- **STRICT RULE**: Imports MUST flow strictly one-way (1 -> 2 -> 3). NEVER import upward.
+- **STRICT RULE**: Imports MUST flow one-way (1 -> 2 -> 3). NEVER import upward.
 
 ### Vehicle Data Priority
 `useSelectedVehicle` MUST merge sources with this priority:
 1. **Detail API** (Metadata via `useVehicleDetail`)
 2. **Live Stream** (Positions via `useVehicles`)
 3. **Reducer State** (IDs)
-*If `is_static_fallback: true` in Detail API, preserve the live position/delay from the stream.*
+*If `is_static_fallback: true` in Detail API, preserve live position/delay from stream.*
 
 ## 2. PERFORMANCE & MAP CONSTRAINTS
 
-The map MUST run at 60fps. React renders are too slow for high-frequency updates.
+Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
-- **Bypass React**: Visual updates to map layers (paint/layout properties) MUST bypass React state.
+- **Bypass React**: Visual updates to map layers MUST bypass React state.
 - **Direct Mutations**: ONLY use `map.setPaintProperty()` or `map.setLayoutProperty()` for animations.
-- **Cleanup**: All `requestAnimationFrame` loops MUST have a robust cleanup mechanism.
+- **Cleanup**: All `requestAnimationFrame` loops MUST have robust cleanup.
 - **Memoization**: Wrap map layer components in `React.memo` with primitive props only.
 - **React Query**: Use `TRANSIT_REFRESH_MS` (10s) for refreshes and `keepPreviousData` for positions to prevent flicker.
 
 ## 3. UI & DOMAIN RULES
 
-- **DetailPanel Abstraction**: Mobile UI (Vaul drawer) and Desktop UI (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break this responsive switch logic.
+- **DetailPanel Abstraction**: Mobile (Vaul drawer) and Desktop (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break responsive switch logic.
 - **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` Trolleybus.
-- **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` as lines A/B/C have distinct directional identities.
+- **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` — lines A/B/C have distinct directional identities.
 - **Branding Authority**: All transit colors MUST originate from `src/config/stations.ts` (static) or backend-provided branding.
-- **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts to account for notches.
-- **i18n**: Czech (`cs`) and English (`en`) via `react-i18next`. Translation files live in `src/i18n/locales/`.
-- **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache. Normalization MUST perform structural grouping on the server to keep the frontend map layers performant.
+- **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts.
+- **i18n**: Czech (`cs`) and English (`en`) via `react-i18next`. Translation files in `src/i18n/locales/`.
+- **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache. Normalization MUST perform structural grouping server-side for frontend map layer performance.
 
 ## 4. OPERATIONAL RULES (AGENT WORKFLOW)
 
 ### Forbidden Patterns (STRICT NEGATIVES)
 - **NEVER** use repetitive emojis, icons, or visual filler.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
-- **NEVER** use ad-hoc utility classes for core layout; use the established design system tokens.
-- **NEVER** store UI state (like drawer height) in the global selection context.
+- **NEVER** use ad-hoc utility classes for core layout; use established design system tokens.
+- **NEVER** store UI state (like drawer height) in global selection context.
+- **Lucide Icons**: ALWAYS use even, standardized sizes (`size={16}` for w-4, `size={20}` for w-5). Non-integer viewport scaling causes subpixel anti-aliasing blurriness. For small icons (`size <= 16`), set `strokeWidth={1.5}` to prevent muddy appearances.
 
 ### Mandatory Protocol
-1. **Tool-First Interaction**: Execute tools immediately. Keep explanation under 3 sentences unless complex.
-2. **Frustration Pivot**: If the user shows frustration, switch to a "Zero-Fluff" technical-only style.
-3. **Build & Quality Integrity**: Run `npm run build` and ensure `tsc` and `lint` pass for BOTH frontend and backend (`functions/`) before confirming any architectural change or concluding a task. `npm run build` is the ONLY authority for final type validation.
+1. **Tool-First**: Execute tools immediately. Explanation under 3 sentences unless complex.
+2. **Frustration Pivot**: If user shows frustration, switch to "Zero-Fluff" technical-only style.
+3. **Build & Quality Integrity**: Run `npm run build` and ensure `tsc` and `lint` pass for BOTH frontend and backend (`functions/`) before confirming any architectural change or concluding task. `npm run build` is ONLY authority for final type validation.
 4. **Versioning**: Increment `package.json` exactly once per session (Patch: Fixes, Minor: Features/Arch).
-5. **Changelog**: Every time you increment the version, you MUST document all changes in `CHANGELOG.md` under the new version header with the current date.
+5. **Changelog**: Every version increment MUST document all changes in `CHANGELOG.md` under new version header with current date.
 
 ## 5. DATA PIPELINE & NORMALIZATION
 
-These rules apply to all transit data handlers in `functions/api/`.
+Applies to all transit data handlers in `functions/api/`.
 
-- **Parallel Fetching**: Large GTFS datasets (Stops/Vehicles) MUST be fetched in parallel using `Promise.all` with chunked offsets to avoid Cloudflare Worker execution timeouts.
+- **Parallel Fetching**: Large GTFS datasets (Stops/Vehicles) MUST be fetched in parallel via `Promise.all` with chunked offsets to avoid Cloudflare Worker timeouts.
 - **Two-Phase Grouping**: Stop processing MUST follow two phases:
     1. **Structural**: Identify and create Parent Stations (Type 1) and Entrances (Type 2).
-    2. **Logical**: Merge Regular Stops (Type 0) into their Structural Parent Stations (Type 1) when present. If no Type 1 parent exists, group stops by `name + node + platform`.
-- **Centroid Authority**: Centroids MUST be generated for every logical stop node. They MUST have `is_centroid: true` and an ID prefixed with `centroid-`.
-- **Enrichment Filtering**: Only features present in `stops-enrichment.json` (or their structural parents) should be returned to the frontend. Administrative or technical-only markers MUST be discarded.
-- **Metadata Inheritance**: When merging platform points into a parent station, the parent MUST inherit and aggregate all `metro_lines`, `route_color`, and `is_train` flags from its children.
-- **O(1) Lookups**: All lookups against enrichment data, line metadata, or ID maps MUST use `Map` or `Record`. Sequential array searching (O(N)) for transit metadata is FORBIDDEN across the entire stack (Backend & Frontend).
-- **Data Priority**: Real-time and static properties from the API (Golemio) are the primary authority. Enrichment data (`stops-enrichment.json`) MUST be treated only as an **augmentation layer** to fill in missing metadata (e.g., passing lines, name expansions) or provide fallbacks when API data is incomplete. API-provided live properties (delays, positions, platform codes) always take precedence.
-- **Strict Typing (Zero-Hole Policy)**: Use of `any`, `unknown`, or generic `Record<string, unknown>` is prohibited. All interfaces MUST strictly mirror the Golemio OpenAPI schema from the fetch layer to the UI components.
+    2. **Logical**: Merge Regular Stops (Type 0) into Structural Parent Stations (Type 1) when present. If no Type 1 parent, group by `name + node + platform`.
+- **Centroid Authority**: Centroids MUST be generated for every logical stop node. Must have `is_centroid: true` and ID prefixed with `centroid-`.
+- **Enrichment Filtering**: Only features in `stops-enrichment.json` (or structural parents) returned to frontend. Administrative/technical-only markers MUST be discarded.
+- **Metadata Inheritance**: When merging platform points into parent station, parent MUST inherit and aggregate all `metro_lines`, `route_color`, `is_train` flags from children.
+- **O(1) Lookups**: All lookups against enrichment data, line metadata, or ID maps MUST use `Map` or `Record`. Sequential array search (O(N)) for transit metadata is FORBIDDEN (Backend & Frontend).
+- **Data Priority**: Golemio API real-time/static props are primary authority. `stops-enrichment.json` is augmentation only — fill missing metadata (passing lines, name expansions) or fallbacks when API data incomplete. API-provided live props (delays, positions, platform codes) always take precedence.
+- **Strict Typing (Zero-Hole Policy)**: `any`, `unknown`, or generic `Record<string, unknown>` prohibited. All interfaces MUST strictly mirror Golemio OpenAPI schema from fetch layer to UI components.
 
 ## 6. LOCAL ENVIRONMENT
-- **Port:** The development server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.
+- **Port:** Dev server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.

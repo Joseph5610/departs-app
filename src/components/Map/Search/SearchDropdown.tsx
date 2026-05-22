@@ -57,7 +57,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     <>
                         <Box className="px-4 py-2 bg-white/5">
                             <HStack className="gap-2">
-                                <Clock size={10} className="text-muted-foreground" />
+                                <Clock size={12} className="text-muted-foreground"  strokeWidth={1.5} />
                                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
                                     {t('search.recent')}
                                 </span>
@@ -71,9 +71,9 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                     `hist-line-${item.lines.join('-')}`
                                 }
                                 icon={
-                                    item.type === 'stop' ? <MapPin size={16} /> :
-                                    item.type === 'place' ? <Building2 size={16} /> :
-                                    <SearchIcon size={16} />
+                                    item.type === 'stop' ? <MapPin size={16}  strokeWidth={1.5} /> :
+                                    item.type === 'place' ? <Building2 size={16}  strokeWidth={1.5} /> :
+                                    <SearchIcon size={16} strokeWidth={1.5}  />
                                 }
                                 title={
                                     item.type === 'stop' ? item.stop_name :
@@ -102,7 +102,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {query === '' && results.length > 0 && (
                     <Box className="px-4 py-2 bg-white/5">
                         <HStack className="gap-2">
-                            <Star size={10} fill="currentColor" className="text-muted-foreground" />
+                            <Star size={12} fill="currentColor" className="text-muted-foreground"  strokeWidth={1.5} />
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
                                 {t('search.favorites')}
                             </span>
@@ -112,7 +112,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
                 {isLineLike && (
                     <SearchItem
-                        icon={<SearchIcon size={16} />}
+                        icon={<SearchIcon size={16} strokeWidth={1.5}  />}
                         title={t('search.filterByLine')}
                         lines={linesFromQuery.map(l => {
                             const meta = getLineMetadataFromMap(l, lineMetadataMap);
@@ -131,7 +131,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {results.map((stop) => (
                     <SearchItem
                         key={stop.properties.stop_id}
-                        icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" /> : <MapPin size={16} />}
+                        icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor"  strokeWidth={1.5} /> : <MapPin size={16}  strokeWidth={1.5} />}
                         title={stop.properties.stop_name}
                         subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
                         metroLines={stop.properties.metro_lines}
@@ -147,7 +147,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     <>
                         <Box className="px-4 py-2 bg-white/5">
                             <HStack className="gap-2">
-                                <Building2 size={10} className="text-muted-foreground" />
+                                <Building2 size={12} className="text-muted-foreground"  strokeWidth={1.5} />
                                 <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
                                     {t('search.places')}
                                 </span>
@@ -156,7 +156,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         {geocodingResults.map((place) => (
                             <SearchItem
                                 key={place.id}
-                                icon={<Building2 size={16} />}
+                                icon={<Building2 size={16}  strokeWidth={1.5} />}
                                 title={place.name}
                                 subtitle={place.subtitle || undefined}
                                 testId={`search-item-place-${place.id}`}

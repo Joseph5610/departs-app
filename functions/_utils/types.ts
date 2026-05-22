@@ -111,7 +111,9 @@ export interface GolemioShapeFeature {
         type: 'Point';
         coordinates: [number, number];
     };
-    properties?: Record<string, unknown>;
+    properties: {
+        shape_dist_traveled: number;
+    };
 }
 
 export interface GolemioDepartureItem {
@@ -272,6 +274,7 @@ export interface AppDeparture {
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
+    stopId?: string;
 }
 
 export interface AppRSSItem {

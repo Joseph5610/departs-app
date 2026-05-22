@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from 'react';
+import { useReducer, useCallback, useMemo } from 'react';
 
 import type { GeocodingResult } from '../hooks/data/useGeocoding';
 
@@ -44,13 +44,17 @@ export const useViewportReducer = () => {
         (payload: Extract<ViewportAction, { type: T }> extends { payload: infer P } ? P : never) => 
             dispatch({ type, payload } as unknown as ViewportAction), []);
 
-    return {
+    const actions = useMemo(() => ({
+        setBounds: createAction('SET_BOUNDS'),
+        setDebouncedBounds: createAction('SET_DEBOUNCED_BOUNDS'),
+        setRouteFilter: createAction('SET_ROUTE_FILTER'),
+        setSelectedPlace: createAction('SET_SELECTED_PLACE')
+    }), [createAction]);
+
+    const contextValue = useMemo(() => ({
         state,
-        actions: {
-            setBounds: createAction('SET_BOUNDS'),
-            setDebouncedBounds: createAction('SET_DEBOUNCED_BOUNDS'),
-            setRouteFilter: createAction('SET_ROUTE_FILTER'),
-            setSelectedPlace: createAction('SET_SELECTED_PLACE')
-        }
-    };
+        actions
+    }), [state, actions]);
+
+    return contextValue;
 };

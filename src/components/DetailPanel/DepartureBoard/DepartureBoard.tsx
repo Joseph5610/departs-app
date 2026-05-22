@@ -131,7 +131,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                 >
                                                     {lineGroup.line}
                                                 </span>
-                                                <ArrowRight size={12} className="text-muted-foreground/40 shrink-0" />
+                                                <ArrowRight size={14} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
                                                 <span className="flex items-center gap-1.5 flex-1 min-w-0">
                                                     <span className="text-foreground/90 text-[15px] font-semibold truncate min-w-0">
                                                         {subGroup.headsign}
@@ -147,7 +147,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                         variant="outline"
                                                         className="h-[18px] px-1.5 rounded-md text-[9px] font-bold tabular-nums flex items-center gap-1 bg-black/20 border-white/10! text-foreground/50 shrink-0"
                                                     >
-                                                        <Train size={9} strokeWidth={2.5} className="opacity-40" />
+                                                        <Train size={12} strokeWidth={1.5} className="opacity-40"  />
                                                         <span>{subFirstDep.platform}</span>
                                                     </Badge>
                                                 )}
@@ -168,7 +168,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                     style={{ backgroundColor: subFirstDep.route_color || '#AD0B00' }}
                                                 />
                                                 <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
-                                                    <ArrowRight size={10} className="text-muted-foreground/40 shrink-0" />
+                                                    <ArrowRight size={12} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
                                                     <span className="text-foreground/90 text-[14px] font-bold truncate">
                                                         {subGroup.headsign}
                                                     </span>
@@ -202,9 +202,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                 className="w-full py-2.5 flex items-center justify-center gap-2 bg-white/2 hover:bg-white/6 transition-colors border-t border-white/5 text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider"
                                             >
                                                 <ChevronDown 
-                                                    size={12} 
+                                                    size={14} 
                                                     className={cn("transition-transform duration-200", isExpanded && "rotate-180")} 
-                                                />
+                                                 strokeWidth={1.5} />
                                                 <span>
                                                     {isExpanded 
                                                         ? t('map.departures.showLess') 

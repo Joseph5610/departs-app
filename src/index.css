@@ -153,6 +153,13 @@
       height: 100vh;
     }
   }
+
+  /* Make all Lucide icons crisp and prevent blurry antialiasing */
+  svg.lucide {
+    shape-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @utility custom-scrollbar {
