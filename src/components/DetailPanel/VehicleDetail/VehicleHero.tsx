@@ -59,7 +59,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </button>
                 </HStack>
 
-                <h3 className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5 line-clamp-3">
+                <h3 data-testid="vehicle-headsign"
+                    className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5 line-clamp-3">
                     {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
                 </h3>
 

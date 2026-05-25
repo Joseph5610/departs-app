@@ -56,6 +56,7 @@ export const DepartureItem = memo(({
         <button
             onPointerDown={handlePointerDown}
             onClick={handleClick}
+            data-testid={`departure-item-${dep.tripId}`}
             className={cn(
                 "w-full flex items-center gap-2 py-2.5 px-3 text-left transition-colors",
                 dep.tripId

@@ -190,6 +190,7 @@ export const DepartureBoardHeader = React.memo(() => {
                     <Tooltip>
                         <TooltipTrigger render={
                             <button
+                                data-testid="favorite-btn"
                                 onClick={() => {
                                     if (selectedStop) {
                                         if (!isFavorite && favoriteStops.length >= 20) {
