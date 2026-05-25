@@ -2,9 +2,8 @@ import React, { useState, useCallback, useRef, useMemo } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 
-import { useSelectionReducer } from './useSelectionReducer';
-import { usePreferencesReducer } from './usePreferencesReducer';
-import { useViewportReducer } from './useViewportReducer';
+import { useSelectionStore } from './selectionStore';
+import { useViewportStore } from './viewportStore';
 
 import { useGeolocation } from '../hooks/features/useGeolocation';
 import { useMapInterface } from '../hooks/features/useMapInterface';
@@ -16,7 +15,7 @@ import {
     MAP_VEHICLE_SELECT_ZOOM
 } from '../config/constants';
 
-import { SelectionContext, PreferencesContext, ViewportContext } from './contexts';
+import { ViewportContext } from './contexts';
 import type { ViewportContextType } from './contexts';
 
 // --- ENGINE & PROVIDER ---
@@ -31,12 +30,10 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
     const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const selectionContext = useSelectionReducer();
-    const preferencesContext = usePreferencesReducer();
-    const viewportContext = useViewportReducer();
-
-    const { state: selState, actions: selActions } = selectionContext;
-    const { state: vpState, actions: vpActions } = viewportContext;
+    const selState = useSelectionStore();
+    const selActions = selState.actions;
+    const vpState = useViewportStore();
+    const vpActions = vpState.actions;
 
     const flyToLocation = useCallback((location: [number, number], isJump: boolean = false) => {
         const map = mapRef.current?.getMap();
@@ -150,13 +147,9 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
     ]);
 
     return (
-        <SelectionContext.Provider value={selectionContext}>
-            <PreferencesContext.Provider value={preferencesContext}>
-                <ViewportContext.Provider value={finalViewportValue}>
-                    <MapEngine />
-                    {children}
-                </ViewportContext.Provider>
-            </PreferencesContext.Provider>
-        </SelectionContext.Provider>
+        <ViewportContext.Provider value={finalViewportValue}>
+            <MapEngine />
+            {children}
+        </ViewportContext.Provider>
     );
 };

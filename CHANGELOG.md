@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.42.0] - 2026-05-21
+
+### Changed
+
+- **State Management Architecture**: Migrated the entire application state from React Context/Reducers to **Zustand**.
+  - Created dedicated stores: `selectionStore.ts`, `preferencesStore.ts`, and `viewportStore.ts`.
+  - Replaced manual `localStorage` synchronization in Preferences with Zustand's native `persist` middleware.
+  - Implemented a **Bridge Pattern** in `src/state/contexts.ts`, allowing existing components to continue using `useSelection`, `usePreferences`, and `useViewport` hooks while pulling data from the new stores.
+  - Significantly reduced boilerplate code by deleting `useSelectionReducer.ts`, `usePreferencesReducer.ts`, and `useViewportReducer.ts`.
+  - Improved application performance by enabling granular state subscriptions (selectors) that eliminate unnecessary re-renders in complex UI components.
+  - Simplified `MapStateProvider.tsx` by removing nested Context Providers, resulting in a cleaner and more maintainable component tree.
+- **Documentation**: Updated `AGENTS.md` to reflect the new state management rules and the minimal-state architectural invariant.
+
 ## [0.41.7] - 2026-05-20
 
 ### Fixed

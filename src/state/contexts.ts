@@ -2,19 +2,22 @@ import { createContext, useContext } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 
-import { useSelectionReducer } from './useSelectionReducer';
-import { usePreferencesReducer } from './usePreferencesReducer';
-import { useViewportReducer } from './useViewportReducer';
+import { useSelectionStore } from './selectionStore';
+import type { SelectionStore } from './selectionStore';
+import { usePreferencesStore } from './preferencesStore';
+import type { PreferencesStore } from './preferencesStore';
+import { useViewportStore } from './viewportStore';
+import type { ViewportStore } from './viewportStore';
 
 // --- CONTEXT DEFINITIONS ---
 
-export type SelectionContextType = ReturnType<typeof useSelectionReducer>;
+export type SelectionContextType = { state: Omit<SelectionStore, 'actions'>; actions: SelectionStore['actions'] };
 export const SelectionContext = createContext<SelectionContextType | null>(null);
 
-export type PreferencesContextType = ReturnType<typeof usePreferencesReducer>;
+export type PreferencesContextType = { state: Omit<PreferencesStore, 'actions'>; actions: PreferencesStore['actions'] };
 export const PreferencesContext = createContext<PreferencesContextType | null>(null);
 
-export type ViewportContextType = ReturnType<typeof useViewportReducer> & {
+export type ViewportContextType = { state: Omit<ViewportStore, 'actions'>; actions: ViewportStore['actions'] } & {
     mapRef: React.RefObject<MapRef | null>;
     mapLoaded: boolean;
     labelLayerId: string | undefined;
@@ -44,19 +47,25 @@ export const ViewportContext = createContext<ViewportContextType | null>(null);
 // --- CONSUMER HOOKS ---
 
 export const useSelection = () => {
-    const ctx = useContext(SelectionContext);
-    if (!ctx) throw new Error('useSelection must be within MapStateProvider');
-    return ctx;
+    const { actions, ...state } = useSelectionStore();
+    return { state, actions } as unknown as SelectionContextType;
 };
 
 export const usePreferences = () => {
-    const ctx = useContext(PreferencesContext);
-    if (!ctx) throw new Error('usePreferences must be within MapStateProvider');
-    return ctx;
+    const { actions, ...state } = usePreferencesStore();
+    return { state, actions } as unknown as PreferencesContextType;
 };
 
 export const useViewport = () => {
+    const { actions: vpActions, ...vpState } = useViewportStore();
     const ctx = useContext(ViewportContext);
-    if (!ctx) throw new Error('useViewport must be within MapStateProvider');
-    return ctx;
+
+    return {
+        ...ctx,
+        state: vpState,
+        actions: {
+            ...vpActions,
+            ...ctx?.actions
+        }
+    } as unknown as ViewportContextType;
 };

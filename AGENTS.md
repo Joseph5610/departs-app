@@ -6,17 +6,17 @@ Real-time Prague PID tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + 
 
 Non-negotiable. Any violation is system-level bug.
 
-### State Model & Contexts
-- **Single Source of Truth**: `MapStateProvider` coordinates core context.
-- **ID-Only Reducers**: Reducers MUST ONLY store minimal IDs.
-- **Minimal State**: Full objects/computed data MUST NEVER be stored in state; derive in hooks.
-- **Pure Transformations**: `useMemo`, `select`, data transforms MUST be pure. Side-effects (updating refs for deltas) MUST live in `useEffect`.
+### State Model & Zustand Stores
+- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`) manage global state.
+- **Minimal State**: Stores MUST ONLY store minimal IDs or primitive settings. Full objects/computed data MUST NEVER be stored in state; derive in hooks or use selectors.
+- **Bridge Pattern**: `src/state/contexts.ts` acts as a compatibility layer. Use `useSelection()`, `usePreferences()`, `useViewport()` hooks to access stores via the legacy `{ state, actions }` shape during transition.
+- **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure.
 
-| Context | Reducer | Purpose |
+| Store | Key File | Purpose |
 |---|---|---|
-| `SelectionContext` | `useSelectionReducer` | IDs: `selectedStopId`, `selectedTripId`, `selectedVehicleId`, `isFollowing` |
-| `ViewportContext` | `useViewportReducer` | Map bounds, debounced bounds, route filters |
-| `PreferencesContext` | `usePreferencesReducer` | User settings, UI toggles, route type filters |
+| `SelectionStore` | `selectionStore.ts` | IDs: `selectedStopId`, `selectedTripId`, `selectedVehicleId`, `isFollowing` |
+| `ViewportStore` | `viewportStore.ts` | Map bounds, debounced bounds, selected places |
+| `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (Persisted) |
 
 ### Hook Data Flow (Strict Hierarchy)
 - **Layer 1: `data/` (React Query)**: Talk to API, own cache. (e.g., `useVehicles`, `useDepartures`)
