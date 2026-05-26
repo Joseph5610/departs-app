@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelection } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
 import { useStops } from '../data/useStops';
 import type { SelectedStop } from '../../types/transit';
 
@@ -10,9 +10,8 @@ import type { SelectedStop } from '../../types/transit';
  * into a full SelectedStop object using the local GeoJSON cache.
  */
 export const useSelectedStop = () => {
-    const { state } = useSelection();
+    const stopId = useSelectionStore(s => s.selectedStopId);
     const { allFeatures: stopsData } = useStops();
-    const stopId = state.selectedStopId;
 
     return useMemo((): SelectedStop | null => {
         if (!stopId) {

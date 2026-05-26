@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { usePreferences } from '../../../state/contexts';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { FavoritesStopCard } from './FavoritesStopCard';
 import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
@@ -21,7 +21,10 @@ interface FavoritesPanelProps {
 
 export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
     const { t } = useTranslation();
-    const { state: { favoriteStops } } = usePreferences();
+
+    // Preferences
+    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+
     const { isLoading: stopsLoading, allFeatures: stopsData } = useStops();
 
     // Map favoriteStops (IDs) to StopFeature features efficiently using a Map

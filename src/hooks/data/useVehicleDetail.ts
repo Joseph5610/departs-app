@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../../types/transit';
-import { useSelection } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 
 import { apiFetch } from '../../lib/api-client';
@@ -15,8 +15,8 @@ const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Pro
 };
 
 export const useVehicleDetail = () => {
-    const { state } = useSelection();
-    const { selectedTripId: tripId, selectedVehicleId: vehicleId } = state;
+    const tripId = useSelectionStore(s => s.selectedTripId);
+    const vehicleId = useSelectionStore(s => s.selectedVehicleId);
 
     return useQuery({
         queryKey: ['vehicle-detail', vehicleId, tripId],

@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { usePreferences } from '../../../state/contexts';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 import { cn } from '@/lib/utils';
 import { Box, Stack } from '@/components/ui/layout';
 import { DisplaySection } from './DisplaySection';
@@ -21,10 +21,10 @@ import { SettingsFooter } from './SettingsFooter';
  */
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
-    const { state, actions } = usePreferences();
 
-    const { isSettingsOpen: isOpen } = state;
-    const { setIsSettingsOpen } = actions;
+    // Preferences
+    const isOpen = usePreferencesStore(s => s.isSettingsOpen);
+    const { setIsSettingsOpen } = usePreferencesStore(s => s.actions);
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);

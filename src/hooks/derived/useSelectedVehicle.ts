@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelection } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import type { VehicleDetail } from '../../types/transit';
@@ -13,8 +13,8 @@ import type { VehicleDetail } from '../../types/transit';
  * 3. Detail API (low-frequency metadata from useVehicleDetail)
  */
 export const useSelectedVehicle = () => {
-    const { state } = useSelection();
-    const { selectedTripId: tripId, selectedVehicleId: vehicleId } = state;
+    const tripId = useSelectionStore(s => s.selectedTripId);
+    const vehicleId = useSelectionStore(s => s.selectedVehicleId);
 
     const { vehicles: rawVehicles } = useVehicles();
     const { data: vehicleDetail } = useVehicleDetail();

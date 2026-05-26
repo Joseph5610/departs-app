@@ -3,7 +3,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass, Star } from 'lucide-react';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
-import { usePreferences, useViewport } from '../../state/contexts';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useGeolocationStore } from '../../state/geolocationStore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
@@ -22,11 +24,17 @@ interface MapControlsProps {
  */
 export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }: MapControlsProps) => {
     const { t } = useTranslation();
-    const { actions: prefActions } = usePreferences();
-    const { actions: vpActions, mapRef, mapLoaded, isGeoPending } = useViewport();
 
-    const { setIsSettingsOpen, setIsAlertsOpen } = prefActions;
-    const { handleLocate: onLocate } = vpActions;
+    // Preferences Actions
+    const { setIsSettingsOpen, setIsAlertsOpen } = usePreferencesStore(s => s.actions);
+
+    // Geolocation Store
+    const isGeoPending = useGeolocationStore(s => s.isGeoPending);
+    const { handleLocate: onLocate } = useGeolocationStore(s => s.actions);
+
+    // Metadata Store
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
     const { rss } = useGlobalAlerts();
     const incidentsCount = useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);

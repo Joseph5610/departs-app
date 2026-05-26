@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { VehicleDetail } from './VehicleDetail/VehicleDetail';
-import { useViewport } from '../../state/contexts';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useVehicleDetail } from '../../hooks/data/useVehicleDetail';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
@@ -32,8 +31,7 @@ export const DetailPanelContent = memo(() => {
         refetch: refetchVehicle
     } = useVehicleDetail();
 
-    const { actions: vpActions } = useViewport();
-    const { handleDepartureClick: onDepartureClick } = vpActions;
+    const { selectVehicle } = useSelectionStore(s => s.actions);
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 
@@ -53,7 +51,9 @@ export const DetailPanelContent = memo(() => {
             {showDepartureBoard && (
                 <DepartureBoard 
                     selectedStop={selectedStop}
-                    onDepartureClick={onDepartureClick}
+                    onDepartureClick={async (tripId, vehicleId) => {
+                        selectVehicle(tripId, vehicleId || null, true);
+                    }}
                 />
             )}
         </Stack>

@@ -1,7 +1,10 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Loader2, Train, ArrowRight } from 'lucide-react';
-import { useSelection, useViewport, usePreferences } from '../../../state/contexts';
+import { useSelectionStore } from '../../../state/selectionStore';
+import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useMapMetadataStore } from '../../../state/mapMetadataStore';
+import { useGeolocationStore } from '../../../state/geolocationStore';
 import { calculateDistance } from '../../../utils/transitUtils';
 import { formatDelay } from '../../../utils/dateUtils';
 import { cn } from '../../../lib/utils';
@@ -35,9 +38,18 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     onClosePanel 
 }) => {
     const { t } = useTranslation();
-    const { actions: selActions } = useSelection();
-    const { mapRef, userLocation } = useViewport();
-    const { actions: { toggleFavorite } } = usePreferences();
+
+    // Selection
+    const { selectStop } = useSelectionStore(s => s.actions);
+
+    // Metadata
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+
+    // Geolocation
+    const userLocation = useGeolocationStore(s => s.userLocation);
+
+    // Preferences
+    const { toggleFavorite } = usePreferencesStore(s => s.actions);
 
     const { stop_id, stop_name, platform_code } = stopFeature.properties;
     const coordinates = stopFeature.geometry.coordinates as [number, number];
@@ -102,7 +114,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             duration: MAP_FLY_DURATION
         });
         
-        selActions.selectStop(stop_id);
+        selectStop(stop_id);
         
         if (onClosePanel) {
             onClosePanel();

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useSelection, useViewport } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useIsMobile } from '../useIsMobile';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useSelectedVehicle } from '../derived/useSelectedVehicle';
@@ -23,10 +24,15 @@ import {
  * The "User Experience Layer" hook.
  */
 export const useMapInterface = () => {
-    const { state: selState, actions: selActions } = useSelection();
-    const { mapRef } = useViewport();
-    const { selectedStopId, selectedTripId, selectedVehicleId, isFollowing } = selState;
-    const { selectStop, selectVehicle } = selActions;
+    // Selection Store
+    const selectedStopId = useSelectionStore(s => s.selectedStopId);
+    const selectedTripId = useSelectionStore(s => s.selectedTripId);
+    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const isFollowing = useSelectionStore(s => s.isFollowing);
+    const { selectStop, selectVehicle } = useSelectionStore(s => s.actions);
+
+    // Metadata Store
+    const mapRef = useMapMetadataStore(s => s.mapRef);
 
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();

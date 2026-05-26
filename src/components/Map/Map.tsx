@@ -9,8 +9,12 @@ import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapStateProvider } from '../../state/MapStateProvider';
-import { useSelection, useViewport, usePreferences } from '../../state/contexts';
+import { MapController } from '../../state/MapController';
+import { useSelectionStore } from '../../state/selectionStore';
+import { useViewportStore } from '../../state/viewportStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useGeolocationStore } from '../../state/geolocationStore';
 import { MapControls } from './MapControls';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
 import { useVehicles } from '../../hooks/data/useVehicles';
@@ -30,15 +34,43 @@ const MAP_STYLE_LABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/
 /**
  * MapInner Component
  *
- * Consumes MapContext and manages the layout of the map and its overlays.
+ * Manages the layout of the map and its overlays.
  */
-const MapInner: React.FC = () => {
-    const { t } = useTranslation();
-    const { state: selState, actions: selActions } = useSelection();
-    const { state: vpState, mapEvents, mapRef, mapLoaded, labelLayerId, userLocation } = useViewport();
-    const { state: { showVehicles, showStops, showStopLabels, stopTypeFilter, favoriteStops, mapBaseStyle } } = usePreferences();
+interface MapInnerProps {
+    mapEvents?: {
+        onMove: (evt: any) => void;
+        onMoveEnd: (evt: any) => void;
+        onLoad: (evt: any) => void;
+        onDragStart: () => void;
+    };
+}
 
-    const { selectedId } = selState;
+const MapInner: React.FC<MapInnerProps> = ({ mapEvents }) => {
+    const { t } = useTranslation();
+
+    // Selection Store
+    const selectedId = useSelectionStore(s => s.selectedId);
+    const selectedStopId = useSelectionStore(s => s.selectedStopId);
+    const selActions = useSelectionStore(s => s.actions);
+
+    // Viewport Store
+    const selectedPlace = useViewportStore(s => s.selectedPlace);
+
+    // Metadata Store
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
+    const labelLayerId = useMapMetadataStore(s => s.labelLayerId);
+
+    // Geolocation Store
+    const userLocation = useGeolocationStore(s => s.userLocation);
+
+    // Preferences Store
+    const showVehicles = usePreferencesStore(s => s.showVehicles);
+    const showStops = usePreferencesStore(s => s.showStops);
+    const showStopLabels = usePreferencesStore(s => s.showStopLabels);
+    const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
+    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
 
     // Derived State
     const selectedStop = useSelectedStop();
@@ -98,11 +130,11 @@ const MapInner: React.FC = () => {
                 ref={mapRef}
                 initialViewState={initialViewState}
                 mapStyle={mapBaseStyle === 'labels' ? MAP_STYLE_LABELS : MAP_STYLE_NOLABELS}
-                onMove={mapEvents.onMove}
-                onMoveEnd={mapEvents.onMoveEnd}
-                onLoad={mapEvents.onLoad}
+                onMove={mapEvents?.onMove}
+                onMoveEnd={mapEvents?.onMoveEnd}
+                onLoad={mapEvents?.onLoad}
                 style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
-                onDragStart={mapEvents.onDragStart}
+                onDragStart={mapEvents?.onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
                     if (features?.length && features[0].layer.id !== 'entrance-layer') {
@@ -173,15 +205,15 @@ const MapInner: React.FC = () => {
                     labelLayerId={labelLayerId}
                 />
                 
-                {vpState.selectedPlace && (
+                {selectedPlace && (
                     <Marker
-                        longitude={vpState.selectedPlace.coordinates[0]}
-                        latitude={vpState.selectedPlace.coordinates[1]}
+                        longitude={selectedPlace.coordinates[0]}
+                        latitude={selectedPlace.coordinates[1]}
                         anchor="bottom"
                     >
                         <div className="flex flex-col items-center">
                             <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded-md text-sm font-bold shadow-md whitespace-nowrap mb-1">
-                                {vpState.selectedPlace.name}
+                                {selectedPlace.name}
                             </div>
                             <div className="text-primary drop-shadow-md">
                                 <MapPin size={24} fill="currentColor" className="text-primary"  strokeWidth={1.5} />
@@ -213,7 +245,7 @@ const MapInner: React.FC = () => {
 
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}
-                id={selectedId || selectedStop?.stop_id || undefined}
+                id={selectedId || selectedStopId || undefined}
                 onClose={() => selActions.clearSelection()}
                 onBack={(selectedVehicle && selectedStop) ? handleBack : undefined}
                 title={panelTitle}
@@ -233,8 +265,8 @@ export const Map: React.FC = () => {
     const mapRef = useRef<MapRef>(null);
 
     return (
-        <MapStateProvider mapRef={mapRef}>
+        <MapController mapRef={mapRef}>
             <MapInner />
-        </MapStateProvider>
+        </MapController>
     );
 };

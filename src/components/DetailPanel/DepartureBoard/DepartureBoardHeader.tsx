@@ -2,7 +2,8 @@ import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
-import { usePreferences, useSelection } from '../../../state/contexts';
+import { useSelectionStore } from '../../../state/selectionStore';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
@@ -25,19 +26,22 @@ import { toast } from 'sonner';
  */
 export const DepartureBoardHeader = React.memo(() => {
     const { t } = useTranslation();
-    const { state, actions } = usePreferences();
+
+    // Preferences
+    const departureSort = usePreferencesStore(s => s.departureSort);
+    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const { setDepartureSort, toggleFavorite } = usePreferencesStore(s => s.actions);
+
     const { share } = useShare();
     const isMobile = useIsMobile();
 
+    // Selection
+    const selectedLine = useSelectionStore(s => s.selectedLine);
+    const { toggleLineFilter } = useSelectionStore(s => s.actions);
+
     // Derived state
-    const { state: selState, actions: selActions } = useSelection();
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
-
-    const { departureSort, favoriteStops } = state;
-    const { setDepartureSort, toggleFavorite } = actions;
-    const { selectedLine } = selState;
-    const { toggleLineFilter } = selActions;
 
     const showHeader = !!selectedStop && !selectedVehicle;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;

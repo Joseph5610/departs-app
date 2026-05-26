@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
-import { usePreferences } from '../../state/contexts';
+import { usePreferencesStore } from '../../state/preferencesStore';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import type { RSSItem } from '../../types/transit';
 import {
@@ -28,9 +28,10 @@ import { cn } from '@/lib/utils';
  */
 export const AlertsModal: React.FC = () => {
     const { t } = useTranslation();
-    const { state: prefState, actions: prefActions } = usePreferences();
-    const { isAlertsOpen } = prefState;
-    const { setIsAlertsOpen } = prefActions;
+
+    // Preferences
+    const isAlertsOpen = usePreferencesStore(s => s.isAlertsOpen);
+    const { setIsAlertsOpen } = usePreferencesStore(s => s.actions);
     
     const [activeTab, setActiveTab] = useState<'incidents' | 'exclusions'>('incidents');
     const [searchQuery, setSearchQuery] = useState('');

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
-import { useViewport } from '../../state/contexts';
+import { useGeolocationStore } from '../../state/geolocationStore';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
  */
 export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();
-    const { actions } = useViewport();
+    const { handleLocate } = useGeolocationStore(s => s.actions);
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         const params = new URLSearchParams(window.location.search);
@@ -42,18 +42,18 @@ export const WelcomeModal: React.FC = () => {
         
         if (params.has('skipTutorial')) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
-            actions.handleLocate();
+            handleLocate();
 
             const url = new URL(window.location.href);
             url.searchParams.delete('skipTutorial');
             window.history.replaceState({}, '', url.toString());
         }
-    }, [actions]);
+    }, [handleLocate]);
 
     const handleClose = () => {
         localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
         setIsOpen(false);
-        actions.handleLocate();
+        handleLocate();
     };
 
     return (
