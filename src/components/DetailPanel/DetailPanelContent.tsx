@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { VehicleDetail } from './VehicleDetail/VehicleDetail';
-import { useSelection, useViewport } from '../../state/contexts';
+import { useViewport } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
 import { useVehicleDetail } from '../../hooks/data/useVehicleDetail';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
@@ -15,8 +16,8 @@ import type { AppError } from '@/types/error';
  * Switches between VehicleDetail and DepartureBoard based on selection.
  */
 export const DetailPanelContent = memo(() => {
-    const { state: selectionState, actions: selectionActions } = useSelection();
-    const { isFollowing } = selectionState;
+    const isFollowing = useSelectionStore(s => s.isFollowing);
+    const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
 
     // Derived State
     const selectedStop = useSelectedStop();
@@ -33,7 +34,6 @@ export const DetailPanelContent = memo(() => {
 
     const { actions: vpActions } = useViewport();
     const { handleDepartureClick: onDepartureClick } = vpActions;
-    const { setIsFollowing } = selectionActions;
 
     const showDepartureBoard = selectedStop && !selectedVehicle;
 

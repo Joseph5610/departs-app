@@ -6,17 +6,30 @@ Real-time Prague PID tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + 
 
 Non-negotiable. Any violation is system-level bug.
 
-### State Model & Contexts
-- **Single Source of Truth**: `MapStateProvider` coordinates core context.
-- **ID-Only Reducers**: Reducers MUST ONLY store minimal IDs.
-- **Minimal State**: Full objects/computed data MUST NEVER be stored in state; derive in hooks.
-- **Pure Transformations**: `useMemo`, `select`, data transforms MUST be pure. Side-effects (updating refs for deltas) MUST live in `useEffect`.
+### State Model & Zustand Stores
+- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`) manage global state.
+- **Minimal State**: Stores MUST ONLY store minimal IDs or primitive settings. Full objects/computed data MUST NEVER be stored in state; derive in hooks or use selectors.
+- **Bridge Pattern**: `src/state/contexts.ts` acts as a compatibility layer. Use `useSelection()`, `usePreferences()`, `useViewport()` hooks to access stores via the legacy `{ state, actions }` shape during transition.
+- **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure.
 
-| Context | Reducer | Purpose |
+| Store | Key File | Purpose |
 |---|---|---|
-| `SelectionContext` | `useSelectionReducer` | IDs: `selectedStopId`, `selectedTripId`, `selectedVehicleId`, `isFollowing` |
-| `ViewportContext` | `useViewportReducer` | Map bounds, debounced bounds, route filters |
-| `PreferencesContext` | `usePreferencesReducer` | User settings, UI toggles, route type filters |
+| `SelectionStore` | `selectionStore.ts` | IDs: `selectedStopId`, `selectedTripId`, `selectedVehicleId`, `isFollowing` |
+| `ViewportStore` | `viewportStore.ts` | Map bounds, debounced bounds, selected places |
+| `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (Persisted) |
+| `GeolocationStore` | `geolocationStore.ts` | User location, speed, geo-pending status |
+| `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer IDs |
+
+## 2. STATE MIGRATION: PHASE 2 (NEXT STEPS)
+
+The application is in a hybrid state. Core data is in Zustand, but accessed via a Bridge Pattern in `src/state/contexts.ts`.
+
+### Goal: Zero-Context Architecture
+1. **Direct Store Selection**: Components should stop using `useSelection()`, `usePreferences()`, and `useViewport()`. Instead, use granular selectors: `useSelectionStore(s => s.selectedStopId)`.
+2. **Move MapRef to Store**: Migrate the `mapRef` from `App.tsx` / `MapStateProvider` directly into `MapMetadataStore` (using `ref.current` or a setter). This allows any component to trigger camera movements (e.g., `flyTo`) via store actions without prop-drilling the ref.
+3. **Encapsulate Geolocation**: Refactor `useGeolocation.ts` into a headless background worker hook. It should only manage the `navigator.geolocation` lifecycle and write to `GeolocationStore`, returning no values to the UI.
+4. **Dissolve Bridge**: Once all components use direct selectors, delete `src/state/contexts.ts` and remove `ViewportContext.Provider` from `MapStateProvider.tsx`.
+5. **Rename Provider**: Finally, rename `MapStateProvider` to `MapController` or `MapEventsHandler` as it will no longer provide state, only handle imperative map event orchestration.
 
 ### Hook Data Flow (Strict Hierarchy)
 - **Layer 1: `data/` (React Query)**: Talk to API, own cache. (e.g., `useVehicles`, `useDepartures`)

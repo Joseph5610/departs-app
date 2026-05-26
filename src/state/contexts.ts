@@ -1,20 +1,23 @@
 import { createContext, useContext } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 
-import { useSelectionReducer } from './useSelectionReducer';
-import { usePreferencesReducer } from './usePreferencesReducer';
-import { useViewportReducer } from './useViewportReducer';
+import { useSelectionStore } from './selectionStore';
+import type { SelectionStore } from './selectionStore';
+import { usePreferencesStore } from './preferencesStore';
+import type { PreferencesStore } from './preferencesStore';
+import { useViewportStore } from './viewportStore';
+import type { ViewportStore } from './viewportStore';
+import { useMapMetadataStore } from './mapMetadataStore';
+import { useGeolocationStore } from './geolocationStore';
 
 // --- CONTEXT DEFINITIONS ---
 
-export type SelectionContextType = ReturnType<typeof useSelectionReducer>;
-export const SelectionContext = createContext<SelectionContextType | null>(null);
+export type SelectionContextType = { state: Omit<SelectionStore, 'actions'>; actions: SelectionStore['actions'] };
+export type PreferencesContextType = { state: Omit<PreferencesStore, 'actions'>; actions: PreferencesStore['actions'] };
 
-export type PreferencesContextType = ReturnType<typeof usePreferencesReducer>;
-export const PreferencesContext = createContext<PreferencesContextType | null>(null);
-
-export type ViewportContextType = ReturnType<typeof useViewportReducer> & {
+export type ViewportContextType = { state: Omit<ViewportStore, 'actions'>; actions: ViewportStore['actions'] } & {
     mapRef: React.RefObject<MapRef | null>;
     mapLoaded: boolean;
     labelLayerId: string | undefined;
@@ -44,19 +47,68 @@ export const ViewportContext = createContext<ViewportContextType | null>(null);
 // --- CONSUMER HOOKS ---
 
 export const useSelection = () => {
-    const ctx = useContext(SelectionContext);
-    if (!ctx) throw new Error('useSelection must be within MapStateProvider');
-    return ctx;
+    const { actions, ...state } = useSelectionStore(
+        useShallow((s) => ({
+            selectedStopId: s.selectedStopId,
+            selectedTripId: s.selectedTripId,
+            selectedVehicleId: s.selectedVehicleId,
+            isFollowing: s.isFollowing,
+            selectedLine: s.selectedLine,
+            selectedId: s.selectedId,
+            actions: s.actions,
+        }))
+    );
+    return { state, actions } as SelectionContextType;
 };
 
 export const usePreferences = () => {
-    const ctx = useContext(PreferencesContext);
-    if (!ctx) throw new Error('usePreferences must be within MapStateProvider');
-    return ctx;
+    const { actions, ...state } = usePreferencesStore(
+        useShallow((s) => ({
+            showVehicles: s.showVehicles,
+            showStops: s.showStops,
+            showStopLabels: s.showStopLabels,
+            stopTypeFilter: s.stopTypeFilter,
+            isSettingsOpen: s.isSettingsOpen,
+            isAlertsOpen: s.isAlertsOpen,
+            departureSort: s.departureSort,
+            routeTypeFilter: s.routeTypeFilter,
+            favoriteStops: s.favoriteStops,
+            searchHistory: s.searchHistory,
+            mapBaseStyle: s.mapBaseStyle,
+            actions: s.actions,
+        }))
+    );
+    return { state, actions } as PreferencesContextType;
 };
 
 export const useViewport = () => {
+    const { actions: vpActions, ...vpState } = useViewportStore(
+        useShallow((s) => ({
+            bounds: s.bounds,
+            debouncedBounds: s.debouncedBounds,
+            routeFilter: s.routeFilter,
+            selectedPlace: s.selectedPlace,
+            actions: s.actions,
+        }))
+    );
+    const { mapLoaded, labelLayerId } = useMapMetadataStore();
+    const { userLocation, userSpeed, isGeoPending } = useGeolocationStore();
+
     const ctx = useContext(ViewportContext);
+
     if (!ctx) throw new Error('useViewport must be within MapStateProvider');
-    return ctx;
+
+    return {
+        ...ctx,
+        state: vpState,
+        mapLoaded,
+        labelLayerId,
+        userLocation,
+        userSpeed,
+        isGeoPending,
+        actions: {
+            ...vpActions,
+            ...ctx.actions
+        }
+    } as ViewportContextType;
 };

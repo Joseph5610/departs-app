@@ -1,8 +1,9 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { STORAGE_KEYS } from '../../config/constants';
+import { useGeolocationStore } from '../../state/geolocationStore';
 
 /**
  * useGeolocation
@@ -12,9 +13,8 @@ import { STORAGE_KEYS } from '../../config/constants';
  */
 export const useGeolocation = (onFlyRequest: (location: [number, number], isJump?: boolean) => void, mapLoaded: boolean = false) => {
     const { t } = useTranslation();
-    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-    const [userSpeed, setUserSpeed] = useState<number | null>(null);
-    const [isGeoPending, setIsGeoPending] = useState(false);
+    const { userLocation, userSpeed, isGeoPending, actions } = useGeolocationStore();
+    const { setUserLocation, setUserSpeed, setIsGeoPending } = actions;
 
     const watchId = useRef<number | null>(null);
     const lastUpdatedAt = useRef<number>(0);
@@ -26,7 +26,7 @@ export const useGeolocation = (onFlyRequest: (location: [number, number], isJump
         setUserSpeed(pos.coords.speed);
         lastUpdatedAt.current = Date.now();
         localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
-    }, []);
+    }, [setUserLocation, setUserSpeed]);
 
     const startWatcher = useCallback(() => {
         if (typeof navigator === 'undefined' || !navigator.geolocation || watchId.current !== null) return;

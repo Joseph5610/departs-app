@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useCallback, useRef, useMemo } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Map } from 'maplibre-gl';
 
-import { useSelectionReducer } from './useSelectionReducer';
-import { usePreferencesReducer } from './usePreferencesReducer';
-import { useViewportReducer } from './useViewportReducer';
+import { useSelectionStore } from './selectionStore';
+import { useViewportStore } from './viewportStore';
+import { useMapMetadataStore } from './mapMetadataStore';
+import { useGeolocationStore } from './geolocationStore';
 
 import { useGeolocation } from '../hooks/features/useGeolocation';
 import { useMapInterface } from '../hooks/features/useMapInterface';
@@ -16,7 +17,7 @@ import {
     MAP_VEHICLE_SELECT_ZOOM
 } from '../config/constants';
 
-import { SelectionContext, PreferencesContext, ViewportContext } from './contexts';
+import { ViewportContext } from './contexts';
 import type { ViewportContextType } from './contexts';
 
 // --- ENGINE & PROVIDER ---
@@ -27,16 +28,16 @@ const MapEngine: React.FC = () => {
 };
 
 export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<MapRef | null> }> = ({ children, mapRef }) => {
-    const [mapLoaded, setMapLoaded] = useState(false);
-    const [labelLayerId, setLabelLayerId] = useState<string | undefined>(undefined);
+    const { mapLoaded, labelLayerId, actions: mapActions } = useMapMetadataStore();
+    const { setMapLoaded, setLabelLayerId } = mapActions;
+    const { userLocation, userSpeed, isGeoPending } = useGeolocationStore();
+
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const selectionContext = useSelectionReducer();
-    const preferencesContext = usePreferencesReducer();
-    const viewportContext = useViewportReducer();
-
-    const { state: selState, actions: selActions } = selectionContext;
-    const { state: vpState, actions: vpActions } = viewportContext;
+    const selState = useSelectionStore();
+    const selActions = selState.actions;
+    const vpState = useViewportStore();
+    const vpActions = vpState.actions;
 
     const flyToLocation = useCallback((location: [number, number], isJump: boolean = false) => {
         const map = mapRef.current?.getMap();
@@ -48,7 +49,8 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         }
     }, [mapRef]);
 
-    const { userLocation, userSpeed, isGeoPending, handleLocate, performGeolocation } = useGeolocation(flyToLocation, mapLoaded);
+    const geoResult = useGeolocation(flyToLocation, mapLoaded);
+    const { handleLocate, performGeolocation } = geoResult;
 
     const getRoundedBounds = useCallback((map: Map) => {
         const b = map.getBounds();
@@ -126,37 +128,41 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode; mapRef: Rea
         selActions.selectVehicle(tripId, vehicleId || null, true);
     }, [selActions]);
 
-    const finalViewportValue = useMemo<ViewportContextType>(() => ({
-        state: vpState,
-        mapRef,
-        mapLoaded,
-        labelLayerId,
-        userLocation,
-        userSpeed,
-        isGeoPending,
-        actions: {
-            ...vpActions,
-            handleLocate,
-            performGeolocation,
-            setMapLoaded,
-            setLabelLayerId,
-            handleDepartureClick
-        },
-        mapEvents: { onMove, onMoveEnd, onLoad, onDragStart }
-    }), [
+    const finalViewportValue = useMemo<ViewportContextType>(() => {
+        const { actions: _vpActions, ...vpPureState } = vpState;
+        return {
+            state: vpPureState,
+            mapRef,
+            mapLoaded,
+            labelLayerId,
+            userLocation,
+            userSpeed,
+            isGeoPending,
+            actions: {
+                // Store actions
+                setBounds: vpActions.setBounds,
+                setDebouncedBounds: vpActions.setDebouncedBounds,
+                setRouteFilter: vpActions.setRouteFilter,
+                setSelectedPlace: vpActions.setSelectedPlace,
+                // Context specific actions
+                handleLocate,
+                performGeolocation,
+                setMapLoaded,
+                setLabelLayerId,
+                handleDepartureClick
+            },
+            mapEvents: { onMove, onMoveEnd, onLoad, onDragStart }
+        };
+    }, [
         vpState, vpActions, mapRef, mapLoaded, labelLayerId, userLocation, userSpeed, isGeoPending,
         handleLocate, performGeolocation, handleDepartureClick,
         onMove, onMoveEnd, onLoad, onDragStart
     ]);
 
     return (
-        <SelectionContext.Provider value={selectionContext}>
-            <PreferencesContext.Provider value={preferencesContext}>
-                <ViewportContext.Provider value={finalViewportValue}>
-                    <MapEngine />
-                    {children}
-                </ViewportContext.Provider>
-            </PreferencesContext.Provider>
-        </SelectionContext.Provider>
+        <ViewportContext.Provider value={finalViewportValue}>
+            <MapEngine />
+            {children}
+        </ViewportContext.Provider>
     );
 };
