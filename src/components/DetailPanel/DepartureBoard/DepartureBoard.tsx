@@ -98,7 +98,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                     : subGroup.departures.slice(0, DEFAULT_VISIBLE);
                                     
                                 const hiddenCount = subGroup.departures.length - visibleDepartures.length;
-                                const hasMore = subGroup.departures.length > DEFAULT_VISIBLE && !isFiltered;
+                                const hasMore = !showAllByDefault && subGroup.departures.length > DEFAULT_VISIBLE && !isFiltered;
 
                                 return (
                                     <div key={subGroup.groupId} className="flex flex-col">
