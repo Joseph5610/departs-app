@@ -9,7 +9,7 @@ import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapController } from './MapController';
+import { MapController, useMapEvents } from './MapController';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -36,17 +36,9 @@ const MAP_STYLE_LABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/
  *
  * Manages the layout of the map and its overlays.
  */
-interface MapInnerProps {
-    mapEvents?: {
-        onMove: (evt: any) => void;
-        onMoveEnd: (evt: any) => void;
-        onLoad: (evt: any) => void;
-        onDragStart: () => void;
-    };
-}
-
-const MapInner: React.FC<MapInnerProps> = ({ mapEvents }) => {
+const MapInner: React.FC = () => {
     const { t } = useTranslation();
+    const mapEvents = useMapEvents();
 
     // Selection Store
     const selectedId = useSelectionStore(s => s.selectedId);

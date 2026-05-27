@@ -1,5 +1,6 @@
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
 import type { Map, SymbolLayerSpecification } from 'maplibre-gl';
+import { useCallback, useRef } from 'react';
 
 import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
@@ -23,7 +24,24 @@ const MapEngine: React.FC = () => {
 
 // --- CONTROLLER ---
 
+/**
+ * MapController acts as a headless container for map-related logic and lifecycle.
+ * It initializes global map hooks and provides children as-is.
+ */
 export const MapController: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <>
+            <MapEngine />
+            {children}
+        </>
+    );
+};
+
+/**
+ * Hook to manage MapLibre events and sync them with global stores.
+ * Used by the Map component to decouple event logic from the UI.
+ */
+export const useMapEvents = () => {
     const { setMapLoaded, setLabelLayerId } = useMapMetadataStore(s => s.actions);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,21 +123,5 @@ export const MapController: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [vpActions, getRoundedBounds, setLabelLayerId, setMapLoaded]);
 
-    // Expose events via window for Map.tsx to consume without context
-    // This is a temporary bridge until Map.tsx is refactored to call these directly if possible,
-    // but better to just use them as props in Map.tsx.
-
-    return (
-        <>
-            <MapEngine />
-            {React.Children.map(children, child => {
-                if (React.isValidElement(child)) {
-                    return React.cloneElement(child as React.ReactElement<any>, {
-                        mapEvents: { onMove, onMoveEnd, onLoad, onDragStart }
-                    });
-                }
-                return child;
-            })}
-        </>
-    );
+    return { onMove, onMoveEnd, onLoad, onDragStart };
 };

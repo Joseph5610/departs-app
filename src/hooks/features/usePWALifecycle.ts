@@ -1,10 +1,14 @@
-import React, { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { usePWAStore } from '../state/pwaStore';
+import { usePWAStore } from '../../state/pwaStore';
 
-export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+/**
+ * Headless hook to manage the PWA lifecycle.
+ * Handles service worker registration, state syncing to Zustand, and update notifications.
+ */
+export const usePWALifecycle = () => {
     const { t } = useTranslation();
 
     const {
@@ -37,6 +41,7 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         });
     }, [offlineReady, needRefresh, updateServiceWorker]);
 
+    // Show update notification when a new version is available
     useEffect(() => {
         if (needRefresh) {
             toast.info(t('update.newVersion'), {
@@ -50,10 +55,4 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             });
         }
     }, [needRefresh, updateServiceWorker, t]);
-
-    return (
-        <>
-            {children}
-        </>
-    );
 };
