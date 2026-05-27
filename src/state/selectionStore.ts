@@ -17,9 +17,13 @@ export interface SelectionActions {
 }
 
 export interface SelectionStore extends SelectionState {
-    selectedId: string | null;
     actions: SelectionActions;
 }
+
+/**
+ * Selector to get the active vehicle or trip identifier.
+ */
+export const getSelectedId = (state: SelectionState) => state.selectedVehicleId || state.selectedTripId;
 
 export const useSelectionStore = create<SelectionStore>((set) => ({
     // State
@@ -28,7 +32,6 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
     selectedVehicleId: null,
     isFollowing: false,
     selectedLine: null,
-    selectedId: null,
 
     // Actions
     actions: {
@@ -39,19 +42,16 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
                 selectedVehicleId: null,
                 isFollowing: false,
                 selectedLine: null,
-                selectedId: null,
             }),
 
         selectVehicle: (tripId, vehicleId, keepStop = false) =>
             set((state) => {
-                const selectedId = vehicleId || tripId;
                 return {
                     selectedTripId: tripId,
                     selectedVehicleId: vehicleId,
                     selectedStopId: keepStop ? state.selectedStopId : null,
                     isFollowing: true,
                     selectedLine: keepStop ? state.selectedLine : null,
-                    selectedId,
                 };
             }),
 
@@ -62,7 +62,6 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
                 selectedVehicleId: null,
                 isFollowing: false,
                 selectedLine: null,
-                selectedId: null,
             }),
 
         setIsFollowing: (isFollowing) => set({ isFollowing }),

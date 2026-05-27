@@ -10,7 +10,7 @@ import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
 import { MapController, useMapEvents } from './MapController';
-import { useSelectionStore } from '../../state/selectionStore';
+import { useSelectionStore, getSelectedId } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { geocodingCache } from '../../hooks/data/useGeocoding';
@@ -42,7 +42,7 @@ const MapInner: React.FC = () => {
     const mapEvents = useMapEvents();
 
     // Selection Store
-    const selectedId = useSelectionStore(s => s.selectedId);
+    const selectedId = useSelectionStore(getSelectedId);
     const selectedStopId = useSelectionStore(s => s.selectedStopId);
     const selActions = useSelectionStore(s => s.actions);
 

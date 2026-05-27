@@ -7,9 +7,9 @@ Real-time Prague PID tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + 
 Non-negotiable. Any violation is system-level bug.
 
 ### State Model & Zustand Stores
-- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`) manage global state.
+- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`, `geolocationStore`, `mapMetadataStore`, `pwaStore`) manage global state.
 - **Minimal State**: Stores MUST ONLY store minimal IDs or primitive settings. Full objects/computed data MUST NEVER be stored in state; derive in hooks or use selectors.
-- **Bridge Pattern**: `src/state/contexts.ts` acts as a compatibility layer. Use `useSelection()`, `usePreferences()`, `useViewport()` hooks to access stores via the legacy `{ state, actions }` shape during transition.
+- **Zero-Context Architecture**: React Context providers are avoided. Components access global state and actions directly from modular stores using granular selectors (e.g., `s => s.value`).
 - **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure.
 
 | Store | Key File | Purpose |
@@ -18,18 +18,8 @@ Non-negotiable. Any violation is system-level bug.
 | `ViewportStore` | `viewportStore.ts` | Map bounds, debounced bounds, selected places |
 | `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (Persisted) |
 | `GeolocationStore` | `geolocationStore.ts` | User location, speed, geo-pending status |
-| `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer IDs |
-
-## 2. STATE MIGRATION: PHASE 2 (NEXT STEPS)
-
-The application is in a hybrid state. Core data is in Zustand, but accessed via a Bridge Pattern in `src/state/contexts.ts`.
-
-### Goal: Zero-Context Architecture
-1. **Direct Store Selection**: Components should stop using `useSelection()`, `usePreferences()`, and `useViewport()`. Instead, use granular selectors: `useSelectionStore(s => s.selectedStopId)`.
-2. **Move MapRef to Store**: Migrate the `mapRef` from `App.tsx` / `MapStateProvider` directly into `MapMetadataStore` (using `ref.current` or a setter). This allows any component to trigger camera movements (e.g., `flyTo`) via store actions without prop-drilling the ref.
-3. **Encapsulate Geolocation**: Refactor `useGeolocation.ts` into a headless background worker hook. It should only manage the `navigator.geolocation` lifecycle and write to `GeolocationStore`, returning no values to the UI.
-4. **Dissolve Bridge**: Once all components use direct selectors, delete `src/state/contexts.ts` and remove `ViewportContext.Provider` from `MapStateProvider.tsx`.
-5. **Rename Provider**: Finally, rename `MapStateProvider` to `MapController` or `MapEventsHandler` as it will no longer provide state, only handle imperative map event orchestration.
+| `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer IDs, MapRef |
+| `PWAStore` | `pwaStore.ts` | PWA installation and update status |
 
 ### Hook Data Flow (Strict Hierarchy)
 - **Layer 1: `data/` (React Query)**: Talk to API, own cache. (e.g., `useVehicles`, `useDepartures`)
@@ -41,16 +31,16 @@ The application is in a hybrid state. Core data is in Zustand, but accessed via 
 `useSelectedVehicle` MUST merge sources with this priority:
 1. **Detail API** (Metadata via `useVehicleDetail`)
 2. **Live Stream** (Positions via `useVehicles`)
-3. **Reducer State** (IDs)
+3. **Selection State** (IDs)
 *If `is_static_fallback: true` in Detail API, preserve live position/delay from stream.*
 
 ## 2. PERFORMANCE & MAP CONSTRAINTS
 
 Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
-- **Bypass React**: Visual updates to map layers MUST bypass React state.
-- **Direct Mutations**: ONLY use `map.setPaintProperty()` or `map.setLayoutProperty()` for animations.
-- **Cleanup**: All `requestAnimationFrame` loops MUST have robust cleanup.
+- **Bypass React**: Visual updates to map layers (like the selected vehicle pulse) MUST bypass React state via `requestAnimationFrame` and direct map mutations.
+- **Direct Mutations**: ONLY use `map.setPaintProperty()` or `map.setLayoutProperty()` for high-frequency animations.
+- **Cleanup**: All `requestAnimationFrame` loops and map event listeners MUST have robust cleanup.
 - **Memoization**: Wrap map layer components in `React.memo` with primitive props only.
 - **React Query**: Use `TRANSIT_REFRESH_MS` (10s) for refreshes and `keepPreviousData` for positions to prevent flicker.
 
@@ -59,7 +49,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **DetailPanel Abstraction**: Mobile (Vaul drawer) and Desktop (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break responsive switch logic.
 - **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` Trolleybus.
 - **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` — lines A/B/C have distinct directional identities.
-- **Branding Authority**: All transit colors MUST originate from `src/config/stations.ts` (static) or backend-provided branding.
+- **Branding Authority**: Transit colors and icons originate from backend-provided branding or centralized frontend config (`src/utils/mapIcons.ts`).
 - **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts.
 - **i18n**: Czech (`cs`) and English (`en`) via `react-i18next`. Translation files in `src/i18n/locales/`.
 - **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache. Normalization MUST perform structural grouping server-side for frontend map layer performance.
@@ -80,20 +70,16 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 4. **Versioning**: Increment `package.json` exactly once per session (Patch: Fixes, Minor: Features/Arch).
 5. **Changelog**: Every version increment MUST document all changes in `CHANGELOG.md` under new version header with current date.
 
-## 5. DATA PIPELINE & NORMALIZATION
+## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
 
-Applies to all transit data handlers in `functions/api/`.
-
-- **Parallel Fetching**: Large GTFS datasets (Stops/Vehicles) MUST be fetched in parallel via `Promise.all` with chunked offsets to avoid Cloudflare Worker timeouts.
+- **Parallel Fetching**: Large GTFS datasets (Stops/Vehicles) MUST be fetched in parallel via `Promise.all` with chunked offsets.
 - **Two-Phase Grouping**: Stop processing MUST follow two phases:
     1. **Structural**: Identify and create Parent Stations (Type 1) and Entrances (Type 2).
-    2. **Logical**: Merge Regular Stops (Type 0) into Structural Parent Stations (Type 1) when present. If no Type 1 parent, group by `name + node + platform`.
+    2. **Logical**: Merge Regular Stops (Type 0) into Structural Parent Stations (Type 1) when present.
 - **Centroid Authority**: Centroids MUST be generated for every logical stop node. Must have `is_centroid: true` and ID prefixed with `centroid-`.
-- **Enrichment Filtering**: Only features in `stops-enrichment.json` (or structural parents) returned to frontend. Administrative/technical-only markers MUST be discarded.
-- **Metadata Inheritance**: When merging platform points into parent station, parent MUST inherit and aggregate all `metro_lines`, `route_color`, `is_train` flags from children.
-- **O(1) Lookups**: All lookups against enrichment data, line metadata, or ID maps MUST use `Map` or `Record`. Sequential array search (O(N)) for transit metadata is FORBIDDEN (Backend & Frontend).
-- **Data Priority**: Golemio API real-time/static props are primary authority. `stops-enrichment.json` is augmentation only — fill missing metadata (passing lines, name expansions) or fallbacks when API data incomplete. API-provided live props (delays, positions, platform codes) always take precedence.
-- **Strict Typing (Zero-Hole Policy)**: `any`, `unknown`, or generic `Record<string, unknown>` prohibited. All interfaces MUST strictly mirror Golemio OpenAPI schema from fetch layer to UI components.
+- **Enrichment Filtering**: Only features in `stops-enrichment.json` (or structural parents) returned to frontend.
+- **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
+- **Strict Typing**: All interfaces MUST strictly mirror Golemio OpenAPI schema from fetch layer to UI components.
 
 ## 6. LOCAL ENVIRONMENT
 - **Port:** Dev server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.

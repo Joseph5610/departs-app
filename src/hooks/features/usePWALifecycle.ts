@@ -26,20 +26,15 @@ export const usePWALifecycle = () => {
         usePWAStore.setState((state) => {
             if (
                 state.offlineReady === offlineReady &&
-                state.needRefresh === needRefresh &&
-                state.actions.updateServiceWorker === updateServiceWorker
+                state.needRefresh === needRefresh
             ) return state;
 
             return {
                 offlineReady,
                 needRefresh,
-                actions: {
-                    ...state.actions,
-                    updateServiceWorker
-                }
             };
         });
-    }, [offlineReady, needRefresh, updateServiceWorker]);
+    }, [offlineReady, needRefresh]);
 
     // Show update notification when a new version is available
     useEffect(() => {
