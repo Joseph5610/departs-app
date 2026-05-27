@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -13,11 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { GenericAlertCard } from '../Alerts/GenericAlertCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Stack, Box, Surface } from '@/components/ui/layout';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +34,8 @@ export const AlertsModal: React.FC = () => {
     
     const [activeTab, setActiveTab] = useState<'incidents' | 'exclusions'>('incidents');
     const [searchQuery, setSearchQuery] = useState('');
+
+    const parentRef = useRef<HTMLDivElement>(null);
 
     const { rss } = useGlobalAlerts();
     const { data: rssData, isLoading: loadingRSS } = rss;
@@ -61,6 +62,18 @@ export const AlertsModal: React.FC = () => {
         });
     }, [activeTab, rssData, searchQuery]);
 
+    const rowVirtualizer = useVirtualizer({
+        count: currentItems.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 140, // Estimated height of GenericAlertCard
+        overscan: 5,
+    });
+
+    // Reset scroll when tab or search changes
+    useEffect(() => {
+        rowVirtualizer.scrollToOffset(0);
+    }, [activeTab, searchQuery, rowVirtualizer]);
+
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
             <DialogContent aria-describedby={undefined} variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
@@ -75,13 +88,15 @@ export const AlertsModal: React.FC = () => {
                         <Stack gap={2}>
                             <TabsList variant="pill">
                                 <TabsTrigger value="incidents" className="gap-2">
-                                    <span>{t('alerts.incidents')}</span>
+                                    <span className="text-xs uppercase tracking-wide font-black">
+                                        {t('alerts.incidents')}
+                                    </span>
                                     {incidentsCount > 0 && (
                                         <Badge
-                                            variant={activeTab === 'incidents' ? 'default' : 'destructive'}
+                                            variant="destructive"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[10px]",
-                                                activeTab === 'incidents' ? "bg-destructive text-destructive-foreground hover:bg-destructive" : ""
+                                                "h-4 px-1 rounded-md text-[9px] font-black",
+                                                activeTab !== 'incidents' && "opacity-50 grayscale"
                                             )}
                                         >
                                             {incidentsCount}
@@ -89,13 +104,15 @@ export const AlertsModal: React.FC = () => {
                                     )}
                                 </TabsTrigger>
                                 <TabsTrigger value="exclusions" className="gap-2">
-                                    <span>{t('alerts.exclusions')}</span>
+                                    <span className="text-xs uppercase tracking-wide font-black">
+                                        {t('alerts.exclusions')}
+                                    </span>
                                     {exclusionsCount > 0 && (
                                         <Badge
-                                            variant="status"
+                                            variant="secondary"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[10px]",
-                                                activeTab === 'exclusions' ? 'bg-foreground/20' : ''
+                                                "h-4 px-1 rounded-md text-[9px] font-black",
+                                                activeTab !== 'exclusions' && "opacity-50"
                                             )}
                                         >
                                             {exclusionsCount}
@@ -110,7 +127,7 @@ export const AlertsModal: React.FC = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('search.placeholder')}
-                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border-2 border-white/10 bg-muted/40"
+                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border-white/10 bg-white/5 focus:bg-white/10 transition-all"
                                 />
                                 <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16}  strokeWidth={1.5} />
                                 {searchQuery && (
@@ -127,31 +144,45 @@ export const AlertsModal: React.FC = () => {
                         </Stack>
                     </Surface>
 
-                    <ScrollArea className="flex-1 min-h-0 px-6">
-                        <div className="pt-4 pb-6">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeTab + searchQuery}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <Stack gap={3}>
-                                        {currentItems.map((item, idx) => (
-                                            <AlertCard key={item.guid || idx} item={item} />
-                                        ))}
-
-                                        {currentItems.length === 0 && !loadingRSS && (
-                                            <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
-                                                <p>{t('alerts.noAlerts')}</p>
-                                            </Stack>
-                                        )}
-                                    </Stack>
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-                    </ScrollArea>
+                    <Box
+                        ref={parentRef}
+                        className="flex-1 min-h-0 overflow-y-auto px-6 custom-scrollbar"
+                    >
+                        {currentItems.length > 0 ? (
+                            <div
+                                style={{
+                                    height: `${rowVirtualizer.getTotalSize()}px`,
+                                    width: '100%',
+                                    position: 'relative',
+                                }}
+                            >
+                                {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                                    const item = currentItems[virtualItem.index];
+                                    return (
+                                        <div
+                                            key={virtualItem.key}
+                                            data-index={virtualItem.index}
+                                            ref={rowVirtualizer.measureElement}
+                                            className="absolute top-0 left-0 w-full"
+                                            style={{
+                                                transform: `translateY(${virtualItem.start}px)`,
+                                                paddingBottom: '12px', // Gap between cards
+                                                paddingTop: virtualItem.index === 0 ? '16px' : '0', // Initial padding
+                                            }}
+                                        >
+                                            <AlertCard item={item} />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            !loadingRSS && (
+                                <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
+                                    <p>{t('alerts.noAlerts')}</p>
+                                </Stack>
+                            )
+                        )}
+                    </Box>
                 </Tabs>
             </DialogContent>
         </Dialog>

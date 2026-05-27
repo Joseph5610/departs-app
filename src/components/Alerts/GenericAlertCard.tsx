@@ -50,10 +50,10 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl",
-                isHigh && "bg-destructive/20! border-destructive/50! shadow-[0_0_12px_rgba(239,68,68,0.15)]",
-                isNormal && "bg-amber-500/15! border-amber-500/40! shadow-[0_0_12px_rgba(245,158,11,0.15)]",
-                link && "hover:brightness-125 cursor-pointer group",
+                "relative transition-all overflow-hidden p-3 sm:p-4 rounded-2xl border border-white/10 bg-white/5 shadow-sm",
+                isHigh && "bg-destructive/15! border-destructive/40! shadow-[0_0_12px_rgba(239,68,68,0.1)]",
+                isNormal && "bg-amber-500/10! border-amber-500/30! shadow-[0_0_12px_rgba(245,158,11,0.1)]",
+                link && "hover:bg-white/10 cursor-pointer group active:scale-[0.98]",
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
         >
@@ -63,24 +63,32 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
             )} />
 
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
-                {showStatus && (isFuture ? (
-                    <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-destructive" />
-                        <span className="text-[8px] font-bold text-destructive/80 uppercase tracking-widest">
-                            {t('alerts.planned')}
+                <HStack gap={2} align="center" className="mb-1">
+                    {showStatus && (isFuture ? (
+                        <HStack gap={1} align="center" className="px-1.5 py-0.5 rounded-md bg-destructive/10 border border-destructive/20">
+                            <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+                            <span className="text-[8px] font-black text-destructive uppercase tracking-widest">
+                                {t('alerts.planned')}
+                            </span>
+                        </HStack>
+                    ) : isActive ? (
+                        <HStack gap={1} align="center" className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                            <Box className="w-1 h-1 rounded-full bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" />
+                            <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+                                {t('alerts.active')}
+                            </span>
+                        </HStack>
+                    ) : null)}
+
+                    {isHigh && (
+                        <span className="text-[8px] font-black text-destructive uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-destructive/10 border border-destructive/20">
+                            {t('alerts.priorityHigh')}
                         </span>
-                    </HStack>
-                ) : isActive ? (
-                    <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" />
-                        <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
-                            {t('alerts.active')}
-                        </span>
-                    </HStack>
-                ) : null)}
+                    )}
+                </HStack>
 
                 <span className={cn(
-                    "font-bold text-sm leading-tight transition-colors",
+                    "font-black text-sm leading-tight transition-colors",
                     isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
                     link && "group-hover:text-primary"
                 )}>
@@ -90,7 +98,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             <AlertDescription className="grid gap-3">
                 {description && (
-                    <p className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
+                    <p className="text-[11px] line-clamp-4 leading-relaxed text-foreground/90 font-medium">
                         {description}
                     </p>
                 )}
@@ -102,7 +110,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                                 {lines.map((line, idx) => (
                                     <span
                                         key={`${line.name}-${idx}`}
-                                        className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm ring-1 ring-white/10"
+                                        className="px-2.5 py-1 rounded-md text-[10px] font-black text-white shadow-sm ring-1 ring-white/10"
                                         style={{ backgroundColor: line.route_color }}
                                     >
                                         {line.name}

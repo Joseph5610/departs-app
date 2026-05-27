@@ -198,6 +198,7 @@
     "moreInfo": "More info",
     "planned": "Planned",
     "active": "Active now",
+    "priorityHigh": "High priority",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice"
   },

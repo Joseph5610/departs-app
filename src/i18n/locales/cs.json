@@ -201,6 +201,7 @@
     "moreInfo": "Více informací",
     "planned": "Plánováno",
     "active": "Právě probíhá",
+    "priorityHigh": "Vysoká priorita",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolání"
   },
