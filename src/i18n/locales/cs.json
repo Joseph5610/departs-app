@@ -81,7 +81,7 @@
       },
       "trackVehicles": {
         "title": "Sledujte vozidla",
-        "description": "Šipka u vozidla ukazuje jeho aktuální směr."
+        "description": "Na mapě vidíte vozidla pohybující se v reálném čase."
       }
     },
     "cta": "Začínáme",

@@ -1,10 +1,13 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
-import { useGeocoding } from '../../../hooks/data/useGeocoding';
-import { useSelection, usePreferences, useViewport } from '../../../state/contexts';
+import { useGeocoding, geocodingCache } from '../../../hooks/data/useGeocoding';
+import { useSelectionStore } from '../../../state/selectionStore';
+import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useViewportStore } from '../../../state/viewportStore';
+import { useMapMetadataStore } from '../../../state/mapMetadataStore';
+import { useGeolocationStore } from '../../../state/geolocationStore';
 import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../../../config/constants';
 import { useStops } from '../../../hooks/data/useStops';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
@@ -24,18 +27,31 @@ import { getLineMetadataMap } from '@/utils/transitUtils';
  */
 export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const { state: selState, actions: selActions } = useSelection();
-    const { state: prefState, actions: prefActions } = usePreferences();
-    const { state: vpState, actions: vpActions, mapRef, userLocation } = useViewport();
+
+    // Selection
+    const selectedStopId = useSelectionStore(s => s.selectedStopId);
+    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const { selectStop, clearSelection } = useSelectionStore(s => s.actions);
+
+    // Preferences
+    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const { addToHistory } = usePreferencesStore(s => s.actions);
+
+    // Viewport
+    const activeFilter = useViewportStore(s => s.routeFilter);
+    const setSelectedPlaceId = useViewportStore(s => s.actions.setSelectedPlaceId);
+    const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
+    const selectedPlace = selectedPlaceId ? geocodingCache.get(selectedPlaceId) : null;
+    const { setRouteFilter: onLineSelect } = useViewportStore(s => s.actions);
+
+    // Metadata & Geolocation
+    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const userLocation = useGeolocationStore(s => s.userLocation);
+
     const stops = useStops();
 
-    const { favoriteStops, searchHistory } = prefState;
-    const { routeFilter: activeFilter } = vpState;
-    const { addToHistory } = prefActions;
-    const { selectStop, clearSelection } = selActions;
-    const { setRouteFilter: onLineSelect } = vpActions;
-
-    const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
+    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId;
     const [isOpen, setIsOpen] = React.useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -90,7 +106,7 @@ export const Search: React.FC = React.memo(() => {
                /^([A-C]|S\d{1,2}|R\d{1,2}|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d|MHD\s?\d{1,2})$/i.test(trimmed);
     }, [query, linesFromQuery, lineMetadataMap]);
 
-    const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== vpState.selectedPlace?.name;
+    const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -112,7 +128,7 @@ export const Search: React.FC = React.memo(() => {
 
     const handleStopSelect = (stop: StopFeature) => {
         const [lng, lat] = stop.geometry.coordinates;
-        mapRef.current?.flyTo({
+        flyTo({
             center: [lng, lat],
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION
@@ -138,7 +154,7 @@ export const Search: React.FC = React.memo(() => {
 
     const handleHistorySelect = (item: SearchHistoryItem) => {
         if (item.type === 'stop') {
-            mapRef.current?.flyTo({
+            flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
@@ -147,18 +163,12 @@ export const Search: React.FC = React.memo(() => {
             addToHistory(item);
         } else if (item.type === 'place') {
             clearSelection();
-            mapRef.current?.flyTo({
+            flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
-            vpActions.setSelectedPlace({
-                id: item.place_id,
-                name: item.name,
-                subtitle: item.subtitle || '',
-                coordinates: item.coordinates
-            });
-            addToHistory(item);
+            setSelectedPlaceId(item.place_id);
             setQuery(item.name);
         } else {
             onLineSelect(item.lines);
@@ -178,12 +188,12 @@ export const Search: React.FC = React.memo(() => {
 
     const handlePlaceSelect = (result: GeocodingResult) => {
         clearSelection();
-        mapRef.current?.flyTo({
+        flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION
         });
-        vpActions.setSelectedPlace(result);
+        setSelectedPlaceId(result.id);
         addToHistory({
             type: 'place',
             place_id: result.id,
@@ -217,8 +227,8 @@ export const Search: React.FC = React.memo(() => {
                             } else {
                                 setQuery(e.target.value);
                             }
-                            if (vpState.selectedPlace) {
-                                vpActions.setSelectedPlace(null);
+                            if (selectedPlaceId) {
+                                setSelectedPlaceId(null);
                             }
                             setIsOpen(true);
                         }}
@@ -245,8 +255,9 @@ export const Search: React.FC = React.memo(() => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => {
+                                    if (selectedPlaceId) setSelectedPlaceId(null);
                                     clearSearch();
-                                    if (vpState.selectedPlace) vpActions.setSelectedPlace(null);
+                                    inputRef.current?.focus();
                                 }}
                                 className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
                                 aria-label={t('search.clearFilter')}

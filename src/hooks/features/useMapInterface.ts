@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useSelection, useViewport } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useIsMobile } from '../useIsMobile';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useSelectedVehicle } from '../derived/useSelectedVehicle';
@@ -23,10 +24,17 @@ import {
  * The "User Experience Layer" hook.
  */
 export const useMapInterface = () => {
-    const { state: selState, actions: selActions } = useSelection();
-    const { mapRef } = useViewport();
-    const { selectedStopId, selectedTripId, selectedVehicleId, isFollowing } = selState;
-    const { selectStop, selectVehicle } = selActions;
+    // Selection Store
+    const selectedStopId = useSelectionStore(s => s.selectedStopId);
+    const selectedTripId = useSelectionStore(s => s.selectedTripId);
+    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const isFollowing = useSelectionStore(s => s.isFollowing);
+    const selectStop = useSelectionStore(s => s.actions.selectStop);
+    const selectVehicle = useSelectionStore(s => s.actions.selectVehicle);
+
+    // Metadata Store
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const { flyTo, easeTo } = useMapMetadataStore(s => s.actions);
 
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
@@ -106,7 +114,7 @@ export const useMapInterface = () => {
 
         if (isFollowing && hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId || null;
-            currentMap.flyTo({
+            flyTo({
                 center: coords as [number, number],
                 zoom: MAP_VEHICLE_SELECT_ZOOM,
                 duration: MAP_ANIMATION_DURATION,
@@ -117,7 +125,7 @@ export const useMapInterface = () => {
         }
 
         if (isFollowing && hasCoords) {
-            currentMap.easeTo({
+            easeTo({
                 center: coords as [number, number],
                 duration: MAP_EASE_DURATION,
                 essential: true,
@@ -128,14 +136,14 @@ export const useMapInterface = () => {
 
         if (!isFollowing && !selectedTripId && selectedStop?.coordinates && lastFlownStopId.current !== selectedStopId) {
             lastFlownStopId.current = selectedStopId || null;
-            currentMap.easeTo({
+            easeTo({
                 center: selectedStop.coordinates,
                 zoom: Math.max(currentMap.getZoom(), MAP_MIN_STOP_ZOOM),
                 duration: MAP_EASE_DURATION,
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile]);
 
     // --- 4. PERFORMANCE VISUALS ---
     useEffect(() => {

@@ -1,7 +1,8 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { VehicleCollection } from '../../types/transit';
-import { useViewport, usePreferences } from '../../state/contexts';
+import { useViewportStore } from '../../state/viewportStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
@@ -38,10 +39,9 @@ const fetchVehicles = async (bounds: string | null, routeFilter: string[] | null
  * Disables polling automatically while the map is dragged or the user is tracking.
  */
 export const useVehicles = () => {
-    const { state: vpState } = useViewport();
-    const { state: prefState } = usePreferences();
-    const { debouncedBounds: bounds, routeFilter } = vpState;
-    const { routeTypeFilter } = prefState;
+    const bounds = useViewportStore(s => s.debouncedBounds);
+    const routeFilter = useViewportStore(s => s.routeFilter);
+    const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
 
     const query = useQuery<VehicleCollection | null, AppError>({
         queryKey: ['vehicles', bounds, routeFilter, routeTypeFilter],

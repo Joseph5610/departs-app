@@ -73,6 +73,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
+                aria-label="Close"
+                data-testid="detail-panel-close"
                 className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground opacity-60 hover:opacity-100 hover:text-foreground"
             >
                 <X size={20} strokeWidth={1.5}  />

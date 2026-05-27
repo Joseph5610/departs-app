@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.43.1] - 2026-05-27
+
+### Changed
+
+- **Zustand Migration Phase 4 (Zero-Context Finish)**: 
+  - Extracted side-effects from `geolocationStore` into headless `useGeolocation.ts` hook.
+  - Refactored `viewportStore` to store primitive ID (`selectedPlaceId`) instead of full `GeocodingResult` objects, resolving data via a cache.
+  - Strictly typed `MapMetadataStore` camera actions (`flyTo`, `easeTo`) using `maplibre-gl`'s `FlyToOptions` and `EaseToOptions`.
+  - Cleaned up obsolete context and provider imports.
+
+## [0.43.0] - 2026-05-27
+
+### Changed
+
+- **Zustand Migration Phase 3**: Refined state architecture and cleaned up global side effects.
+  - Implemented map camera helper actions (`flyTo`, `easeTo`, `zoomIn`, `zoomOut`) in `MapMetadataStore` to replace direct `mapRef.current` access across components (`FavoritesStopCard`, `Search`, `MapControls`, and `useMapInterface`).
+  - Deprecated legacy localStorage migration fallbacks in `PreferencesStore` in favor of clean Zustand-managed defaults.
+  - Refactored `useMapInterface.ts` URL synchronization and action dispatching to use granular Zustand selectors.
+  - Optimized `useMapFilters.ts` dependency tracing and memoization to prevent redundant rendering cycles in `MapLayers.tsx`.
+  - Installed and configured `zustand` in `package.json` dependencies.
+
 ## [0.42.0] - 2026-05-21
 
 ### Changed

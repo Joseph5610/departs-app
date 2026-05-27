@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useViewport } from '../../state/contexts';
+import { useGeolocationStore } from '../../state/geolocationStore';
 import { useSelectedStop } from './useSelectedStop';
 import { calculateDistance } from '../../utils/transitUtils';
 import {
@@ -17,7 +17,7 @@ import {
  */
 export const useStopDistance = () => {
     const selectedStop = useSelectedStop();
-    const { userLocation } = useViewport();
+    const userLocation = useGeolocationStore(s => s.userLocation);
 
     return useMemo(() => {
         const coords = selectedStop?.coordinates;

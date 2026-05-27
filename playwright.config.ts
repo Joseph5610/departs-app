@@ -26,7 +26,7 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    
+
     /* Use data-testid for stable locators */
     testIdAttribute: 'data-testid',
 
@@ -50,7 +50,7 @@ export default defineConfig({
         },
       },
     },
-    /* 
+    /*
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },

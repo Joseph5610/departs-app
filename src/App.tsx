@@ -1,7 +1,10 @@
 import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
+import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 
 function App() {
+  usePWALifecycle();
+
   return (
     <>
       {/* Visually hidden SEO content */}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelection, useViewport } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
+import { useViewportStore } from '../../state/viewportStore';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useNetworkStatus } from '../../hooks/features/useNetworkStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
@@ -15,13 +16,13 @@ import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
-    const { state: selState } = useSelection();
-    const { state: vpState } = useViewport();
+    const selectedStopId = useSelectionStore(s => s.selectedStopId);
+    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const bounds = useViewportStore(s => s.bounds);
     const { isFetching: fetching, dataUpdatedAt: lastUpdate, isError, error } = useVehicles();
     const isOnline = useNetworkStatus();
 
-    const isSidebarOpen = !!selState.selectedStopId || !!selState.selectedVehicleId;
-    const { bounds } = vpState;
+    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId;
     const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
 
     useEffect(() => {

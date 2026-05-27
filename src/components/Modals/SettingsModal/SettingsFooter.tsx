@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Clock, Database, Code, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
-import { usePWA } from '../../../state/pwa-context';
-import { usePreferences } from '../../../state/contexts';
+import { usePWAStore } from '../../../state/pwaStore';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
 import { Box, Stack, HStack } from '@/components/ui/layout';
@@ -11,12 +11,16 @@ import { Box, Stack, HStack } from '@/components/ui/layout';
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
-    const { state, actions } = usePreferences();
+
+    // Preferences
+    const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const { clearHistory } = usePreferencesStore(s => s.actions);
+
     const { updatedAt } = useStops();
-    const { searchHistory } = state;
-    const { clearHistory } = actions;
     const [isChecking, setIsChecking] = useState(false);
-    const { needRefresh } = usePWA();
+
+    // PWA
+    const needRefresh = usePWAStore(s => s.needRefresh);
 
     // Reset checking state if update is found
     React.useEffect(() => {

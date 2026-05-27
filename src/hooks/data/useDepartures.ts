@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useMemo } from 'react';
 import type { Departure } from '../../types/transit';
-import { useSelection, usePreferences } from '../../state/contexts';
+import { useSelectionStore } from '../../state/selectionStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
@@ -39,10 +40,9 @@ export interface DeparturesResponse {
  * Fetches, enriches, and groups departure data for the selected stop.
  */
 export const useDepartures = () => {
-    const { state: selState } = useSelection();
-    const { state: prefState } = usePreferences();
-    const stopId = selState.selectedStopId;
-    const departureSort = prefState.departureSort;
+    const stopId = useSelectionStore(s => s.selectedStopId);
+    const selectedLine = useSelectionStore(s => s.selectedLine);
+    const departureSort = usePreferencesStore(s => s.departureSort);
 
     // Store previous data to calculate deltas without effects
     const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});
@@ -97,7 +97,6 @@ export const useDepartures = () => {
     });
 
     const enrichedDepartures = useMemo((): Departure[] => query.data?.departures || [], [query.data]);
-    const { selectedLine } = selState;
 
     const filteredDepartures = useMemo(() => {
         if (!selectedLine) return enrichedDepartures;

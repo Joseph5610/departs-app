@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
-import { usePreferences } from '../../../state/contexts';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 
 const vehicleTypes = [
     { id: 'metro', icon: Subway },
@@ -120,9 +120,23 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
  */
 export const DisplaySection: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions } = usePreferences();
-    const { showVehicles, showStops, routeTypeFilter, stopTypeFilter, showStopLabels, mapBaseStyle } = state;
-    const { setShowVehicles, setShowStops, setRouteTypeFilter, setStopTypeFilter, setShowStopLabels, setMapBaseStyle } = actions;
+
+    // Preferences
+    const showVehicles = usePreferencesStore(s => s.showVehicles);
+    const showStops = usePreferencesStore(s => s.showStops);
+    const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
+    const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
+    const showStopLabels = usePreferencesStore(s => s.showStopLabels);
+    const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
+
+    const {
+        setShowVehicles,
+        setShowStops,
+        setRouteTypeFilter,
+        setStopTypeFilter,
+        setShowStopLabels,
+        setMapBaseStyle
+    } = usePreferencesStore(s => s.actions);
 
     const toggleFilter = (filter: string[], setFilter: (val: string[]) => void, type: string) => {
         if (filter.includes(type)) {
