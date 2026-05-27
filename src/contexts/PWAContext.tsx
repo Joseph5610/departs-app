@@ -2,19 +2,40 @@ import React, { useEffect, type ReactNode } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { PWAContext } from '../state/pwa-context';
+import { usePWAStore } from '../state/pwaStore';
 
 export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { t } = useTranslation();
+
     const {
-        offlineReady: [offlineReady, setOfflineReady],
-        needRefresh: [needRefresh, setNeedRefresh],
+        offlineReady: [offlineReady],
+        needRefresh: [needRefresh],
         updateServiceWorker,
     } = useRegisterSW({
         onRegisterError(error) {
             console.error('SW registration error', error);
         },
     });
+
+    // Sync SW state to Zustand store
+    useEffect(() => {
+        usePWAStore.setState((state) => {
+            if (
+                state.offlineReady === offlineReady &&
+                state.needRefresh === needRefresh &&
+                state.actions.updateServiceWorker === updateServiceWorker
+            ) return state;
+
+            return {
+                offlineReady,
+                needRefresh,
+                actions: {
+                    ...state.actions,
+                    updateServiceWorker
+                }
+            };
+        });
+    }, [offlineReady, needRefresh, updateServiceWorker]);
 
     useEffect(() => {
         if (needRefresh) {
@@ -31,16 +52,8 @@ export const PWAProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [needRefresh, updateServiceWorker, t]);
 
     return (
-        <PWAContext.Provider
-            value={{
-                offlineReady,
-                setOfflineReady,
-                needRefresh,
-                setNeedRefresh,
-                updateServiceWorker,
-            }}
-        >
+        <>
             {children}
-        </PWAContext.Provider>
+        </>
     );
 };

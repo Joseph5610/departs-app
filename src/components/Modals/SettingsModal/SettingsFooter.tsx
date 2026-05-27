@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Clock, Database, Code, Scale } from 'lucide-react';
 import { version } from '../../../../package.json';
-import { usePWA } from '../../../state/pwa-context';
+import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
@@ -18,7 +18,9 @@ export const SettingsFooter: React.FC = () => {
 
     const { updatedAt } = useStops();
     const [isChecking, setIsChecking] = useState(false);
-    const { needRefresh } = usePWA();
+
+    // PWA
+    const needRefresh = usePWAStore(s => s.needRefresh);
 
     // Reset checking state if update is found
     React.useEffect(() => {

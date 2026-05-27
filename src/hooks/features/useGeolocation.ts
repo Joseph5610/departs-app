@@ -11,9 +11,12 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
  * It auto-starts the watcher and handles initial map focus.
  */
 export const useGeolocation = () => {
-    const { watchId, userLocation, actions } = useGeolocationStore();
-    const { performGeolocation, setWatchId } = actions;
-    const { mapLoaded, mapRef } = useMapMetadataStore();
+    const watchId = useGeolocationStore(s => s.watchId);
+    const userLocation = useGeolocationStore(s => s.userLocation);
+    const { performGeolocation, setWatchId } = useGeolocationStore(s => s.actions);
+
+    const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
+    const mapRef = useMapMetadataStore(s => s.mapRef);
 
     // Auto-start watcher on mount (only if welcome modal was already seen or skipped)
     useEffect(() => {

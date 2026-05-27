@@ -1,6 +1,6 @@
-import React, { useRef, useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import MapGL, { Marker, type MapRef } from 'react-map-gl/maplibre';
+import MapGL, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
@@ -9,7 +9,7 @@ import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapController } from '../../state/MapController';
+import { MapController } from './MapController';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -262,10 +262,8 @@ const MapInner: React.FC<MapInnerProps> = ({ mapEvents }) => {
  * Map Component (Entry Point)
  */
 export const Map: React.FC = () => {
-    const mapRef = useRef<MapRef>(null);
-
     return (
-        <MapController mapRef={mapRef}>
+        <MapController>
             <MapInner />
         </MapController>
     );

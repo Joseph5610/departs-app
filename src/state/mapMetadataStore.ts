@@ -1,3 +1,4 @@
+import React from 'react';
 import { create } from 'zustand';
 import type { MapRef } from 'react-map-gl/maplibre';
 
@@ -10,7 +11,6 @@ export interface MapMetadataState {
 export interface MapMetadataActions {
     setMapLoaded: (loaded: boolean) => void;
     setLabelLayerId: (id: string | undefined) => void;
-    setMapRef: (ref: React.RefObject<MapRef | null>) => void;
 }
 
 export interface MapMetadataStore extends MapMetadataState {
@@ -21,12 +21,11 @@ export const useMapMetadataStore = create<MapMetadataStore>((set) => ({
     // State
     mapLoaded: false,
     labelLayerId: undefined,
-    mapRef: { current: null },
+    mapRef: React.createRef<MapRef>(),
 
     // Actions
     actions: {
         setMapLoaded: (mapLoaded) => set({ mapLoaded }),
         setLabelLayerId: (labelLayerId) => set({ labelLayerId }),
-        setMapRef: (mapRef) => set({ mapRef }),
     },
 }));

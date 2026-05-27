@@ -1,18 +1,17 @@
-import React, { useCallback, useRef, useEffect } from 'react';
-import type { MapRef } from 'react-map-gl/maplibre';
-import type { Map } from 'maplibre-gl';
+import React, { useCallback, useRef } from 'react';
+import type { Map, SymbolLayerSpecification } from 'maplibre-gl';
 
-import { useSelectionStore } from './selectionStore';
-import { useViewportStore } from './viewportStore';
-import { useMapMetadataStore } from './mapMetadataStore';
+import { useSelectionStore } from '../../state/selectionStore';
+import { useViewportStore } from '../../state/viewportStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
 
-import { useGeolocation } from '../hooks/features/useGeolocation';
-import { useMapInterface } from '../hooks/features/useMapInterface';
-import { addAllIcons } from '../utils/mapIcons';
+import { useGeolocation } from '../../hooks/features/useGeolocation';
+import { useMapInterface } from '../../hooks/features/useMapInterface';
+import { addAllIcons } from '../../utils/mapIcons';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
     MAP_BOUNDS_DEBOUNCE,
-} from '../config/constants';
+} from '../../config/constants';
 
 // --- ENGINE ---
 
@@ -24,9 +23,8 @@ const MapEngine: React.FC = () => {
 
 // --- CONTROLLER ---
 
-export const MapController: React.FC<{ children: React.ReactNode; mapRef: React.RefObject<MapRef | null> }> = ({ children, mapRef }) => {
-    const { actions: mapActions } = useMapMetadataStore();
-    const { setMapLoaded, setLabelLayerId, setMapRef } = mapActions;
+export const MapController: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { setMapLoaded, setLabelLayerId } = useMapMetadataStore(s => s.actions);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -34,11 +32,6 @@ export const MapController: React.FC<{ children: React.ReactNode; mapRef: React.
     const selActions = useSelectionStore(s => s.actions);
     const bounds = useViewportStore(s => s.bounds);
     const vpActions = useViewportStore(s => s.actions);
-
-    // Sync mapRef to store
-    useEffect(() => {
-        setMapRef(mapRef);
-    }, [mapRef, setMapRef]);
 
     const getRoundedBounds = useCallback((map: Map) => {
         const b = map.getBounds();
@@ -99,7 +92,7 @@ export const MapController: React.FC<{ children: React.ReactNode; mapRef: React.
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {
-            const firstLabelLayer = layers.find(layer => layer.type === 'symbol' && (layer as maplibregl.SymbolLayerSpecification).layout?.['text-field']);
+            const firstLabelLayer = layers.find(layer => layer.type === 'symbol' && (layer as SymbolLayerSpecification).layout?.['text-field']);
             if (firstLabelLayer) setLabelLayerId(firstLabelLayer.id);
         }
         addAllIcons(map);
