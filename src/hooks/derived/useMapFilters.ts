@@ -15,7 +15,7 @@ const EMPTY_GEOJSON: VehicleCollection = {
  */
 export const useMapFilters = (
     selectedVehicle: VehicleDetail | null,
-    selectedId: string | null
+    selectedId: string | null | undefined
 ) => {
     // 1. Create a standalone GeoJSON for the selected vehicle
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
