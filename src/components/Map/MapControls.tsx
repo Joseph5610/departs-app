@@ -6,6 +6,7 @@ import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
+import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
@@ -30,11 +31,12 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
 
     // Geolocation Store
     const isGeoPending = useGeolocationStore(s => s.isGeoPending);
-    const { handleLocate: onLocate } = useGeolocationStore(s => s.actions);
+    const { handleLocate: onLocate } = useGeolocation();
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
+    const { easeTo, zoomIn, zoomOut } = useMapMetadataStore(s => s.actions);
 
     const { rss } = useGlobalAlerts();
     const incidentsCount = useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
@@ -48,20 +50,20 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     }, [setIsAlertsOpen]);
 
     const onZoomIn = React.useCallback(() => {
-        mapRef.current?.zoomIn();
-    }, [mapRef]);
+        zoomIn();
+    }, [zoomIn]);
 
     const onZoomOut = React.useCallback(() => {
-        mapRef.current?.zoomOut();
-    }, [mapRef]);
+        zoomOut();
+    }, [zoomOut]);
 
     const onResetBearing = React.useCallback(() => {
-        mapRef.current?.easeTo({
+        easeTo({
             bearing: 0,
             duration: 1000,
             pitch: 0
         });
-    }, [mapRef]);
+    }, [easeTo]);
 
     const [showCompass, setShowCompass] = useState(false);
 

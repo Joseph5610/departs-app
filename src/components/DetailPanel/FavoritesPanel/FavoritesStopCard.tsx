@@ -43,7 +43,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     const { selectStop } = useSelectionStore(s => s.actions);
 
     // Metadata
-    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
 
     // Geolocation
     const userLocation = useGeolocationStore(s => s.userLocation);
@@ -108,7 +108,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
 
     // Handle flying to stop and opening its departure board
     const handleCardClick = () => {
-        mapRef.current?.flyTo({
+        flyTo({
             center: coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION

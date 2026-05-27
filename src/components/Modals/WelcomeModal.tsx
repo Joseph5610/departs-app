@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Info, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
-import { useGeolocationStore } from '../../state/geolocationStore';
+import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
  */
 export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();
-    const { handleLocate } = useGeolocationStore(s => s.actions);
+    const { handleLocate } = useGeolocation();
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         const params = new URLSearchParams(window.location.search);

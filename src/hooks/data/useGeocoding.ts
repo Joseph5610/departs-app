@@ -82,6 +82,9 @@ const parsePhotonFeature = (
     };
 };
 
+// Module-level cache for O(1) lookups by ID
+export const geocodingCache = new Map<string, GeocodingResult>();
+
 /**
  * useGeocoding
  *
@@ -115,9 +118,12 @@ export const useGeocoding = (
             
             const json = await res.json() as { features: Parameters<typeof parsePhotonFeature>[0][] };
             
-            return json.features
+            const results = json.features
                 .map((f, i) => parsePhotonFeature(f, i))
                 .filter((r): r is GeocodingResult => r !== null);
+                
+            results.forEach(r => geocodingCache.set(r.id, r));
+            return results;
         },
         enabled: !!url,
         staleTime: 1000 * 60 * 5, // Cache for 5 minutes

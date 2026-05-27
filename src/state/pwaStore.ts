@@ -24,7 +24,7 @@ export const usePWAStore = create<PWAStore>((set) => ({
     actions: {
         setOfflineReady: (offlineReady) => set({ offlineReady }),
         setNeedRefresh: (needRefresh) => set({ needRefresh }),
-        // This will be populated by the PWAProvider
+        // This will be populated by the usePWALifecycle hook
         updateServiceWorker: async () => { console.warn('updateServiceWorker not initialized'); },
     },
 }));

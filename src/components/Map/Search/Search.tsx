@@ -1,9 +1,8 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
-import { useGeocoding } from '../../../hooks/data/useGeocoding';
+import { useGeocoding, geocodingCache } from '../../../hooks/data/useGeocoding';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useViewportStore } from '../../../state/viewportStore';
@@ -41,11 +40,13 @@ export const Search: React.FC = React.memo(() => {
 
     // Viewport
     const activeFilter = useViewportStore(s => s.routeFilter);
-    const selectedPlace = useViewportStore(s => s.selectedPlace);
-    const { setRouteFilter: onLineSelect, setSelectedPlace } = useViewportStore(s => s.actions);
+    const setSelectedPlaceId = useViewportStore(s => s.actions.setSelectedPlaceId);
+    const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
+    const selectedPlace = selectedPlaceId ? geocodingCache.get(selectedPlaceId) : null;
+    const { setRouteFilter: onLineSelect } = useViewportStore(s => s.actions);
 
     // Metadata & Geolocation
-    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
     const userLocation = useGeolocationStore(s => s.userLocation);
 
     const stops = useStops();
@@ -127,7 +128,7 @@ export const Search: React.FC = React.memo(() => {
 
     const handleStopSelect = (stop: StopFeature) => {
         const [lng, lat] = stop.geometry.coordinates;
-        mapRef.current?.flyTo({
+        flyTo({
             center: [lng, lat],
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION
@@ -153,7 +154,7 @@ export const Search: React.FC = React.memo(() => {
 
     const handleHistorySelect = (item: SearchHistoryItem) => {
         if (item.type === 'stop') {
-            mapRef.current?.flyTo({
+            flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
@@ -162,18 +163,12 @@ export const Search: React.FC = React.memo(() => {
             addToHistory(item);
         } else if (item.type === 'place') {
             clearSelection();
-            mapRef.current?.flyTo({
+            flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
-            setSelectedPlace({
-                id: item.place_id,
-                name: item.name,
-                subtitle: item.subtitle || '',
-                coordinates: item.coordinates
-            });
-            addToHistory(item);
+            setSelectedPlaceId(item.place_id);
             setQuery(item.name);
         } else {
             onLineSelect(item.lines);
@@ -193,12 +188,12 @@ export const Search: React.FC = React.memo(() => {
 
     const handlePlaceSelect = (result: GeocodingResult) => {
         clearSelection();
-        mapRef.current?.flyTo({
+        flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,
             duration: MAP_FLY_DURATION
         });
-        setSelectedPlace(result);
+        setSelectedPlaceId(result.id);
         addToHistory({
             type: 'place',
             place_id: result.id,
@@ -232,8 +227,8 @@ export const Search: React.FC = React.memo(() => {
                             } else {
                                 setQuery(e.target.value);
                             }
-                            if (selectedPlace) {
-                                setSelectedPlace(null);
+                            if (selectedPlaceId) {
+                                setSelectedPlaceId(null);
                             }
                             setIsOpen(true);
                         }}
@@ -260,8 +255,9 @@ export const Search: React.FC = React.memo(() => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => {
+                                    if (selectedPlaceId) setSelectedPlaceId(null);
                                     clearSearch();
-                                    if (selectedPlace) setSelectedPlace(null);
+                                    inputRef.current?.focus();
                                 }}
                                 className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
                                 aria-label={t('search.clearFilter')}

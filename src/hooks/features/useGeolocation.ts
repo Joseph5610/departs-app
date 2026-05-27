@@ -1,24 +1,108 @@
-
-import { useEffect } from 'react';
-import { STORAGE_KEYS, MAP_VEHICLE_SELECT_ZOOM } from '../../config/constants';
+import { useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import i18n from '../../i18n/config';
+import { STORAGE_KEYS, MAP_VEHICLE_SELECT_ZOOM, MAP_FLY_DURATION } from '../../config/constants';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 
-/**
- * useGeolocation
- *
- * Headless hook that manages the geolocation lifecycle.
- * It auto-starts the watcher and handles initial map focus.
- */
 export const useGeolocation = () => {
     const watchId = useGeolocationStore(s => s.watchId);
     const userLocation = useGeolocationStore(s => s.userLocation);
-    const { performGeolocation, setWatchId } = useGeolocationStore(s => s.actions);
+    const isGeoPending = useGeolocationStore(s => s.isGeoPending);
+    const lastUpdatedAt = useGeolocationStore(s => s.lastUpdatedAt);
+    
+    const { 
+        setUserLocation, 
+        setUserSpeed, 
+        setLastUpdatedAt, 
+        setIsGeoPending, 
+        setWatchId 
+    } = useGeolocationStore(s => s.actions);
 
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const mapRef = useMapMetadataStore(s => s.mapRef);
 
-    // Auto-start watcher on mount (only if welcome modal was already seen or skipped)
+    const performGeolocation = useCallback(() => {
+        if (typeof navigator === 'undefined' || !navigator.geolocation || watchId !== null) return;
+
+        const id = navigator.geolocation.watchPosition(
+            (pos) => {
+                const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+                setUserLocation(coords);
+                setUserSpeed(pos.coords.speed);
+                setLastUpdatedAt(Date.now());
+                setIsGeoPending(false);
+                localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
+            },
+            (err) => {
+                setIsGeoPending(false);
+                if (err.code === err.PERMISSION_DENIED) {
+                    if (watchId !== null) {
+                        navigator.geolocation.clearWatch(watchId);
+                        setWatchId(null);
+                    }
+                }
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+        setWatchId(id);
+    }, [watchId, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending, setWatchId]);
+
+    const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        if (isGeoPending) return;
+
+        const map = mapRef.current?.getMap();
+        const now = Date.now();
+        const isFreshEnough = now - lastUpdatedAt < 10000;
+
+        if (userLocation && isFreshEnough) {
+            if (map) map.flyTo({ center: userLocation, zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
+            if (watchId === null) performGeolocation();
+            return;
+        }
+
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            toast.error(i18n.t('toasts.geoNotSupported'));
+            const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
+            if (saved && map) {
+                try {
+                    const { lat, lng } = JSON.parse(saved);
+                    map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
+                } catch { /* ignore */ }
+            }
+            return;
+        }
+
+        setIsGeoPending(true);
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+                setUserLocation(coords);
+                setUserSpeed(pos.coords.speed);
+                setLastUpdatedAt(Date.now());
+                setIsGeoPending(false);
+                if (map) map.flyTo({ center: coords, zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
+            },
+            () => {
+                setIsGeoPending(false);
+                toast.error(i18n.t('toasts.geoError'));
+                const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
+                if (saved && map) {
+                    try {
+                        const { lat, lng } = JSON.parse(saved);
+                        map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
+                    } catch { /* ignore */ }
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+        );
+
+        if (watchId === null) performGeolocation();
+    }, [isGeoPending, lastUpdatedAt, userLocation, watchId, mapRef, performGeolocation, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending]);
+
+    // Auto-start watcher on mount
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
@@ -38,18 +122,19 @@ export const useGeolocation = () => {
         };
     }, [performGeolocation, watchId, setWatchId]);
 
-    // Initial map focus once both map and location are ready
+    // Initial map focus
     useEffect(() => {
         if (mapLoaded && userLocation && mapRef.current) {
             const map = mapRef.current.getMap();
             const p = new URLSearchParams(window.location.search);
             const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
 
-            // We use a simple session-based flag to ensure we only auto-focus once per session
             if (!hasExplicitLocation && !sessionStorage.getItem('initial_geo_focus')) {
                 map.jumpTo({ center: userLocation, zoom: MAP_VEHICLE_SELECT_ZOOM });
                 sessionStorage.setItem('initial_geo_focus', 'true');
             }
         }
     }, [mapLoaded, userLocation, mapRef]);
+
+    return { performGeolocation, handleLocate };
 };

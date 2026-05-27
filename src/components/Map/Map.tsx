@@ -13,6 +13,7 @@ import { MapController, useMapEvents } from './MapController';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { geocodingCache } from '../../hooks/data/useGeocoding';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { MapControls } from './MapControls';
@@ -46,7 +47,8 @@ const MapInner: React.FC = () => {
     const selActions = useSelectionStore(s => s.actions);
 
     // Viewport Store
-    const selectedPlace = useViewportStore(s => s.selectedPlace);
+    const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
+    const selectedPlace = selectedPlaceId ? geocodingCache.get(selectedPlaceId) : null;
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);

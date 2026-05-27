@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { STORAGE_KEYS } from '../config/constants';
 import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 
 export interface PreferencesState {
@@ -36,36 +35,21 @@ export interface PreferencesStore extends PreferencesState {
     actions: PreferencesActions;
 }
 
-const migrateLegacyPreferences = () => {
-    const safeJsonParse = <T>(key: string, fallback: T): T => {
-        try {
-            const item = localStorage.getItem(key);
-            return item ? (JSON.parse(item) as T) : fallback;
-        } catch {
-            return fallback;
-        }
-    };
-
-    return {
-        showVehicles: localStorage.getItem(STORAGE_KEYS.SHOW_VEHICLES) !== 'false',
-        showStops: localStorage.getItem(STORAGE_KEYS.SHOW_STOPS) !== 'false',
-        showStopLabels: localStorage.getItem(STORAGE_KEYS.SHOW_STOP_LABELS) !== 'false',
-        stopTypeFilter: safeJsonParse<string[]>(STORAGE_KEYS.STOP_TYPE_FILTER, []),
-        departureSort: (localStorage.getItem(STORAGE_KEYS.DEPARTURE_SORT) as 'line' | 'departure') || 'line',
-        mapBaseStyle: (localStorage.getItem(STORAGE_KEYS.MAP_BASE_STYLE) as 'nolabels' | 'labels') || 'labels',
-        favoriteStops: safeJsonParse<string[]>(STORAGE_KEYS.FAVORITES, []),
-        searchHistory: safeJsonParse<SearchHistoryItem[]>(STORAGE_KEYS.SEARCH_HISTORY, []),
-    };
-};
-
 export const usePreferencesStore = create<PreferencesStore>()(
     persist(
         (set) => ({
             // State
-            ...migrateLegacyPreferences(),
+            showVehicles: true,
+            showStops: true,
+            showStopLabels: true,
+            stopTypeFilter: [],
             isSettingsOpen: false,
             isAlertsOpen: false,
+            departureSort: 'line',
             routeTypeFilter: [],
+            favoriteStops: [],
+            searchHistory: [],
+            mapBaseStyle: 'labels',
 
             // Actions
             actions: {

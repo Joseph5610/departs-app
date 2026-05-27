@@ -80,7 +80,7 @@
       },
       "trackVehicles": {
         "title": "Track vehicles",
-        "description": "The arrow next to a vehicle shows its current direction."
+        "description": "See vehicles moving in real-time on the map."
       }
     },
     "cta": "Get Started",
