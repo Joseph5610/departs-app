@@ -40,43 +40,47 @@ export const AlertsModal: React.FC = () => {
     const { rss } = useGlobalAlerts();
     const { data: rssData, isLoading: loadingRSS } = rss;
 
-    const incidentsCount = useMemo(() => { return rssData?.alerts?.filter((a) => { return a.type === 'incident'; }).length || 0; }, [rssData]);
-    const exclusionsCount = useMemo(() => { return rssData?.alerts?.filter((a) => { return a.type === 'exclusion'; }).length || 0; }, [rssData]);
+    const { incidents, exclusions } = useMemo(() => {
+        const alerts = rssData?.alerts || [];
+        return {
+            incidents: alerts.filter(a => a.type === 'incident').sort((a, b) => (a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1)),
+            exclusions: alerts.filter(a => a.type === 'exclusion').sort((a, b) => (a.isActive === b.isActive ? 0 : a.isActive ? -1 : 1))
+        };
+    }, [rssData]);
+
+    const incidentsCount = incidents.length;
+    const exclusionsCount = exclusions.length;
 
     const currentItems = useMemo(() => {
-        const items = rssData?.alerts?.filter((a) => { return activeTab === 'incidents' ? a.type === 'incident' : a.type === 'exclusion'; });
-        if (!items) return [];
+        const items = activeTab === 'incidents' ? incidents : exclusions;
+        const query = searchQuery.trim().toLowerCase();
 
-        const filtered = searchQuery.trim()
-            ? items.filter(item =>
-                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                item.lines?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()))
-              )
-            : [...items];
+        if (!query) return items;
 
-        return filtered.sort((a, b) => {
-            if (a.isActive && !b.isActive) return -1;
-            if (!a.isActive && b.isActive) return 1;
-            return 0;
-        });
-    }, [activeTab, rssData, searchQuery]);
+        return items.filter(item =>
+            item.title.toLowerCase().includes(query) ||
+            (item.description && item.description.toLowerCase().includes(query)) ||
+            item.lines?.some(l => l.toLowerCase().includes(query))
+        );
+    }, [activeTab, incidents, exclusions, searchQuery]);
 
-    const rowVirtualizer = useVirtualizer({
+    const rowVirtualizer = useVirtualizer(useMemo(() => ({
         count: currentItems.length,
         getScrollElement: () => parentRef.current,
-        estimateSize: () => 140, // Estimated height of GenericAlertCard
+        estimateSize: () => 140,
         overscan: 5,
-    });
+    }), [currentItems.length]));
 
     // Reset scroll when tab or search changes
     useEffect(() => {
-        rowVirtualizer.scrollToOffset(0);
+        if (parentRef.current) {
+            parentRef.current.scrollTop = 0;
+        }
     }, [activeTab, searchQuery]);
 
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
-            <DialogContent aria-describedby={undefined} variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+            <DialogContent aria-describedby={undefined} variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 max-w-2xl overflow-hidden gap-0">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('alerts.title')}
@@ -88,14 +92,14 @@ export const AlertsModal: React.FC = () => {
                         <Stack gap={2}>
                             <TabsList variant="pill">
                                 <TabsTrigger value="incidents" className="gap-2">
-                                    <span className="text-xs uppercase tracking-wide font-bold">
+                                    <span className="text-xs uppercase tracking-wide font-semibold">
                                         {t('alerts.incidents')}
                                     </span>
                                     {incidentsCount > 0 && (
                                         <Badge
                                             variant="destructive"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[10px] font-bold",
+                                                "h-4 px-1 rounded-md text-[10px] font-semibold",
                                                 activeTab !== 'incidents' && "opacity-50 grayscale"
                                             )}
                                         >
@@ -104,14 +108,14 @@ export const AlertsModal: React.FC = () => {
                                     )}
                                 </TabsTrigger>
                                 <TabsTrigger value="exclusions" className="gap-2">
-                                    <span className="text-xs uppercase tracking-wide font-bold">
+                                    <span className="text-xs uppercase tracking-wide font-semibold">
                                         {t('alerts.exclusions')}
                                     </span>
                                     {exclusionsCount > 0 && (
                                         <Badge
                                             variant="secondary"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[10px] font-bold",
+                                                "h-4 px-1 rounded-md text-[10px] font-semibold",
                                                 activeTab !== 'exclusions' && "opacity-50"
                                             )}
                                         >
@@ -146,9 +150,13 @@ export const AlertsModal: React.FC = () => {
 
                     <Box
                         ref={parentRef}
-                        className="flex-1 min-h-0 overflow-y-auto px-6 custom-scrollbar"
+                        className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-6 custom-scrollbar"
                     >
-                        {currentItems.length > 0 ? (
+                        {loadingRSS ? (
+                             <Stack justify="center" align="center" className="flex-1 py-12 min-h-[50vh]">
+                                <Box className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                             </Stack>
+                        ) : currentItems.length > 0 ? (
                             <div
                                 style={{
                                     height: `${rowVirtualizer.getTotalSize()}px`,
@@ -158,16 +166,16 @@ export const AlertsModal: React.FC = () => {
                             >
                                 {rowVirtualizer.getVirtualItems().map((virtualItem) => {
                                     const item = currentItems[virtualItem.index];
+                                    if (!item) return null;
+
                                     return (
                                         <div
-                                            key={virtualItem.key}
+                                            key={`${activeTab}-${virtualItem.index}`}
                                             data-index={virtualItem.index}
                                             ref={rowVirtualizer.measureElement}
-                                            className="absolute top-0 left-0 w-full"
+                                            className="absolute top-0 left-0 w-full py-[6px]"
                                             style={{
                                                 transform: `translateY(${virtualItem.start}px)`,
-                                                paddingBottom: '12px', // Gap between cards
-                                                paddingTop: virtualItem.index === 0 ? '16px' : '0', // Initial padding
                                             }}
                                         >
                                             <AlertCard item={item} />
@@ -176,11 +184,9 @@ export const AlertsModal: React.FC = () => {
                                 })}
                             </div>
                         ) : (
-                            !loadingRSS && (
-                                <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
-                                    <p>{t('alerts.noAlerts')}</p>
-                                </Stack>
-                            )
+                            <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm min-h-[50vh]">
+                                <p>{t('alerts.noAlerts')}</p>
+                            </Stack>
                         )}
                     </Box>
                 </Tabs>
