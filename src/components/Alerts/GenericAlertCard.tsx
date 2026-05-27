@@ -67,28 +67,28 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                     {showStatus && (isFuture ? (
                         <HStack gap={1} align="center" className="px-1.5 py-0.5 rounded-md bg-destructive/10 border border-destructive/20">
                             <Box className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
-                            <span className="text-[8px] font-black text-destructive uppercase tracking-widest">
+                            <span className="text-[8px] font-bold text-destructive uppercase tracking-widest">
                                 {t('alerts.planned')}
                             </span>
                         </HStack>
                     ) : isActive ? (
                         <HStack gap={1} align="center" className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
                             <Box className="w-1 h-1 rounded-full bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" />
-                            <span className="text-[8px] font-black text-primary uppercase tracking-widest">
+                            <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
                                 {t('alerts.active')}
                             </span>
                         </HStack>
                     ) : null)}
 
                     {isHigh && (
-                        <span className="text-[8px] font-black text-destructive uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-destructive/10 border border-destructive/20">
+                        <span className="text-[8px] font-bold text-destructive uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-destructive/10 border border-destructive/20">
                             {t('alerts.priorityHigh')}
                         </span>
                     )}
                 </HStack>
 
                 <span className={cn(
-                    "font-black text-sm leading-tight transition-colors",
+                    "font-bold text-sm leading-tight transition-colors",
                     isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
                     link && "group-hover:text-primary"
                 )}>
@@ -110,7 +110,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                                 {lines.map((line, idx) => (
                                     <span
                                         key={`${line.name}-${idx}`}
-                                        className="px-2.5 py-1 rounded-md text-[10px] font-black text-white shadow-sm ring-1 ring-white/10"
+                                        className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm ring-1 ring-white/10"
                                         style={{ backgroundColor: line.route_color }}
                                     >
                                         {line.name}

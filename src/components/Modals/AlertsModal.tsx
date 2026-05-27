@@ -72,7 +72,7 @@ export const AlertsModal: React.FC = () => {
     // Reset scroll when tab or search changes
     useEffect(() => {
         rowVirtualizer.scrollToOffset(0);
-    }, [activeTab, searchQuery, rowVirtualizer]);
+    }, [activeTab, searchQuery]);
 
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
@@ -88,14 +88,14 @@ export const AlertsModal: React.FC = () => {
                         <Stack gap={2}>
                             <TabsList variant="pill">
                                 <TabsTrigger value="incidents" className="gap-2">
-                                    <span className="text-xs uppercase tracking-wide font-black">
+                                    <span className="text-xs uppercase tracking-wide font-bold">
                                         {t('alerts.incidents')}
                                     </span>
                                     {incidentsCount > 0 && (
                                         <Badge
                                             variant="destructive"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[9px] font-black",
+                                                "h-4 px-1 rounded-md text-[10px] font-bold",
                                                 activeTab !== 'incidents' && "opacity-50 grayscale"
                                             )}
                                         >
@@ -104,14 +104,14 @@ export const AlertsModal: React.FC = () => {
                                     )}
                                 </TabsTrigger>
                                 <TabsTrigger value="exclusions" className="gap-2">
-                                    <span className="text-xs uppercase tracking-wide font-black">
+                                    <span className="text-xs uppercase tracking-wide font-bold">
                                         {t('alerts.exclusions')}
                                     </span>
                                     {exclusionsCount > 0 && (
                                         <Badge
                                             variant="secondary"
                                             className={cn(
-                                                "h-4 px-1 rounded-md text-[9px] font-black",
+                                                "h-4 px-1 rounded-md text-[10px] font-bold",
                                                 activeTab !== 'exclusions' && "opacity-50"
                                             )}
                                         >
