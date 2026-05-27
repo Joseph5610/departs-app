@@ -159,7 +159,7 @@ const MapInner: React.FC = () => {
                                     zoom,
                                     duration: 500
                                 });
-                            }).catch(() => { });
+                            }).catch((e) => { console.error('Failed to load map icon:', e); });
                         }
                         return;
                     }

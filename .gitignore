@@ -28,3 +28,4 @@ playwright-report/
 scratch/*
 # inkode
 .ik.yaml
+.ik/*

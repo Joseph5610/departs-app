@@ -69,7 +69,7 @@ export const useGeolocation = () => {
                 try {
                     const { lat, lng } = JSON.parse(saved);
                     map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
-                } catch { /* ignore */ }
+                } catch (e) { console.warn('Failed to parse saved LAST_LOCATION', e); }
             }
             return;
         }
@@ -93,7 +93,7 @@ export const useGeolocation = () => {
                     try {
                         const { lat, lng } = JSON.parse(saved);
                         map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
-                    } catch { /* ignore */ }
+                    } catch (e) { console.warn('Failed to parse saved LAST_LOCATION during zoom check', e); }
                 }
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
