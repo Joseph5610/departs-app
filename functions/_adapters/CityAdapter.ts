@@ -2,7 +2,6 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../_core/types";
 import type { CityConfig } from '../_core/city-config';
 import { GolemioAdapter } from './golemio/GolemioAdapter';
-import { GtfsAdapter } from './gtfs/GtfsAdapter';
 
 /** Contract all city adapters must fulfill. */
 export interface CityAdapter {
@@ -24,6 +23,5 @@ export interface CityAdapter {
 export function getAdapter(city: CityConfig): CityAdapter {
     switch (city.adapter) {
         case 'golemio': return new GolemioAdapter(city);
-        case 'gtfs':    return new GtfsAdapter(city);
     }
 }
