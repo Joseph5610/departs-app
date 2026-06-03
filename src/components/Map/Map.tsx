@@ -9,7 +9,8 @@ import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
-import { MapController, useMapEvents } from './MapController';
+import { MapController } from './MapController';
+import { useMapEvents } from '../../hooks/features/useMapEvents';
 import { useSelectionStore, getSelectedId } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -150,7 +151,7 @@ const MapInner: React.FC = () => {
                         if (!map) {
                             return;
                         }
-                        const sourceId = 'pid-stops';
+                        const sourceId = 'city-stops';
                         const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
                         if (source && clusterId !== undefined) {
                             source.getClusterExpansionZoom(clusterId).then((zoom) => {

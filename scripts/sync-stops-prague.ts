@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const SOURCE_URL = "https://data.pid.cz/stops/json/stops.json";
-const OUTPUT_DIR = "functions/_data";
+const OUTPUT_DIR = "functions/_data/cities/prague";
 const OUTPUT_FILE = path.join(OUTPUT_DIR, "stops-enrichment.json");
 
 interface PIDLine {

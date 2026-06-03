@@ -1,53 +1,27 @@
-import { Env, GolemioVehiclePayload, AppVehicleDetail, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "../_utils/types";
-import { CACHE_TTL, ERROR_MESSAGES, createErrorResponse, createSuccessResponse, golemioFetch, sanitizeId, fixCommaSpacing } from "../_utils/api-utils";
-import { getVehicleColor, isNightRoute } from "../_utils/vehicle-colors";
-import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../_utils/enrichment";
+import { AppVehicleDetail } from "../../../../_core/types";
+import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "./types";
+import { fixCommaSpacing } from "../../../../_core/api-utils";
+import { getVehicleColor, isNightRoute } from "./colors";
+import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../stops/enrichment";
 
-
-export const onRequest: PagesFunction<Env> = async (context) => {
-    const { env } = context;
-    const { searchParams } = new URL(context.request.url);
-    const vehicleId = sanitizeId(searchParams.get("vehicleId"));
-    const tripId = sanitizeId(searchParams.get("tripId"));
-
-    if (!tripId) {
-        return createErrorResponse(ERROR_MESSAGES.MISSING_PARAMS, 400);
-    }
-
-    const scopes = ['info', 'stop_times', 'shapes', 'vehicle_descriptor'];
-
-    const fetchStaticTrip = async () => {
-        const res = await golemioFetch(`/v2/public/gtfs/trips/${tripId}`, env, {
-            cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-            searchParams: { scopes }
-        });
-        return { response: res, isStatic: true };
-    };
-
-    try {
-        let response: Response;
-        let isStatic = false;
-
-        if (!vehicleId) {
-            ({ response, isStatic } = await fetchStaticTrip());
-        } else {
-            response = await golemioFetch(`/v2/public/vehiclepositions/${vehicleId};gtfsTripId=${tripId}`, env, {
-                cacheTtl: CACHE_TTL.VEHICLE_DETAIL,
-                searchParams: { scopes }
-            });
-
-            if (!response.ok) {
-                console.warn(`Real-time fetch failed (${response.status}), falling back to static GTFS for trip ${tripId}`);
-                ({ response, isStatic } = await fetchStaticTrip());
-            }
-        }
-
-        if (!response.ok) {
-            return createErrorResponse(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
-        }
-
-        const data = await response.json() as GolemioVehiclePayload;
-
+/**
+ * Mapper for parsing vehicle details from the Golemio API.
+ * 
+ * Supports two payload shapes:
+ * 1. Live GTFS-Realtime `vehiclepositions` (which contains position/delay data but lacks route shapes).
+ * 2. Static GTFS schedule fallback (used when live data is missing).
+ */
+export class VehicleDetailMapper {
+    /**
+     * Normalizes a Golemio vehicle detail payload into a standard AppVehicleDetail object.
+     * 
+     * @param data Raw payload from Golemio API
+     * @param tripId The requested trip ID
+     * @param isStatic If true, indicates this data comes from static schedules and live tracking is unavailable.
+     *                 The frontend must preserve any existing live position data when merging this.
+     * @returns Normalized vehicle detail object
+     */
+    static map(data: GolemioVehiclePayload, tripId: string, isStatic: boolean): AppVehicleDetail {
         // Golemio returns either a FeatureCollection or a bare Feature.
         // Extract properties from whichever shape we received.
         const feature = data.features?.[0];
@@ -60,8 +34,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
         const bearing = p.bearing !== undefined ? Number(p.bearing) : null;
         const delay = p.delay !== undefined ? Number(p.delay) : 0;
-        const state_position = p.state_position;
-        const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name);
+        const state_position = p.state_position || 'unknown';
+        const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name) || '';
         
         const vd = data.vehicle_descriptor || p.vehicle_descriptor || {};
 
@@ -73,7 +47,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const is_night = isNightRoute(route_short_name);
 
         const vehicleData: AppVehicleDetail = {
-            vehicle_id: extracted_vehicle_id,
+            vehicle_id: extracted_vehicle_id || gtfs_trip_id,
             gtfs_trip_id,
             route_short_name,
             route_type,
@@ -99,12 +73,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             is_static_fallback: isStatic,
         };
 
-        // Process Stop Times
+        // Process Stop Times (The schedule of stops for this trip)
         const stopTimesData = data.stop_times;
         if (stopTimesData?.features) {
             vehicleData.stop_times = {
                 features: stopTimesData.features.map((st: GolemioStopTimeFeature) => {
-                    const stProps = st.properties;
+                    const stProps = st.properties || {};
                     const stopId = stProps.stop_id;
                     const stopName = stProps.stop_name;
                     let metroLines = getMetroLinesForStop(stopId);
@@ -125,7 +99,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             };
         }
 
-        // Shape processing: Build a GeoJSON LineString
+        // Shape processing: Reconstruct a continuous LineString from individual shape points
         const shapes = data.shapes;
         if (shapes) {
             const shapesFeatures = 'features' in shapes ? shapes.features : (Array.isArray(shapes) ? shapes : null);
@@ -151,9 +125,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
-        return createSuccessResponse(vehicleData, CACHE_TTL.VEHICLE_DETAIL);
-    } catch (error) {
-        console.error("Vehicle Detail API Error:", error);
-        return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL);
+        return vehicleData;
     }
-};
+}

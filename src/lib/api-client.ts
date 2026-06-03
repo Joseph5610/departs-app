@@ -2,6 +2,8 @@ import { type AppError, AppErrorCode, parseFetchError } from '../types/error';
 
 const DEFAULT_TIMEOUT = 10000; // 10s
 
+import { API_BASE_URL } from '../config/constants';
+
 /**
  * Enhanced fetch wrapper with timeout and automatic error normalization.
  */
@@ -11,11 +13,21 @@ export async function apiFetch<T>(
 ): Promise<T> {
     const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options;
 
+    let finalUrl = url.toString();
+    if (finalUrl.startsWith('/')) {
+        finalUrl = `${API_BASE_URL}${finalUrl}`;
+    } else if (finalUrl.startsWith(window.location.origin)) {
+        const path = finalUrl.slice(window.location.origin.length);
+        if (path.startsWith('/')) {
+             finalUrl = `${window.location.origin}${API_BASE_URL}${path}`;
+        }
+    }
+
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(finalUrl, {
             ...fetchOptions,
             signal: controller.signal
         });

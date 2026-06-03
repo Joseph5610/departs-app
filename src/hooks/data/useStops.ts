@@ -4,6 +4,7 @@ import type { StopCollection } from '../../types/transit';
 import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
+import { usePreferencesStore } from '../../state/preferencesStore';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -12,7 +13,7 @@ localforage.config({
 });
 
 const STORAGE_VERSION = 'v41';
-const STOP_STORAGE_KEY = `pid_stops_storage_${STORAGE_VERSION}`;
+const STOP_STORAGE_KEY = `city_stops_storage_${STORAGE_VERSION}`;
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 interface CachedStops {
@@ -29,21 +30,23 @@ interface CachedStops {
  * Merges data and timestamp into a single storage entry for efficiency.
  */
 export const useStops = () => {
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+
     const query = useQuery<{ data: StopCollection; updatedAt: number }, AppError>({
-        queryKey: ['stops'],
+        queryKey: ['stops', selectedCity],
         queryFn: async () => {
             const now = Date.now();
-            const cached = await localforage.getItem<CachedStops>(STOP_STORAGE_KEY);
+            const cached = await localforage.getItem<CachedStops>(`${STOP_STORAGE_KEY}_${selectedCity}`);
 
             if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < TWENTY_FOUR_HOURS)) {
                 return cached;
             }
 
             // Cache busting via query parameter linked to the storage version
-            const data = await apiFetch<StopCollection>(`/api/stops?v=${STORAGE_VERSION}`);
+            const data = await apiFetch<StopCollection>(`/${selectedCity}/stops?v=${STORAGE_VERSION}`);
             const result = { data, updatedAt: now };
 
-            await localforage.setItem(STOP_STORAGE_KEY, result);
+            await localforage.setItem(`${STOP_STORAGE_KEY}_${selectedCity}`, result);
 
             return result;
         },
@@ -51,28 +54,25 @@ export const useStops = () => {
         gcTime: Infinity,
     });
 
-    const stops = useMemo(() => {
+    const { stops, centroids } = useMemo(() => {
         if (!query.data?.data || !Array.isArray(query.data.data.features)) {
-            return null;
+            return { stops: null, centroids: null };
         }
-        return {
-            type: 'FeatureCollection',
-            features: query.data.data.features.filter((f) => {
-                return !f.properties.is_centroid;
-            })
-        } as StopCollection;
-    }, [query.data]);
+        
+        const features = query.data.data.features;
+        const hasCentroids = features.some(f => f.properties.is_centroid);
 
-    const centroids = useMemo(() => {
-        if (!query.data?.data || !Array.isArray(query.data.data.features)) {
-            return null;
-        }
-        return {
+        const stops = {
             type: 'FeatureCollection',
-            features: query.data.data.features.filter((f) => {
-                return f.properties.is_centroid;
-            })
+            features: features.filter(f => hasCentroids ? !f.properties.is_centroid : true)
         } as StopCollection;
+
+        const centroids = {
+            type: 'FeatureCollection',
+            features: features.filter(f => hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1)
+        } as StopCollection;
+
+        return { stops, centroids };
     }, [query.data]);
 
 

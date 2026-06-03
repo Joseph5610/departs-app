@@ -1,0 +1,14 @@
+/api/infotexts /api/prague/alerts 301
+/api/rss /api/prague/alerts 301
+/infotexts /api/prague/infotexts 301
+/rss /api/prague/alerts 301
+/stops /api/prague/stops 301
+/api/stops /api/prague/stops 301
+/vehicles /api/prague/vehicles 301
+/api/vehicles /api/prague/vehicles 301
+/departures /api/prague/departures 301
+/api/departures /api/prague/departures 301
+/vehicle-detail /api/prague/vehicle-detail 301
+/api/vehicle-detail /api/prague/vehicle-detail 301
+/alerts /api/prague/alerts 301
+/api/alerts /api/prague/alerts 301

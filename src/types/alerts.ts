@@ -13,8 +13,9 @@ export interface RSSItem {
     isFuture?: boolean;
 }
 
-export interface RSSResponse {
+export interface AlertsResponse {
     alerts: RSSItem[];
+    infotexts: Infotext[];
 }
 
 export interface Infotext {

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Overlay, Stack } from '@/components/ui/layout';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import { CitySwitcher } from './CitySwitcher';
 
 interface MapControlsProps {
     onToggleFavorites?: () => void;
@@ -163,6 +164,8 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                         <Minus size={20}  strokeWidth={1.5} />
                     </Button>
                 </ButtonGroup>
+
+                <CitySwitcher />
 
                 {showCompass && (
                     <ControlButton

@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../../types/transit';
 import { useSelectionStore } from '../../state/selectionStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
-
 import { apiFetch } from '../../lib/api-client';
 
-const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
-    const url = new URL('/api/vehicle-detail', window.location.origin);
+const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
+    const url = new URL(`/${city}/vehicle-detail`, window.location.origin);
     url.searchParams.set('tripId', tripId);
     if (vehicleId) {
         url.searchParams.set('vehicleId', vehicleId);
@@ -17,13 +17,15 @@ const fetchVehicleDetail = async (vehicleId: string | null, tripId: string): Pro
 export const useVehicleDetail = () => {
     const tripId = useSelectionStore(s => s.selectedTripId);
     const vehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     return useQuery({
-        queryKey: ['vehicle-detail', vehicleId, tripId],
-        queryFn: () => { return fetchVehicleDetail(vehicleId, tripId!); },
-        enabled: !!tripId,
+        queryKey: ['vehicle-detail', selectedCity, vehicleId, tripId],
+        queryFn: () => { return fetchVehicleDetail(selectedCity, vehicleId, tripId!); },
+        enabled: !!tripId && !!selectedCity,
         staleTime: TRANSIT_REFRESH_MS,
         refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
         gcTime: 60000,
     });
 };
+

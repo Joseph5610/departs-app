@@ -51,6 +51,7 @@ export const STORAGE_KEYS = {
 /**
  * API and Transit constants
  */
+export const API_BASE_URL = '/api';
 
 /**
  * Average walking speed in m/s (3.6 km/h)

@@ -11,7 +11,7 @@ import type {
 export const clusterLayer: CircleLayerSpecification = {
     id: 'clusters',
     type: 'circle',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['has', 'point_count'],
     paint: {
         'circle-color': '#1e3a8a',
@@ -33,7 +33,7 @@ export const clusterLayer: CircleLayerSpecification = {
 export const stopPointLayer: CircleLayerSpecification = {
     id: 'unclustered-point',
     type: 'circle',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
@@ -68,7 +68,7 @@ export const stopPointLayer: CircleLayerSpecification = {
 export const stopPointGlowLayer: CircleLayerSpecification = {
     id: 'unclustered-point-glow',
     type: 'circle',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
@@ -92,7 +92,7 @@ export const stopPointGlowLayer: CircleLayerSpecification = {
 export const transferOuterLayer: CircleLayerSpecification = {
     id: 'transfer-outer',
     type: 'circle',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
         ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
@@ -113,7 +113,7 @@ export const transferOuterLayer: CircleLayerSpecification = {
 export const transferInnerLayer: CircleLayerSpecification = {
     id: 'transfer-inner',
     type: 'circle',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
         ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
@@ -170,7 +170,7 @@ export const stopLabelLayer: SymbolLayerSpecification = {
 export const platformLabelLayer: SymbolLayerSpecification = {
     id: 'platform-labels',
     type: 'symbol',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
@@ -199,7 +199,7 @@ export const platformLabelLayer: SymbolLayerSpecification = {
 export const entranceLayer: SymbolLayerSpecification = {
     id: 'entrance-layer',
     type: 'symbol',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
@@ -305,7 +305,7 @@ export const selectedVehicleLabelLayer: SymbolLayerSpecification = {
 export const vehiclesPointLayer: CircleLayerSpecification = {
     id: 'vehicles-point',
     type: 'circle',
-    source: 'pid-vehicles',
+    source: 'city-vehicles',
     minzoom: 10,
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 8, 15, 14],
@@ -319,7 +319,7 @@ export const vehiclesPointLayer: CircleLayerSpecification = {
 export const vehiclesDirectionLayer: SymbolLayerSpecification = {
     id: 'vehicles-direction-all',
     type: 'symbol',
-    source: 'pid-vehicles',
+    source: 'city-vehicles',
     minzoom: 10,
     layout: {
         'icon-image': 'v-arrow-centered',
@@ -350,7 +350,7 @@ export const vehiclesDirectionLayer: SymbolLayerSpecification = {
 export const vehiclesLabelLayer: SymbolLayerSpecification = {
     id: 'vehicles-label-all',
     type: 'symbol',
-    source: 'pid-vehicles',
+    source: 'city-vehicles',
     minzoom: 10,
     layout: {
         'text-field': ['to-string', ['coalesce', ['get', 'route_short_name'], '']],
@@ -410,7 +410,7 @@ export const userLocationPointLayer: CircleLayerSpecification = {
 export const favoriteStarLayer: SymbolLayerSpecification = {
     id: 'favorite-star-layer',
     type: 'symbol',
-    source: 'pid-stops',
+    source: 'city-stops',
     layout: {
         'icon-image': 'favorite-star',
         'icon-size': ['interpolate', ['linear'], ['zoom'],
@@ -435,13 +435,10 @@ export const favoriteStarLayer: SymbolLayerSpecification = {
 export const stationIconLayer: SymbolLayerSpecification = {
     id: 'station-icons',
     type: 'symbol',
-    source: 'pid-stops',
+    source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['any',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1], // Parent Stations (Metro/Hubs)
-            ['==', ['get', 'is_train'], 1] // Rail-enabled Child Stops
-        ]
+        ['==', ['get', 'is_train'], 1]
     ],
     minzoom: 12,
     layout: {

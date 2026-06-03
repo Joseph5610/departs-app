@@ -1,12 +1,12 @@
-import { getVehicleColor } from "./vehicle-colors";
-import STOPS_ENRICHMENT from "../_data/stops-enrichment.json";
+import { getVehicleColor } from "../vehicles/colors";
+import STOPS_ENRICHMENT from "../../../../_data/cities/prague/stops-enrichment.json";
 
 interface EnrichmentData {
     l: Array<{ n: string; t: string; e: number }>;
     n: string;
 }
 
-interface EnrichedLine {
+export interface EnrichedLine {
     name: string;
     route_color: string;
 }

@@ -14,6 +14,7 @@ export interface PreferencesState {
     favoriteStops: string[];
     searchHistory: SearchHistoryItem[];
     mapBaseStyle: 'nolabels' | 'labels';
+    selectedCity: string;
 }
 
 export interface PreferencesActions {
@@ -26,6 +27,7 @@ export interface PreferencesActions {
     setDepartureSort: (sort: 'line' | 'departure') => void;
     setRouteTypeFilter: (filter: string[]) => void;
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
+    setSelectedCity: (city: string) => void;
     toggleFavorite: (stopId: string) => void;
     addToHistory: (item: SearchHistoryBase) => void;
     clearHistory: () => void;
@@ -50,6 +52,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             favoriteStops: [],
             searchHistory: [],
             mapBaseStyle: 'labels',
+            selectedCity: 'prague',
 
             // Actions
             actions: {
@@ -62,6 +65,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setDepartureSort: (sort) => set({ departureSort: sort }),
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),
+                setSelectedCity: (city) => set({ selectedCity: city }),
                 toggleFavorite: (stopId) =>
                     set((state) => {
                         const exists = state.favoriteStops.includes(stopId);
@@ -100,6 +104,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 mapBaseStyle: state.mapBaseStyle,
                 favoriteStops: state.favoriteStops,
                 searchHistory: state.searchHistory,
+                selectedCity: state.selectedCity,
             }),
             // Manual migration from legacy keys if needed, but for now we'll just start fresh or use the persist default
             // To maintain compatibility with existing legacy keys, we could use a custom storage or onRehydrateStorage

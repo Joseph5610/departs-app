@@ -51,14 +51,16 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
         return favoriteStopFeatures.map(f => f.properties.stop_id);
     }, [favoriteStopFeatures]);
 
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+
     // Fetch all departures in a single bulk API request
     const { data, isLoading: departuresLoading, isError } = useQuery<DeparturesResponse | null, AppError>({
-        queryKey: ['departures', 'bulk', stopIds.join(',')],
+        queryKey: ['departures', 'bulk', selectedCity, stopIds.join(',')],
         queryFn: async () => {
-            if (stopIds.length === 0) return null;
+            if (stopIds.length === 0 || !selectedCity) return null;
             const params = new URLSearchParams();
             stopIds.forEach(id => params.append('stopId', id));
-            return apiFetch<DeparturesResponse>(`/api/departures?${params.toString()}`);
+            return apiFetch<DeparturesResponse>(`/${selectedCity}/departures?${params.toString()}`);
         },
         refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: TRANSIT_REFRESH_MS,

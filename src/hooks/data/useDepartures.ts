@@ -43,18 +43,19 @@ export const useDepartures = () => {
     const stopId = useSelectionStore(s => s.selectedStopId);
     const selectedLine = useSelectionStore(s => s.selectedLine);
     const departureSort = usePreferencesStore(s => s.departureSort);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     // Store previous data to calculate deltas without effects
     const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});
 
 
     const query = useQuery<DeparturesResponse | null, AppError>({
-        queryKey: ['departures', stopId],
+        queryKey: ['departures', selectedCity, stopId],
         queryFn: async () => {
-            if (!stopId) {
+            if (!stopId || !selectedCity) {
                 return null;
             }
-            const data = await apiFetch<DeparturesResponse>(`/api/departures?stopId=${encodeURIComponent(stopId)}`);
+            const data = await apiFetch<DeparturesResponse>(`/${selectedCity}/departures?stopId=${encodeURIComponent(stopId)}`);
             
             if (!data?.departures) return data;
             

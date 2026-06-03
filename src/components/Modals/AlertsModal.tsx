@@ -50,7 +50,7 @@ export const AlertsModal: React.FC = () => {
             ? items.filter(item =>
                 item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                item.lines?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()))
+                item.lines?.some((l: string) => l.toLowerCase().includes(searchQuery.toLowerCase()))
               )
             : [...items];
 

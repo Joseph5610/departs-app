@@ -2,12 +2,15 @@ import { useDeferredValue, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useCities } from './useCities';
+
 /**
- * Bounding box for the PID (Prague Integrated Transport) service area.
+ * Fallback bounding box for the service area.
  * Covers Prague + Středočeský kraj.
  * Format: [minLng, minLat, maxLng, maxLat]
  */
-const PID_BBOX = '13.5,49.5,15.5,50.8';
+const FALLBACK_BBOX = '13.5,49.5,15.5,50.8';
 
 export interface GeocodingResult {
     id: string;
@@ -16,7 +19,7 @@ export interface GeocodingResult {
     coordinates: [number, number];
 }
 
-const buildPhotonUrl = (query: string, userLocation: [number, number] | null, lang: string): string => {
+const buildPhotonUrl = (query: string, userLocation: [number, number] | null, lang: string, bbox: string): string => {
     // Build base params — bbox must be appended raw (commas must not be %2C-encoded)
     // Photon supports: default, de, en, fr
     const photonLang = lang.startsWith('en') ? 'en' : 'default';
@@ -34,7 +37,7 @@ const buildPhotonUrl = (query: string, userLocation: [number, number] | null, la
     }
 
     // Append bbox directly to avoid URLSearchParams encoding commas as %2C
-    return `https://photon.komoot.io/api/?${params.toString()}&bbox=${PID_BBOX}`;
+    return `https://photon.komoot.io/api/?${params.toString()}&bbox=${bbox}`;
 };
 
 const parsePhotonFeature = (
@@ -91,7 +94,7 @@ export const geocodingCache = new Map<string, GeocodingResult>();
  * Queries the Photon geocoding API (powered by OSM) for address/POI results
  * within the PID service area (Praha + Středočeský kraj).
  *
- * - Hard-bounded to PID region via `bbox` parameter.
+ * - Hard-bounded to the active city region via `bbox` parameter.
  * - Uses user location as a soft relevance bias if available.
  * - Only fires when query length >= 3 characters.
  * - Uses TanStack Query for caching and error handling.
@@ -102,11 +105,20 @@ export const useGeocoding = (
 ): { results: GeocodingResult[]; isLoading: boolean } => {
     const { i18n } = useTranslation();
     const deferredQuery = useDeferredValue(query);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { data: citiesData } = useCities();
+
+    const cityBounds = useMemo(() => {
+        if (!citiesData?.cities) return FALLBACK_BBOX;
+        const city = citiesData.cities.find(c => c.slug === selectedCity);
+        if (!city) return FALLBACK_BBOX;
+        return city.bounds.join(',');
+    }, [citiesData, selectedCity]);
 
     const url = useMemo(() => {
         if (deferredQuery.trim().length < 3) return null;
-        return buildPhotonUrl(deferredQuery.trim(), userLocation, i18n.language);
-    }, [deferredQuery, userLocation, i18n.language]);
+        return buildPhotonUrl(deferredQuery.trim(), userLocation, i18n.language, cityBounds);
+    }, [deferredQuery, userLocation, i18n.language, cityBounds]);
 
     const { data, isFetching } = useQuery({
         queryKey: ['geocoding', url],

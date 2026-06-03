@@ -83,3 +83,6 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ## 6. LOCAL ENVIRONMENT
 - **Port:** Dev server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.
+
+### API Endpoints & Logic Authority
+- **USER IS THE SOLE AUTHORITY ON ENDPOINTS AND LOGIC.** NEVER alter, "fix", format, or restructure existing API endpoints, URL paths, or core business logic during refactors. If an endpoint looks weird (like using a semicolon `;gtfsTripId=`), ASSUME IT IS CORRECT. Your job is ONLY to refactor architectural wrappers (like OOP classes, DI, typing), NOT to touch the underlying data flow or remote endpoints.

@@ -1,9 +1,13 @@
+import type { Fetcher } from "@cloudflare/workers-types";
+
 export interface Env {
-    GOLEMIO_API_KEY: string;
+    FLAGS: any;
+    ASSETS: Fetcher;
+    [key: string]: unknown;
 }
 
-// --- Golemio RAW Types ---
-export interface GolemioVehicleDescriptor {
+// --- Application Internal Types (Response Structures) ---
+export interface AppVehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
     is_wheelchair_accessible?: boolean | null;
@@ -12,78 +16,7 @@ export interface GolemioVehicleDescriptor {
     vehicle_registration_number?: string | number;
 }
 
-export interface GolemioVehicleProperties {
-    vehicle_id?: string | number;
-    id?: string | number;
-    gtfs_trip_id?: string;
-    route_short_name?: string;
-    gtfs_route_short_name?: string;
-    route_type?: string | number;
-    trip_headsign?: string;
-    gtfs_trip_headsign?: string;
-    bearing?: number | string;
-    delay?: number | string;
-    state_position?: string;
-    next_stop_name?: string;
-    last_stop_sequence?: number | string;
-    origin_timestamp?: string;
-    run_number?: number | string;
-    vehicle_descriptor?: GolemioVehicleDescriptor;
-}
-
-export interface GolemioVehicleFeature {
-    type: 'Feature';
-    geometry: {
-        type: 'Point';
-        coordinates: [number, number];
-    } | null;
-    properties: GolemioVehicleProperties;
-}
-
-/**
- * Golemio vehicle response — can be either:
- *   - A FeatureCollection with `features[]`
- *   - A bare Feature with properties at the top level
- * We model both shapes here to avoid `as unknown` casts.
- */
-export interface GolemioVehiclePayload extends Partial<GolemioVehicleProperties> {
-    type?: string;
-    features?: GolemioVehicleFeature[];
-    geometry?: { type: 'Point'; coordinates: [number, number] } | null;
-    stop_times?: { features: GolemioStopTimeFeature[] };
-    shapes?: GolemioShapeFeature[] | { features: GolemioShapeFeature[] };
-    vehicle_descriptor?: GolemioVehicleDescriptor;
-    last_stop_sequence?: number;
-    origin_timestamp?: string;
-    next_stop_name?: string;
-}
-
-export interface GolemioStopProperties {
-    stop_id: string;
-    stop_name: string;
-    location_type: number;
-    parent_station?: string | null;
-    platform_code?: string | null;
-    zone_id?: string | null;
-    wheelchair_boarding?: number;
-    level_id?: string | null;
-}
-
-export interface GolemioStopFeature {
-    type: 'Feature';
-    geometry: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    properties: GolemioStopProperties;
-}
-
-export interface GolemioStopPayload {
-    type: 'FeatureCollection';
-    features: GolemioStopFeature[];
-}
-
-export interface GolemioStopTimeProperties {
+export interface AppStopTimeProperties {
     stop_id: string;
     stop_name: string;
     stop_sequence: number;
@@ -94,74 +27,9 @@ export interface GolemioStopTimeProperties {
     zone_id?: string;
     is_wheelchair_accessible?: boolean | null;
     shape_dist_traveled?: number;
+    metro_lines: Array<{ name: string; route_color: string }>;
 }
 
-export interface GolemioStopTimeFeature {
-    type: 'Feature';
-    geometry?: {
-        type: string;
-        coordinates: number[] | number[][];
-    };
-    properties: GolemioStopTimeProperties;
-}
-
-export interface GolemioShapeFeature {
-    type: 'Feature';
-    geometry: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    properties: {
-        shape_dist_traveled: number;
-    };
-}
-
-export interface GolemioDepartureItem {
-    departure: {
-        timestamp_predicted: string | null;
-        timestamp_scheduled: string;
-        delay_seconds: number | null;
-        minutes?: number;
-    };
-    route: {
-        short_name: string;
-        type: string | number;
-    };
-    trip: {
-        id: string;
-        direction_id?: string | number;
-        headsign: string;
-        is_canceled: boolean;
-    };
-    stop: {
-        id: string;
-        platform_code: string | null;
-        sequence?: number;
-    };
-    vehicle?: {
-        id: string;
-        is_wheelchair_accessible?: boolean | null;
-        is_air_conditioned?: boolean | null;
-        has_charger?: boolean | null;
-    };
-}
-
-export interface GolemioInfotext {
-    id: string;
-    priority: 'low' | 'normal' | 'high';
-    display_type: 'inline' | 'general';
-    text: string;
-    text_en: string | null;
-    related_stops: Array<{
-        id: string;
-        name: string;
-        platform_code: string | null;
-    }>;
-    valid_from: string;
-    valid_to: string | null;
-}
-
-// --- Application Internal Types (Response Structures) ---
 export interface AppStopProperties {
     stop_id: string;
     stop_name: string;
@@ -200,6 +68,11 @@ export interface AppStopCollection {
     features: AppStopFeature[];
 }
 
+export interface AppVehicleCollection {
+    type: 'FeatureCollection';
+    features: AppVehicleFeature[];
+}
+
 export interface AppVehicleProperties {
     vehicle_id: string;
     gtfs_trip_id: string;
@@ -213,7 +86,7 @@ export interface AppVehicleProperties {
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
     run_number?: string;
-    vehicle_descriptor?: GolemioVehicleDescriptor;
+    vehicle_descriptor?: AppVehicleDescriptor;
     is_static_fallback?: boolean;
     route_color: string;
     is_night: boolean;
@@ -236,7 +109,7 @@ export interface AppVehicleDetail extends AppVehicleProperties {
     stop_times?: {
         features: Array<{
             type: 'Feature';
-            properties: GolemioStopTimeProperties & { metro_lines: Array<{ name: string; route_color: string }> };
+            properties: AppStopTimeProperties;
             geometry?: {
                 type: string;
                 coordinates: number[] | number[][];
@@ -277,6 +150,10 @@ export interface AppDeparture {
     stopId?: string;
 }
 
+export interface AppDepartureResponse {
+    departures: AppDeparture[];
+}
+
 export interface AppRSSItem {
     type: 'incident' | 'exclusion';
     title: string;
@@ -292,10 +169,6 @@ export interface AppRSSItem {
     isFuture?: boolean;
 }
 
-export interface AppRSSResponse {
-    alerts: AppRSSItem[];
-}
-
 export interface AppInfotext {
     id: string;
     text: string;
@@ -305,4 +178,20 @@ export interface AppInfotext {
     relatedStopIds: string[];
     valid_from: string;
     valid_to: string | null;
+}
+
+export interface AppAlertsResponse {
+    alerts: AppRSSItem[];
+}
+
+
+export interface AppCity {
+    slug: string;
+    name: string;
+    center: [number, number];
+    bounds: [number, number, number, number];
+}
+
+export interface AppCitiesResponse {
+    cities: AppCity[];
 }

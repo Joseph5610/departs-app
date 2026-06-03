@@ -1,10 +1,8 @@
-import { Env } from "./types";
-
-/**
- * Base URL for the Golemio API.
- */
-export const GOLEMIO_BASE_URL = "https://api.golemio.cz";
-
+import { ApiError } from "./errors";
+import type { EventContext } from "@cloudflare/workers-types";
+import type { Env } from "./types";
+import { getCityConfig } from "./city-config";
+import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
 /**
  * Centralized Cache TTL Configuration (in seconds).
  */
@@ -18,23 +16,6 @@ export const CACHE_TTL = {
     RSS_EXCLUSIONS: 3600, // 1h
     GTFS_DATA: 3600, // 1h for the static data fetch process
 };
-
-/**
- * Transit-related magic constants and configuration.
- */
-export const TRANSIT_CONFIG = {
-    DEPARTURE_LIMIT: 16,
-    DEPARTURE_MINUTES_AFTER: 120,
-    STOPS_FETCH_LIMIT: 10000,
-    STOPS_MAX_OFFSET: 40000,
-    STOPS_SOURCE_URL: "https://data.pid.cz/stops/json/stops.json",
-    JITTER_RADIUS: 0.00012,
-    RSS_FEEDS: {
-        incidents: 'https://pid.cz/feed/rss-mimoradnosti/',
-        exclusions: 'https://pid.cz/feed/rss-vyluky/'
-    }
-};
-
 
 /**
  * Standardized Error Messages (Public Facing).
@@ -51,76 +32,6 @@ export const ERROR_MESSAGES = {
     STOPS_DATA_UNAVAILABLE: "Stop data is currently unavailable.",
 };
 
-/**
- * Options for the golemioFetch utility.
- */
-export interface GolemioFetchOptions {
-    /** Custom TTL for Cloudflare cache */
-    cacheTtl?: number;
-    /** Query parameters to append to the request */
-    searchParams?: Record<string, string | string[]>;
-}
-
-/**
- * Standardized fetch wrapper for the Golemio API.
- * Automatically handles:
- * - Base URL prepending
- * - API Key injection via headers
- * - Query parameter serialization (including array support)
- * - Cloudflare Cache configuration
- * - Bracket encoding fix for legacy-compatible query parameters
- *
- * @param path API endpoint path (e.g., '/v2/vehiclepositions')
- * @param env Environment variables containing the API key
- * @param options Additional fetch options
- * @returns Promise resolving to a Response object
- */
-export async function golemioFetch(
-    path: string,
-    env: Env,
-    options: GolemioFetchOptions = {}
-): Promise<Response> {
-    const url = new URL(`${GOLEMIO_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`);
-
-    if (options.searchParams) {
-        Object.entries(options.searchParams).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-                value.forEach(v => url.searchParams.append(key, v));
-            } else {
-                url.searchParams.set(key, value);
-            }
-        });
-    }
-
-    const finalUrl = url.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
-
-    // Timeout implementation for Cloudflare Workers
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-    try {
-        const response = await fetch(finalUrl, {
-            headers: {
-                "X-Access-Token": env.GOLEMIO_API_KEY,
-                "Content-Type": "application/json",
-            },
-            cf: {
-                cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
-                cacheEverything: true,
-            },
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        return response;
-    } catch (error: unknown) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error("Golemio API request timed out (15s)", { cause: error });
-        }
-        throw error;
-    }
-}
 
 /**
  * Creates a standardized JSON error response.
@@ -144,11 +55,23 @@ export function createErrorResponse(message: string, status: number = 500): Resp
 }
 
 /**
- * Formats a date into D. M. YYYY HH:mm in Europe/Prague timezone.
+ * Converts thrown errors (like ApiError) into standardized JSON Responses.
  */
-export function formatPragueDate(date: Date): string {
+export function handleError(error: unknown): Response {
+    if (error instanceof ApiError) {
+        return createErrorResponse(error.message, error.status);
+    }
+    console.error("Unhandled API Error:", error);
+    return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL, 500);
+}
+
+/**
+ * Formats a date into D. M. YYYY HH:mm in the given IANA timezone.
+ * Defaults to Europe/Prague for backward compatibility.
+ */
+export function formatDate(date: Date, timezone = 'Europe/Prague'): string {
     const d = new Intl.DateTimeFormat('cs-CZ', {
-        timeZone: 'Europe/Prague',
+        timeZone: timezone,
         day: 'numeric',
         month: 'numeric',
         year: 'numeric',
@@ -160,6 +83,7 @@ export function formatPragueDate(date: Date): string {
     const get = (type: string) => d.find(p => p.type === type)?.value;
     return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
 }
+
 
 /**
  * Creates a standardized JSON success response with appropriate Cache-Control headers.
@@ -196,4 +120,42 @@ export function sanitizeId(id: string | null): string | null {
 export function fixCommaSpacing(text: string | undefined | null): string | undefined {
     if (!text) return undefined;
     return text.replace(/,([^\s])/g, ', $1');
+}
+
+export const ALLOWED_PATTERNS = [
+    /^https:\/\/(www\.)?departs\.app$/,      // Main domain (with or without www)
+    /^https:\/\/.*departs-app\.pages\.dev$/, // Cloudflare Pages (all environments)
+    /^http:\/\/localhost:\d+$/,              // Localhost
+    /^http:\/\/127\.0\.0\.1:\d+$/            // Local IP
+];
+
+export const isAllowedOrigin = (origin: string | null): boolean => {
+    if (!origin) return false;
+    return ALLOWED_PATTERNS.some(pattern => pattern.test(origin));
+};
+
+/**
+ * Higher-order function to wrap API routes with city context, adapter initialization,
+ * error handling, and standardized responses.
+ */
+export function withCityRoute(
+    handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<unknown>,
+    cacheTtl: number
+): (context: EventContext<Env, string, unknown>) => Promise<Response> {
+    return async (context) => {
+        const slug = context.params.city as string;
+        const city = getCityConfig(slug);
+
+        if (!city) {
+            return createErrorResponse('City not found', 404);
+        }
+
+        try {
+            const adapter = getAdapter(city);
+            const data = await handler(adapter, context);
+            return createSuccessResponse(data, cacheTtl);
+        } catch (error) {
+            return handleError(error);
+        }
+    };
 }

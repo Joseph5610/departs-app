@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.45.0] - 2026-06-03
+
+### Changed
+- **Architectural Separation of Concerns (Phase 0)**: Extracted all data mapping and transformation logic from `*Service` classes into dedicated `*Mapper` static classes (`AlertsMapper`, `DeparturesMapper`, `StopsMapper`, `VehicleDetailMapper`). Services are now strictly responsible for orchestration, fetching, and error handling.
+- **Performance Optimization**: Refactored structural grouping algorithms in `grouping.ts` (specifically `processStops`) to replace expensive O(N²) `Array.from()` nested allocations with highly efficient `Map` and `Set` mutations, reducing Garbage Collection pauses during large payload construction.
+- **Error Handling**: Standardized API Error propagation. Enforced `502 Bad Gateway` status codes when the upstream provider (Golemio) fails or enforces rate limits, preventing frontend misinterpretation of missing data as generic server crashes.
+
+### Added
+- **API Documentation**: Added comprehensive JSDoc annotations to all `*Mapper` files to document GTFS bitmasks, route types, and metric conversions that were previously implicit.
+
+## [0.44.0] - 2026-05-29
+
+### Added
+- **Multi-City Architecture**: Introduced `CityAdapter` OOP pattern to easily scale the backend for multiple transit providers. 
+- **Adapters**: Created `GolemioAdapter` mapping to Prague PID, and stubbed `GtfsAdapter` for future cities.
+- **Dynamic Routing**: Re-routed all API endpoints through `functions/api/[city]/*`. The frontend base URL is now `/api/prague/`.
+
+### Changed
+- **Unified Alerts API**: The frontend hook `useGlobalAlerts` now makes a single request to the combined `/api/prague/alerts` endpoint instead of separate `/api/rss` and `/api/infotexts` requests, reducing HTTP roundtrips.
+- **Backend Refactoring**: Removed `TRANSIT_CONFIG` from shared utilities. Hardcoded Prague assumptions (e.g., timezone `Europe/Prague`, RSS URLs) have been isolated into `golemio/config.ts` and `golemio/rss-utils.ts`.
+- **Date Formatting**: Generalized `formatPragueDate` to `formatDate(date, timezone)` supporting dynamic IANA timezones.
+
+### Removed
+- **Legacy API**: Deleted deprecated flat routes (`/api/stops`, `/api/departures`, `/api/vehicles`, etc.).
+- **Middleware Cleanup**: Removed duplicate root `_middleware.ts`. All security policies and CORS headers are now strictly enforced by the single canonical `/api/[city]/_middleware.ts`.
+
 ## [0.43.1] - 2026-05-27
 
 ### Changed
@@ -81,7 +107,7 @@ All notable changes to this project will be documented in this file.
 - **Refactoring**: Extracted magic numbers from `useStopDistance.ts` into centralized constants (`AT_STOP_THRESHOLD_METERS` and `MAX_REASONABLE_WALKING_DISTANCE`) in `src/config/constants.ts`, and updated the walking time calculation to dynamically use the `WALKING_SPEED` constant.
 - **VS Code Settings**: Configured `.vscode/settings.json` to auto-fix code via ESLint on save (`source.fixAll.eslint`) and locked the TypeScript language server (`typescript.tsdk`) to the workspace's `node_modules` version.
 - **VS Code Extensions**: Expanded `.vscode/extensions.json` workspace recommendations to include `dbaeumer.vscode-eslint`, `bradlc.vscode-tailwindcss`, `ms-playwright.playwright`, and `lokalise.i18n-ally`.
-- **Git Config**: Updated `.gitignore` to allow tracking and sharing of workspace `.vscode/` settings with the team while ensuring dependencies and local secrets remain strictly ignored.
+- **Git Config**: Updated `.gitignore` to allow tracking and sharing of workspace `.vscode/settings.json` with the team while ensuring dependencies and local secrets remain strictly ignored.
 - **DevOps**: Resolved Wrangler startup warnings by explicitly specifying `--compatibility-date=2026-03-17` in the `dev` package script.
 
 ## [0.41.1] - 2026-05-18

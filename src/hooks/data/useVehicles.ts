@@ -7,8 +7,8 @@ import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
-const fetchVehicles = async (bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
-    const url = new URL('/api/vehicles', window.location.origin);
+const fetchVehicles = async (selectedCity: string, bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
+    const url = new URL(`/${selectedCity}/vehicles`, window.location.origin);
 
     if (bounds) {
         url.searchParams.set('bounds', bounds);
@@ -22,10 +22,6 @@ const fetchVehicles = async (bounds: string | null, routeFilter: string[] | null
         routeTypeFilter.forEach((type) => {
             url.searchParams.append('routeType', type);
         });
-    }
-
-    if (url.searchParams.toString() === '') {
-        return null;
     }
 
     return apiFetch<VehicleCollection>(url);
@@ -42,11 +38,12 @@ export const useVehicles = () => {
     const bounds = useViewportStore(s => s.debouncedBounds);
     const routeFilter = useViewportStore(s => s.routeFilter);
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const query = useQuery<VehicleCollection | null, AppError>({
-        queryKey: ['vehicles', bounds, routeFilter, routeTypeFilter],
-        queryFn: () => fetchVehicles(bounds, routeFilter, routeTypeFilter),
-        enabled: !!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0,
+        queryKey: ['vehicles', selectedCity, bounds, routeFilter, routeTypeFilter],
+        queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
+        enabled: !!selectedCity && (!!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0),
         refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: 5000,
         gcTime: 60000,

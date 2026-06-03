@@ -152,7 +152,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            <Source id="pid-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
+            <Source id="city-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
                 <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
@@ -163,7 +163,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             </Source>
 
             <Source
-                id="pid-stops"
+                id="city-stops"
                 type="geojson"
                 data={filteredStopsData}
                 cluster={true}
