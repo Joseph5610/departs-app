@@ -14,6 +14,21 @@ export class DeparturesService {
 
 
 
+    /**
+     * Filters a comma-separated string of stop IDs down to the specific platform nodes (Z-nodes)
+     * suitable for querying the departure board API.
+     * 
+     * PID Domain Logic:
+     * - "S" nodes represent Station areas (Parent stations). These are structural and cannot be queried for departures.
+     * - "Z" nodes represent specific Platforms (Zastávky). Departures are always attached to platforms.
+     * 
+     * If a query includes a mix of S and Z nodes, we strip the S nodes to prevent upstream API errors.
+     * If no Z nodes exist, we fall back to raw IDs to ensure the query doesn't fail silently.
+     * Also strips internal "centroid-" prefixes.
+     * 
+     * @param stopId The raw stop ID (potentially a comma-separated list of child IDs)
+     * @returns Array of filtered platform IDs ready for Golemio API
+     */
     private filterStopIdsForDepartures(stopId: string): string[] {
         const cleanStopId = stopId.replace(/^centroid-/, '');
         const rawIds = cleanStopId.split(',');

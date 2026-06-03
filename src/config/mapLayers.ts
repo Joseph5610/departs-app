@@ -438,7 +438,12 @@ export const stationIconLayer: SymbolLayerSpecification = {
     source: 'city-stops',
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['==', ['get', 'is_train'], 1]
+        ['any',
+            ['==', ['get', 'is_train'], 1],
+            ['==', ['get', 'metro_a'], 1],
+            ['==', ['get', 'metro_b'], 1],
+            ['==', ['get', 'metro_c'], 1]
+        ]
     ],
     minzoom: 12,
     layout: {

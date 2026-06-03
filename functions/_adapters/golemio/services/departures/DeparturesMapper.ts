@@ -32,7 +32,7 @@ export class DeparturesMapper {
             });
         }
 
-        departures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        departures.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
         return { departures };
     }

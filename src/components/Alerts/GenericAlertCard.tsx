@@ -88,11 +88,11 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 </span>
             </AlertTitle>
 
-            <AlertDescription className="grid gap-3">
+            <AlertDescription className="grid gap-2">
                 {description && (
-                    <p className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
+                    <div className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
                         {description}
-                    </p>
+                    </div>
                 )}
 
                 {(lines && lines.length > 0) || validFrom ? (

@@ -1,12 +1,14 @@
 import { AppRSSItem } from "../../../../_core/types";
-import { getXMLTagContent } from "./rss-utils";
 import { formatDate } from "../../../../_core/api-utils";
 import { getVehicleColor } from "../vehicles/colors";
+import { XMLParser } from "fast-xml-parser";
 
 export class AlertsMapper {
     private static guessType(name: string): string {
         const n = String(name).toUpperCase();
         if (['A', 'B', 'C'].includes(n)) return 'metro';
+        const num = parseInt(n, 10);
+        if (!isNaN(num) && num >= 50 && num <= 60) return 'trolleybus';
         if (/^[1-9][0-9]?$/.test(n)) return 'tram';
         if (/^S[0-9]/.test(n) || /^R[0-9]/.test(n)) return 'train';
         if (/^9[0-9][0-9]?$/.test(n)) return n.length === 2 ? 'tram' : 'bus'; // Night tram 9x, night bus 9xx
@@ -22,28 +24,64 @@ export class AlertsMapper {
      */
     static mapRSS(xmlString: string, type: 'incidents' | 'exclusions'): AppRSSItem[] {
         const itemType = type === 'incidents' ? 'incident' : 'exclusion';
-        const items: AppRSSItem[] = [];
-        const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-        let match: RegExpExecArray | null;
+        
+        const parser = new XMLParser({
+            ignoreAttributes: false,
+            attributeNamePrefix: "@_"
+        });
+        
+        const jObj = parser.parse(xmlString);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let parsedItems: any[] = [];
+        
+        if (jObj && jObj.rss && jObj.rss.channel && jObj.rss.channel.item) {
+            if (Array.isArray(jObj.rss.channel.item)) {
+                parsedItems = jObj.rss.channel.item;
+            } else {
+                parsedItems = [jObj.rss.channel.item];
+            }
+        }
 
         const now = new Date();
+        const items: AppRSSItem[] = [];
 
-        while ((match = itemRegex.exec(xmlString)) !== null) {
-            const itemXml = match[1];
-            const title = getXMLTagContent(itemXml, 'title');
-            const description = getXMLTagContent(itemXml, 'description');
-            const pubDate = getXMLTagContent(itemXml, 'pubDate');
+        const dateRangeRegex = /(\d{1,2}\.\s*\d{1,2}\.\s*(?:\d{4}\s*)?\d{1,2}:\d{2})\s*-\s*(.*?)(?=\s*(?:;|<|(?:Dotčené\s+)?(?:L|l)inky:|Z\s+důvodu|$))/i;
+        const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
+        const linesRegex = /(?:Dotčené\s+)?(?:L|l)inky:\s*((?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z])(?:,\s*(?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z]))*(?:\s+(?:a|A)\s+(?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z]))?)/;
 
-            const dateFromTag = getXMLTagContent(itemXml, 'dateFrom');
-            const dateToTag = getXMLTagContent(itemXml, 'dateTo');
+        for (const item of parsedItems) {
+            const title = item.title || "";
+            const pubDate = item.pubDate || "";
+            const guid = item.guid ? (typeof item.guid === 'object' ? item.guid["#text"] : item.guid) : null;
+            const link = item.link || null;
+            const priority = item.priority ? String(item.priority) : null;
+            
+            // For incidents, description is usually in 'description', for exclusions it's 'content:encoded' or 'description'
+            const description = (item["content:encoded"] || item.description || "").toString().replace(/&nbsp;/ig, ' ');
+
+            // lines parsing
+            let lines: string[] = [];
+            if (item.lines && item.lines.line) {
+                if (Array.isArray(item.lines.line)) {
+                    lines = item.lines.line.map(String);
+                } else {
+                    lines = [String(item.lines.line)];
+                }
+            } else {
+                const linesDescMatch = description.match(linesRegex);
+                if (linesDescMatch && linesDescMatch[1]) {
+                    lines = linesDescMatch[1]
+                        .replace(/\s+(?:a|A)\s+/g, ',')
+                        .split(',')
+                        .map(l => l.trim())
+                        .filter(Boolean);
+                }
+            }
 
             let isActive = true;
             let isFuture = false;
             let valid_from: string | null = null;
             let valid_to: string | null = null;
-
-            const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
-            const dateRangeRegex = /(\d{1,2}\.\s*\d{1,2}\.\s*\d{1,2}:\d{2})\s*-\s*([^;]+)/i;
 
             const parseAndFormat = (str: string) => {
                 const match = str.match(datePartsRegex);
@@ -66,7 +104,7 @@ export class AlertsMapper {
                 const dateMatch = description.match(dateRangeRegex);
                 if (dateMatch) {
                     valid_from = parseAndFormat(dateMatch[1]);
-                    const toStr = dateMatch[2].replace(/&nbsp;/g, ' ').trim();
+                    const toStr = dateMatch[2].trim();
                     if (toStr.toLowerCase().includes('odvolání')) {
                         valid_to = null;
                     } else {
@@ -75,7 +113,7 @@ export class AlertsMapper {
                 }
 
                 if (!valid_from) {
-                    const rawDate = getXMLTagContent(itemXml, 'date');
+                    const rawDate = item.date || "";
                     if (rawDate) {
                         valid_from = rawDate;
                     } else if (pubDate) {
@@ -87,8 +125,8 @@ export class AlertsMapper {
                 isFuture = false;
             } else {
                 // Exclusions
-                const start = dateFromTag && /^\d+$/.test(dateFromTag) ? new Date(parseInt(dateFromTag) * 1000) : null;
-                const end = dateToTag && /^\d+$/.test(dateToTag) ? new Date(parseInt(dateToTag) * 1000) : null;
+                const start = item.dateFrom ? new Date(Number(item.dateFrom) * 1000) : null;
+                const end = item.dateTo ? new Date(Number(item.dateTo) * 1000) : null;
 
                 if (start) {
                     valid_from = formatDate(start);
@@ -105,47 +143,31 @@ export class AlertsMapper {
                 }
             }
 
-            let lines: string[] = [];
-            const linesMatch = itemXml.match(/<lines>([\s\S]*?)<\/lines>/i);
-            if (linesMatch) {
-                const lineMatches = linesMatch[1].match(/<line>([\s\S]*?)<\/line>/gi);
-                if (lineMatches) {
-                    lines = lineMatches.map((l: string) => l.replace(/<\/?line>/gi, '').trim()).filter(Boolean);
-                }
-            } else {
-                const linesDescMatch = description.match(/Dotčené linky:\s*([A-Z0-9,\s]+)/i);
-                if (linesDescMatch && linesDescMatch[1]) {
-                    lines = linesDescMatch[1].split(',').map(l => l.trim()).filter(Boolean);
-                }
-            }
-
-            // Clean description: remove the leading date range and "Dotčené linky"
+            // Clean description
             let cleanedDescription = description
                 .replace(dateRangeRegex, '')
-                .replace(/Dotčené linky:\s*([A-Z0-9,\s]+)/i, '')
-                .replace(/<[^>]*>/g, '')
-                .replace(/&nbsp;/g, ' ')
+                .replace(linesRegex, '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s+/g, ' ')
                 .trim();
-
-            // Remove trailing semicolons or dots if they are left over
             cleanedDescription = cleanedDescription.replace(/^[;\s.]+|[;\s.]+$/g, '');
 
             items.push({
                 type: itemType,
-                title,
+                title: String(title).trim(),
                 description: cleanedDescription || null,
-                link: getXMLTagContent(itemXml, 'link'),
+                link: link ? String(link).trim() : "",
                 valid_from,
                 valid_to,
-                guid: getXMLTagContent(itemXml, 'guid'),
-                priority: getXMLTagContent(itemXml, 'priority'),
+                guid: guid ? String(guid).trim() : undefined,
+                priority: priority ? String(priority) : undefined,
                 lines,
                 line_metadata: lines.map(name => {
-                    const type = AlertsMapper.guessType(name);
+                    const t = AlertsMapper.guessType(name);
                     return {
                         name,
-                        type: String(type === 'metro' ? 1 : type === 'tram' ? 0 : type === 'train' ? 2 : 3),
-                        route_color: getVehicleColor(type === 'metro' ? '1' : type === 'tram' ? '0' : type === 'train' ? '2' : '3', name)
+                        type: String(t === 'metro' ? 1 : t === 'tram' ? 0 : t === 'train' ? 2 : t === 'trolleybus' ? 11 : 3),
+                        route_color: getVehicleColor(t === 'metro' ? '1' : t === 'tram' ? '0' : t === 'train' ? '2' : t === 'trolleybus' ? '11' : '3', name)
                     };
                 }),
                 isActive,
