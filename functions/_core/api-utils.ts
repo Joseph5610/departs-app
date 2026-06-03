@@ -144,6 +144,11 @@ export function withCityRoute(
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
     return async (context) => {
         const slug = context.params.city as string;
+        
+        if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+            return createErrorResponse('Invalid city format', 400);
+        }
+
         const city = getCityConfig(slug);
 
         if (!city) {

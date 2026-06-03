@@ -17,7 +17,7 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
                 "Access-Control-Allow-Origin": allowed && origin ? origin : "null",
                 "Access-Control-Allow-Methods": "GET, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type",
-                "Access-Control-Max-Age": "86400",
+                "Access-Control-Max-Age": "3600",
                 "Vary": "Origin",
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",

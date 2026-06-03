@@ -1,7 +1,9 @@
 import type { Fetcher } from "@cloudflare/workers-types";
 
 export interface Env {
-    FLAGS: any;
+    FLAGS?: {
+        getBooleanValue: (key: string, defaultValue: boolean) => Promise<boolean>;
+    };
     ASSETS: Fetcher;
     [key: string]: unknown;
 }

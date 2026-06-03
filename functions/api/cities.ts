@@ -5,7 +5,7 @@ import { createSuccessResponse } from "../_core/api-utils";
 export const onRequest: PagesFunction<Env> = async (context) => {
     // Read Flagship value for Brno (fallback to false if missing or error)
     // using catch in case the binding is not yet provided locally
-    const isBrnoEnabled = await context.env.FLAGS?.getBooleanValue("city-brno", false).catch(() => false) ?? false;
+    const isBrnoEnabled = await context.env.FLAGS?.getBooleanValue("city-brno", false).catch(() => false);
 
     const allCities = Object.values(CITY_REGISTRY).map(city => ({
         slug: city.slug,
@@ -23,3 +23,4 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const response: AppCitiesResponse = { cities };
     return createSuccessResponse(response, 3600); // cache for 1 hour
 };
+
