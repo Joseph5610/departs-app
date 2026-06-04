@@ -47,7 +47,7 @@ export class AlertsMapper {
 
         const dateRangeRegex = /(\d{1,2}\.\s*\d{1,2}\.\s*(?:\d{4}\s*)?\d{1,2}:\d{2})\s*-\s*(.*?)(?=\s*(?:;|<|(?:Dotčené\s+)?(?:L|l)inky:|Z\s+důvodu|$))/i;
         const datePartsRegex = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{1,2}:\d{2})/i;
-        const linesRegex = /(?:Dotčené\s+)?(?:L|l)inky:\s*((?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z])(?:,\s*(?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z]))*(?:\s+(?:a|A)\s+(?:(?:S|R)?\d{1,3}[A-Z]?|[A-Z]))?)/;
+        const linesRegex = /(?:Dotčené\s+)?(?:L|l)inky:\s*([A-Za-z0-9,\s]+?)(?=<br>|Z\s+důvodu|;|$|Etapa|\.|Vážení)/i;
 
         for (const item of parsedItems) {
             const title = item.title || "";
