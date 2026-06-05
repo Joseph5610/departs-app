@@ -26,7 +26,6 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
     const isHigh = item.priority === 'high' || item.priority === '1';
     const isNormal = item.priority === 'normal' || item.priority === '2';
     const isFuture = item.isFuture;
-    const isActive = item.isActive;
     const lines = item.line_metadata;
 
     const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to;
