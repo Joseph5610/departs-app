@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { VehicleDetail } from '../../types/transit';
-import { useSelectionStore } from '../../state/selectionStore';
+import { useRouteParams } from '../useRouteParams';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
@@ -15,8 +15,7 @@ const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId
 };
 
 export const useVehicleDetail = () => {
-    const tripId = useSelectionStore(s => s.selectedTripId);
-    const vehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const { tripId, vehicleId } = useRouteParams();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     return useQuery({

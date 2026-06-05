@@ -4,13 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCities } from './useCities';
-
-/**
- * Fallback bounding box for the service area.
- * Covers Prague + Středočeský kraj.
- * Format: [minLng, minLat, maxLng, maxLat]
- */
-const FALLBACK_BBOX = '13.5,49.5,15.5,50.8';
+import { FALLBACK_CITY_CONFIG } from '../../config/constants';
 
 export interface GeocodingResult {
     id: string;
@@ -109,9 +103,9 @@ export const useGeocoding = (
     const { data: citiesData } = useCities();
 
     const cityBounds = useMemo(() => {
-        if (!citiesData?.cities) return FALLBACK_BBOX;
+        if (!citiesData?.cities) return FALLBACK_CITY_CONFIG.bounds;
         const city = citiesData.cities.find(c => c.slug === selectedCity);
-        if (!city) return FALLBACK_BBOX;
+        if (!city) return FALLBACK_CITY_CONFIG.bounds;
         return city.bounds.join(',');
     }, [citiesData, selectedCity]);
 

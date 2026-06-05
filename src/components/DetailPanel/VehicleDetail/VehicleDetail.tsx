@@ -109,10 +109,14 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     if (!displayVehicle) return null;
 
+    const hasBasicData = !!(displayVehicle.route_short_name || displayVehicle.trip_headsign);
+    const showSkeleton = loadingDetail && !vehicleDetail && !isError && !hasBasicData;
+    const showContent = hasBasicData && !showSkeleton && !isError;
+
     return (
         <Stack gap={4}>
             {/* Loading State */}
-            {loadingDetail && !vehicleDetail && !isError && (
+            {showSkeleton && (
                 <VehicleDetailSkeleton />
             )}
 
@@ -121,39 +125,45 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                 <ErrorState error={error || null} onRetry={onRetry} />
             )}
 
-            {/* Header Hero Section (badge, delay, metadata, warning banners) */}
-            <VehicleHero
-                displayVehicle={displayVehicle}
-                isFollowing={isFollowing}
-                onToggleFollow={onToggleFollow}
-                liveDataAgeSeconds={liveDataAgeSeconds}
-            />
+            {/* Main Content */}
+            {showContent && (
+                <>
+                    <VehicleHero
+                        displayVehicle={displayVehicle}
+                        isFollowing={isFollowing}
+                        onToggleFollow={onToggleFollow}
+                        liveDataAgeSeconds={liveDataAgeSeconds}
+                    />
 
-            {/* Alerts */}
-            {relevantAlerts.length > 0 && (
-                <Stack gap={2}>
-                    {relevantAlerts.map((alert, idx) => (
-                        <GenericAlertCard
-                            key={alert.guid || idx}
-                            title={alert.title}
-                            description={alert.description}
-                            link={alert.link}
-                            priority={alert.priority || 'normal'}
-                            validFrom={alert.valid_from}
-                            validTo={alert.valid_to}
-                            isActive={alert.isActive}
-                            isFuture={alert.isFuture}
+                    {/* Alerts */}
+                    {relevantAlerts.length > 0 && (
+                        <Stack gap={2}>
+                            {relevantAlerts.map((alert, idx) => (
+                                <GenericAlertCard
+                                    key={alert.guid || idx}
+                                    title={alert.title}
+                                    description={alert.description}
+                                    link={alert.link}
+                                    priority={alert.priority || 'normal'}
+                                    validFrom={alert.valid_from}
+                                    validTo={alert.valid_to}
+                                    isActive={alert.isActive}
+                                    isFuture={alert.isFuture}
+                                />
+                            ))}
+                        </Stack>
+                    )}
+
+                    {/* Schedule / Stop List */}
+                    {displayVehicle.stop_times?.features && displayVehicle.stop_times.features.length > 0 ? (
+                        <StopTimeline
+                            stopTimes={displayVehicle.stop_times.features}
+                            effectiveSequence={displayVehicle.effectiveSequence}
                         />
-                    ))}
-                </Stack>
-            )}
-
-            {/* Schedule / Stop List */}
-            {displayVehicle.stop_times?.features && displayVehicle.stop_times.features.length > 0 && (
-                <StopTimeline
-                    stopTimes={displayVehicle.stop_times.features}
-                    effectiveSequence={displayVehicle.effectiveSequence}
-                />
+                    ) : (
+                        loadingDetail && <VehicleDetailSkeleton />
+                    )}
+                </>
             )}
         </Stack>
     );

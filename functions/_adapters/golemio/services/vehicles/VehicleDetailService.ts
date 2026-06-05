@@ -61,6 +61,6 @@ export class VehicleDetailService {
         }
 
         const data = await response.json() as GolemioVehiclePayload;
-        return VehicleDetailMapper.map(data, tripId, isStatic);
+        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic);
     }
 }

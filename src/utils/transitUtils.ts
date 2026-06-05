@@ -1,4 +1,4 @@
-import { WALKING_SPEED, CATCH_BUFFER, FALLBACK_ROUTE_COLOR } from '../config/constants';
+import { FALLBACK_ROUTE_COLOR } from '../config/constants';
 import type { StopFeature } from '../types/transit';
 
 /**
@@ -53,37 +53,3 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
     return R * c;
 };
 
-export type CatchStatus = 'success' | 'warning' | 'error';
-
-/**
- * Determines the catchability of a departure based on distance and time.
- */
-export const getCatchStatus = (
-    distanceMeters: number,
-    departureTimestamp: string,
-    isAtStop: boolean = false
-): { status: CatchStatus; walkingTimeMin: number } => {
-    const now = Date.now();
-    const depTime = new Date(departureTimestamp).getTime();
-    const walkingTimeSec = distanceMeters / WALKING_SPEED;
-    const totalRequiredTimeSec = walkingTimeSec + CATCH_BUFFER;
-
-    const remainingTimeSec = (depTime - now) / 1000;
-
-    let status: CatchStatus = 'success';
-
-    if (isAtStop) {
-        status = remainingTimeSec >= 0 ? 'success' : 'error';
-    } else {
-        if (remainingTimeSec < walkingTimeSec) {
-            status = 'error';
-        } else if (remainingTimeSec < totalRequiredTimeSec) {
-            status = 'warning';
-        }
-    }
-
-    return {
-        status,
-        walkingTimeMin: Math.ceil(walkingTimeSec / 60)
-    };
-};

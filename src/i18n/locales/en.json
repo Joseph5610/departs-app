@@ -191,21 +191,36 @@
   },
   "alerts": {
     "title": "Incidents and Exclusions",
+    "incident": "Incident",
+    "exclusionPlanned": "Planned Exclusion",
+    "exclusionActive": "Active Exclusion",
     "incidents": "Incidents",
     "exclusions": "Exclusions",
     "noAlerts": "No active alerts",
     "error": "Error loading alerts",
     "moreInfo": "More info",
+    "all": "All",
+    "live": "Live",
     "planned": "Planned",
     "active": "Active now",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice"
   },
+  "transportModes": {
+    "metro": "Metro",
+    "tram": "Trams",
+    "bus": "Buses",
+    "trolleybus": "Trolleybuses",
+    "train": "Trains",
+    "other": "Other"
+  },
   "errors": {
     "generic": "Something went wrong",
     "network": "Check your internet connection",
     "timeout": "The request timed out",
-    "upstream": "The data source is currently unavailable"
+    "upstream": "The data source is currently unavailable",
+    "notFoundTitle": "Stop not found",
+    "notFound": "This stop does not exist or is no longer in service."
   },
   "favorites": {
     "title": "Favorite Stops",

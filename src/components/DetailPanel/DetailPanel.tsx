@@ -157,11 +157,14 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         <Sheet
             open={isOpen}
             onOpenChange={(open: boolean, details: DialogRootChangeEventDetails) => {
-                if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out' && details.reason !== 'escape-key') {
+                // If it's closed internally (e.g. escape key), we call onClose.
+                // We ignore outside-press and focus-out because pointer dismissal is disabled.
+                if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out') {
                     onClose();
                 }
             }}
             modal={false}
+            disablePointerDismissal={true}
         >
             <SheetContent
                 side="left"

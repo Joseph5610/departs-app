@@ -6,7 +6,7 @@ test.describe('Favorites Tests', () => {
         const mapPage = new MapPage(page);
 
         // Mock stops
-        await page.route('**/api/stops*', async route => {
+        await page.route('**/api/*/stops*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -34,7 +34,7 @@ test.describe('Favorites Tests', () => {
         });
 
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().includes('/api/stops') && response.status() === 200,
+            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
             { timeout: 30000 }
         );
 
@@ -44,7 +44,7 @@ test.describe('Favorites Tests', () => {
         await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
 
         // Go directly to the stop by URL parameter to skip search
-        await page.goto('/?stopId=U1111Z1P');
+        await page.goto('/stop/U1111Z1P');
         
         await expect(mapPage.detailPanel).toBeVisible();
 
@@ -61,7 +61,7 @@ test.describe('Favorites Tests', () => {
         await expect(mapPage.detailPanel).not.toBeVisible({ timeout: 10000 });
 
         // Mock departures for the favorites panel bulk fetch
-        await page.route('**/api/departures*', async route => {
+        await page.route('**/api/*/departures*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',

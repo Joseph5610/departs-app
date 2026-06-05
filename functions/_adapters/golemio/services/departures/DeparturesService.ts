@@ -81,7 +81,8 @@ export class DeparturesService {
             });
 
             if (!response.ok) {
-                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), 502);
+                const status = (response.status === 404 || response.status === 400) ? response.status : 502;
+                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), status);
             }
 
             const data = await response.json() as GolemioDepartureItem[][];

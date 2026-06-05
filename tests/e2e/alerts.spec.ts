@@ -14,8 +14,8 @@ test.describe('Alerts tests', () => {
         await mapPage.openAlerts();
         await expect(alertsPage.container).toBeVisible();
 
-        // Ensure incidents tab is active by default or clickable
-        await alertsPage.switchTab('incidents');
+        // Ensure live tab is active by default or clickable
+        await alertsPage.switchTab('live');
         
         // Wait for potential RSS load (we could mock this in real full e2e, but for now we wait for any cards or empty state)
         // Check if there are alert cards

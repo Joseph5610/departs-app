@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSelectionStore } from '../../state/selectionStore';
+import { useRouteParams } from '../../hooks/useRouteParams';
 import { useViewportStore } from '../../state/viewportStore';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useNetworkStatus } from '../../hooks/features/useNetworkStatus';
@@ -16,8 +16,7 @@ import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
-    const selectedStopId = useSelectionStore(s => s.selectedStopId);
-    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const { stopId: selectedStopId, vehicleId: selectedVehicleId } = useRouteParams();
     const bounds = useViewportStore(s => s.bounds);
     const { isFetching: fetching, dataUpdatedAt: lastUpdate, isError, error } = useVehicles();
     const isOnline = useNetworkStatus();

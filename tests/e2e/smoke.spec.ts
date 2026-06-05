@@ -8,7 +8,7 @@ test.describe('Smoke tests', () => {
         const searchPage = new SearchPage(page);
 
         // Mock the massive /api/stops endpoint with a lightweight mock payload to prevent overloading the dev server in parallel CI test runs
-        await page.route('**/api/stops*', async route => {
+        await page.route('**/api/*/stops*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -40,7 +40,7 @@ test.describe('Smoke tests', () => {
 
         // Wait for the stops API response to finish loading so the stop search index is fully built
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().includes('/api/stops') && response.status() === 200,
+            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
             { timeout: 30000 }
         );
 

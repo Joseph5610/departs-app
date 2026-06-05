@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useSelectedVehicle } from './useSelectedVehicle';
 import type { FeatureCollection, LineString } from 'geojson';
+import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 
 export const useRouteShape = () => {
     const { data: vehicleDetail } = useVehicleDetail();
@@ -18,7 +19,7 @@ export const useRouteShape = () => {
         }
 
         // The backend now provides route_color directly in the first feature's properties
-        const color = geojson.features[0].properties?.route_color || '#AD0B00';
+        const color = geojson.features[0].properties?.route_color || FALLBACK_ROUTE_COLOR;
 
         // Ensure all segments have the correct color injected (safety)
         return {

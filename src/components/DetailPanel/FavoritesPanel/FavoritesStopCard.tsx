@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Loader2, Train, ArrowRight } from 'lucide-react';
-import { useSelectionStore } from '../../../state/selectionStore';
+import { navigate } from 'wouter/use-browser-location';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
@@ -40,15 +40,11 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     const { t } = useTranslation();
 
     // Selection
-    const { selectStop } = useSelectionStore(s => s.actions);
-
-    // Metadata
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
 
     // Geolocation
     const userLocation = useGeolocationStore(s => s.userLocation);
 
-    // Preferences
     const { toggleFavorite } = usePreferencesStore(s => s.actions);
 
     const { stop_id, stop_name, platform_code } = stopFeature.properties;
@@ -114,7 +110,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             duration: MAP_FLY_DURATION
         });
         
-        selectStop(stop_id);
+        navigate(`/stop/${encodeURIComponent(stop_id)}`);
         
         if (onClosePanel) {
             onClosePanel();

@@ -1,6 +1,5 @@
 import type { Map } from 'maplibre-gl';
 
-
 export const addArrowIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
@@ -23,11 +22,6 @@ export const addArrowIcon = (map: Map) => {
         map.addImage('v-arrow-centered', imageData, { sdf: true });
     }
 };
-
-// Removed canvas-based transfer logic in favor of native WebGL circles
-
-
-
 
 export const addTrainIcon = (map: Map) => {
     const size = 64;

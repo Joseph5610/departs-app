@@ -29,3 +29,5 @@ scratch/*
 # inkode
 .ik.yaml
 .ik/*
+
+.playwright-mcp

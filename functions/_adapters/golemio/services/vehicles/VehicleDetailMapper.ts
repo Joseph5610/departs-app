@@ -21,7 +21,7 @@ export class VehicleDetailMapper {
      *                 The frontend must preserve any existing live position data when merging this.
      * @returns Normalized vehicle detail object
      */
-    static map(data: GolemioVehiclePayload, tripId: string, isStatic: boolean): AppVehicleDetail {
+    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean): AppVehicleDetail {
         // Golemio returns either a FeatureCollection or a bare Feature.
         // Extract properties from whichever shape we received.
         const feature = data.features?.[0];
@@ -47,7 +47,7 @@ export class VehicleDetailMapper {
         const is_night = isNightRoute(route_short_name);
 
         const vehicleData: AppVehicleDetail = {
-            vehicle_id: extracted_vehicle_id || gtfs_trip_id,
+            vehicle_id: extracted_vehicle_id || requestedVehicleId || null,
             gtfs_trip_id,
             route_short_name,
             route_type,

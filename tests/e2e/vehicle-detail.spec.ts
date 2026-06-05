@@ -6,7 +6,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
         const mapPage = new MapPage(page);
 
         // Mock stops and departures
-        await page.route('**/api/stops*', async route => {
+        await page.route('**/api/*/stops*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -33,7 +33,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
             });
         });
 
-        await page.route('**/api/departures*', async route => {
+        await page.route('**/api/*/departures*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -56,7 +56,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
         });
 
         // Mock vehicle detail
-        await page.route('**/api/vehicle-detail*', async route => {
+        await page.route('**/api/*/vehicle-detail*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -101,12 +101,12 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
 
         // Wait for the stops API response
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().includes('/api/stops') && response.status() === 200,
+            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
             { timeout: 30000 }
         );
 
         // Go directly to the stop by URL parameter to skip search
-        await page.goto('/?stopId=U1111Z1P');
+        await page.goto('/stop/U1111Z1P');
         
         await stopsResponsePromise;
         await expect(mapPage.detailPanel).toBeVisible();
@@ -117,7 +117,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
 
         // Click departure item to open vehicle detail
         const vehicleDetailResponsePromise = page.waitForResponse(
-            response => response.url().includes('/api/vehicle-detail') && response.status() === 200,
+            response => response.url().match(/\/api\/.*\/vehicle-detail/) !== null && response.status() === 200,
             { timeout: 15000 }
         );
         await departureItem.click();

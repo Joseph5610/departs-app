@@ -76,7 +76,7 @@ export interface AppVehicleCollection {
 }
 
 export interface AppVehicleProperties {
-    vehicle_id: string;
+    vehicle_id?: string | null;
     gtfs_trip_id: string;
     route_short_name: string;
     route_type: string | number;

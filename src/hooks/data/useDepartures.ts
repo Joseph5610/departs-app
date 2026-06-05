@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useMemo } from 'react';
 import type { Departure } from '../../types/transit';
+import { useRouteParams } from '../../hooks/useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
@@ -40,7 +41,7 @@ export interface DeparturesResponse {
  * Fetches, enriches, and groups departure data for the selected stop.
  */
 export const useDepartures = () => {
-    const stopId = useSelectionStore(s => s.selectedStopId);
+    const { stopId } = useRouteParams();
     const selectedLine = useSelectionStore(s => s.selectedLine);
     const departureSort = usePreferencesStore(s => s.departureSort);
     const selectedCity = usePreferencesStore(s => s.selectedCity);

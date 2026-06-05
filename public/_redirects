@@ -12,3 +12,4 @@
 /api/vehicle-detail /api/prague/vehicle-detail 301
 /alerts /api/prague/alerts 301
 /api/alerts /api/prague/alerts 301
+/* /index.html 200

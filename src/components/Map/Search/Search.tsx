@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
+import { navigate } from 'wouter/use-browser-location';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
 import { useGeocoding, geocodingCache } from '../../../hooks/data/useGeocoding';
-import { useSelectionStore } from '../../../state/selectionStore';
+import { useRouteParams } from '../../../hooks/useRouteParams';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useViewportStore } from '../../../state/viewportStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
@@ -28,10 +29,8 @@ import { getLineMetadataMap } from '@/utils/transitUtils';
 export const Search: React.FC = React.memo(() => {
     const { t } = useTranslation();
 
-    // Selection
-    const selectedStopId = useSelectionStore(s => s.selectedStopId);
-    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
-    const { selectStop, clearSelection } = useSelectionStore(s => s.actions);
+    // Zustand state
+    const { stopId: selectedStopId, vehicleId: selectedVehicleId } = useRouteParams();
 
     // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
@@ -143,7 +142,7 @@ export const Search: React.FC = React.memo(() => {
             coordinates: stop.geometry.coordinates as [number, number]
         };
 
-        selectStop(selectedStop.stop_id);
+        navigate(`/stop/${encodeURIComponent(selectedStop.stop_id)}`);
         addToHistory({
             type: 'stop',
             ...selectedStop
@@ -159,10 +158,10 @@ export const Search: React.FC = React.memo(() => {
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
-            selectStop(item.stop_id);
+            navigate(`/stop/${encodeURIComponent(item.stop_id)}`);
             addToHistory(item);
         } else if (item.type === 'place') {
-            clearSelection();
+            navigate('/');
             flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
@@ -187,7 +186,7 @@ export const Search: React.FC = React.memo(() => {
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
-        clearSelection();
+        navigate('/');
         flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,

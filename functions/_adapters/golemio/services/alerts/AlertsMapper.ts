@@ -77,6 +77,9 @@ export class AlertsMapper {
                         .filter(Boolean);
                 }
             }
+            
+            // Deduplicate lines
+            lines = Array.from(new Set(lines));
 
             let isActive = true;
             let isFuture = false;

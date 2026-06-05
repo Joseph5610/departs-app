@@ -4,21 +4,21 @@ import { Locator } from '@playwright/test';
 export class AlertsPage extends BasePage {
     readonly container: Locator = this.page.getByTestId('alerts-modal-content');
     readonly searchInput: Locator = this.container.locator('input[type="text"]');
-    readonly incidentsTab: Locator = this.container.getByRole('tab', { name: /Incidents|Události/i });
-    readonly exclusionsTab: Locator = this.container.getByRole('tab', { name: /Exclusions|Výluky/i });
+    readonly liveTab: Locator = this.container.getByRole('tab', { name: /Live|Aktu/i });
+    readonly plannedTab: Locator = this.container.getByRole('tab', { name: /Planned|Plánované/i });
 
-    readonly emptyStateMessage: Locator = this.container.getByText(new RegExp("Nejsou aktivn\u00ed \u017e\u00e1dn\u00e9 ud\u00e1losti|No active alerts", "i"));
+    readonly emptyStateMessage: Locator = this.container.getByText(new RegExp("Nejsou aktivn\u00ed \u017e\u00e1dn\u00e9 ud\u00e1losti|No active alerts|No alerts", "i"));
     readonly closeButton: Locator = this.container.getByRole('button', { name: 'Close' });
 
     async searchAlert(query: string) {
         await this.searchInput.fill(query);
     }
 
-    async switchTab(tab: 'incidents' | 'exclusions') {
-        if (tab === 'incidents') {
-            await this.incidentsTab.click();
+    async switchTab(tab: 'live' | 'planned') {
+        if (tab === 'live') {
+            await this.liveTab.click();
         } else {
-            await this.exclusionsTab.click();
+            await this.plannedTab.click();
         }
     }
 

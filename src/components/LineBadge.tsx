@@ -32,7 +32,6 @@ export const LineBadge = ({ name, routeColor, size = 'md' }: LineBadgeProps) => 
     }
 
     const calculatedMinWidth = baseWidth + (Math.max(0, len - 1) * charWidth);
-    const isMetro = ['A', 'B', 'C'].includes(name.toUpperCase());
 
     return (
         <span
@@ -42,11 +41,7 @@ export const LineBadge = ({ name, routeColor, size = 'md' }: LineBadgeProps) => 
                 minWidth: `${calculatedMinWidth}px`
             }}
         >
-            {isMetro ? (
-                <span className="leading-none translate-y-[0.5px]">{name}</span>
-            ) : (
-                name
-            )}
+            {name}
         </span>
     );
 };

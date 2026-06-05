@@ -16,12 +16,14 @@ export const useShare = () => {
 
     const getConstructedUrl = useCallback((options: ShareOptions) => {
         // Build from scratch ONLY if we have entity IDs
-        if (options.stopId || options.tripId || options.vehicleId) {
-            const url = new URL(window.location.origin);
-            if (options.stopId) url.searchParams.set('stopId', options.stopId);
-            if (options.tripId) url.searchParams.set('tripId', options.tripId);
-            if (options.vehicleId) url.searchParams.set('vehicleId', options.vehicleId);
-            return url.toString();
+        if (options.stopId) {
+            return `${window.location.origin}/stop/${encodeURIComponent(options.stopId)}`;
+        }
+        if (options.tripId) {
+            if (options.vehicleId && options.vehicleId !== options.tripId) {
+                return `${window.location.origin}/trip/${encodeURIComponent(options.tripId)}/${encodeURIComponent(options.vehicleId)}`;
+            }
+            return `${window.location.origin}/trip/${encodeURIComponent(options.tripId)}`;
         }
 
         // No valid entity IDs provided - strictly forbidden to fallback for privacy

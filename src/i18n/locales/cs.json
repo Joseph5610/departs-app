@@ -194,21 +194,36 @@
   },
   "alerts": {
     "title": "Mimořádnosti a výluky",
+    "incident": "Mimořádnost",
+    "exclusionPlanned": "Plánovaná výluka",
+    "exclusionActive": "Aktivní výluka",
     "incidents": "Mimořádnosti",
     "exclusions": "Výluky",
     "noAlerts": "Žádné aktuální upozornění",
     "error": "Chyba při načítání upozornění",
     "moreInfo": "Více informací",
+    "all": "Vše",
+    "live": "Živě",
     "planned": "Plánováno",
     "active": "Právě probíhá",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolání"
   },
+  "transportModes": {
+    "metro": "Metro",
+    "tram": "Tramvaje",
+    "bus": "Autobusy",
+    "trolleybus": "Trolejbusy",
+    "train": "Vlaky",
+    "other": "Ostatní"
+  },
   "errors": {
     "generic": "Něco se nepovedlo",
     "network": "Zkontrolujte připojení k internetu",
     "timeout": "Požadavek vypršel",
-    "upstream": "Zdroj dát je momentálně nedostupný"
+    "upstream": "Zdroj dát je momentálně nedostupný",
+    "notFoundTitle": "Zastávka se nenašla",
+    "notFound": "Tato zastávka neexistuje nebo již neobsluhuje spoje."
   },
   "favorites": {
     "title": "Oblíbené zastávky",

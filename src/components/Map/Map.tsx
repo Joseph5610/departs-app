@@ -1,7 +1,10 @@
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { navigate } from 'wouter/use-browser-location';
+
 import MapGL, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
@@ -11,9 +14,10 @@ import { getInitialViewState } from '../../utils/mapUtils';
 import { MapLayers } from './MapLayers';
 import { MapController } from './MapController';
 import { useMapEvents } from '../../hooks/features/useMapEvents';
-import { useSelectionStore, getSelectedId } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
+import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useRouteParams } from '../../hooks/useRouteParams';
 import { geocodingCache } from '../../hooks/data/useGeocoding';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
@@ -42,10 +46,9 @@ const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const mapEvents = useMapEvents();
 
-    // Selection Store
-    const selectedId = useSelectionStore(getSelectedId);
-    const selectedStopId = useSelectionStore(s => s.selectedStopId);
-    const selActions = useSelectionStore(s => s.actions);
+    // Store Actions
+    const { stopId: selectedStopId, tripId, vehicleId } = useRouteParams();
+    const selectedId = tripId || vehicleId;
 
     // Viewport Store
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
@@ -87,12 +90,12 @@ const MapInner: React.FC = () => {
             const next = !prev;
             if (next) {
                 setTimeout(() => {
-                    selActions.clearSelection();
+                    navigate('/');
                 }, 0);
             }
             return next;
         });
-    }, [selActions]);
+    }, []);
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
@@ -103,11 +106,22 @@ const MapInner: React.FC = () => {
 
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, selectedId);
 
-    const handleBack = useCallback(() => {
-        if (selectedVehicle && selectedStop) {
-            selActions.selectStop(selectedStop.stop_id);
+    const { stopId } = useRouteParams();
+    const lastStopId = useSelectionStore(s => s.lastStopId);
+    const setLastStopId = useSelectionStore(s => s.actions.setLastStopId);
+    const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
+
+    useEffect(() => {
+        if (stopId) {
+            setLastStopId(stopId);
         }
-    }, [selectedVehicle, selectedStop, selActions]);
+    }, [stopId, setLastStopId]);
+
+    const handleBack = useCallback(() => {
+        if (selectedVehicle && lastStopId) {
+            navigate(`/stop/${encodeURIComponent(lastStopId)}`);
+        }
+    }, [selectedVehicle, lastStopId]);
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {
@@ -119,8 +133,48 @@ const MapInner: React.FC = () => {
         return '';
     }, [selectedVehicle, selectedStop, t]);
 
+    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — Pražská integrovaná doprava LIVE';
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : 'https://departs.app/';
+
+    const jsonLd = useMemo(() => {
+        if (selectedStop) {
+            return {
+                "@context": "https://schema.org",
+                "@type": "TransitStop",
+                "name": selectedStop.stop_name,
+                "url": canonicalUrl,
+                "geo": selectedStop.coordinates ? {
+                    "@type": "GeoCoordinates",
+                    "latitude": selectedStop.coordinates[1],
+                    "longitude": selectedStop.coordinates[0]
+                } : undefined
+            };
+        }
+        return {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "departs.app",
+            "url": "https://departs.app",
+            "description": "Real-time visualization of Prague public transport (PID). Track buses, trams, and metro live.",
+            "applicationCategory": "TransportApplication",
+            "operatingSystem": "All",
+            "image": "https://departs.app/icon.png",
+            "author": {
+                "@type": "Organization",
+                "name": "departs.app"
+            }
+        };
+    }, [selectedStop, canonicalUrl]);
+
     return (
         <>
+            <Helmet>
+                <title>{displayTitle}</title>
+                <link rel="canonical" href={canonicalUrl} />
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
+            </Helmet>
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
@@ -142,6 +196,7 @@ const MapInner: React.FC = () => {
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') {
+                        navigate('/'); // Close panel on background click
                         return;
                     }
 
@@ -167,17 +222,24 @@ const MapInner: React.FC = () => {
 
                     if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
                         const props = f.properties;
-                        if (!props?.vehicle_id) {
+                        if (!props?.vehicle_id || !props?.gtfs_trip_id) {
                             return;
                         }
-                        selActions.selectVehicle(props.gtfs_trip_id, props.vehicle_id, false);
+                        setIsFollowing(true);
+                        const tId = props.gtfs_trip_id;
+                        const vId = props.vehicle_id;
+                        if (vId && vId !== tId) {
+                            navigate(`/trip/${encodeURIComponent(tId)}/${encodeURIComponent(vId)}`);
+                        } else {
+                            navigate(`/trip/${encodeURIComponent(tId)}`);
+                        }
                         return;
                     }
 
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'station-icons' || f.layer.id === 'transfer-outer' || f.layer.id === 'transfer-inner') {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
-                            selActions.selectStop(stopId);
+                            navigate(`/stop/${encodeURIComponent(stopId)}`);
                         }
                     }
                 }}
@@ -241,8 +303,8 @@ const MapInner: React.FC = () => {
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}
                 id={selectedId || selectedStopId || undefined}
-                onClose={() => selActions.clearSelection()}
-                onBack={(selectedVehicle && selectedStop) ? handleBack : undefined}
+                onClose={() => navigate('/')}
+                onBack={(selectedVehicle && lastStopId) ? handleBack : undefined}
                 title={panelTitle}
                 platformCode={!selectedVehicle ? selectedStop?.platform_code : undefined}
                 subHeader={<DepartureBoardHeader />}

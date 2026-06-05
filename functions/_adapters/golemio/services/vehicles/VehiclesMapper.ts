@@ -14,7 +14,7 @@ export class VehiclesMapper {
                 type: 'Feature',
                 geometry: f.geometry || null,
                 properties: {
-                    vehicle_id: String(p.vehicle_id || p.id || ''),
+                    vehicle_id: p.vehicle_id ? String(p.vehicle_id) : null,
                     gtfs_trip_id: p.gtfs_trip_id || '',
                     route_short_name,
                     route_type,

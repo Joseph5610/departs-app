@@ -7,7 +7,7 @@ test.describe('Departure Board Tests', () => {
         const mapPage = new MapPage(page);
         const searchPage = new SearchPage(page);
 
-        await page.route('**/api/stops*', async route => {
+        await page.route('**/api/*/stops*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -35,7 +35,7 @@ test.describe('Departure Board Tests', () => {
         });
 
         // Mock departures
-        await page.route('**/api/departures*', async route => {
+        await page.route('**/api/*/departures*', async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -93,7 +93,7 @@ test.describe('Departure Board Tests', () => {
 
         // Wait for the stops API response to finish loading so the stop search index is fully built
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().includes('/api/stops') && response.status() === 200,
+            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
             { timeout: 30000 }
         );
 

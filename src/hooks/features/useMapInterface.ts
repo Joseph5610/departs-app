@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useRouteParams } from '../useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useIsMobile } from '../useIsMobile';
@@ -24,13 +25,11 @@ import {
  * The "User Experience Layer" hook.
  */
 export const useMapInterface = () => {
+    // Route Params
+    const { stopId: selectedStopId, tripId: selectedTripId, vehicleId: selectedVehicleId } = useRouteParams();
+    
     // Selection Store
-    const selectedStopId = useSelectionStore(s => s.selectedStopId);
-    const selectedTripId = useSelectionStore(s => s.selectedTripId);
-    const selectedVehicleId = useSelectionStore(s => s.selectedVehicleId);
     const isFollowing = useSelectionStore(s => s.isFollowing);
-    const selectStop = useSelectionStore(s => s.actions.selectStop);
-    const selectVehicle = useSelectionStore(s => s.actions.selectVehicle);
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
@@ -40,56 +39,8 @@ export const useMapInterface = () => {
     const selectedVehicle = useSelectedVehicle();
     const isMobile = useIsMobile();
 
-    const initialized = useRef(false);
     const lastFlownId = useRef<string | null>(null);
     const lastFlownStopId = useRef<string | null>(null);
-
-    // --- 1. URL SYNC (Initial Load) ---
-    useEffect(() => {
-        if (initialized.current) {
-            return;
-        }
-        const p = new URLSearchParams(window.location.search);
-
-        const stopId = p.get('stopId');
-        if (stopId && !selectedStopId) {
-            selectStop(stopId);
-        }
-
-        const tripId = p.get('tripId');
-        const vehicleId = p.get('vehicleId');
-        if (tripId && !selectedTripId) {
-            selectVehicle(tripId, vehicleId, !!stopId);
-        }
-
-        initialized.current = true;
-    }, [selectedStopId, selectedTripId, selectStop, selectVehicle]);
-
-    // --- 2. URL SYNC (Write) ---
-    useEffect(() => {
-        const url = new URL(window.location.href);
-        const sp = url.searchParams;
-
-        if (selectedStopId) {
-            sp.set('stopId', selectedStopId);
-        } else {
-            sp.delete('stopId');
-        }
-
-        if (selectedTripId) {
-            sp.set('tripId', selectedTripId);
-            if (selectedVehicleId) {
-                sp.set('vehicleId', selectedVehicleId);
-            } else {
-                sp.delete('vehicleId');
-            }
-        } else {
-            sp.delete('tripId');
-            sp.delete('vehicleId');
-        }
-
-        window.history.replaceState({}, '', url.toString());
-    }, [selectedStopId, selectedTripId, selectedVehicleId]);
 
     // --- 3. CAMERA FOLLOW ---
     useEffect(() => {

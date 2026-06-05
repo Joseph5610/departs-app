@@ -14,7 +14,7 @@ Non-negotiable. Any violation is system-level bug.
 
 | Store | Key File | Purpose |
 |---|---|---|
-| `SelectionStore` | `selectionStore.ts` | IDs: `selectedStopId`, `selectedTripId`, `selectedVehicleId`, `isFollowing` |
+| `SelectionStore` | `selectionStore.ts` | State: `isFollowing`, `selectedLine` (URL is source of truth for IDs) |
 | `ViewportStore` | `viewportStore.ts` | Map bounds, debounced bounds, selected places |
 | `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (Persisted) |
 | `GeolocationStore` | `geolocationStore.ts` | User location, speed, geo-pending status |
@@ -61,7 +61,6 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
 - **NEVER** use ad-hoc utility classes for core layout; use established design system tokens.
 - **NEVER** store UI state (like drawer height) in global selection context.
-- **Lucide Icons**: ALWAYS use even, standardized sizes (`size={16}` for w-4, `size={20}` for w-5). Non-integer viewport scaling causes subpixel anti-aliasing blurriness. For small icons (`size <= 16`), set `strokeWidth={1.5}` to prevent muddy appearances.
 
 ### Mandatory Protocol
 1. **Tool-First**: Execute tools immediately. Explanation under 3 sentences unless complex.

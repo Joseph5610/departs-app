@@ -12,6 +12,7 @@ import { useNavigate } from '../../../hooks/features/useNavigate';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { HStack } from '@/components/ui/layout';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { LineBadge } from '../../LineBadge';
 import { toast } from 'sonner';
@@ -33,21 +34,22 @@ export const DepartureBoardHeader = React.memo(() => {
     const { setDepartureSort, toggleFavorite } = usePreferencesStore(s => s.actions);
 
     const { share } = useShare();
-    const isMobile = useIsMobile();
-
-    // Selection
     const selectedLine = useSelectionStore(s => s.selectedLine);
     const { toggleLineFilter } = useSelectionStore(s => s.actions);
 
+    const isMobile = useIsMobile();
+
+    // Selection
+    
     // Derived state
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
-    const showHeader = !!selectedStop && !selectedVehicle;
-    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
-
     const { handleNavigate, distanceLabel, stopDistanceInfo } = useNavigate();
-    const { delayStats } = useDepartures();
+    const { delayStats, isError } = useDepartures();
+
+    const showHeader = !!selectedStop && !selectedVehicle && !isError;
+    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const uniqueLines = React.useMemo(() => {
         if (!selectedStop?.lines) return [];
@@ -129,26 +131,26 @@ export const DepartureBoardHeader = React.memo(() => {
                         {delayStats && delayStats.sampleSize >= 2 && (
                             <>
                                 <div className="w-px h-3 bg-white/10 shrink-0" />
-                                <Tooltip>
-                                    <TooltipTrigger render={
-                                        <div className="flex items-center h-full px-3 hover:bg-white/5 transition-colors cursor-help">
-                                            <Activity size={12} className={cn(
-                                                "mr-1.5",
-                                                delayStats.trend === 'worsening' ? "text-red-400" :
-                                                delayStats.trend === 'improving' ? "text-emerald-400" :
-                                                "text-amber-400"
-                                            )}  strokeWidth={1.5} />
-                                            <span className="font-bold text-foreground text-[11px] tracking-tight opacity-90 whitespace-nowrap">
-                                                {delayStats.averageDelayMin === 0 
-                                                    ? t('map.departures.onTime') 
-                                                    : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${delayStats.averageDelayMin} min`}
-                                            </span>
-                                        </div>
-                                    } />
-                                    <TooltipContent side="bottom">
-                                        {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
-                                    </TooltipContent>
-                                </Tooltip>
+                                <Popover>
+                                    <PopoverTrigger render={<button type="button" className="flex items-center h-full px-3 hover:bg-white/5 transition-colors cursor-pointer active:scale-95" />}>
+                                        <Activity size={12} className={cn(
+                                            "mr-1.5",
+                                            delayStats.trend === 'worsening' ? "text-red-400" :
+                                            delayStats.trend === 'improving' ? "text-emerald-400" :
+                                            "text-amber-400"
+                                        )}  strokeWidth={1.5} />
+                                        <span className="font-bold text-foreground text-[11px] tracking-tight opacity-90 whitespace-nowrap">
+                                            {delayStats.averageDelayMin === 0 
+                                                ? t('map.departures.onTime') 
+                                                : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${delayStats.averageDelayMin} min`}
+                                        </span>
+                                    </PopoverTrigger>
+                                    <PopoverContent side="bottom" align="center" className="w-auto border-white/10 bg-[#161618]/95 backdrop-blur-xl shadow-2xl">
+                                        <span className="text-[13px] font-medium text-foreground/90">
+                                            {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
+                                        </span>
+                                    </PopoverContent>
+                                </Popover>
                             </>
                         )}
                     </div>
@@ -222,6 +224,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         <TooltipTrigger render={
                             <button
                                 onClick={handleShare}
+                                aria-label={t('common.share')}
                                 className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
                             >
                                 <Share2 size={16}  strokeWidth={1.5} />

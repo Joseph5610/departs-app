@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useSelectionStore } from '../../state/selectionStore';
+import { navigate } from 'wouter/use-browser-location';
 
 export const CitySwitcher: React.FC = () => {
     const { t } = useTranslation();
@@ -16,7 +16,6 @@ export const CitySwitcher: React.FC = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
-    const { clearSelection } = useSelectionStore(s => s.actions);
     const [open, setOpen] = useState(false);
 
     const cities = data?.cities || [];
@@ -36,7 +35,7 @@ export const CitySwitcher: React.FC = () => {
         setSelectedCity(city.slug);
         
         // 2. Clear current selection (so we don't look for prague stops in brno)
-        clearSelection();
+        navigate('/');
 
         // 3. Move map camera
         const map = mapRef.current?.getMap();

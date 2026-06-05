@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.46.0] - 2026-06-05
+
+### Added
+- **Path-Based Routing**: Replaced query-parameter-based entity selection with clean, path-based routing (`/stop/:id`, `/trip/:id`, and `/trip/:tripId/:vehicleId`).
+- **History Support**: Integrated `wouter` for proper browser history navigation, fixing the native Android "back" gesture and enabling standard forward/back navigation between stops and vehicles.
+
 ## [0.45.0] - 2026-06-03
 
 ### Changed

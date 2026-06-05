@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSelectionStore } from '../../state/selectionStore';
+import { useRouteParams } from '../useRouteParams';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import type { VehicleDetail } from '../../types/transit';
@@ -8,13 +8,12 @@ import type { VehicleDetail } from '../../types/transit';
  * useSelectedVehicle
  *
  * A derived data hook that merges multiple vehicle data sources on the fly:
- * 1. Current State (IDs from reducer)
+ * 1. Current Route (IDs from URL)
  * 2. Live Stream (high-frequency location from useVehicles)
  * 3. Detail API (low-frequency metadata from useVehicleDetail)
  */
 export const useSelectedVehicle = () => {
-    const tripId = useSelectionStore(s => s.selectedTripId);
-    const vehicleId = useSelectionStore(s => s.selectedVehicleId);
+    const { tripId, vehicleId } = useRouteParams();
 
     const { vehicles: rawVehicles } = useVehicles();
     const { data: vehicleDetail } = useVehicleDetail();

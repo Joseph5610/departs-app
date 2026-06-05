@@ -13,6 +13,7 @@ import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { LineBadge } from '../../LineBadge';
 import type { AppError } from '@/types/error';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 
 /** How many departures to show per group before requiring expand */
 const DEFAULT_VISIBLE = 3;
@@ -125,7 +126,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                             : "rounded-[4px] h-[24px] px-2 min-w-[24px]"
                                                     )}
                                                     style={{ 
-                                                        backgroundColor: subFirstDep.route_color || '#AD0B00',
+                                                        backgroundColor: subFirstDep.route_color || FALLBACK_ROUTE_COLOR,
                                                         border: '1px solid rgba(255,255,255,0.15)'
                                                     }}
                                                 >
@@ -165,7 +166,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                             >
                                                 <div 
                                                     className="w-1 h-4 rounded-r-sm shrink-0" 
-                                                    style={{ backgroundColor: subFirstDep.route_color || '#AD0B00' }}
+                                                    style={{ backgroundColor: subFirstDep.route_color || FALLBACK_ROUTE_COLOR }}
                                                 />
                                                 <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
                                                     <ArrowRight size={12} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
