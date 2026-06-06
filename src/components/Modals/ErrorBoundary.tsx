@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 import { Box, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
+import { version } from '../../../package.json';
 
 interface Props {
     children?: ReactNode;
@@ -58,6 +59,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
                         {/* Enhanced debug info (temporary) */}
                         <Box className="mt-8 pt-6 border-t border-border text-left overflow-hidden w-full">
+                            <p className="text-muted-foreground text-[10px] font-mono leading-tight mb-2">
+                                Version: {version}
+                            </p>
                             <p className="text-destructive text-[10px] font-mono leading-tight break-all mb-2">
                                 {this.state.error?.toString()}
                             </p>

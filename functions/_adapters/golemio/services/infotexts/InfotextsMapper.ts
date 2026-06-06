@@ -4,6 +4,11 @@ import { GolemioInfotext } from "./types";
 
 export class InfotextsMapper {
     static map(data: GolemioInfotext[]): AppInfotext[] {
+        if (!Array.isArray(data)) {
+            console.error("InfotextsMapper: input data is not an array", data);
+            return [];
+        }
+
         const now = new Date();
         const nowMs = now.getTime();
 

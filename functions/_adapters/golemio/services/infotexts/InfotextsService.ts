@@ -29,7 +29,12 @@ export class InfotextsService {
                 throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
             }
 
-            const data: GolemioInfotext[] = await response.json();
-            return InfotextsMapper.map(data);
+            try {
+                const data: GolemioInfotext[] = await response.json();
+                return InfotextsMapper.map(data);
+            } catch (e) {
+                console.error("InfotextsService: Failed to parse JSON response", e);
+                return [];
+            }
     }
 }

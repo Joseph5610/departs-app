@@ -21,7 +21,7 @@ export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
     const allInfotexts = infotexts.data;
 
     const relevantInfotexts = useMemo(() => {
-        if (!selectedStop || !allInfotexts) {
+        if (!selectedStop || !allInfotexts || !Array.isArray(allInfotexts)) {
             return [];
         }
 
