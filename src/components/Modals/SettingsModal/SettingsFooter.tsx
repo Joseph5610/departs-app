@@ -6,8 +6,8 @@ import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
-import { Box, Stack, HStack } from '@/components/ui/layout';
-
+import { cn } from '@/lib/utils';
+import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -69,91 +69,92 @@ export const SettingsFooter: React.FC = () => {
     };
 
     return (
-        <Stack gap={6}>
-            <Stack gap={3}>
+        <div className="flex flex-col gap-6">
+            <ItemGroup className="rounded-2xl bg-muted/40 border border-white/5 overflow-hidden gap-0">
                 {searchHistory.length > 0 && (
-                    <button
-                        onClick={() => {
-                            clearHistory();
-                            toast.success(t('settings.clearHistory.success'));
-                        }}
-                        className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border transition-all text-left focus-visible:ring-2 focus-visible:ring-ring"
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<button onClick={() => { clearHistory(); toast.success(t('settings.clearHistory.success')); }} />}
                     >
-                        <HStack gap={3}>
-                            <Box className="p-2 rounded-lg bg-destructive/20 text-destructive">
-                                <Clock size={20}  strokeWidth={1.5} />
-                            </Box>
-                            <span className="text-foreground text-sm font-bold">{t('settings.clearHistory.button')}</span>
-                        </HStack>
-                    </button>
+                        <ItemMedia variant="icon" className="text-destructive">
+                            <Clock size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('settings.clearHistory.button')}</ItemTitle>
+                        </ItemContent>
+                    </Item>
                 )}
 
-                <button
-                    onClick={handleCheckUpdate}
-                    disabled={isChecking}
-                    className="flex items-center justify-between p-3.5 sm:p-4 bg-muted/40 hover:bg-white/10 active:bg-white/15 active:scale-[0.98] rounded-2xl border transition-all text-left outline-none"
+                <Item
+                    variant="settings"
+                    size="none"
+                    className={cn(isChecking && "opacity-50 pointer-events-none")}
+                    render={<button onClick={handleCheckUpdate} disabled={isChecking} />}
                 >
-                    <HStack gap={3}>
-                        <Box className="p-2 rounded-lg bg-white/10 text-foreground">
-                            <RefreshCw size={20} className={isChecking ? 'animate-spin' : ''}  strokeWidth={1.5} />
-                        </Box>
-                        <span className="text-foreground text-sm font-bold">
+                    <ItemMedia variant="icon" className={cn("text-muted-foreground", isChecking && "animate-spin text-primary")}>
+                        <RefreshCw size={18} strokeWidth={2} />
+                    </ItemMedia>
+                    <ItemContent>
+                        <ItemTitle className="text-foreground">
                             {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
+                        </ItemTitle>
+                    </ItemContent>
+                    <ItemActions>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-black/20 px-2 py-1 rounded-md">
+                            {t('settings.versionBadge', { version })}
                         </span>
-                    </HStack>
-                    <span className="text-[10px] text-foreground/70 font-bold uppercase tracking-widest bg-white/10 px-2 py-1 rounded-md">
-                        {t('settings.versionBadge', { version })}
-                    </span>
-                </button>
+                    </ItemActions>
+                </Item>
+            </ItemGroup>
 
-                <Stack align="center" gap={0} className="w-full">
-                    <HStack justify="center" gap={6}>
-                        <a
-                            href="https://golemio.cz"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                        >
-                            <Database size={14}  strokeWidth={1.5} />
-                            {t('settings.dataSource')}
-                        </a>
-
-                        <a
-                            href="https://github.com/joseph5610/departs-app"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                        >
-                            <Code size={14}  strokeWidth={1.5} />
-                            {t('settings.viewSource')}
-                        </a>
-                    </HStack>
+            <div className="flex flex-col items-center gap-0 w-full">
+                <div className="flex justify-center gap-6">
                     <a
-                        href="https://creativecommons.org/licenses/by/4.0/"
+                        href="https://golemio.cz"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 py-2 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
                     >
-                        <Scale size={14}  strokeWidth={1.5} />
-                        {t('settings.license')}
+                        <Database size={14} strokeWidth={1.5} />
+                        {t('settings.dataSource')}
                     </a>
-                </Stack>
 
-                {updatedAt && (
-                    <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
-                        {t('settings.lastStopUpdate', { 
-                            date: new Date(updatedAt).toLocaleString(i18n.language, {
-                                day: 'numeric',
-                                month: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) 
-                        })}
-                    </div>
-                )}
-            </Stack>
-        </Stack>
+                    <a
+                        href="https://github.com/joseph5610/departs-app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                    >
+                        <Code size={14} strokeWidth={1.5} />
+                        {t('settings.viewSource')}
+                    </a>
+                </div>
+                <a
+                    href="https://creativecommons.org/licenses/by/4.0/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 py-2 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
+                >
+                    <Scale size={14} strokeWidth={1.5} />
+                    {t('settings.license')}
+                </a>
+            </div>
+
+            {updatedAt && (
+                <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
+                    {t('settings.lastStopUpdate', { 
+                        date: new Date(updatedAt).toLocaleString(i18n.language, {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) 
+                    })}
+                </div>
+            )}
+        </div>
     );
 };
 

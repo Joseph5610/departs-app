@@ -7,9 +7,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { cn } from '@/lib/utils';
-import { Box, Stack } from '@/components/ui/layout';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
 
@@ -32,44 +32,55 @@ export const SettingsModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent aria-describedby={undefined} variant="tinted" data-testid="settings-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+            <DialogContent aria-describedby={undefined} variant="default" data-testid="settings-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('settings.title')}
                     </DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="flex-1 min-h-0 px-6">
-                    <Stack gap={8} className="py-2 pb-8">
+                    <div className="flex flex-col gap-8 py-2 pb-8">
                         {/* Display Toggles & Vehicle Type Filters */}
                         <DisplaySection />
 
                         {/* Language Selection */}
-                        <Stack gap={3}>
+                        <div className="flex flex-col gap-3">
                             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.language')}
                             </h3>
-                            <Box className="grid grid-cols-2 gap-3">
+                            <ToggleGroup
+                                value={[(i18n.resolvedLanguage || i18n.language).split('-')[0]]}
+                                onValueChange={(val: string[]) => {
+                                    if (val && val.length > 0) {
+                                        i18n.changeLanguage(val[0]);
+                                    }
+                                }}
+                                className="grid grid-cols-2 gap-3 bg-transparent p-0"
+                            >
                                 {(['en', 'cs'] as const).map((lang) => (
-                                    <button
+                                    <ToggleGroupItem
                                         key={lang}
-                                        onClick={() => i18n.changeLanguage(lang)}
+                                        value={lang}
+                                        variant="outline"
                                         className={cn(
-                                            "py-3 px-4 rounded-2xl text-sm font-semibold outline-none glassy-tinted",
-                                            (i18n.resolvedLanguage || i18n.language).startsWith(lang)
-                                                ? "ring-1 ring-inset ring-primary/40 text-primary border-primary/20"
-                                                : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                                            "h-auto py-3 px-4 rounded-xl text-sm font-semibold border-white/5",
+                                            "data-[state=on]:ring-1 data-[state=on]:ring-inset data-[state=on]:ring-primary/40 data-[state=on]:text-primary data-[state=on]:border-primary/20 data-[state=on]:bg-primary/5",
+                                            "data-[state=off]:text-muted-foreground data-[state=off]:bg-muted/40 data-[state=off]:backdrop-blur-md"
                                         )}
                                     >
-                                        {t(`settings.language.${lang}`)}
-                                    </button>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇨🇿'}</span>
+                                            <span>{t(`settings.language.${lang}`)}</span>
+                                        </div>
+                                    </ToggleGroupItem>
                                 ))}
-                            </Box>
-                        </Stack>
+                            </ToggleGroup>
+                        </div>
 
 
                         {/* Footer: Clear History, Update Check, External Links */}
                         <SettingsFooter />
-                    </Stack>
+                    </div>
                 </ScrollArea>
             </DialogContent>
         </Dialog>

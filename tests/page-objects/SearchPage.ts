@@ -13,7 +13,7 @@ export class SearchPage extends BasePage {
     }
 
     getStopSearchItem(pattern: RegExp): Locator {
-        return this.page.getByRole('button', { name: pattern }).first();
+        return this.page.getByRole('option', { name: pattern }).first();
     }
 
     async selectStopByRegex(pattern: RegExp) {

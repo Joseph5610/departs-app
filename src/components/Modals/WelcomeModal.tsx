@@ -6,12 +6,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Info, ArrowRight } from 'lucide-react';
+import { MapPin, Bus, ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
 import { useGeolocation } from '../../hooks/features/useGeolocation';
-import { Box, Stack, Surface } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 /**
  * WelcomeModal
@@ -26,7 +26,8 @@ export const WelcomeModal: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         
         // If the user arrives via a deep link to a specific entity, skip the welcome modal
-        const hasDeepLink = params.has('stopId') || params.has('tripId') || params.has('vehicleId');
+        const path = window.location.pathname;
+        const hasDeepLink = params.has('stopId') || params.has('tripId') || params.has('vehicleId') || path.includes('/stop/') || path.includes('/trip/');
         if (hasDeepLink) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
             return false;
@@ -58,55 +59,51 @@ export const WelcomeModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent aria-describedby={undefined} variant="tinted" showCloseButton={false}>
+            <DialogContent aria-describedby={undefined} variant="default" showCloseButton={false} className="h-fit gap-8! p-6!">
                 <DialogHeader>
-                    <DialogTitle className="text-center flex items-center justify-center gap-2">
+                    <DialogTitle className="text-center flex items-center justify-center gap-2 text-2xl">
                         {t('welcome.title')}
-                        <Badge variant="secondary" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary border-primary/20">
+                        <Badge variant="soft" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider">
                             {t('welcome.beta')}
                         </Badge>
                     </DialogTitle>
                 </DialogHeader>
-                <Stack gap={8}>
-                    <Stack align="center" gap={4} className="text-center">
-                        <Box className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden">
+                <div className="flex flex-col gap-8">
+                    <div className="flex flex-col items-center gap-4 text-center mt-2">
+                        <div className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden">
                             <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-3xl" />
-                        </Box>
-                        <Box>
+                        </div>
+                        <div>
                             <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">
                                 {t('welcome.description')}
                             </p>
-                        </Box>
-                    </Stack>
+                        </div>
+                    </div>
 
-                    <Stack gap={4}>
-                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
-                            <Box className="mt-1 text-primary"><Info size={20}  strokeWidth={1.5} /></Box>
-                            <Stack gap={1}>
-                                <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.clickStop.title')}</h3>
-                                <p className="text-muted-foreground text-xs">{t('welcome.steps.clickStop.description')}</p>
-                            </Stack>
-                        </Surface>
+                    <div className="flex flex-col gap-4">
+                        <Alert variant="subtle">
+                            <MapPin size={20} className="text-primary" strokeWidth={1.5} />
+                            <AlertTitle className="font-semibold leading-tight">{t('welcome.steps.clickStop.title')}</AlertTitle>
+                            <AlertDescription className="text-xs leading-snug">{t('welcome.steps.clickStop.description')}</AlertDescription>
+                        </Alert>
 
-                        <Surface variant="tinted" padding="md" className="flex flex-row items-start gap-4">
-                            <Box className="mt-1 text-primary"><Info size={20}  strokeWidth={1.5} /></Box>
-                            <Stack gap={1}>
-                                <h3 className="font-semibold text-sm leading-none">{t('welcome.steps.trackVehicles.title')}</h3>
-                                <p className="text-muted-foreground text-xs">{t('welcome.steps.trackVehicles.description')}</p>
-                            </Stack>
-                        </Surface>
-                    </Stack>
+                        <Alert variant="subtle">
+                            <Bus size={20} className="text-primary" strokeWidth={1.5} />
+                            <AlertTitle className="font-semibold leading-tight">{t('welcome.steps.trackVehicles.title')}</AlertTitle>
+                            <AlertDescription className="text-xs leading-snug">{t('welcome.steps.trackVehicles.description')}</AlertDescription>
+                        </Alert>
+                    </div>
 
                     <Button
-                        size="lg"
+                        size="xl"
                         onClick={handleClose}
                         data-testid="welcome-cta"
-                        className="w-full h-auto py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group"
+                        className="w-full transition-all flex items-center justify-center gap-2 group font-bold"
                     >
                         {t('welcome.cta')}
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"  strokeWidth={1.5} />
                     </Button>
-                </Stack>
+                </div>
             </DialogContent>
         </Dialog>
     );

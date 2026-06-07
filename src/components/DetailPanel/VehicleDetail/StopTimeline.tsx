@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
@@ -37,8 +36,8 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
 
     return (
         <Collapsible open={showPastStops} onOpenChange={setShowPastStops}>
-            <Stack gap={3}>
-                <HStack justify="between" className="px-1">
+            <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center px-1">
                     <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
                     {effectiveSequence !== null && pastStopsCount > 0 && (
                         <CollapsibleTrigger render={
@@ -52,9 +51,9 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                             {showPastStops ? <ChevronUp size={14}  strokeWidth={1.5} /> : <ChevronDown size={14}  strokeWidth={1.5} />}
                         </CollapsibleTrigger>
                     )}
-                </HStack>
-                <Box className="relative pl-6 overflow-hidden!">
-                    <Box className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
+                </div>
+                <div className="relative pl-6 overflow-hidden!">
+                    <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
 
                     {/* Past Stops (Collapsible) */}
                     <CollapsibleContent className="transition-[height] duration-300 ease-in-out data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
@@ -85,8 +84,8 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                             />
                         ))
                     }
-                </Box>
-            </Stack>
+                </div>
+            </div>
         </Collapsible>
     );
 };
@@ -106,15 +105,15 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
     const showZone = !!stop.properties.zone_id;
 
     return (
-        <HStack justify="between" className={cn(
-            "relative py-2.5 transition-opacity",
+        <div className={cn(
+            "flex justify-between items-center relative py-2.5 transition-opacity",
             isPast ? "opacity-40" : "opacity-100"
         )}>
-            <Box className={cn(
+            <div className={cn(
                 "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
                 isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
-            <Stack align="start" gap={0} className="min-w-0 pr-2 flex-1">
+            <div className="flex flex-col items-start min-w-0 pr-2 flex-1">
                 <div className="flex items-center gap-1.5 w-full">
                     <span className={cn(
                         "text-sm truncate min-w-0",
@@ -128,19 +127,19 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                         ))}
                     </div>
                 </div>
-                <HStack gap={2} align="center" className="flex-wrap mt-0.5">
+                <div className="flex gap-2 items-center flex-wrap mt-0.5">
                     {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
                     {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
-                </HStack>
-            </Stack>
-            <Box className="shrink-0 w-8 flex justify-center">
+                </div>
+            </div>
+            <div className="shrink-0 w-8 flex justify-center items-center">
                 {showZone && (
-                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums">
+                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums leading-none">
                         {stop.properties.zone_id}
                     </span>
                 )}
-            </Box>
-            <Stack align="end" gap={0} className="shrink-0 min-w-[64px]">
+            </div>
+            <div className="flex flex-col items-end shrink-0 min-w-[64px]">
                 {(() => {
                     const { realtime_arrival_time, arrival_time } = stop.properties;
                     const realtimeTime = realtime_arrival_time || arrival_time;
@@ -164,7 +163,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                         </>
                     );
                 })()}
-            </Stack>
-        </HStack>
+            </div>
+        </div>
     );
 };

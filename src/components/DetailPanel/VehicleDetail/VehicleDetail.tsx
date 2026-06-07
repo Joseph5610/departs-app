@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import { parseISO } from 'date-fns';
 import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
-import { Stack } from '@/components/ui/layout';
+
 import { VehicleDetailSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
 import { StopTimeline } from './StopTimeline';
@@ -114,7 +114,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const showContent = hasBasicData && !showSkeleton && !isError;
 
     return (
-        <Stack gap={4}>
+        <div className="flex flex-col gap-4">
             {/* Loading State */}
             {showSkeleton && (
                 <VehicleDetailSkeleton />
@@ -137,7 +137,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                     {/* Alerts */}
                     {relevantAlerts.length > 0 && (
-                        <Stack gap={2}>
+                        <div className="flex flex-col gap-2">
                             {relevantAlerts.map((alert, idx) => (
                                 <GenericAlertCard
                                     key={alert.guid || idx}
@@ -151,7 +151,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                     isFuture={alert.isFuture}
                                 />
                             ))}
-                        </Stack>
+                        </div>
                     )}
 
                     {/* Schedule / Stop List */}
@@ -165,7 +165,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     )}
                 </>
             )}
-        </Stack>
+        </div>
     );
 });
 

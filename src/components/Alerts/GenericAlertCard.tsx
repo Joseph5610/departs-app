@@ -2,12 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack } from '@/components/ui/layout';
 import {
     Alert,
     AlertDescription,
     AlertTitle
 } from '@/components/ui/alert';
+import { LineBadge } from '../LineBadge';
+import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 
 interface GenericAlertCardProps {
     id?: string;
@@ -50,7 +51,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden glassy-tinted p-3 sm:p-4 rounded-2xl",
+                "relative transition-all overflow-hidden glassy p-3 sm:p-4 rounded-2xl",
                 isHigh && "bg-destructive/20! border-destructive/50! shadow-[0_0_12px_rgba(239,68,68,0.15)]",
                 isNormal && "bg-amber-500/15! border-amber-500/40! shadow-[0_0_12px_rgba(245,158,11,0.15)]",
                 link && "hover:brightness-125 cursor-pointer group",
@@ -64,24 +65,23 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
                 {showStatus && (isFuture ? (
-                    <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-destructive" />
-                        <span className="text-[8px] font-bold text-destructive/80 uppercase tracking-widest">
+                    <div className="flex gap-1.5 items-center mb-1 w-fit bg-white/5 px-1.5 py-0.5 rounded-md border border-white/5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+                        <span className="text-[8px] font-bold text-amber-500/90 uppercase tracking-widest">
                             {t('alerts.planned')}
                         </span>
-                    </HStack>
+                    </div>
                 ) : isActive ? (
-                    <HStack gap={1} className="mb-0.5">
-                        <Box className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" />
+                    <div className="flex gap-1 items-center mb-0.5">
+                        <div className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" />
                         <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
                             {t('alerts.active')}
                         </span>
-                    </HStack>
+                    </div>
                 ) : null)}
 
                 <span className={cn(
-                    "font-bold text-sm leading-tight transition-colors",
-                    isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground",
+                    "font-bold text-sm leading-tight transition-colors text-foreground/95",
                     link && "group-hover:text-primary"
                 )}>
                     {title}
@@ -96,32 +96,31 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 )}
 
                 {(lines && lines.length > 0) || validFrom ? (
-                    <Stack gap={2}>
+                    <div className="flex flex-col gap-2">
                         {lines && lines.length > 0 && (
-                            <HStack gap={1} className="flex-wrap">
+                            <div className="flex gap-1 flex-wrap">
                                 {lines.map((line, idx) => (
-                                    <span
+                                    <LineBadge
                                         key={`${line.name}-${idx}`}
-                                        className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow-sm ring-1 ring-white/10"
-                                        style={{ backgroundColor: line.route_color }}
-                                    >
-                                        {line.name}
-                                    </span>
+                                        name={line.name}
+                                        routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
+                                        size="md"
+                                    />
                                 ))}
-                            </HStack>
+                            </div>
                         )}
 
                         {validFrom && (
-                            <Box className="text-[10px] font-semibold text-foreground/60 mt-0.5">
+                            <div className="text-[10px] font-semibold text-foreground/60 mt-0.5">
                                 {validTo ? `${validFrom} – ${validTo}` : t('alerts.validFrom', { date: validFrom })}
-                            </Box>
+                            </div>
                         )}
-                    </Stack>
+                    </div>
                 ) : null}
             </AlertDescription>
 
             {link && (
-                <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
+                <div className="absolute top-3 right-3 p-1.5 rounded-full bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
                     <ExternalLink size={14}  strokeWidth={1.5} />
                 </div>
             )}

@@ -10,7 +10,7 @@ import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
 import { useNavigate } from '../../../hooks/features/useNavigate';
 import { useIsMobile } from '../../../hooks/useIsMobile';
-import { HStack } from '@/components/ui/layout';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -104,15 +104,15 @@ export const DepartureBoardHeader = React.memo(() => {
     return (
         <div className="px-6 pb-0 shrink-0 flex flex-col gap-2">
             {/* Row 1: Distance/Delay (Left) + Actions (Right) */}
-            <HStack className="w-full h-7" justify="between" align="center">
-                <HStack className="gap-2 shrink-0" align="center">
-                    <div className="flex items-center h-7 rounded-full bg-white/10 border border-white/5 shadow-sm shrink-0 overflow-hidden">
+            <div className="flex w-full h-7 justify-between items-center">
+                <div className="flex gap-2 shrink-0 items-center">
+                    <div className="flex items-center h-7 rounded-full bg-muted/50 border shadow-sm shrink-0 overflow-hidden">
                         {/* Distance & Walking Time segment */}
                         <div 
-                            className="flex items-center h-full px-3 hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer"
+                            className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer"
                             onClick={handleNavigate}
                         >
-                             <MapPin size={12} className="text-muted-foreground/80 mr-1.5"  strokeWidth={1.5} />
+                             <MapPin size={12} className="text-muted-foreground/80 mr-1"  strokeWidth={1.5} />
                              <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap flex items-center">
                                 {stopDistanceInfo?.isReasonableWalkingDistance ? (
                                     <>
@@ -130,22 +130,21 @@ export const DepartureBoardHeader = React.memo(() => {
                         {/* Delay Statistics segment */}
                         {delayStats && delayStats.sampleSize >= 2 && (
                             <>
-                                <div className="w-px h-3 bg-white/10 shrink-0" />
+                                <div className="w-px h-3 bg-border shrink-0" />
                                 <Popover>
-                                    <PopoverTrigger render={<button type="button" className="flex items-center h-full px-3 hover:bg-white/5 transition-colors cursor-pointer active:scale-95" />}>
+                                    <PopoverTrigger render={<Button variant="ghost" className="h-7 px-3 gap-1 rounded-md transition-colors hover:bg-muted active:scale-95" />}>
                                         <Activity size={12} className={cn(
-                                            "mr-1.5",
                                             delayStats.trend === 'worsening' ? "text-red-400" :
                                             delayStats.trend === 'improving' ? "text-emerald-400" :
                                             "text-amber-400"
-                                        )}  strokeWidth={1.5} />
+                                        )} strokeWidth={1.5} />
                                         <span className="font-bold text-foreground text-[11px] tracking-tight opacity-90 whitespace-nowrap">
                                             {delayStats.averageDelayMin === 0 
                                                 ? t('map.departures.onTime') 
                                                 : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${delayStats.averageDelayMin} min`}
                                         </span>
                                     </PopoverTrigger>
-                                    <PopoverContent side="bottom" align="center" className="w-auto border-white/10 bg-[#161618]/95 backdrop-blur-xl shadow-2xl">
+                                    <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/95 backdrop-blur-xl shadow-2xl">
                                         <span className="text-[13px] font-medium text-foreground/90">
                                             {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
                                         </span>
@@ -154,19 +153,21 @@ export const DepartureBoardHeader = React.memo(() => {
                             </>
                         )}
                     </div>
-                </HStack>
+                </div>
 
-                <HStack gap={1} className="shrink-0 items-center pr-1">
+                <div className="flex gap-1 shrink-0 items-center pr-1">
                     {/* Sort Action */}
                     <Tooltip>
                         <TooltipTrigger render={
-                            <button
-                                onClick={() => setDepartureSort(departureSort === 'line' ? 'departure' : 'line')}
-                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
-                            >
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setDepartureSort(departureSort === 'line' ? 'departure' : 'line')}
+                                    className="h-8 w-8 text-muted-foreground"
+                                >
                                 {/* Show the ACTION you will take: if sorted by line, show Clock. If sorted by departure, show A-Z. */}
-                                {departureSort === 'line' ? <Clock size={16}  strokeWidth={1.5} /> : <ArrowDownAz size={16}  strokeWidth={1.5} />}
-                            </button>
+                                {departureSort === 'line' ? <Clock size={16} strokeWidth={1.5} /> : <ArrowDownAz size={16} strokeWidth={1.5} />}
+                            </Button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
                             {departureSort === 'line' ? t('map.departures.sortByDeparture') : t('map.departures.sortByLine')}
@@ -177,14 +178,14 @@ export const DepartureBoardHeader = React.memo(() => {
                     {!isMobile && (
                         <Tooltip>
                             <TooltipTrigger render={
-                                <a 
-                                    href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    render={<a href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" />}
+                                    className="h-8 w-8 text-muted-foreground"
                                 >
-                                    <ExternalLink size={16}  strokeWidth={1.5} />
-                                </a>
+                                    <ExternalLink size={16} strokeWidth={1.5} />
+                                </Button>
                             } />
                             <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
                                 {t('map.departures.officialBoard')}
@@ -195,7 +196,9 @@ export const DepartureBoardHeader = React.memo(() => {
                     {/* Favorite */}
                     <Tooltip>
                         <TooltipTrigger render={
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 data-testid="favorite-btn"
                                 onClick={() => {
                                     if (selectedStop) {
@@ -207,12 +210,12 @@ export const DepartureBoardHeader = React.memo(() => {
                                     }
                                 }}
                                 className={cn(
-                                    "h-7 w-7 flex items-center justify-center rounded-md transition-all text-muted-foreground opacity-40 hover:opacity-100 hover:text-amber-500",
-                                    isFavorite && "text-amber-500 opacity-100"
+                                    "h-8 w-8 text-muted-foreground",
+                                    isFavorite && "text-amber-500 hover:text-amber-400"
                                 )}
                             >
-                                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'}  strokeWidth={1.5} />
-                            </button>
+                                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
+                            </Button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
                             {isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
@@ -222,20 +225,22 @@ export const DepartureBoardHeader = React.memo(() => {
                     {/* Share */}
                     <Tooltip>
                         <TooltipTrigger render={
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={handleShare}
                                 aria-label={t('common.share')}
-                                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-muted-foreground opacity-40 hover:opacity-100 hover:text-foreground"
+                                className="h-8 w-8 text-muted-foreground"
                             >
-                                <Share2 size={16}  strokeWidth={1.5} />
-                            </button>
+                                <Share2 size={16} strokeWidth={1.5} />
+                            </Button>
                         } />
                         <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
                             {t('common.share')}
                         </TooltipContent>
                     </Tooltip>
-                </HStack>
-            </HStack>
+                </div>
+            </div>
 
             {/* Row 2: Line badges */}
             {selectedStop?.lines && selectedStop.lines.length > 0 && (
@@ -246,7 +251,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
                     }}
                 >
-                    <HStack gap={1.5} justify="start">
+                    <div className="flex gap-1.5 justify-start">
                         {uniqueLines.map((line) => {
                             const name = String(line.name || '');
                             if (!name) return null;
@@ -260,9 +265,9 @@ export const DepartureBoardHeader = React.memo(() => {
                                     key={name}
                                     onClick={() => toggleLineFilter(name)}
                                     className={cn(
-                                        "transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
-                                        isDimmed ? "opacity-30 scale-95" : "opacity-100",
-                                        isActive && "ring-2 ring-white z-10 shadow-lg rounded-[4px]"
+                                        "flex transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
+                                        isDimmed ? "opacity-30" : "opacity-100",
+                                        isActive && "ring-[2.5px] ring-white z-10 shadow-lg rounded-[4px]"
                                     )}
                                 >
                                     {isMetro ? (
@@ -274,7 +279,7 @@ export const DepartureBoardHeader = React.memo(() => {
                             );
                         })}
                         <div className="shrink-0 w-8 h-1" />
-                    </HStack>
+                    </div>
                 </div>
             )}
         </div>

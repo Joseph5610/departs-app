@@ -6,10 +6,9 @@ import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
-import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { cn } from '@/lib/utils';
+import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
-import { Overlay, Stack } from '@/components/ui/layout';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import { CitySwitcher } from './CitySwitcher';
 
@@ -21,8 +20,7 @@ interface MapControlsProps {
 /**
  * MapControls Component
  *
- * Re-architected with semantic components to remove redundant positioning classes.
- * Applied glassy theme with increased transparency for better backdrop-blur visibility.
+ * Unified control palette using Shadcn Card and standard Buttons.
  */
 export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }: MapControlsProps) => {
     const { t } = useTranslation();
@@ -89,8 +87,8 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     }, [mapRef, mapLoaded]);
 
     return (
-        <Overlay position="top-right" className="safe-top safe-right p-4 md:p-0 md:top-5 md:right-5 z-40" data-testid="map-controls">
-            <Stack gap={2}>
+        <div className="fixed top-0 right-0 safe-top safe-right p-4 md:p-0 md:top-5 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
+            <div className="flex flex-col gap-2 items-end pointer-events-auto">
                 <ControlButton
                     onClick={(e) => onLocate(e)}
                     title={t('map.controls.myLocation')}
@@ -102,7 +100,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                             "transition-all",
                             isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
                         )}
-                     strokeWidth={1.5} />
+                     />
                 </ControlButton>
 
                 <ControlButton
@@ -110,7 +108,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                     title={t('map.controls.settings')}
                     testId="map-settings-btn"
                 >
-                    <Settings size={20} className="transition-transform group-hover:rotate-45"  strokeWidth={1.5} />
+                    <Settings size={20} className="transition-transform group-hover:rotate-45" />
                 </ControlButton>
 
                 <ControlButton
@@ -121,7 +119,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                 >
                     <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform group-hover:scale-110")} />
                     {incidentsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#151515] min-w-[20px] text-center">
+                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm">
                             {incidentsCount}
                         </span>
                     )}
@@ -138,46 +136,48 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                         className={cn(
                             isFavoritesActive ? "fill-primary text-primary" : "transition-transform group-hover:scale-110"
                         )}
-                     strokeWidth={1.5} />
+                     />
                 </ControlButton>
 
-                <ButtonGroup orientation="vertical" className="mt-2 rounded-2xl overflow-hidden glassy-tinted">
+                <ButtonGroup orientation="vertical" className="mt-2 glassy rounded-full! overflow-hidden">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomIn}
-                        className="h-11 w-11 rounded-none border-none!"
+                        className="rounded-none shrink-0"
                         title={t('map.controls.zoomIn')}
                         aria-label={t('map.controls.zoomIn')}
                     >
-                        <Plus size={20}  strokeWidth={1.5} />
+                        <Plus size={20} />
                     </Button>
-                    <ButtonGroupSeparator orientation="horizontal" className="mx-2 bg-white/10" />
+                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onZoomOut}
-                        className="h-11 w-11 rounded-none border-none!"
+                        className="rounded-none shrink-0"
                         title={t('map.controls.zoomOut')}
                         aria-label={t('map.controls.zoomOut')}
                     >
-                        <Minus size={20}  strokeWidth={1.5} />
+                        <Minus size={20} />
                     </Button>
                 </ButtonGroup>
 
-                <CitySwitcher />
+                <div className="mt-2">
+                    <CitySwitcher />
+                </div>
 
                 {showCompass && (
                     <ControlButton
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
-                        className=""
+                        className="mt-2"
                     >
-                        <Compass size={20} className="transition-transform group-hover:rotate-12"  strokeWidth={1.5} />
+                        <Compass size={20} className="transition-transform group-hover:rotate-12" />
                     </ControlButton>
                 )}
-            </Stack>
-        </Overlay>
+            </div>
+        </div>
     );
 });
 
@@ -188,7 +188,10 @@ const ControlButton = ({ children, onClick, title, testId, className }: { childr
         onClick={onClick}
         title={title}
         aria-label={title}
-        className={cn("h-11 w-11", className)}
+        className={cn(
+            "shrink-0",
+            className
+        )}
         data-testid={testId}
     >
         {children}

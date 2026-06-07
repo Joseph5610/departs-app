@@ -1,6 +1,6 @@
 import type { Map } from 'maplibre-gl';
 
-export const addArrowIcon = (map: Map) => {
+const addArrowIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -23,7 +23,7 @@ export const addArrowIcon = (map: Map) => {
     }
 };
 
-export const addTrainIcon = (map: Map) => {
+const addTrainIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -83,7 +83,7 @@ export const addTrainIcon = (map: Map) => {
     }
 };
 
-export const addStarIcon = (map: Map) => {
+const addStarIcon = (map: Map) => {
     const size = 64;
     const canvas = document.createElement('canvas');
     canvas.width = size;

@@ -130,12 +130,13 @@
     "departures": {
       "upcoming": "Nejbližší odjezdy",
       "noUpcoming": "Nebyly nalezeny žádné nejbližší odjezdy.",
+      "noUpcomingDescription": "Zkuste to později nebo se podívejte na oficiální jízdní řád.",
       "noUpcomingForLine": "Pro linku {{line}} nebyly nalezeny žádné odjezdy.",
       "shareTitle": "Zastávka: {{name}}",
       "shareText": "Podívej se na odjezdy ze zastávky {{name}} na departs.app",
       "metroNight": {
         "title": "Metro v noci nejezdí",
-        "description": "Využijte noční tramvaje a autobusy, které zajišťujú dopravu až do ranních hodin."
+        "description": "Využijte noční tramvaje a autobusy, které zajišťují dopravu až do ranních hodin."
       },
       "delay": "+{{minutes}}min zpoždění",
       "moreConnections_one": "{{count}} další spoj",

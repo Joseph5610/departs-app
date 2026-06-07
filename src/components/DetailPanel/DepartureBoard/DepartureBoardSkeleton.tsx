@@ -1,6 +1,5 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Stack, HStack } from '@/components/ui/layout';
 
 /**
  * DepartureBoardSkeleton
@@ -8,18 +7,18 @@ import { Stack, HStack } from '@/components/ui/layout';
  */
 export const DepartureBoardSkeleton: React.FC = () => {
     return (
-        <Stack gap={3} className="animate-in fade-in duration-500">
+        <div className="flex flex-col gap-3 animate-in fade-in duration-500">
             {[1].map((group) => (
                 <div 
                     key={group} 
                     className="flex flex-col rounded-xl overflow-hidden border border-white/5 bg-white/1"
                 >
                     {/* Primary Group Header Skeleton */}
-                    <HStack gap={2} className="px-3 py-2 bg-white/4 items-center border-b border-white/5">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white/4 border-b border-white/5">
                         <Skeleton className="h-5 w-8 rounded-md" />
                         <div className="w-3 h-3 bg-white/5 rounded-full" />
                         <Skeleton className="h-4 w-32" />
-                    </HStack>
+                    </div>
                     
                     {/* First Sub-group rows */}
                     <div className="flex flex-col border-b border-white/5">
@@ -37,11 +36,11 @@ export const DepartureBoardSkeleton: React.FC = () => {
                     </div>
 
                     {/* Secondary Variant Header Skeleton */}
-                    <HStack gap={2} className="px-3 py-1.5 bg-white/5 items-center border-t border-white/10 shadow-[0_-2px_4px_rgba(0,0,0,0.2)]">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border-t border-white/10 shadow-[0_-2px_4px_rgba(0,0,0,0.2)]">
                         <div className="w-[2px] h-3 bg-white/10 rounded-full shrink-0" />
                         <div className="w-2.5 h-2.5 bg-white/5 rounded-full ml-1" />
                         <Skeleton className="h-3 w-24 opacity-50" />
-                    </HStack>
+                    </div>
 
                     {/* Second Sub-group rows */}
                     <div className="flex flex-col">
@@ -58,7 +57,7 @@ export const DepartureBoardSkeleton: React.FC = () => {
                     </div>
                 </div>
             ))}
-        </Stack>
+        </div>
     );
 };
 

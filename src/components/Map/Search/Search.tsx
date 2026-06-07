@@ -15,7 +15,6 @@ import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { Overlay, Box } from '@/components/ui/layout';
 import { Button } from '@/components/ui/button';
 import { SearchDropdown } from './SearchDropdown';
 import { getLineMetadataMap } from '@/utils/transitUtils';
@@ -205,15 +204,15 @@ export const Search: React.FC = React.memo(() => {
     };
 
     return (
-        <Overlay
-            position="top-left"
+        <div
             className={cn(
-                "w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-2000 transition-all duration-300 ease-in-out",
+                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-50 transition-all duration-300 ease-in-out",
                 isSidebarOpen && "md:left-(--visible-center-x) md:w-[360px]"
             )}
             data-vaul-no-drag
+            onClick={() => inputRef.current?.focus()}
         >
-            <Box ref={containerRef}>
+            <div ref={containerRef}>
                 <div className="relative group">
                     <Input
                         ref={inputRef}
@@ -239,7 +238,7 @@ export const Search: React.FC = React.memo(() => {
                         onFocus={() => setIsOpen(true)}
                         placeholder={t('search.placeholder')}
                         className={cn(
-                            "h-11 pl-12 pr-4 rounded-2xl glassy-tinted transition-all placeholder:text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20",
+                            "h-11 pl-12 pr-4 rounded-2xl glassy transition-all text-[15px] truncate placeholder:text-[14px] placeholder:text-muted-foreground/50 focus-visible:border-primary/50 focus-visible:ring-primary/20",
                             activeFilter && "border-primary/50 ring-1 ring-primary/20"
                         )}
                         data-testid="search-input"
@@ -258,7 +257,7 @@ export const Search: React.FC = React.memo(() => {
                                     clearSearch();
                                     inputRef.current?.focus();
                                 }}
-                                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+                                className="h-9 w-9 text-muted-foreground"
                                 aria-label={t('search.clearFilter')}
                             >
                                 <X size={20} strokeWidth={1.5}  />
@@ -284,8 +283,8 @@ export const Search: React.FC = React.memo(() => {
                         lineMetadataMap={lineMetadataMap}
                     />
                 )}
-            </Box>
-        </Overlay>
+            </div>
+        </div>
     );
 });
 

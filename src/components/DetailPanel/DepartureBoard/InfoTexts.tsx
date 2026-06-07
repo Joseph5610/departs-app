@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stack } from '@/components/ui/layout';
 import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import type { SelectedStop } from '../../../types/transit';
@@ -32,7 +31,7 @@ export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
     if (relevantInfotexts.length === 0) return null;
 
     return (
-        <Stack gap={2}>
+        <div className="flex flex-col gap-2">
             {relevantInfotexts.map(info => (
                 <GenericAlertCard
                     key={info.id}
@@ -43,7 +42,7 @@ export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
                     isActive={true}
                 />
             ))}
-        </Stack>
+        </div>
     );
 };
 

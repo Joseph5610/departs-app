@@ -12,7 +12,6 @@ import {
     type DialogRootChangeEventDetails
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { HStack } from '@/components/ui/layout';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,21 +41,21 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="shrink-0 -ml-2 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+            className="shrink-0 -ml-2 h-9 w-9 text-muted-foreground"
         >
             <ArrowLeft size={20}  strokeWidth={1.5} />
         </Button>
     );
 
     const platformBadge = platformCode && (
-        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 border border-white/10 text-foreground text-[13px] font-bold tabular-nums mr-1.5">
+        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted/50 border text-foreground text-[13px] font-bold tabular-nums mr-1.5">
             {platformCode}
         </span>
     );
 
     const headerContent = (
-        <HStack justify="between" className="w-full items-center pt-2">
-            <HStack className="gap-1 min-w-0 flex-1 items-center">
+        <div className="flex w-full items-center justify-between pt-2">
+            <div className="flex gap-1 min-w-0 flex-1 items-center">
                 {backButton}
                 {platformBadge}
                 {isMobile ? (
@@ -68,18 +67,18 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         {title || ''}
                     </SheetTitle>
                 )}
-            </HStack>
+            </div>
             <Button
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
                 aria-label="Close"
                 data-testid="detail-panel-close"
-                className="shrink-0 rounded-full h-9 w-9 p-0 text-muted-foreground opacity-60 hover:opacity-100 hover:text-foreground"
+                className="shrink-0 h-9 w-9 text-muted-foreground"
             >
                 <X size={20} strokeWidth={1.5}  />
             </Button>
-        </HStack>
+        </div>
     );
 
     const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
@@ -110,9 +109,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 noBodyStyles={true}
             >
                 <DrawerContent
-                    className="max-h-[96%] h-full flex flex-col pointer-events-auto glassy-tinted outline-none rounded-t-[32px]!"
+                    className="max-h-[96%] h-full flex flex-col pointer-events-none glassy outline-none rounded-t-[32px]!"
                     hideOverlay={true}
                     aria-describedby={undefined}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                     {/* 
                         Draggable Header Area:
@@ -120,9 +120,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         The header (station name, subheader) is naturally part of the drag area.
                         No DrawerHandle component needed — just a visual bar.
                     */}
-                    <div className="shrink-0 flex flex-col">
+                    <div className="shrink-0 flex flex-col pointer-events-auto">
                         {/* Visual Handle Bar (purely cosmetic, not a DrawerHandle) */}
-                        <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-white/20 mb-2" />
+                        <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-border mb-2" />
 
                         <div className="mt-2 px-6 pb-2">
                             {headerContent}
@@ -170,8 +170,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 side="left"
                 showCloseButton={false}
                 hideOverlay={true}
-                variant="tinted"
-                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none border border-border rounded-3xl"
+                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none glassy rounded-3xl"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

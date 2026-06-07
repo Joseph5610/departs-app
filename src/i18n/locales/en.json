@@ -129,6 +129,7 @@
     "departures": {
       "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
+      "noUpcomingDescription": "Check back later or view the official schedule.",
       "noUpcomingForLine": "No upcoming departures for line {{line}}.",
       "shareTitle": "Stop: {{name}}",
       "shareText": "Check out departures for {{name}} on departs.app",

@@ -127,7 +127,8 @@ export const useGeolocation = () => {
         if (mapLoaded && userLocation && mapRef.current) {
             const map = mapRef.current.getMap();
             const p = new URLSearchParams(window.location.search);
-            const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId');
+            const path = window.location.pathname;
+            const hasExplicitLocation = p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId') || path.includes('/stop/') || path.includes('/trip/');
 
             if (!hasExplicitLocation && !sessionStorage.getItem('initial_geo_focus')) {
                 map.jumpTo({ center: userLocation, zoom: MAP_VEHICLE_SELECT_ZOOM });

@@ -9,7 +9,6 @@ import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
 import { navigate } from 'wouter/use-browser-location';
-import { Stack } from '@/components/ui/layout';
 import type { AppError } from '@/types/error';
 
 
@@ -45,7 +44,7 @@ export const DetailPanelContent: React.FC = memo(() => {
     // Auto-close panel and show error toast if vehicle API fails
     useEffect(() => {
         if (selectedVehicle && isVehicleError && !loadingDetail && !vehicleDetail) {
-            toast.error(t('errors.vehicleNotFound', 'Spoj sa nenašiel alebo dáta už nie sú aktuálne.'));
+            toast.error(t('toasts.vehicleNotFound'));
             navigate('/');
         }
     }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t]);
@@ -65,7 +64,7 @@ export const DetailPanelContent: React.FC = memo(() => {
     }, [stopId, clearLineFilter]);
 
     return (
-        <Stack gap={0} className="pt-0">
+        <div className="flex flex-col gap-0 pt-0">
             <VehicleDetail
                 selectedVehicle={selectedVehicle}
                 vehicleDetail={vehicleDetail || null}
@@ -89,7 +88,7 @@ export const DetailPanelContent: React.FC = memo(() => {
                     }}
                 />
             )}
-        </Stack>
+        </div>
     );
 });
 

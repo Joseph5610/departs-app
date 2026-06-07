@@ -7,6 +7,8 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check } from 'lucide-react';
+import { ItemGroup, Item, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
 import { cn } from '@/lib/utils';
 import { navigate } from 'wouter/use-browser-location';
 
@@ -69,23 +71,30 @@ export const CitySwitcher: React.FC = () => {
                     <DialogTitle>{t('map.controls.switchCity', 'Vyberte mesto')}</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] mt-4">
-                    <div className="flex flex-col gap-2">
+                    <ItemGroup className="gap-2">
                         {cities.map(city => (
-                            <Button
+                            <Item
                                 key={city.slug}
-                                variant={selectedCity === city.slug ? "default" : "outline"}
+                                variant={selectedCity === city.slug ? "outline" : "default"}
                                 className={cn(
-                                    "justify-start text-left h-auto py-3 px-4",
-                                    selectedCity === city.slug && "border-primary"
+                                    "cursor-pointer transition-colors border",
+                                    selectedCity === city.slug 
+                                        ? "border-primary bg-primary/10 hover:bg-primary/20" 
+                                        : "border-transparent hover:bg-white/5 active:bg-white/10"
                                 )}
-                                onClick={() => handleSelectCity(city)}
+                                render={<button onClick={() => handleSelectCity(city)} />}
                             >
-                                <div className="flex flex-col gap-1">
-                                    <span className="font-semibold text-base">{city.name}</span>
-                                </div>
-                            </Button>
+                                <ItemContent>
+                                    <ItemTitle className="text-base">{city.name}</ItemTitle>
+                                </ItemContent>
+                                {selectedCity === city.slug && (
+                                    <ItemActions>
+                                        <Check size={18} className="text-primary" strokeWidth={2} />
+                                    </ItemActions>
+                                )}
+                            </Item>
                         ))}
-                    </div>
+                    </ItemGroup>
                 </ScrollArea>
             </DialogContent>
         </Dialog>

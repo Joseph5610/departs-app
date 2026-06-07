@@ -64,7 +64,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run build && npx wrangler pages dev dist --binding FLAGS=mock',
     url: 'http://localhost:8788',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

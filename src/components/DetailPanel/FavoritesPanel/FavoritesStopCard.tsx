@@ -11,6 +11,8 @@ import { cn } from '../../../lib/utils';
 import { Countdown } from '../DepartureBoard/Countdown';
 import { LineBadge } from '../../LineBadge';
 import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card';
 import {
     WALKING_SPEED,
     AT_STOP_THRESHOLD_METERS,
@@ -124,21 +126,20 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     };
 
     return (
-        <div 
+        <Card 
             onClick={handleCardClick}
+            variant="subtle"
             className={cn(
-                "w-full flex flex-col p-4 rounded-xl text-left transition-all cursor-pointer relative",
-                "bg-white/4 border border-white/5 shadow-sm hover:bg-white/8 active:bg-white/12",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                "w-full cursor-pointer transition-colors relative group/favcard",
+                "hover:bg-white/5 active:bg-white/10",
+                "focus-visible:outline-none p-0 gap-0"
             )}
         >
             {/* Header Area */}
-            <div className="flex justify-between items-start gap-2 mb-1">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 border-b border-white/5 p-3 px-4">
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[15px] font-bold text-foreground leading-tight truncate min-w-0">
-                            {stop_name}
-                        </span>
+                    <CardTitle className="flex items-center gap-1.5 flex-wrap text-[15px] leading-tight truncate min-w-0">
+                        <span className="truncate">{stop_name}</span>
                         {platform_code && (
                             <Badge 
                                 variant="outline"
@@ -147,11 +148,11 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                 {platform_code}
                             </Badge>
                         )}
-                    </div>
+                    </CardTitle>
                     {/* Distance / Walking Time */}
                     {stopDistanceInfo && (
                         <div className={cn(
-                            "text-[11px] font-medium mt-0.5",
+                            "text-[11px] font-medium mt-1",
                             stopDistanceInfo.isAtStop ? "text-emerald-400 font-semibold" : "text-muted-foreground/60"
                         )}>
                             {distanceLabel}
@@ -160,20 +161,22 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                 </div>
 
                 {/* Unpin Button */}
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handleUnpin}
                     title={t('map.departures.removeFromFavorites')}
-                    className="p-1.5 -mr-1 rounded-lg hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-all duration-150 shrink-0 outline-none group"
+                    className="h-8 w-8 hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-all duration-150 shrink-0 group"
                     aria-label={t('map.departures.removeFromFavorites')}
                 >
-                    <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110"  />
-                </button>
-            </div>
+                    <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110" />
+                </Button>
+            </CardHeader>
 
             {/* Departures Area */}
-            <div className="mt-3 border-t border-white/5 pt-2">
+            <CardContent className="p-3 px-4">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground/40 text-xs">
+                    <div className="flex items-center justify-center py-2 gap-2 text-muted-foreground/40 text-xs">
                         <Loader2 size={14} className="animate-spin text-primary"  strokeWidth={1.5} />
                         <span>{t('common.loading')}</span>
                     </div>
@@ -193,7 +196,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                             return (
                                 <div 
                                     key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx}
-                                    className="flex items-center justify-between gap-3 text-xs py-1"
+                                    className="flex items-center justify-between gap-3 text-xs py-0.5"
                                 >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                         {/* Line badge */}
@@ -244,8 +247,8 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                         })}
                     </div>
                 )}
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 };
 

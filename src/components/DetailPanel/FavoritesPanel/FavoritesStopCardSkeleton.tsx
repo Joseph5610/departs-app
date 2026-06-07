@@ -1,30 +1,31 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export const FavoritesStopCardSkeleton: React.FC = () => {
     return (
-        <div className="w-full flex flex-col p-4 rounded-xl bg-white/4 border border-white/5 shadow-sm relative animate-in fade-in duration-500">
+        <Card variant="subtle" className="w-full relative animate-in fade-in duration-500">
             {/* Header Area */}
-            <div className="flex justify-between items-start gap-2 mb-1">
+            <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 border-b border-white/5 pb-3">
                 <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-                    <div className="flex items-center gap-1.5">
+                    <CardTitle className="flex items-center gap-1.5">
                         {/* Stop name skeleton */}
                         <Skeleton className="h-5 w-32 rounded-md" />
                         {/* Platform code skeleton */}
                         <Skeleton className="w-5 h-5 rounded-full shrink-0" />
-                    </div>
+                    </CardTitle>
                     {/* Distance / Walk time skeleton */}
                     <Skeleton className="h-3.5 w-24 rounded-md" />
                 </div>
 
                 {/* Star icon skeleton */}
-                <Skeleton className="w-6 h-6 rounded-lg shrink-0" />
-            </div>
+                <Skeleton className="w-6 h-6 rounded-lg shrink-0 -mr-2 -mt-1" />
+            </CardHeader>
 
             {/* Departures Area */}
-            <div className="mt-3 border-t border-white/5 pt-2 flex flex-col gap-2">
+            <CardContent className="pt-3 flex flex-col gap-2">
                 {/* Departure row 1 */}
-                <div className="flex items-center justify-between gap-3 py-1">
+                <div className="flex items-center justify-between gap-3 py-0.5">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         {/* Line badge skeleton */}
                         <Skeleton className="h-5 w-8 rounded-md shrink-0" />
@@ -38,7 +39,7 @@ export const FavoritesStopCardSkeleton: React.FC = () => {
                 </div>
 
                 {/* Departure row 2 */}
-                <div className="flex items-center justify-between gap-3 py-1">
+                <div className="flex items-center justify-between gap-3 py-0.5">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         {/* Line badge skeleton */}
                         <Skeleton className="h-5 w-8 rounded-md shrink-0" />
@@ -50,8 +51,8 @@ export const FavoritesStopCardSkeleton: React.FC = () => {
                     {/* Time countdown skeleton */}
                     <Skeleton className="h-4 w-10 rounded-md shrink-0" />
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 };
 

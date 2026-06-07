@@ -7,7 +7,7 @@ import { useStops } from '../../../hooks/data/useStops';
 import { FavoritesStopCard } from './FavoritesStopCard';
 import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
 import { Star } from 'lucide-react';
-import { Stack } from '@/components/ui/layout';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '../../ui/empty';
 import { apiFetch } from '../../../lib/api-client';
 import { TRANSIT_REFRESH_MS } from '../../../config/constants';
 import type { StopFeature } from '../../../types/stops';
@@ -88,36 +88,37 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
 
     if (isLoading && favoriteStops.length > 0) {
         return (
-            <Stack gap={3} className="pt-2">
+            <div className="flex flex-col gap-3 pt-2">
                 {Array.from({ length: favoriteStops.length }).map((_, idx) => (
                     <FavoritesStopCardSkeleton key={idx} />
                 ))}
-            </Stack>
+            </div>
         );
     }
 
     if (favoriteStopFeatures.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center text-center py-16 px-4">
-                <div className="relative mb-6">
-                    {/* Glowing backdrop circle */}
-                    <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl transform scale-150" />
-                    <div className="relative w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground/30 shadow-inner">
-                        <Star size={24} className="text-muted-foreground/40 stroke-[1.5]"  strokeWidth={1.5} />
-                    </div>
-                </div>
-                <h3 className="text-base font-bold text-foreground mb-1.5">
-                    {t('favorites.empty')}
-                </h3>
-                <p className="text-[12.5px] text-muted-foreground/60 leading-relaxed max-w-[240px]">
-                    {t('favorites.emptySub')}
-                </p>
-            </div>
+            <Empty className="py-16 border-none animate-in fade-in duration-500">
+                <EmptyHeader>
+                    <EmptyMedia
+                        variant="icon"
+                        className="size-14 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-[0_0_20px_rgba(var(--color-primary),0.1)] [&_svg:not([class*='size-'])]:size-7"
+                    >
+                        <Star strokeWidth={1.5} />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-base font-bold text-foreground/90">
+                        {t('favorites.empty')}
+                    </EmptyTitle>
+                    <EmptyDescription className="text-[13px] max-w-[220px]">
+                        {t('favorites.emptySub')}
+                    </EmptyDescription>
+                </EmptyHeader>
+            </Empty>
         );
     }
 
     return (
-        <Stack gap={3} className="pt-2">
+        <div className="flex flex-col gap-3 pt-2">
             <AnimatePresence mode="popLayout" initial={false}>
                 {favoriteStopFeatures.map((feature) => {
                     const stopId = feature.properties.stop_id;
@@ -141,7 +142,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
                     );
                 })}
             </AnimatePresence>
-        </Stack>
+        </div>
     );
 };
 

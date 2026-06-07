@@ -15,7 +15,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Stack, Box, Surface, HStack } from '@/components/ui/layout';
 import { GroupedVirtuoso } from 'react-virtuoso';
 
 // Helper to determine the primary transport mode of an alert
@@ -125,17 +124,17 @@ export const AlertsModal: React.FC = () => {
 
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
-            <DialogContent aria-describedby={undefined} variant="tinted" data-testid="alerts-modal-content" className="flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] p-0 overflow-hidden gap-0">
+            <DialogContent aria-describedby={undefined} variant="default" data-testid="alerts-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('alerts.title')}
                     </DialogTitle>
                 </DialogHeader>
                 
-                <Box className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 flex flex-col min-h-0">
                     {/* Header Section */}
-                    <Surface variant="ghost" padding="none" className="pt-1 pb-3 px-6 shrink-0 rounded-none border-b border-white/5">
-                        <Stack gap={3}>
+                    <div className="pt-1 pb-3 px-6 shrink-0 rounded-none border-b border-white/5 bg-transparent">
+                        <div className="flex flex-col gap-3">
                             <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as 'all' | 'incident' | 'exclusion')}>
                                 <TabsList variant="pill" className="w-full grid grid-cols-3">
                                     <TabsTrigger value="all">{t('alerts.all') || 'All'}</TabsTrigger>
@@ -144,13 +143,13 @@ export const AlertsModal: React.FC = () => {
                                 </TabsList>
                             </Tabs>
 
-                            <Box className="relative group">
+                            <div className="relative group">
                                 <Input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('search.placeholder')}
-                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border-2 border-white/10 bg-muted/40"
+                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border border-white/5 bg-black/40"
                                 />
                                 <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16}  strokeWidth={1.5} />
                                 {searchQuery && (
@@ -163,16 +162,16 @@ export const AlertsModal: React.FC = () => {
                                         <X size={16} strokeWidth={1.5}  />
                                     </Button>
                                 )}
-                            </Box>
-                        </Stack>
-                    </Surface>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Virtualized List */}
-                    <Box className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0">
                         {items.length === 0 && !loadingRSS ? (
-                            <Stack justify="center" align="center" className="flex-1 py-12 text-muted-foreground text-sm h-full">
+                            <div className="flex justify-center items-center flex-1 py-12 text-muted-foreground text-sm h-full">
                                 <p>{t('alerts.noAlerts')}</p>
-                            </Stack>
+                            </div>
                         ) : (
                             <GroupedVirtuoso
                                 groupCounts={groupCounts}
@@ -183,31 +182,31 @@ export const AlertsModal: React.FC = () => {
                                     const modeName = t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) });
                                     
                                     return (
-                                        <Box className="bg-background/95 backdrop-blur-md px-6 py-2 border-b border-white/10 shadow-sm z-10">
-                                            <HStack justify="between" align="center">
+                                        <div className="sticky top-0 bg-background/95 backdrop-blur-md px-6 py-2 border-b border-white/10 shadow-sm z-10">
+                                            <div className="flex justify-between items-center">
                                                 <span className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
                                                     {modeName}
                                                 </span>
                                                 <span className="text-[10px] font-semibold text-muted-foreground/60 bg-white/5 px-2 py-0.5 rounded-full">
                                                     {count}
                                                 </span>
-                                            </HStack>
-                                        </Box>
+                                            </div>
+                                        </div>
                                     );
                                 }}
                                 itemContent={(index) => {
                                     const item = items[index];
                                     return (
-                                        <Box className="px-2">
+                                        <div className="px-2">
                                             <CondensedAlertItem item={item} />
-                                        </Box>
+                                        </div>
                                     );
                                 }}
                                 className="h-full"
                             />
                         )}
-                    </Box>
-                </Box>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

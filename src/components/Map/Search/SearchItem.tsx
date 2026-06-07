@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { Box, Stack, Surface } from '@/components/ui/layout';
 import { LineBadge } from '../../LineBadge';
+import { CommandItem } from '@/components/ui/command';
 
 interface SearchItemProps {
     icon: React.ReactNode;
@@ -60,50 +60,49 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
 /**
  * SearchItem
  *
- * A single row in the search dropdown. Supports default, primary (line filter),
- * and highlighted (favorite) visual variants.
+ * A single row in the search dropdown using Shadcn CommandItem.
+ * Supports default, primary (line filter), and highlighted (favorite) visual variants.
  */
 export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => {
     // If we have explicit lines (enriched), use them. Fallback to legacy metroLines.
     const displayLines = lines || metroLines?.map(m => ({ name: m.name, type: 'metro', route_color: m.route_color }));
 
     return (
-        <Surface
-            asChild
-            variant="ghost"
+        <CommandItem
+            value={testId || title}
+            onSelect={onClick}
+            data-testid={testId}
             className={cn(
-                "w-full px-4 py-3 flex flex-row items-center gap-3 transition-colors text-left outline-none focus-visible:bg-white/10 rounded-none",
-                variant === 'primary' ? "hover:bg-primary/10 active:bg-primary/20" : "hover:bg-white/10 active:bg-white/15"
+                'w-full px-4 py-2.5 flex flex-row items-center gap-3 rounded-none cursor-pointer',
+                '[&_svg.lucide-check]:hidden', // hide the default checkmark
+                variant === 'primary'
+                    ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15!'
+                    : 'data-[selected=true]:bg-white/10! hover:bg-white/10! active:bg-white/15!'
             )}
         >
-            <button 
-                onClick={onClick}
-                data-testid={testId}
-            >
-                <Box center padding="sm" className={cn(
-                    "rounded-lg shrink-0",
-                    variant === 'primary' ? "bg-primary/10 text-primary" :
-                    highlight ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
-                )}>
-                    {icon}
-                </Box>
-                <Stack gap={1} className="min-w-0 flex-1">
-                    <span className="text-foreground font-medium line-clamp-2 leading-tight">
-                        {title}
-                    </span>
-                    
-                    <div className="flex flex-wrap items-center gap-y-1 mt-0.5">
-                        <LineBadges lines={displayLines} />
+            <div className={cn(
+                'rounded-lg shrink-0 w-8 h-8 flex items-center justify-center transition-colors',
+                variant === 'primary' ? 'bg-primary/10 text-primary' :
+                highlight ? 'bg-amber-500/10 text-amber-500' : 'bg-white/5 text-muted-foreground group-data-[selected=true]/command-item:bg-white/10 group-data-[selected=true]/command-item:text-foreground'
+            )}>
+                {icon}
+            </div>
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+                <span className="text-foreground font-medium line-clamp-2 leading-tight text-[13px]">
+                    {title}
+                </span>
+                
+                <div className="flex flex-wrap items-center gap-y-1 mt-0.5">
+                    <LineBadges lines={displayLines} />
 
-                        {subtitle && (
-                            <span className="text-muted-foreground/60 text-[10.5px] font-medium line-clamp-1">
-                                {subtitle}
-                            </span>
-                        )}
-                    </div>
-                </Stack>
-            </button>
-        </Surface>
+                    {subtitle && (
+                        <span className="text-muted-foreground/60 text-[10.5px] font-medium line-clamp-1">
+                            {subtitle}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </CommandItem>
     );
 };
 

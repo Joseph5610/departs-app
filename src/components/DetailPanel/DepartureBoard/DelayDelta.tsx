@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { HStack } from '@/components/ui/layout';
 
 /**
  * Displays the real-time delay trend (up/down arrow and value in seconds).
@@ -41,12 +40,12 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
                     exit={{ opacity: 0, x: 5 }}
                     className={isInline ? "ml-1" : ""}
                 >
-                    <HStack className={cn(
-                        "font-bold tabular-nums text-[8px] opacity-60",
+                    <div className={cn(
+                        "flex items-center gap-1 font-bold tabular-nums text-[8px] opacity-60",
                         delta > 0 ? "text-rose-400" : "text-emerald-400"
                     )}>
                         <span>{delta > 0 ? '▲' : '▼'}</span>
-                    </HStack>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>

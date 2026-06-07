@@ -33,6 +33,7 @@ export const useMapInterface = () => {
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
+    const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { flyTo, easeTo } = useMapMetadataStore(s => s.actions);
 
     const selectedStop = useSelectedStop();
@@ -44,7 +45,7 @@ export const useMapInterface = () => {
 
     // --- 3. CAMERA FOLLOW ---
     useEffect(() => {
-        if (!mapRef.current) {
+        if (!mapLoaded || !mapRef.current) {
             return;
         }
 
@@ -94,7 +95,7 @@ export const useMapInterface = () => {
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
 
     // --- 4. PERFORMANCE VISUALS ---
     useEffect(() => {

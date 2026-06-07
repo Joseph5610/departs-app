@@ -15,9 +15,11 @@ import {
     Map as MapIcon,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Card } from '@/components/ui/card';
+import { Toggle } from '@/components/ui/toggle';
+import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 
 const vehicleTypes = [
@@ -40,24 +42,23 @@ interface FilterButtonProps {
     testId?: string;
 }
 
-const FilterButton: React.FC<FilterButtonProps> = ({ icon: Icon, label, isActive, onClick, variant = 'primary', testId }) => (
-    <button
-        onClick={onClick}
-        className={cn(
-            "group relative px-3 py-2.5 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 outline-none",
-            isActive
-                ? variant === 'primary' 
-                    ? "bg-primary/20 border-primary/50 text-primary shadow-[0_0_12px_rgba(var(--color-primary),0.1)]"
-                    : "bg-amber-500/20 border-amber-500/50 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.1)]"
-                : "bg-muted/40 border text-foreground/80 hover:bg-white/10 hover:text-foreground"
-        )}
+const FilterButton: React.FC<FilterButtonProps> = ({ icon: Icon, label, isActive, onClick, testId }) => (
+    <Toggle
+        pressed={isActive}
+        onPressedChange={onClick}
+        variant="outline"
         data-testid={testId}
+        className={cn(
+            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl border-white/5 transition-all text-sm font-semibold active:scale-95 group",
+            "data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/50 data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.1)]",
+            "data-[state=off]:bg-muted/40 data-[state=off]:text-foreground/80 hover:bg-white/10 hover:text-foreground"
+        )}
     >
         <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
         <span className="text-[10px] font-bold uppercase tracking-wider">
             {label}
         </span>
-    </button>
+    </Toggle>
 );
 
 interface ToggleSectionProps {
@@ -71,30 +72,32 @@ interface ToggleSectionProps {
 }
 
 const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon: Icon, isChecked, onToggle, children, className }) => (
-    <Surface variant="tinted" className={cn("overflow-hidden", className)}>
-        <button
-            onClick={() => onToggle(!isChecked)}
-            className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+    <Card variant="subtle" className={cn("p-0 gap-0", className)}>
+        <Item
+            variant="settings"
+            size="none"
+            className={cn(
+                "w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset border-0",
+                !isChecked && "rounded-xl",
+                isChecked && "rounded-t-xl"
+            )}
+            render={<button onClick={() => onToggle(!isChecked)} />}
         >
-            <HStack gap={4} className="min-w-0 flex-1">
-                <Box className={cn(
-                    "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
-                    isChecked ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                )}>
-                    <Icon size={22} />
-                </Box>
-                <Stack gap={1} className="min-w-0 flex-1">
-                    <h4 className="font-semibold leading-snug">{title}</h4>
-                    <p className="text-muted-foreground text-xs leading-tight">{description}</p>
-                </Stack>
-            </HStack>
-
-            <Switch
-                checked={isChecked}
-                onCheckedChange={onToggle}
-                className="ml-3 sm:ml-4"
-            />
-        </button>
+            <ItemMedia variant="icon" className={cn(isChecked ? "text-primary" : "text-muted-foreground")}>
+                <Icon size={20} strokeWidth={1.5} />
+            </ItemMedia>
+            <ItemContent>
+                <ItemTitle className="text-foreground">{title}</ItemTitle>
+                <ItemDescription className="text-xs">{description}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+                <Switch
+                    checked={isChecked}
+                    onCheckedChange={onToggle}
+                    className="ml-3 sm:ml-4"
+                />
+            </ItemActions>
+        </Item>
 
         <AnimatePresence>
             {isChecked && children && (
@@ -102,15 +105,15 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-foreground/2"
+                    className="overflow-hidden border-t border-white/5"
                 >
-                    <Stack gap={4} className="relative p-4 pt-2">
+                    <div className="flex flex-col">
                         {children}
-                    </Stack>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>
-    </Surface>
+    </Card>
 );
 
 /**
@@ -147,7 +150,7 @@ export const DisplaySection: React.FC = () => {
     };
 
     return (
-        <Stack gap={3}>
+        <div className="flex flex-col gap-3">
             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                 {t('settings.sections.display')}
             </h3>
@@ -159,14 +162,14 @@ export const DisplaySection: React.FC = () => {
                 isChecked={showVehicles}
                 onToggle={setShowVehicles}
             >
-                <Stack gap={4}>
-                    <HStack gap={2} className="px-1">
-                        <Box className="w-1 h-1 rounded-full bg-primary" />
-                        <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
+                <div className="flex flex-col gap-3 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary" />
+                        <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
                             {t('settings.sections.filters')}
-                        </Box>
-                    </HStack>
-                    <Box className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
                         {vehicleTypes.map(({ id, icon }) => (
                             <FilterButton
                                 key={id}
@@ -185,8 +188,8 @@ export const DisplaySection: React.FC = () => {
                             onClick={() => setRouteTypeFilter([])}
                             variant="amber"
                         />
-                    </Box>
-                </Stack>
+                    </div>
+                </div>
             </ToggleSection>
 
             <ToggleSection
@@ -197,35 +200,35 @@ export const DisplaySection: React.FC = () => {
                 onToggle={setShowStops}
                 className="mt-3"
             >
-                <Stack gap={3} className="px-1 border-b border-white/5 pb-4">
-                    <HStack justify="between">
-                        <HStack gap={3}>
-                            <Box className={cn(
-                                "p-2 rounded-lg transition-colors",
-                                showStopLabels ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                            )}>
-                                <Type size={18} />
-                            </Box>
-                            <Stack gap={1}>
-                                <span className="text-sm font-semibold">{t('settings.showStops.labels')}</span>
-                                <span className="text-[10px] text-muted-foreground leading-none">{t('settings.showStops.labelsDescription')}</span>
-                            </Stack>
-                        </HStack>
+                <Item
+                    variant="settings"
+                    size="none"
+                    className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none border-b border-white/5"
+                    render={<button onClick={() => setShowStopLabels(!showStopLabels)} />}
+                >
+                    <ItemMedia variant="icon" className={cn(showStopLabels ? "text-primary" : "text-muted-foreground")}>
+                        <Type size={20} strokeWidth={1.5} />
+                    </ItemMedia>
+                    <ItemContent>
+                        <ItemTitle className="text-foreground">{t('settings.showStops.labels')}</ItemTitle>
+                        <ItemDescription className="text-[10px] font-normal">{t('settings.showStops.labelsDescription')}</ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
                         <Switch
                             checked={showStopLabels}
                             onCheckedChange={setShowStopLabels}
                         />
-                    </HStack>
-                </Stack>
+                    </ItemActions>
+                </Item>
 
-                <Stack gap={4}>
-                    <HStack gap={2} className="px-1">
-                        <Box className="w-1 h-1 rounded-full bg-primary" />
-                        <Box className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
+                <div className="flex flex-col gap-3 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary" />
+                        <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
                             {t('settings.sections.filters')}
-                        </Box>
-                    </HStack>
-                    <Box className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
                         <FilterButton
                             icon={Subway}
                             label={t('settings.vehicleTypes.metro')}
@@ -247,36 +250,35 @@ export const DisplaySection: React.FC = () => {
                             onClick={() => setStopTypeFilter([])}
                             variant="amber"
                         />
-                        <Box className="hidden sm:block" />
-                    </Box>
-                </Stack>
+                        <div className="hidden sm:block" />
+                    </div>
+                </div>
             </ToggleSection>
 
-            <Surface variant="tinted" className="overflow-hidden mt-3">
-                <button
-                    onClick={() => setMapBaseStyle(mapBaseStyle === 'labels' ? 'nolabels' : 'labels')}
-                    className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/10 active:bg-white/15 transition-all text-left group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            <Card variant="subtle" className="mt-3 p-0 gap-0">
+                <Item
+                    variant="settings"
+                    size="none"
+                    className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-xl border-0"
+                    render={<button onClick={() => setMapBaseStyle(mapBaseStyle === 'labels' ? 'nolabels' : 'labels')} />}
                 >
-                    <HStack gap={4}>
-                        <Box className={cn(
-                            "p-3 rounded-xl transition-colors shrink-0 hidden sm:flex",
-                            mapBaseStyle === 'labels' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                        )}>
-                            <MapIcon size={22} />
-                        </Box>
-                        <Stack gap={1}>
-                            <h4 className="font-semibold leading-snug">{t('settings.mapStyle.title')}</h4>
-                            <p className="text-muted-foreground text-xs leading-tight">{t('settings.mapStyle.description')}</p>
-                        </Stack>
-                    </HStack>
-                    <Switch
-                        checked={mapBaseStyle === 'labels'}
-                        onCheckedChange={(c) => setMapBaseStyle(c ? 'labels' : 'nolabels')}
-                        className="ml-3 sm:ml-4"
-                    />
-                </button>
-            </Surface>
-        </Stack>
+                    <ItemMedia variant="icon" className={cn(mapBaseStyle === 'labels' ? "text-primary" : "text-muted-foreground")}>
+                        <MapIcon size={20} strokeWidth={1.5} />
+                    </ItemMedia>
+                    <ItemContent>
+                        <ItemTitle className="text-foreground">{t('settings.mapStyle.title')}</ItemTitle>
+                        <ItemDescription className="text-xs">{t('settings.mapStyle.description')}</ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                        <Switch
+                            checked={mapBaseStyle === 'labels'}
+                            onCheckedChange={(c) => setMapBaseStyle(c ? 'labels' : 'nolabels')}
+                            className="ml-3 sm:ml-4"
+                        />
+                    </ItemActions>
+                </Item>
+            </Card>
+        </div>
     );
 };
 

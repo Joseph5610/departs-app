@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ExternalLink, ChevronDown, Construction } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Box, Stack, HStack } from '@/components/ui/layout';
 import type { RSSItem } from '../../types/transit';
+import { LineBadge } from '../LineBadge';
+import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 import {
     Collapsible,
     CollapsibleContent,
@@ -28,6 +29,9 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
     const isFuture = item.isFuture;
     const lines = item.line_metadata;
 
+    const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
+    const IconComponent = item.type === 'exclusion' ? Construction : AlertTriangle;
+
     const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to;
 
     return (
@@ -35,8 +39,10 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             open={isExpanded}
             onOpenChange={setIsExpanded}
             className={cn(
-                "group relative border-b border-white/5 last:border-0 transition-colors block",
-                isExpanded ? "bg-muted/20" : "hover:bg-muted/10",
+                "group relative transition-all block overflow-hidden",
+                isExpanded 
+                    ? "bg-muted/30 rounded-xl my-2 shadow-sm border border-white/10" 
+                    : "border-b border-white/5 last:border-0 hover:bg-muted/10",
                 isFuture && "opacity-75 grayscale-[0.3]"
             )}
         >
@@ -44,67 +50,57 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                 className="w-full text-left px-4 py-3 flex items-start gap-3 outline-none"
             >
                 {/* Icon Column */}
-                <Box className="shrink-0 pt-0.5">
-                    {item.type === 'exclusion' ? (
-                        <Construction size={16} strokeWidth={1.5} className={cn(
-                            isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground"
-                        )} />
-                    ) : (
-                        <AlertTriangle size={16} strokeWidth={1.5} className={cn(
-                            isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground"
-                        )} />
-                    )}
-                </Box>
+                <div className="shrink-0 pt-0.5">
+                    <IconComponent size={16} strokeWidth={1.5} className={iconColorClass} />
+                </div>
 
                 {/* Content Column */}
-                <Stack gap={1} className="flex-1 min-w-0">
-                    <HStack gap={2} className="flex-wrap items-center">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex gap-2 flex-wrap items-center">
                         {/* Lines Badges */}
                         {lines && lines.length > 0 && (
-                            <HStack gap={1} className="flex-wrap">
+                            <div className="flex gap-1 flex-wrap">
                                 {lines.map((line, idx) => (
-                                    <span
+                                    <LineBadge
                                         key={`${line.name}-${idx}`}
-                                        className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white shadow-sm"
-                                        style={{ backgroundColor: line.route_color }}
-                                    >
-                                        {line.name}
-                                    </span>
+                                        name={line.name}
+                                        routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
+                                        size="md"
+                                    />
                                 ))}
-                            </HStack>
+                            </div>
                         )}
 
                         {/* Status Badge */}
                         {isFuture ? (
-                            <HStack gap={1}>
-                                <Box className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                                <span className="text-[9px] font-bold text-destructive/80 uppercase tracking-widest">
+                            <div className="flex gap-1.5 items-center bg-white/5 px-1.5 py-0.5 rounded-md border border-white/5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+                                <span className="text-[9px] font-bold text-amber-500/90 uppercase tracking-widest">
                                     {t('alerts.planned')}
                                 </span>
-                            </HStack>
+                            </div>
                         ) : null}
-                    </HStack>
+                    </div>
 
                     {/* Title */}
                     <div className={cn(
-                        "text-sm font-semibold leading-tight",
-                        !isExpanded && "line-clamp-2",
-                        isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-foreground"
+                        "text-sm font-semibold leading-tight text-foreground/95",
+                        !isExpanded && "line-clamp-2"
                     )}>
                         {item.title}
                     </div>
-                </Stack>
+                </div>
 
                 {/* Chevron */}
-                <Box className="shrink-0 pt-1 text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
+                <div className="shrink-0 pt-1 text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
                     <ChevronDown size={16} strokeWidth={1.5} />
-                </Box>
+                </div>
             </CollapsibleTrigger>
 
             {/* Expandable Content */}
             <CollapsibleContent>
-                <Box className="px-4 pb-4 pt-1 ml-7">
-                    <Stack gap={3}>
+                <div className="px-4 pb-4 pt-1 ml-7">
+                    <div className="flex flex-col gap-3">
                         {item.description && (
                             <div className="text-[12px] leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap">
                                 {item.description}
@@ -124,12 +120,12 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                         )}
 
                         {item.valid_from && (
-                            <Box className="text-[11px] font-medium text-muted-foreground bg-background/50 px-3 py-1.5 rounded-lg border border-white/5 inline-flex w-fit">
+                            <div className="text-[11px] font-medium text-muted-foreground bg-black/20 px-3 py-1.5 rounded-lg border border-white/5 inline-flex w-fit shadow-inner">
                                 {validToText ? `${item.valid_from} – ${validToText}` : t('alerts.validFrom', { date: item.valid_from })}
-                            </Box>
+                            </div>
                         )}
-                    </Stack>
-                </Box>
+                    </div>
+                </div>
             </CollapsibleContent>
         </Collapsible>
     );

@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Info, MapPin, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShare } from '../../../hooks/features/useShare';
-import { Box, Stack, HStack, Surface } from '@/components/ui/layout';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 
@@ -22,29 +24,39 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     const bgColor = displayVehicle.route_color || FALLBACK_ROUTE_COLOR;
 
     return (
-        <Surface variant="tinted" padding="none" className="overflow-hidden rounded-2xl">
-            <Box
-                className="absolute inset-0 opacity-5"
-                style={{ backgroundColor: bgColor }}
-            />
-            <Stack gap={1} className="relative z-10 px-6 py-6">
-                <HStack justify="between" align="center" className="w-full">
-                    <button
-                        className="h-7 px-2.5 w-fit rounded-lg flex items-center justify-center shadow-lg relative group transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring ring-1 ring-white/10"
+        <Card 
+            className="overflow-hidden p-0 gap-0 border border-white/10 backdrop-blur-xl shadow-2xl ring-0 relative flex flex-col transition-colors"
+            style={{
+                backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, rgba(0,0,0,0.4))` : 'rgba(0,0,0,0.4)'
+            }}
+        >
+            <div className="relative z-10 flex flex-col p-4 pb-3">
+                <div className="flex flex-row justify-between items-start mb-2">
+                        <Button
+                        variant="default"
+                        className={cn(
+                            "flex items-center gap-2 w-fit rounded-lg px-2.5 py-1.5 h-auto text-[15px] font-black text-white transition-all active:scale-95 shadow-sm",
+                            isFollowing ? "ring-2 ring-white/50" : "hover:brightness-110 ring-1 ring-white/15"
+                        )}
                         style={{ backgroundColor: bgColor }}
                         onClick={onToggleFollow}
                     >
-                        <span className="text-sm font-black text-white leading-none tracking-tight pr-1.5">{displayVehicle.routeName}</span>
-                        <Box className={cn(
-                            "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors border-[1.5px] border-white/30 bg-white shadow-inner",
-                            isFollowing ? "text-primary" : "text-slate-300"
+                        <span className="tracking-tight leading-none">{displayVehicle.routeName}</span>
+                        <div className={cn(
+                            "flex items-center justify-center transition-all",
+                            isFollowing ? "text-white" : "text-white/40"
                         )}>
-                            <MapPin size={12} className={cn(isFollowing ? "fill-current" : "")}  strokeWidth={1.5} />
-                        </Box>
-                    </button>
-
-                    <button
-                        className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg w-7 h-7 backdrop-blur-md transition-colors flex items-center justify-center text-white/90 active:scale-90"
+                            <MapPin 
+                                size={16} 
+                                className="" 
+                                strokeWidth={isFollowing ? 2.5 : 2} 
+                            />
+                        </div>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 text-muted-foreground"
                         onClick={(e) => {
                             e.stopPropagation();
                             share({
@@ -55,16 +67,17 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             });
                         }}
                     >
-                        <Share2 size={14}  strokeWidth={1.5} />
-                    </button>
-                </HStack>
-
-                <h3 data-testid="vehicle-headsign"
-                    className="text-3xl font-bold text-foreground leading-[1.1] tracking-tight py-1.5 line-clamp-3">
+                        <Share2 size={16} strokeWidth={1.5} />
+                    </Button>
+                </div>
+                <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
                     {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
-                </h3>
+                </h2>
+            </div>
+            
+            <div className="relative z-10 flex flex-col gap-3 px-4 pb-4">
 
-                <HStack gap={2} className="flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
                     {(() => {
                         const delayVal = Number(displayVehicle.delay || 0);
                         const delayMinutes = Math.round(Math.abs(delayVal) / 60);
@@ -72,8 +85,11 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         const isEarly = delayVal < -30;
                         return (
                             <Badge
-                                variant={isLate ? 'danger' : isEarly ? 'info' : 'success'}
-                                className="h-6 px-2.5 text-[9px] font-bold uppercase tracking-wider rounded-md border-white/5"
+                                variant="outline"
+                                className={cn(
+                                    "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent",
+                                    isLate ? "bg-rose-500/20 text-rose-500" : isEarly ? "bg-sky-500/20 text-sky-500" : "bg-emerald-500/20 text-emerald-500"
+                                )}
                             >
                                 {isLate
                                     ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
@@ -85,15 +101,15 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     })()}
 
                     {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
-                        <Box className="flex items-center gap-1.5 px-2.5 h-6 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/80">
-                            <Box className={cn(
-                                "w-1 h-1 rounded-full",
+                        <Badge variant="muted" className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5">
+                            <div className={cn(
+                                "w-1.5 h-1.5 rounded-full shrink-0",
                                 liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
                             )} />
                             <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
-                        </Box>
+                        </Badge>
                     )}
-                </HStack>
+                </div>
 
                 {/* Warning Banner & Metadata Footer */}
                 {(() => {
@@ -117,56 +133,62 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     return (
                         <>
                             {isShowBanner && (
-                                <HStack gap={3} className="mt-4 items-start">
-                                    <Box className="p-2 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
-                                        <Info size={14}  strokeWidth={1.5} />
-                                    </Box>
-                                    <Stack gap={1}>
-                                        <span className="text-amber-500 font-bold text-[10px] uppercase tracking-wider leading-none">{title}</span>
-                                        <p className="text-amber-500/80 text-[11px] leading-snug font-medium">
-                                            {description}
-                                        </p>
-                                    </Stack>
-                                </HStack>
+                                <Alert className="mt-2 bg-amber-500/10 text-amber-500 border-amber-500/20">
+                                    <Info size={14} className="mt-0.5 text-amber-500 shrink-0" strokeWidth={1.5} />
+                                    <AlertTitle className="font-bold text-[10px] uppercase tracking-wider leading-none text-amber-500 mb-1">
+                                        {title}
+                                    </AlertTitle>
+                                    <AlertDescription className="text-amber-500/80 text-[11px] leading-snug font-medium">
+                                        {description}
+                                    </AlertDescription>
+                                </Alert>
                             )}
 
-                            <HStack gap={2} className="mt-4 pt-4 border-t border-white/5 flex-wrap justify-between items-end">
-                                <Stack gap={0} className="min-w-0 flex-1">
-                                    <span className="text-muted-foreground/60 text-[8px] uppercase font-bold tracking-[0.15em] line-clamp-1 block w-full mb-0.5">
-                                        {displayVehicle.vehicle_descriptor?.operator}
-                                    </span>
-                                    <HStack gap={2} align="center" className="min-w-0 w-full">
-                                        <span className="text-foreground text-[10px] font-bold line-clamp-1 shrink leading-none">
-                                            {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
-                                        </span>
-                                        <span className="text-muted-foreground/80 text-[10px] font-bold shrink-0 leading-none">
-                                            #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
-                                        </span>
-                                        {displayVehicle.run_number && (
-                                            <span className="text-muted-foreground/60 text-[9px] font-bold ml-1 pl-2 border-l border-white/10 leading-none">
-                                                {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
-                                            </span>
-                                        )}
-                                    </HStack>
-                                </Stack>
-
-                                <HStack gap={3} className="shrink-0 pb-0.5">
-                                    {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
-                                        <Snowflake size={14} className="text-sky-400"  strokeWidth={1.5} />
-                                    )}
-                                    {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
-                                        <Zap size={14} className="text-amber-400"  strokeWidth={1.5} />
-                                    )}
-                                    {displayVehicle.vehicle_descriptor?.is_wheelchair_accessible && (
-                                        <Accessibility size={14} className="text-primary"  strokeWidth={1.5} />
-                                    )}
-                                </HStack>
-                            </HStack>
                         </>
                     );
                 })()}
-            </Stack>
-        </Surface>
+            </div>
+
+            {/* Render Footer outside CardContent if data exists */}
+            {displayVehicle.vehicle_descriptor && (
+                <div className="relative z-10 flex gap-2 p-3 px-4 bg-muted/20 border-t border-white/5 flex-wrap justify-between items-center mt-auto">
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <span className="text-muted-foreground/80 text-[9px] uppercase font-bold tracking-wider line-clamp-1">
+                            {displayVehicle.vehicle_descriptor?.operator || 'DP PRAHA'}
+                        </span>
+                        <div className="flex gap-1.5 items-center min-w-0 w-full text-foreground/90">
+                            <span className="text-xs font-semibold truncate">
+                                {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
+                            </span>
+                            <span className="text-muted-foreground text-xs font-medium shrink-0">
+                                #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
+                            </span>
+                            {displayVehicle.run_number && (
+                                <span className="text-muted-foreground text-[11px] font-medium ml-1 pl-1.5 border-l border-white/10 shrink-0 whitespace-nowrap">
+                                    {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
+                      displayVehicle.vehicle_descriptor?.has_usb_chargers || 
+                      displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
+                        <div className="flex gap-2 shrink-0 bg-black/20 p-2 rounded-lg">
+                            {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
+                                <Snowflake size={14} className="text-sky-400" strokeWidth={2} />
+                            )}
+                            {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
+                                <Zap size={14} className="text-amber-400" strokeWidth={2} />
+                            )}
+                            {displayVehicle.vehicle_descriptor?.is_wheelchair_accessible && (
+                                <Accessibility size={14} className="text-emerald-400" strokeWidth={2} />
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </Card>
     );
 };
 

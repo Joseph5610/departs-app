@@ -7,7 +7,6 @@ import { useVehicles } from '../../hooks/data/useVehicles';
 import { useNetworkStatus } from '../../hooks/features/useNetworkStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
-import { Overlay, HStack, Box, Surface } from '@/components/ui/layout';
 
 /**
  * LiveStatus Component
@@ -40,10 +39,10 @@ export const LiveStatus: React.FC = () => {
     if (!bounds) return null;
 
     return (
-        <Overlay
-            position="top-center"
+        <div
             data-testid="live-status"
             className={cn(
+                "absolute z-50 pointer-events-none transform -translate-x-1/2 left-1/2 top-0",
                 "pt-[calc(4.75rem+env(safe-area-inset-top,0px))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0px))]",
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}
@@ -54,14 +53,13 @@ export const LiveStatus: React.FC = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
+                    className="pointer-events-auto"
                 >
-                    <Surface
-                        variant="tinted"
-                        padding="none"
-                        className="px-3 py-1.5 rounded-full border-white/10! shadow-2xl"
+                    <div
+                        className="glassy px-3 py-1.5 rounded-full"
                     >
-                        <HStack gap={2}>
-                            <Box className={cn(
+                        <div className="flex items-center gap-2">
+                            <div className={cn(
                                 "w-2 h-2 rounded-full transition-colors duration-500",
                                 !isOnline ? "bg-neutral-500" :
                                     isError ? (error?.isUpstream ? "bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]" : "bg-destructive shadow-[0_0_8px_var(--color-destructive)]") :
@@ -85,11 +83,11 @@ export const LiveStatus: React.FC = () => {
                                     </>
                                 )}
                             </span>
-                        </HStack>
-                    </Surface>
+                        </div>
+                    </div>
                 </motion.div>
             </AnimatePresence>
-        </Overlay>
+        </div>
     );
 };
 

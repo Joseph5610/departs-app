@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.47.0] - 2026-06-06
+
+### Changed
+- **Shadcn UI Unification**: Full migration of the app to use official Shadcn UI components consistently across all layers.
+  - **`Empty` state**: Installed official Shadcn `empty` component. Replaced custom ad-hoc divs in `ErrorState`, `MetroNightMessage`, and `FavoritesPanel` empty state with `<Empty>` + `<EmptyHeader>` + `<EmptyMedia>` + `<EmptyTitle>` + `<EmptyDescription>` + `<EmptyContent>` composition.
+  - **`Card` layout**: Replaced custom `div`-based card wrappers in `DisplaySection` (`ToggleSection`), `ErrorBoundary`, and `SettingsFooter` with `<Card>` + `<CardContent>`.
+  - **`Command` search**: Installed Shadcn `command` component (cmdk). Refactored `SearchItem` to `<CommandItem>` and `SearchDropdown` to `<Command>` + `<CommandList>` + `<CommandGroup>` + `<CommandSeparator>`, providing built-in keyboard navigation and proper ARIA roles.
+  - **`Label`**: Installed Shadcn `label` component. Connected Stop Labels `<Switch>` in `DisplaySection` to a proper `<Label htmlFor>` for accessibility.
+  - **`Button`**: Replaced raw `<button>` elements in `SettingsFooter` (clear history, check update) with Shadcn `<Button variant="ghost">`.
+
 ## [0.46.0] - 2026-06-05
+
 
 ### Added
 - **Path-Based Routing**: Replaced query-parameter-based entity selection with clean, path-based routing (`/stop/:id`, `/trip/:id`, and `/trip/:tripId/:vehicleId`).
@@ -297,3 +308,9 @@ All notable changes to this project will be documented in this file.
 
 - Implemented zero-any type safety.
 - Aligned internal types with Golemio OpenAPI.
+
+## [0.47.1] - 2026-06-07
+### Changed
+- Replaced Radix-dependent `vaul` Drawer with `@base-ui/react/dialog` `Sheet` component for mobile `DetailPanel` views.
+- Fixed an interaction blocking bug where iOS Safari was preventing native focus on the Map `Search` input when a direct detail URL was loaded due to Radix `DismissableLayer` intercepting `touchstart`.
+- Aligned `DetailPanel` completely with the Base UI component library architectural directive.
