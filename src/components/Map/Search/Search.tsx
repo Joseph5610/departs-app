@@ -210,10 +210,9 @@ export const Search: React.FC = React.memo(() => {
                 isSidebarOpen && "md:left-(--visible-center-x) md:w-[360px]"
             )}
             data-vaul-no-drag
-            onClick={() => inputRef.current?.focus()}
         >
             <div ref={containerRef}>
-                <div className="relative group">
+                <div className="relative group" onClick={() => inputRef.current?.focus()}>
                     <Input
                         ref={inputRef}
                         aria-label={t('search.placeholder')}
