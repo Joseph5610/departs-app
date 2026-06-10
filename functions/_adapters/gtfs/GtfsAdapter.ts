@@ -236,10 +236,17 @@ export class GtfsAdapter implements CityAdapter {
             const safeTripId = encodeURIComponent(tripId);
             const tripUrl = `https://data.departs.app/${this._city.slug}/trips/${safeTripId}.json`;
             const tripRes = await fetch(tripUrl);
+            const tripData = await tripRes.json();
 
-            let stations = [];
-            if (tripRes.ok) {
-                stations = await tripRes.json();
+            let feedTotalSecs = 0;
+            if (currentVehicleData?.timestamp) {
+                const feedTime = new Date(Number(currentVehicleData.timestamp) * 1000);
+                const formatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
+                const parts = formatter.formatToParts(feedTime);
+                const fHour = Number(parts.find((p: any) => p.type === 'hour')?.value) || 0;
+                const fMin = Number(parts.find((p: any) => p.type === 'minute')?.value) || 0;
+                const fSec = Number(parts.find((p: any) => p.type === 'second')?.value) || 0;
+                feedTotalSecs = (fHour % 24) * 3600 + fMin * 60 + fSec;
             }
             
             let lineName = '?';
@@ -265,40 +272,39 @@ export class GtfsAdapter implements CityAdapter {
             let lastStopSequence = null;
             let computedDelay = 0;
 
+            const stations = tripData.map((st: any, idx: number) => {
+                return {
+                    id: st.stop_id,
+                    name: st.name || 'Unknown',
+                    sequence: idx + 1,
+                    arrival_time: st.arrival_time,
+                    departure_time: st.departure_time,
+                    realtime_arrival_time: st.arrival_time,
+                    realtime_departure_time: st.departure_time,
+                    coordinates: [st.lon || 0, st.lat || 0],
+                    is_wheelchair_accessible: null,
+                    zone_id: null
+                };
+            });
+
             if (currentStopId) {
-                // Kordis GTFS-RT sends Z01, but static GTFS has Z1. We must normalize it.
                 const normalizedStopId = currentStopId.replace(/Z0([1-9])$/, 'Z$1');
-                const foundIndex = stations.findIndex((s: any) => s.stop_id === normalizedStopId);
+                const foundIndex = stations.findIndex((s: any) => s.id === normalizedStopId);
                 if (foundIndex !== -1) {
                     lastStopSequence = foundIndex + 1;
-
-                    // Calculate delay from RT timestamp vs static arrival time
                     if (currentVehicleData?.timestamp && stations[foundIndex].arrival_time) {
-                        const feedTime = new Date(Number(currentVehicleData.timestamp) * 1000);
-                        const formatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
-                        const parts = formatter.formatToParts(feedTime);
-                        const fHour = Number(parts.find((p: any) => p.type === 'hour')?.value) || 0;
-                        const fMin = Number(parts.find((p: any) => p.type === 'minute')?.value) || 0;
-                        const fSec = Number(parts.find((p: any) => p.type === 'second')?.value) || 0;
-                        const feedTotalSecs = (fHour % 24) * 3600 + fMin * 60 + fSec;
-
                         const [h, m, s] = stations[foundIndex].arrival_time.split(':').map(Number);
                         let stopTotalSecs = h * 3600 + m * 60 + (s || 0);
 
-                        // Midnight crossover handling
                         if (stopTotalSecs < 14400 && feedTotalSecs > 72000) stopTotalSecs += 86400;
                         else if (feedTotalSecs < 14400 && stopTotalSecs > 72000) stopTotalSecs -= 86400;
 
                         computedDelay = feedTotalSecs - stopTotalSecs;
-                        
-                        // If it's early (negative delay), usually we just say 0 for UI purposes or keep negative. 
-                        // The UI handles negative nicely (shows it's early).
                     }
                 }
             }
             
             if (lastStopSequence === null) {
-                // Time-based heuristic fallback if RT feed doesn't provide stopId or stopId wasn't found
                 const formatter = new Intl.DateTimeFormat('en-US', {
                     timeZone: 'Europe/Prague',
                     hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
@@ -321,12 +327,12 @@ export class GtfsAdapter implements CityAdapter {
                 }
             }
 
-            const stopFeatures = stations.map((st: any, idx: number) => ({
+            const stopFeatures = stations.map((st: any) => ({
                 type: 'Feature',
                 properties: {
-                    stop_id: st.stop_id,
+                    stop_id: st.id,
                     stop_name: st.name,
-                    stop_sequence: idx + 1,
+                    stop_sequence: st.sequence,
                     arrival_time: st.arrival_time,
                     departure_time: st.departure_time,
                     metro_lines: []
@@ -334,8 +340,7 @@ export class GtfsAdapter implements CityAdapter {
             }));
 
             const coordinates: [number, number][] = stations
-                .filter((st: any) => typeof st.lon === 'number' && typeof st.lat === 'number')
-                .map((st: any) => [st.lon, st.lat] as [number, number]);
+                .map((st: any) => st.coordinates as [number, number]);
 
             let routeGeoJson = undefined;
             if (coordinates.length > 1) {
@@ -396,6 +401,84 @@ export class GtfsAdapter implements CityAdapter {
             } as any;
         }
     }
-    handleAlerts(_ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> { return Promise.resolve({ alerts: [] }); }
+    async handleAlerts(_ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> {
+        try {
+            const cache = caches.default;
+            const rtRes = await cache.match(new Request('https://kordis-jmk.cz/gtfs/gtfsReal.dat'));
+            if (!rtRes) return { alerts: [] };
+
+            const buffer = await rtRes.arrayBuffer();
+            const GtfsRealtimeBindings = await import('gtfs-realtime-bindings');
+            const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+            
+            const rawAlerts = feed.entity.filter((e: any) => e.alert);
+
+            let routes: Record<string, any> = {};
+            try {
+                const routesRes = await fetch(`https://data.departs.app/${this._city.slug}/routes.json`);
+                if (routesRes.ok) {
+                    routes = await routesRes.json();
+                }
+            } catch (e) {
+                console.error("Failed to fetch routes for alerts", e);
+            }
+
+            const alerts = rawAlerts.map((entity: any) => {
+                const alert = entity.alert;
+                const isDetour = alert.effect === 'DETOUR';
+                
+                const lines: string[] = [];
+                const line_metadata: Array<{ name: string; route_color: string; type: string }> = [];
+
+                if (alert.informedEntity) {
+                    for (const ie of alert.informedEntity) {
+                        if (ie.routeId) {
+                            lines.push(ie.routeId);
+                            // Kordis routeIds are often short names like "602"
+                            const matchingRoute = Object.values(routes).find((r: any) => r.name === ie.routeId) as any;
+                            if (matchingRoute) {
+                                line_metadata.push({
+                                    name: matchingRoute.name,
+                                    route_color: matchingRoute.route_color || '#888888',
+                                    type: getVehicleType(Number(matchingRoute.type))
+                                });
+                            } else {
+                                line_metadata.push({
+                                    name: ie.routeId,
+                                    route_color: '#888888',
+                                    type: 'Spoj'
+                                });
+                            }
+                        }
+                    }
+                }
+
+                const uniqueLines = [...new Set(lines)];
+                const uniqueMetadata = line_metadata.filter((meta, index, self) =>
+                    index === self.findIndex((m) => m.name === meta.name)
+                );
+
+                return {
+                    type: isDetour ? 'exclusion' : 'incident',
+                    title: alert.headerText?.translation?.[0]?.text || 'Mimořádnost',
+                    description: alert.descriptionText?.translation?.[0]?.text || null,
+                    link: alert.url?.translation?.[0]?.text || 'https://www.idsjmk.cz',
+                    valid_from: null,
+                    valid_to: null,
+                    guid: entity.id,
+                    priority: 'normal',
+                    lines: uniqueLines.length > 0 ? uniqueLines : undefined,
+                    line_metadata: uniqueMetadata.length > 0 ? uniqueMetadata : undefined,
+                    isActive: true,
+                    isFuture: false
+                } as any;
+            });
+
+            return { alerts };
+        } catch (e) {
+            console.error("Error fetching GTFS-RT alerts:", e);
+            return { alerts: [] };
+        }
+    }
     handleInfotexts(_ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]> { return Promise.resolve([]); }
 }
