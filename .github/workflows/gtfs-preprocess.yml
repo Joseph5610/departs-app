@@ -1,0 +1,23 @@
+name: GTFS Preprocess
+on:
+  schedule:
+    - cron: '0 3 * * *'   # nightly — GTFS static updates ~weekly
+  workflow_dispatch:
+    inputs:
+      city:
+        description: City slug
+        default: brno
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install
+      - run: node scripts/preprocess-gtfs.mjs --city ${{ inputs.city || 'brno' }}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(gtfs): refresh ${{ inputs.city || 'brno' }} static data"
+          file_pattern: 'functions/_data/cities/**'
