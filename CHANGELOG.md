@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.48.1] - 2026-06-10
+
+### Fixed
+- **GTFS-RT Brno Integration**:
+  - Normalized `stopId` parsing from Kordis RT (removed padding) to match static IDs.
+  - Implemented mathematical fallback for `last_stop_sequence` based on local time.
+  - Added robust calculation for real-time `delay` by cross-referencing timestamps with static schedule.
+  - Mapped vehicle metadata (`operator`, `vehicle_registration_number`, `vehicle_type`) to Golemio UI contract.
+  - Resolved `currentVehicleData` ReferenceError.
+
+
+## [0.48.0] - 2026-06-10
+
+### Added
+- **Brno Multi-City Support (Phase 1)**: Full static departure board for Brno (JMK KORDIS GTFS).
+  - **GtfsAdapter**: New city adapter implementing `CityAdapter` interface for GTFS-based cities.
+    - `handleStops`: Serves pre-processed `stops.json` (10 800+ stops) from bundled data.
+    - `handleDepartures`: Serves static per-stop schedule JSON (next 48h, 7 500+ files) via `ASSETS` binding.
+    - `handleVehicles`: Returns empty FeatureCollection (GTFS-RT Phase 3).
+    - `handleAlerts`/`handleInfotexts`: Returns empty stubs (no Brno alerts API).
+  - **City Registry**: Brno registered in `CITY_REGISTRY` with center, bounds, timezone, and feature-flag gating.
+  - **GTFS Preprocessing Script**: `scripts/preprocess-gtfs.mjs` downloads live GTFS zip from Kordis JMK, parses routes/trips/calendar/stop_times, and generates per-stop JSON departure schedules.
+  - **GitHub Actions Workflow**: `gtfs-preprocess.yml` for automated nightly GTFS data refresh.
+  - **CitySwitcher**: Globe icon button in map controls opens a city picker dialog; switches map camera and clears selection state on city change.
+
+### Changed
+- **`brno` branch**: Merged all master changes (shadcn/ui migration, dep bumps) into brno branch via fast-forward.
+- **`CityAdapter` factory**: Extended `getAdapter()` to dispatch to `GtfsAdapter` for `adapter: 'gtfs'` cities.
+- **`city-config.ts`**: Added `'gtfs'` to `AdapterType` union and `adapterConfig?: Record<string, string>` to `CityConfig`.
+
 ## [0.47.0] - 2026-06-06
 
 ### Changed
