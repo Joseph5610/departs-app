@@ -50,21 +50,18 @@ export class GtfsAdapter implements CityAdapter {
     async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
         try {
             const cache = caches.default;
-            const cacheUrl = 'https://kordis-jmk.cz/gtfs/gtfsReal.dat';
-            const cacheKey = new Request(cacheUrl, { method: 'GET' });
-            let response = await cache.match(cacheKey);
-
-            if (!response) {
-                response = await fetch(cacheUrl, {
-                    headers: { 'User-Agent': 'departs-app/1.0' }
-                });
-                
-                if (response.ok) {
-                    const responseToCache = new Response(response.clone().body, response);
-                    responseToCache.headers.set('Cache-Control', 's-maxage=10');
-                    ctx.waitUntil(cache.put(cacheKey, responseToCache));
-                }
+            // Cache the final PROCESSED JSON output, not the raw protobuf.
+            // This means protobuf decoding only runs once per 10s instead of on every request.
+            const jsonCacheKey = new Request('https://kordis-jmk.cz/__processed_vehicles_v1', { method: 'GET' });
+            const cached = await cache.match(jsonCacheKey);
+            if (cached) {
+                return cached.json();
             }
+
+            const rtUrl = 'https://kordis-jmk.cz/gtfs/gtfsReal.dat';
+            const response = await fetch(rtUrl, {
+                headers: { 'User-Agent': 'departs-app/1.0' }
+            });
 
             if (!response || !response.ok) {
                 return { type: 'FeatureCollection', features: [] };
@@ -125,10 +122,15 @@ export class GtfsAdapter implements CityAdapter {
                 }
             }
             
-            return {
-                type: 'FeatureCollection',
-                features
-            };
+            const result: AppVehicleCollection = { type: 'FeatureCollection', features };
+
+            // Store processed JSON in cache for 10s so subsequent requests skip protobuf decode
+            const responseToCache = new Response(JSON.stringify(result), {
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 's-maxage=10' }
+            });
+            ctx.waitUntil(cache.put(jsonCacheKey, responseToCache));
+
+            return result;
         } catch (e) {
             console.error('Error fetching/parsing GTFS-RT:', e);
             return { type: 'FeatureCollection', features: [] };
