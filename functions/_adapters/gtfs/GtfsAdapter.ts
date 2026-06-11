@@ -115,7 +115,6 @@ export class GtfsAdapter implements CityAdapter {
                             vehicle_descriptor: {
                                 operator: 'IDS JMK',
                                 vehicle_registration_number: vp.vehicle?.label || vp.vehicle?.id,
-                                vehicle_type: getVehicleType(Number(route.type)),
                             }
                         }
                     });
@@ -398,7 +397,6 @@ export class GtfsAdapter implements CityAdapter {
                 vehicle_descriptor: {
                     operator: 'IDS JMK',
                     vehicle_registration_number: currentVehicleData?.vehicle?.label || currentVehicleData?.vehicle?.id,
-                    vehicle_type: getVehicleType(rType),
                 },
                 route_color: routeColor,
                 is_night: isNight,

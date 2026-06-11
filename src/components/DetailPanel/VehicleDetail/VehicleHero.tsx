@@ -19,6 +19,24 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     const { t } = useTranslation();
     const { share } = useShare();
 
+    const routeTypeLabel = (type: number | string | undefined): string => {
+        const n = Number(type);
+        if (n >= 100 && n <= 199) return t('vehicleTypes.train');   // Extended: Railway
+        if (n >= 700 && n <= 799) return t('vehicleTypes.bus');     // Extended: Bus
+        if (n >= 800 && n <= 899) return t('vehicleTypes.trolleybus'); // Extended: Trolleybus
+        if (n >= 900 && n <= 999) return t('vehicleTypes.tram');    // Extended: Tram
+        switch (n) {
+            case 0: return t('vehicleTypes.tram');
+            case 1: return t('vehicleTypes.metro');
+            case 2: return t('vehicleTypes.train');
+            case 3: return t('vehicleTypes.bus');
+            case 4: return t('vehicleTypes.ferry', 'Trajekt');
+            case 7: return t('vehicleTypes.funicular', 'Lanovka');
+            case 11: return t('vehicleTypes.trolleybus');
+            default: return '';
+        }
+    };
+
     if (!displayVehicle) return null;
 
     const bgColor = displayVehicle.route_color || FALLBACK_ROUTE_COLOR;
@@ -158,7 +176,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         </span>
                         <div className="flex gap-1.5 items-center min-w-0 w-full text-foreground/90">
                             <span className="text-xs font-semibold truncate">
-                                {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
+                                {displayVehicle.vehicle_descriptor?.vehicle_type || routeTypeLabel(displayVehicle.route_type) || '---'}
                             </span>
                             <span className="text-muted-foreground text-xs font-medium shrink-0">
                                 #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
