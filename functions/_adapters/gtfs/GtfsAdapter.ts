@@ -8,6 +8,9 @@ import { NotImplementedError } from '../../_core/errors';
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppDeparture, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../../_core/types";
 
+// PRELOAD DATA GLOBALLY FOR CLOUDFLARE WORKERS CPU OPTIMIZATION
+import brnoRoutes from "../../_data/cities/brno/routes.json";
+import brnoTripRoutes from "../../_data/cities/brno/trip_routes.json";
 function getVehicleType(routeType: number): string {
     switch (routeType) {
         case 0: return 'Tramvaj';
@@ -71,11 +74,8 @@ export class GtfsAdapter implements CityAdapter {
             const GtfsRealtimeBindings = await import('gtfs-realtime-bindings');
             const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
 
-            const routesModule = await import('../../_data/cities/brno/routes.json');
-            const routes = routesModule.default as Record<string, any>;
-            
-            const tripRoutesModule = await import('../../_data/cities/brno/trip_routes.json');
-            const tripRoutes = tripRoutesModule.default as Record<string, string>;
+            const routes = brnoRoutes as Record<string, any>;
+            const tripRoutes = brnoTripRoutes as Record<string, string>;
 
             const features: any[] = [];
             
@@ -252,13 +252,11 @@ export class GtfsAdapter implements CityAdapter {
             let lineName = '?';
             let routeColor = '#888888';
             let rType = 3;
-            const tripRoutesModule = await import('../../_data/cities/brno/trip_routes.json');
-            const tripRoutes = tripRoutesModule.default as Record<string, string>;
+            const tripRoutes = brnoTripRoutes as Record<string, string>;
             const routeId = tripRoutes[tripId];
             
             if (routeId) {
-                const routesModule = await import('../../_data/cities/brno/routes.json');
-                const routes = routesModule.default as Record<string, any>;
+                const routes = brnoRoutes as Record<string, any>;
                 const route = routes[routeId];
                 if (route) {
                     lineName = route.name;
