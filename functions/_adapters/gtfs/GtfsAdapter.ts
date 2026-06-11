@@ -213,24 +213,48 @@ export class GtfsAdapter implements CityAdapter {
         }
 
         try {
-            // First we need the tripId and currentStopId. Since we only get vehicleId in the request,
-            // we should technically look it up from the GTFS-RT feed again.
             const cache = caches.default;
-            const rtRes = await cache.match(new Request('https://kordis-jmk.cz/gtfs/gtfsReal.dat'));
             let currentStopId = null;
             let currentVehicleData: any = null;
 
-            if (rtRes) {
-                const buffer = await rtRes.arrayBuffer();
-                const GtfsRealtimeBindings = await import('gtfs-realtime-bindings');
-                const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
-                
-                for (const entity of feed.entity) {
-                    const vid = entity.vehicle?.vehicle?.id || entity.id;
-                    if (vid === vehicleId) {
-                        currentStopId = entity.vehicle?.stopId || null;
-                        currentVehicleData = entity.vehicle || null;
-                        break;
+            // Look up RT data from the processed vehicles JSON cache (raw .dat is no longer cached)
+            const jsonCacheKey = new Request('https://kordis-jmk.cz/__processed_vehicles_v1', { method: 'GET' });
+            const cachedVehicles = await cache.match(jsonCacheKey);
+            if (cachedVehicles) {
+                const vehiclesGeoJson: AppVehicleCollection = await cachedVehicles.json();
+                const match = vehiclesGeoJson.features.find(
+                    (f: any) => f.properties.vehicle_id === vehicleId
+                );
+                if (match) {
+                    // Reconstruct minimal currentVehicleData shape from cached properties
+                    const p = match.properties;
+                    currentVehicleData = {
+                        timestamp: p.origin_timestamp ? BigInt(Math.floor(new Date(p.origin_timestamp).getTime() / 1000)) : null,
+                        currentStatus: p.state_position === 'at_stop' ? 'STOPPED_AT' : 'IN_TRANSIT_TO',
+                        vehicle: {
+                            label: p.vehicle_descriptor?.vehicle_registration_number,
+                            id: p.vehicle_id
+                        }
+                    };
+                    // stopId not stored in processed cache — fallback to null
+                    currentStopId = null;
+                }
+            } else {
+                // Cache miss — fetch raw RT feed as fallback
+                const rtResponse = await fetch('https://kordis-jmk.cz/gtfs/gtfsReal.dat', {
+                    headers: { 'User-Agent': 'departs-app/1.0' }
+                });
+                if (rtResponse.ok) {
+                    const buffer = await rtResponse.arrayBuffer();
+                    const GtfsRealtimeBindings = await import('gtfs-realtime-bindings');
+                    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+                    for (const entity of feed.entity) {
+                        const vid = entity.vehicle?.vehicle?.id || entity.id;
+                        if (vid === vehicleId) {
+                            currentStopId = entity.vehicle?.stopId || null;
+                            currentVehicleData = entity.vehicle || null;
+                            break;
+                        }
                     }
                 }
             }
