@@ -10,6 +10,7 @@ import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
 import { navigate } from 'wouter/use-browser-location';
 import type { AppError } from '@/types/error';
+import { usePreferencesStore } from '../../state/preferencesStore';
 
 
 /**
@@ -23,6 +24,7 @@ export const DetailPanelContent: React.FC = memo(() => {
     const isFollowing = useSelectionStore(s => s.isFollowing);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
     const clearLineFilter = useSelectionStore(s => s.actions.clearLineFilter);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { tripId, stopId } = useRouteParams();
 
     // Derived State
@@ -45,9 +47,9 @@ export const DetailPanelContent: React.FC = memo(() => {
     useEffect(() => {
         if (selectedVehicle && isVehicleError && !loadingDetail && !vehicleDetail) {
             toast.error(t('toasts.vehicleNotFound'));
-            navigate('/');
+            navigate(`/${selectedCity}`);
         }
-    }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t]);
+    }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t, selectedCity]);
 
     // Auto-enable tracking when opening a trip
     useEffect(() => {
@@ -81,9 +83,9 @@ export const DetailPanelContent: React.FC = memo(() => {
                     selectedStop={selectedStop}
                     onDepartureClick={async (tripId, vehicleId) => {
                         if (vehicleId && vehicleId !== tripId) {
-                            navigate(`/trip/${encodeURIComponent(tripId)}/${encodeURIComponent(vehicleId)}`);
+                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}/${encodeURIComponent(vehicleId)}`);
                         } else {
-                            navigate(`/trip/${encodeURIComponent(tripId)}`);
+                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}`);
                         }
                     }}
                 />

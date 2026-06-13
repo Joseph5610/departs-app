@@ -18,12 +18,14 @@ export interface CityAdapter {
     handleAlerts(ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse>;
     /** Handle /api/[city]/infotexts */
     handleInfotexts(ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]>;
+    /** Handle /api/[city]/debug-feed */
+    handleRawFeed(ctx: EventContext<Env, string, unknown>, type?: string): Promise<unknown>;
 }
 
 /** Returns the correct adapter for a city. Exhaustive — tsc will catch missing cases. */
 export function getAdapter(city: CityConfig): CityAdapter {
     switch (city.adapter) {
         case 'golemio': return new GolemioAdapter(city);
-        case 'gtfs':    return new GtfsAdapter(city);
+        case 'gtfs': return new GtfsAdapter(city);
     }
 }

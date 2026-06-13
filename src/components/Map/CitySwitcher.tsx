@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check } from 'lucide-react';
-import { ItemGroup, Item, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
 import { cn } from '@/lib/utils';
-import { navigate } from 'wouter/use-browser-location';
+import { useLocation } from 'wouter';
 
 export const CitySwitcher: React.FC = () => {
     const { t } = useTranslation();
@@ -19,6 +18,7 @@ export const CitySwitcher: React.FC = () => {
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [open, setOpen] = useState(false);
+    const [, navigate] = useLocation();
 
     const cities = data?.cities || [];
 
@@ -36,8 +36,8 @@ export const CitySwitcher: React.FC = () => {
         // 1. Change city
         setSelectedCity(city.slug);
         
-        // 2. Clear current selection (so we don't look for prague stops in brno)
-        navigate('/');
+        // 2. Clear current selection and navigate to the new city map
+        navigate(`/${city.slug}`);
 
         // 3. Move map camera
         const map = mapRef.current?.getMap();
@@ -58,43 +58,39 @@ export const CitySwitcher: React.FC = () => {
                 <Button
                     variant="tinted"
                     size="icon"
-                    title={t('map.controls.switchCity', 'Switch City')}
-                    aria-label={t('map.controls.switchCity', 'Switch City')}
+                    title={t('map.controls.switchCity')}
+                    aria-label={t('map.controls.switchCity')}
                     className="h-11 w-11"
                     data-testid="map-city-switcher-btn"
                 >
                     <Globe size={20} className="transition-transform group-hover:rotate-12" strokeWidth={1.5} />
                 </Button>
             } />
-            <DialogContent className="sm:max-w-[400px]">
-                <DialogHeader>
-                    <DialogTitle>{t('map.controls.switchCity', 'Vyberte mesto')}</DialogTitle>
+            <DialogContent className="sm:max-w-[400px] p-6 h-auto">
+                <DialogHeader className="pb-2">
+                    <DialogTitle>{t('map.controls.switchCity')}</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-[60vh] mt-4">
-                    <ItemGroup className="gap-2">
-                        {cities.map(city => (
-                            <Item
-                                key={city.slug}
-                                variant={selectedCity === city.slug ? "outline" : "default"}
-                                className={cn(
-                                    "cursor-pointer transition-colors border",
-                                    selectedCity === city.slug 
-                                        ? "border-primary bg-primary/10 hover:bg-primary/20" 
-                                        : "border-transparent hover:bg-white/5 active:bg-white/10"
-                                )}
-                                render={<button onClick={() => handleSelectCity(city)} />}
-                            >
-                                <ItemContent>
-                                    <ItemTitle className="text-base">{city.name}</ItemTitle>
-                                </ItemContent>
-                                {selectedCity === city.slug && (
-                                    <ItemActions>
-                                        <Check size={18} className="text-primary" strokeWidth={2} />
-                                    </ItemActions>
-                                )}
-                            </Item>
-                        ))}
-                    </ItemGroup>
+                <ScrollArea className="max-h-[60vh]">
+                    <div className="flex flex-col gap-1.5">
+                        {cities.map(city => {
+                            const isSelected = selectedCity === city.slug;
+                            return (
+                                <button
+                                    key={city.slug}
+                                    onClick={() => handleSelectCity(city)}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-all duration-200 outline-none",
+                                        isSelected 
+                                            ? "border-primary bg-primary/10 text-primary-foreground"
+                                            : "border-transparent bg-white/5 hover:bg-white/10 hover:border-white/10 text-foreground"
+                                    )}
+                                >
+                                    <span className="text-base font-medium">{city.name}</span>
+                                    {isSelected && <Check size={18} className="text-primary" strokeWidth={2.5} />}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </ScrollArea>
             </DialogContent>
         </Dialog>

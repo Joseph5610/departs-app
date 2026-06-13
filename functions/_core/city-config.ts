@@ -29,7 +29,8 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapter: 'gtfs',
         adapterConfig: {
             stopsFile: 'cities/brno/stops.json',
-            realtimeUrl: 'TBD', // To be defined later in Phase 3
+            realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
+            staticDataUrl: 'https://data.departs.app'
         },
     },
 };

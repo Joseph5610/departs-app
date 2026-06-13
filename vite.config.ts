@@ -19,7 +19,7 @@ export default defineConfig({
       manifest: {
         name: 'Departs.app',
         short_name: 'Departs',
-        description: 'Real-time Prague Public Transport Visualization',
+        description: 'Real-time Public Transport Visualization',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',

@@ -61,6 +61,8 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
 - **NEVER** use ad-hoc utility classes for core layout; use established design system tokens.
 - **NEVER** store UI state (like drawer height) in global selection context.
+- **NEVER** use `eslint-disable`. All typescript and eslint errors MUST be solved architecturally or typing-wise. Disabling linter is strictly forbidden.
+- **NEVER** use `Array.prototype.find()` or `.filter()` inside loops or `.map()` callbacks. O(N) nested searches (O(N^2) complexity) are strictly forbidden. Always build an O(1) index `Map` or `Record` beforehand.
 
 ### Mandatory Protocol
 1. **Tool-First**: Execute tools immediately. Explanation under 3 sentences unless complex.
@@ -68,17 +70,17 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 3. **Build & Quality Integrity**: Run `npm run build` and ensure `tsc` and `lint` pass for BOTH frontend and backend (`functions/`) before confirming any architectural change or concluding task. `npm run build` is ONLY authority for final type validation.
 4. **Versioning**: Increment `package.json` exactly once per session (Patch: Fixes, Minor: Features/Arch).
 5. **Changelog**: Every version increment MUST document all changes in `CHANGELOG.md` under new version header with current date.
+6. **Scratch & Testing**: All scratch files, testing scripts, and temporary data MUST live in the `/scratch` folder at the root of the repository. This folder is git-ignored, ensuring the repository is not cluttered.
 
 ## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
 
-- **Parallel Fetching**: Large GTFS datasets (Stops/Vehicles) MUST be fetched in parallel via `Promise.all` with chunked offsets.
+- **Parallel Fetching**: Fetch large independent datasets in parallel via `Promise.all` where possible.
 - **Two-Phase Grouping**: Stop processing MUST follow two phases:
-    1. **Structural**: Identify and create Parent Stations (Type 1) and Entrances (Type 2).
-    2. **Logical**: Merge Regular Stops (Type 0) into Structural Parent Stations (Type 1) when present.
+    1. **Structural**: Identify and create Parent Stations (e.g. location_type 1).
+    2. **Logical**: Merge Regular Stops (e.g. location_type 0) into Structural Parent Stations when present.
 - **Centroid Authority**: Centroids MUST be generated for every logical stop node. Must have `is_centroid: true` and ID prefixed with `centroid-`.
-- **Enrichment Filtering**: Only features in `stops-enrichment.json` (or structural parents) returned to frontend.
 - **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
-- **Strict Typing**: All interfaces MUST strictly mirror Golemio OpenAPI schema from fetch layer to UI components.
+- **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppStopFeature`, `AppVehicleFeature`).
 
 ## 6. LOCAL ENVIRONMENT
 - **Port:** Dev server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.

@@ -59,9 +59,10 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const routeName = String(merged.route_short_name || '');
         const isStaticFallback = !!merged.is_static_fallback;
 
-        // Effective sequence: suppress highlight if static fallback
+        // Effective sequence: suppress highlight if static fallback or before_track
         const rawSeq = merged.last_stop_sequence;
-        const effectiveSequence = (isStaticFallback || rawSeq === null || rawSeq === undefined) ? null : Number(rawSeq);
+        const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(merged.state_position || '');
+        const effectiveSequence = (isStaticFallback || isBeforeTrack || rawSeq === null || rawSeq === undefined) ? null : Number(rawSeq);
 
         return {
             ...merged,

@@ -1,6 +1,7 @@
 import type { Fetcher } from "@cloudflare/workers-types";
 
 export interface Env {
+
     ASSETS: Fetcher;
     [key: string]: unknown;
 }

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { calculateTimeDifferenceSecs } from '../../../utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
@@ -145,8 +146,15 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                     const realtimeTime = realtime_arrival_time || arrival_time;
                     const scheduledTime = arrival_time;
                     const hasRealtime = !!realtime_arrival_time && realtime_arrival_time !== arrival_time;
-                    const isEarly = hasRealtime && realtime_arrival_time < arrival_time;
-                    const isLate = hasRealtime && realtime_arrival_time > arrival_time;
+                    
+                    let isEarly = false;
+                    let isLate = false;
+                    
+                    if (hasRealtime && arrival_time) {
+                        const diff = calculateTimeDifferenceSecs(realtime_arrival_time, arrival_time);
+                        isEarly = diff < -30;
+                        isLate = diff > 30;
+                    }
                     return (
                         <>
                             <span className={cn(

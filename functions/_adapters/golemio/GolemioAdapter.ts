@@ -79,4 +79,30 @@ export class GolemioAdapter implements CityAdapter {
     handleInfotexts(ctx: EventContext<Env, string, unknown>) {
         return this.infotextsService.getInfotexts(ctx.env);
     }
+
+    /**
+     * Returns raw upstream Golemio or PID XML JSON
+     */
+    async handleRawFeed(ctx: EventContext<Env, string, unknown>, type: string = 'vehicles') {
+        if (type === 'alerts') {
+            const [incidents, exclusions] = await Promise.all([
+                fetch("https://pid.cz/feed/rss-mimoradnosti/").then(r => r.text()),
+                fetch("https://pid.cz/feed/rss-vyluky/").then(r => r.text())
+            ]);
+            const { XMLParser } = await import("fast-xml-parser");
+            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+            return {
+                incidents: parser.parse(incidents),
+                exclusions: parser.parse(exclusions)
+            };
+        }
+
+        const response = await this.client.fetch('/v2/public/vehiclepositions', ctx.env, {
+            cacheTtl: 10 // 10 seconds for debug feed
+        });
+        if (!response.ok) {
+            throw new Error(`Golemio API error: ${response.status}`);
+        }
+        return await response.json();
+    }
 }

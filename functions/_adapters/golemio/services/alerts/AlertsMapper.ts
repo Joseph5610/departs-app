@@ -63,7 +63,7 @@ export class AlertsMapper {
             let lines: string[] = [];
             if (item.lines && item.lines.line) {
                 if (Array.isArray(item.lines.line)) {
-                    lines = item.lines.line.map(String);
+                    lines = item.lines.line.map((l: unknown) => String(l));
                 } else {
                     lines = [String(item.lines.line)];
                 }
@@ -73,7 +73,7 @@ export class AlertsMapper {
                     lines = linesDescMatch[1]
                         .replace(/\s+(?:a|A)\s+/g, ',')
                         .split(',')
-                        .map(l => l.trim())
+                        .map((l: string) => l.trim())
                         .filter(Boolean);
                 }
             }

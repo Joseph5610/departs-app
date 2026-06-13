@@ -2,39 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.48.1] - 2026-06-10
-
-### Fixed
-- **GTFS-RT Brno Integration**:
-  - Normalized `stopId` parsing from Kordis RT (removed padding) to match static IDs.
-  - Implemented mathematical fallback for `last_stop_sequence` based on local time.
-  - Added robust calculation for real-time `delay` by cross-referencing timestamps with static schedule.
-  - Mapped vehicle metadata (`operator`, `vehicle_registration_number`, `vehicle_type`) to Golemio UI contract.
-  - Resolved `currentVehicleData` ReferenceError.
-
-
-## [0.48.0] - 2026-06-10
-
-### Added
-- **Brno Multi-City Support (Phase 1)**: Full static departure board for Brno (JMK KORDIS GTFS).
-  - **GtfsAdapter**: New city adapter implementing `CityAdapter` interface for GTFS-based cities.
-    - `handleStops`: Serves pre-processed `stops.json` (10 800+ stops) from bundled data.
-    - `handleDepartures`: Serves static per-stop schedule JSON (next 48h, 7 500+ files) via `ASSETS` binding.
-    - `handleVehicles`: Returns empty FeatureCollection (GTFS-RT Phase 3).
-    - `handleAlerts`/`handleInfotexts`: Returns empty stubs (no Brno alerts API).
-  - **City Registry**: Brno registered in `CITY_REGISTRY` with center, bounds, timezone, and feature-flag gating.
-  - **GTFS Preprocessing Script**: `scripts/preprocess-gtfs.mjs` downloads live GTFS zip from Kordis JMK, parses routes/trips/calendar/stop_times, and generates per-stop JSON departure schedules.
-  - **GitHub Actions Workflow**: `gtfs-preprocess.yml` for automated nightly GTFS data refresh.
-  - **CitySwitcher**: Globe icon button in map controls opens a city picker dialog; switches map camera and clears selection state on city change.
+## [0.48.0] - 2026-06-12
 
 ### Changed
-- **`brno` branch**: Merged all master changes (shadcn/ui migration, dep bumps) into brno branch via fast-forward.
-- **`CityAdapter` factory**: Extended `getAdapter()` to dispatch to `GtfsAdapter` for `adapter: 'gtfs'` cities.
-- **`city-config.ts`**: Added `'gtfs'` to `AdapterType` union and `adapterConfig?: Record<string, string>` to `CityConfig`.
+
+- **Architecture**: Removed Cloudflare Flagship (FLAGS) service.
+- **Performance**: Optimized Brno GTFS backend adapter to respect Cloudflare 50 subrequests limits by removing real-time delays from `/departures` endpoint loops.
+- **Performance**: Added `caches.default` native caching for `/stops` GTFS adapter to prevent CPU time limit exceptions.
+- **Testing**: Added Playwright API E2E testing to explicitly cover Brno GTFS adapter functionality.
+- **Type Safety**: Fully typed `StopsService` and dynamic configuration for data sources.
+
+## [0.47.2] - 2026-06-12
+
+### Fixed
+
+- **Type Safety**: Strictly typed GTFS-RT feed protobuf structures using native types from `gtfs-realtime-bindings`. Completely eliminated `as unknown` and `as any` type assertions across `VehiclesService.ts`, `VehicleDetailService.ts`, `DeparturesService.ts`, and `AlertsMapper.ts` ensuring a 100% strictly typed backend pipeline.
+- **Linter**: Resolved all remaining `@typescript-eslint/no-explicit-any` errors in backend functions.
+- **Config**: Ignored Cloudflare Worker `.wrangler` build directory in `eslint.config.js`.
 
 ## [0.47.0] - 2026-06-06
 
 ### Changed
+
 - **Shadcn UI Unification**: Full migration of the app to use official Shadcn UI components consistently across all layers.
   - **`Empty` state**: Installed official Shadcn `empty` component. Replaced custom ad-hoc divs in `ErrorState`, `MetroNightMessage`, and `FavoritesPanel` empty state with `<Empty>` + `<EmptyHeader>` + `<EmptyMedia>` + `<EmptyTitle>` + `<EmptyDescription>` + `<EmptyContent>` composition.
   - **`Card` layout**: Replaced custom `div`-based card wrappers in `DisplaySection` (`ToggleSection`), `ErrorBoundary`, and `SettingsFooter` with `<Card>` + `<CardContent>`.
@@ -44,34 +33,39 @@ All notable changes to this project will be documented in this file.
 
 ## [0.46.0] - 2026-06-05
 
-
 ### Added
+
 - **Path-Based Routing**: Replaced query-parameter-based entity selection with clean, path-based routing (`/stop/:id`, `/trip/:id`, and `/trip/:tripId/:vehicleId`).
 - **History Support**: Integrated `wouter` for proper browser history navigation, fixing the native Android "back" gesture and enabling standard forward/back navigation between stops and vehicles.
 
 ## [0.45.0] - 2026-06-03
 
 ### Changed
+
 - **Architectural Separation of Concerns (Phase 0)**: Extracted all data mapping and transformation logic from `*Service` classes into dedicated `*Mapper` static classes (`AlertsMapper`, `DeparturesMapper`, `StopsMapper`, `VehicleDetailMapper`). Services are now strictly responsible for orchestration, fetching, and error handling.
 - **Performance Optimization**: Refactored structural grouping algorithms in `grouping.ts` (specifically `processStops`) to replace expensive O(N²) `Array.from()` nested allocations with highly efficient `Map` and `Set` mutations, reducing Garbage Collection pauses during large payload construction.
 - **Error Handling**: Standardized API Error propagation. Enforced `502 Bad Gateway` status codes when the upstream provider (Golemio) fails or enforces rate limits, preventing frontend misinterpretation of missing data as generic server crashes.
 
 ### Added
+
 - **API Documentation**: Added comprehensive JSDoc annotations to all `*Mapper` files to document GTFS bitmasks, route types, and metric conversions that were previously implicit.
 
 ## [0.44.0] - 2026-05-29
 
 ### Added
-- **Multi-City Architecture**: Introduced `CityAdapter` OOP pattern to easily scale the backend for multiple transit providers. 
+
+- **Multi-City Architecture**: Introduced `CityAdapter` OOP pattern to easily scale the backend for multiple transit providers.
 - **Adapters**: Created `GolemioAdapter` mapping to Prague PID, and stubbed `GtfsAdapter` for future cities.
 - **Dynamic Routing**: Re-routed all API endpoints through `functions/api/[city]/*`. The frontend base URL is now `/api/prague/`.
 
 ### Changed
+
 - **Unified Alerts API**: The frontend hook `useGlobalAlerts` now makes a single request to the combined `/api/prague/alerts` endpoint instead of separate `/api/rss` and `/api/infotexts` requests, reducing HTTP roundtrips.
 - **Backend Refactoring**: Removed `TRANSIT_CONFIG` from shared utilities. Hardcoded Prague assumptions (e.g., timezone `Europe/Prague`, RSS URLs) have been isolated into `golemio/config.ts` and `golemio/rss-utils.ts`.
 - **Date Formatting**: Generalized `formatPragueDate` to `formatDate(date, timezone)` supporting dynamic IANA timezones.
 
 ### Removed
+
 - **Legacy API**: Deleted deprecated flat routes (`/api/stops`, `/api/departures`, `/api/vehicles`, etc.).
 - **Middleware Cleanup**: Removed duplicate root `_middleware.ts`. All security policies and CORS headers are now strictly enforced by the single canonical `/api/[city]/_middleware.ts`.
 
@@ -79,7 +73,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- **Zustand Migration Phase 4 (Zero-Context Finish)**: 
+- **Zustand Migration Phase 4 (Zero-Context Finish)**:
   - Extracted side-effects from `geolocationStore` into headless `useGeolocation.ts` hook.
   - Refactored `viewportStore` to store primitive ID (`selectedPlaceId`) instead of full `GeocodingResult` objects, resolving data via a cache.
   - Strictly typed `MapMetadataStore` camera actions (`flyTo`, `easeTo`) using `maplibre-gl`'s `FlyToOptions` and `EaseToOptions`.
@@ -340,7 +334,22 @@ All notable changes to this project will be documented in this file.
 - Aligned internal types with Golemio OpenAPI.
 
 ## [0.47.1] - 2026-06-07
+
 ### Changed
+
+- Replaced Radix-dependent `vaul` Drawer with `@base-ui/react/dialog` `Sheet` component for mobile `DetailPanel` views.
+- Fixed an interaction blocking bug where iOS Safari was preventing native focus on the Map `Search` input when a direct detail URL was loaded due to Radix `DismissableLayer` intercepting `touchstart`.
+- Aligned `DetailPanel` completely with the Base UI component library architectural directive.
+
+## [0.35.0] - 2026-05-03
+
+- Implemented zero-any type safety.
+- Aligned internal types with Golemio OpenAPI.
+
+## [0.47.1] - 2026-06-07
+
+### Changed
+
 - Replaced Radix-dependent `vaul` Drawer with `@base-ui/react/dialog` `Sheet` component for mobile `DetailPanel` views.
 - Fixed an interaction blocking bug where iOS Safari was preventing native focus on the Map `Search` input when a direct detail URL was loaded due to Radix `DismissableLayer` intercepting `touchstart`.
 - Aligned `DetailPanel` completely with the Base UI component library architectural directive.

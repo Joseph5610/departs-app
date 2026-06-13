@@ -69,6 +69,7 @@ const MapInner: React.FC = () => {
     const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     // Derived State
     const selectedStop = useSelectedStop();
@@ -90,12 +91,12 @@ const MapInner: React.FC = () => {
             const next = !prev;
             if (next) {
                 setTimeout(() => {
-                    navigate('/');
+                    navigate(`/${selectedCity}`);
                 }, 0);
             }
             return next;
         });
-    }, []);
+    }, [selectedCity]);
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
@@ -119,9 +120,9 @@ const MapInner: React.FC = () => {
 
     const handleBack = useCallback(() => {
         if (selectedVehicle && lastStopId) {
-            navigate(`/stop/${encodeURIComponent(lastStopId)}`);
+            navigate(`/${selectedCity}/stop/${encodeURIComponent(lastStopId)}`);
         }
-    }, [selectedVehicle, lastStopId]);
+    }, [selectedVehicle, lastStopId, selectedCity]);
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {
@@ -133,7 +134,7 @@ const MapInner: React.FC = () => {
         return '';
     }, [selectedVehicle, selectedStop, t]);
 
-    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — Pražská integrovaná doprava LIVE';
+    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — MHD Praha & Brno LIVE';
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : 'https://departs.app/';
 
     const jsonLd = useMemo(() => {
@@ -155,7 +156,7 @@ const MapInner: React.FC = () => {
             "@type": "WebApplication",
             "name": "departs.app",
             "url": "https://departs.app",
-            "description": "Real-time visualization of Prague public transport (PID). Track buses, trams, and metro live.",
+            "description": "Real-time visualization of public transport for Prague and Brno. Track buses, trams, and metro live.",
             "applicationCategory": "TransportApplication",
             "operatingSystem": "All",
             "image": "https://departs.app/icon.png",
@@ -196,7 +197,7 @@ const MapInner: React.FC = () => {
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === 'entrance-layer') {
-                        navigate('/'); // Close panel on background click
+                        navigate(`/${selectedCity}`); // Close panel on background click
                         return;
                     }
 
@@ -229,9 +230,9 @@ const MapInner: React.FC = () => {
                         const tId = props.gtfs_trip_id;
                         const vId = props.vehicle_id;
                         if (vId && vId !== tId) {
-                            navigate(`/trip/${encodeURIComponent(tId)}/${encodeURIComponent(vId)}`);
+                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tId)}/${encodeURIComponent(vId)}`);
                         } else {
-                            navigate(`/trip/${encodeURIComponent(tId)}`);
+                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tId)}`);
                         }
                         return;
                     }
@@ -239,7 +240,7 @@ const MapInner: React.FC = () => {
                     if (f.layer.id === 'unclustered-point' || f.layer.id === 'station-icons' || f.layer.id === 'transfer-outer' || f.layer.id === 'transfer-inner') {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
-                            navigate(`/stop/${encodeURIComponent(stopId)}`);
+                            navigate(`/${selectedCity}/stop/${encodeURIComponent(stopId)}`);
                         }
                     }
                 }}
@@ -303,7 +304,7 @@ const MapInner: React.FC = () => {
             <DetailPanel
                 isOpen={!!selectedStop || !!selectedVehicle}
                 id={selectedId || selectedStopId || undefined}
-                onClose={() => navigate('/')}
+                onClose={() => navigate(`/${selectedCity}`)}
                 onBack={(selectedVehicle && lastStopId) ? handleBack : undefined}
                 title={panelTitle}
                 platformCode={!selectedVehicle ? selectedStop?.platform_code : undefined}

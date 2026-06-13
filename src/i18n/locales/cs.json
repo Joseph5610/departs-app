@@ -56,7 +56,7 @@
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "dataSource": "Zdroj dat",
-    "license": "Data PID (CC BY 4.0)",
+    "license": "Data PID & KORDIS JMK (CC BY 4.0)",
     "version": "Verze {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
@@ -93,7 +93,8 @@
       "settings": "Nastavení",
       "zoomIn": "Přiblížit",
       "zoomOut": "Oddálit",
-      "resetBearing": "Vycentrovat na sever"
+      "resetBearing": "Vycentrovat na sever",
+      "switchCity": "Změnit město"
     },
     "vehicleDetails": {
       "fetching": "Načítání podrobností...",

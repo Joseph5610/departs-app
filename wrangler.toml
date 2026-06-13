@@ -6,4 +6,3 @@ required = ["GOLEMIO_API_KEY"]
 
 [observability]
 enabled = true
-

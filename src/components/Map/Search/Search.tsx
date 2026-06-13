@@ -34,6 +34,7 @@ export const Search: React.FC = React.memo(() => {
     // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { addToHistory } = usePreferencesStore(s => s.actions);
 
     // Viewport
@@ -141,7 +142,7 @@ export const Search: React.FC = React.memo(() => {
             coordinates: stop.geometry.coordinates as [number, number]
         };
 
-        navigate(`/stop/${encodeURIComponent(selectedStop.stop_id)}`);
+        navigate(`/${selectedCity}/stop/${encodeURIComponent(selectedStop.stop_id)}`);
         addToHistory({
             type: 'stop',
             ...selectedStop
@@ -157,10 +158,10 @@ export const Search: React.FC = React.memo(() => {
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
-            navigate(`/stop/${encodeURIComponent(item.stop_id)}`);
+            navigate(`/${selectedCity}/stop/${encodeURIComponent(item.stop_id)}`);
             addToHistory(item);
         } else if (item.type === 'place') {
-            navigate('/');
+            navigate(`/${selectedCity}`);
             flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
@@ -185,7 +186,7 @@ export const Search: React.FC = React.memo(() => {
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
-        navigate('/');
+        navigate(`/${selectedCity}`);
         flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,

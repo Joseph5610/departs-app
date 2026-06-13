@@ -129,8 +129,45 @@ const addStarIcon = (map: Map) => {
     }
 };
 
+const addBusIcon = (map: Map) => {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.clearRect(0, 0, size, size);
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = 'black';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        // Pole
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(32, 34);
+        ctx.lineTo(32, 58);
+        ctx.stroke();
+
+        // Big sign board
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(10, 8, 44, 28, 4);
+        } else {
+            ctx.rect(10, 8, 44, 28);
+        }
+        ctx.fill();
+
+        if (map.hasImage('bus-icon')) map.removeImage('bus-icon');
+        const imageData = ctx.getImageData(0, 0, size, size);
+        map.addImage('bus-icon', imageData, { sdf: true });
+    }
+};
+
 export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
     addTrainIcon(map);
+    addBusIcon(map);
     addStarIcon(map);
 };

@@ -55,7 +55,7 @@
     },
     "viewSource": "View source on GitHub",
     "dataSource": "Data Source",
-    "license": "Data PID (CC BY 4.0)",
+    "license": "Data PID & KORDIS JMK (CC BY 4.0)",
     "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
@@ -92,7 +92,8 @@
       "settings": "Settings",
       "zoomIn": "Zoom In",
       "zoomOut": "Zoom Out",
-      "resetBearing": "Reset bearing to north"
+      "resetBearing": "Reset bearing to north",
+      "switchCity": "Switch City"
     },
     "vehicleDetails": {
       "fetching": "Fetching live details...",
