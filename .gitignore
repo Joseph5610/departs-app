@@ -30,4 +30,4 @@ scratch/*
 .ik.yaml
 .ik/*
 
-.playwright-mcp/scratch
+.playwright-mcp/
