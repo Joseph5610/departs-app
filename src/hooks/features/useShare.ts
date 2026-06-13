@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { usePreferencesStore } from '../../state/preferencesStore';
 
 interface ShareOptions {
     title?: string;
@@ -14,21 +15,25 @@ interface ShareOptions {
 export const useShare = () => {
     const { t } = useTranslation();
 
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+
     const getConstructedUrl = useCallback((options: ShareOptions) => {
         // Build from scratch ONLY if we have entity IDs
+        const base = `${window.location.origin}/${selectedCity}`;
+
         if (options.stopId) {
-            return `${window.location.origin}/stop/${encodeURIComponent(options.stopId)}`;
+            return `${base}/stop/${encodeURIComponent(options.stopId)}`;
         }
         if (options.tripId) {
             if (options.vehicleId && options.vehicleId !== options.tripId) {
-                return `${window.location.origin}/trip/${encodeURIComponent(options.tripId)}/${encodeURIComponent(options.vehicleId)}`;
+                return `${base}/trip/${encodeURIComponent(options.tripId)}/${encodeURIComponent(options.vehicleId)}`;
             }
-            return `${window.location.origin}/trip/${encodeURIComponent(options.tripId)}`;
+            return `${base}/trip/${encodeURIComponent(options.tripId)}`;
         }
 
         // No valid entity IDs provided - strictly forbidden to fallback for privacy
         return null;
-    }, []);
+    }, [selectedCity]);
 
     const share = useCallback(async (options: ShareOptions) => {
         const url = getConstructedUrl(options);

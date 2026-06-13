@@ -4,7 +4,7 @@ import type { GtfsRoute } from "../../core/gtfs-data";
 
 export class DeparturesMapper {
     static mapDepartures(
-        deps: Array<GtfsDepartureTuple>, 
+        deps: Array<{ stopId: string, tuple: GtfsDepartureTuple }>, 
         routes: Record<string, GtfsRoute>, 
         rtVehicles: AppVehicleCollection | null
     ): AppDeparture[] {
@@ -14,7 +14,7 @@ export class DeparturesMapper {
         const FUTURE_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
 
         const filtered = deps.filter(d => {
-            const ts = d[3];
+            const ts = d.tuple[3];
             return ts >= now - PAST_WINDOW_MS && ts <= now + FUTURE_WINDOW_MS;
         });
 
@@ -28,7 +28,8 @@ export class DeparturesMapper {
         }
 
         const mapped = filtered.map(d => {
-            const [trip_id, route_id, headsign, timestamp_ms] = d;
+            const { stopId, tuple } = d;
+            const [trip_id, route_id, headsign, timestamp_ms] = tuple;
             const scheduledIso = new Date(timestamp_ms).toISOString();
             const route = routes[route_id];
             
@@ -55,7 +56,8 @@ export class DeparturesMapper {
                 timestamp: rtIso,
                 delay: delaySecs,
                 isCanceled: false,
-                route_color: route ? String(route.route_color) : undefined
+                route_color: route ? String(route.route_color) : undefined,
+                stopId: stopId
             } as AppDeparture;
         });
 
