@@ -10,7 +10,7 @@ export interface SearchIndexItem {
 
 export const createSearchIndex = (features: StopFeature[]): SearchIndexItem[] => {
     return features
-        .filter((stop) => stop.properties.location_type !== 2)
+        .filter((stop) => stop.properties.location_type !== 2 && !stop.properties.is_centroid)
         .map((stop) => {
             const normalizedName = normalizeString(stop.properties.stop_name);
             const stopId = stop.properties.stop_id.toUpperCase();

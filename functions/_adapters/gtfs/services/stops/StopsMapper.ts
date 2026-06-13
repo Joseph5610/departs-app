@@ -45,6 +45,9 @@ export class StopsMapper {
                 if (n.properties.lines?.some((l) => String(l.type) === '2' || l.type === 'train')) {
                     p.properties.is_train = 1;
                 }
+
+                if (!p.properties.all_ids) p.properties.all_ids = [];
+                p.properties.all_ids.push(n.properties.stop_id);
             }
         }
 
