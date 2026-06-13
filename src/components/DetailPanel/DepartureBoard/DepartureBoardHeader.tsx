@@ -8,6 +8,7 @@ import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
+import { useCities } from '../../../hooks/data/useCities';
 import { useNavigate } from '../../../hooks/features/useNavigate';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export const DepartureBoardHeader = React.memo(() => {
     // Preferences
     const departureSort = usePreferencesStore(s => s.departureSort);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setDepartureSort, toggleFavorite } = usePreferencesStore(s => s.actions);
 
     const { share } = useShare();
@@ -47,6 +49,10 @@ export const DepartureBoardHeader = React.memo(() => {
 
     const { handleNavigate, distanceLabel, stopDistanceInfo } = useNavigate();
     const { delayStats, isError } = useDepartures();
+
+    const { data: citiesData } = useCities();
+    const currentCityConfig = citiesData?.cities.find(c => c.slug === selectedCity);
+    const virtualTableUrl = currentCityConfig?.virtualTableUrl;
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
@@ -175,13 +181,13 @@ export const DepartureBoardHeader = React.memo(() => {
                     </Tooltip>
 
                     {/* Official Link – desktop only (PID web board doesn't work well on mobile) */}
-                    {!isMobile && (
+                    {!isMobile && virtualTableUrl && (
                         <Tooltip>
                             <TooltipTrigger render={
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    render={<a href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" />}
+                                    render={<a href={`${virtualTableUrl}${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" />}
                                     className="h-8 w-8 text-muted-foreground"
                                 >
                                     <ExternalLink size={16} strokeWidth={1.5} />

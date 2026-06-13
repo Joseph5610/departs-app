@@ -9,6 +9,7 @@ export interface CityConfig {
     adapter: AdapterType;
     adapterConfig?: Record<string, string>;
     isBeta?: boolean;
+    virtualTableUrl?: string;
 }
 
 export const CITY_REGISTRY: Record<string, CityConfig> = {
@@ -19,7 +20,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         adapter: 'golemio',
-        adapterConfig: { apiKeyEnvVar: 'GOLEMIO_API_KEY' },
+        virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
     },
     brno: {
         slug: 'brno',

@@ -190,6 +190,7 @@ export interface AppCity {
     bounds: [number, number, number, number];
     adapter: string;
     isBeta?: boolean;
+    virtualTableUrl?: string;
 }
 
 export interface AppCitiesResponse {
