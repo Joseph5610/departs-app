@@ -3,7 +3,7 @@ import type { AppCitiesResponse } from '../../../functions/_core/types';
 
 export function useCities() {
     return useQuery<AppCitiesResponse, Error>({
-        queryKey: ['cities'],
+        queryKey: ['cities', 'v2'],
         queryFn: async () => {
             const response = await fetch('/api/cities');
             if (!response.ok) {

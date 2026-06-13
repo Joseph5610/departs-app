@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useCities } from '../../hooks/data/useCities';
 import { apiFetch } from '../../lib/api-client';
 import { Link } from 'wouter';
 import { ArrowLeft, RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 export const FeedExplorer: React.FC = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
+    const { data: citiesData } = useCities();
     const [feedType, setFeedType] = useState<'vehicles' | 'alerts'>('vehicles');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExpandedAll, setIsExpandedAll] = useState(false);
@@ -63,7 +65,7 @@ export const FeedExplorer: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-background text-foreground overflow-hidden">
+        <div className="flex flex-col h-dvh bg-background text-foreground overflow-hidden">
             {/* Header Area */}
             <div className="flex-none border-b border-border bg-card p-3 shadow-sm z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center justify-between w-full sm:w-auto">
@@ -93,8 +95,9 @@ export const FeedExplorer: React.FC = () => {
                 <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
                     <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="hidden sm:block w-full sm:w-auto">
                         <TabsList variant="pill" className="w-full sm:w-auto grid grid-cols-2">
-                            <TabsTrigger value="prague">Prague</TabsTrigger>
-                            <TabsTrigger value="brno">Brno</TabsTrigger>
+                            {citiesData?.cities.map(city => (
+                                <TabsTrigger key={city.slug} value={city.slug}>{city.name}</TabsTrigger>
+                            ))}
                         </TabsList>
                     </Tabs>
 
@@ -136,7 +139,7 @@ export const FeedExplorer: React.FC = () => {
                         <div className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-xl max-w-md text-center shadow-sm">
                             <AlertCircle size={40} className="mx-auto mb-4 opacity-80" />
                             <h2 className="text-lg font-bold mb-2">Upstream Connection Error</h2>
-                            <p className="text-sm opacity-90 font-mono break-words">{error instanceof Error ? error.message : 'Unknown error occurred'}</p>
+                            <p className="text-sm opacity-90 font-mono wrap-break-word">{error instanceof Error ? error.message : 'Unknown error occurred'}</p>
                             <button onClick={handleRefresh} className="mt-4 px-4 py-2 bg-destructive/20 hover:bg-destructive/30 rounded-md font-medium text-sm transition-colors">Try Again</button>
                         </div>
                     </div>
@@ -146,15 +149,15 @@ export const FeedExplorer: React.FC = () => {
                     <div className="bg-[#1e1e1e] rounded-xl shadow-xl overflow-hidden h-full flex flex-col border border-white/10 relative">
                         {/* Fake Mac OS window header */}
                         <div className="bg-[#2d2d2d] px-4 py-2 flex items-center justify-between border-b border-white/5 select-none overflow-x-auto">
-                            <div className="flex gap-2 items-center flex-shrink-0 mr-4">
+                            <div className="flex gap-2 items-center shrink-0 mr-4">
                                 <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
                                 <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
                                 <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
                             </div>
-                            <div className="text-xs text-white/50 font-mono flex items-center gap-2 whitespace-nowrap hidden md:flex">
-                                <span>{selectedCity === 'brno' ? (feedType === 'alerts' ? 'KORDIS (GTFS-RT Alerts -> JSON)' : 'KORDIS (GTFS-RT -> JSON)') : (feedType === 'alerts' ? 'PID (RSS XML -> JSON)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
+                            <div className="text-xs text-white/50 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
+                                <span>{citiesData?.cities.find(c => c.slug === selectedCity)?.adapter === 'gtfs' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (RSS XML -> JSON)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                            <div className="flex items-center gap-2 shrink-0 ml-auto">
                                 <div className="text-xs text-white/40 font-mono bg-white/5 px-2 py-1 rounded-md hidden sm:block">
                                     {getItemsCount()} {feedType === 'vehicles' ? 'vehicles' : 'alerts'}
                                 </div>
@@ -174,7 +177,7 @@ export const FeedExplorer: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-auto p-4 text-xs sm:text-sm font-mono whitespace-pre text-[#d4d4d4] [&>div]:!bg-transparent">
+                        <div className="flex-1 overflow-auto p-4 text-xs sm:text-sm font-mono whitespace-pre text-[#d4d4d4] [&>div]:bg-transparent!">
                             <JsonView 
                                 key={isExpandedAll ? 'expanded' : 'collapsed'}
                                 data={data as Record<string, unknown>} 

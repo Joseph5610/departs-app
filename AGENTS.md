@@ -1,6 +1,6 @@
 # CRITICAL CONSTRAINTS: departs-app
 
-Real-time Prague PID tracking PWA. Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui. Backend: Cloudflare Pages Functions.
+Real-time multi-city public transport tracking PWA (Prague PID, Brno IDS JMK). Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui. Backend: Cloudflare Pages Functions.
 
 ## 1. ARCHITECTURAL INVARIANTS (MANDATORY)
 

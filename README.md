@@ -1,13 +1,13 @@
 # 🚉 departs.app
 
-A lightweight, fast, and distraction-free web app for viewing Prague's public transport departures in real-time.
+A lightweight, fast, and distraction-free web app for viewing public transport departures in real-time. Currently supports Prague (PID) and Brno (IDS JMK).
 
 [![Live App](https://img.shields.io/badge/Live-departs.app-emerald.svg?style=for-the-badge)](https://departs.app)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 ## ✨ Features
 
-- **Real-Time Data**: Live departures for all Prague public transport (Metro, Trams, Buses, Trains).
+- **Real-Time Data**: Live departures for public transport (Metro, Trams, Buses, Trains).
 - **Interactive Map**: Live vehicle locations with accurate delay information and route shapes.
 - **Smart Search**: Find any stop by name and view its upcoming connections.
 - **PWA Ready**: Installable on iOS and Android for a native app experience.
@@ -18,7 +18,7 @@ A lightweight, fast, and distraction-free web app for viewing Prague's public tr
 - **Frontend**: React 19, TypeScript, Vite
 - **Map**: MapLibre GL JS, React Map GL
 - **Backend**: Cloudflare Pages Functions (Edge Computing)
-- **Data Source**: [Golemio API](https://api.golemio.cz/)
+- **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno)
 - **Styling**: Tailwind CSS 4, Framer Motion
 
 ## 🚀 Local Development
@@ -72,4 +72,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ for Prague's commuters.
+Built with ❤️ for commuters.

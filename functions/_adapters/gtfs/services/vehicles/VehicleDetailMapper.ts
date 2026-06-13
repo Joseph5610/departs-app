@@ -28,7 +28,13 @@ export class VehicleDetailMapper {
             nowSecs
         );
 
-        const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, computedDelay);
+        const statePosition = (lastStopSequence === null || (lastStopSequence === 1 && computedDelay < -60)) 
+            ? 'before_track' 
+            : (currentVehicleData?.currentStatus === 1 ? 'at_stop' : 'running');
+
+        const finalDelay = statePosition === 'before_track' ? 0 : computedDelay;
+
+        const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, finalDelay);
         const routeGeoJson = this.buildRouteGeoJson(stations, routeColor);
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : 'Unknown destination';
@@ -40,13 +46,11 @@ export class VehicleDetailMapper {
             route_type: rType,
             trip_headsign: headsign,
             bearing: currentVehicleData?.position?.bearing || null,
-            delay: computedDelay,
+            delay: finalDelay,
             route_color: routeColor,
             is_night: isNightRoute(lineName),
             is_static_fallback: !currentVehicleData,
-            state_position: (lastStopSequence === null || (lastStopSequence === 1 && computedDelay < -60)) 
-                ? 'before_track' 
-                : (currentVehicleData?.currentStatus === 1 ? 'at_stop' : 'running'),
+            state_position: statePosition,
             origin_timestamp: currentVehicleData?.timestamp ? new Date(Number(currentVehicleData.timestamp) * 1000).toISOString() : undefined,
             vehicle_descriptor: {
                 operator: 'IDS JMK',

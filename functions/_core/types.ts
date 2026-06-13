@@ -1,7 +1,6 @@
 import type { Fetcher } from "@cloudflare/workers-types";
 
 export interface Env {
-
     ASSETS: Fetcher;
     [key: string]: unknown;
 }
@@ -184,12 +183,13 @@ export interface AppAlertsResponse {
     alerts: AppRSSItem[];
 }
 
-
 export interface AppCity {
     slug: string;
     name: string;
     center: [number, number];
     bounds: [number, number, number, number];
+    adapter: string;
+    isBeta?: boolean;
 }
 
 export interface AppCitiesResponse {

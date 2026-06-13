@@ -85,7 +85,12 @@ export const CitySwitcher: React.FC = () => {
                                             : "border-transparent bg-white/5 hover:bg-white/10 hover:border-white/10 text-foreground"
                                     )}
                                 >
-                                    <span className="text-base font-medium">{city.name}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-base font-medium">{city.name}</span>
+                                        {city.isBeta && (
+                                            <span className="bg-amber-500/20 text-amber-500 text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-bold">Beta</span>
+                                        )}
+                                    </div>
                                     {isSelected && <Check size={18} className="text-primary" strokeWidth={2.5} />}
                                 </button>
                             );

@@ -47,8 +47,15 @@ export const useAutoCitySwitch = () => {
                 usePreferencesStore.getState().actions.setSelectedCity(newCity.slug);
                 
                 // Also update the URL so useRouteParams doesn't revert it
-                // Preserve the search params (lat, lng, z) that useMapEvents manages
-                const newUrl = `/${newCity.slug}${window.location.search}`;
+                // Preserve the rest of the path (like /stop/123) and search params (lat, lng, z)
+                const currentPath = window.location.pathname;
+                const pathParts = currentPath.split('/').filter(Boolean);
+                if (pathParts.length > 0) {
+                    pathParts[0] = newCity.slug;
+                } else {
+                    pathParts.push(newCity.slug);
+                }
+                const newUrl = `/${pathParts.join('/')}${window.location.search}`;
                 
                 // Use history.replaceState to avoid adding navigation history for panning
                 window.history.replaceState({}, '', newUrl);

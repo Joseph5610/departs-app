@@ -8,6 +8,7 @@ export interface CityConfig {
     bounds: [number, number, number, number]; // [w, s, e, n]
     adapter: AdapterType;
     adapterConfig?: Record<string, string>;
+    isBeta?: boolean;
 }
 
 export const CITY_REGISTRY: Record<string, CityConfig> = {
@@ -32,6 +33,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
             staticDataUrl: 'https://data.departs.app'
         },
+        isBeta: true,
     },
 };
 
