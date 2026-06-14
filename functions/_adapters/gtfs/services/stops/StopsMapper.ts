@@ -54,14 +54,7 @@ export class StopsMapper {
         const finalFeatures: AppStopFeature[] = [];
         
         for (const p of parents.values()) {
-            // 1. Create a clone for the centroid label
-            const centroid = JSON.parse(JSON.stringify(p));
-            centroid.properties.is_centroid = true;
-            // No prefixing! Centroids and parents share the same ID so URLs stay clean.
-            finalFeatures.push(centroid);
-
-            // 2. Keep the original parent for actual map interactions and routing
-            p.properties.is_centroid = false;
+            p.properties.is_centroid = true;
             finalFeatures.push(p);
         }
 

@@ -22,7 +22,7 @@ export const useSelectedStop = () => {
             return { stop_id: stopId };
         }
 
-        const feature = stopsData.features.find(f => f.properties.stop_id === stopId || f.properties.all_ids?.includes(stopId));
+        const feature = stopsData.features.find(f => f.properties.stop_id === stopId);
 
         if (!feature) {
             return { stop_id: stopId };

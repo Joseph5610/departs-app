@@ -18,7 +18,7 @@ export class StopsService {
         
         return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
             const cache = caches.default;
-            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v3`, { method: 'GET' });
+            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v4`, { method: 'GET' });
             const cached = await cache.match(jsonCacheKey);
             
             if (cached) {
