@@ -30,15 +30,37 @@ export class VehiclesService {
             
             const routeShortNames = url.searchParams.getAll('routeShortName');
 
+            const boundsStr = url.searchParams.get('bounds');
+            let bounds: { minLat: number, minLng: number, maxLat: number, maxLng: number } | null = null;
+            if (boundsStr) {
+                const parts = boundsStr.split(',').map(Number);
+                if (parts.length === 4 && !parts.some(isNaN)) {
+                    bounds = {
+                        minLat: parts[0],
+                        minLng: parts[1],
+                        maxLat: parts[2],
+                        maxLng: parts[3]
+                    };
+                }
+            }
+
             const filterCollection = (collection: AppVehicleCollection): AppVehicleCollection => {
-                if (rawRouteTypes.length === 0 && routeShortNames.length === 0) return collection;
+                if (rawRouteTypes.length === 0 && routeShortNames.length === 0 && !bounds) return collection;
                 
                 return {
                     type: 'FeatureCollection',
                     features: collection.features.filter(f => {
                         const typeMatch = rawRouteTypes.length === 0 || routeTypes.includes(f.properties.route_type);
                         const nameMatch = routeShortNames.length === 0 || routeShortNames.includes(f.properties.route_short_name);
-                        return typeMatch && nameMatch;
+                        
+                        let boundsMatch = true;
+                        if (bounds) {
+                            const [lng, lat] = f.geometry.coordinates;
+                            boundsMatch = lat >= bounds.minLat && lat <= bounds.maxLat &&
+                                          lng >= bounds.minLng && lng <= bounds.maxLng;
+                        }
+                        
+                        return typeMatch && nameMatch && boundsMatch;
                     })
                 };
             };
