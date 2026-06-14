@@ -5,7 +5,7 @@ import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { VehiclesMapper } from './VehiclesMapper';
 
-const processingPromises = new Map<string, Promise<AppVehicleCollection>>();
+import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
 export class VehiclesService {
     constructor(private city: CityConfig) {}
@@ -43,27 +43,23 @@ export class VehiclesService {
                 };
             };
 
-            const cache = caches.default;
-            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/vehicles_v1`, { method: 'GET' });
+            const cacheKey = `vehicles_${this.city.slug}`;
             
-            // 1. Check native Cloudflare cache
-            const cached = await cache.match(jsonCacheKey);
-            if (cached) {
-                const data = await cached.json() as AppVehicleCollection;
-                return filterCollection(data);
-            }
+            const result = await CacheManager.getOrFetch(cacheKey, CACHE_TTL.TEN_SECONDS_MS, async () => {
+                const cache = caches.default;
+                const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/vehicles_v1`, { method: 'GET' });
+                
+                // 1. Check native Cloudflare cache
+                const cached = await cache.match(jsonCacheKey);
+                if (cached) {
+                    return await cached.json() as AppVehicleCollection;
+                }
 
-            // 2. Prevent cache stampede: Wait if another request in this isolate is already processing it
-            if (processingPromises.has(this.city.slug)) {
-                const data = await processingPromises.get(this.city.slug)!;
-                return filterCollection(data);
-            }
-
-            const fetchAndProcess = async (): Promise<AppVehicleCollection> => {
+                // 2. Fetch origin
                 const rtUrl = this.city.adapterConfig?.realtimeUrl;
                 if (!rtUrl) {
                     console.warn(`[GTFS Vehicles] No realtimeUrl configured for city: ${this.city.slug}`);
-                    return { type: 'FeatureCollection', features: [] };
+                    return { type: 'FeatureCollection' as const, features: [] } as AppVehicleCollection;
                 }
 
                 const response = await fetch(rtUrl, {
@@ -71,7 +67,7 @@ export class VehiclesService {
                 });
 
                 if (!response || !response.ok) {
-                    return { type: 'FeatureCollection', features: [] };
+                    return { type: 'FeatureCollection' as const, features: [] } as AppVehicleCollection;
                 }
 
                 const buffer = await response.arrayBuffer();
@@ -81,31 +77,21 @@ export class VehiclesService {
 
                 const features = VehiclesMapper.mapVehicles(feed, routes, tripRoutes);
                 
-                const result: AppVehicleCollection = { type: 'FeatureCollection', features };
+                const mappedResult: AppVehicleCollection = { type: 'FeatureCollection', features };
 
-                const responseToCache = new Response(JSON.stringify(result), {
+                const responseToCache = new Response(JSON.stringify(mappedResult), {
                     headers: { 'Content-Type': 'application/json', 'Cache-Control': 's-maxage=10' }
                 });
                 ctx.waitUntil(cache.put(jsonCacheKey, responseToCache));
 
-                return result;
-            };
-
-            const promise = fetchAndProcess().finally(() => {
-                processingPromises.delete(this.city.slug);
+                return mappedResult;
             });
 
-            processingPromises.set(this.city.slug, promise);
-
-            const result = await promise;
             return filterCollection(result);
 
         } catch (e) {
             console.error('Error fetching/parsing GTFS-RT:', e);
-            if (processingPromises.has(this.city.slug)) {
-                processingPromises.delete(this.city.slug);
-            }
-            return { type: 'FeatureCollection', features: [] };
+            return { type: 'FeatureCollection' as const, features: [] } as AppVehicleCollection;
         }
     }
 }
