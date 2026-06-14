@@ -107,8 +107,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 selectedCity: state.selectedCity,
                 routeTypeFilter: state.routeTypeFilter,
             }),
-            // Manual migration from legacy keys if needed, but for now we'll just start fresh or use the persist default
-            // To maintain compatibility with existing legacy keys, we could use a custom storage or onRehydrateStorage
         }
     )
 );

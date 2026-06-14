@@ -54,18 +54,19 @@ export class StopsMapper {
         const finalFeatures: AppStopFeature[] = [];
         
         for (const p of parents.values()) {
-            p.properties.is_centroid = true;
-            if (!p.properties.stop_id.startsWith('centroid-')) {
-                p.properties.stop_id = `centroid-${p.properties.stop_id}`;
-            }
+            // 1. Create a clone for the centroid label
+            const centroid = JSON.parse(JSON.stringify(p));
+            centroid.properties.is_centroid = true;
+            // No prefixing! Centroids and parents share the same ID so URLs stay clean.
+            finalFeatures.push(centroid);
+
+            // 2. Keep the original parent for actual map interactions and routing
+            p.properties.is_centroid = false;
             finalFeatures.push(p);
         }
 
         for (const n of nodes) {
             n.properties.is_centroid = false;
-            if (n.properties.parent_station && !n.properties.parent_station.startsWith('centroid-')) {
-                n.properties.parent_station = `centroid-${n.properties.parent_station}`;
-            }
             finalFeatures.push(n);
         }
 

@@ -5,6 +5,8 @@ import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { VehiclesMapper } from './VehiclesMapper';
 
+const processingPromises = new Map<string, Promise<AppVehicleCollection>>();
+
 export class VehiclesService {
     constructor(private city: CityConfig) {}
 
@@ -43,43 +45,66 @@ export class VehiclesService {
 
             const cache = caches.default;
             const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/vehicles_v1`, { method: 'GET' });
+            
+            // 1. Check native Cloudflare cache
             const cached = await cache.match(jsonCacheKey);
             if (cached) {
                 const data = await cached.json() as AppVehicleCollection;
                 return filterCollection(data);
             }
 
-            const rtUrl = this.city.adapterConfig?.realtimeUrl;
-            if (!rtUrl) {
-                console.warn(`[GTFS Vehicles] No realtimeUrl configured for city: ${this.city.slug}`);
-                return { type: 'FeatureCollection', features: [] };
+            // 2. Prevent cache stampede: Wait if another request in this isolate is already processing it
+            if (processingPromises.has(this.city.slug)) {
+                const data = await processingPromises.get(this.city.slug)!;
+                return filterCollection(data);
             }
 
-            const response = await fetch(rtUrl, {
-                headers: { 'User-Agent': 'departs-app/1.0' }
+            const fetchAndProcess = async (): Promise<AppVehicleCollection> => {
+                const rtUrl = this.city.adapterConfig?.realtimeUrl;
+                if (!rtUrl) {
+                    console.warn(`[GTFS Vehicles] No realtimeUrl configured for city: ${this.city.slug}`);
+                    return { type: 'FeatureCollection', features: [] };
+                }
+
+                const response = await fetch(rtUrl, {
+                    headers: { 'User-Agent': 'departs-app/1.0' }
+                });
+
+                if (!response || !response.ok) {
+                    return { type: 'FeatureCollection', features: [] };
+                }
+
+                const buffer = await response.arrayBuffer();
+                const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+
+                const { routes, tripRoutes } = await getGtfsData(this.city.slug);
+
+                const features = VehiclesMapper.mapVehicles(feed, routes, tripRoutes);
+                
+                const result: AppVehicleCollection = { type: 'FeatureCollection', features };
+
+                const responseToCache = new Response(JSON.stringify(result), {
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 's-maxage=10' }
+                });
+                ctx.waitUntil(cache.put(jsonCacheKey, responseToCache));
+
+                return result;
+            };
+
+            const promise = fetchAndProcess().finally(() => {
+                processingPromises.delete(this.city.slug);
             });
 
-            if (!response || !response.ok) {
-                return { type: 'FeatureCollection', features: [] };
-            }
+            processingPromises.set(this.city.slug, promise);
 
-            const buffer = await response.arrayBuffer();
-            const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
-
-            const { routes, tripRoutes } = await getGtfsData(this.city.slug);
-
-            const features = VehiclesMapper.mapVehicles(feed, routes, tripRoutes);
-            
-            const result: AppVehicleCollection = { type: 'FeatureCollection', features };
-
-            const responseToCache = new Response(JSON.stringify(result), {
-                headers: { 'Content-Type': 'application/json', 'Cache-Control': 's-maxage=10' }
-            });
-            ctx.waitUntil(cache.put(jsonCacheKey, responseToCache));
-
+            const result = await promise;
             return filterCollection(result);
+
         } catch (e) {
             console.error('Error fetching/parsing GTFS-RT:', e);
+            if (processingPromises.has(this.city.slug)) {
+                processingPromises.delete(this.city.slug);
+            }
             return { type: 'FeatureCollection', features: [] };
         }
     }

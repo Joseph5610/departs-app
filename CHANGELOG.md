@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.48.2] - 2026-06-14
+
+### Performance
+
+- **Backend**: Implemented "cache stampede" protection in `VehiclesService` by caching the ongoing Promise for GTFS-RT fetching and parsing per isolate. This prevents the Cloudflare Pages Function from exceeding its CPU time limit when multiple requests hit the backend concurrently with a cold cache.
+- **Backend**: Micro-optimized time allocation inside `VehiclesMapper` by moving object instantiation outside the entity parsing loop.
+
+## [0.48.1] - 2026-06-14
+
+### Fixed
+
+- **Map Interaction**: Prevented parent stations from being mutated into centroids, fixing an issue where stops were loaded with a `centroid-` prefixed URL when clicked on the map.
+- **Favorites**: Fixed `FavoritesPanel` returning "No upcoming departures found" by correctly mapping child platform IDs back to their requested parent station ID when fetching departures.
+
 ## [0.48.0] - 2026-06-12
 
 ### Changed

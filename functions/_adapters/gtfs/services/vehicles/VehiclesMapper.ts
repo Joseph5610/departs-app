@@ -11,6 +11,10 @@ export class VehiclesMapper {
     ): AppVehicleFeature[] {
         const vehiclesMap = new Map<string, AppVehicleFeature>();
         
+        const now = new Date();
+        const hour = now.getUTCHours() + 2; // Approximate local time (Prague/Brno)
+        const isNightTime = hour >= 23 || hour < 5;
+
         for (const entity of feed.entity) {
             if (entity.vehicle && entity.vehicle.position) {
                 const vp = entity.vehicle;
@@ -76,10 +80,6 @@ export class VehiclesMapper {
                         vehiclesMap.set(vehicleId, feature);
                     } else if (newSeq === null && existingSeq === null) {
                         // If neither started, use time-based heuristic
-                        const now = new Date();
-                        const hour = now.getUTCHours() + 2; // Approximate local time (Prague/Brno)
-                        const isNightTime = hour >= 23 || hour < 5;
-                        
                         // If it's night time, prefer night routes. If day time, prefer day routes.
                         const existingIsNight = existing.properties.is_night;
                         const newIsNight = feature.properties.is_night;

@@ -22,24 +22,26 @@ export class DeparturesService {
             if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
             const targetIds: string[] = [];
+            const childToRequestedMap = new Map<string, string>();
             
             for (const stopId of stopIds) {
-                if (stopId.startsWith('centroid-')) {
-                    try {
-                        const stopsService = new StopsService(this.city);
-                        const stopsColl = await stopsService.getStops();
-                        const centroid = stopsColl.features.find(f => f.properties.stop_id === stopId);
-                        if (centroid && centroid.properties.all_ids && centroid.properties.all_ids.length > 0) {
-                            targetIds.push(...centroid.properties.all_ids);
-                        } else {
-                            targetIds.push(stopId);
-                        }
-                    } catch (e) {
-                        console.error('Failed to resolve centroid children:', e);
+                // If they ask for a parent station, resolve to all its child nodes
+                try {
+                    const stopsService = new StopsService(this.city);
+                    const stopsColl = await stopsService.getStops();
+                    const parent = stopsColl.features.find(f => f.properties.stop_id === stopId);
+                    
+                    if (parent && parent.properties.all_ids && parent.properties.all_ids.length > 0) {
+                        targetIds.push(...parent.properties.all_ids);
+                        parent.properties.all_ids.forEach(childId => childToRequestedMap.set(childId, stopId));
+                    } else {
                         targetIds.push(stopId);
+                        childToRequestedMap.set(stopId, stopId);
                     }
-                } else {
+                } catch (e) {
+                    console.error('Failed to resolve children:', e);
                     targetIds.push(stopId);
+                    childToRequestedMap.set(stopId, stopId);
                 }
             }
 
@@ -59,8 +61,9 @@ export class DeparturesService {
                     const chunkData = await res.json() as Record<string, GtfsDepartureTuple[]>;
                     for (const id of ids) {
                         if (chunkData[id]) {
+                            const requestedStopId = childToRequestedMap.get(id) || id;
                             chunkData[id].forEach(tuple => {
-                                allDeps.push({ stopId: id, tuple });
+                                allDeps.push({ stopId: requestedStopId, tuple });
                             });
                         }
                     }
