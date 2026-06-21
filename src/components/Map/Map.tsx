@@ -33,6 +33,7 @@ import { Search } from './Search/Search';
 import { SettingsModal } from '../Modals/SettingsModal/SettingsModal';
 import { WelcomeModal } from '../Modals/WelcomeModal';
 import { AlertsModal } from '../Modals/AlertsModal';
+import { FeedbackModal } from '../Modals/FeedbackModal/FeedbackModal';
 
 const MAP_STYLE_NOLABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
 const MAP_STYLE_LABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
@@ -291,6 +292,7 @@ const MapInner: React.FC = () => {
             <WelcomeModal />
             <SettingsModal />
             <AlertsModal />
+            <FeedbackModal />
 
             <DetailPanel
                 isOpen={isFavoritesOpen}

@@ -43,6 +43,19 @@ export default defineConfig({
         ]
       },
       workbox: {
+        navigateFallback: '/',
+        navigateFallbackDenylist: [/manifest\.webmanifest$/, /\.json$/, /\.xml$/],
+        manifestTransforms: [
+          (manifestEntries) => {
+            const manifest = manifestEntries.map((entry) => {
+              if (entry.url === 'index.html') {
+                entry.url = '/';
+              }
+              return entry;
+            });
+            return { manifest, warnings: [] };
+          }
+        ],
         runtimeCaching: [
           {
             // Cache CARTO Map Style JSON

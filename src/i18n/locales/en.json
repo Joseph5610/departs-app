@@ -5,7 +5,8 @@
     "copyError": "Could not copy link",
     "retry": "Retry",
     "loading": "Loading...",
-    "share": "Share"
+    "share": "Share",
+    "cancel": "Cancel"
   },
   "search": {
     "placeholder": "Search stops, addresses or lines...",
@@ -228,5 +229,22 @@
     "title": "Favorite Stops",
     "empty": "No favorite stops yet",
     "emptySub": "Tap the star icon on any stop's departure board to pin it here."
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "description": "Found a bug or have an idea for an improvement? Let us know.",
+    "type": "Message Type",
+    "typeBug": "Bug",
+    "typeFeature": "Idea",
+    "typeOther": "Other",
+    "message": "Your Message",
+    "messagePlaceholder": "What would you like to change or what is broken?",
+    "email": "Email (optional)",
+    "emailPlaceholder": "name@example.com",
+    "diagnostics": "Include diagnostic data",
+    "diagnosticsDesc": "This helps me find the bug faster (browser version, active stop, etc.)",
+    "submit": "Submit",
+    "success": "Thank you for your feedback!",
+    "errorTurnstile": "Please verify that you are human."
   }
 }

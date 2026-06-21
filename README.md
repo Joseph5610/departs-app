@@ -46,6 +46,11 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
    Create a `.dev.vars` file in the root (copied from `.dev.vars.example`):
    ```bash
    GOLEMIO_API_KEY=your_actual_key_here
+   TURNSTILE_SECRET_KEY=your_turnstile_secret_key
+   ```
+   *And in `.env` or `.env.local` for the frontend:*
+   ```bash
+   VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA # Dummy key for local dev
    ```
 
 4. **Run development server**:
@@ -59,6 +64,31 @@ To create an optimized production build:
 ```bash
 npm run build
 ```
+
+## 🛡️ Feedback System & Admin Hub
+
+The application includes a built-in user feedback widget and an admin dashboard protected by Cloudflare Zero Trust. To set this up for production:
+
+1. **Cloudflare KV**:
+   - Create a KV namespace in your Cloudflare dashboard (e.g., `DEPARTS_FEEDBACK`).
+   - Add the binding to your `wrangler.toml`:
+     ```toml
+     [[kv_namespaces]]
+     binding = "DEPARTS_FEEDBACK"
+     id = "your_kv_namespace_id"
+     ```
+
+2. **Cloudflare Turnstile (Bot Protection)**:
+   - Create a Turnstile widget in Cloudflare.
+   - Add the keys to your Cloudflare Pages Environment Variables:
+     - `VITE_TURNSTILE_SITE_KEY` (Public)
+     - `TURNSTILE_SECRET_KEY` (Secret)
+
+3. **Cloudflare Access (Zero Trust)**:
+   - The `/admin/*` and `/api/admin/*` routes contain sensitive user feedback and diagnostic data.
+   - In your Cloudflare dashboard, navigate to Zero Trust and create an **Access Application** for the paths `departs.app/admin/*` AND `departs.app/api/admin/*`.
+   - Set up a policy to allow only your personal email address or identity provider (e.g., GitHub) to access the dashboard.
+
 
 ## 🏗️ Project Structure
 

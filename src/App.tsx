@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Switch, Route, useLocation } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { FeedExplorer } from './pages/FeedExplorer/FeedExplorer';
+import { AdminFeedback } from './pages/AdminFeedback/AdminFeedback';
 import { usePreferencesStore } from './state/preferencesStore';
 import { useEffect } from 'react';
 
@@ -38,6 +39,9 @@ function App() {
       <Switch>
         <Route path="/explorer">
           <FeedExplorer />
+        </Route>
+        <Route path="/admin/feedback">
+          <AdminFeedback />
         </Route>
         <Route path="/">
           <RootRedirect />

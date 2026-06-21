@@ -5,7 +5,8 @@
     "copyError": "Nepodařilo se zkopírovat odkaz",
     "retry": "Zkusit znovu",
     "loading": "Načítání...",
-    "share": "Sdílet"
+    "share": "Sdílet",
+    "cancel": "Zrušit"
   },
   "search": {
     "placeholder": "Hledat zastávky, adresy nebo linky...",
@@ -231,5 +232,22 @@
     "title": "Oblíbené zastávky",
     "empty": "Žádné oblíbené zastávky",
     "emptySub": "Klepnutím na hvězdičku v detailu zastávky si ji uložíte sem."
+  },
+  "feedback": {
+    "title": "Odeslat zpětnou vazbu",
+    "description": "Našli jste chybu nebo máte nápad na vylepšení? Dejte nám vědět.",
+    "type": "Typ zprávy",
+    "typeBug": "Chyba",
+    "typeFeature": "Nápad",
+    "typeOther": "Jiné",
+    "message": "Vaše zpráva",
+    "messagePlaceholder": "Co byste chtěli změnit nebo co nefunguje?",
+    "email": "E-mail (volitelné)",
+    "emailPlaceholder": "jmeno@domena.cz",
+    "diagnostics": "Přiložit technická data",
+    "diagnosticsDesc": "Pomůže mi to rychleji najít chybu (verze prohlížeče, otevřená zastávka atd.)",
+    "submit": "Odeslat",
+    "success": "Děkujeme za zpětnou vazbu!",
+    "errorTurnstile": "Prosím, ověřte, že jste člověk."
   }
 }

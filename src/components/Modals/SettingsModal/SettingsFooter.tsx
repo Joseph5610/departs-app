@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Code, Scale } from 'lucide-react';
+import { RefreshCw, Clock, Database, Code, Scale, MessageSquareHeart } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -14,7 +14,7 @@ export const SettingsFooter: React.FC = () => {
 
     // Preferences
     const searchHistory = usePreferencesStore(s => s.searchHistory);
-    const { clearHistory } = usePreferencesStore(s => s.actions);
+    const { clearHistory, setIsFeedbackOpen, setIsSettingsOpen } = usePreferencesStore(s => s.actions);
 
     const { updatedAt } = useStops();
     const [isChecking, setIsChecking] = useState(false);
@@ -85,6 +85,19 @@ export const SettingsFooter: React.FC = () => {
                         </ItemContent>
                     </Item>
                 )}
+
+                <Item
+                    variant="settings"
+                    size="none"
+                    render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), 150); }} />}
+                >
+                    <ItemMedia variant="icon" className="text-primary">
+                        <MessageSquareHeart size={18} strokeWidth={2} />
+                    </ItemMedia>
+                    <ItemContent>
+                        <ItemTitle className="text-foreground">{t('feedback.title')}</ItemTitle>
+                    </ItemContent>
+                </Item>
 
                 <Item
                     variant="settings"

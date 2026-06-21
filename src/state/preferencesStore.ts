@@ -8,6 +8,7 @@ export interface PreferencesState {
     showStopLabels: boolean;
     stopTypeFilter: string[];
     isSettingsOpen: boolean;
+    isFeedbackOpen: boolean;
     isAlertsOpen: boolean;
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
@@ -23,6 +24,7 @@ export interface PreferencesActions {
     setShowStopLabels: (show: boolean) => void;
     setStopTypeFilter: (filter: string[]) => void;
     setIsSettingsOpen: (open: boolean) => void;
+    setIsFeedbackOpen: (open: boolean) => void;
     setIsAlertsOpen: (open: boolean) => void;
     setDepartureSort: (sort: 'line' | 'departure') => void;
     setRouteTypeFilter: (filter: string[]) => void;
@@ -46,6 +48,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             showStopLabels: true,
             stopTypeFilter: [],
             isSettingsOpen: false,
+            isFeedbackOpen: false,
             isAlertsOpen: false,
             departureSort: 'line',
             routeTypeFilter: [],
@@ -61,6 +64,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setShowStopLabels: (show) => set({ showStopLabels: show }),
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
+                setIsFeedbackOpen: (open) => set({ isFeedbackOpen: open }),
                 setIsAlertsOpen: (open) => set({ isAlertsOpen: open }),
                 setDepartureSort: (sort) => set({ departureSort: sort }),
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
