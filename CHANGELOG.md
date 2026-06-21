@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## [0.48.7] - 2026-06-22
+
+### Added
+
+- **Agent Integration**: Expanded WebMCP tools with `get_departures` (returns raw JSON of departures for AI agents to parse), `navigate_to_trip`, `set_active_city`, `toggle_map_layers`, and `open_settings`.
+
+## [0.48.6] - 2026-06-22
+
+### Added
+
+- **Agent Integration**: Implemented WebMCP API (`navigator.modelContext.provideContext()`) to expose site tools (like searching or navigating to stops) natively to browser-based AI agents.
+
+## [0.48.5] - 2026-06-22
+### Added
+
+- **SEO/Agent Discovery**: Added a `Link` response header to the homepage pointing to an `llms.txt` file for automated agent discovery (RFC 8288), making the web app more agent-friendly.
+
 ## [0.48.4] - 2026-06-21
 
 ### Changed

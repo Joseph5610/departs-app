@@ -215,7 +215,21 @@
     "planned": "Plánováno",
     "active": "Právě probíhá",
     "validFrom": "Od {{date}}",
-    "untilFurtherNotice": "do odvolání"
+    "untilFurtherNotice": "do odvolání",
+    "causes": {
+      "1": "Neznámá příčina",
+      "2": "Jiná příčina",
+      "3": "Technická závada",
+      "4": "Stávka",
+      "5": "Demonstrace",
+      "6": "Nehoda",
+      "7": "Státní svátek",
+      "8": "Počasí",
+      "9": "Údržba",
+      "10": "Stavební práce",
+      "11": "Policejní zásah",
+      "12": "Záchranná akce"
+    }
   },
   "transportModes": {
     "metro": "Metro",

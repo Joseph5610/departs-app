@@ -11,6 +11,8 @@ export interface RSSItem {
     line_metadata?: Array<{ name: string; route_color: string; type: string }>;
     isActive?: boolean;
     isFuture?: boolean;
+    cause?: string;
+    causeDetail?: { cs?: string; en?: string };
 }
 
 export interface AlertsResponse {

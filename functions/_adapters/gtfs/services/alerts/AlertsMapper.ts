@@ -1,9 +1,10 @@
-import type { AppRSSItem } from "../../../../_core/types";
+import type { AppAlert } from "../../../../_core/types";
 import type { GtfsAlertEntity } from "./types";
 import type { GtfsRoute } from "../../core/gtfs-data";
+import { formatDate } from "../../../../_core/api-utils";
 
 export class AlertsMapper {
-    static mapAlerts(rawAlerts: GtfsAlertEntity[], routes: Record<string, unknown>): AppRSSItem[] {
+    static mapAlerts(rawAlerts: GtfsAlertEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
         const routesByName = new Map<string, GtfsRoute>();
         for (const r of Object.values(routes)) {
             const staticRoute = r as GtfsRoute;
@@ -31,7 +32,7 @@ export class AlertsMapper {
                         const matchingRoute = routesByName.get(ie.routeId);
                         if (matchingRoute) {
                             line_metadata.push({
-                                name: matchingRoute.name as string,
+                                name: (matchingRoute.short_name || matchingRoute.name) as string,
                                 route_color: (matchingRoute.route_color as string) || '#888888',
                                 type: String(matchingRoute.type)
                             });
@@ -60,19 +61,51 @@ export class AlertsMapper {
                     .replace(/&nbsp;/g, ' ');
             }
 
+            let valid_from: string | null = null;
+            let valid_to: string | null = null;
+            
+            if (alert.activePeriod && alert.activePeriod.length > 0) {
+                const period = alert.activePeriod[0];
+                if (period.start && Number(period.start) > 0) {
+                    const startMs = Number(period.start) * (Number(period.start) > 1e11 ? 1 : 1000);
+                    valid_from = formatDate(new Date(startMs));
+                }
+                if (period.end && Number(period.end) > 0) {
+                    const endMs = Number(period.end) * (Number(period.end) > 1e11 ? 1 : 1000);
+                    valid_to = formatDate(new Date(endMs));
+                }
+            }
+
+            let causeDetail: { cs?: string, en?: string } | undefined = undefined;
+            if (alert.causeDetail?.translation) {
+                causeDetail = {};
+                for (const t of alert.causeDetail.translation) {
+                    if (t.language?.startsWith('cs')) {
+                        causeDetail.cs = t.text;
+                    } else if (t.language?.startsWith('en')) {
+                        causeDetail.en = t.text;
+                    }
+                }
+                if (!causeDetail.cs && alert.causeDetail.translation.length > 0) {
+                    causeDetail.cs = alert.causeDetail.translation[0].text;
+                }
+            }
+
             return {
-                type: isDetour ? 'exclusion' : 'incident',
+                type: (isDetour && !forceIncident) ? 'exclusion' : 'incident',
                 title: alert.headerText?.translation?.[0]?.text || 'Mimořádnost',
                 description: description,
-                link: alert.url?.translation?.[0]?.text || 'https://www.idsjmk.cz',
-                valid_from: null,
-                valid_to: null,
+                link: alert.url?.translation?.[0]?.text || '',
+                valid_from: valid_from,
+                valid_to: valid_to,
                 guid: entity.id,
                 priority: 'normal',
                 lines: uniqueLines.length > 0 ? uniqueLines : undefined,
                 line_metadata: uniqueMetadata.length > 0 ? uniqueMetadata : undefined,
                 isActive: true,
-                isFuture: false
+                isFuture: false,
+                cause: alert.cause ? String(alert.cause) : undefined,
+                causeDetail: causeDetail
             };
         });
     }

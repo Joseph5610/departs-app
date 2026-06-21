@@ -212,7 +212,21 @@
     "planned": "Planned",
     "active": "Active now",
     "validFrom": "From {{date}}",
-    "untilFurtherNotice": "until further notice"
+    "untilFurtherNotice": "until further notice",
+    "causes": {
+      "1": "Unknown Cause",
+      "2": "Other Cause",
+      "3": "Technical Problem",
+      "4": "Strike",
+      "5": "Demonstration",
+      "6": "Accident",
+      "7": "Holiday",
+      "8": "Weather",
+      "9": "Maintenance",
+      "10": "Construction",
+      "11": "Police Activity",
+      "12": "Medical Emergency"
+    }
   },
   "transportModes": {
     "metro": "Metro",

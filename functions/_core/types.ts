@@ -153,7 +153,7 @@ export interface AppDepartureResponse {
     departures: AppDeparture[];
 }
 
-export interface AppRSSItem {
+export interface AppAlert {
     type: 'incident' | 'exclusion';
     title: string;
     description: string | null;
@@ -166,6 +166,8 @@ export interface AppRSSItem {
     line_metadata?: Array<{ name: string; route_color: string; type: string }>;
     isActive?: boolean;
     isFuture?: boolean;
+    cause?: string;
+    causeDetail?: { cs?: string; en?: string };
 }
 
 export interface AppInfotext {
@@ -180,7 +182,7 @@ export interface AppInfotext {
 }
 
 export interface AppAlertsResponse {
-    alerts: AppRSSItem[];
+    alerts: AppAlert[];
 }
 
 export interface AppCity {

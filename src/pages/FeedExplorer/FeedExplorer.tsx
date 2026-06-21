@@ -48,8 +48,8 @@ export const FeedExplorer: React.FC = () => {
         if (!data) return 0;
         if (feedType === 'alerts') {
             if (selectedCity === 'prague') {
-                const prgData = data as { incidents?: { rss?: { channel?: { item?: unknown } } }, exclusions?: { rss?: { channel?: { item?: unknown } } } };
-                const inc = prgData.incidents?.rss?.channel?.item;
+                const prgData = data as { incidents?: { entity?: unknown[], rss?: { channel?: { item?: unknown } } }, exclusions?: { rss?: { channel?: { item?: unknown } } } };
+                const inc = prgData.incidents?.entity || prgData.incidents?.rss?.channel?.item;
                 const exc = prgData.exclusions?.rss?.channel?.item;
                 let count = 0;
                 if (Array.isArray(inc)) count += inc.length;
@@ -155,7 +155,7 @@ export const FeedExplorer: React.FC = () => {
                                 <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
                             </div>
                             <div className="text-xs text-white/50 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                                <span>{citiesData?.cities.find(c => c.slug === selectedCity)?.adapter === 'gtfs' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (RSS XML -> JSON)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
+                                <span>{citiesData?.cities.find(c => c.slug === selectedCity)?.adapter === 'gtfs' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-auto">
                                 <div className="text-xs text-white/40 font-mono bg-white/5 px-2 py-1 rounded-md hidden sm:block">

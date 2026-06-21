@@ -142,24 +142,31 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
             </div>
             <div className="flex flex-col items-end shrink-0 min-w-[64px]">
                 {(() => {
-                    const { realtime_arrival_time, arrival_time } = stop.properties;
-                    const realtimeTime = realtime_arrival_time || arrival_time;
-                    const scheduledTime = arrival_time;
-                    const hasRealtime = !!realtime_arrival_time && realtime_arrival_time !== arrival_time;
+                    const { realtime_arrival_time, realtime_departure_time, arrival_time, departure_time } = stop.properties;
                     
-                    let isEarly = false;
+                    const rtTime = (isPast || isCurrent) 
+                        ? (realtime_departure_time || realtime_arrival_time) 
+                        : (realtime_arrival_time || realtime_departure_time);
+                        
+                    const schTime = (isPast || isCurrent) 
+                        ? (departure_time || arrival_time) 
+                        : (arrival_time || departure_time);
+                        
+                    const realtimeTime = rtTime || schTime;
+                    const scheduledTime = schTime;
+                    const hasRealtime = !!rtTime && rtTime !== schTime;
+                    
                     let isLate = false;
                     
-                    if (hasRealtime && arrival_time) {
-                        const diff = calculateTimeDifferenceSecs(realtime_arrival_time, arrival_time);
-                        isEarly = diff < -30;
+                    if (hasRealtime && schTime) {
+                        const diff = calculateTimeDifferenceSecs(rtTime as string, schTime);
                         isLate = diff > 30;
                     }
                     return (
                         <>
                             <span className={cn(
                                 "text-xs tabular-nums",
-                                isPast ? "text-muted-foreground" : isEarly ? "text-primary" : isLate ? "text-destructive" : "text-muted-foreground"
+                                isPast ? "text-muted-foreground" : hasRealtime ? (isLate ? "text-destructive" : "text-primary") : "text-muted-foreground"
                             )}>
                                 {String(realtimeTime || '').slice(0, 8)}
                             </span>

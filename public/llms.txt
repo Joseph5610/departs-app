@@ -1,0 +1,34 @@
+# departs.app
+
+**departs.app** is a lightning-fast, real-time public transit tracker for Prague (PID) and Brno (IDS JMK). It provides users with live departures, vehicle locations, and dynamic route tracking on an interactive map.
+
+## Core Features
+
+- **Live Departures**: Real-time departure boards for all stops (Metro, Trams, Buses, Trains).
+- **Interactive Map**: Live vehicle locations with accurate delay information and route tracking.
+- **Smart Search**: Quick stop and station discovery.
+- **Supported Regions**: Prague Integrated Transport (PID) and South Moravian Region (IDS JMK).
+
+## AI capabilities and WebMCP
+
+This website exposes its internal state and features directly to AI assistants via WebMCP (`navigator.modelContext`). AI agents can interact with the app on behalf of the user using the following tools:
+
+- **`search_stops`**: Resolves a stop name (e.g., "Hlavní nádraží") to an exact Stop ID.
+- **`get_departures`**: Fetches the raw JSON of real-time upcoming departures, including delays, for a specific Stop ID.
+- **`navigate_to_stop`** and **`navigate_to_trip`**: Visually opens a specific stop or tracks a specific vehicle on the user's screen.
+- **`set_active_city`**: Switches the active transit network between `prague` and `brno`.
+
+Using these tools allows agents to provide immediate, accurate transit data (such as upcoming connections and delay times in seconds) without hallucinating timetables.
+
+## URL Structure
+
+For direct navigation or linking, the app uses the following routing structures:
+- **Map Home**: `https://departs.app/{city}` (e.g., `https://departs.app/prague`)
+- **Stop Detail**: `https://departs.app/{city}/stop/{stopId}` (e.g., `https://departs.app/prague/stop/U850Z1P`)
+- **Vehicle/Trip Tracking**: `https://departs.app/{city}/trip/{tripId}` (e.g., `https://departs.app/brno/trip/12345`)
+
+## Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite, Tailwind v4, Zustand, MapLibre GL JS
+- **Backend**: Cloudflare Pages Functions
+- **Source**: https://github.com/joseph5610/departs-app

@@ -1,8 +1,16 @@
 
 import React, { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
+import { useTranslation } from 'react-i18next';
 import { parseISO } from 'date-fns';
 import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  useCarousel,
+} from '@/components/ui/carousel';
 
 import { VehicleDetailSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
@@ -42,6 +50,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     isFollowing,
     onToggleFollow
 }) => {
+    const { t } = useTranslation();
     const { rss } = useGlobalAlerts();
     const rssData = rss.data;
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
@@ -76,8 +85,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     React.useEffect(() => {
         const originTs = displayVehicle?.origin_timestamp;
         if (!originTs) {
-            setLiveDataAgeSeconds(null);
-            return;
+            const tId = setTimeout(() => setLiveDataAgeSeconds(null), 0);
+            return () => clearTimeout(tId);
         }
 
         const updateAge = () => {
@@ -102,10 +111,11 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const routeName = displayVehicle?.routeName;
         if (!routeName) return [];
         const upperRouteName = routeName.toUpperCase();
-        return allItems.filter(item =>
-            item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName) &&
-            item.isActive
-        );
+        return allItems.filter(item => {
+            const matchesLine = item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName);
+            const matchesMetadata = item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName);
+            return (matchesLine || matchesMetadata) && item.isActive;
+        });
     }, [rssData, displayVehicle?.routeName]);
 
     if (!displayVehicle) return null;
@@ -138,20 +148,34 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                     {/* Alerts */}
                     {relevantAlerts.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                            {relevantAlerts.map((alert, idx) => (
-                                <GenericAlertCard
-                                    key={alert.guid || idx}
-                                    title={alert.title}
-                                    description={alert.description}
-                                    link={alert.link}
-                                    priority={alert.priority || 'normal'}
-                                    validFrom={alert.valid_from}
-                                    validTo={alert.valid_to}
-                                    isActive={alert.isActive}
-                                    isFuture={alert.isFuture}
-                                />
-                            ))}
+                        <div className="flex flex-col gap-2 mt-2">
+                            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                                {t('alerts.title', { defaultValue: 'Mimořádnosti a výluky' })}
+                                {relevantAlerts.length > 1 && ` (${relevantAlerts.length})`}
+                            </span>
+                            <Carousel opts={{ loop: true }} className="w-full">
+                                <CarouselContent className="-ml-3">
+                                    {relevantAlerts.map((alert, idx) => (
+                                        <CarouselItem key={alert.guid || idx} className="pl-3 basis-full">
+                                            <GenericAlertCard
+                                                title={alert.title}
+                                                description={alert.description}
+                                                link={alert.link}
+                                                priority={alert.priority || 'normal'}
+                                                validFrom={alert.valid_from}
+                                                validTo={alert.valid_to}
+                                                isActive={alert.isActive}
+                                                isFuture={alert.isFuture}
+                                                cause={alert.cause}
+                                                causeDetail={alert.causeDetail}
+                                                type={alert.type}
+                                                hideCauseText={true}
+                                            />
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                                <CarouselDots count={relevantAlerts.length} />
+                            </Carousel>
                         </div>
                     )}
 
@@ -171,3 +195,37 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 });
 
 VehicleDetail.displayName = 'VehicleDetail';
+
+const CarouselDots = ({ count }: { count: number }) => {
+    const { api } = useCarousel();
+    const [current, setCurrent] = React.useState(0);
+
+    React.useEffect(() => {
+        if (!api) return;
+        const onSelect = () => setCurrent(api.selectedScrollSnap());
+        api.on("select", onSelect);
+        api.on("reInit", onSelect);
+        const tId = setTimeout(onSelect, 0);
+        return () => {
+            api.off("select", onSelect);
+            api.off("reInit", onSelect);
+            clearTimeout(tId);
+        };
+    }, [api]);
+
+    if (count <= 1) return null;
+
+    return (
+        <div className="flex justify-center items-center gap-1.5 mt-2 mb-1">
+            {Array.from({ length: count }).map((_, idx) => (
+                <div
+                    key={idx}
+                    className={cn(
+                        "h-1.5 rounded-full transition-all duration-300",
+                        current === idx ? "w-4 bg-primary" : "w-1.5 bg-foreground/20"
+                    )}
+                />
+            ))}
+        </div>
+    );
+};
