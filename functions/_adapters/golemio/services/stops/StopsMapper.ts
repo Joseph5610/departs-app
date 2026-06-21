@@ -1,5 +1,5 @@
 import { AppStopFeature, AppStopProperties } from "../../../../_core/types";
-import { GolemioStopFeature } from "./types";
+import { GolemioStopFeature } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
 import { getStopEnrichment } from "./enrichment";
 

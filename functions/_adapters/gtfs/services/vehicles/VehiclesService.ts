@@ -4,6 +4,7 @@ import type { Env, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { VehiclesMapper } from './VehiclesMapper';
+import { vehicleQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
@@ -25,12 +26,9 @@ export class VehiclesService {
                 'trolleybus': [11, 800]
             };
             
-            const rawRouteTypes = url.searchParams.getAll('routeType');
-            const routeTypes = rawRouteTypes.flatMap(t => gtfsTypeMap[t.toLowerCase()] || []);
-            
-            const routeShortNames = url.searchParams.getAll('routeShortName');
+            const { bounds: boundsStr, routeType: rawRouteTypes, routeShortName: routeShortNames } = parseSearchParams(url.searchParams, vehicleQuerySchema);
+            const routeTypes = rawRouteTypes.flatMap((t: string) => gtfsTypeMap[t.toLowerCase()] || []);
 
-            const boundsStr = url.searchParams.get('bounds');
             let bounds: { minLat: number, minLng: number, maxLat: number, maxLng: number } | null = null;
             if (boundsStr) {
                 const parts = boundsStr.split(',').map(Number);

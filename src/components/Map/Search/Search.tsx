@@ -58,6 +58,7 @@ export const Search: React.FC = React.memo(() => {
     const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
     const { results: geocodingResults } = useGeocoding(query, userLocation);
 
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === '/' &&

@@ -19,13 +19,18 @@ async function verifyTurnstile(token: string, secret: string, ip: string) {
   formData.append('response', token);
   formData.append('remoteip', ip);
 
+  console.log('Verifying Turnstile:', { secret, token, ip });
+
   const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
   const result = await fetch(url, {
     body: formData,
     method: 'POST',
   });
 
-  const outcome = await result.json() as { success: boolean };
+  const outcome = await result.json() as { success: boolean; "error-codes"?: string[] };
+  if (!outcome.success) {
+    console.error('Turnstile verification failed:', outcome);
+  }
   return outcome.success;
 }
 
@@ -73,7 +78,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
     
     // Use secret key exclusively from the environment (production from CF dashboard, local from .dev.vars)
-    const secretKey = context.env.TURNSTILE_SECRET_KEY;
+    // If undefined (e.g. local dev without .dev.vars), fallback to the Cloudflare testing dummy key
+    const secretKey = context.env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA';
 
     const isHuman = await verifyTurnstile(data.turnstileToken, secretKey, clientIp);
     

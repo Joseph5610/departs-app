@@ -1,5 +1,5 @@
 import { AppDeparture, AppDepartureResponse } from "../../../../_core/types";
-import { GolemioDepartureItem } from "./types";
+import { GolemioDepartureItem } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
 import { getMetroLinesForHeadsign } from "../stops/enrichment";
 import { fixCommaSpacing } from "../../../../_core/api-utils";

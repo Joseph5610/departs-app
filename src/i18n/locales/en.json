@@ -88,6 +88,11 @@
     "beta": "Beta"
   },
   "map": {
+    "regions": {
+      "title": "Departs currently supports these regions:",
+      "prague": "Prague & Central Bohemia",
+      "brno": "Brno & South Moravia"
+    },
     "controls": {
       "myLocation": "My Location",
       "settings": "Settings",

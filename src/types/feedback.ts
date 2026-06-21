@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other']);
+export const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other', 'crash']);
 
 export type FeedbackType = z.infer<typeof feedbackTypeEnum>;
 
@@ -35,6 +35,14 @@ export const diagnosticDataSchema = z.object({
   locale: z.string().optional(),
   isPwa: z.boolean().optional(),
   gpsEnabled: z.boolean().optional(),
+  
+  // Crash Report Data
+  crashInfo: z.object({
+    errorName: z.string(),
+    errorMessage: z.string(),
+    errorStack: z.string().optional(),
+    componentStack: z.string().optional(),
+  }).optional(),
 });
 
 export type DiagnosticData = z.infer<typeof diagnosticDataSchema>;

@@ -1,5 +1,5 @@
 import { AppVehicleFeature, AppVehicleCollection } from "../../../../_core/types";
-import { GolemioVehiclePayload, GolemioVehicleFeature } from "./types";
+import { GolemioVehiclePayload, GolemioVehicleFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
 

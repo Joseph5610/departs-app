@@ -1,6 +1,6 @@
 import { AppInfotext } from "../../../../_core/types";
 import { formatDate } from "../../../../_core/api-utils";
-import { GolemioInfotext } from "./types";
+import { GolemioInfotext } from "./schemas";
 
 export class InfotextsMapper {
     static map(data: GolemioInfotext[]): AppInfotext[] {

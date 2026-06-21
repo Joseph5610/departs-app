@@ -5,13 +5,14 @@ import { getGtfsData } from '../../core/gtfs-data';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { StopsService } from '../stops/StopsService';
+import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 
 export class DeparturesService {
     constructor(private city: CityConfig) {}
 
     async getDepartures(ctx: EventContext<Env, string, unknown>): Promise<AppDepartureResponse> {
         const url = new URL(ctx.request.url);
-        const stopIds = url.searchParams.getAll('stopId');
+        const { stopId: stopIds } = parseSearchParams(url.searchParams, departuresQuerySchema);
         
         if (!stopIds || stopIds.length === 0) {
             return { departures: [] };

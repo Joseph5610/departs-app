@@ -108,11 +108,7 @@ export const FeedbackModal: React.FC = () => {
         setIsFeedbackOpen(false);
     }, [setIsFeedbackOpen]);
 
-    const isDev = import.meta.env.DEV;
-    // V dev móde natvrdo použijeme Cloudflare testovací kľúč, ktorý vždy prejde
-    const siteKey = isDev 
-        ? '1x00000000000000000000AA' 
-        : (import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA');
+    const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

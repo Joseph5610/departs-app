@@ -5,14 +5,15 @@ import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
+import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 
 export class VehicleDetailService {
     constructor(private city: CityConfig) {}
 
     async getVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         const url = new URL(ctx.request.url);
-        const tripId = url.searchParams.get('tripId');
-        const vehicleId = url.searchParams.get('vehicleId') || null;
+        const { vehicleId: rawVehicleId, tripId } = parseSearchParams(url.searchParams, vehicleDetailQuerySchema);
+        const vehicleId = rawVehicleId || null;
 
         if (!tripId) {
             return VehicleDetailMapper.buildErrorResponse(vehicleId, '', 'Unknown destination');

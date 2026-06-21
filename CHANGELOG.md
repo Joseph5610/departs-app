@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.48.4] - 2026-06-21
+
+### Changed
+
+- **UI**: Cleaned up the Departure Board header on Desktop by grouping the "Share" and "Official Board" actions into a new Dropdown Menu (hamburger icon) to save space.
+
+## [0.48.3] - 2026-06-15
+
+### Changed
+
+- **UI**: Minor fixes.
+
 ## [0.48.2] - 2026-06-14
 
 ### Performance

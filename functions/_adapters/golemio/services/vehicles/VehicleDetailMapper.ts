@@ -1,5 +1,5 @@
 import { AppVehicleDetail } from "../../../../_core/types";
-import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "./types";
+import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
 import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../stops/enrichment";

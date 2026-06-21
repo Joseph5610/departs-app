@@ -1,10 +1,13 @@
 import { Env, AppDepartureResponse } from "../../../../_core/types";
-import { GolemioDepartureItem } from "./types";
-import { CACHE_TTL, ERROR_MESSAGES, sanitizeId } from "../../../../_core/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
+import { golemioDepartureItemSchema, type GolemioDepartureItem } from "./schemas";
+
+import { z } from "zod";
 import { GolemioClient } from "../../core/GolemioClient";
 import { DeparturesMapper } from "./DeparturesMapper";
+import { departuresQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 
 /**
  * Service for fetching and processing real-time departure boards for a specific stop.
@@ -50,14 +53,8 @@ export class DeparturesService {
      * @throws {ApiError} If stopId is missing or upstream fetch fails
      */
     async getDepartures(env: Env, searchParams: URLSearchParams): Promise<AppDepartureResponse> {
-        let stopIds = searchParams.getAll("stopId").map(sanitizeId).filter((id): id is string => !!id);
-        
-        if (stopIds.length === 0) {
-            const singleStopId = sanitizeId(searchParams.get("stopId"));
-            if (singleStopId) {
-                stopIds = [singleStopId];
-            }
-        }
+        const { stopId: rawStopIds } = parseSearchParams(searchParams, departuresQuerySchema);
+        const stopIds = rawStopIds.filter((id): id is string => !!id);
 
         if (stopIds.length === 0) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
@@ -85,7 +82,24 @@ export class DeparturesService {
                 throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), status);
             }
 
-            const data = await response.json() as GolemioDepartureItem[][];
+            const rawData = await response.json();
+            
+            // Safe array parsing: if an individual departure item is malformed, 
+            // we catch it as null and filter it out, saving the rest of the board!
+            const safeSchema = z.array(z.array(golemioDepartureItemSchema.nullable().catch(err => {
+                console.warn("Skipping invalid departure item:", err.error.message);
+                return null;
+            })));
+            
+            const parsed = safeSchema.safeParse(rawData);
+            if (!parsed.success) {
+                console.error("Critical Golemio structural change:", parsed.error);
+                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
+            }
+            
+            // Filter out the nulls
+            const data = parsed.data.map(group => group.filter((item): item is GolemioDepartureItem => item !== null));
+            
             return DeparturesMapper.map(data, stopIds);
     }
 }

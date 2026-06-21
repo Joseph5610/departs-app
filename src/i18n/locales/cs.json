@@ -89,6 +89,11 @@
     "beta": "Beta"
   },
   "map": {
+    "regions": {
+      "title": "Departs aktuálně podporuje tyto regiony:",
+      "prague": "Praha a Středočeský kraj",
+      "brno": "Brno a Jihomoravský kraj"
+    },
     "controls": {
       "myLocation": "Moje poloha",
       "settings": "Nastavení",

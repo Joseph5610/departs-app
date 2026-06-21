@@ -28,7 +28,7 @@ export const useAutoCitySwitch = () => {
         const handleMoveEnd = () => {
             const center = map.getCenter();
             
-            const newCity = data.cities.find(city => {
+            let newCity = data.cities.find(city => {
                 const [minLng, minLat, maxLng, maxLat] = city.bounds;
                 return (
                     center.lng >= minLng &&
@@ -37,6 +37,30 @@ export const useAutoCitySwitch = () => {
                     center.lat <= maxLat
                 );
             });
+
+            // If the map center is not strictly inside any city's bounding box,
+            // try to find a city whose center point is visible on the screen
+            if (!newCity) {
+                const bounds = map.getBounds();
+                const visibleCities = data.cities.filter(city => {
+                    if (!city.center) return false;
+                    const [lng, lat] = city.center as [number, number];
+                    // check if the city center is within the viewport
+                    return bounds.contains([lng, lat]);
+                });
+
+                if (visibleCities.length > 0) {
+                    let minDistance = Infinity;
+                    for (const city of visibleCities) {
+                        const [lng, lat] = city.center as [number, number];
+                        const dist = Math.pow(lng - center.lng, 2) + Math.pow(lat - center.lat, 2);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            newCity = city;
+                        }
+                    }
+                }
+            }
 
             // If we found a city and it's different from the currently selected one, switch to it
             // State mutation uses zustand's getState to avoid missing state updates if closure goes stale,
@@ -88,16 +112,19 @@ export const useAutoCitySwitch = () => {
         const center = map.getCenter();
         const [minLng, minLat, maxLng, maxLat] = cityData.bounds;
         
-        const isInside = (
+        const isInsideStrict = (
             center.lng >= minLng &&
             center.lng <= maxLng &&
             center.lat >= minLat &&
             center.lat <= maxLat
         );
 
-        // If selectedCity changed but we are outside its bounds, fly there.
+        const isCenterVisible = map.getBounds().contains(cityData.center as [number, number]);
+
+        // If selectedCity changed but we are outside its bounds and its center is not visible, fly there.
         // This handles cases where user clicks a link to /brno while map is in Prague.
-        if (!isInside) {
+        // If the center is already visible, the user probably just panned there, so don't aggressively fly.
+        if (!isInsideStrict && !isCenterVisible) {
             map.flyTo({
                 center: cityData.center as [number, number],
                 zoom: 12,

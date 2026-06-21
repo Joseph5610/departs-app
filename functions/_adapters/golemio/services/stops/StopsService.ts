@@ -1,6 +1,6 @@
 
 import { Env, AppStopCollection } from "../../../../_core/types";
-import { GolemioStopFeature, GolemioStopPayload } from "./types";
+import { GolemioStopFeature, golemioStopPayloadSchema } from "./schemas";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
@@ -35,8 +35,14 @@ export class StopsService {
                     searchParams: { limit: limit.toString(), offset: offset.toString() }
                 });
                 if (!res.ok) return [];
-                const data = await res.json() as GolemioStopPayload;
-                return data.features || [];
+                const rawData = await res.json();
+                const parsed = golemioStopPayloadSchema.safeParse(rawData);
+                if (!parsed.success) {
+                    console.error("Critical Golemio stops structural change:", parsed.error);
+                    return [];
+                }
+                const features = parsed.data.features;
+                return features.filter((f): f is NonNullable<typeof f> => f !== null);
             }));
             return results.flat();
         };

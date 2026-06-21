@@ -2,6 +2,8 @@ import { AppRSSItem } from "../../../../_core/types";
 import { formatDate } from "../../../../_core/api-utils";
 import { getVehicleColor } from "../vehicles/colors";
 import { XMLParser } from "fast-xml-parser";
+import { z } from 'zod';
+import { pidRssItemSchema } from "./schemas";
 
 export class AlertsMapper {
     private static guessType(name: string): string {
@@ -31,16 +33,23 @@ export class AlertsMapper {
         });
         
         const jObj = parser.parse(xmlString);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let parsedItems: any[] = [];
+        let rawItems: unknown[] = [];
         
         if (jObj && jObj.rss && jObj.rss.channel && jObj.rss.channel.item) {
             if (Array.isArray(jObj.rss.channel.item)) {
-                parsedItems = jObj.rss.channel.item;
+                rawItems = jObj.rss.channel.item;
             } else {
-                parsedItems = [jObj.rss.channel.item];
+                rawItems = [jObj.rss.channel.item];
             }
         }
+
+        // Validate structure with Zod and drop malformed items silently
+        const safeArraySchema = z.array(pidRssItemSchema.nullable().catch(err => {
+            console.warn("Skipping invalid RSS item:", err.error);
+            return null;
+        }));
+        
+        const parsedItems = safeArraySchema.parse(rawItems).filter((i): i is NonNullable<typeof i> => i !== null);
 
         const now = new Date();
         const items: AppRSSItem[] = [];
@@ -52,21 +61,17 @@ export class AlertsMapper {
         for (const item of parsedItems) {
             const title = item.title || "";
             const pubDate = item.pubDate || "";
-            const guid = item.guid ? (typeof item.guid === 'object' ? item.guid["#text"] : item.guid) : null;
+            const guid = item.guid || null;
             const link = item.link || null;
-            const priority = item.priority ? String(item.priority) : null;
+            const priority = item.priority || null;
             
             // For incidents, description is usually in 'description', for exclusions it's 'content:encoded' or 'description'
-            const description = (item["content:encoded"] || item.description || "").toString().replace(/&nbsp;/ig, ' ');
+            const description = (item["content:encoded"] || item.description || "").replace(/&nbsp;/ig, ' ');
 
             // lines parsing
             let lines: string[] = [];
-            if (item.lines && item.lines.line) {
-                if (Array.isArray(item.lines.line)) {
-                    lines = item.lines.line.map((l: unknown) => String(l));
-                } else {
-                    lines = [String(item.lines.line)];
-                }
+            if (item.lines) {
+                lines = item.lines;
             } else {
                 const linesDescMatch = description.match(linesRegex);
                 if (linesDescMatch && linesDescMatch[1]) {
@@ -157,13 +162,13 @@ export class AlertsMapper {
 
             items.push({
                 type: itemType,
-                title: String(title).trim(),
+                title: title,
                 description: cleanedDescription || null,
-                link: link ? String(link).trim() : "",
+                link: link || "",
                 valid_from,
                 valid_to,
-                guid: guid ? String(guid).trim() : undefined,
-                priority: priority ? String(priority) : undefined,
+                guid: guid || undefined,
+                priority: priority || undefined,
                 lines,
                 line_metadata: lines.map(name => {
                     const t = AlertsMapper.guessType(name);
