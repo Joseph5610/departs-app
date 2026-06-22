@@ -3,8 +3,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { Switch, Route, useLocation } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useWebMCP } from './hooks/features/useWebMCP';
-import { FeedExplorer } from './pages/FeedExplorer/FeedExplorer';
-import { AdminFeedback } from './pages/AdminFeedback/AdminFeedback';
+import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
+import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
+import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
 import { usePreferencesStore } from './state/preferencesStore';
 import { useEffect } from 'react';
 
@@ -39,11 +40,14 @@ function App() {
       </div>
 
       <Switch>
-        <Route path="/explorer">
+        <Route path="/admin/explorer">
           <FeedExplorer />
         </Route>
         <Route path="/admin/feedback">
           <AdminFeedback />
+        </Route>
+        <Route path="/admin">
+          <AdminIndex />
         </Route>
         <Route path="/">
           <RootRedirect />

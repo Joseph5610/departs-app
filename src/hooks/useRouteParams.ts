@@ -1,4 +1,4 @@
-import { useRoute } from 'wouter';
+import { useRoute, useLocation } from 'wouter';
 import { usePreferencesStore } from '../state/preferencesStore';
 import { useEffect } from 'react';
 import { useCities } from './data/useCities';
@@ -31,16 +31,30 @@ export const useRouteParams = () => {
     const { data: citiesData } = useCities();
     const setSelectedCity = usePreferencesStore(s => s.actions.setSelectedCity);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const [, navigate] = useLocation();
 
     useEffect(() => {
-        if (city && city !== selectedCity && city !== 'explorer') {
-            // Check if valid city
-            const isValidCity = citiesData?.cities.some(c => c.slug === city) ?? true;
-            if (isValidCity) {
-                setSelectedCity(city);
-            }
+        if (!citiesData?.cities.length) return;
+
+        const validCities = new Set(citiesData.cities.map(c => c.slug));
+        const safeCity = validCities.has(selectedCity) ? selectedCity : citiesData.cities[0].slug;
+
+        // 1. Fix persisted store if it holds an invalid city
+        if (safeCity !== selectedCity) {
+            setSelectedCity(safeCity);
         }
-    }, [city, selectedCity, setSelectedCity, citiesData]);
+
+        // 2. Handle URL city validation
+        if (!city || city === 'explorer') return;
+
+        if (validCities.has(city)) {
+            // Valid city in URL: sync store if needed
+            if (city !== safeCity) setSelectedCity(city);
+        } else {
+            // Invalid city in URL: redirect to safe city
+            navigate(`/${safeCity}`, { replace: true });
+        }
+    }, [city, selectedCity, setSelectedCity, citiesData, navigate]);
 
     return { city, stopId, tripId, vehicleId };
 };

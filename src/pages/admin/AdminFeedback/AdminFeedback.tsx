@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
-import type { StoredFeedback } from '../../types/feedback';
+import type { StoredFeedback } from '../../../types/feedback';
 
 import { Badge } from '@/components/ui/badge';
 import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AdminLayout } from '../AdminLayout';
 
 export const AdminFeedback: React.FC = () => {
     const [filterText, setFilterText] = useState('');
@@ -76,20 +77,19 @@ export const AdminFeedback: React.FC = () => {
         }
     };
 
-    return (
-        <div className="h-dvh w-full bg-background text-foreground flex flex-col overflow-hidden">
-            <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full flex flex-col gap-4 flex-1 min-h-0">
-            <div className="flex justify-between items-center shrink-0">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Feedback Hub</h1>
-                    <p className="text-muted-foreground">Overview of user feedback.</p>
-                </div>
-                <Button onClick={() => refetch()} disabled={isFetching} variant="outline" size="sm">
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-                    Refresh
-                </Button>
-            </div>
+    const headerActions = (
+        <Button onClick={() => refetch()} disabled={isFetching} variant="outline" size="sm">
+            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh
+        </Button>
+    );
 
+    return (
+        <AdminLayout 
+            title="Feedback Hub" 
+            headerActions={headerActions} 
+            contentClassName="p-4 sm:p-6 flex flex-col gap-4 max-w-7xl mx-auto w-full min-h-0"
+        >
             {isLoading && (
                 <div className="flex justify-center items-center h-64">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -97,20 +97,20 @@ export const AdminFeedback: React.FC = () => {
             )}
 
             {isError && (
-                <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20">
+                <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20 shrink-0">
                     <h3 className="font-bold">Error loading feedback</h3>
                     <p>{(error as Error).message}</p>
                 </div>
             )}
 
             {!isLoading && !isError && data?.items?.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-border border-dashed">
+                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-border border-dashed shrink-0">
                     No feedback yet.
                 </div>
             )}
 
             {!isLoading && !isError && (data?.items?.length || 0) > 0 && (
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
@@ -120,7 +120,7 @@ export const AdminFeedback: React.FC = () => {
                             onChange={(e) => setFilterText(e.target.value)}
                         />
                     </div>
-                    <div className="flex bg-muted/50 p-1 rounded-md border border-border">
+                    <div className="flex bg-muted/50 p-1 rounded-md border border-border shrink-0">
                         <Button 
                             variant={filterType === 'all' ? 'default' : 'ghost'} 
                             size="sm" 
@@ -283,7 +283,6 @@ export const AdminFeedback: React.FC = () => {
                     )}
                 </div>
             </div>
-            </div>
-        </div>
+        </AdminLayout>
     );
 };

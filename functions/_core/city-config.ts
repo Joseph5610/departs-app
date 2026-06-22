@@ -22,20 +22,20 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapter: 'golemio',
         virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
     },
-    brno: {
-        slug: 'brno',
-        name: 'Brno',
-        timezone: 'Europe/Prague',
-        center: [16.6068, 49.1951],
-        bounds: [16.44, 49.11, 16.77, 49.28],
-        adapter: 'gtfs',
-        adapterConfig: {
-            stopsFile: 'cities/brno/stops.json',
-            realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
-            staticDataUrl: 'https://data.departs.app'
-        },
-        isBeta: true,
-    },
+    // brno: {
+    //     slug: 'brno',
+    //     name: 'Brno',
+    //     timezone: 'Europe/Prague',
+    //     center: [16.6068, 49.1951],
+    //     bounds: [16.44, 49.11, 16.77, 49.28],
+    //     adapter: 'gtfs',
+    //     adapterConfig: {
+    //         stopsFile: 'cities/brno/stops.json',
+    //         realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
+    //         staticDataUrl: 'https://data.departs.app'
+    //     },
+    //     isBeta: true,
+    // },
 };
 
 export function getCityConfig(slug: string): CityConfig | null {

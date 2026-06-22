@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCities } from './useCities';
-import { FALLBACK_CITY_CONFIG } from '../../config/constants';
+import { FALLBACK_CITY_CONFIG } from '../../config/cities';
 
 export interface GeocodingResult {
     id: string;
@@ -103,9 +103,9 @@ export const useGeocoding = (
     const { data: citiesData } = useCities();
 
     const cityBounds = useMemo(() => {
-        if (!citiesData?.cities) return FALLBACK_CITY_CONFIG.bounds;
+        if (!citiesData?.cities) return FALLBACK_CITY_CONFIG.bounds.join(',');
         const city = citiesData.cities.find(c => c.slug === selectedCity);
-        if (!city) return FALLBACK_CITY_CONFIG.bounds;
+        if (!city) return FALLBACK_CITY_CONFIG.bounds.join(',');
         return city.bounds.join(',');
     }, [citiesData, selectedCity]);
 

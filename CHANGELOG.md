@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.0] - 2026-06-22
+
+### Changed
+- **Routing**: Moved `/explorer` route to `/admin/explorer`.
+- **UI**: Created a new `/admin` index dashboard for admin tools.
+
+## [0.48.8] - 2026-06-22
+
+### Changed
+- Temporarily disabled Brno in both frontend and backend configurations.
+- Fixed an issue where visiting invalid city slugs in the URL (like `/random`) would attempt to fetch API endpoints instead of properly redirecting to a valid fallback city.
+
 
 ## [0.48.7] - 2026-06-22
 
