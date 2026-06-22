@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { FRONTEND_CITIES_CONFIG } from '../../src/config/cities';
 
 test.describe('Brno Backend API tests', () => {
+    test.skip(!FRONTEND_CITIES_CONFIG['brno'], 'Brno city support is currently disabled in config');
+
     // We are testing the API directly against the local wrangler dev server 
     // to ensure the newly refactored GTFS adapter services work and return 
     // valid JSON under Cloudflare limits without UI flakiness.

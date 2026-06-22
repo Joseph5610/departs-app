@@ -217,13 +217,15 @@ export const DepartureBoardHeader = React.memo(() => {
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    data-testid="more-options-btn"
+                                    aria-label="More options"
                                     className="h-8 w-8 text-muted-foreground"
                                 >
                                     <MoreHorizontal size={16} strokeWidth={1.5} />
                                 </Button>
                             } />
                             <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem render={<div onClick={handleShare} />} closeOnClick={false}>
+                                <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
                                     <Share2 size={14} className="mr-2" strokeWidth={1.5} />
                                     {t('common.share')}
                                 </DropdownMenuItem>
@@ -246,6 +248,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                     variant="ghost"
                                     size="icon"
                                     onClick={handleShare}
+                                    data-testid="share-btn"
                                     aria-label={t('common.share')}
                                     className="h-8 w-8 text-muted-foreground"
                                 >

@@ -14,7 +14,8 @@ const RootRedirect = () => {
   const [, navigate] = useLocation();
   
   useEffect(() => {
-    navigate(`/${selectedCity}`, { replace: true });
+    const search = window.location.search;
+    navigate(`/${selectedCity}${search}`, { replace: true });
   }, [selectedCity, navigate]);
   
   return null;
