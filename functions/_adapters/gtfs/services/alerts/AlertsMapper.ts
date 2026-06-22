@@ -105,7 +105,8 @@ export class AlertsMapper {
                 isActive: true,
                 isFuture: false,
                 cause: alert.cause ? String(alert.cause) : undefined,
-                causeDetail: causeDetail
+                causeDetail: causeDetail,
+                effect: alert.effect ? String(alert.effect) : undefined
             };
         });
     }

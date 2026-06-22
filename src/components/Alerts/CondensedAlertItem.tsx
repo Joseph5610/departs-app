@@ -51,7 +51,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             >
                 {/* Icon Column */}
                 <div className="shrink-0 pt-0.5">
-                    <AlertIcon cause={item.cause} type={item.type} size={16} strokeWidth={1.5} className={iconColorClass} />
+                    <AlertIcon cause={item.cause} effect={item.effect} type={item.type} size={16} strokeWidth={1.5} className={iconColorClass} />
                 </div>
 
                 {/* Content Column */}

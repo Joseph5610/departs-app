@@ -13,6 +13,7 @@ export interface RSSItem {
     isFuture?: boolean;
     cause?: string;
     causeDetail?: { cs?: string; en?: string };
+    effect?: string;
 }
 
 export interface AlertsResponse {
