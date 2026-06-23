@@ -44,7 +44,7 @@ export class AlertsMapper {
 
         // Validate structure with Zod and drop malformed items silently
         const safeArraySchema = z.array(pidRssItemSchema.nullable().catch(err => {
-            console.warn("Skipping invalid RSS item:", err.error);
+            console.warn("Skipping invalid RSS item:", err);
             return null;
         }));
         

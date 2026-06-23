@@ -22,4 +22,13 @@ export const pidRssItemSchema = z.object({
     }).optional().catch(null)
 });
 
-export type PidRssItem = z.infer<typeof pidRssItemSchema>;
+
+
+export const golemioRouteSchema = z.object({
+    route_id: z.string(),
+    route_short_name: z.string(),
+    route_type: z.number(),
+    route_color: z.string().optional()
+});
+
+

@@ -34,7 +34,7 @@ export class InfotextsService {
             
             // Validate structure with Zod and drop malformed infotexts silently
             const safeArraySchema = z.array(golemioInfotextSchema.nullable().catch(err => {
-                console.warn("Skipping invalid Infotext:", err.error);
+                console.warn("Skipping invalid Infotext:", err);
                 return null;
             }));
 

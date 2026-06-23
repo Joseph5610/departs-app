@@ -1,4 +1,4 @@
-import { AppAlertsResponse, Env } from "../../../../_core/types";
+import { AppAlert, AppAlertsResponse, Env } from "../../../../_core/types";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
@@ -7,8 +7,9 @@ import { AlertsMapper as GtfsAlertsMapper } from "../../../gtfs/services/alerts/
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { GOLEMIO_CONFIG } from "../../core/config";
 import type { GtfsRoute } from "../../../gtfs/core/gtfs-data";
-import type { GtfsAlertEntity } from "../../../gtfs/services/alerts/types";
 
+import { z } from 'zod';
+import { golemioRouteSchema } from './schemas';
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
  * Uses GTFS-RT PB for incidents and PID RSS feeds for exclusions.
@@ -61,11 +62,13 @@ export class AlertsService {
                 try {
                     const buffer = await pbRes.value.arrayBuffer();
                     const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
-                    const rawAlerts = (feed.entity as unknown as GtfsAlertEntity[]).filter((e) => e.alert);
+                    const rawAlerts = feed.entity.filter(e => e.alert != null);
 
-                    const routesData = await routesRes.value.json() as Array<{ route_id: string; route_short_name: string; route_type: number; route_color?: string }>;
-                    const routesMap: Record<string, GtfsRoute> = {};
+                    const routesJson = await routesRes.value.json();
+                    const parsedRoutes = z.array(golemioRouteSchema).safeParse(routesJson);
+                    const routesData = parsedRoutes.success ? parsedRoutes.data : [];
                     
+                    const routesMap: Record<string, GtfsRoute> = {};
                     for (const r of routesData) {
                         routesMap[r.route_id] = {
                             name: r.route_id,
@@ -74,7 +77,6 @@ export class AlertsService {
                             route_color: r.route_color ? '#' + r.route_color : undefined
                         };
                     }
-
                     incidents = GtfsAlertsMapper.mapAlerts(rawAlerts, routesMap, true);
                 } catch (e) {
                     console.error("Failed to parse GTFS-RT alerts or routes", e);

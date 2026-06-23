@@ -10,7 +10,7 @@ export const golemioStopPropertiesSchema = z.object({
     wheelchair_boarding: z.number().nullable().optional(),
     level_id: z.string().nullable().optional(),
 });
-export type GolemioStopProperties = z.infer<typeof golemioStopPropertiesSchema>;
+
 
 export const golemioStopFeatureSchema = z.object({
     type: z.literal('Feature'),
@@ -25,9 +25,10 @@ export type GolemioStopFeature = z.infer<typeof golemioStopFeatureSchema>;
 export const golemioStopPayloadSchema = z.object({
     type: z.literal('FeatureCollection'),
     features: z.array(golemioStopFeatureSchema.nullable().catch((ctx) => {
-        const stopId = ctx.input?.properties?.stop_id || 'unknown';
-        console.warn(`[WARNING] Skipping invalid stop feature (${stopId}):`, JSON.stringify(ctx.error?.issues || ctx.error));
+        const inputObj = ctx.value as { properties?: { stop_id?: string | number } } | null | undefined;
+        const stopId = inputObj?.properties?.stop_id ? String(inputObj.properties.stop_id) : 'unknown';
+        console.warn(`[WARNING] Skipping invalid stop feature (${stopId}):`, ctx);
         return null;
-    }))
+    })).transform(arr => arr.filter((f): f is GolemioStopFeature => f !== null))
 });
-export type GolemioStopPayload = z.infer<typeof golemioStopPayloadSchema>;
+

@@ -76,9 +76,9 @@ export class VehiclesMapper {
                     const existingSeq = existing.properties.last_stop_sequence;
                     const newSeq = feature.properties.last_stop_sequence;
                     
-                    if (newSeq !== null && (existingSeq === null || newSeq > existingSeq)) {
+                    if (newSeq != null && (existingSeq == null || newSeq > existingSeq)) {
                         vehiclesMap.set(vehicleId, feature);
-                    } else if (newSeq === null && existingSeq === null) {
+                    } else if (newSeq == null && existingSeq == null) {
                         // If neither started, use time-based heuristic
                         // If it's night time, prefer night routes. If day time, prefer day routes.
                         const existingIsNight = existing.properties.is_night;

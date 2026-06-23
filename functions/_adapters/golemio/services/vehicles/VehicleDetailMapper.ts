@@ -1,5 +1,5 @@
-import { AppVehicleDetail } from "../../../../_core/types";
-import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature, GolemioVehicleProperties } from "./schemas";
+import { AppVehicleDetail, AppStopTimeProperties } from "../../../../_core/types";
+import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
 import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../stops/enrichment";
@@ -25,25 +25,23 @@ export class VehicleDetailMapper {
         // Golemio returns either a FeatureCollection or a bare Feature.
         // Extract properties from whichever shape we received.
         const feature = data.features?.[0];
-        const p: Partial<GolemioVehicleProperties> = feature?.properties ?? data;
-        const geometry = feature?.geometry ?? data.geometry ?? null;
-        const extracted_vehicle_id = p.vehicle_id ? String(p.vehicle_id) : (p.id ? String(p.id) : '');
+        const p = feature?.properties ?? data;
+        const geometry = feature?.geometry ?? data.geometry;
+        const extracted_vehicle_id = p.vehicle_id || p.id || '';
         const gtfs_trip_id = p.gtfs_trip_id || tripId;
         const route_short_name = p.route_short_name || '';
-        const route_type = p.route_type || '';
+        const route_type = String(p.route_type || '');
         const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
-        const bearing = p.bearing !== undefined ? Number(p.bearing) : null;
-        const delay = p.delay !== undefined ? Number(p.delay) : 0;
-        const state_position = p.state_position || 'unknown';
+        const bearing = p.bearing ?? null;
+        const delay = p.delay ?? 0;
+        const state_position = p.state_position ?? 'unknown';
         const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name) || '';
         
-        const vd = data.vehicle_descriptor || p.vehicle_descriptor || {};
+        const run_number = p.run_number || '';
+        const last_stop_sequence = data.last_stop_sequence ?? p.last_stop_sequence ?? 0;
+        const origin_timestamp = data.origin_timestamp ?? p.origin_timestamp;
 
-        const run_number = String(p.run_number || '');
-        const last_stop_sequence = Number(data.last_stop_sequence || p.last_stop_sequence || 0);
-        const origin_timestamp = data.origin_timestamp || p.origin_timestamp;
-
-        const routeColor = getVehicleColor(String(route_type), route_short_name);
+        const routeColor = getVehicleColor(route_type, route_short_name);
         const is_night = isNightRoute(route_short_name);
 
         const vehicleData: AppVehicleDetail = {
@@ -61,14 +59,7 @@ export class VehicleDetailMapper {
             run_number,
             route_color: routeColor,
             is_night,
-            vehicle_descriptor: {
-                operator: vd.operator,
-                vehicle_type: vd.vehicle_type,
-                is_wheelchair_accessible: vd.is_wheelchair_accessible,
-                is_air_conditioned: vd.is_air_conditioned,
-                has_usb_chargers: vd.has_usb_chargers,
-                vehicle_registration_number: vd.vehicle_registration_number
-            },
+            vehicle_descriptor: (data.vehicle_descriptor || p.vehicle_descriptor) ?? undefined,
             geometry,
             is_static_fallback: isStatic,
         };
@@ -78,8 +69,8 @@ export class VehicleDetailMapper {
         if (stopTimesData?.features) {
             vehicleData.stop_times = {
                 features: stopTimesData.features.map((st: GolemioStopTimeFeature) => {
-                    const stProps = st.properties || {};
-                    const stopId = stProps.stop_id;
+                    const stProps = st.properties;
+                    const stopId = stProps.stop_id || '';
                     const stopName = stProps.stop_name;
                     let metroLines = getMetroLinesForStop(stopId);
                     
@@ -88,12 +79,13 @@ export class VehicleDetailMapper {
                     }
 
                     return {
-                        type: 'Feature',
+                        type: 'Feature' as const,
                         geometry: st.geometry,
                         properties: {
                             ...stProps,
+                            stop_id: stopId,
                             metro_lines: metroLines
-                        }
+                        } as AppStopTimeProperties
                     };
                 })
             };

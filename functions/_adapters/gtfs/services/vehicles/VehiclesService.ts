@@ -48,14 +48,16 @@ export class VehiclesService {
                 return {
                     type: 'FeatureCollection',
                     features: collection.features.filter(f => {
-                        const typeMatch = rawRouteTypes.length === 0 || routeTypes.includes(f.properties.route_type);
+                        const typeMatch = rawRouteTypes.length === 0 || routeTypes.includes(Number(f.properties.route_type));
                         const nameMatch = routeShortNames.length === 0 || routeShortNames.includes(f.properties.route_short_name);
                         
                         let boundsMatch = true;
-                        if (bounds) {
+                        if (bounds && f.geometry) {
                             const [lng, lat] = f.geometry.coordinates;
                             boundsMatch = lat >= bounds.minLat && lat <= bounds.maxLat &&
                                           lng >= bounds.minLng && lng <= bounds.maxLng;
+                        } else if (bounds && !f.geometry) {
+                            boundsMatch = false; // Cannot match bounds if no geometry
                         }
                         
                         return typeMatch && nameMatch && boundsMatch;

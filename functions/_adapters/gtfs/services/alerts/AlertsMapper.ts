@@ -1,10 +1,10 @@
 import type { AppAlert } from "../../../../_core/types";
-import type { GtfsAlertEntity } from "./types";
 import type { GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
+import { transit_realtime } from 'gtfs-realtime-bindings';
 
 export class AlertsMapper {
-    static mapAlerts(rawAlerts: GtfsAlertEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
+    static mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
         const routesByName = new Map<string, GtfsRoute>();
         for (const r of Object.values(routes)) {
             const staticRoute = r as GtfsRoute;
@@ -19,7 +19,7 @@ export class AlertsMapper {
             const isDetour = 
                 String(alert.effect) === '4' || // DETOUR
                 String(alert.effect) === '9' || // STOP_MOVED
-                alert.effect === 'DETOUR' ||
+                String(alert.effect) === 'DETOUR' ||
                 headerStr.toLowerCase().includes('výluka');
             
             const lines: string[] = [];
@@ -77,17 +77,23 @@ export class AlertsMapper {
             }
 
             let causeDetail: { cs?: string, en?: string } | undefined = undefined;
-            if (alert.causeDetail?.translation) {
+            
+            interface PidAlertExtension {
+                causeDetail?: { translation?: Array<{ text: string, language?: string }> };
+            }
+            const customAlert = alert as transit_realtime.IAlert & PidAlertExtension;
+            
+            if (customAlert.causeDetail?.translation) {
                 causeDetail = {};
-                for (const t of alert.causeDetail.translation) {
+                for (const t of customAlert.causeDetail.translation) {
                     if (t.language?.startsWith('cs')) {
                         causeDetail.cs = t.text;
                     } else if (t.language?.startsWith('en')) {
                         causeDetail.en = t.text;
                     }
                 }
-                if (!causeDetail.cs && alert.causeDetail.translation.length > 0) {
-                    causeDetail.cs = alert.causeDetail.translation[0].text;
+                if (!causeDetail.cs && customAlert.causeDetail.translation.length > 0) {
+                    causeDetail.cs = customAlert.causeDetail.translation[0].text;
                 }
             }
 

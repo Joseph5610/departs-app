@@ -87,7 +87,7 @@ export class DeparturesService {
             // Safe array parsing: if an individual departure item is malformed, 
             // we catch it as null and filter it out, saving the rest of the board!
             const safeSchema = z.array(z.array(golemioDepartureItemSchema.nullable().catch(err => {
-                console.warn("Skipping invalid departure item:", err.error.message);
+                console.warn("Skipping invalid departure item:", err);
                 return null;
             })));
             

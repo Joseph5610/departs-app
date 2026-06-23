@@ -3,7 +3,7 @@ import { transit_realtime } from 'gtfs-realtime-bindings';
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { AlertsMapper } from './AlertsMapper';
-import type { GtfsAlertEntity } from './types';
+
 
 export class AlertsService {
     constructor(private city: CityConfig) {}
@@ -25,7 +25,7 @@ export class AlertsService {
             const buffer = await rtRes.arrayBuffer();
             const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
             
-            const rawAlerts = (feed.entity as unknown as GtfsAlertEntity[]).filter((e) => e.alert);
+            const rawAlerts = feed.entity.filter(e => e.alert != null);
 
             let routes: Record<string, unknown> = {};
             try {

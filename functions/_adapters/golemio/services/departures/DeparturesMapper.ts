@@ -65,7 +65,7 @@ export class DeparturesMapper {
             headsign,
             isCanceled: item.trip?.is_canceled || false,
             tripId: item.trip?.id,
-            vehicleId: item.vehicle?.id,
+            vehicleId: item.vehicle?.id ?? undefined,
             platform: item.stop?.platform_code || (isMetro && item.stop?.id ? item.stop.id.match(/Z\d+(\d)P?$/)?.[1] : undefined),
             route_color: getVehicleColor(type, line),
             is_wheelchair_accessible: item.vehicle?.is_wheelchair_accessible,

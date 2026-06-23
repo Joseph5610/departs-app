@@ -1,4 +1,4 @@
-export type AdapterType = 'golemio' | 'gtfs';
+type AdapterType = 'golemio' | 'gtfs';
 
 export interface CityConfig {
     slug: string;
