@@ -31,3 +31,21 @@ export const haversineDist = (lat1: number, lon1: number, lat2: number, lon2: nu
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 };
+
+/**
+ * Helper to fetch data with a standardized User-Agent to bypass restrictive firewalls (e.g. Cloudflare)
+ */
+export const gtfsFetch = async (url: string | URL, init?: RequestInit): Promise<Response> => {
+    const headers = new Headers(init?.headers);
+    if (!headers.has('User-Agent')) {
+        headers.set('User-Agent', 'departs-app-backend/1.0');
+    }
+    
+    const res = await fetch(url, { ...init, headers });
+    
+    if (!res.ok) {
+        throw new Error(`GTFS fetch failed: ${res.status} ${res.statusText} for ${url}`);
+    }
+    
+    return res;
+};

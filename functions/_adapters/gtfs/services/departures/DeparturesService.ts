@@ -2,6 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppDepartureResponse, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
+import { gtfsFetch } from '../../core/utils';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { StopsService } from '../stops/StopsService';
@@ -57,8 +58,8 @@ export class DeparturesService {
 
             const fetchPromises = Array.from(chunkMap.entries()).map(async ([chunkId, ids]) => {
                 const dataUrl = `${staticDataUrl}/${this.city.slug}/departures/${chunkId}.json`;
-                const res = await fetch(dataUrl);
-                if (res.ok) {
+                try {
+                    const res = await gtfsFetch(dataUrl);
                     const chunkData = await res.json() as Record<string, GtfsDepartureTuple[]>;
                     for (const id of ids) {
                         if (chunkData[id]) {
@@ -68,6 +69,8 @@ export class DeparturesService {
                             });
                         }
                     }
+                } catch {
+                    // Fail silently for this chunk, it just means no departures for it or 404
                 }
             });
 

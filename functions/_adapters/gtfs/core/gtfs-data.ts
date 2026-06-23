@@ -1,4 +1,5 @@
 import { getCityConfig } from '../../../_core/city-config';
+import { gtfsFetch } from './utils';
 
 export interface GtfsRoute {
     name: string;
@@ -20,8 +21,8 @@ export async function getGtfsData(citySlug: string): Promise<{ routes: Record<st
     return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
             const [rRes, trRes] = await Promise.all([
-                fetch(`${staticDataUrl}/${citySlug}/routes.json`),
-                fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)
+                gtfsFetch(`${staticDataUrl}/${citySlug}/routes.json`),
+                gtfsFetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)
             ]);
 
             if (!rRes.ok || !trRes.ok) {

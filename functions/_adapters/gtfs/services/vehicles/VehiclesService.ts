@@ -2,6 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import { transit_realtime } from "gtfs-realtime-bindings";
 import type { Env, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
+import { gtfsFetch } from '../../core/utils';
 import { getGtfsData } from '../../core/gtfs-data';
 import { VehiclesMapper } from './VehiclesMapper';
 import { vehicleQuerySchema, parseSearchParams } from '../../../../_core/schemas';
@@ -84,9 +85,7 @@ export class VehiclesService {
                     return { type: 'FeatureCollection' as const, features: [] } as AppVehicleCollection;
                 }
 
-                const response = await fetch(rtUrl, {
-                    headers: { 'User-Agent': 'departs-app/1.0' }
-                });
+                const response = await gtfsFetch(rtUrl);
 
                 if (!response || !response.ok) {
                     return { type: 'FeatureCollection' as const, features: [] } as AppVehicleCollection;

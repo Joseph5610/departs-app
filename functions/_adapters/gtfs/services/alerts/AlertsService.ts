@@ -2,6 +2,7 @@ import type { AppAlertsResponse } from "../../../../_core/types";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
+import { gtfsFetch } from '../../core/utils';
 import { AlertsMapper } from './AlertsMapper';
 
 
@@ -16,10 +17,7 @@ export class AlertsService {
                 return { alerts: [] };
             }
 
-            const rtRes = await fetch(rtUrl, {
-                headers: { 'User-Agent': 'departs-app/1.0' },
-                cf: { cacheTtl: 60 } // Cloudflare fetch cache for 60 seconds to avoid spamming
-            });
+            const rtRes = await gtfsFetch(rtUrl, { cf: { cacheTtl: 60 } });
             if (!rtRes || !rtRes.ok) return { alerts: [] };
 
             const buffer = await rtRes.arrayBuffer();

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.1] - 2026-06-23
+
+### Fixed
+- **Testing**: Fixed Cloudflare Worker 403 errors when fetching GTFS static data during GitHub Actions CI runs by adding a User-Agent header to Miniflare requests, bypassing Cloudflare Bot Fight Mode. Added safety checks for `res.ok` to prevent JSON parsing errors on 403 HTML pages.
+
 ## [0.49.0] - 2026-06-22
 
 ### Changed

@@ -10,6 +10,7 @@ import { DeparturesService } from './services/departures/DeparturesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { AlertsService } from './services/alerts/AlertsService';
 import { InfotextsService } from './services/infotexts/InfotextsService';
+import { gtfsFetch } from './core/utils';
 
 export class GtfsAdapter implements CityAdapter {
     private stopsService: StopsService;
@@ -47,7 +48,7 @@ export class GtfsAdapter implements CityAdapter {
         if (!rtUrl) {
             return { error: `No realtimeUrl configured for city: ${this._city.slug}` };
         }
-        const response = await fetch(rtUrl, { headers: { 'User-Agent': 'departs-app/1.0' } });
+        const response = await gtfsFetch(rtUrl);
         if (!response.ok) {
             throw new Error(`GTFS-RT fetch failed: ${response.status}`);
         }

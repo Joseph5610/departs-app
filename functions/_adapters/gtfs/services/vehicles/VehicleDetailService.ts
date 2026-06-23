@@ -3,6 +3,7 @@ import type { Env, AppVehicleDetail, AppVehicleCollection, AppVehicleProperties 
 import { transit_realtime } from "gtfs-realtime-bindings";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
+import { gtfsFetch } from '../../core/utils';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
@@ -68,9 +69,7 @@ export class VehicleDetailService {
         const realtimeUrl = this.city.adapterConfig?.realtimeUrl;
         if (!realtimeUrl) throw new Error('Missing realtimeUrl in city config');
         
-        const rtResponse = await fetch(realtimeUrl, {
-            headers: { 'User-Agent': 'departs-app/1.0' }
-        });
+        const rtResponse = await gtfsFetch(realtimeUrl);
         
         if (rtResponse.ok) {
             const buffer = await rtResponse.arrayBuffer();
@@ -150,25 +149,28 @@ export class VehicleDetailService {
         if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
         const tripUrl = `${staticDataUrl}/${this.city.slug}/trips/${chunkId}.json`;
-        const tripRes = await fetch(tripUrl);
-        if (!tripRes.ok) return [];
-        
-        const chunkData = await tripRes.json() as Record<string, unknown[]>;
-        const tripData = chunkData[tripId];
-        if (!tripData) return [];
+        try {
+            const tripRes = await gtfsFetch(tripUrl);
+            const chunkData = await tripRes.json() as Record<string, unknown[]>;
+            const tripData = chunkData[tripId];
+            if (!tripData) return [];
 
-        return tripData.map((st: unknown, idx: number) => {
-            const s = st as Record<string, unknown>;
-            return {
-                id: s.stop_id as string,
-                name: (s.name as string) || 'Unknown',
-                sequence: idx + 1,
-                arrival_time: s.arrival_time as string,
-                departure_time: s.departure_time as string,
-                coordinates: [Number(s.lon) || 0, Number(s.lat) || 0] as [number, number],
-                is_wheelchair_accessible: null,
-                zone_id: null
-            };
-        });
+            return tripData.map((st: unknown, idx: number) => {
+                const s = st as Record<string, unknown>;
+                return {
+                    id: s.stop_id as string,
+                    name: (s.name as string) || 'Unknown',
+                    sequence: idx + 1,
+                    arrival_time: s.arrival_time as string,
+                    departure_time: s.departure_time as string,
+                    coordinates: [Number(s.lon) || 0, Number(s.lat) || 0] as [number, number],
+                    is_wheelchair_accessible: null,
+                    zone_id: null
+                };
+            });
+        } catch (e) {
+            console.error('Failed to get trip stops:', e);
+            return [];
+        }
     }
 }
