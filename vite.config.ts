@@ -44,7 +44,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/',
-        navigateFallbackDenylist: [/manifest\.webmanifest$/, /\.json$/, /\.xml$/],
+        navigateFallbackDenylist: [/^\/admin/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/],
         manifestTransforms: [
           (manifestEntries) => {
             const manifest = manifestEntries.map((entry) => {
