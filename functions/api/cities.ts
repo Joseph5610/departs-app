@@ -9,7 +9,6 @@ export async function onRequest() {
             name: city.name,
             center: city.center,
             bounds: city.bounds,
-            adapter: city.adapter,
             isBeta: city.isBeta,
             virtualTableUrl: city.virtualTableUrl,
         }))

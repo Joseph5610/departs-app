@@ -191,7 +191,6 @@ export interface AppCity {
     name: string;
     center: [number, number];
     bounds: [number, number, number, number];
-    adapter: string;
     isBeta?: boolean;
     virtualTableUrl?: string;
 }

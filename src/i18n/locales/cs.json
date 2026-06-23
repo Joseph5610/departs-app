@@ -75,6 +75,7 @@
   "welcome": {
     "title": "Vítejte v departs.app",
     "description": "Nejrychlejší způsob, jak sledovat odjezdy a polohu vašich spojů v reálném čase.",
+    "chooseCity": "Vyberte region",
     "steps": {
       "clickStop": {
         "title": "Klikněte na zastávku",

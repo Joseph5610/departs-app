@@ -141,7 +141,7 @@ export const FeedExplorer: React.FC = () => {
                 <div className="bg-card rounded-xl shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col border border-border relative mt-2 sm:mt-0">
                     <div className="bg-muted/30 px-4 py-2 flex items-center justify-between border-b border-border select-none overflow-x-auto">
                         <div className="text-xs text-muted-foreground font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                            <span>{citiesData?.cities.find(c => c.slug === selectedCity)?.adapter === 'gtfs' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
+                            <span>{selectedCity === 'brno' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-auto">
                             <div className="text-xs text-muted-foreground font-mono bg-muted/50 border border-border px-2 py-1 rounded-md hidden sm:block">

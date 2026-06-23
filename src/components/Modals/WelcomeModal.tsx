@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { MapPin, Bus, ArrowRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowRight } from 'lucide-react';
 import { STORAGE_KEYS } from '../../config/constants';
 import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useCities } from '../../hooks/data/useCities';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useLocation } from 'wouter';
+import { CitySelectionList } from '../Map/CitySelectionList';
 
 /**
  * WelcomeModal
@@ -21,6 +20,20 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 export const WelcomeModal: React.FC = () => {
     const { t } = useTranslation();
     const { handleLocate } = useGeolocation();
+    
+    const { data } = useCities();
+    const cities = useMemo(() => data?.cities || [], [data?.cities]);
+    const globalSelectedCity = usePreferencesStore(s => s.selectedCity);
+    const { setSelectedCity } = usePreferencesStore(s => s.actions);
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const [, navigate] = useLocation();
+
+    const [localSelectedCitySlug, setLocalSelectedCitySlug] = useState<string>(globalSelectedCity || 'prague');
+
+    if (cities.length > 0 && (!localSelectedCitySlug || !cities.find(c => c.slug === localSelectedCitySlug))) {
+        setLocalSelectedCitySlug(cities[0].slug);
+    }
+
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
         const params = new URLSearchParams(window.location.search);
@@ -55,43 +68,64 @@ export const WelcomeModal: React.FC = () => {
         localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
         setIsOpen(false);
         handleLocate();
+
+        if (localSelectedCitySlug) {
+            const city = cities.find(c => c.slug === localSelectedCitySlug);
+            if (city) {
+                if (city.slug !== globalSelectedCity) {
+                    setSelectedCity(city.slug);
+                    navigate(`/${city.slug}`);
+                    
+                    const map = mapRef.current?.getMap();
+                    if (map && city.center) {
+                        map.flyTo({
+                            center: city.center as [number, number],
+                            zoom: 12,
+                            duration: 1500
+                        });
+                    }
+                }
+            }
+        }
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <DialogContent aria-describedby={undefined} variant="default" showCloseButton={false} className="h-fit gap-8! p-6!">
-                <DialogHeader>
-                    <DialogTitle className="text-center flex items-center justify-center gap-2 text-2xl">
-                        {t('welcome.title')}
-                        <Badge variant="soft" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider">
-                            {t('welcome.beta')}
-                        </Badge>
-                    </DialogTitle>
-                </DialogHeader>
-                <div className="flex flex-col gap-8">
-                    <div className="flex flex-col items-center gap-4 text-center mt-2">
-                        <div className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden">
-                            <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-3xl" />
-                        </div>
-                        <div>
-                            <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">
-                                {t('welcome.description')}
-                            </p>
+                <DialogHeader className="space-y-4 pt-2">
+                    <div className="flex justify-center">
+                        <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden relative">
+                            <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
+                            <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-2xl relative z-10" />
                         </div>
                     </div>
+                    <DialogTitle className="text-center flex flex-col items-center justify-center gap-1.5 text-2xl">
+                        <div className="flex items-center gap-2">
+                            {t('welcome.title')}
+                            <Badge variant="soft" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider mt-0.5">
+                                {t('welcome.beta')}
+                            </Badge>
+                        </div>
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-[320px] mx-auto">
+                        {t('welcome.description')}
+                    </p>
+                </DialogHeader>
+                <div className="flex flex-col gap-6 mt-2">
 
                     <div className="flex flex-col gap-4">
-                        <Alert variant="subtle">
-                            <MapPin size={20} className="text-primary" strokeWidth={1.5} />
-                            <AlertTitle className="font-semibold leading-tight">{t('welcome.steps.clickStop.title')}</AlertTitle>
-                            <AlertDescription className="text-xs leading-snug">{t('welcome.steps.clickStop.description')}</AlertDescription>
-                        </Alert>
-
-                        <Alert variant="subtle">
-                            <Bus size={20} className="text-primary" strokeWidth={1.5} />
-                            <AlertTitle className="font-semibold leading-tight">{t('welcome.steps.trackVehicles.title')}</AlertTitle>
-                            <AlertDescription className="text-xs leading-snug">{t('welcome.steps.trackVehicles.description')}</AlertDescription>
-                        </Alert>
+                        <div className="flex items-center gap-4 px-2">
+                            <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                                {t('welcome.chooseCity', { defaultValue: 'Select Region' })}
+                            </span>
+                            <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
+                        </div>
+                        <CitySelectionList 
+                            cities={cities}
+                            selectedCitySlug={localSelectedCitySlug}
+                            onSelect={(c) => setLocalSelectedCitySlug(c.slug)}
+                        />
                     </div>
 
                     <Button
