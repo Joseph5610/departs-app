@@ -110,10 +110,16 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', '@tanstack/react-query'],
-          'vendor-map': ['maplibre-gl'],
-          'vendor-ui': ['framer-motion', 'lucide-react']
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/@tanstack/react-query/')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/maplibre-gl/')) {
+            return 'vendor-map';
+          }
+          if (id.includes('node_modules/framer-motion/') || id.includes('node_modules/lucide-react/')) {
+            return 'vendor-ui';
+          }
         }
       }
     }
