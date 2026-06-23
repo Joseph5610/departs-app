@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.2] - 2026-06-23
+
+### Fixed
+- **Config**: Removed deprecated `baseUrl` and `ignoreDeprecations` from `tsconfig.app.json` which caused build errors with newer TypeScript versions.
+
 ## [0.49.1] - 2026-06-23
 
 ### Fixed
