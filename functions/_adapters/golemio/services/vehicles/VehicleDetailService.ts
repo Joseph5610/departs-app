@@ -1,9 +1,11 @@
 import { AppVehicleDetail, Env } from "../../../../_core/types";
-import { GolemioVehiclePayload } from "./types";
-import { CACHE_TTL, ERROR_MESSAGES, sanitizeId } from "../../../../_core/api-utils";
+
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehicleDetailMapper } from "./VehicleDetailMapper";
+import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
+import { vehicleDetailQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 
 /**
  * Service for fetching detailed information about a specific transit vehicle or trip.
@@ -22,8 +24,10 @@ export class VehicleDetailService {
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
     async getVehicleDetail(env: Env, searchParams: URLSearchParams): Promise<AppVehicleDetail> {
-        const vehicleId = sanitizeId(searchParams.get("vehicleId"));
-        const tripId = sanitizeId(searchParams.get("tripId"));
+        const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
+        
+        const vehicleId = rawVehicleId ?? null;
+        const tripId = rawTripId ?? null;
 
         if (!tripId) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
@@ -60,7 +64,22 @@ export class VehicleDetailService {
             throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        const data = await response.json() as GolemioVehiclePayload;
+        const rawData = await response.json();
+        const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+
+        if (!parsed.success) {
+            console.error(`Critical Golemio vehicle detail structural change for ${tripId}:`, parsed.error);
+            throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
+        }
+
+        const data = parsed.data as GolemioVehiclePayload;
+        if (data.features) {
+            data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+        }
+        if (data.stop_times && data.stop_times.features) {
+            data.stop_times.features = data.stop_times.features.filter((f): f is NonNullable<typeof f> => f !== null);
+        }
+
         return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic);
     }
 }

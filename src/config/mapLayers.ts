@@ -174,25 +174,39 @@ export const platformLabelLayer: SymbolLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
-        ['has', 'platform_code'],
-        ['>', ['length', ['to-string', ['get', 'platform_code']]], 0]
+        ['!', ['any',
+            ['==', ['get', 'is_train'], 1],
+            ['==', ['get', 'metro_a'], 1],
+            ['==', ['get', 'metro_b'], 1],
+            ['==', ['get', 'metro_c'], 1]
+        ]]
     ],
     minzoom: 14.5,
     layout: {
-        'text-field': ['get', 'platform_code'],
+        'text-field': ['case', ['has', 'platform_code'], ['get', 'platform_code'], ''],
         'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 13, 9, 18, 17],
         'text-anchor': 'center',
         'text-padding': 0,
-        'text-allow-overlap': true, 
+        'text-allow-overlap': true,
         'text-ignore-placement': true,
+        'icon-image': ['case',
+            ['>', ['length', ['to-string', ['coalesce', ['get', 'platform_code'], '']]], 0],
+            '',
+            'bus-icon'
+        ],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.09, 17, 0.28],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
         'symbol-sort-key': 5
     },
     paint: {
         'text-color': '#cbd5e1',
         'text-halo-color': '#000000',
         'text-halo-width': 0.8,
-        'text-halo-blur': 0.2
+        'text-halo-blur': 0.2,
+        'icon-color': '#ffffff',
+        'icon-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, 1]
     }
 };
 

@@ -1,10 +1,12 @@
 
 import { Env, AppVehicleCollection } from "../../../../_core/types";
-import { GolemioVehiclePayload } from "./types";
+
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehiclesMapper } from "./VehiclesMapper";
+import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
+import { vehicleQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 
 /**
  * Service for fetching real-time positions of active transit vehicles.
@@ -22,9 +24,7 @@ export class VehiclesService {
      */
     async getVehicles(env: Env, searchParams: URLSearchParams): Promise<AppVehicleCollection> {
 
-        const bounds = searchParams.get("bounds");
-        const routeTypes = searchParams.getAll("routeType");
-        const routeShortNames = searchParams.getAll("routeShortName");
+        const { bounds, routeType: routeTypes, routeShortName: routeShortNames } = parseSearchParams(searchParams, vehicleQuerySchema);
 
         if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
@@ -44,7 +44,19 @@ export class VehiclesService {
                 throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), 502);
             }
 
-            const data = await response.json() as GolemioVehiclePayload;
-            return VehiclesMapper.map(data);
+            const rawData = await response.json();
+            const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+            
+            if (!parsed.success) {
+                console.error("Critical Golemio vehicles structural change:", parsed.error);
+                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
+            }
+            
+            const data = parsed.data;
+            if (data.features) {
+                data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+            }
+
+            return VehiclesMapper.map(data as GolemioVehiclePayload);
     }
 }

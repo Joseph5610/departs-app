@@ -12,7 +12,7 @@ localforage.config({
     storeName: 'stops_cache'
 });
 
-const STORAGE_VERSION = 'v41';
+const STORAGE_VERSION = 'v46';
 const STOP_STORAGE_KEY = `city_stops_storage_${STORAGE_VERSION}`;
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 

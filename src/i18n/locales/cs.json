@@ -5,7 +5,8 @@
     "copyError": "Nepodařilo se zkopírovat odkaz",
     "retry": "Zkusit znovu",
     "loading": "Načítání...",
-    "share": "Sdílet"
+    "share": "Sdílet",
+    "cancel": "Zrušit"
   },
   "search": {
     "placeholder": "Hledat zastávky, adresy nebo linky...",
@@ -56,7 +57,7 @@
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "dataSource": "Zdroj dat",
-    "license": "Data PID (CC BY 4.0)",
+    "license": "Data PID & KORDIS JMK (CC BY 4.0)",
     "version": "Verze {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
@@ -88,12 +89,18 @@
     "beta": "Beta"
   },
   "map": {
+    "regions": {
+      "title": "Departs aktuálně podporuje tyto regiony:",
+      "prague": "Praha a Středočeský kraj",
+      "brno": "Brno a Jihomoravský kraj"
+    },
     "controls": {
       "myLocation": "Moje poloha",
       "settings": "Nastavení",
       "zoomIn": "Přiblížit",
       "zoomOut": "Oddálit",
-      "resetBearing": "Vycentrovat na sever"
+      "resetBearing": "Vycentrovat na sever",
+      "switchCity": "Změnit město"
     },
     "vehicleDetails": {
       "fetching": "Načítání podrobností...",
@@ -208,7 +215,21 @@
     "planned": "Plánováno",
     "active": "Právě probíhá",
     "validFrom": "Od {{date}}",
-    "untilFurtherNotice": "do odvolání"
+    "untilFurtherNotice": "do odvolání",
+    "causes": {
+      "1": "Neznámá příčina",
+      "2": "Jiná příčina",
+      "3": "Technická závada",
+      "4": "Stávka",
+      "5": "Demonstrace",
+      "6": "Nehoda",
+      "7": "Státní svátek",
+      "8": "Počasí",
+      "9": "Údržba",
+      "10": "Stavební práce",
+      "11": "Policejní zásah",
+      "12": "Záchranná akce"
+    }
   },
   "transportModes": {
     "metro": "Metro",
@@ -230,5 +251,22 @@
     "title": "Oblíbené zastávky",
     "empty": "Žádné oblíbené zastávky",
     "emptySub": "Klepnutím na hvězdičku v detailu zastávky si ji uložíte sem."
+  },
+  "feedback": {
+    "title": "Odeslat zpětnou vazbu",
+    "description": "Našli jste chybu nebo máte nápad na vylepšení? Dejte nám vědět.",
+    "type": "Typ zprávy",
+    "typeBug": "Chyba",
+    "typeFeature": "Nápad",
+    "typeOther": "Jiné",
+    "message": "Vaše zpráva",
+    "messagePlaceholder": "Co byste chtěli změnit nebo co nefunguje?",
+    "email": "E-mail (volitelné)",
+    "emailPlaceholder": "jmeno@domena.cz",
+    "diagnostics": "Přiložit technická data",
+    "diagnosticsDesc": "Pomůže mi to rychleji najít chybu (verze prohlížeče, otevřená zastávka atd.)",
+    "submit": "Odeslat",
+    "success": "Děkujeme za zpětnou vazbu!",
+    "errorTurnstile": "Prosím, ověřte, že jste člověk."
   }
 }

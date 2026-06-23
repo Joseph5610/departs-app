@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     Alert,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/alert';
 import { LineBadge } from '../LineBadge';
 import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
+import { AlertIcon } from './AlertIcon';
 
 interface GenericAlertCardProps {
     id?: string;
@@ -22,6 +23,10 @@ interface GenericAlertCardProps {
     isFuture?: boolean;
     showStatus?: boolean;
     lines?: Array<{ name: string; route_color: string; type: string }>;
+    cause?: string;
+    causeDetail?: { cs?: string; en?: string };
+    type?: string;
+    hideCauseText?: boolean;
 }
 
 /**
@@ -39,9 +44,13 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
     isActive,
     isFuture,
     showStatus = false,
-    lines
+    lines,
+    cause,
+    causeDetail,
+    type,
+    hideCauseText = false
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const isHigh = priority === 'high' || priority === '1';
     const isNormal = priority === 'normal' || priority === '2';
 
@@ -51,14 +60,14 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert
             variant={alertVariant}
             className={cn(
-                "relative transition-all overflow-hidden glassy p-3 sm:p-4 rounded-2xl",
+                "relative transition-all overflow-hidden glassy p-3 sm:p-4 rounded-2xl h-full",
                 isHigh && "bg-destructive/20! border-destructive/50! shadow-[0_0_12px_rgba(239,68,68,0.15)]",
                 isNormal && "bg-amber-500/15! border-amber-500/40! shadow-[0_0_12px_rgba(245,158,11,0.15)]",
                 link && "hover:brightness-125 cursor-pointer group",
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
         >
-            <AlertTriangle className={cn(
+            <AlertIcon cause={cause} type={type} className={cn(
                 "h-4 w-4 mt-0.5 shrink-0",
                 isHigh ? "text-destructive!" : isNormal ? "text-amber-500!" : "text-muted-foreground"
             )} />
@@ -89,6 +98,19 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
             </AlertTitle>
 
             <AlertDescription className="grid gap-2">
+                {((cause && !hideCauseText) || causeDetail) && (
+                    <div className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
+                        {cause && !hideCauseText && <span>{t(`alerts.causes.${cause}`, cause)}</span>}
+                        {causeDetail && (
+                            <span className={cn(
+                                "normal-case font-medium",
+                                (cause && !hideCauseText) ? "text-foreground/50 ml-1.5 border-l border-white/10 pl-1.5" : "text-foreground/80"
+                            )}>
+                                {i18n.language.startsWith('en') && causeDetail.en ? causeDetail.en : causeDetail.cs}
+                            </span>
+                        )}
+                    </div>
+                )}
                 {description && (
                     <div className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
                         {description}
@@ -129,7 +151,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
     if (link) {
         return (
-            <a href={link} target="_blank" rel="noopener noreferrer" className="block outline-none no-underline active:scale-[0.99] transition-transform">
+            <a href={link} target="_blank" rel="noopener noreferrer" className="block h-full outline-none no-underline active:scale-[0.99] transition-transform">
                 {CardContent}
             </a>
         );

@@ -1,26 +1,62 @@
 import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
+import { Switch, Route, useLocation } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
+import { useWebMCP } from './hooks/features/useWebMCP';
+import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
+import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
+import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
+import { usePreferencesStore } from './state/preferencesStore';
+import { useEffect } from 'react';
+
+const RootRedirect = () => {
+  const selectedCity = usePreferencesStore(s => s.selectedCity);
+  const [, navigate] = useLocation();
+  
+  useEffect(() => {
+    const search = window.location.search;
+    navigate(`/${selectedCity}${search}`, { replace: true });
+  }, [selectedCity, navigate]);
+  
+  return null;
+};
 
 function App() {
   usePWALifecycle();
+  useWebMCP();
 
   return (
     <>
       {/* Visually hidden SEO content */}
       <div className="sr-only">
-        <h1>departs.app — Pražská integrovaná doprava LIVE</h1>
+        <h1>departs.app — MHD Praha & Brno LIVE</h1>
         <p>
-          Sledujte polohu vozidel pražské MHD (metro, tramvaje, autobusy, vlaky) v reálném čase.
-          Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů PID.
+          Sledujte polohu vozidel MHD v reálném čase.
+          Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů pro Prahu (PID) a Brno (IDS JMK).
         </p>
         <p>
-          Real-time visualization of Prague public transport. Track live locations of PID vehicles,
+          Real-time visualization of Prague and Brno public transport. Track live locations of vehicles,
           view upcoming departures, and check current delays on an interactive map.
         </p>
       </div>
 
-      <Map />
+      <Switch>
+        <Route path="/admin/explorer">
+          <FeedExplorer />
+        </Route>
+        <Route path="/admin/feedback">
+          <AdminFeedback />
+        </Route>
+        <Route path="/admin">
+          <AdminIndex />
+        </Route>
+        <Route path="/">
+          <RootRedirect />
+        </Route>
+        <Route>
+          <Map />
+        </Route>
+      </Switch>
       <Toaster position="bottom-center" />
     </>
   );

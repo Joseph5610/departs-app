@@ -69,8 +69,8 @@ export class GolemioAdapter implements CityAdapter {
     /**
      * Routes transit alert requests to AlertsService.
      */
-    handleAlerts() { 
-        return this.alertsService.getAlerts(); 
+    handleAlerts(ctx: EventContext<Env, string, unknown>) { 
+        return this.alertsService.getAlerts(ctx.env); 
     }
 
     /**
@@ -78,5 +78,40 @@ export class GolemioAdapter implements CityAdapter {
      */
     handleInfotexts(ctx: EventContext<Env, string, unknown>) {
         return this.infotextsService.getInfotexts(ctx.env);
+    }
+
+    /**
+     * Returns raw upstream Golemio or PID XML JSON
+     */
+    async handleRawFeed(ctx: EventContext<Env, string, unknown>, type: string = 'vehicles') {
+        if (type === 'alerts') {
+            const [pbRes, exclusionsRes] = await Promise.all([
+                this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", ctx.env, { cacheTtl: 10 }),
+                fetch("https://pid.cz/feed/rss-vyluky/").then(r => r.text())
+            ]);
+            
+            const { XMLParser } = await import("fast-xml-parser");
+            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+            
+            let incidents = null;
+            if (pbRes.ok) {
+                const buffer = await pbRes.arrayBuffer();
+                const { transit_realtime } = await import('gtfs-realtime-bindings');
+                incidents = transit_realtime.FeedMessage.decode(new Uint8Array(buffer)).toJSON();
+            }
+
+            return {
+                incidents,
+                exclusions: parser.parse(exclusionsRes)
+            };
+        }
+
+        const response = await this.client.fetch('/v2/public/vehiclepositions', ctx.env, {
+            cacheTtl: 10 // 10 seconds for debug feed
+        });
+        if (!response.ok) {
+            throw new Error(`Golemio API error: ${response.status}`);
+        }
+        return await response.json();
     }
 }

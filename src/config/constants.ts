@@ -7,16 +7,7 @@ export const SIDEBAR_WIDTH = 420;
 export const MOBILE_BREAKPOINT = 768;
 export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
 
-/**
- * Map configuration defaults
- */
-export const FALLBACK_CITY_CONFIG = {
-    slug: 'prague',
-    center: { lat: 50.0755, lng: 14.4378 },
-    bounds: '13.5,49.5,15.5,50.8',
-    zoom: 13,
-    userZoom: 15
-};
+
 
 export const MAP_BOUNDS_DEBOUNCE = 800;
 export const MAP_MIN_ZOOM_FOR_DATA = 9;

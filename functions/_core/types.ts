@@ -1,9 +1,6 @@
 import type { Fetcher } from "@cloudflare/workers-types";
 
 export interface Env {
-    FLAGS?: {
-        getBooleanValue: (key: string, defaultValue: boolean) => Promise<boolean>;
-    };
     ASSETS: Fetcher;
     [key: string]: unknown;
 }
@@ -156,7 +153,7 @@ export interface AppDepartureResponse {
     departures: AppDeparture[];
 }
 
-export interface AppRSSItem {
+export interface AppAlert {
     type: 'incident' | 'exclusion';
     title: string;
     description: string | null;
@@ -169,6 +166,9 @@ export interface AppRSSItem {
     line_metadata?: Array<{ name: string; route_color: string; type: string }>;
     isActive?: boolean;
     isFuture?: boolean;
+    cause?: string;
+    causeDetail?: { cs?: string; en?: string };
+    effect?: string;
 }
 
 export interface AppInfotext {
@@ -183,15 +183,17 @@ export interface AppInfotext {
 }
 
 export interface AppAlertsResponse {
-    alerts: AppRSSItem[];
+    alerts: AppAlert[];
 }
-
 
 export interface AppCity {
     slug: string;
     name: string;
     center: [number, number];
     bounds: [number, number, number, number];
+    adapter: string;
+    isBeta?: boolean;
+    virtualTableUrl?: string;
 }
 
 export interface AppCitiesResponse {

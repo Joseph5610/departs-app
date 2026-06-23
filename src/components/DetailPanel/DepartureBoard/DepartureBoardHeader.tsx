@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -8,11 +8,13 @@ import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
+import { useCities } from '../../../hooks/data/useCities';
 import { useNavigate } from '../../../hooks/features/useNavigate';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { LineBadge } from '../../LineBadge';
 import { toast } from 'sonner';
@@ -31,7 +33,8 @@ export const DepartureBoardHeader = React.memo(() => {
     // Preferences
     const departureSort = usePreferencesStore(s => s.departureSort);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
-    const { setDepartureSort, toggleFavorite } = usePreferencesStore(s => s.actions);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { setDepartureSort, toggleFavorite, setIsFeedbackOpen } = usePreferencesStore(s => s.actions);
 
     const { share } = useShare();
     const selectedLine = useSelectionStore(s => s.selectedLine);
@@ -47,6 +50,10 @@ export const DepartureBoardHeader = React.memo(() => {
 
     const { handleNavigate, distanceLabel, stopDistanceInfo } = useNavigate();
     const { delayStats, isError } = useDepartures();
+
+    const { data: citiesData } = useCities();
+    const currentCityConfig = citiesData?.cities.find(c => c.slug === selectedCity);
+    const virtualTableUrl = currentCityConfig?.virtualTableUrl;
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
@@ -174,25 +181,6 @@ export const DepartureBoardHeader = React.memo(() => {
                         </TooltipContent>
                     </Tooltip>
 
-                    {/* Official Link – desktop only (PID web board doesn't work well on mobile) */}
-                    {!isMobile && (
-                        <Tooltip>
-                            <TooltipTrigger render={
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    render={<a href={`https://data.pid.cz/departures/?ids=${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" />}
-                                    className="h-8 w-8 text-muted-foreground"
-                                >
-                                    <ExternalLink size={16} strokeWidth={1.5} />
-                                </Button>
-                            } />
-                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                                {t('map.departures.officialBoard')}
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
-
                     {/* Favorite */}
                     <Tooltip>
                         <TooltipTrigger render={
@@ -222,23 +210,56 @@ export const DepartureBoardHeader = React.memo(() => {
                         </TooltipContent>
                     </Tooltip>
 
-                    {/* Share */}
-                    <Tooltip>
-                        <TooltipTrigger render={
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={handleShare}
-                                aria-label={t('common.share')}
-                                className="h-8 w-8 text-muted-foreground"
-                            >
-                                <Share2 size={16} strokeWidth={1.5} />
-                            </Button>
-                        } />
-                        <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                            {t('common.share')}
-                        </TooltipContent>
-                    </Tooltip>
+                    {/* Desktop Dropdown or Mobile Share */}
+                    {!isMobile ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger render={
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    data-testid="more-options-btn"
+                                    aria-label="More options"
+                                    className="h-8 w-8 text-muted-foreground"
+                                >
+                                    <MoreHorizontal size={16} strokeWidth={1.5} />
+                                </Button>
+                            } />
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
+                                    <Share2 size={14} className="mr-2" strokeWidth={1.5} />
+                                    {t('common.share')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem render={<div onClick={() => setIsFeedbackOpen(true)} />}>
+                                    <MessageSquareHeart size={14} className="mr-2" strokeWidth={1.5} />
+                                    {t('feedback.title')}
+                                </DropdownMenuItem>
+                                {virtualTableUrl && selectedStop && (
+                                    <DropdownMenuItem render={<a href={`${virtualTableUrl}${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer" />}>
+                                        <ExternalLink size={14} className="mr-2" strokeWidth={1.5} />
+                                        {t('map.departures.officialBoard')}
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Tooltip>
+                            <TooltipTrigger render={
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleShare}
+                                    data-testid="share-btn"
+                                    aria-label={t('common.share')}
+                                    className="h-8 w-8 text-muted-foreground"
+                                >
+                                    <Share2 size={16} strokeWidth={1.5} />
+                                </Button>
+                            } />
+                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
+                                {t('common.share')}
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
             </div>
 

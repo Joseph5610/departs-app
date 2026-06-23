@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
+import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
 
 export const VehicleHero: React.FC<VehicleHeroProps> = ({
     displayVehicle,
@@ -151,30 +152,44 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
             {/* Render Footer outside CardContent if data exists */}
             {displayVehicle.vehicle_descriptor && (
-                <div className="relative z-10 flex gap-2 p-3 px-4 bg-muted/20 border-t border-white/5 flex-wrap justify-between items-center mt-auto">
-                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                        <span className="text-muted-foreground/80 text-[9px] uppercase font-bold tracking-wider line-clamp-1">
-                            {displayVehicle.vehicle_descriptor?.operator || 'DP PRAHA'}
-                        </span>
-                        <div className="flex gap-1.5 items-center min-w-0 w-full text-foreground/90">
-                            <span className="text-xs font-semibold truncate">
-                                {displayVehicle.vehicle_descriptor?.vehicle_type || '---'}
+                <div className="relative z-10 flex gap-3 p-3 px-4 bg-muted/20 border-t border-white/5 justify-between items-center mt-auto">
+                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        {displayVehicle.vehicle_descriptor?.operator && (
+                            <span className="text-muted-foreground/80 text-[9px] uppercase font-bold tracking-wider line-clamp-1">
+                                {displayVehicle.vehicle_descriptor.operator}
+                            </span>
+                        )}
+                        <div className="flex items-center gap-1.5 min-w-0 w-full">
+                            <span className="text-xs font-semibold truncate text-foreground/90">
+                                {displayVehicle.vehicle_descriptor?.vehicle_type || (() => {
+                                    const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
+                                    return typeKey ? t(typeKey) : '---';
+                                })()}
                             </span>
                             <span className="text-muted-foreground text-xs font-medium shrink-0">
                                 #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
                             </span>
-                            {displayVehicle.run_number && (
-                                <span className="text-muted-foreground text-[11px] font-medium ml-1 pl-1.5 border-l border-white/10 shrink-0 whitespace-nowrap">
-                                    {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
-                                </span>
-                            )}
                         </div>
+                        {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
+                            <div className="flex items-center gap-2 mt-0.5 min-w-0 w-full">
+                                {displayVehicle.run_number && (
+                                    <span className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold shrink-0">
+                                        {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
+                                    </span>
+                                )}
+                                {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number) && (
+                                    <span className="text-muted-foreground/50 text-[9px] font-mono uppercase tracking-widest truncate">
+                                        {displayVehicle.vehicle_id}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
                       displayVehicle.vehicle_descriptor?.has_usb_chargers || 
                       displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                        <div className="flex gap-2 shrink-0 bg-black/20 p-2 rounded-lg">
+                        <div className="flex gap-2 shrink-0 bg-black/20 p-2 rounded-lg items-center h-fit">
                             {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
                                 <Snowflake size={14} className="text-sky-400" strokeWidth={2} />
                             )}

@@ -1,31 +1,34 @@
-import { AppAlertsResponse } from "../../../../_core/types";
+import { AppAlert, AppAlertsResponse, Env } from "../../../../_core/types";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
-import { AlertsMapper } from "./AlertsMapper";
+import { AlertsMapper as RssAlertsMapper } from "./AlertsMapper";
+import { AlertsMapper as GtfsAlertsMapper } from "../../../gtfs/services/alerts/AlertsMapper";
+import { transit_realtime } from 'gtfs-realtime-bindings';
+import { GOLEMIO_CONFIG } from "../../core/config";
+import type { GtfsRoute } from "../../../gtfs/core/gtfs-data";
 
+import { z } from 'zod';
+import { golemioRouteSchema } from './schemas';
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
- * Uses the external PID RSS feeds.
+ * Uses GTFS-RT PB for incidents and PID RSS feeds for exclusions.
  */
 export class AlertsService {
     constructor(private client: GolemioClient) {}
 
-    private async fetchFeed(url: string): Promise<string> {
-        const isExclusion = url.includes('vyluky');
-        const cacheTtl = isExclusion ? CACHE_TTL.RSS_EXCLUSIONS : CACHE_TTL.RSS_INCIDENTS;
-
+    private async fetchExclusionsFeed(): Promise<string> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-            const response = await fetch(url, {
+            const response = await fetch(GOLEMIO_CONFIG.FEEDS.exclusions, {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (compatible; departs-app/0.1; +https://departs.app)',
                     'Accept': 'application/rss+xml, application/xml, text/xml'
                 },
                 cf: {
-                    cacheTtl,
+                    cacheTtl: CACHE_TTL.RSS_EXCLUSIONS,
                     cacheEverything: true
                 },
                 signal: controller.signal
@@ -38,27 +41,63 @@ export class AlertsService {
         }
     }
 
-
-
     /**
      * Main entry point to get all alerts.
-     * Fetches and combines both PID RSS incidents and exclusions feeds.
+     * Fetches GTFS-RT Incidents and RSS Exclusions.
      * 
      * @param {Env} env - The environment configuration
      * @returns {Promise<AppAlertsResponse>} Combined alerts response
      */
-    async getAlerts(): Promise<AppAlertsResponse> {
+    async getAlerts(env: Env): Promise<AppAlertsResponse> {
         try {
-            const [incidentsRes, exclusionsRes] = await Promise.allSettled([
-                this.fetchFeed("https://pid.cz/feed/rss-mimoradnosti/"),
-                this.fetchFeed("https://pid.cz/feed/rss-vyluky/")
+            const [pbRes, routesRes, exclusionsRes] = await Promise.allSettled([
+                this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS }),
+                this.client.fetch("/v2/gtfs/routes", env, { cacheTtl: 86400 }), // Cache routes for a day
+                this.fetchExclusionsFeed()
             ]);
 
-            const incidents = incidentsRes.status === 'fulfilled' ? AlertsMapper.mapRSS(incidentsRes.value, 'incidents') : [];
-            const exclusions = exclusionsRes.status === 'fulfilled' ? AlertsMapper.mapRSS(exclusionsRes.value, 'exclusions') : [];
+            // Handle GTFS-RT Incidents
+            let incidents: AppAlert[] = [];
+            if (pbRes.status === 'fulfilled' && pbRes.value.ok && routesRes.status === 'fulfilled' && routesRes.value.ok) {
+                try {
+                    const buffer = await pbRes.value.arrayBuffer();
+                    const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+                    const rawAlerts = feed.entity.filter(e => e.alert != null);
 
-            if (incidentsRes.status === 'rejected' && exclusionsRes.status === 'rejected') {
-                throw new ApiError("Both RSS feeds failed to fetch", 502);
+                    const routesJson = await routesRes.value.json();
+                    const parsedRoutes = z.array(golemioRouteSchema).safeParse(routesJson);
+                    const routesData = parsedRoutes.success ? parsedRoutes.data : [];
+                    
+                    const routesMap: Record<string, GtfsRoute> = {};
+                    for (const r of routesData) {
+                        routesMap[r.route_id] = {
+                            name: r.route_id,
+                            short_name: r.route_short_name,
+                            type: r.route_type,
+                            route_color: r.route_color ? '#' + r.route_color : undefined
+                        };
+                    }
+                    incidents = GtfsAlertsMapper.mapAlerts(rawAlerts, routesMap, true);
+                } catch (e) {
+                    console.error("Failed to parse GTFS-RT alerts or routes", e);
+                }
+            } else {
+                console.error("Failed to fetch PB alerts or Routes", 
+                    pbRes.status === 'rejected' ? pbRes.reason : 'PB response not OK',
+                    routesRes.status === 'rejected' ? routesRes.reason : 'Routes response not OK'
+                );
+            }
+
+            // Handle RSS Exclusions
+            let exclusions: AppAlert[] = [];
+            if (exclusionsRes.status === 'fulfilled') {
+                exclusions = RssAlertsMapper.mapRSS(exclusionsRes.value);
+            } else {
+                console.error("Failed to fetch Exclusions RSS", exclusionsRes.reason);
+            }
+
+            if (incidents.length === 0 && exclusions.length === 0 && exclusionsRes.status === 'rejected') {
+                throw new ApiError("Failed to fetch alerts from all sources", 502);
             }
 
             return {

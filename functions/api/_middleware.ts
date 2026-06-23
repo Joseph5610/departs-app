@@ -15,7 +15,7 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
             status: 204,
             headers: {
                 "Access-Control-Allow-Origin": allowed && origin ? origin : "null",
-                "Access-Control-Allow-Methods": "GET, OPTIONS",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type",
                 "Access-Control-Max-Age": "3600",
                 "Vary": "Origin",
@@ -27,7 +27,7 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
     }
 
     // 3. Block disallowed methods
-    if (request.method !== "GET" && request.method !== "HEAD") {
+    if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
         return new Response("Method Not Allowed", { status: 405 });
     }
 

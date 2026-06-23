@@ -44,7 +44,7 @@ test.describe('Favorites Tests', () => {
         await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
 
         // Go directly to the stop by URL parameter to skip search
-        await page.goto('/stop/U1111Z1P');
+        await page.goto('/prague/stop/U1111Z1P');
         
         await expect(mapPage.detailPanel).toBeVisible();
 

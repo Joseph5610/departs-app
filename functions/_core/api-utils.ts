@@ -1,4 +1,5 @@
 import { ApiError } from "./errors";
+import { ZodError } from "zod";
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env } from "./types";
 import { getCityConfig } from "./city-config";
@@ -58,6 +59,9 @@ export function createErrorResponse(message: string, status: number = 500): Resp
  * Converts thrown errors (like ApiError) into standardized JSON Responses.
  */
 export function handleError(error: unknown): Response {
+    if (error instanceof ZodError) {
+        return createErrorResponse("Invalid request parameters", 400);
+    }
     if (error instanceof ApiError) {
         return createErrorResponse(error.message, error.status);
     }
@@ -107,15 +111,8 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
 }
 
 /**
- * Sanitizes an ID parameter to prevent path traversal or parameter injection.
- * Allows alphanumeric characters, dashes, underscores, and commas.
- */
-export function sanitizeId(id: string | null): string | null {
-    if (!id) return null;
-    return id.replace(/[^a-zA-Z0-9_,-]/g, '');
-}
-/**
  * Fixes missing spaces after commas (common in Golemio data).
+ * TODO: Consider migrating this to a shared text-processing utility.
  */
 export function fixCommaSpacing(text: string | undefined | null): string | undefined {
     if (!text) return undefined;

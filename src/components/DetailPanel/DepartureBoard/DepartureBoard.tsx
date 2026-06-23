@@ -1,5 +1,6 @@
 import { memo, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
 import { Train, ArrowRight, ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,13 +33,34 @@ interface DepartureBoardProps {
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
-    const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine } = useDepartures();
+    const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine, data } = useDepartures();
 
     const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
     
     const onToggleGroup = useCallback((group: string) => {
         setExpandedGroups(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]);
     }, []);
+
+    const jsonLd = useMemo(() => {
+        if (!data?.departures || data.departures.length === 0) return null;
+        
+        // Take up to 15 upcoming departures to avoid bloating the DOM
+        const upcoming = data.departures.slice(0, 15).map(dep => ({
+            "@type": "TrainTrip",
+            "trainNumber": String(dep.line),
+            "trainName": dep.headsign,
+            "departureTime": dep.scheduled,
+            "description": `Delay: ${dep.delay || 0} seconds`,
+            "departurePlatform": dep.platform || undefined
+        }));
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Live Departures",
+            "itemListElement": upcoming
+        };
+    }, [data?.departures]);
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
@@ -60,6 +82,13 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     return (
         <div className="flex flex-col gap-3">
+            {jsonLd && (
+                <Helmet>
+                    <script type="application/ld+json">
+                        {JSON.stringify(jsonLd)}
+                    </script>
+                </Helmet>
+            )}
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (

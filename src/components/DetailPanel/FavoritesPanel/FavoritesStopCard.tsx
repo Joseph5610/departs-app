@@ -48,6 +48,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     const userLocation = useGeolocationStore(s => s.userLocation);
 
     const { toggleFavorite } = usePreferencesStore(s => s.actions);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const { stop_id, stop_name, platform_code } = stopFeature.properties;
     const coordinates = stopFeature.geometry.coordinates as [number, number];
@@ -112,7 +113,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             duration: MAP_FLY_DURATION
         });
         
-        navigate(`/stop/${encodeURIComponent(stop_id)}`);
+        navigate(`/${selectedCity}/stop/${encodeURIComponent(stop_id)}`);
         
         if (onClosePanel) {
             onClosePanel();

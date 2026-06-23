@@ -6,8 +6,9 @@ export const GOLEMIO_CONFIG = {
     STOPS_FETCH_LIMIT: 10000,
     STOPS_MAX_OFFSET: 40000,
     STOPS_SOURCE_URL: 'https://data.pid.cz/stops/json/stops.json',
-    RSS_FEEDS: {
-        incidents: 'https://pid.cz/feed/rss-mimoradnosti/',
-        exclusions: 'https://pid.cz/feed/rss-vyluky/'
+    FEEDS: {
+        exclusions: 'https://pid.cz/feed/rss-vyluky/',
+        alerts_pb: 'https://api.golemio.cz/v2/vehiclepositions/gtfsrt/alerts.pb',
+        routes: '/v2/gtfs/routes'
     }
 } as const;

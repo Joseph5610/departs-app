@@ -26,7 +26,7 @@ test.describe('Routing Tests', () => {
         });
 
         // Navigate directly to the new URL format
-        await mapPage.goto('/stop/U1111Z1P');
+        await mapPage.goto('/prague/stop/U1111Z1P');
         
         await expect(mapPage.detailPanel).toBeVisible({ timeout: 15000 });
         await expect(page.getByText('Hlavní nádraží').first()).toBeVisible();

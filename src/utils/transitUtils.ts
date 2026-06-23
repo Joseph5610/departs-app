@@ -53,3 +53,25 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
     return R * c;
 };
 
+
+/**
+ * Returns the i18n translation key for a given GTFS route_type.
+ * Handles both standard GTFS types (0-12) and extended Google Transit types (100-999).
+ */
+export const getRouteTypeI18nKey = (type: number | string | undefined): string => {
+    const n = Number(type);
+    if (n >= 100 && n <= 199) return 'settings.vehicleTypes.train';
+    if (n >= 700 && n <= 799) return 'settings.vehicleTypes.bus';
+    if (n >= 800 && n <= 899) return 'settings.vehicleTypes.trolleybus';
+    if (n >= 900 && n <= 999) return 'settings.vehicleTypes.tram';
+    switch (n) {
+        case 0: return 'settings.vehicleTypes.tram';
+        case 1: return 'settings.vehicleTypes.metro';
+        case 2: return 'settings.vehicleTypes.train';
+        case 3: return 'settings.vehicleTypes.bus';
+        case 4: return 'settings.vehicleTypes.ferry';
+        case 7: return 'settings.vehicleTypes.funicular';
+        case 11: return 'settings.vehicleTypes.trolleybus';
+        default: return '';
+    }
+};

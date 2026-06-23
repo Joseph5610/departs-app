@@ -29,12 +29,19 @@ test.describe('Share functionality', () => {
         });
 
         // Navigate directly to a stop
-        await mapPage.goto('/stop/U1111Z1P');
+        await mapPage.goto('/prague/stop/U1111Z1P');
         
         await expect(mapPage.detailPanel).toBeVisible({ timeout: 15000 });
 
+        // On desktop, the share button is inside a dropdown menu.
+        // We can check if the more options button is visible and click it.
+        const moreOptionsBtn = page.getByTestId('more-options-btn');
+        if (await moreOptionsBtn.isVisible()) {
+            await moreOptionsBtn.click();
+        }
+
         // Find the share button in the DepartureBoardHeader
-        const shareBtn = page.getByRole('button', { name: /Share|Sdílet/i }).first();
+        const shareBtn = page.getByTestId('share-btn').first();
         await expect(shareBtn).toBeVisible();
 
         // Click it - since navigator.share is usually undefined in headless, it should fallback to clipboard
@@ -47,7 +54,7 @@ test.describe('Share functionality', () => {
         const clipboardText = await page.evaluate("navigator.clipboard.readText()");
         
         // Assert it's the correct Wouter path
-        expect(clipboardText).toContain('/stop/U1111Z1P');
+        expect(clipboardText).toContain('/prague/stop/U1111Z1P');
         expect(clipboardText).not.toContain('?stopId=U1111Z1P');
     });
 });

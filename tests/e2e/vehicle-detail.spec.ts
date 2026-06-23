@@ -106,7 +106,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
         );
 
         // Go directly to the stop by URL parameter to skip search
-        await page.goto('/stop/U1111Z1P');
+        await page.goto('/prague/stop/U1111Z1P');
         
         await stopsResponsePromise;
         await expect(mapPage.detailPanel).toBeVisible();

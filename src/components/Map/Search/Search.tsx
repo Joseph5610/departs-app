@@ -34,6 +34,7 @@ export const Search: React.FC = React.memo(() => {
     // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { addToHistory } = usePreferencesStore(s => s.actions);
 
     // Viewport
@@ -56,6 +57,7 @@ export const Search: React.FC = React.memo(() => {
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
     const { results: geocodingResults } = useGeocoding(query, userLocation);
+
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -141,9 +143,10 @@ export const Search: React.FC = React.memo(() => {
             coordinates: stop.geometry.coordinates as [number, number]
         };
 
-        navigate(`/stop/${encodeURIComponent(selectedStop.stop_id)}`);
+        navigate(`/${selectedCity}/stop/${encodeURIComponent(selectedStop.stop_id)}`);
         addToHistory({
             type: 'stop',
+            city_slug: selectedCity,
             ...selectedStop
         });
         setQuery('');
@@ -151,16 +154,17 @@ export const Search: React.FC = React.memo(() => {
     };
 
     const handleHistorySelect = (item: SearchHistoryItem) => {
+        const targetCity = item.city_slug || selectedCity;
         if (item.type === 'stop') {
             flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
-            navigate(`/stop/${encodeURIComponent(item.stop_id)}`);
+            navigate(`/${targetCity}/stop/${encodeURIComponent(item.stop_id)}`);
             addToHistory(item);
         } else if (item.type === 'place') {
-            navigate('/');
+            navigate(`/${targetCity}`);
             flyTo({
                 center: item.coordinates,
                 zoom: MAP_STOP_SELECT_ZOOM,
@@ -179,13 +183,13 @@ export const Search: React.FC = React.memo(() => {
 
     const handleLineSelect = (lines: string[]) => {
         onLineSelect(lines);
-        addToHistory({ type: 'line', lines });
+        addToHistory({ type: 'line', city_slug: selectedCity, lines });
         setQuery('');
         setIsOpen(false);
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
-        navigate('/');
+        navigate(`/${selectedCity}`);
         flyTo({
             center: result.coordinates,
             zoom: MAP_STOP_SELECT_ZOOM,
@@ -194,6 +198,7 @@ export const Search: React.FC = React.memo(() => {
         setSelectedPlaceId(result.id);
         addToHistory({
             type: 'place',
+            city_slug: selectedCity,
             place_id: result.id,
             name: result.name,
             subtitle: result.subtitle,

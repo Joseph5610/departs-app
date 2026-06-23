@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, ExternalLink, ChevronDown, Construction } from 'lucide-react';
+import { ExternalLink, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RSSItem } from '../../types/transit';
 import { LineBadge } from '../LineBadge';
+import { AlertIcon } from './AlertIcon';
 import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 import {
     Collapsible,
@@ -21,7 +22,7 @@ interface CondensedAlertItemProps {
  * An accordion-style list item for alerts, using Shadcn Collapsible.
  */
 export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(false);
 
     const isHigh = item.priority === 'high' || item.priority === '1';
@@ -30,7 +31,6 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
     const lines = item.line_metadata;
 
     const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
-    const IconComponent = item.type === 'exclusion' ? Construction : AlertTriangle;
 
     const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to;
 
@@ -51,7 +51,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             >
                 {/* Icon Column */}
                 <div className="shrink-0 pt-0.5">
-                    <IconComponent size={16} strokeWidth={1.5} className={iconColorClass} />
+                    <AlertIcon cause={item.cause} effect={item.effect} type={item.type} size={16} strokeWidth={1.5} className={iconColorClass} />
                 </div>
 
                 {/* Content Column */}
@@ -80,6 +80,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                                 </span>
                             </div>
                         ) : null}
+
                     </div>
 
                     {/* Title */}
@@ -101,6 +102,16 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             <CollapsibleContent>
                 <div className="px-4 pb-4 pt-1 ml-7">
                     <div className="flex flex-col gap-3">
+                        {item.cause && (
+                            <div className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
+                                <span>{t(`alerts.causes.${item.cause}`, item.cause)}</span>
+                                {item.causeDetail && (
+                                    <span className="text-foreground/50 ml-1.5 normal-case font-medium border-l border-white/10 pl-1.5">
+                                        {i18n.language.startsWith('en') && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         {item.description && (
                             <div className="text-[12px] leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap">
                                 {item.description}

@@ -1,9 +1,9 @@
-name: Sync PID Stops
+name: Sync Stops
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *' # Run daily at 3:00 AM
+    - cron: "0 3 * * *" # Run daily at 3:00 AM
 
 jobs:
   sync:
@@ -16,13 +16,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: "22"
 
-      - name: Run Sync Script
-        run: npx tsx scripts/sync-stops.ts
+      - name: Sync PID Stops
+        run: npx tsx scripts/prague/sync-stops.ts
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "data: sync pid stops enrichment data"
-          file_pattern: "functions/_data/prague/stops-enrichment.json"
+          file_pattern: "functions/_data/cities/prague/stops-enrichment.json"

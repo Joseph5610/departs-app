@@ -23,6 +23,7 @@ dist-ssr
 
 .wrangler/
 .dev.vars
+.env
 test-results
 playwright-report/
 scratch/*
@@ -30,4 +31,4 @@ scratch/*
 .ik.yaml
 .ik/*
 
-.playwright-mcp
+.playwright-mcp/
