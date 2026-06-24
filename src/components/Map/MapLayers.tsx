@@ -22,6 +22,8 @@ import {
     vehiclesDirectionLayer,
     vehiclesLabelLayer,
     routeLineLayer,
+    routeStopsLayer,
+    routeTerminalsLayer,
     userLocationPulseLayer,
     userLocationPointLayer,
     stationIconLayer
@@ -129,6 +131,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                 <Layer
                     {...routeLineLayer}
+                    beforeId={labelLayerId}
+                />
+                <Layer
+                    {...routeStopsLayer}
+                    beforeId={labelLayerId}
+                />
+                <Layer
+                    {...routeTerminalsLayer}
                     beforeId={labelLayerId}
                 />
             </Source>
