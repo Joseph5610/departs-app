@@ -8,6 +8,7 @@ import { z } from "zod";
 import { GolemioClient } from "../../core/GolemioClient";
 import { DeparturesMapper } from "./DeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../../_core/schemas";
+import { getEnrichmentData } from "../stops/enrichment";
 
 /**
  * Service for fetching and processing real-time departure boards for a specific stop.
@@ -53,6 +54,7 @@ export class DeparturesService {
      * @throws {ApiError} If stopId is missing or upstream fetch fails
      */
     async getDepartures(env: Env, searchParams: URLSearchParams): Promise<AppDepartureResponse> {
+        const enrichmentData = await getEnrichmentData();
         const { stopId: rawStopIds } = parseSearchParams(searchParams, departuresQuerySchema);
         const stopIds = rawStopIds.filter((id): id is string => !!id);
 
@@ -100,6 +102,6 @@ export class DeparturesService {
             // Filter out the nulls
             const data = parsed.data.map(group => group.filter((item): item is GolemioDepartureItem => item !== null));
             
-            return DeparturesMapper.map(data, stopIds);
+            return DeparturesMapper.map(data, stopIds, enrichmentData);
     }
 }

@@ -1,8 +1,8 @@
-import { AppVehicleDetail, AppStopTimeProperties } from "../../../../_core/types";
+import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
-import { getMetroLinesForStop, getMetroLinesForHeadsign } from "../stops/enrichment";
+import { ProcessedEnrichmentData } from "../stops/enrichment";
 
 /**
  * Mapper for parsing vehicle details from the Golemio API.
@@ -21,7 +21,7 @@ export class VehicleDetailMapper {
      *                 The frontend must preserve any existing live position data when merging this.
      * @returns Normalized vehicle detail object
      */
-    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean): AppVehicleDetail {
+    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean, enrichmentData: ProcessedEnrichmentData): AppVehicleDetail {
         // Golemio returns either a FeatureCollection or a bare Feature.
         // Extract properties from whichever shape we received.
         const feature = data.features?.[0];
@@ -72,10 +72,10 @@ export class VehicleDetailMapper {
                     const stProps = st.properties;
                     const stopId = stProps.stop_id || '';
                     const stopName = stProps.stop_name;
-                    let metroLines = getMetroLinesForStop(stopId);
+                    let metroLines = enrichmentData.stopIdToMetroLines.get(stopId) || [];
                     
                     if (metroLines.length === 0 && stopName) {
-                        metroLines = getMetroLinesForHeadsign(stopName);
+                        metroLines = enrichmentData.headsignLookup.get(stopName.trim().toUpperCase()) || [];
                     }
 
                     return {
@@ -91,7 +91,9 @@ export class VehicleDetailMapper {
             };
         }
 
-        // Shape processing: Reconstruct a continuous LineString from individual shape points
+        // Shape and Stops processing: Reconstruct a continuous LineString and add Stop points
+        const routeFeatures: AppRouteFeature[] = [];
+
         const shapes = data.shapes;
         if (shapes) {
             const shapesFeatures = 'features' in shapes ? shapes.features : (Array.isArray(shapes) ? shapes : null);
@@ -101,20 +103,45 @@ export class VehicleDetailMapper {
                     .filter((sf: GolemioShapeFeature) => sf.geometry?.type === 'Point')
                     .map((sf: GolemioShapeFeature) => sf.geometry.coordinates as [number, number]);
                 
-                vehicleData.route_geojson = {
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: coordinates
-                        },
-                        properties: {
-                            route_color: routeColor
-                        }
-                    }]
-                };
+                routeFeatures.push({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: coordinates
+                    },
+                    properties: {
+                        route_color: routeColor
+                    }
+                });
             }
+        }
+
+        const validStops = vehicleData.stop_times?.features
+            ?.filter(st => st.geometry && st.geometry.type === 'Point' && Array.isArray(st.geometry.coordinates)) || [];
+
+        validStops.forEach((st: typeof validStops[0], index: number) => {
+            const isStart = index === 0;
+            const isEnd = index === validStops.length - 1;
+            if (st.geometry) {
+                routeFeatures.push({
+                    type: 'Feature',
+                    geometry: st.geometry as { type: 'Point'; coordinates: number[] },
+                    properties: {
+                        ...st.properties,
+                        route_color: routeColor,
+                        is_start: isStart,
+                        is_end: isEnd,
+                        is_regular: !isStart && !isEnd
+                    }
+                });
+            }
+        });
+
+        if (routeFeatures.length > 0) {
+            vehicleData.route_geojson = {
+                type: 'FeatureCollection',
+                features: routeFeatures
+            } as NonNullable<AppVehicleDetail['route_geojson']>;
         }
 
         return vehicleData;

@@ -1,18 +1,18 @@
 import { AppStopFeature, AppStopProperties } from "../../../../_core/types";
 import { GolemioStopFeature } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
-import { getStopEnrichment } from "./enrichment";
+import { ProcessedEnrichmentData } from "./enrichment";
 
 export class StopsMapper {
-    static map(allRawStops: GolemioStopFeature[]): AppStopFeature[] {
+    static map(allRawStops: GolemioStopFeature[], enrichmentData: ProcessedEnrichmentData): AppStopFeature[] {
         return allRawStops
             .filter(f => {
-                const enrichment = getStopEnrichment(f.properties.stop_id);
+                const enrichment = enrichmentData.enrichmentMap[f.properties.stop_id];
                 if (!enrichment) return true;
                 return enrichment.l && enrichment.l.some(l => l.e === 0);
             })
             .map(f => {
-                const enrichment = getStopEnrichment(f.properties.stop_id);
+                const enrichment = enrichmentData.enrichmentMap[f.properties.stop_id];
                 const lines: NonNullable<AppStopProperties['lines']> = enrichment
                     ? enrichment.l.map(l => ({ name: l.n, type: l.t, route_color: getVehicleColor(l.t, l.n) }))
                     : [];

@@ -2,9 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.49.3] - 2026-06-23
+## [0.49.4] - 2026-06-23
 
-### Changed
+### Added
+- **Map Rendering**: Enhanced route lines rendering by showing exact route stops and start/end terminal markers directly overlaid on the path using live vehicle data `stop_times`.
+
+## [0.49.3] - 2026-06-23
 - **Dependencies**: Bumped `vite` to `8.1.0`, `@vitejs/plugin-react` to `6.0.3`, and `react`/`@types/react` to latest. Fixed `vite.config.ts` typing for `manualChunks` to support Vite 8 Rollup types.
 
 ## [0.49.2] - 2026-06-23

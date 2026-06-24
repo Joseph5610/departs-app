@@ -7,6 +7,7 @@ import { GOLEMIO_CONFIG } from "../../core/config";
 import { GolemioClient } from "../../core/GolemioClient";
 import { processStops } from "./grouping";
 import { StopsMapper } from "./StopsMapper";
+import { getEnrichmentData } from "./enrichment";
 
 /**
  * Service for fetching and processing physical transit stops.
@@ -23,6 +24,7 @@ export class StopsService {
      * @returns {Promise<AppStopCollection>} Object containing a FeatureCollection of grouped and enriched stop features
      */
     async getStops(env: Env): Promise<AppStopCollection> {
+        const enrichmentData = await getEnrichmentData();
 
         const fetchAllGolemioStops = async (): Promise<GolemioStopFeature[]> => {
             const limit = GOLEMIO_CONFIG.STOPS_FETCH_LIMIT;
@@ -51,7 +53,7 @@ export class StopsService {
             if (allRawStops.length === 0) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
 
             // Enrich raw Golemio stops → AppStopFeature[] (adds lines, names from our enrichment data)
-            const enrichedStops = StopsMapper.map(allRawStops);
+            const enrichedStops = StopsMapper.map(allRawStops, enrichmentData);
 
             const features = processStops(enrichedStops);
             return { type: "FeatureCollection", features };

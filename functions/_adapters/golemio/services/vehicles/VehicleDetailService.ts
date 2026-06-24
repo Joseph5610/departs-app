@@ -6,6 +6,7 @@ import { GolemioClient } from "../../core/GolemioClient";
 import { VehicleDetailMapper } from "./VehicleDetailMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleDetailQuerySchema, parseSearchParams } from "../../../../_core/schemas";
+import { getEnrichmentData } from "../stops/enrichment";
 
 /**
  * Service for fetching detailed information about a specific transit vehicle or trip.
@@ -24,6 +25,7 @@ export class VehicleDetailService {
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
     async getVehicleDetail(env: Env, searchParams: URLSearchParams): Promise<AppVehicleDetail> {
+        const enrichmentData = await getEnrichmentData();
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
@@ -80,6 +82,6 @@ export class VehicleDetailService {
             data.stop_times.features = data.stop_times.features.filter((f): f is NonNullable<typeof f> => f !== null);
         }
 
-        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic);
+        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic, enrichmentData);
     }
 }

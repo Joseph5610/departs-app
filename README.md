@@ -25,32 +25,30 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 
 ### Prerequisites
 
-- **Node.js**: v20 or higher
+- **Node.js**: v22 or higher
 - **Wrangler**: `npm install -g wrangler` (for Cloudflare Functions)
 - **API Key**: A free API key from [api.golemio.cz](https://api.golemio.cz/)
 
-### Setup
+### Quick Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/joseph5610/departs-app.git
    cd departs-app
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment**:
    Create a `.dev.vars` file in the root (copied from `.dev.vars.example`):
+
    ```bash
    GOLEMIO_API_KEY=your_actual_key_here
-   TURNSTILE_SECRET_KEY=your_turnstile_secret_key
-   ```
-   *And in `.env` or `.env.local` for the frontend:*
-   ```bash
-   VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA # Dummy key for local dev
    ```
 
 4. **Run development server**:
@@ -61,6 +59,7 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 ### Building
 
 To create an optimized production build:
+
 ```bash
 npm run build
 ```
@@ -70,11 +69,11 @@ npm run build
 The application includes a built-in user feedback widget and an admin dashboard protected by Cloudflare Zero Trust. To set this up for production:
 
 1. **Cloudflare KV**:
-   - Create a KV namespace in your Cloudflare dashboard (e.g., `DEPARTS_FEEDBACK`).
+   - Create a KV namespace in your Cloudflare dashboard (e.g., `FEEDBACK_STORE`).
    - Add the binding to your `wrangler.toml`:
      ```toml
      [[kv_namespaces]]
-     binding = "DEPARTS_FEEDBACK"
+     binding = "FEEDBACK_STORE"
      id = "your_kv_namespace_id"
      ```
 
@@ -86,9 +85,8 @@ The application includes a built-in user feedback widget and an admin dashboard 
 
 3. **Cloudflare Access (Zero Trust)**:
    - The `/admin/*` and `/api/admin/*` routes contain sensitive user feedback and diagnostic data.
-   - In your Cloudflare dashboard, navigate to Zero Trust and create an **Access Application** for the paths `departs.app/admin/*` AND `departs.app/api/admin/*`.
+   - In your Cloudflare dashboard, navigate to Zero Trust and create an **Access Application** for the paths `/admin/*` and `/api/admin/*`.
    - Set up a policy to allow only your personal email address or identity provider (e.g., GitHub) to access the dashboard.
-
 
 ## 🏗️ Project Structure
 

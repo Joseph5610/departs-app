@@ -115,19 +115,27 @@ export interface AppVehicleDetail extends AppVehicleProperties {
             };
         }>;
     };
-    route_geojson?: {
-        type: 'FeatureCollection';
-        features: Array<{
-            type: 'Feature';
-            geometry: {
-                type: 'LineString';
-                coordinates: [number, number][];
-            };
-            properties: {
-                route_color: string;
-            };
-        }>;
+    route_geojson?: AppRouteGeoJSON;
+}
+
+export interface AppRouteFeature {
+    type: 'Feature';
+    geometry: {
+        type: 'LineString' | 'Point';
+        coordinates: number[] | number[][] | [number, number][];
     };
+    properties: {
+        route_color: string;
+        is_start?: boolean;
+        is_end?: boolean;
+        is_regular?: boolean;
+        [key: string]: unknown;
+    };
+}
+
+export interface AppRouteGeoJSON {
+    type: 'FeatureCollection';
+    features: AppRouteFeature[];
 }
 
 export interface AppDeparture {

@@ -1,7 +1,7 @@
 import { AppDeparture, AppDepartureResponse } from "../../../../_core/types";
 import { GolemioDepartureItem } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
-import { getMetroLinesForHeadsign } from "../stops/enrichment";
+import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 
 /**
@@ -16,7 +16,7 @@ export class DeparturesMapper {
      * @param stopIds Array of requested stop IDs for reference
      * @returns Normalized departure response
      */
-    static map(data: GolemioDepartureItem[][], stopIds: string[]): AppDepartureResponse {
+    static map(data: GolemioDepartureItem[][], stopIds: string[], enrichmentData: ProcessedEnrichmentData): AppDepartureResponse {
         const departures: AppDeparture[] = [];
 
         if (Array.isArray(data)) {
@@ -24,7 +24,7 @@ export class DeparturesMapper {
                 if (Array.isArray(groupData)) {
                     const originalStopId = stopIds[idx];
                     groupData.forEach(item => {
-                        const normalized = this.normalizeDeparture(item);
+                        const normalized = this.normalizeDeparture(item, enrichmentData);
                         normalized.stopId = originalStopId;
                         departures.push(normalized);
                     });
@@ -37,7 +37,7 @@ export class DeparturesMapper {
         return { departures };
     }
 
-    private static normalizeDeparture(item: GolemioDepartureItem): AppDeparture {
+    private static normalizeDeparture(item: GolemioDepartureItem, enrichmentData: ProcessedEnrichmentData): AppDeparture {
         const line = String(item.route?.short_name || '?').toUpperCase();
         const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
         const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
@@ -70,7 +70,7 @@ export class DeparturesMapper {
             route_color: getVehicleColor(type, line),
             is_wheelchair_accessible: item.vehicle?.is_wheelchair_accessible,
             is_air_conditioned: item.vehicle?.is_air_conditioned,
-            headsign_metro_lines: getMetroLinesForHeadsign(headsign).filter(l => l.name !== line)
+            headsign_metro_lines: (enrichmentData.headsignLookup.get(headsign.trim().toUpperCase()) || []).filter(l => l.name !== line)
         };
     }
 }

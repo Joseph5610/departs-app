@@ -387,6 +387,7 @@ export const routeLineLayer: LineLayerSpecification = {
     id: 'route-line',
     type: 'line',
     source: 'route-shape',
+    filter: ['==', ['geometry-type'], 'LineString'],
     layout: {
         'line-join': 'round',
         'line-cap': 'round'
@@ -474,4 +475,39 @@ export const stationIconLayer: SymbolLayerSpecification = {
         'icon-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 13, 1]
     }
 };
+
+export const routeStopsLayer: CircleLayerSpecification = {
+    id: 'route-stops',
+    type: 'circle',
+    source: 'route-shape',
+    filter: ['all', 
+        ['==', ['geometry-type'], 'Point'],
+        ['==', ['get', 'is_regular'], true]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 15, 4.5],
+        'circle-color': '#ffffff',
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': ['get', 'route_color'],
+        'circle-opacity': 1
+    }
+};
+
+export const routeTerminalsLayer: CircleLayerSpecification = {
+    id: 'route-terminals',
+    type: 'circle',
+    source: 'route-shape',
+    filter: ['all',
+        ['==', ['geometry-type'], 'Point'],
+        ['any', ['==', ['get', 'is_start'], true], ['==', ['get', 'is_end'], true]]
+    ],
+    paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 5, 15, 7],
+        'circle-color': '#ffffff',
+        'circle-stroke-width': 2.5,
+        'circle-stroke-color': ['get', 'route_color'],
+        'circle-opacity': 1
+    }
+};
+
 
