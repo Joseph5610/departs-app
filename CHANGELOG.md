@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.5] - 2026-06-26
+
+### Fixed
+- **UI**: Fixed an issue where the back button on the vehicle detail panel would incorrectly display when opening a vehicle directly from the map or search. The `lastStopId` state is now properly cleared when the detail panel closes or when a vehicle is clicked directly on the map.
+
 ## [0.49.4] - 2026-06-23
 
 ### Added

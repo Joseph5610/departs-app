@@ -119,6 +119,12 @@ const MapInner: React.FC = () => {
         }
     }, [stopId, setLastStopId]);
 
+    useEffect(() => {
+        if (!selectedStop && !selectedVehicle) {
+            setLastStopId(null);
+        }
+    }, [selectedStop, selectedVehicle, setLastStopId]);
+
     const handleBack = useCallback(() => {
         if (selectedVehicle && lastStopId) {
             navigate(`/${selectedCity}/stop/${encodeURIComponent(lastStopId)}`);
@@ -228,6 +234,7 @@ const MapInner: React.FC = () => {
                             return;
                         }
                         setIsFollowing(true);
+                        setLastStopId(null);
                         const tId = props.gtfs_trip_id;
                         const vId = props.vehicle_id;
                         if (vId && vId !== tId) {
