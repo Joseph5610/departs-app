@@ -16,6 +16,7 @@ export interface PreferencesState {
     searchHistory: SearchHistoryItem[];
     mapBaseStyle: 'nolabels' | 'labels';
     selectedCity: string;
+    requireAirConditioned: boolean;
 }
 
 export interface PreferencesActions {
@@ -33,6 +34,7 @@ export interface PreferencesActions {
     toggleFavorite: (stopId: string) => void;
     addToHistory: (item: SearchHistoryBase) => void;
     clearHistory: () => void;
+    toggleRequireAirConditioned: () => void;
 }
 
 export interface PreferencesStore extends PreferencesState {
@@ -56,6 +58,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             searchHistory: [],
             mapBaseStyle: 'labels',
             selectedCity: 'prague',
+            requireAirConditioned: false,
 
             // Actions
             actions: {
@@ -94,6 +97,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                         return { searchHistory: newHistory };
                     }),
                 clearHistory: () => set({ searchHistory: [] }),
+                toggleRequireAirConditioned: () => set((state) => ({ requireAirConditioned: !state.requireAirConditioned })),
             },
         }),
         {
@@ -110,6 +114,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 searchHistory: state.searchHistory,
                 selectedCity: state.selectedCity,
                 routeTypeFilter: state.routeTypeFilter,
+                requireAirConditioned: state.requireAirConditioned,
             }),
         }
     )

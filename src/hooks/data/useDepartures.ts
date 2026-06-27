@@ -43,6 +43,7 @@ export interface DeparturesResponse {
 export const useDepartures = () => {
     const { stopId } = useRouteParams();
     const selectedLine = useSelectionStore(s => s.selectedLine);
+    const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const departureSort = usePreferencesStore(s => s.departureSort);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
@@ -100,10 +101,22 @@ export const useDepartures = () => {
 
     const enrichedDepartures = useMemo((): Departure[] => query.data?.departures || [], [query.data]);
 
+    const hasAirConditioningData = useMemo(() => {
+        return enrichedDepartures.some(dep => dep.is_air_conditioned === true);
+    }, [enrichedDepartures]);
+
     const filteredDepartures = useMemo(() => {
-        if (!selectedLine) return enrichedDepartures;
-        return enrichedDepartures.filter(dep => String(dep.line).toUpperCase() === selectedLine.toUpperCase());
-    }, [enrichedDepartures, selectedLine]);
+        let result = enrichedDepartures;
+        if (selectedLine) {
+            result = result.filter(dep => String(dep.line).toUpperCase() === selectedLine.toUpperCase());
+        }
+        // Only apply AC filter when this stop actually has AC vehicles — if none have AC data,
+        // silently ignore the persistent preference so the board never goes empty unexpectedly.
+        if (requireAirConditioned && hasAirConditioningData) {
+            result = result.filter(dep => dep.is_air_conditioned === true);
+        }
+        return result;
+    }, [enrichedDepartures, selectedLine, requireAirConditioned, hasAirConditioningData]);
 
     const groupedDepartures = useMemo((): DepartureLineGroup[] => {
         if (filteredDepartures.length === 0) return [];
@@ -219,5 +232,5 @@ export const useDepartures = () => {
         return { averageDelayMin, trend, sampleSize: realTimeDeps.length };
     }, [filteredDepartures, query.dataUpdatedAt]);
 
-    return { ...query, groupedDepartures, delayStats, isFiltered: !!selectedLine, selectedLine };
+    return { ...query, groupedDepartures, delayStats, isFiltered: !!selectedLine || (requireAirConditioned && hasAirConditioningData), selectedLine, hasAirConditioningData };
 };

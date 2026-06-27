@@ -151,6 +151,8 @@
       "moreConnections_few": "{{count}} další spoje",
       "moreConnections_other": "{{count}} dalších spojů",
       "showLess": "Zobrazit méně",
+      "showAirConditioned": "Jen vozy s klimou",
+      "showAll": "Všechny vozy",
       "now": "Nyní",
       "minutes": "{{count}} min",
       "platform": "Nástupiště / Kolej",

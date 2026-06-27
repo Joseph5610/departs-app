@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart, Snowflake } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -34,7 +34,8 @@ export const DepartureBoardHeader = React.memo(() => {
     const departureSort = usePreferencesStore(s => s.departureSort);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const { setDepartureSort, toggleFavorite, setIsFeedbackOpen } = usePreferencesStore(s => s.actions);
+    const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
+    const { setDepartureSort, toggleFavorite, setIsFeedbackOpen, toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
 
     const { share } = useShare();
     const selectedLine = useSelectionStore(s => s.selectedLine);
@@ -49,7 +50,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const selectedVehicle = useSelectedVehicle();
 
     const { handleNavigate, distanceLabel, stopDistanceInfo } = useNavigate();
-    const { delayStats, isError } = useDepartures();
+    const { delayStats, isError, hasAirConditioningData } = useDepartures();
 
     const { data: citiesData } = useCities();
     const currentCityConfig = citiesData?.cities.find(c => c.slug === selectedCity);
@@ -263,8 +264,8 @@ export const DepartureBoardHeader = React.memo(() => {
                 </div>
             </div>
 
-            {/* Row 2: Line badges */}
-            {selectedStop?.lines && selectedStop.lines.length > 0 && (
+            {/* Row 2: Line badges and AC filter */}
+            {((selectedStop?.lines && selectedStop.lines.length > 0) || hasAirConditioningData) && (
                 <div 
                     className="w-full overflow-x-auto no-scrollbar py-2 px-2"
                     style={{ 
@@ -273,6 +274,19 @@ export const DepartureBoardHeader = React.memo(() => {
                     }}
                 >
                     <div className="flex gap-1.5 justify-start">
+                        {hasAirConditioningData && (
+                            <button
+                                onClick={toggleRequireAirConditioned}
+                                className={cn(
+                                    "flex items-center justify-center h-[24px] px-1.5 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-[4px] border border-white/10 text-[11px] font-bold gap-1 shrink-0",
+                                    requireAirConditioned ? "bg-[#0ea5e9] text-white ring-[2.5px] ring-white z-10 shadow-lg" : "bg-[#2a2a2a] text-white/80"
+                                )}
+                            >
+                                <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />
+                                <span>{t('map.vehicleDetails.ac')}</span>
+                            </button>
+                        )}
+                        
                         {uniqueLines.map((line) => {
                             const name = String(line.name || '');
                             if (!name) return null;

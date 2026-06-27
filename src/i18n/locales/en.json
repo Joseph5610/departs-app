@@ -149,6 +149,8 @@
       "moreConnections_one": "+ {{count}} more connection",
       "moreConnections_other": "+ {{count}} more connections",
       "showLess": "Show less",
+      "showAirConditioned": "AC vehicles only",
+      "showAll": "All vehicles",
       "now": "Now",
       "minutes": "{{count}} min",
       "sortByLine": "Sort by line",
