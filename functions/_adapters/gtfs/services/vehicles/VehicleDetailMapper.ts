@@ -241,19 +241,15 @@ export class VehicleDetailMapper {
         computedDelay = Math.max(-1800, Math.min(computedDelay, 7200));
 
         if (lastStopSequence === null) {
-            let lastPassedIndex = -1;
+            computedDelay = 0;
             const effectiveNowSecs = feedTotalSecs || nowSecs;
+            let lastPassedIndex = -1;
             for (let i = 0; i < stations.length; i++) {
                 const stopSecs = toSecs(String(stations[i].arrival_time));
                 if (crossFix(stopSecs, effectiveNowSecs) < effectiveNowSecs) lastPassedIndex = i;
             }
             if (lastPassedIndex !== -1) {
                 lastStopSequence = lastPassedIndex + 1;
-                const arrTime = stations[lastPassedIndex].arrival_time || stations[lastPassedIndex].departure_time;
-                if (arrTime) {
-                    const schedSecs = crossFix(toSecs(String(arrTime)), effectiveNowSecs);
-                    computedDelay = effectiveNowSecs - schedSecs;
-                }
             }
         }
 
