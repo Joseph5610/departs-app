@@ -5,7 +5,6 @@ import { transit_realtime } from "gtfs-realtime-bindings";
 import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../../_core/types";
 
 import { StopsService } from './services/stops/StopsService';
-import { VehiclesService } from './services/vehicles/VehiclesService';
 import { DeparturesService } from './services/departures/DeparturesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { AlertsService } from './services/alerts/AlertsService';
@@ -23,8 +22,8 @@ export class GtfsAdapter implements CityAdapter {
         return this.stopsService.getStops();
     }
     
-    async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
-        return new VehiclesService(this._city).getVehicles(ctx);
+    async handleVehicles(): Promise<AppVehicleCollection> {
+        return { type: 'FeatureCollection', features: [] };
     }
     
     async handleDepartures(ctx: EventContext<Env, string, unknown>): Promise<AppDepartureResponse> {

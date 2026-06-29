@@ -79,7 +79,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
             <div className="relative z-10 flex flex-col gap-3 px-4 pb-4">
 
                 <div className="flex gap-2 flex-wrap items-center">
-                    {(() => {
+                    {!displayVehicle.isStaticFallback && (() => {
                         const delayVal = Number(displayVehicle.delay || 0);
                         const delayMinutes = Math.round(Math.abs(delayVal) / 60);
                         const isLate = delayVal > 30;
@@ -101,7 +101,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         );
                     })()}
 
-                    {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
+                    {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && !displayVehicle.isStaticFallback && (
                         <Badge variant="muted" className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5">
                             <div className={cn(
                                 "w-1.5 h-1.5 rounded-full shrink-0",
