@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.50.4] - 2026-07-01
+
+### Fixed
+- **Departures**: Increased `vehicles_v1` Cache-Control TTL to 30 seconds (previously 10s). This resolves timing offsets between the departures list refresh (10s) and vehicle positions updates, eliminating the board flickering with zero performance overhead.
+
+## [0.50.2] - 2026-07-01
+
+### Added
+- **Departures**: Read and map static `wheelchair_accessible` values from `GtfsDepartureTuple` in `DeparturesMapper.ts` as a fallback when real-time vehicle mapping is not yet active/available for a departure.
+
+## [0.50.1] - 2026-07-01
+
+### Added
+- **Departures**: Mapped live vehicle properties (`is_air_conditioned`, `is_wheelchair_accessible`) from the real-time vehicle status to the GTFS departures list items in `DeparturesMapper.ts`.
+
+## [0.50.0] - 2026-07-01
+
+### Added
+- **Adapter**: Introduced a static vehicle model type and air-conditioning status resolver for DPMB (Brno) vehicles based on known registration number ranges scraped from the BMHD database.
+
 ## [0.49.7] - 2026-07-01
 
 ### Fixed

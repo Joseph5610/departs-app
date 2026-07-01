@@ -5,6 +5,8 @@ import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from './types
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { getGtfsData, GtfsRoute, GtfsData } from '../../gtfs/core/gtfs-data';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
+import { getDpmbVehicleMetadata } from '../utils/dpmbVehicleMetadata';
+
 
 export class KordisVehiclesService {
     constructor(private city: CityConfig) {}
@@ -136,6 +138,8 @@ export class KordisVehiclesService {
         const lineName = attr.LineName || '?';
         const finalLineName = route?.short_name || route?.name || lineName;
 
+        const metadata = getDpmbVehicleMetadata(attr.ID);
+
         return {
             type: 'Feature',
             geometry: {
@@ -155,7 +159,9 @@ export class KordisVehiclesService {
                 vehicle_descriptor: {
                     operator: 'IDS JMK',
                     vehicle_registration_number: attr.ID.toString(),
-                    is_wheelchair_accessible: attr.LF === 'true'
+                    is_wheelchair_accessible: attr.LF === 'true',
+                    vehicle_type: metadata?.vehicle_type || undefined,
+                    is_air_conditioned: metadata?.is_air_conditioned !== undefined ? metadata.is_air_conditioned : undefined
                 },
                 origin_timestamp: new Date(attr.TimeUpdated).toISOString(),
                 is_static_fallback: false,
@@ -164,6 +170,7 @@ export class KordisVehiclesService {
             }
         };
     }
+
 
     async getVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
         const allVehicles = await CacheManager.getOrFetch<AppVehicleCollection>(
@@ -247,7 +254,7 @@ export class KordisVehiclesService {
                     const responseToCache = new Response(JSON.stringify(result), {
                         headers: { 
                             'Content-Type': 'application/json', 
-                            'Cache-Control': 'public, max-age=10, s-maxage=10' 
+                            'Cache-Control': 'public, max-age=30, s-maxage=30' 
                         }
                     });
                     await cache.put(jsonCacheKey, responseToCache);

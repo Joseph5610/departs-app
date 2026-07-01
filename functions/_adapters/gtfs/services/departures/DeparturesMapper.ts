@@ -20,32 +20,60 @@ export class DeparturesMapper {
 
         const vehicleIndex = new Map<string, string>();
         const delayIndex = new Map<string, number>();
+        const acIndex = new Map<string, boolean | null>();
+        const wheelchairIndex = new Map<string, boolean | null>();
+
         if (rtVehicles) {
             for (const f of rtVehicles.features) {
                 const vId = f.properties.vehicle_id;
                 const tripId = f.properties.gtfs_trip_id;
                 const delay = f.properties.delay;
+                const desc = f.properties.vehicle_descriptor;
 
                 if (vId && tripId) {
                     vehicleIndex.set(tripId, vId);
                     delayIndex.set(tripId, delay);
+                    if (desc) {
+                        if (desc.is_air_conditioned !== undefined) {
+                            acIndex.set(tripId, desc.is_air_conditioned);
+                        }
+                        if (desc.is_wheelchair_accessible !== undefined) {
+                            wheelchairIndex.set(tripId, desc.is_wheelchair_accessible);
+                        }
+                    }
                 }
             }
         }
 
         const mapped = filtered.map(d => {
             const { stopId, tuple } = d;
-            const [trip_id, route_id, headsign, timestamp_ms] = tuple;
+            const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible] = tuple;
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
             let delaySecs = 0;
+            let isAirConditioned: boolean | null = null;
+            let isWheelchairAccessible: boolean | null = null;
+
+            if (wheelchair_accessible === 1) {
+                isWheelchairAccessible = true;
+            } else if (wheelchair_accessible === 2) {
+                isWheelchairAccessible = false;
+            }
 
             if (rtVehicles) {
                 vId = vehicleIndex.get(trip_id);
                 const rtDelay = delayIndex.get(trip_id);
                 if (typeof rtDelay === 'number') {
                     delaySecs = rtDelay;
+                }
+                const rtAc = acIndex.get(trip_id);
+                if (rtAc !== undefined) {
+                    isAirConditioned = rtAc;
+                }
+                const rtWheelchair = wheelchairIndex.get(trip_id);
+                if (rtWheelchair !== undefined) {
+                    isWheelchairAccessible = rtWheelchair;
                 }
             }
 
@@ -63,7 +91,9 @@ export class DeparturesMapper {
                 delay: delaySecs,
                 isCanceled: false,
                 route_color: route ? String(route.route_color) : undefined,
-                stopId: stopId
+                stopId: stopId,
+                is_air_conditioned: isAirConditioned,
+                is_wheelchair_accessible: isWheelchairAccessible
             };
         });
 
@@ -83,7 +113,9 @@ export class DeparturesMapper {
                 delay: d.delay,
                 isCanceled: d.isCanceled,
                 route_color: d.route_color,
-                stopId: d.stopId
+                stopId: d.stopId,
+                is_air_conditioned: d.is_air_conditioned,
+                is_wheelchair_accessible: d.is_wheelchair_accessible
             } as AppDeparture));
     }
 }

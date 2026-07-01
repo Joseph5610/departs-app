@@ -4,6 +4,8 @@ import { GtfsAdapter } from '../gtfs/GtfsAdapter';
 import type { Env, AppVehicleCollection, AppVehicleDetail, AppVehicleFeature } from "../../_core/types";
 import { KordisVehiclesService } from './services/KordisVehiclesService';
 import { addSecondsToTime } from '../gtfs/core/utils';
+import { getDpmbVehicleMetadata } from './utils/dpmbVehicleMetadata';
+
 
 
 export class KordisAdapter extends GtfsAdapter {
@@ -23,6 +25,18 @@ export class KordisAdapter extends GtfsAdapter {
 
         if (!detail || detail.vehicle_id === 'error') {
             return detail;
+        }
+
+        // Apply static vehicle metadata by default
+        if (detail.vehicle_id) {
+            const meta = getDpmbVehicleMetadata(detail.vehicle_id);
+            if (meta) {
+                detail.vehicle_descriptor = {
+                    ...detail.vehicle_descriptor,
+                    vehicle_type: meta.vehicle_type,
+                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : detail.vehicle_descriptor?.is_air_conditioned
+                };
+            }
         }
 
         const liveVehicles = await this.vehiclesService.getVehicles(ctx);
@@ -70,7 +84,8 @@ export class KordisAdapter extends GtfsAdapter {
                 ...detail.vehicle_descriptor,
                 vehicle_registration_number: liveMatch.properties.vehicle_descriptor.vehicle_registration_number || (liveMatch.properties.vehicle_id ?? undefined),
                 is_wheelchair_accessible: liveMatch.properties.vehicle_descriptor.is_wheelchair_accessible,
-                is_air_conditioned: liveMatch.properties.vehicle_descriptor.is_air_conditioned
+                is_air_conditioned: liveMatch.properties.vehicle_descriptor.is_air_conditioned !== undefined ? liveMatch.properties.vehicle_descriptor.is_air_conditioned : detail.vehicle_descriptor?.is_air_conditioned,
+                vehicle_type: liveMatch.properties.vehicle_descriptor.vehicle_type || detail.vehicle_descriptor?.vehicle_type
             };
         }
     }
