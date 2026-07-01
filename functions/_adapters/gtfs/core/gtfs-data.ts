@@ -11,6 +11,7 @@ export interface GtfsRoute {
 export interface GtfsData {
     routes: Record<string, GtfsRoute>;
     tripRoutes: Record<string, string>;
+    routesByName: Record<string, GtfsRoute>;
 }
 
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
@@ -32,16 +33,27 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
 
             if (!rRes.ok || !trRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}, TripRoutes: ${trRes.status}`);
-                return { routes: {}, tripRoutes: {} };
+                return { routes: {}, tripRoutes: {}, routesByName: {} };
             }
 
             const routes = await rRes.json() as Record<string, GtfsRoute>;
             const tripRoutes = await trRes.json() as Record<string, string>;
 
-            return { routes, tripRoutes };
+            const routesByName: Record<string, GtfsRoute> = {};
+            for (const rId in routes) {
+                const r = routes[rId];
+                if (r.short_name) {
+                    routesByName[r.short_name.toUpperCase()] = r;
+                }
+                if (r.name) {
+                    routesByName[r.name.toUpperCase()] = r;
+                }
+            }
+
+            return { routes, tripRoutes, routesByName };
         } catch (e) {
             console.error(`Failed to parse or fetch GTFS static data for ${citySlug}:`, e);
-            return { routes: {}, tripRoutes: {} };
+            return { routes: {}, tripRoutes: {}, routesByName: {} };
         }
     });
 }

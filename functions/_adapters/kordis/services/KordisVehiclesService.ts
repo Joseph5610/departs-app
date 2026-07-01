@@ -85,10 +85,9 @@ export class KordisVehiclesService {
     private resolveRoute(
         attr: ArcgisFeature['attributes'],
         tripId: string | null,
-        gtfsData: GtfsData,
-        routesByName: Record<string, GtfsRoute>
+        gtfsData: GtfsData
     ): GtfsRoute | null {
-        const { routes, tripRoutes } = gtfsData;
+        const { routes, tripRoutes, routesByName } = gtfsData;
         const routeInfo = tripId && tripRoutes ? tripRoutes[tripId] : null;
         const routeId = routeInfo ? routeInfo.split('|')[0] : null;
         let route = routeId && routes ? routes[routeId] : null;
@@ -166,20 +165,6 @@ export class KordisVehiclesService {
                     return { type: 'FeatureCollection', features: [] };
                 }
 
-                // Index routes by short_name and name to allow O(1) fallback route resolution
-                const routesByName: Record<string, GtfsRoute> = {};
-                if (gtfsData.routes) {
-                    for (const rId in gtfsData.routes) {
-                        const r = gtfsData.routes[rId];
-                        if (r.short_name) {
-                            routesByName[r.short_name.toUpperCase()] = r;
-                        }
-                        if (r.name) {
-                            routesByName[r.name.toUpperCase()] = r;
-                        }
-                    }
-                }
-
                 const tzFormatter = new Intl.DateTimeFormat('en-US', {
                     timeZone: 'Europe/Prague',
                     year: 'numeric',
@@ -221,7 +206,7 @@ export class KordisVehiclesService {
                     const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
                     const tripId = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay);
  
-                    const route = this.resolveRoute(attr, tripId, gtfsData, routesByName);
+                    const route = this.resolveRoute(attr, tripId, gtfsData);
                     features.push(this.mapVehicle(attr, tripId, route, delay));
                 }
 
