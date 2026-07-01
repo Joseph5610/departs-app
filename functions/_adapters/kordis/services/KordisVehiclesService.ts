@@ -143,39 +143,6 @@ export class KordisVehiclesService {
                     throw new Error(`Missing KORDIS Static URL configuration.`);
                 }
                 const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
-                
-                const apiMapping = await CacheManager.getOrFetch<ApiMapping | null>(
-                    `api_mapping_${this.city.slug}`, 
-                    CACHE_TTL.TWO_HOURS_MS, 
-                    async () => {
-                        const resApi = await fetch(apiUrl, { cf: { cacheTtl: 7200 } });
-                        if (!resApi.ok) return null;
-                        return await resApi.json() as ApiMapping;
-                    }
-                );
-
-                const [arcgisData, gtfsData] = await Promise.all([
-                    this.getRawVehicles(),
-                    getGtfsData(this.city.slug)
-                ]);
-
-                if (!arcgisData?.features || arcgisData.features.length === 0 || !apiMapping) {
-                    return { type: 'FeatureCollection', features: [] };
-                }
-
-                // Index routes by short_name and name to allow O(1) fallback route resolution
-                const routesByName: Record<string, GtfsRoute> = {};
-                if (gtfsData.routes) {
-                    for (const rId in gtfsData.routes) {
-                        const r = gtfsData.routes[rId];
-                        if (r.short_name) {
-                            routesByName[r.short_name.toUpperCase()] = r;
-                        }
-                        if (r.name) {
-                            routesByName[r.name.toUpperCase()] = r;
-                        }
-                    }
-                }
 
                 const tzFormatter = new Intl.DateTimeFormat('en-US', {
                     timeZone: 'Europe/Prague',
@@ -198,27 +165,60 @@ export class KordisVehiclesService {
                 const todayLocalStr = `${y}${m}${d}`;
                 const currentMinutes = Number(hh) * 60 + Number(mm) + Number(ss) / 60;
 
-                const parseTimeToMinutes = (timeStr: string) => {
-                    const [h, min, s] = timeStr.split(':').map(Number);
-                    return h * 60 + min + (s / 60);
-                };
+                const todayMapping = await CacheManager.getOrFetch<Record<string, ActiveTripInfo[]>>(
+                    `today_mapping_${this.city.slug}_${todayLocalStr}`,
+                    CACHE_TTL.TWO_HOURS_MS,
+                    async () => {
+                        const resApi = await fetch(apiUrl, { cf: { cacheTtl: 7200 } });
+                        if (!resApi.ok) return {};
+                        const rawMapping = await resApi.json() as ApiMapping;
 
-                // Pre-filter and pre-parse course mapping to avoid expensive string operations inside the vehicle loop
-                const todayMapping: Record<string, ActiveTripInfo[]> = {};
-                for (const courseKey in apiMapping) {
-                    const trips = apiMapping[courseKey];
-                    const filteredTrips: ActiveTripInfo[] = [];
-                    for (const trip of trips) {
-                        if (!trip.dates || trip.dates.includes(todayLocalStr)) {
-                            filteredTrips.push({
-                                trip_id: trip.trip_id,
-                                startMins: parseTimeToMinutes(trip.start),
-                                endMins: parseTimeToMinutes(trip.end)
-                            });
+                        const parseTimeToMinutes = (timeStr: string) => {
+                            const [h, min, s] = timeStr.split(':').map(Number);
+                            return h * 60 + min + (s / 60);
+                        };
+
+                        const todayMap: Record<string, ActiveTripInfo[]> = {};
+                        for (const courseKey in rawMapping) {
+                            const trips = rawMapping[courseKey];
+                            const filteredTrips: ActiveTripInfo[] = [];
+                            for (const trip of trips) {
+                                if (!trip.dates || trip.dates.includes(todayLocalStr)) {
+                                    filteredTrips.push({
+                                        trip_id: trip.trip_id,
+                                        startMins: parseTimeToMinutes(trip.start),
+                                        endMins: parseTimeToMinutes(trip.end)
+                                    });
+                                }
+                            }
+                            if (filteredTrips.length > 0) {
+                                todayMap[courseKey] = filteredTrips;
+                            }
                         }
+                        return todayMap;
                     }
-                    if (filteredTrips.length > 0) {
-                        todayMapping[courseKey] = filteredTrips;
+                );
+
+                const [arcgisData, gtfsData] = await Promise.all([
+                    this.getRawVehicles(),
+                    getGtfsData(this.city.slug)
+                ]);
+
+                if (!arcgisData?.features || arcgisData.features.length === 0 || !todayMapping) {
+                    return { type: 'FeatureCollection', features: [] };
+                }
+
+                // Index routes by short_name and name to allow O(1) fallback route resolution
+                const routesByName: Record<string, GtfsRoute> = {};
+                if (gtfsData.routes) {
+                    for (const rId in gtfsData.routes) {
+                        const r = gtfsData.routes[rId];
+                        if (r.short_name) {
+                            routesByName[r.short_name.toUpperCase()] = r;
+                        }
+                        if (r.name) {
+                            routesByName[r.name.toUpperCase()] = r;
+                        }
                     }
                 }
 
