@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.50.10] - 2026-07-01
+
+### Fixed
+- **Core & Adapter**: Optimized timezone formatting by caching and reusing `Intl.DateTimeFormat` instances (module-level constant in `KordisVehiclesService` and in-memory Map in `api-utils.ts`). This avoids expensive V8 localization database lookups and object reinstantiation on every request/cache-refresh cycle.
+
+## [0.50.9] - 2026-07-01
+
+### Fixed
+- **Core**: Added a default 8-second request timeout to `gtfsFetch` using `AbortController` and converted custom fetches in `KordisVehiclesService` to use it. This prevents the worker requests from hanging indefinitely ("canceled" with high wallTime) when static data server endpoints (`data.departs.app`) respond slowly.
+
+## [0.50.8] - 2026-07-01
+
+### Fixed
+- **Departures**: Replaced dynamic parsing of `stops.json` (~1.2MB of complex data) in the departures API path with a precomputed, lightweight `parent_child_map.json` (~130KB) static file, dropping departures board cache-miss CPU execution time from ~60ms to under 1ms.
+
+## [0.50.7] - 2026-07-01
+
+### Fixed
+- **Departures**: Increased static stop departures chunking prefix length from 3 to 4 characters (e.g., `U14` split into `U140`–`U149`), shrinking maximum JSON payload size from 4.0MB to ~670KB. This reduces JSON parsing CPU time to ~3ms, successfully avoiding the Cloudflare Workers 10ms CPU limit / 503 Service Unavailable errors on busy stops like Hlavní nádraží.
+
 ## [0.50.6] - 2026-07-01
 
 ### Fixed

@@ -55,11 +55,20 @@ export const gtfsFetch = async (url: string | URL, init?: RequestInit): Promise<
         headers.set('User-Agent', 'departs-app-backend/1.0');
     }
     
-    const res = await fetch(url, { ...init, headers });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     
-    if (!res.ok) {
-        throw new Error(`GTFS fetch failed: ${res.status} ${res.statusText} for ${url}`);
+    try {
+        const res = await fetch(url, { ...init, headers, signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) {
+            throw new Error(`GTFS fetch failed: ${res.status} ${res.statusText} for ${url}`);
+        }
+        
+        return res;
+    } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
     }
-    
-    return res;
 };

@@ -5,7 +5,6 @@ import { getGtfsData } from '../../core/gtfs-data';
 import { gtfsFetch } from '../../core/utils';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
-import { StopsService } from '../stops/StopsService';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
@@ -28,16 +27,9 @@ export class DeparturesService {
                 `parent_child_map_${this.city.slug}`,
                 CACHE_TTL.TWO_HOURS_MS,
                 async () => {
-                    const stopsService = new StopsService(this.city);
-                    const stopsColl = await stopsService.getStops();
-                    const map: Record<string, string[]> = {};
-                    for (const f of stopsColl.features) {
-                        const sId = f.properties.stop_id;
-                        if (sId && f.properties.all_ids && f.properties.all_ids.length > 0) {
-                            map[sId] = f.properties.all_ids;
-                        }
-                    }
-                    return map;
+                    const res = await gtfsFetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
+                    if (!res.ok) return {};
+                    return await res.json() as Record<string, string[]>;
                 }
             );
 
@@ -57,7 +49,7 @@ export class DeparturesService {
 
             const chunkMap = new Map<string, string[]>();
             for (const id of targetIds) {
-                const chunkId = encodeURIComponent(id.substring(0, 3).toUpperCase());
+                const chunkId = encodeURIComponent(id.substring(0, 4).toUpperCase());
                 if (!chunkMap.has(chunkId)) chunkMap.set(chunkId, []);
                 chunkMap.get(chunkId)!.push(id);
             }

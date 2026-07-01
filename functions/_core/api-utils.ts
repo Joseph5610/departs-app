@@ -73,16 +73,23 @@ export function handleError(error: unknown): Response {
  * Formats a date into D. M. YYYY HH:mm in the given IANA timezone.
  * Defaults to Europe/Prague for backward compatibility.
  */
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
 export function formatDate(date: Date, timezone = 'Europe/Prague'): string {
-    const d = new Intl.DateTimeFormat('cs-CZ', {
-        timeZone: timezone,
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false
-    }).formatToParts(date);
+    let formatter = formatters.get(timezone);
+    if (!formatter) {
+        formatter = new Intl.DateTimeFormat('cs-CZ', {
+            timeZone: timezone,
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: false
+        });
+        formatters.set(timezone, formatter);
+    }
+    const d = formatter.formatToParts(date);
 
     const get = (type: string) => d.find(p => p.type === type)?.value;
     return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;

@@ -4,8 +4,20 @@ import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../_cor
 import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from './types';
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { getGtfsData, GtfsRoute, GtfsData } from '../../gtfs/core/gtfs-data';
+import { gtfsFetch } from '../../gtfs/core/utils';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { getDpmbVehicleMetadata } from '../utils/dpmbVehicleMetadata';
+
+const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Prague',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+});
 
 
 export class KordisVehiclesService {
@@ -188,8 +200,7 @@ export class KordisVehiclesService {
                         `api_mapping_${this.city.slug}`, 
                         CACHE_TTL.TWO_HOURS_MS, 
                         async () => {
-                            const resApi = await fetch(apiUrl, { cf: { cacheTtl: 7200 } });
-                            if (!resApi.ok) return null;
+                            const resApi = await gtfsFetch(apiUrl, { cf: { cacheTtl: 7200 } });
                             return await resApi.json() as ApiMapping;
                         }
                     ),
@@ -201,17 +212,7 @@ export class KordisVehiclesService {
                     return { type: 'FeatureCollection', features: [] };
                 }
 
-                const tzFormatter = new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'Europe/Prague',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-                const parts = tzFormatter.formatToParts(new Date());
+                const parts = PRAGUE_TZ_FORMATTER.formatToParts(new Date());
                 const y = parts.find(p => p.type === 'year')?.value || '';
                 const m = parts.find(p => p.type === 'month')?.value || '';
                 const d = parts.find(p => p.type === 'day')?.value || '';
