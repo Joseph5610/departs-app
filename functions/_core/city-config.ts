@@ -1,4 +1,4 @@
-type AdapterType = 'golemio' | 'gtfs';
+type AdapterType = 'golemio' | 'gtfs' | 'kordis';
 
 export interface CityConfig {
     slug: string;
@@ -28,11 +28,12 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         timezone: 'Europe/Prague',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
-        adapter: 'gtfs',
+        adapter: 'kordis',
         adapterConfig: {
             stopsFile: 'cities/brno/stops.json',
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
-            staticDataUrl: 'https://data.departs.app'
+            staticDataUrl: 'https://data.departs.app',
+            realtimeArcgisUrl: 'https://gis.brno.cz/ags1/rest/services/Hosted/Kordis_26_polohy/FeatureServer/0/query?where=IsInactive%3D%27false%27&outFields=*&orderByFields=TimeUpdated+DESC&resultRecordCount=2000&f=json'
         },
         isBeta: true,
     },

@@ -3,6 +3,7 @@ import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse
 import type { CityConfig } from '../_core/city-config';
 import { GolemioAdapter } from './golemio/GolemioAdapter';
 import { GtfsAdapter } from './gtfs/GtfsAdapter';
+import { KordisAdapter } from './kordis/KordisAdapter';
 
 /** Contract all city adapters must fulfill. */
 export interface CityAdapter {
@@ -27,5 +28,6 @@ export function getAdapter(city: CityConfig): CityAdapter {
     switch (city.adapter) {
         case 'golemio': return new GolemioAdapter(city);
         case 'gtfs': return new GtfsAdapter(city);
+        case 'kordis': return new KordisAdapter(city);
     }
 }

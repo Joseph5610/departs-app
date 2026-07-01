@@ -1,0 +1,35 @@
+export type ApiTrip = {
+    trip_id: string;
+    start: string;
+    end: string;
+    dates?: string[];
+};
+
+export type ApiMapping = Record<string, ApiTrip[]>;
+
+export interface ArcgisFeature {
+    attributes: {
+        ID: number;
+        TimeUpdated: number;
+        IsInactive: string;
+        LineID: number;
+        RouteID: number;
+        Delay?: number;
+        VType: number;
+        LF?: string;
+        AC?: string;
+        LineName?: string;
+        FinalStopName?: string;
+        Bearing?: number;
+        LastStopID?: number;
+        FinalStopID?: number;
+        Course?: string;
+        LastStopName?: string;
+        Lng: number;
+        Lat: number;
+    };
+}
+
+export interface ArcgisResponse {
+    features: ArcgisFeature[];
+}

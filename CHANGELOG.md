@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.6] - 2026-07-01
+
+### Fixed
+- **Adapter**: Fixed ESLint unused `_ctx` variable error in `KordisVehiclesService.ts`.
+- **Adapter**: Fixed timezone-shifting bug in `KordisVehiclesService.ts` when resolving dates/times on UTC server runtimes.
+- **Adapter**: Optimized fallback route lookup in KORDIS vehicle loop to run in O(1) time using a lookup index map.
+
 ## [0.49.5] - 2026-06-26
 
 ### Fixed

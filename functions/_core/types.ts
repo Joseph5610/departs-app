@@ -89,6 +89,7 @@ export interface AppVehicleProperties {
     is_static_fallback?: boolean;
     route_color: string;
     is_night: boolean;
+    all_gtfs_trip_ids?: string[];
 }
 
 export interface AppVehicleFeature {

@@ -1,5 +1,5 @@
 import type { AppVehicleDetail } from "../../../../_core/types";
-import { isNightRoute } from '../../../golemio/services/vehicles/colors';
+
 import { toSecs } from '../../core/utils';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
@@ -12,8 +12,8 @@ export class VehicleDetailMapper {
         stations: Station[],
         route: GtfsRoute | null
     ): AppVehicleDetail {
-        const lineName = route?.name || '?';
-        const routeColor = route?.route_color || '#888888';
+        const lineName = route?.name || undefined;
+        const routeColor = route?.route_color || undefined;
         const rType = route ? Number(route.type) : 3;
 
         // Since we are completely removing live GTFS-RT for Brno, we just use static data
@@ -21,20 +21,20 @@ export class VehicleDetailMapper {
         const lastStopSequence = null;
 
         const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, finalDelay);
-        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor);
+        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || '#888888');
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : 'Unknown destination';
 
         return {
             vehicle_id: vehicleId,
             gtfs_trip_id: tripId,
-            route_short_name: lineName,
+            route_short_name: lineName || '',
             route_type: rType,
             trip_headsign: headsign,
             bearing: null,
             delay: finalDelay,
-            route_color: routeColor,
-            is_night: isNightRoute(lineName),
+            route_color: routeColor || '',
+            is_night: false,
             is_static_fallback: true,
             state_position: 'before_track',
             origin_timestamp: undefined,
@@ -79,6 +79,10 @@ export class VehicleDetailMapper {
             const applyDelay = s.sequence >= (lastStopSequence || 0) ? computedDelay : 0;
             return {
                 type: 'Feature' as const,
+                geometry: {
+                    type: 'Point',
+                    coordinates: s.coordinates
+                },
                 properties: {
                     stop_id: String(s.id),
                     stop_name: s.name,
