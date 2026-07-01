@@ -7,6 +7,7 @@ import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { StopsService } from '../stops/StopsService';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
+import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
 export class DeparturesService {
     constructor(private city: CityConfig) {}
@@ -23,25 +24,32 @@ export class DeparturesService {
             const staticDataUrl = this.city.adapterConfig?.staticDataUrl;
             if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
+            const parentToChildMap = await CacheManager.getOrFetch<Record<string, string[]>>(
+                `parent_child_map_${this.city.slug}`,
+                CACHE_TTL.TWO_HOURS_MS,
+                async () => {
+                    const stopsService = new StopsService(this.city);
+                    const stopsColl = await stopsService.getStops();
+                    const map: Record<string, string[]> = {};
+                    for (const f of stopsColl.features) {
+                        const sId = f.properties.stop_id;
+                        if (sId && f.properties.all_ids && f.properties.all_ids.length > 0) {
+                            map[sId] = f.properties.all_ids;
+                        }
+                    }
+                    return map;
+                }
+            );
+
             const targetIds: string[] = [];
             const childToRequestedMap = new Map<string, string>();
             
             for (const stopId of stopIds) {
-                // If they ask for a parent station, resolve to all its child nodes
-                try {
-                    const stopsService = new StopsService(this.city);
-                    const stopsColl = await stopsService.getStops();
-                    const parent = stopsColl.features.find(f => f.properties.stop_id === stopId);
-                    
-                    if (parent && parent.properties.all_ids && parent.properties.all_ids.length > 0) {
-                        targetIds.push(...parent.properties.all_ids);
-                        parent.properties.all_ids.forEach(childId => childToRequestedMap.set(childId, stopId));
-                    } else {
-                        targetIds.push(stopId);
-                        childToRequestedMap.set(stopId, stopId);
-                    }
-                } catch (e) {
-                    console.error('Failed to resolve children:', e);
+                const children = parentToChildMap[stopId];
+                if (children && children.length > 0) {
+                    targetIds.push(...children);
+                    children.forEach(childId => childToRequestedMap.set(childId, stopId));
+                } else {
                     targetIds.push(stopId);
                     childToRequestedMap.set(stopId, stopId);
                 }
