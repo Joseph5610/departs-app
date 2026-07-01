@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Code, Scale, MessageSquareHeart } from 'lucide-react';
+import { RefreshCw, Clock, Database, Scale, MessageSquareHeart } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -121,37 +121,80 @@ export const SettingsFooter: React.FC = () => {
                 </Item>
             </ItemGroup>
 
-            <div className="flex flex-col items-center gap-0 w-full">
-                <div className="flex justify-center gap-6">
-                    <a
-                        href="https://golemio.cz"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                    >
-                        <Database size={14} strokeWidth={1.5} />
-                        {t('settings.dataSource')}
-                    </a>
-
-                    <a
-                        href="https://github.com/joseph5610/departs-app"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 py-3 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                    >
-                        <Code size={14} strokeWidth={1.5} />
-                        {t('settings.viewSource')}
-                    </a>
+            <div className="flex flex-col gap-2">
+                <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
+                    Attributions
                 </div>
-                <a
-                    href="https://creativecommons.org/licenses/by/4.0/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-2 text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase font-bold tracking-widest outline-none"
-                >
-                    <Scale size={14} strokeWidth={1.5} />
-                    {t('settings.license')}
-                </a>
+                <ItemGroup className="rounded-2xl bg-muted/40 border border-white/5 overflow-hidden gap-0">
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<a href="https://golemio.cz" target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Database size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">Golemio (Prague)</ItemTitle>
+                        </ItemContent>
+                        <ItemActions>
+                            <span className="text-[10px] text-muted-foreground font-medium bg-black/10 px-2 py-0.5 rounded-md">
+                                Data Source
+                            </span>
+                        </ItemActions>
+                    </Item>
+
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<a href="https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328" target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Database size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">IDS JMK (Brno)</ItemTitle>
+                        </ItemContent>
+                        <ItemActions>
+                            <span className="text-[10px] text-muted-foreground font-medium bg-black/10 px-2 py-0.5 rounded-md">
+                                Data Source
+                            </span>
+                        </ItemActions>
+                    </Item>
+
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Scale size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('settings.license')}</ItemTitle>
+                        </ItemContent>
+                        <ItemActions>
+                            <span className="text-[10px] text-muted-foreground font-medium bg-black/10 px-2 py-0.5 rounded-md">
+                                CC BY 4.0
+                            </span>
+                        </ItemActions>
+                    </Item>
+
+                    {/*
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<a href="https://github.com/joseph5610/departs-app" target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Code size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('settings.viewSource')}</ItemTitle>
+                        </ItemContent>
+                    </Item>
+                    */}
+                </ItemGroup>
             </div>
 
             {updatedAt && (
@@ -162,7 +205,6 @@ export const SettingsFooter: React.FC = () => {
                             month: 'numeric',
                             year: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
                         }) 
                     })}
                 </div>
