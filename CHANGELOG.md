@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Adapter**: Implemented backend-side map viewport bounding box (`bounds`) filtering for KORDIS vehicles to only return active vehicles inside the user's screen.
 - **Adapter**: Populated the global `vehicles_v1` cache key on the Cloudflare Cache API during vehicle fetches, enabling the GTFS departure board to match live vehicle positions and delays for Brno stops.
 - **Adapter**: Fixed a potential runtime crash when checking `arcgisData.features.length` by adding optional chaining and fallback checking when the ArcGIS API returns error payloads.
+- **Adapter**: Added simulated vehicle states (`before_track` and `before_track_delayed`) in `resolveActiveTrip` to detect and display warning flags when a vehicle is still active on its previous trip or has not yet commenced its matched trip.
 - **Departures**: Cached the parent-to-child stop ID index map (`parent_child_map_${city}`) in the worker's memory cache for 2 hours. This replaces instantiating `StopsService`, parsing the entire `stops.json` (300KB), and running $O(N)$ linear searches for child platforms on every single departures board request.
 - **Departures**: Optimized `DeparturesMapper.ts` to perform all filtering, sorting, and slicing using numeric epoch millisecond timestamps (`rtTimestampMs`), deferring ISO string conversions strictly to the final sliced payload (150 items instead of 500+ items). This eliminates expensive repeated date parsing and allocations on the departures board request path.
 

@@ -10,10 +10,17 @@ export class KordisVehiclesService {
     constructor(private city: CityConfig) {}
 
     /**
-     * Resolves the current active trip_id from raw ApiTrip info using optimized on-demand parsing
+     * Resolves the current active trip_id and statePosition from raw ApiTrip info using optimized on-demand parsing
      */
-    private resolveActiveTrip(trips: ApiTrip[] | undefined, currentMinutes: number, todayLocalStr: string, delay: number): string | null {
-        if (!trips || trips.length === 0) return null;
+    private resolveActiveTrip(
+        trips: ApiTrip[] | undefined, 
+        currentMinutes: number, 
+        todayLocalStr: string, 
+        delaySecs: number,
+        hasLastStopId: boolean
+    ): { tripId: string | null; statePosition: string } {
+        const defaultState = hasLastStopId ? 'in_transit_to' : 'stopped_at';
+        if (!trips || trips.length === 0) return { tripId: null, statePosition: defaultState };
 
         const parseTimeToMinutes = (timeStr: string) => {
             const h = parseInt(timeStr.substring(0, 2), 10);
@@ -22,34 +29,50 @@ export class KordisVehiclesService {
         };
 
         const BUFFER_MINS = 15;
-        let closestTrip = trips[0].trip_id;
+        let matchedTrip: ApiTrip | null = null;
+        let closestTrip: ApiTrip = trips[0];
         let minDiff = Infinity;
 
         for (const trip of trips) {
             if (!trip.start || !trip.end) continue;
 
-            const startMins = parseTimeToMinutes(trip.start) - BUFFER_MINS;
-            const delayMinutes = delay / 60;
-            let endMins = parseTimeToMinutes(trip.end) + delayMinutes + BUFFER_MINS;
+            const startMins = parseTimeToMinutes(trip.start);
+            const delayMinutes = delaySecs / 60;
             
-            if (endMins < startMins) endMins += 24 * 60;
-            const checkMins = currentMinutes < startMins ? currentMinutes + 24 * 60 : currentMinutes;
+            const startMinsWithBuffer = startMins - BUFFER_MINS;
+            let endMinsWithBuffer = parseTimeToMinutes(trip.end) + delayMinutes + BUFFER_MINS;
+            
+            if (endMinsWithBuffer < startMinsWithBuffer) endMinsWithBuffer += 24 * 60;
+            const checkMins = currentMinutes < startMinsWithBuffer ? currentMinutes + 24 * 60 : currentMinutes;
 
             const runsToday = !trip.dates || trip.dates.includes(todayLocalStr);
 
-            if (checkMins >= startMins && checkMins <= endMins && runsToday) {
-                return trip.trip_id;
+            if (checkMins >= startMinsWithBuffer && checkMins <= endMinsWithBuffer && runsToday) {
+                matchedTrip = trip;
+                break;
             }
 
             // Calculate distance to this trip if no exact match is found
-            const dist = Math.min(Math.abs(checkMins - startMins), Math.abs(checkMins - endMins));
+            const dist = Math.min(Math.abs(checkMins - startMinsWithBuffer), Math.abs(checkMins - endMinsWithBuffer));
             if (dist < minDiff && runsToday) {
                 minDiff = dist;
-                closestTrip = trip.trip_id;
+                closestTrip = trip;
             }
         }
 
-        return closestTrip;
+        const finalTrip = matchedTrip || closestTrip;
+        if (!finalTrip) return { tripId: null, statePosition: defaultState };
+
+        // Determine if vehicle is currently running before the scheduled start time of this trip
+        const tripStartMins = parseTimeToMinutes(finalTrip.start);
+        const checkMinsForStart = currentMinutes < tripStartMins - BUFFER_MINS ? currentMinutes + 24 * 60 : currentMinutes;
+        
+        let statePosition = defaultState;
+        if (checkMinsForStart < tripStartMins) {
+            statePosition = delaySecs > 60 ? 'before_track_delayed' : 'before_track';
+        }
+
+        return { tripId: finalTrip.trip_id, statePosition };
     }
 
     async getRawVehicles(): Promise<ArcgisResponse> {
@@ -100,7 +123,13 @@ export class KordisVehiclesService {
         return route || null;
     }
 
-    private mapVehicle(attr: ArcgisFeature['attributes'], tripId: string | null, route: GtfsRoute | null, delay: number): AppVehicleFeature {
+    private mapVehicle(
+        attr: ArcgisFeature['attributes'], 
+        tripId: string | null, 
+        route: GtfsRoute | null, 
+        delay: number,
+        statePosition: string
+    ): AppVehicleFeature {
         const routeColor = route?.route_color ? (route.route_color.startsWith('#') ? route.route_color : `#${route.route_color}`) : '#4b5563';
         const rType = route ? Number(route.type) : ([0, 1, 11, 3, 4, 2][attr.VType] ?? 3);
         
@@ -121,7 +150,7 @@ export class KordisVehiclesService {
                 trip_headsign: 'Unknown',
                 bearing: attr.Bearing || null,
                 delay: delay,
-                state_position: attr.LastStopID ? 'in_transit_to' : 'stopped_at',
+                state_position: statePosition,
                 run_number: attr.Course || undefined,
                 vehicle_descriptor: {
                     operator: 'IDS JMK',
@@ -204,10 +233,10 @@ export class KordisVehiclesService {
                     const delay = (attr.Delay || 0) * 60; // Convert minutes to seconds
                     
                     const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
-                    const tripId = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay);
+                    const { tripId, statePosition } = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay, !!attr.LastStopID);
  
                     const route = this.resolveRoute(attr, tripId, gtfsData);
-                    features.push(this.mapVehicle(attr, tripId, route, delay));
+                    features.push(this.mapVehicle(attr, tripId, route, delay, statePosition));
                 }
 
                 const result: AppVehicleCollection = { type: 'FeatureCollection', features };
