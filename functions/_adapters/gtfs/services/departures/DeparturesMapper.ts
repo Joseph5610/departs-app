@@ -36,7 +36,6 @@ export class DeparturesMapper {
         const mapped = filtered.map(d => {
             const { stopId, tuple } = d;
             const [trip_id, route_id, headsign, timestamp_ms] = tuple;
-            const scheduledIso = new Date(timestamp_ms).toISOString();
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
@@ -51,7 +50,6 @@ export class DeparturesMapper {
             }
 
             const rtTimestampMs = timestamp_ms + (delaySecs * 1000);
-            const rtIso = new Date(rtTimestampMs).toISOString();
 
             return {
                 tripId: trip_id,
@@ -60,18 +58,32 @@ export class DeparturesMapper {
                 type: route ? String(route.type) : 'unknown', 
                 directionId: '0', 
                 headsign: headsign,
-                scheduled: scheduledIso,
-                timestamp: rtIso,
+                scheduledTimestampMs: timestamp_ms,
+                rtTimestampMs,
                 delay: delaySecs,
                 isCanceled: false,
                 route_color: route ? String(route.route_color) : undefined,
                 stopId: stopId
-            } as AppDeparture;
+            };
         });
 
         return mapped
-            .filter(d => new Date(d.timestamp).getTime() >= now - 60 * 1000)
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-            .slice(0, 150);
+            .filter(d => d.rtTimestampMs >= now - 60000)
+            .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
+            .slice(0, 150)
+            .map(d => ({
+                tripId: d.tripId,
+                vehicleId: d.vehicleId,
+                line: d.line,
+                type: d.type, 
+                directionId: d.directionId, 
+                headsign: d.headsign,
+                scheduled: new Date(d.scheduledTimestampMs).toISOString(),
+                timestamp: new Date(d.rtTimestampMs).toISOString(),
+                delay: d.delay,
+                isCanceled: d.isCanceled,
+                route_color: d.route_color,
+                stopId: d.stopId
+            } as AppDeparture));
     }
 }

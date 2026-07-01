@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Adapter**: Implemented backend-side map viewport bounding box (`bounds`) filtering for KORDIS vehicles to only return active vehicles inside the user's screen.
 - **Adapter**: Populated the global `vehicles_v1` cache key on the Cloudflare Cache API during vehicle fetches, enabling the GTFS departure board to match live vehicle positions and delays for Brno stops.
 - **Adapter**: Fixed a potential runtime crash when checking `arcgisData.features.length` by adding optional chaining and fallback checking when the ArcGIS API returns error payloads.
+- **Departures**: Optimized `DeparturesMapper.ts` to perform all filtering, sorting, and slicing using numeric epoch millisecond timestamps (`rtTimestampMs`), deferring ISO string conversions strictly to the final sliced payload (150 items instead of 500+ items). This eliminates expensive repeated date parsing and allocations on the departures board request path.
 
 ## [0.49.6] - 2026-07-01
 
