@@ -56,13 +56,17 @@ export function getDpmbVehicleMetadata(registrationNumber: string | number): Brn
             return { vehicle_type: 'Iveco Crossway LE 12M', is_air_conditioned: true };
         }
         if (num >= 7001 && num <= 7044) {
-            return { vehicle_type: 'SOR NBG 12 / Irisbus Citelis 12M' };
+            if (num >= 7007 && num <= 7012) {
+                return { vehicle_type: 'Irisbus Citelis 12M CNG' };
+            }
+            return { vehicle_type: 'SOR NBG 12' };
         }
         if (num >= 7045 && num <= 7100) {
             return { vehicle_type: 'Iveco Urbanway 12M CNG', is_air_conditioned: true };
         }
         if (num >= 7101 && num <= 7116) {
-            return { vehicle_type: 'SOR NBG 12' };
+            const hasAc = num >= 7102;
+            return { vehicle_type: 'SOR NBG 12', is_air_conditioned: hasAc };
         }
         if (num === 7526) {
             return { vehicle_type: 'Isuzu Novo Citi Life', is_air_conditioned: true };

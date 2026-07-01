@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.50.6] - 2026-07-01
+
+### Fixed
+- **Adapter**: Configured correct passenger air conditioning status for the newer `SOR NBG 12` buses (vozy 7102–7116) delivered in 2018.
+
+## [0.50.5] - 2026-07-01
+
+### Fixed
+- **Adapter**: Separated `SOR NBG 12` and `Irisbus Citelis 12M CNG` registration numbers within the 7001-7044 range (7007-7012 are Citelis 12M, and the rest are SOR NBG 12).
+
 ## [0.50.4] - 2026-07-01
 
 ### Fixed
