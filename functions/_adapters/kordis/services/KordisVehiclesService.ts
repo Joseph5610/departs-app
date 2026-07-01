@@ -19,13 +19,6 @@ const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
     hour12: false
 });
 
-const parseTimeToMinutes = (timeStr: string) => {
-    const h = parseInt(timeStr.substring(0, 2), 10);
-    const m = parseInt(timeStr.substring(3, 5), 10);
-    return h * 60 + m;
-};
-
-
 export class KordisVehiclesService {
     constructor(private city: CityConfig) {}
 
@@ -47,14 +40,15 @@ export class KordisVehiclesService {
         let closestTrip: ApiTrip = trips[0];
         let minDiff = Infinity;
 
-        for (const trip of trips) {
-            if (!trip.start || !trip.end) continue;
+        const delayMinutes = delaySecs / 60;
 
-            const startMins = parseTimeToMinutes(trip.start);
-            const delayMinutes = delaySecs / 60;
+        for (const trip of trips) {
+            if (trip.start_mins === undefined || trip.end_mins === undefined) continue;
+
+            const startMins = trip.start_mins;
             
             const startMinsWithBuffer = startMins - BUFFER_MINS;
-            let endMinsWithBuffer = parseTimeToMinutes(trip.end) + delayMinutes + BUFFER_MINS;
+            let endMinsWithBuffer = trip.end_mins + delayMinutes + BUFFER_MINS;
             
             if (endMinsWithBuffer < startMinsWithBuffer) endMinsWithBuffer += 24 * 60;
             const checkMins = currentMinutes < startMinsWithBuffer ? currentMinutes + 24 * 60 : currentMinutes;
@@ -78,7 +72,7 @@ export class KordisVehiclesService {
         if (!finalTrip) return { tripId: null, statePosition: defaultState };
 
         // Determine if vehicle is currently running before the scheduled start time of this trip
-        const tripStartMins = parseTimeToMinutes(finalTrip.start);
+        const tripStartMins = finalTrip.start_mins;
         const checkMinsForStart = currentMinutes < tripStartMins - BUFFER_MINS ? currentMinutes + 24 * 60 : currentMinutes;
         
         let statePosition = defaultState;

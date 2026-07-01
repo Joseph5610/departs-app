@@ -3,6 +3,8 @@ export type ApiTrip = {
     start: string;
     end: string;
     dates?: string[];
+    start_mins: number;
+    end_mins: number;
 };
 
 export type ApiMapping = Record<string, ApiTrip[]>;
