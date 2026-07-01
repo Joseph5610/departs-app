@@ -33,7 +33,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             stopsFile: 'cities/brno/stops.json',
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
             staticDataUrl: 'https://data.departs.app',
-            realtimeArcgisUrl: 'https://gis.brno.cz/ags1/rest/services/Hosted/Kordis_26_polohy/FeatureServer/0/query?where=IsInactive%3D%27false%27&outFields=*&orderByFields=TimeUpdated+DESC&resultRecordCount=2000&f=json'
+            realtimeArcgisUrl: 'https://gis.brno.cz/ags1/rest/services/Hosted/Kordis_26_polohy/FeatureServer/0/query?where=IsInactive%3D%27false%27&outFields=ID,TimeUpdated,IsInactive,LineID,RouteID,Delay,VType,LF,LineName,Bearing,LastStopID,FinalStopID,Course,Lng,Lat&returnGeometry=false&orderByFields=TimeUpdated+DESC&f=json'
         },
         isBeta: true,
     },

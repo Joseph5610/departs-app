@@ -17,14 +17,11 @@ export interface ArcgisFeature {
         Delay?: number;
         VType: number;
         LF?: string;
-        AC?: string;
         LineName?: string;
-        FinalStopName?: string;
         Bearing?: number;
         LastStopID?: number;
         FinalStopID?: number;
         Course?: string;
-        LastStopName?: string;
         Lng: number;
         Lat: number;
     };

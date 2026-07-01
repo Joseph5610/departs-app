@@ -58,7 +58,7 @@ export class KordisVehiclesService {
                     throw new Error(`Missing KORDIS ArcGIS configuration.`);
                 }
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const timeoutId = setTimeout(() => controller.abort(), 8500);
                 try {
                     const resArcgis = await fetch(arcgisConfigUrl, { 
                         cf: { cacheTtl: 10 },
@@ -115,7 +115,7 @@ export class KordisVehiclesService {
                 gtfs_trip_id: tripId || '',
                 route_short_name: finalLineName,
                 route_type: rType,
-                trip_headsign: attr.FinalStopName || 'Unknown',
+                trip_headsign: 'Unknown',
                 bearing: attr.Bearing || null,
                 delay: delay,
                 state_position: attr.LastStopID ? 'in_transit_to' : 'stopped_at',
@@ -123,8 +123,7 @@ export class KordisVehiclesService {
                 vehicle_descriptor: {
                     operator: 'IDS JMK',
                     vehicle_registration_number: attr.ID.toString(),
-                    is_wheelchair_accessible: attr.LF === 'true',
-                    is_air_conditioned: attr.AC === 'true'
+                    is_wheelchair_accessible: attr.LF === 'true'
                 },
                 origin_timestamp: new Date(attr.TimeUpdated).toISOString(),
                 is_static_fallback: false,
@@ -160,7 +159,7 @@ export class KordisVehiclesService {
                     getGtfsData(this.city.slug)
                 ]);
 
-                if (!arcgisData.features.length || !apiMapping) {
+                if (!arcgisData?.features || arcgisData.features.length === 0 || !apiMapping) {
                     return { type: 'FeatureCollection', features: [] };
                 }
 
