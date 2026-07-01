@@ -1,62 +1,51 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { CityConfig } from '../../../_core/city-config';
 import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../_core/types";
-import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from './types';
+import type { ApiMapping, ArcgisResponse, ArcgisFeature } from './types';
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
-import { getGtfsData, GtfsData, GtfsRoute } from '../../gtfs/core/gtfs-data';
+import { getGtfsData, GtfsRoute, GtfsData } from '../../gtfs/core/gtfs-data';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
+
+interface ActiveTripInfo {
+    trip_id: string;
+    startMins: number;
+    endMins: number;
+}
 
 export class KordisVehiclesService {
     constructor(private city: CityConfig) {}
 
     /**
-     * Resolves the current trip_id from an array of trips using the current time
-     * @param delay delay in SECONDS
+     * Resolves the current active trip_id from pre-parsed trip info using numeric minutes
      */
-    private resolveActiveTrips(trips: ApiTrip[], currentMinutes: number, todayLocalStr: string, delay: number): string[] {
-        if (!trips || trips.length === 0) return [];
-        
-        const timeToMinutes = (timeStr: string) => {
-            const [h, m, s] = timeStr.split(':').map(Number);
-            return h * 60 + m + (s / 60);
-        };
+    private resolveActiveTrip(trips: ActiveTripInfo[], currentMinutes: number, delay: number): string | null {
+        if (!trips || trips.length === 0) return null;
 
         const BUFFER_MINS = 15;
-        
         let closestTrip = trips[0].trip_id;
         let minDiff = Infinity;
-        const exactMatches: string[] = [];
 
         for (const trip of trips) {
-            if (!trip.start || !trip.end) continue;
-
-            const startMins = timeToMinutes(trip.start) - BUFFER_MINS;
-            // Trip resolving delay is passed in seconds, convert back to minutes for time checking
+            const startMins = trip.startMins - BUFFER_MINS;
             const delayMinutes = delay / 60;
-            let endMins = timeToMinutes(trip.end) + delayMinutes + BUFFER_MINS;
+            let endMins = trip.endMins + delayMinutes + BUFFER_MINS;
             
             if (endMins < startMins) endMins += 24 * 60;
             const checkMins = currentMinutes < startMins ? currentMinutes + 24 * 60 : currentMinutes;
 
-            const runsToday = !trip.dates || trip.dates.includes(todayLocalStr);
-
-            if (checkMins >= startMins && checkMins <= endMins && runsToday) {
-                exactMatches.push(trip.trip_id); // Add all matching trips
+            if (checkMins >= startMins && checkMins <= endMins) {
+                return trip.trip_id;
             }
 
             // Calculate distance to this trip if no exact match is found
             const dist = Math.min(Math.abs(checkMins - startMins), Math.abs(checkMins - endMins));
-            if (dist < minDiff && runsToday) {
+            if (dist < minDiff) {
                 minDiff = dist;
                 closestTrip = trip.trip_id;
             }
         }
 
-        if (exactMatches.length > 0) {
-            return exactMatches;
-        }
-
-        return [closestTrip]; // Fallback to closest trip
+        return closestTrip;
     }
 
     async getRawVehicles(): Promise<ArcgisResponse> {
@@ -68,11 +57,23 @@ export class KordisVehiclesService {
                 if (!arcgisConfigUrl) {
                     throw new Error(`Missing KORDIS ArcGIS configuration.`);
                 }
-                const resArcgis = await fetch(arcgisConfigUrl, { cf: { cacheTtl: 10 } });
-                if (!resArcgis.ok) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                try {
+                    const resArcgis = await fetch(arcgisConfigUrl, { 
+                        cf: { cacheTtl: 10 },
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    if (!resArcgis.ok) {
+                        return { features: [] };
+                    }
+                    return await resArcgis.json() as ArcgisResponse;
+                } catch (e) {
+                    clearTimeout(timeoutId);
+                    console.error("KORDIS ArcGIS fetch timed out or failed:", e);
                     return { features: [] };
                 }
-                return await resArcgis.json() as ArcgisResponse;
             }
         );
     }
@@ -96,7 +97,7 @@ export class KordisVehiclesService {
         return route || null;
     }
 
-    private mapVehicle(attr: ArcgisFeature['attributes'], tripIds: string[], route: GtfsRoute | null, delay: number): AppVehicleFeature {
+    private mapVehicle(attr: ArcgisFeature['attributes'], tripId: string | null, route: GtfsRoute | null, delay: number): AppVehicleFeature {
         const routeColor = route?.route_color ? (route.route_color.startsWith('#') ? route.route_color : `#${route.route_color}`) : '#4b5563';
         const rType = route ? Number(route.type) : ([0, 1, 11, 3, 4, 2][attr.VType] ?? 3);
         
@@ -111,8 +112,7 @@ export class KordisVehiclesService {
             },
             properties: {
                 vehicle_id: attr.ID.toString(),
-                gtfs_trip_id: tripIds.length > 0 ? tripIds[tripIds.length - 1] : '', // Usually the last one is the newest GTFS export
-                all_gtfs_trip_ids: tripIds,
+                gtfs_trip_id: tripId || '',
                 route_short_name: finalLineName,
                 route_type: rType,
                 trip_headsign: attr.FinalStopName || 'Unknown',
@@ -137,7 +137,7 @@ export class KordisVehiclesService {
     async getVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
         const allVehicles = await CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_vehicles_${this.city.slug}`, 
-            CACHE_TTL.LIVE_DATA_MS, 
+            CACHE_TTL.TEN_SECONDS_MS, 
             async () => {
                 const staticUrl = this.city.adapterConfig?.staticDataUrl;
                 if (!staticUrl) {
@@ -199,6 +199,30 @@ export class KordisVehiclesService {
                 const todayLocalStr = `${y}${m}${d}`;
                 const currentMinutes = Number(hh) * 60 + Number(mm) + Number(ss) / 60;
 
+                const parseTimeToMinutes = (timeStr: string) => {
+                    const [h, min, s] = timeStr.split(':').map(Number);
+                    return h * 60 + min + (s / 60);
+                };
+
+                // Pre-filter and pre-parse course mapping to avoid expensive string operations inside the vehicle loop
+                const todayMapping: Record<string, ActiveTripInfo[]> = {};
+                for (const courseKey in apiMapping) {
+                    const trips = apiMapping[courseKey];
+                    const filteredTrips: ActiveTripInfo[] = [];
+                    for (const trip of trips) {
+                        if (!trip.dates || trip.dates.includes(todayLocalStr)) {
+                            filteredTrips.push({
+                                trip_id: trip.trip_id,
+                                startMins: parseTimeToMinutes(trip.start),
+                                endMins: parseTimeToMinutes(trip.end)
+                            });
+                        }
+                    }
+                    if (filteredTrips.length > 0) {
+                        todayMapping[courseKey] = filteredTrips;
+                    }
+                }
+
                 const features: AppVehicleFeature[] = [];
                 const THRESHOLD_MS = 20 * 60 * 1000;
                 const nowMs = Date.now();
@@ -216,11 +240,11 @@ export class KordisVehiclesService {
 
                     const delay = (attr.Delay || 0) * 60; // Convert minutes to seconds
                     
-                    const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
-                    const tripIds = this.resolveActiveTrips(tripsForCourse, currentMinutes, todayLocalStr, delay);
-
-                    const route = this.resolveRoute(attr, tripIds.length > 0 ? tripIds[0] : null, gtfsData, routesByName);
-                    features.push(this.mapVehicle(attr, tripIds, route, delay));
+                    const tripsForCourse = todayMapping[`${attr.LineID}-${attr.RouteID}`];
+                    const tripId = this.resolveActiveTrip(tripsForCourse, currentMinutes, delay);
+ 
+                    const route = this.resolveRoute(attr, tripId, gtfsData, routesByName);
+                    features.push(this.mapVehicle(attr, tripId, route, delay));
                 }
 
                 return { type: 'FeatureCollection', features };

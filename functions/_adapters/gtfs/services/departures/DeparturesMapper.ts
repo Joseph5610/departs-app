@@ -19,10 +19,16 @@ export class DeparturesMapper {
         });
 
         const vehicleIndex = new Map<string, string>();
+        const delayIndex = new Map<string, number>();
         if (rtVehicles) {
             for (const f of rtVehicles.features) {
-                if (f.properties.gtfs_trip_id && f.properties.vehicle_id) {
-                    vehicleIndex.set(f.properties.gtfs_trip_id, f.properties.vehicle_id);
+                const vId = f.properties.vehicle_id;
+                const tripId = f.properties.gtfs_trip_id;
+                const delay = f.properties.delay;
+
+                if (vId && tripId) {
+                    vehicleIndex.set(tripId, vId);
+                    delayIndex.set(tripId, delay);
                 }
             }
         }
@@ -34,12 +40,14 @@ export class DeparturesMapper {
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
-            // Delay is explicitly defaulted to 0 here to save CPU/Subrequests limit on Cloudflare Pages.
-            // Full detailed delay computations (requiring getTripStops fetch) are deferred to the map view.
-            const delaySecs = 0;
+            let delaySecs = 0;
 
             if (rtVehicles) {
                 vId = vehicleIndex.get(trip_id);
+                const rtDelay = delayIndex.get(trip_id);
+                if (typeof rtDelay === 'number') {
+                    delaySecs = rtDelay;
+                }
             }
 
             const rtTimestampMs = timestamp_ms + (delaySecs * 1000);

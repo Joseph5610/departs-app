@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.49.7] - 2026-07-01
+
+### Fixed
+- **Adapter**: Resolved Cloudflare Worker CPU limits by pre-filtering/pre-parsing course-to-trip mappings into numeric minutes and implemented a strict 4-second timeout on the KORDIS ArcGIS feed fetch to prevent 503 gateway timeouts when the upstream server is slow or unresponsive.
+- **Adapter**: Completely removed redundant `all_gtfs_trip_ids` field to match clean GTFS specifications and type systems, migrating adapter matching to the standard `gtfs_trip_id` property.
+- **Adapter**: Corrected `GtfsAdapter` signature parameters and resolved ESLint `no-unused-vars` and `no-explicit-any` errors in backend worker functions.
+
 ## [0.49.6] - 2026-07-01
 
 ### Fixed

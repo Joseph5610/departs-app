@@ -8,9 +8,14 @@ export interface GtfsRoute {
     route_color?: string;
 }
 
+export interface GtfsData {
+    routes: Record<string, GtfsRoute>;
+    tripRoutes: Record<string, string>;
+}
+
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 
-export async function getGtfsData(citySlug: string): Promise<{ routes: Record<string, GtfsRoute>; tripRoutes: Record<string, string> }> {
+export async function getGtfsData(citySlug: string): Promise<GtfsData> {
     const cityConfig = getCityConfig(citySlug);
     const staticDataUrl = cityConfig?.adapterConfig?.staticDataUrl;
     

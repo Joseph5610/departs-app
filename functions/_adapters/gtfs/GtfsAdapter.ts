@@ -18,11 +18,13 @@ export class GtfsAdapter implements CityAdapter {
         this.stopsService = new StopsService(this._city);
     }
 
-    async handleStops(): Promise<AppStopCollection> {
+    async handleStops(ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {
+        void ctx;
         return this.stopsService.getStops();
     }
     
-    async handleVehicles(): Promise<AppVehicleCollection> {
+    async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
+        void ctx;
         return { type: 'FeatureCollection', features: [] };
     }
     
@@ -34,11 +36,13 @@ export class GtfsAdapter implements CityAdapter {
         return new VehicleDetailService(this._city).getVehicleDetail(ctx);
     }
     
-    async handleAlerts(): Promise<AppAlertsResponse> {
+    async handleAlerts(ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> {
+        void ctx;
         return new AlertsService(this._city).getAlerts();
     }
     
-    async handleInfotexts(): Promise<AppInfotext[]> {
+    async handleInfotexts(ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]> {
+        void ctx;
         return new InfotextsService(this._city).getInfotexts();
     }
 

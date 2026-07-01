@@ -28,10 +28,7 @@ export class KordisAdapter extends GtfsAdapter {
         const liveVehicles = await this.vehiclesService.getVehicles(ctx);
         const liveMatch = liveVehicles.features.find(f => {
             if (detail.vehicle_id && f.properties.vehicle_id === detail.vehicle_id) return true;
-            if (detail.gtfs_trip_id) {
-                if (f.properties.gtfs_trip_id === detail.gtfs_trip_id) return true;
-                if (f.properties.all_gtfs_trip_ids?.includes(detail.gtfs_trip_id)) return true;
-            }
+            if (detail.gtfs_trip_id && f.properties.gtfs_trip_id === detail.gtfs_trip_id) return true;
             return false;
         });
 
@@ -71,7 +68,7 @@ export class KordisAdapter extends GtfsAdapter {
         if (liveMatch.properties.vehicle_descriptor) {
             detail.vehicle_descriptor = {
                 ...detail.vehicle_descriptor,
-                vehicle_registration_number: liveMatch.properties.vehicle_descriptor.vehicle_registration_number || liveMatch.properties.vehicle_id,
+                vehicle_registration_number: liveMatch.properties.vehicle_descriptor.vehicle_registration_number || (liveMatch.properties.vehicle_id ?? undefined),
                 is_wheelchair_accessible: liveMatch.properties.vehicle_descriptor.is_wheelchair_accessible,
                 is_air_conditioned: liveMatch.properties.vehicle_descriptor.is_air_conditioned
             };
