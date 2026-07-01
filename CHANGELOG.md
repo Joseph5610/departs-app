@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 - **Adapter**: Optimized KORDIS ArcGIS query to achieve a 45x speedup (reducing latency from 6.1s to 0.13s) by requesting only required existing database fields (removing non-existent `AC`, `FinalStopName`, and `LastStopName` fields which caused query failures), disabling spatial geometry return (`returnGeometry=false`), and keeping database sort logic. Resolved Cloudflare Workers CPU limit/503 errors at the root while keeping a 8.5s timeout buffer.
 - **Adapter**: Completely removed redundant `all_gtfs_trip_ids` field to match clean GTFS specifications and type systems, migrating adapter matching to the standard `gtfs_trip_id` property.
 - **Adapter**: Corrected `GtfsAdapter` signature parameters and resolved ESLint `no-unused-vars` and `no-explicit-any` errors in backend worker functions.
+- **Adapter**: Implemented backend-side map viewport bounding box (`bounds`) filtering for KORDIS vehicles to only return active vehicles inside the user's screen.
+- **Adapter**: Populated the global `vehicles_v1` cache key on the Cloudflare Cache API during vehicle fetches, enabling the GTFS departure board to match live vehicle positions and delays for Brno stops.
 - **Adapter**: Fixed a potential runtime crash when checking `arcgisData.features.length` by adding optional chaining and fallback checking when the ArcGIS API returns error payloads.
 
 ## [0.49.6] - 2026-07-01

@@ -246,14 +246,42 @@ export class KordisVehiclesService {
                     features.push(this.mapVehicle(attr, tripId, route, delay));
                 }
 
-                return { type: 'FeatureCollection', features };
+                const result: AppVehicleCollection = { type: 'FeatureCollection', features };
+
+                try {
+                    const cache = caches.default;
+                    const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/vehicles_v1`, { method: 'GET' });
+                    const responseToCache = new Response(JSON.stringify(result), {
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Cache-Control': 'public, max-age=10, s-maxage=10' 
+                        }
+                    });
+                    await cache.put(jsonCacheKey, responseToCache);
+                } catch (e) {
+                    console.error("Failed to populate departures vehicles cache:", e);
+                }
+
+                return result;
             }
         );
 
         const { searchParams } = new URL(ctx.request.url);
-        const { routeType: routeTypes, routeShortName: routeShortNames } = parseSearchParams(searchParams, vehicleQuerySchema);
+        const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);
         
         let filteredFeatures = allVehicles.features;
+
+        if (bounds) {
+            const [minLat, minLng, maxLat, maxLng] = bounds.split(',').map(Number);
+            if (!isNaN(minLat) && !isNaN(minLng) && !isNaN(maxLat) && !isNaN(maxLng)) {
+                filteredFeatures = filteredFeatures.filter(f => {
+                    const coords = f.geometry?.coordinates;
+                    if (!coords) return false;
+                    const [lng, lat] = coords;
+                    return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+                });
+            }
+        }
 
         if (routeTypes.length > 0) {
             filteredFeatures = filteredFeatures.filter(f => {
