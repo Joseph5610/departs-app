@@ -19,6 +19,12 @@ const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
     hour12: false
 });
 
+const parseTimeToMinutes = (timeStr: string) => {
+    const h = parseInt(timeStr.substring(0, 2), 10);
+    const m = parseInt(timeStr.substring(3, 5), 10);
+    return h * 60 + m;
+};
+
 
 export class KordisVehiclesService {
     constructor(private city: CityConfig) {}
@@ -35,12 +41,6 @@ export class KordisVehiclesService {
     ): { tripId: string | null; statePosition: string } {
         const defaultState = hasLastStopId ? 'in_transit_to' : 'stopped_at';
         if (!trips || trips.length === 0) return { tripId: null, statePosition: defaultState };
-
-        const parseTimeToMinutes = (timeStr: string) => {
-            const h = parseInt(timeStr.substring(0, 2), 10);
-            const m = parseInt(timeStr.substring(3, 5), 10);
-            return h * 60 + m;
-        };
 
         const BUFFER_MINS = 15;
         let matchedTrip: ApiTrip | null = null;
@@ -184,8 +184,8 @@ export class KordisVehiclesService {
     }
 
 
-    async getVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
-        const allVehicles = await CacheManager.getOrFetch<AppVehicleCollection>(
+    async getAllVehicles(): Promise<AppVehicleCollection> {
+        return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_vehicles_${this.city.slug}`, 
             CACHE_TTL.TEN_SECONDS_MS, 
             async () => {
@@ -266,6 +266,10 @@ export class KordisVehiclesService {
                 return result;
             }
         );
+    }
+
+    async getVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
+        const allVehicles = await this.getAllVehicles();
 
         const { searchParams } = new URL(ctx.request.url);
         const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);

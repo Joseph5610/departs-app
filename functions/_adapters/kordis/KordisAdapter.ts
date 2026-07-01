@@ -39,7 +39,7 @@ export class KordisAdapter extends GtfsAdapter {
             }
         }
 
-        const liveVehicles = await this.vehiclesService.getVehicles(ctx);
+        const liveVehicles = await this.vehiclesService.getAllVehicles();
         const liveMatch = liveVehicles.features.find(f => {
             if (detail.vehicle_id && f.properties.vehicle_id === detail.vehicle_id) return true;
             if (detail.gtfs_trip_id && f.properties.gtfs_trip_id === detail.gtfs_trip_id) return true;
@@ -101,7 +101,8 @@ export class KordisAdapter extends GtfsAdapter {
 
     private async resolveLastStopSequence(ctx: EventContext<Env, string, unknown>, detail: AppVehicleDetail) {
         const rawArcgisData = await this.vehiclesService.getRawVehicles();
-        const rawMatch = rawArcgisData.features.find(f => f.attributes.ID.toString() === detail.vehicle_id);
+        const targetId = Number(detail.vehicle_id);
+        const rawMatch = rawArcgisData.features.find(f => f.attributes.ID === targetId);
         const lastStopId = rawMatch?.attributes?.LastStopID?.toString();
 
         if (lastStopId && detail.stop_times?.features?.length) {
