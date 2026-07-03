@@ -36,16 +36,17 @@ export const WelcomeModal: React.FC = () => {
 
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
-        const params = new URLSearchParams(window.location.search);
         
-        // If the user arrives via a deep link to a specific entity, skip the welcome modal
         const path = window.location.pathname;
-        const hasDeepLink = params.has('stopId') || params.has('tripId') || params.has('vehicleId') || path.includes('/stop/') || path.includes('/trip/');
-        if (hasDeepLink) {
+        const isHomepage = path === '/';
+        
+        // Skip welcome modal on any deep links or city subpaths, and mark it as seen
+        if (!isHomepage) {
             localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
             return false;
         }
 
+        const params = new URLSearchParams(window.location.search);
         if (params.has('skipTutorial')) return false;
         return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
     });

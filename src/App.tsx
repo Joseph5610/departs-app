@@ -1,25 +1,12 @@
 import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
-import { Switch, Route, useLocation } from 'wouter';
+import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useWebMCP } from './hooks/features/useWebMCP';
 import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
 import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
 import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
-import { usePreferencesStore } from './state/preferencesStore';
-import { useEffect } from 'react';
 
-const RootRedirect = () => {
-  const selectedCity = usePreferencesStore(s => s.selectedCity);
-  const [, navigate] = useLocation();
-  
-  useEffect(() => {
-    const search = window.location.search;
-    navigate(`/${selectedCity}${search}`, { replace: true });
-  }, [selectedCity, navigate]);
-  
-  return null;
-};
 
 function App() {
   usePWALifecycle();
@@ -49,9 +36,6 @@ function App() {
         </Route>
         <Route path="/admin">
           <AdminIndex />
-        </Route>
-        <Route path="/">
-          <RootRedirect />
         </Route>
         <Route>
           <Map />

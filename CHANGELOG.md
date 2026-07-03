@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.50.11] - 2026-07-03
+
+### Fixed
+- **SEO & Routing**: Resolved Google Search Console redirect and canonical URL conflicts by moving the Prague map to the root URL `/` directly instead of doing a client-side redirect. Added a static CDN-level 301 redirect from `/prague` to `/` in `public/_redirects` to consolidate search indexing.
+
 ## [0.50.10] - 2026-07-01
 
 ### Fixed
