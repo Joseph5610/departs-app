@@ -15,7 +15,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.png', 'cities/prague.png'],
       manifest: {
         name: 'Departs.app',
         short_name: 'Departs',
@@ -58,8 +58,8 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
-            // Cache CARTO Map Style JSON
-            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/gl\/.*\.json$/i,
+            // Cache CARTO Map Style & Tiles JSON
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(gl|vector)\/.*\.json$/i,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'carto-map-styles',

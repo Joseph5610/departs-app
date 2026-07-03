@@ -1,6 +1,9 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [0.50.12] - 2026-07-03
+
+### Fixed
+- **PWA**: Updated runtime caching pattern for CartoDB map resources in `vite.config.ts` to also include `tiles.json` metadata under `StaleWhileRevalidate` caching, ensuring offline availability and reducing network roundtrips during map load.
 
 ## [0.50.11] - 2026-07-03
 
