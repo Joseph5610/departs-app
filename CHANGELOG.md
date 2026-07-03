@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.50.13] - 2026-07-03
+
+### Added
+- **Assets**: Added `favicon.ico` at the root using macOS built-in sips tool to convert `favicon.png` (64x64) and registered it in PWA cached assets in `vite.config.ts`.
+
 ## [0.50.12] - 2026-07-03
 
 ### Fixed

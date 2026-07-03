@@ -15,7 +15,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.png', 'cities/prague.png'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.png', 'cities/prague.png'],
       manifest: {
         name: 'Departs.app',
         short_name: 'Departs',
