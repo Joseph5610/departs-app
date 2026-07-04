@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.50.14] - 2026-07-04
+
+### Fixed
+- **Routing & Viewport**: Fixed a race condition where launching the app on a city path different from the persisted city selection (e.g. going to `/prague` when `brno` was previously selected) triggered an immediate viewport fly-to the old city before dynamic city data loaded. Statically defined cities are now synced to the store synchronously on mount to prevent the incorrect fly-to.
+
 ## [0.50.13] - 2026-07-03
 
 ### Added
