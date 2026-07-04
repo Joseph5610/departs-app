@@ -50,7 +50,9 @@ export const useRouteParams = () => {
         if (!city || city === 'explorer') return;
 
         if (city === defaultCity && isCityBase) {
-            navigate('/', { replace: true });
+            if (window.location.pathname !== '/') {
+                navigate('/', { replace: true });
+            }
             return;
         }
 

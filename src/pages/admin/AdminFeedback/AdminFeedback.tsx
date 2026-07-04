@@ -7,17 +7,20 @@ import 'react-json-view-lite/dist/index.css';
 import type { StoredFeedback } from '../../../types/feedback';
 
 import { Badge } from '@/components/ui/badge';
-import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon, Copy, Terminal, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AdminLayout } from '../AdminLayout';
+import { toast } from 'sonner';
 
 export const AdminFeedback: React.FC = () => {
     const [filterText, setFilterText] = useState('');
     const [filterType, setFilterType] = useState<'all' | 'feedback' | 'crash'>('all');
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [showMobileDetail, setShowMobileDetail] = useState(false);
+
     const { data, isLoading, isError, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
         queryKey: ['adminFeedback'],
         queryFn: async () => {
@@ -30,7 +33,7 @@ export const AdminFeedback: React.FC = () => {
     const filteredItems = data?.items?.filter(item => {
         // Type filter
         if (filterType === 'crash' && item.type !== 'crash') return false;
-        if (filterType === 'feedback' && item.type === 'crash') return false; // Anything that isn't a crash is considered standard feedback
+        if (filterType === 'feedback' && item.type === 'crash') return false;
 
         // Text filter
         if (!filterText) return true;
@@ -75,6 +78,62 @@ export const AdminFeedback: React.FC = () => {
             case 'feature_request': return 'default';
             default: return 'secondary';
         }
+    };
+
+    const handleCopyRawJson = () => {
+        if (!selectedItem) return;
+        navigator.clipboard.writeText(JSON.stringify(selectedItem, null, 2))
+            .then(() => toast.success('Raw JSON copied to clipboard'))
+            .catch(() => toast.error('Failed to copy to clipboard'));
+    };
+
+    const handleCopyAgentPrompt = () => {
+        if (!selectedItem) return;
+        
+        let crashBlock = '';
+        if (selectedItem.type === 'crash' && selectedItem.diagnostics?.crashInfo) {
+            crashBlock = `
+## Crash Trace & Diagnostics
+**Error Message:** \`${selectedItem.diagnostics.crashInfo.errorMessage || selectedItem.message}\`
+**Error Name:** \`${selectedItem.diagnostics.crashInfo.errorName || 'Error'}\`
+
+### Error Stack
+\`\`\`
+${selectedItem.diagnostics.crashInfo.errorStack || 'N/A'}
+\`\`\`
+
+### Component Stack
+\`\`\`
+${selectedItem.diagnostics.crashInfo.componentStack || 'N/A'}
+\`\`\`
+`;
+        }
+
+        const promptText = `I encountered a bug/crash in the application. Please investigate and fix this issue:
+
+### Description / Feedback Message
+> ${selectedItem.message}
+
+${crashBlock}
+### App Context
+- **URL / Path:** \`${selectedItem.diagnostics?.url || 'N/A'}\`
+- **Selected City:** \`${selectedItem.diagnostics?.selectedCity || 'N/A'}\`
+- **Locale:** \`${selectedItem.diagnostics?.locale || 'N/A'}\`
+- **PWA Mode:** \`${selectedItem.diagnostics?.isPwa ? 'Yes' : 'No'}\`
+- **User Agent:** \`${selectedItem.diagnostics?.userAgent || 'N/A'}\`
+- **Feedback ID:** \`${selectedItem.id}\`
+- **Time of Occurrence:** ${new Date(selectedItem.timestamp).toLocaleString()}
+
+### Full Diagnostic Payload
+\`\`\`json
+${JSON.stringify(selectedItem.diagnostics || {}, null, 2)}
+\`\`\`
+
+Please locate the source code files mentioned in the stack traces above, diagnose the root cause (e.g. unexpected null/undefined values or unhandled exceptions), and implement a robust fix.`;
+
+        navigator.clipboard.writeText(promptText)
+            .then(() => toast.success('Agent prompt template copied to clipboard!'))
+            .catch(() => toast.error('Failed to copy prompt'));
     };
 
     const headerActions = (
@@ -151,9 +210,9 @@ export const AdminFeedback: React.FC = () => {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
+            <div className="flex gap-4 flex-1 min-h-0 relative">
                 {/* Left Column: List */}
-                <div className="w-full lg:w-[350px] shrink-0 flex flex-col gap-2 overflow-y-auto pr-1 pb-4">
+                <div className={`w-full lg:w-[350px] shrink-0 flex flex-col gap-2 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {filteredItems?.length === 0 && data?.items?.length !== 0 && (
                         <div className="text-center py-8 text-muted-foreground">
                             No results found for filter "{filterText}".
@@ -162,7 +221,10 @@ export const AdminFeedback: React.FC = () => {
                     {filteredItems?.map((item) => (
                         <div 
                             key={item.id} 
-                            onClick={() => setSelectedItemId(item.id)}
+                            onClick={() => {
+                                setSelectedItemId(item.id);
+                                setShowMobileDetail(true);
+                            }}
                             className={`cursor-pointer rounded-lg p-3.5 transition-colors border text-left flex flex-col gap-2 ${activeItemId === item.id ? 'bg-muted/60 border-primary/30 shadow-sm' : 'bg-card hover:bg-muted/30 border-border'} ${item.type === 'crash' ? (activeItemId === item.id ? 'bg-red-500/10 border-red-500/40' : 'bg-red-500/5 hover:bg-red-500/10 border-red-500/20') : ''}`}
                         >
                             <div className="flex items-center justify-between gap-2">
@@ -187,13 +249,21 @@ export const AdminFeedback: React.FC = () => {
                 </div>
 
                 {/* Right Column: Detail */}
-                <div className="flex-1 min-w-0 bg-card rounded-xl border border-border overflow-hidden flex flex-col shadow-sm">
+                <div className={`flex-1 min-w-0 bg-card rounded-xl border border-border overflow-hidden flex flex-col shadow-sm ${!showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {selectedItem ? (
                         <ScrollArea className={`h-full w-full ${selectedItem.type === 'crash' ? 'bg-red-500/5' : ''}`}>
-                            <div className="p-6 flex flex-col gap-6">
+                            <div className="p-4 sm:p-6 flex flex-col gap-6">
+                                {/* Mobile back button */}
+                                <div className="lg:hidden flex items-center mb-1">
+                                    <Button variant="ghost" size="sm" onClick={() => setShowMobileDetail(false)} className="-ml-2">
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        Back to list
+                                    </Button>
+                                </div>
+
                                 {/* Header */}
-                                <div className="flex justify-between items-start sm:items-center gap-4 flex-col sm:flex-row">
-                                    <div className="flex items-center gap-3">
+                                <div className="flex justify-between items-start gap-4 flex-col sm:flex-row sm:items-center">
+                                    <div className="flex flex-wrap items-center gap-3">
                                         {getIcon(selectedItem.type)}
                                         <Badge variant={getBadgeVariant(selectedItem.type)} className="capitalize px-3 py-1 text-sm">
                                             {selectedItem.type.replace('_', ' ')}
@@ -202,12 +272,23 @@ export const AdminFeedback: React.FC = () => {
                                             {formatDistanceToNow(new Date(selectedItem.timestamp), { addSuffix: true })}
                                         </span>
                                     </div>
-                                    {selectedItem.email && (
-                                        <div className="text-sm font-medium px-3 py-1.5 bg-primary/10 text-primary rounded-full truncate max-w-[250px] sm:max-w-none">
-                                            {selectedItem.email}
-                                        </div>
-                                    )}
+                                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                                        <Button variant="outline" size="sm" onClick={handleCopyRawJson} className="flex-1 sm:flex-none">
+                                            <Copy className="w-4 h-4 mr-2" />
+                                            Copy Raw JSON
+                                        </Button>
+                                        <Button variant="default" size="sm" onClick={handleCopyAgentPrompt} className="flex-1 sm:flex-none">
+                                            <Terminal className="w-4 h-4 mr-2" />
+                                            Copy Agent Prompt
+                                        </Button>
+                                    </div>
                                 </div>
+
+                                {selectedItem.email && (
+                                    <div className="text-sm font-medium px-3 py-1.5 bg-primary/10 text-primary rounded-full truncate max-w-xs self-start">
+                                        {selectedItem.email}
+                                    </div>
+                                )}
                                 
                                 {/* Message */}
                                 <div className="bg-background rounded-lg p-5 border border-border shadow-sm">
@@ -243,10 +324,10 @@ export const AdminFeedback: React.FC = () => {
                                 )}
                                 
                                 {/* Meta Information */}
-                                <div className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-muted-foreground/80 bg-muted/30 p-4 rounded-lg border border-border/50">
-                                    <p className="flex flex-col gap-1"><span className="uppercase text-[10px] font-bold tracking-wider">Feedback ID</span><span className="font-mono">{selectedItem.id}</span></p>
-                                    <p className="flex flex-col gap-1"><span className="uppercase text-[10px] font-bold tracking-wider">Client IP</span><span className="font-mono">{selectedItem.ipAddress}</span></p>
-                                    <p className="flex flex-col gap-1"><span className="uppercase text-[10px] font-bold tracking-wider">Exact Time</span><span>{new Date(selectedItem.timestamp).toLocaleString()}</span></p>
+                                <div className="flex flex-col gap-2 text-xs text-muted-foreground/80 bg-muted/30 p-4 rounded-lg border border-border/50">
+                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Feedback ID:</span><span className="font-mono break-all">{selectedItem.id}</span></p>
+                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Client IP:</span><span className="font-mono">{selectedItem.ipAddress}</span></p>
+                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Exact Time:</span><span>{new Date(selectedItem.timestamp).toLocaleString()}</span></p>
                                 </div>
                                 
                                 {/* Diagnostics Collapsible */}
@@ -260,8 +341,8 @@ export const AdminFeedback: React.FC = () => {
                                             <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                                         </CollapsibleTrigger>
                                         <CollapsibleContent className="px-4 pb-4">
-                                            <div className="w-full rounded-md mt-2 bg-background p-4 border border-border shadow-inner">
-                                                <div className="text-sm [&>div]:bg-transparent! font-mono">
+                                            <div className="w-full rounded-md mt-2 bg-background p-4 border border-border shadow-inner overflow-hidden">
+                                                <div className="text-sm [&>div]:bg-transparent! font-mono overflow-x-auto">
                                                     <JsonView 
                                                         data={selectedItem.diagnostics} 
                                                         shouldExpandNode={allExpanded} 
