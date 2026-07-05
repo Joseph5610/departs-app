@@ -27,10 +27,10 @@ export const MAP_MIN_STOP_ZOOM = 14;
  * Controls the pulsing ring effect around the selected vehicle on the map.
  */
 export const PULSE_SPEED_DIVISOR = 350;
-export const PULSE_BASE_RADIUS = 20;
-export const PULSE_RADIUS_AMPLITUDE = 15;
-export const PULSE_BASE_OPACITY = 0.6;
-export const PULSE_OPACITY_DIVISOR = 50;
+export const PULSE_BASE_RADIUS = 28;
+export const PULSE_RADIUS_AMPLITUDE = 20;
+export const PULSE_BASE_OPACITY = 0.85;
+export const PULSE_OPACITY_DIVISOR = 65;
 
 /**
  * Local Storage Keys
@@ -71,3 +71,8 @@ export const CATCH_BUFFER = 120;
  */
 export const TRANSIT_REFRESH_S = 10;
 export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
+
+export const DATA_SOURCE_URLS = {
+    prague: 'https://golemio.cz',
+    brno: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328'
+} as const;

@@ -101,13 +101,14 @@ export class KordisVehiclesService {
                     });
                     clearTimeout(timeoutId);
                     if (!resArcgis.ok) {
-                        return { features: [] };
+                        return { features: [], status: 'upstream_offline' };
                     }
-                    return await resArcgis.json() as ArcgisResponse;
+                    const data = await resArcgis.json() as ArcgisResponse;
+                    return { ...data, status: 'ok' };
                 } catch (e) {
                     clearTimeout(timeoutId);
                     console.error("KORDIS ArcGIS fetch timed out or failed:", e);
-                    return { features: [] };
+                    return { features: [], status: 'upstream_offline' };
                 }
             }
         );
@@ -202,8 +203,13 @@ export class KordisVehiclesService {
                     getGtfsData(this.city.slug)
                 ]);
 
-                if (!arcgisData?.features || arcgisData.features.length === 0 || !apiMapping) {
-                    return { type: 'FeatureCollection', features: [] };
+                if (!apiMapping) {
+                    return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+                }
+
+                if (!arcgisData?.features || arcgisData.features.length === 0) {
+                    const status = arcgisData?.status || 'upstream_offline';
+                    return { type: 'FeatureCollection', features: [], status };
                 }
 
                 const parts = PRAGUE_TZ_FORMATTER.formatToParts(new Date());
@@ -215,15 +221,19 @@ export class KordisVehiclesService {
                 const ss = parts.find(p => p.type === 'second')?.value || '0';
 
                 const todayLocalStr = `${y}${m}${d}`;
-                const currentMinutes = Number(hh) * 60 + Number(mm) + Number(ss) / 60;
+                const currentMinutes = (Number(hh) % 24) * 60 + Number(mm) + Number(ss) / 60;
 
                 const features: AppVehicleFeature[] = [];
                 const THRESHOLD_MS = 20 * 60 * 1000;
                 const nowMs = Date.now();
                 const seenVehicles = new Set<string>();
+                let maxTimeUpdated = 0;
 
                 for (const feature of arcgisData.features) {
                     const attr = feature.attributes;
+                    if (attr.TimeUpdated > maxTimeUpdated) {
+                        maxTimeUpdated = attr.TimeUpdated;
+                    }
                     
                     if (nowMs - attr.TimeUpdated > THRESHOLD_MS) continue;
                     if (attr.IsInactive === 'true') continue;
@@ -241,7 +251,15 @@ export class KordisVehiclesService {
                     features.push(this.mapVehicle(attr, tripId, route, delay, statePosition));
                 }
 
-                const result: AppVehicleCollection = { type: 'FeatureCollection', features };
+                const isStale = maxTimeUpdated > 0 && (nowMs - maxTimeUpdated > THRESHOLD_MS);
+                const status = isStale ? 'stale' : (arcgisData.status || 'ok');
+
+                const result: AppVehicleCollection = { 
+                    type: 'FeatureCollection', 
+                    features,
+                    status,
+                    last_updated: maxTimeUpdated > 0 ? new Date(maxTimeUpdated).toISOString() : undefined
+                };
 
                 try {
                     const cache = caches.default;
@@ -305,6 +323,11 @@ export class KordisVehiclesService {
             filteredFeatures = filteredFeatures.filter(f => upperRouteShortNames.includes(f.properties.route_short_name.toUpperCase()));
         }
 
-        return { type: 'FeatureCollection', features: filteredFeatures };
+        return { 
+            type: 'FeatureCollection', 
+            features: filteredFeatures,
+            status: allVehicles.status,
+            last_updated: allVehicles.last_updated
+        };
     }
 }

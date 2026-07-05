@@ -4,6 +4,8 @@ import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FilterSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
 import type { VehicleCollection, StopCollection, StopProperties } from '../../types/transit';
+import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useVehicleAnimation } from '../../hooks/features/useVehicleAnimation';
 import {
     clusterLayer,
     stopPointLayer,
@@ -103,6 +105,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         return false;
     }, [stopTypeFilter]);
 
+    const mapRef = useMapMetadataStore(s => s.mapRef);
+    const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
+        mapRef,
+        mapLoaded,
+        displayVehicles,
+        selectedVehicleFeature
+    );
+
     // Filter GeoJSON based on stop type filters
     const filterGeoJSON = React.useCallback((data: StopCollection | null, isEnabled: boolean) => {
         if (!isEnabled || !data) return EMPTY_GEOJSON;
@@ -155,14 +165,14 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...userLocationPointLayer} />
             </Source>
 
-            <Source id="selected-vehicle" type="geojson" data={selectedVehicleFeature}>
+            <Source id="selected-vehicle" type="geojson" data={selectedGeoJSON}>
                 <Layer {...selectedVehiclePulseLayer} />
                 <Layer {...selectedVehiclePointLayer} />
                 <Layer {...selectedVehicleDirectionLayer} />
                 <Layer {...selectedVehicleLabelLayer} />
             </Source>
 
-            <Source id="city-vehicles" type="geojson" data={(showVehicles && displayVehicles ? displayVehicles : EMPTY_GEOJSON)}>
+            <Source id="city-vehicles" type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_GEOJSON}>
                 <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
                 <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />

@@ -31,4 +31,5 @@ export interface ArcgisFeature {
 
 export interface ArcgisResponse {
     features: ArcgisFeature[];
+    status?: 'ok' | 'upstream_offline';
 }

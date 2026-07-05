@@ -44,6 +44,8 @@ export interface VehicleFeature {
 export interface VehicleCollection {
     type: "FeatureCollection";
     features: VehicleFeature[];
+    status?: 'ok' | 'stale' | 'upstream_offline';
+    last_updated?: string;
 }
 
 export interface VehicleDetail extends BaseVehicleProperties {

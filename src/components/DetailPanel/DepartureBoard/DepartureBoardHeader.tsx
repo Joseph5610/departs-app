@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart, Snowflake } from 'lucide-react';
+import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart, Snowflake, ArrowUpDown } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -14,7 +14,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { LineBadge } from '../../LineBadge';
 import { toast } from 'sonner';
@@ -165,22 +165,36 @@ export const DepartureBoardHeader = React.memo(() => {
 
                 <div className="flex gap-1 shrink-0 items-center pr-1">
                     {/* Sort Action */}
-                    <Tooltip>
-                        <TooltipTrigger render={
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setDepartureSort(departureSort === 'line' ? 'departure' : 'line')}
-                                    className="h-8 w-8 text-muted-foreground"
-                                >
-                                {/* Show the ACTION you will take: if sorted by line, show Clock. If sorted by departure, show A-Z. */}
-                                {departureSort === 'line' ? <Clock size={16} strokeWidth={1.5} /> : <ArrowDownAz size={16} strokeWidth={1.5} />}
-                            </Button>
-                        } />
-                        <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                            {departureSort === 'line' ? t('map.departures.sortByDeparture') : t('map.departures.sortByLine')}
-                        </TooltipContent>
-                    </Tooltip>
+                    <DropdownMenu>
+                        <Tooltip>
+                            <TooltipTrigger render={
+                                <DropdownMenuTrigger render={
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground"
+                                    >
+                                        <ArrowUpDown size={16} strokeWidth={1.5} />
+                                    </Button>
+                                } />
+                            } />
+                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
+                                {t('map.departures.sort')}
+                            </TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuRadioGroup value={departureSort} onValueChange={(value) => setDepartureSort(value as 'line' | 'departure')}>
+                                <DropdownMenuRadioItem value="departure" className="flex items-center gap-2">
+                                    <Clock size={14} strokeWidth={1.5} className="mr-1 text-muted-foreground" />
+                                    <span>{t('map.departures.sortByDeparture')}</span>
+                                </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="line" className="flex items-center gap-2">
+                                    <ArrowDownAz size={14} strokeWidth={1.5} className="mr-1 text-muted-foreground" />
+                                    <span>{t('map.departures.sortByLine')}</span>
+                                </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     {/* Favorite */}
                     <Tooltip>

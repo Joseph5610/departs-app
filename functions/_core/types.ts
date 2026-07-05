@@ -70,6 +70,8 @@ export interface AppStopCollection {
 export interface AppVehicleCollection {
     type: 'FeatureCollection';
     features: AppVehicleFeature[];
+    status?: 'ok' | 'stale' | 'upstream_offline';
+    last_updated?: string;
 }
 
 export interface AppVehicleProperties {

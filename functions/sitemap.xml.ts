@@ -1,7 +1,6 @@
 import { Env } from "./_core/types";
 import { getCityConfig, CITY_REGISTRY } from "./_core/city-config";
-import { GolemioAdapter } from "./_adapters/golemio/GolemioAdapter";
-import { GtfsAdapter } from "./_adapters/gtfs/GtfsAdapter";
+import { getAdapter } from "./_adapters/CityAdapter";
 import type { CityAdapter } from "./_adapters/CityAdapter";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -31,11 +30,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     </url>`;
 
         let adapter: CityAdapter;
-        if (city.adapter === 'golemio') {
-            adapter = new GolemioAdapter(city);
-        } else if (city.adapter === 'gtfs') {
-            adapter = new GtfsAdapter(city);
-        } else {
+        try {
+            adapter = getAdapter(city);
+        } catch (e) {
+            console.error(`Failed to get adapter for ${citySlug}:`, e);
             continue;
         }
 

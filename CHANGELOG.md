@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.52.1] - 2026-07-05
+
+### Fixed
+- **SEO & Sitemap**: Fixed a sitemap generation bug where Brno/Kordis stops were excluded from `/sitemap.xml` due to a manual checking fallback. Replaced it with the centralized `getAdapter(city)` factory.
+- **Real-Time Tracking**: Added a modulo `24` operation to the timezone hour parsing logic in `KordisVehiclesService` to prevent off-by-one calculations during the midnight hour in runtimes returning `24` for midnight.
+
+## [0.52.0] - 2026-07-05
+
+### Added
+- **UI & Modals**: Added a interactive `SystemStatusModal` component triggered by clicking the map's live status pill. The modal provides real-time information on network status, active region, API data providers (Golemio for Prague, Kordis for Brno), data freshness metrics, next update countdown, and an educational explanation of how the data sync works.
+- **Interactivity**: Upgraded the static `LiveStatus` pill to a clickable `<button>` with visual hover/active focus rings and state transitions.
+
+## [0.51.1] - 2026-07-05
+
+### Changed
+- **UX & Board Sorting**: Replaced the simple departure board sort toggle button with a cleaner, standard dropdown menu using a general sort icon. Added explicit options for sorting by departure time (with a clock icon) and sorting by line (with an A-Z icon).
+- **Preferences**: Changed the default sorting preference on first load to be sorted by departure time rather than by line.
+
+## [0.51.0] - 2026-07-04
+
+### Added
+- **Map & Animation**: Added high-performance smooth vehicle slide animations to transition live vehicles and selected vehicles between update intervals. The animations interpolate coordinates and bearings smoothly using a `requestAnimationFrame` loop, bypassing React rendering and directly mutating MapLibre GeoJSON sources for maximum performance.
+- **Visuals**: Adjusted selected vehicle pulse indicator animation parameters (increased base radius, pulse amplitude, and base opacity) to make the selected vehicle much more prominent and easier to find on the map.
+
 ## [0.50.14] - 2026-07-04
 
 ### Fixed

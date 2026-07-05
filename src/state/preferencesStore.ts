@@ -52,7 +52,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             isSettingsOpen: false,
             isFeedbackOpen: false,
             isAlertsOpen: false,
-            departureSort: 'line',
+            departureSort: 'departure',
             routeTypeFilter: [],
             favoriteStops: [],
             searchHistory: [],

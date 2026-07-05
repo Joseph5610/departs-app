@@ -8,6 +8,7 @@ import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
+import { DATA_SOURCE_URLS } from '../../../config/constants';
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -129,7 +130,7 @@ export const SettingsFooter: React.FC = () => {
                     <Item
                         variant="settings"
                         size="none"
-                        render={<a href="https://golemio.cz" target="_blank" rel="noopener noreferrer" />}
+                        render={<a href={DATA_SOURCE_URLS.prague} target="_blank" rel="noopener noreferrer" />}
                     >
                         <ItemMedia variant="icon" className="text-muted-foreground">
                             <Database size={18} strokeWidth={2} />
@@ -147,7 +148,7 @@ export const SettingsFooter: React.FC = () => {
                     <Item
                         variant="settings"
                         size="none"
-                        render={<a href="https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328" target="_blank" rel="noopener noreferrer" />}
+                        render={<a href={DATA_SOURCE_URLS.brno} target="_blank" rel="noopener noreferrer" />}
                     >
                         <ItemMedia variant="icon" className="text-muted-foreground">
                             <Database size={18} strokeWidth={2} />

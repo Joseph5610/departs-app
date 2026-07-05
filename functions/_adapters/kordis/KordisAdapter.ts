@@ -6,8 +6,6 @@ import { KordisVehiclesService } from './services/KordisVehiclesService';
 import { addSecondsToTime } from '../gtfs/core/utils';
 import { getDpmbVehicleMetadata } from './utils/dpmbVehicleMetadata';
 
-
-
 export class KordisAdapter extends GtfsAdapter {
     private vehiclesService: KordisVehiclesService;
 

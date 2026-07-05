@@ -140,11 +140,17 @@ export const useDepartures = () => {
         const result: DepartureLineGroup[] = [];
         lineMap.forEach((dirMap, line) => {
             const mergedDirs: Array<{ ids: Set<string>; headsigns: Map<string, Departure[]> }> = [];
+            const headsignToTarget = new Map<string, { ids: Set<string>; headsigns: Map<string, Departure[]> }>();
             
             dirMap.forEach((headsignMap, dirId) => {
-                let target = mergedDirs.find(md => 
-                    Array.from(headsignMap.keys()).some(hs => md.headsigns.has(hs))
-                );
+                let target: { ids: Set<string>; headsigns: Map<string, Departure[]> } | undefined;
+
+                for (const hs of headsignMap.keys()) {
+                    if (headsignToTarget.has(hs)) {
+                        target = headsignToTarget.get(hs);
+                        break;
+                    }
+                }
 
                 if (!target) {
                     target = { ids: new Set(), headsigns: new Map() };
@@ -155,6 +161,7 @@ export const useDepartures = () => {
                 headsignMap.forEach((deps, hs) => {
                     if (!target!.headsigns.has(hs)) target!.headsigns.set(hs, []);
                     target!.headsigns.get(hs)!.push(...deps);
+                    headsignToTarget.set(hs, target!);
                 });
             });
 

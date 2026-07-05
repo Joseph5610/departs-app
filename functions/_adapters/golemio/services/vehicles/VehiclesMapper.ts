@@ -5,10 +5,16 @@ import { getVehicleColor, isNightRoute } from "./colors";
 
 export class VehiclesMapper {
     static map(data: GolemioVehiclePayload): AppVehicleCollection {
+        let maxTimeUpdatedStr = '';
+
         const features: AppVehicleFeature[] = (data.features || []).map((f: GolemioVehicleFeature) => {
             const p = f.properties;
             const route_type = p.route_type || '';
             const route_short_name = p.gtfs_route_short_name || p.route_short_name || '';
+
+            if (p.origin_timestamp && p.origin_timestamp > maxTimeUpdatedStr) {
+                maxTimeUpdatedStr = p.origin_timestamp;
+            }
 
             return {
                 type: 'Feature',
@@ -33,6 +39,16 @@ export class VehiclesMapper {
             };
         });
 
-        return { type: 'FeatureCollection', features };
+        const maxTimeUpdated = maxTimeUpdatedStr ? new Date(maxTimeUpdatedStr).getTime() : 0;
+        const THRESHOLD_MS = 20 * 60 * 1000;
+        const isStale = maxTimeUpdated > 0 && (Date.now() - maxTimeUpdated > THRESHOLD_MS);
+        const status = isStale ? 'stale' : 'ok';
+
+        return { 
+            type: 'FeatureCollection', 
+            features,
+            status,
+            last_updated: maxTimeUpdated > 0 ? new Date(maxTimeUpdated).toISOString() : undefined
+        };
     }
 }
