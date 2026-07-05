@@ -170,6 +170,12 @@ export const Search: React.FC = React.memo(() => {
                 zoom: MAP_STOP_SELECT_ZOOM,
                 duration: MAP_FLY_DURATION
             });
+            geocodingCache.set(item.place_id, {
+                id: item.place_id,
+                name: item.name,
+                subtitle: item.subtitle || '',
+                coordinates: item.coordinates
+            });
             setSelectedPlaceId(item.place_id);
             setQuery(item.name);
         } else {
