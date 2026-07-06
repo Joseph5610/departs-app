@@ -39,16 +39,16 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     const backButton = onBack && (
         <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={onBack}
-            className="shrink-0 -ml-2 h-9 w-9 text-muted-foreground"
+            className="shrink-0 -ml-2 text-muted-foreground"
         >
             <ArrowLeft size={20}  strokeWidth={1.5} />
         </Button>
     );
 
     const platformBadge = platformCode && (
-        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted/50 border text-foreground text-[13px] font-bold tabular-nums mr-1.5">
+        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-white text-black text-[13px] font-bold tabular-nums mr-1.5">
             {platformCode}
         </span>
     );
@@ -70,11 +70,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
             </div>
             <Button
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
                 onClick={onClose}
                 aria-label="Close"
                 data-testid="detail-panel-close"
-                className="shrink-0 h-9 w-9 text-muted-foreground"
+                className="shrink-0 text-muted-foreground"
             >
                 <X size={20} strokeWidth={1.5}  />
             </Button>
@@ -109,7 +109,8 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 noBodyStyles={true}
             >
                 <DrawerContent
-                    className="max-h-[96%] h-full flex flex-col pointer-events-none glassy outline-none rounded-t-[32px]!"
+                    variant="glassy"
+                    className="max-h-[96%] h-full flex flex-col pointer-events-none outline-none rounded-t-[32px]! text-foreground"
                     hideOverlay={true}
                     aria-describedby={undefined}
                     onOpenAutoFocus={(e) => e.preventDefault()}
@@ -168,9 +169,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         >
             <SheetContent
                 side="left"
+                variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none glassy rounded-3xl"
+                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

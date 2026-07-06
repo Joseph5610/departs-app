@@ -42,7 +42,7 @@ export const LiveStatus: React.FC = () => {
         <div
             data-testid="live-status"
             className={cn(
-                "absolute z-50 pointer-events-none transform -translate-x-1/2 left-1/2 top-0",
+                "absolute z-50 pointer-events-none -translate-x-1/2 left-1/2 top-0",
                 "pt-[calc(4.75rem+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]",
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}

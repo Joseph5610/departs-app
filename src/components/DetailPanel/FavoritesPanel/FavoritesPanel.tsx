@@ -98,7 +98,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
 
     if (favoriteStopFeatures.length === 0) {
         return (
-            <Empty className="py-16 border-none animate-in fade-in duration-500">
+            <Empty className="py-16 animate-in fade-in duration-500">
                 <EmptyHeader>
                     <EmptyMedia
                         variant="icon"

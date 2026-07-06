@@ -54,7 +54,7 @@ function TooltipContent({
           {...props}
         >
           {children}
-          <TooltipPrimitive.Arrow className="z-[6000] size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-popover border-l border-t border-white/10 fill-popover data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+          <TooltipPrimitive.Arrow className="z-[6000] size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-popover border-white/10 fill-popover data-[side=bottom]:border-l data-[side=bottom]:border-t data-[side=bottom]:top-1 data-[side=top]:border-r data-[side=top]:border-b data-[side=top]:-bottom-2.5 data-[side=left]:border-t data-[side=left]:border-r data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:border-b data-[side=right]:border-l data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=inline-start]:border-t data-[side=inline-start]:border-r data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=inline-end]:border-b data-[side=inline-end]:border-l data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2" />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>

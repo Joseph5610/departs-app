@@ -19,7 +19,7 @@ export const MetroNightMessage: React.FC = () => {
     const { t } = useTranslation();
 
     return (
-        <Empty className="flex-none justify-start py-12 border-none animate-in fade-in duration-500">
+        <Empty className="flex-none justify-start py-12 animate-in fade-in duration-500">
             <EmptyHeader>
                 <EmptyMedia
                     variant="icon"

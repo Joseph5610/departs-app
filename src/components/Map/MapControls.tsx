@@ -103,7 +103,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                         strokeWidth={1.5}
                         className={cn(
                             "transition-all",
-                            isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
+                            isGeoPending ? "animate-spin text-primary" : "transition-transform"
                         )}
                      />
                 </ControlButton>
@@ -170,7 +170,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                         title={t('map.controls.resetBearing')}
                         className="shadow-sm"
                     >
-                        <Compass size={20} strokeWidth={1.5} className="transition-transform group-hover:rotate-12" />
+                        <Compass size={20} strokeWidth={1.5} className="transition-transform" />
                     </ControlButton>
                 )}
             </div>

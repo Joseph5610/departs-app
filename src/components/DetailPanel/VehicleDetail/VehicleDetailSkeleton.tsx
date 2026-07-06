@@ -9,7 +9,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
     return (
         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
             {/* Header Hero Skeleton - Matches VehicleHero.tsx */}
-            <div className="overflow-hidden rounded-2xl bg-muted/40 backdrop-blur-md border border-white/5">
+            <div className="rounded-2xl bg-muted/40 border border-white/5">
                 <div className="flex flex-col gap-2 relative z-10 px-6 py-6">
                     {/* Route Badge Skeleton */}
                     <Skeleton className="h-7 w-12 rounded-lg" />

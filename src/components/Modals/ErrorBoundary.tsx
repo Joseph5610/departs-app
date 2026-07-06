@@ -91,7 +91,7 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
             <div className="w-full max-w-md bg-card border border-border shadow-2xl rounded-3xl overflow-hidden ring-1 ring-black/5">
-                <Empty className="py-8 border-none">
+                <Empty className="py-8">
                     <EmptyHeader>
                         <EmptyMedia
                             variant="icon"

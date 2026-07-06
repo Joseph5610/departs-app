@@ -1,102 +1,133 @@
 # Changelog
 
+## [0.52.9] - 2026-07-06
+
+### Changed
+
+- **UI Styling**: Inverted the colors of the platform circle badge in `DetailPanel` and `FavoritesStopCard` to use a white background with black text, matching the PID design language.
+
+### Fixed
+
+- **UI Styling**: Fixed an issue where the new CSS `clip-path` fix removed the `shadow-2xl` depth effect from the vehicle cards. Restored the 3D drop shadow while still preventing Safari background bleed using `bg-clip-padding` and `transform-gpu`.
+
+- **UI Styling**: Fixed `glassy` utility class in Tailwind CSS not utilizing defined `--glass-tint` variables, resolving an issue where the background controls blended completely into the map and were almost invisible. Also tweaked dark mode `glass-tint` for slightly better contrast.
+
 ## [0.52.1] - 2026-07-05
 
 ### Fixed
+
 - **SEO & Sitemap**: Fixed a sitemap generation bug where Brno/Kordis stops were excluded from `/sitemap.xml` due to a manual checking fallback. Replaced it with the centralized `getAdapter(city)` factory.
 - **Real-Time Tracking**: Added a modulo `24` operation to the timezone hour parsing logic in `KordisVehiclesService` to prevent off-by-one calculations during the midnight hour in runtimes returning `24` for midnight.
 
 ## [0.52.0] - 2026-07-05
 
 ### Added
+
 - **UI & Modals**: Added a interactive `SystemStatusModal` component triggered by clicking the map's live status pill. The modal provides real-time information on network status, active region, API data providers (Golemio for Prague, Kordis for Brno), data freshness metrics, next update countdown, and an educational explanation of how the data sync works.
 - **Interactivity**: Upgraded the static `LiveStatus` pill to a clickable `<button>` with visual hover/active focus rings and state transitions.
 
 ## [0.51.1] - 2026-07-05
 
 ### Changed
+
 - **UX & Board Sorting**: Replaced the simple departure board sort toggle button with a cleaner, standard dropdown menu using a general sort icon. Added explicit options for sorting by departure time (with a clock icon) and sorting by line (with an A-Z icon).
 - **Preferences**: Changed the default sorting preference on first load to be sorted by departure time rather than by line.
 
 ## [0.51.0] - 2026-07-04
 
 ### Added
+
 - **Map & Animation**: Added high-performance smooth vehicle slide animations to transition live vehicles and selected vehicles between update intervals. The animations interpolate coordinates and bearings smoothly using a `requestAnimationFrame` loop, bypassing React rendering and directly mutating MapLibre GeoJSON sources for maximum performance.
 - **Visuals**: Adjusted selected vehicle pulse indicator animation parameters (increased base radius, pulse amplitude, and base opacity) to make the selected vehicle much more prominent and easier to find on the map.
 
 ## [0.50.14] - 2026-07-04
 
 ### Fixed
+
 - **Routing & Viewport**: Fixed a race condition where launching the app on a city path different from the persisted city selection (e.g. going to `/prague` when `brno` was previously selected) triggered an immediate viewport fly-to the old city before dynamic city data loaded. Statically defined cities are now synced to the store synchronously on mount to prevent the incorrect fly-to.
 
 ## [0.50.13] - 2026-07-03
 
 ### Added
+
 - **Assets**: Added `favicon.ico` at the root using macOS built-in sips tool to convert `favicon.png` (64x64) and registered it in PWA cached assets in `vite.config.ts`.
 
 ## [0.50.12] - 2026-07-03
 
 ### Fixed
+
 - **PWA**: Updated runtime caching pattern for CartoDB map resources in `vite.config.ts` to also include `tiles.json` metadata under `StaleWhileRevalidate` caching, ensuring offline availability and reducing network roundtrips during map load.
 
 ## [0.50.11] - 2026-07-03
 
 ### Fixed
+
 - **SEO & Routing**: Resolved Google Search Console redirect and canonical URL conflicts by moving the Prague map to the root URL `/` directly instead of doing a client-side redirect. Added a static CDN-level 301 redirect from `/prague` to `/` in `public/_redirects` to consolidate search indexing.
 
 ## [0.50.10] - 2026-07-01
 
 ### Fixed
+
 - **Core & Adapter**: Optimized timezone formatting by caching and reusing `Intl.DateTimeFormat` instances (module-level constant in `KordisVehiclesService` and in-memory Map in `api-utils.ts`). This avoids expensive V8 localization database lookups and object reinstantiation on every request/cache-refresh cycle.
 
 ## [0.50.9] - 2026-07-01
 
 ### Fixed
+
 - **Core**: Added a default 8-second request timeout to `gtfsFetch` using `AbortController` and converted custom fetches in `KordisVehiclesService` to use it. This prevents the worker requests from hanging indefinitely ("canceled" with high wallTime) when static data server endpoints (`data.departs.app`) respond slowly.
 
 ## [0.50.8] - 2026-07-01
 
 ### Fixed
+
 - **Departures**: Replaced dynamic parsing of `stops.json` (~1.2MB of complex data) in the departures API path with a precomputed, lightweight `parent_child_map.json` (~130KB) static file, dropping departures board cache-miss CPU execution time from ~60ms to under 1ms.
 
 ## [0.50.7] - 2026-07-01
 
 ### Fixed
+
 - **Departures**: Increased static stop departures chunking prefix length from 3 to 4 characters (e.g., `U14` split into `U140`–`U149`), shrinking maximum JSON payload size from 4.0MB to ~670KB. This reduces JSON parsing CPU time to ~3ms, successfully avoiding the Cloudflare Workers 10ms CPU limit / 503 Service Unavailable errors on busy stops like Hlavní nádraží.
 
 ## [0.50.6] - 2026-07-01
 
 ### Fixed
+
 - **Adapter**: Configured correct passenger air conditioning status for the newer `SOR NBG 12` buses (vozy 7102–7116) delivered in 2018.
 
 ## [0.50.5] - 2026-07-01
 
 ### Fixed
+
 - **Adapter**: Separated `SOR NBG 12` and `Irisbus Citelis 12M CNG` registration numbers within the 7001-7044 range (7007-7012 are Citelis 12M, and the rest are SOR NBG 12).
 
 ## [0.50.4] - 2026-07-01
 
 ### Fixed
+
 - **Departures**: Increased `vehicles_v1` Cache-Control TTL to 30 seconds (previously 10s). This resolves timing offsets between the departures list refresh (10s) and vehicle positions updates, eliminating the board flickering with zero performance overhead.
 
 ## [0.50.2] - 2026-07-01
 
 ### Added
+
 - **Departures**: Read and map static `wheelchair_accessible` values from `GtfsDepartureTuple` in `DeparturesMapper.ts` as a fallback when real-time vehicle mapping is not yet active/available for a departure.
 
 ## [0.50.1] - 2026-07-01
 
 ### Added
+
 - **Departures**: Mapped live vehicle properties (`is_air_conditioned`, `is_wheelchair_accessible`) from the real-time vehicle status to the GTFS departures list items in `DeparturesMapper.ts`.
 
 ## [0.50.0] - 2026-07-01
 
 ### Added
+
 - **Adapter**: Introduced a static vehicle model type and air-conditioning status resolver for DPMB (Brno) vehicles based on known registration number ranges scraped from the BMHD database.
 
 ## [0.49.7] - 2026-07-01
 
 ### Fixed
+
 - **Adapter**: Optimized KORDIS ArcGIS query to achieve a 45x speedup (reducing latency from 6.1s to 0.13s) by requesting only required existing database fields (removing non-existent `AC`, `FinalStopName`, and `LastStopName` fields which caused query failures), limiting response features to `resultRecordCount=1300` to drop payload size from 2.5MB to ~320KB, disabling spatial geometry return (`returnGeometry=false`), and keeping database sort logic. Resolved Cloudflare Workers CPU limit/503 errors at the root while keeping a 8.5s timeout buffer.
 - **Adapter**: Completely removed redundant `all_gtfs_trip_ids` field to match clean GTFS specifications and type systems, migrating adapter matching to the standard `gtfs_trip_id` property.
 - **Adapter**: Corrected `GtfsAdapter` signature parameters and resolved ESLint `no-unused-vars` and `no-explicit-any` errors in backend worker functions.
@@ -111,6 +142,7 @@
 ## [0.49.6] - 2026-07-01
 
 ### Fixed
+
 - **Adapter**: Fixed ESLint unused `_ctx` variable error in `KordisVehiclesService.ts`.
 - **Adapter**: Fixed timezone-shifting bug in `KordisVehiclesService.ts` when resolving dates/times on UTC server runtimes.
 - **Adapter**: Optimized fallback route lookup in KORDIS vehicle loop to run in O(1) time using a lookup index map.
@@ -118,38 +150,44 @@
 ## [0.49.5] - 2026-06-26
 
 ### Fixed
+
 - **UI**: Fixed an issue where the back button on the vehicle detail panel would incorrectly display when opening a vehicle directly from the map or search. The `lastStopId` state is now properly cleared when the detail panel closes or when a vehicle is clicked directly on the map.
 
 ## [0.49.4] - 2026-06-23
 
 ### Added
+
 - **Map Rendering**: Enhanced route lines rendering by showing exact route stops and start/end terminal markers directly overlaid on the path using live vehicle data `stop_times`.
 
 ## [0.49.3] - 2026-06-23
+
 - **Dependencies**: Bumped `vite` to `8.1.0`, `@vitejs/plugin-react` to `6.0.3`, and `react`/`@types/react` to latest. Fixed `vite.config.ts` typing for `manualChunks` to support Vite 8 Rollup types.
 
 ## [0.49.2] - 2026-06-23
 
 ### Fixed
+
 - **Config**: Removed deprecated `baseUrl` and `ignoreDeprecations` from `tsconfig.app.json` which caused build errors with newer TypeScript versions.
 
 ## [0.49.1] - 2026-06-23
 
 ### Fixed
+
 - **Testing**: Fixed Cloudflare Worker 403 errors when fetching GTFS static data during GitHub Actions CI runs by adding a User-Agent header to Miniflare requests, bypassing Cloudflare Bot Fight Mode. Added safety checks for `res.ok` to prevent JSON parsing errors on 403 HTML pages.
 
 ## [0.49.0] - 2026-06-22
 
 ### Changed
+
 - **Routing**: Moved `/explorer` route to `/admin/explorer`.
 - **UI**: Created a new `/admin` index dashboard for admin tools.
 
 ## [0.48.8] - 2026-06-22
 
 ### Changed
+
 - Temporarily disabled Brno in both frontend and backend configurations.
 - Fixed an issue where visiting invalid city slugs in the URL (like `/random`) would attempt to fetch API endpoints instead of properly redirecting to a valid fallback city.
-
 
 ## [0.48.7] - 2026-06-22
 
@@ -164,6 +202,7 @@
 - **Agent Integration**: Implemented WebMCP API (`navigator.modelContext.provideContext()`) to expose site tools (like searching or navigating to stops) natively to browser-based AI agents.
 
 ## [0.48.5] - 2026-06-22
+
 ### Added
 
 - **SEO/Agent Discovery**: Added a `Link` response header to the homepage pointing to an `llms.txt` file for automated agent discovery (RFC 8288), making the web app more agent-friendly.

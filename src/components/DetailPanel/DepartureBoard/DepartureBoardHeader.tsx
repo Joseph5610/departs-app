@@ -114,7 +114,7 @@ export const DepartureBoardHeader = React.memo(() => {
             {/* Row 1: Distance/Delay (Left) + Actions (Right) */}
             <div className="flex w-full h-7 justify-between items-center">
                 <div className="flex gap-2 shrink-0 items-center">
-                    <div className="flex items-center h-7 rounded-full bg-muted/50 border shadow-sm shrink-0 overflow-hidden">
+                    <div className="flex items-center h-7 rounded-full bg-white/5 border border-white/10 shadow-sm shrink-0 overflow-hidden">
                         {/* Distance & Walking Time segment */}
                         <div 
                             className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer"
@@ -171,8 +171,8 @@ export const DepartureBoardHeader = React.memo(() => {
                                 <DropdownMenuTrigger render={
                                     <Button
                                         variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground"
+                                        size="icon-xs"
+                                        className="text-muted-foreground"
                                     >
                                         <ArrowUpDown size={16} strokeWidth={1.5} />
                                     </Button>
@@ -201,7 +201,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         <TooltipTrigger render={
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                size="icon-xs"
                                 data-testid="favorite-btn"
                                 onClick={() => {
                                     if (selectedStop) {
@@ -213,7 +213,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                     }
                                 }}
                                 className={cn(
-                                    "h-8 w-8 text-muted-foreground",
+                                    "text-muted-foreground",
                                     isFavorite && "text-amber-500 hover:text-amber-400"
                                 )}
                             >
@@ -231,10 +231,10 @@ export const DepartureBoardHeader = React.memo(() => {
                             <DropdownMenuTrigger render={
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    size="icon-xs"
                                     data-testid="more-options-btn"
                                     aria-label="More options"
-                                    className="h-8 w-8 text-muted-foreground"
+                                    className="text-muted-foreground"
                                 >
                                     <MoreHorizontal size={16} strokeWidth={1.5} />
                                 </Button>
@@ -261,11 +261,11 @@ export const DepartureBoardHeader = React.memo(() => {
                             <TooltipTrigger render={
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    size="icon-xs"
                                     onClick={handleShare}
                                     data-testid="share-btn"
                                     aria-label={t('common.share')}
-                                    className="h-8 w-8 text-muted-foreground"
+                                    className="text-muted-foreground"
                                 >
                                     <Share2 size={16} strokeWidth={1.5} />
                                 </Button>

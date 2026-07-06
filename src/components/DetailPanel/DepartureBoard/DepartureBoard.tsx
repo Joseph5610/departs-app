@@ -95,7 +95,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 showMetroNightMessage ? (
                     <MetroNightMessage />
                 ) : (
-                    <Empty className="py-12 border-none">
+                    <Empty className="py-12">
                         <EmptyHeader>
                             <EmptyMedia
                                 variant="icon"
@@ -122,7 +122,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     return (
                         <Card 
                             key={lineGroup.lineGroupId} 
-                            className="overflow-hidden p-0 gap-0 border border-white/10 bg-[#161616] shadow-2xl rounded-2xl ring-0 mb-3"
+                            className="p-0 gap-0 border border-white/10 ring-0 bg-[#161616] shadow-xl mb-3 overflow-hidden"
                         >
                             {lineGroup.subGroups.map((subGroup, subIdx) => {
                                 const isFirstSub = subIdx === 0;
@@ -147,17 +147,17 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         {isFirstSub ? (
                                             /* Main Header - Vibrant Sophisticated Gradient */
                                             <CardHeader
-                                                className="p-0 pb-0! bg-transparent relative overflow-hidden rounded-t-2xl! space-y-0 border-b-0"
+                                                className="p-0 pb-0! bg-transparent relative space-y-0 border-b-0"
                                             >
                                                 <div 
-                                                    className="absolute inset-0 opacity-100 pointer-events-none"
+                                                    className="absolute inset-0 pointer-events-none"
                                                     style={{
                                                         background: subFirstDep.route_color 
                                                             ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 70%) 100%)` 
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
-                                                <div className="relative z-10 flex flex-row items-center gap-2 p-3 px-4 w-full border-b-2"
+                                                <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full border-b-2"
                                                      style={{
                                                          borderBottomColor: subFirstDep.route_color || 'rgba(255,255,255,0.1)'
                                                      }}
@@ -208,14 +208,14 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                             /* Secondary Variant Header - Vibrant Glow Style */
                                             <div className="relative overflow-hidden border-t border-white/5">
                                                 <div 
-                                                    className="absolute inset-0 opacity-100 pointer-events-none"
+                                                    className="absolute inset-0 pointer-events-none"
                                                     style={{
                                                         background: subFirstDep.route_color 
                                                             ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 70%) 100%)` 
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
-                                                <div className="relative z-10 flex flex-row items-center gap-3 px-0 py-2.5 w-full">
+                                                <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full">
                                                     <div 
                                                         className="w-1 h-4 rounded-r-sm shrink-0" 
                                                         style={{ backgroundColor: subFirstDep.route_color || FALLBACK_ROUTE_COLOR }}
@@ -255,7 +255,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         {hasMore && (
                                             <button
                                                 onClick={() => onToggleGroup(subGroup.groupId)}
-                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/10 transition-colors border-t border-white/5 text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider"
+                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-white/[0.04] hover:bg-white/10 transition-colors border-t border-white/5 text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider rounded-b-[11px]"
                                             >
                                                 <ChevronDown 
                                                     size={14} 

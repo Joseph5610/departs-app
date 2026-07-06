@@ -47,9 +47,11 @@ function DrawerContent({
   className,
   children,
   hideOverlay = false,
+  variant = 'default',
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   hideOverlay?: boolean
+  variant?: 'default' | 'glassy' | 'tinted'
 }) {
   return (
     <DrawerPortal data-slot="drawer-portal">
@@ -57,7 +59,10 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-500 flex flex-col bg-background text-sm data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] rounded-t-[32px]! focus-visible:ring-0 focus-visible:outline-none",
+          "group/drawer-content fixed z-500 flex flex-col text-sm data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] rounded-t-[32px]! focus-visible:ring-0 focus-visible:outline-none",
+          variant === 'default' && "bg-background",
+          variant === 'glassy' && "glassy",
+          variant === 'tinted' && "glassy",
           className
         )}
         {...props}

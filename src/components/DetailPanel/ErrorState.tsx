@@ -47,7 +47,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
     const displayTitle = title || (isNotFound ? defaultTitle : t('errors.generic'));
 
     return (
-        <Empty className="py-16 border-none animate-in fade-in zoom-in-95 duration-500">
+        <Empty className="py-16 animate-in fade-in zoom-in-95 duration-500">
             <EmptyHeader>
                 <EmptyMedia
                     variant="icon"

@@ -4,15 +4,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export const FavoritesStopCardSkeleton: React.FC = () => {
     return (
-        <Card variant="subtle" className="w-full relative animate-in fade-in duration-500">
+        <Card variant="subtle" className="w-full relative animate-in fade-in duration-500 bg-white/10 border-white/15 shadow-sm">
             {/* Header Area */}
-            <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 border-b border-white/5 pb-3">
+            <CardHeader className="flex items-start justify-between gap-2 space-y-0 border-b border-white/5 pb-3">
                 <div className="min-w-0 flex-1 flex flex-col gap-1.5">
                     <CardTitle className="flex items-center gap-1.5">
-                        {/* Stop name skeleton */}
-                        <Skeleton className="h-5 w-32 rounded-md" />
                         {/* Platform code skeleton */}
                         <Skeleton className="w-5 h-5 rounded-full shrink-0" />
+                        {/* Stop name skeleton */}
+                        <Skeleton className="h-5 w-32 rounded-md" />
                     </CardTitle>
                     {/* Distance / Walk time skeleton */}
                     <Skeleton className="h-3.5 w-24 rounded-md" />

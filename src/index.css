@@ -85,8 +85,8 @@
   --border: oklch(0.2739 0.0055 286.0326);
   --input: oklch(0.2739 0.0055 286.0326);
   --ring: oklch(0.6959 0.1491 162.4796);
-  --glass-tint: oklch(0.18 0.01 260);
-  --glass-tint-opacity: 0.35;
+  --glass-tint: oklch(0.25 0.01 260);
+  --glass-tint-opacity: 0.80;
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
   --chart-2: oklch(0.5960 0.1274 163.2254);
@@ -297,14 +297,15 @@
 
 @utility glassy {
   @apply border border-white/20 shadow-2xl relative;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  background: color-mix(in oklch, var(--background), transparent 5%);
+  isolation: isolate;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: color-mix(in oklch, var(--glass-tint) calc(var(--glass-tint-opacity) * 100%), transparent);
   backface-visibility: hidden;
 
   &.dark,
   .dark & {
-    background: color-mix(in oklch, var(--background), transparent 5%);
+    background: color-mix(in oklch, var(--glass-tint) calc(var(--glass-tint-opacity) * 100%), transparent);
     @apply border-white/10;
   }
 }

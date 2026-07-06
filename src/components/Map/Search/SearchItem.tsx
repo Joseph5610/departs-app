@@ -73,7 +73,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
             onSelect={onClick}
             data-testid={testId}
             className={cn(
-                'w-full px-4 py-2.5 flex flex-row items-center gap-3 rounded-none cursor-pointer',
+                'w-full px-4 py-2.5 flex items-center gap-3 rounded-none cursor-pointer',
                 '[&_svg.lucide-check]:hidden', // hide the default checkmark
                 variant === 'primary'
                     ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15!'

@@ -132,23 +132,23 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             variant="subtle"
             className={cn(
                 "w-full cursor-pointer transition-colors relative group/favcard",
-                "hover:bg-white/5 active:bg-white/10",
+                "bg-white/10 border-white/15 hover:bg-white/20 active:bg-white/25 shadow-sm",
                 "focus-visible:outline-none p-0 gap-0"
             )}
         >
             {/* Header Area */}
-            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 border-b border-white/5 p-3 px-4">
+            <CardHeader className="flex items-center justify-between gap-2 space-y-0 border-b border-white/5 p-3 px-4">
                 <div className="min-w-0 flex-1">
                     <CardTitle className="flex items-center gap-1.5 flex-wrap text-[15px] leading-tight truncate min-w-0">
-                        <span className="truncate">{stop_name}</span>
                         {platform_code && (
                             <Badge 
                                 variant="outline"
-                                className="w-5 h-5 rounded-full p-0 flex items-center justify-center bg-white/10 border-white/10 text-foreground text-[10.5px] font-bold tabular-nums shrink-0"
+                                className="w-5 h-5 rounded-full p-0 flex items-center justify-center bg-white border-white text-black text-[10.5px] font-bold tabular-nums shrink-0"
                             >
                                 {platform_code}
                             </Badge>
                         )}
+                        <span className="truncate">{stop_name}</span>
                     </CardTitle>
                     {/* Distance / Walking Time */}
                     {stopDistanceInfo && (
@@ -164,10 +164,10 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                 {/* Unpin Button */}
                 <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={handleUnpin}
                     title={t('map.departures.removeFromFavorites')}
-                    className="h-8 w-8 hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-all duration-150 shrink-0 group"
+                    className="hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-all duration-150 shrink-0 group"
                     aria-label={t('map.departures.removeFromFavorites')}
                 >
                     <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110" />

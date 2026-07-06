@@ -39,7 +39,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             open={isExpanded}
             onOpenChange={setIsExpanded}
             className={cn(
-                "group relative transition-all block overflow-hidden",
+                "group relative transition-all block",
                 isExpanded 
                     ? "bg-muted/30 rounded-xl my-2 shadow-sm border border-white/10" 
                     : "border-b border-white/5 last:border-0 hover:bg-muted/10",

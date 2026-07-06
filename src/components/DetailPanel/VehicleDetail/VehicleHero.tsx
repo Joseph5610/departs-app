@@ -26,13 +26,13 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
     return (
         <Card 
-            className="overflow-hidden p-0 gap-0 border border-white/10 backdrop-blur-xl shadow-2xl ring-0 relative flex flex-col transition-colors"
+            className="p-0 gap-0 border border-white/10 ring-0 shadow-xl relative flex flex-col transition-colors"
             style={{
                 backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, rgba(0,0,0,0.4))` : 'rgba(0,0,0,0.4)'
             }}
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
-                <div className="flex flex-row justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-2">
                         <Button
                         variant="default"
                         className={cn(
@@ -56,8 +56,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </Button>
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className="shrink-0 h-8 w-8 text-muted-foreground"
+                        size="icon-xs"
+                        className="shrink-0 text-muted-foreground"
                         onClick={(e) => {
                             e.stopPropagation();
                             share({
@@ -159,7 +159,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                 {displayVehicle.vehicle_descriptor.operator}
                             </span>
                         )}
-                        <div className="flex items-center gap-1.5 min-w-0 w-full">
+                        <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-xs font-semibold truncate text-foreground/90">
                                 {displayVehicle.vehicle_descriptor?.vehicle_type || (() => {
                                     const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
@@ -171,7 +171,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             </span>
                         </div>
                         {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
-                            <div className="flex items-center gap-2 mt-0.5 min-w-0 w-full">
+                            <div className="flex items-center gap-2 mt-0.5 min-w-0">
                                 {displayVehicle.run_number && (
                                     <span className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold shrink-0">
                                         {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
