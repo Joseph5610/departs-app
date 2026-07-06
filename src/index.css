@@ -85,7 +85,7 @@
   --border: oklch(0.2739 0.0055 286.0326);
   --input: oklch(0.2739 0.0055 286.0326);
   --ring: oklch(0.6959 0.1491 162.4796);
-  --glass-tint: oklch(0.25 0.01 260);
+  --glass-tint: oklch(0.20 0.01 260);
   --glass-tint-opacity: 0.80;
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
