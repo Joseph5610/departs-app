@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, LocateFixed, Settings, Plus, Minus, Compass, Star } from 'lucide-react';
+import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle } from 'lucide-react';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
-import { CitySwitcher } from './CitySwitcher';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface MapControlsProps {
     onToggleFavorites?: () => void;
@@ -28,6 +28,9 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     // Preferences Actions
     const { setIsSettingsOpen, setIsAlertsOpen } = usePreferencesStore(s => s.actions);
 
+    const { rss } = useGlobalAlerts();
+    const incidentsCount = React.useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
+
     // Geolocation Store
     const isGeoPending = useGeolocationStore(s => s.isGeoPending);
     const { handleLocate: onLocate } = useGeolocation();
@@ -37,9 +40,6 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { easeTo, zoomIn, zoomOut } = useMapMetadataStore(s => s.actions);
 
-    const { rss } = useGlobalAlerts();
-    const incidentsCount = useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
-
     const onSettings = React.useCallback(() => {
         setIsSettingsOpen(true);
     }, [setIsSettingsOpen]);
@@ -47,6 +47,8 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     const onAlerts = React.useCallback(() => {
         setIsAlertsOpen(true);
     }, [setIsAlertsOpen]);
+
+
 
     const onZoomIn = React.useCallback(() => {
         zoomIn();
@@ -87,15 +89,18 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     }, [mapRef, mapLoaded]);
 
     return (
-        <div className="fixed top-0 right-0 safe-top safe-right p-4 md:p-0 md:top-5 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
+        <div className="fixed top-0 md:top-5 right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
             <div className="flex flex-col gap-2 items-end pointer-events-auto">
+                {/* Locate Button */}
                 <ControlButton
                     onClick={(e) => onLocate(e)}
                     title={t('map.controls.myLocation')}
                     testId="map-locate-btn"
+                    className="shadow-sm"
                 >
                     <LocateFixed
                         size={20}
+                        strokeWidth={1.5}
                         className={cn(
                             "transition-all",
                             isGeoPending ? "animate-spin text-primary" : "transition-transform group-hover:scale-110"
@@ -103,77 +108,69 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                      />
                 </ControlButton>
 
-                <ControlButton
-                    onClick={onSettings}
-                    title={t('map.controls.settings')}
-                    testId="map-settings-btn"
-                >
-                    <Settings size={20} className="transition-transform group-hover:rotate-45" />
-                </ControlButton>
-
-                <ControlButton
-                    onClick={onAlerts}
-                    title={t('alerts.title')}
-                    testId="map-alerts-btn"
-                    className="relative"
-                >
-                    <AlertTriangle size={20} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform group-hover:scale-110")} />
-                    {incidentsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm">
-                            {incidentsCount}
-                        </span>
-                    )}
-                </ControlButton>
-
-                <ControlButton
-                    onClick={onToggleFavorites || (() => {})}
-                    title={t('favorites.title')}
-                    testId="map-favorites-btn"
-                    className="relative"
-                >
-                    <Star
-                        size={20}
-                        className={cn(
-                            isFavoritesActive ? "fill-primary text-primary" : "transition-transform group-hover:scale-110"
-                        )}
-                     />
-                </ControlButton>
-
-                <ButtonGroup orientation="vertical" className="mt-2 glassy rounded-full! overflow-hidden">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onZoomIn}
-                        className="rounded-none shrink-0"
-                        title={t('map.controls.zoomIn')}
-                        aria-label={t('map.controls.zoomIn')}
+                {/* Settings / Favorites Pill */}
+                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
+                    <PillButton
+                        onClick={onSettings}
+                        title={t('map.controls.settings')}
+                        testId="map-settings-btn"
                     >
-                        <Plus size={20} />
-                    </Button>
+                        <Settings size={20} strokeWidth={1.5} className="transition-transform hover:rotate-45" />
+                    </PillButton>
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onZoomOut}
-                        className="rounded-none shrink-0"
-                        title={t('map.controls.zoomOut')}
-                        aria-label={t('map.controls.zoomOut')}
+                    <PillButton
+                        onClick={onAlerts}
+                        title={t('alerts.title')}
+                        testId="map-alerts-btn"
                     >
-                        <Minus size={20} />
-                    </Button>
+                        <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
+                        {incidentsCount > 0 && (
+                            <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[9px] font-bold px-1 py-0 rounded-full min-w-[16px] text-center shadow-sm pointer-events-none">
+                                {incidentsCount}
+                            </span>
+                        )}
+                    </PillButton>
+                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <PillButton
+                        onClick={onToggleFavorites || (() => {})}
+                        title={t('favorites.title')}
+                        testId="map-favorites-btn"
+                    >
+                        <Star
+                            size={20}
+                            strokeWidth={1.5}
+                            className={cn(
+                                isFavoritesActive ? "fill-primary text-primary" : "transition-transform hover:scale-110"
+                            )}
+                         />
+                    </PillButton>
                 </ButtonGroup>
 
-                <div className="mt-2">
-                    <CitySwitcher />
-                </div>
+                {/* Zoom Pill */}
+                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
+                    <PillButton
+                        onClick={onZoomIn}
+                        title={t('map.controls.zoomIn')}
+                    >
+                        <Plus size={20} strokeWidth={1.5} />
+                    </PillButton>
+                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <PillButton
+                        onClick={onZoomOut}
+                        title={t('map.controls.zoomOut')}
+                    >
+                        <Minus size={20} strokeWidth={1.5} />
+                    </PillButton>
+                </ButtonGroup>
 
+                {/* Compass Button */}
                 {showCompass && (
                     <ControlButton
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
-                        className="mt-2"
+                        className="shadow-sm"
                     >
-                        <Compass size={20} className="transition-transform group-hover:rotate-12" />
+                        <Compass size={20} strokeWidth={1.5} className="transition-transform group-hover:rotate-12" />
                     </ControlButton>
                 )}
             </div>
@@ -182,23 +179,51 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
 });
 
 const ControlButton = ({ children, onClick, title, testId, className }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string, className?: string }) => (
-    <Button
-        variant="tinted"
-        size="icon"
-        onClick={onClick}
-        title={title}
-        aria-label={title}
-        className={cn(
-            "shrink-0",
-            className
-        )}
-        data-testid={testId}
-    >
-        {children}
-    </Button>
+    <Tooltip>
+        <TooltipTrigger render={
+            <Button
+                variant="tinted"
+                size="icon"
+                onClick={onClick}
+                aria-label={title}
+                className={cn(
+                    "shrink-0",
+                    className
+                )}
+                data-testid={testId}
+            >
+                {children}
+            </Button>
+        } />
+        <TooltipContent side="left" sideOffset={8}>
+            <p className="font-medium text-xs">{title}</p>
+        </TooltipContent>
+    </Tooltip>
 );
 
 ControlButton.displayName = 'ControlButton';
+
+const PillButton = ({ children, onClick, title, testId, className }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string, className?: string }) => (
+    <Tooltip>
+        <TooltipTrigger render={
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClick}
+                aria-label={title}
+                className={cn("relative rounded-none shrink-0 h-11 w-11", className)}
+                data-testid={testId}
+            >
+                {children}
+            </Button>
+        } />
+        <TooltipContent side="left" sideOffset={8}>
+            <p className="font-medium text-xs">{title}</p>
+        </TooltipContent>
+    </Tooltip>
+);
+
+PillButton.displayName = 'PillButton';
 
 
 MapControls.displayName = 'MapControls';

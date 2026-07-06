@@ -9,7 +9,7 @@
     "cancel": "Cancel"
   },
   "search": {
-    "placeholder": "Search stops, addresses or lines...",
+    "placeholder": "Search stops, addresses, lines...",
     "platform": "Platform {{code}}",
     "lineFilter": "Filter line {{line}}",
     "lineFilter_other": "Filter lines {{line}}",

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SearchDropdown } from './SearchDropdown';
+import { CitySwitcher } from '../CitySwitcher';
 import { getLineMetadataMap } from '@/utils/transitUtils';
 
 /**
@@ -223,57 +224,62 @@ export const Search: React.FC = React.memo(() => {
             data-vaul-no-drag
         >
             <div ref={containerRef}>
-                <div className="relative group" onClick={() => inputRef.current?.focus()}>
-                    <Input
-                        ref={inputRef}
-                        aria-label={t('search.placeholder')}
-                        value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', '), count: activeFilter.length }) : query}
-                        onChange={(e) => {
-                            if (activeFilter) {
-                                onLineSelect(null);
-                                setQuery('');
-                            } else {
-                                setQuery(e.target.value);
-                            }
-                            if (selectedPlaceId) {
-                                setSelectedPlaceId(null);
-                            }
-                            setIsOpen(true);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && results.length > 0) {
-                                handleStopSelect(results[0]);
-                            }
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                        placeholder={t('search.placeholder')}
-                        className={cn(
-                            "h-11 pl-12 pr-4 rounded-2xl glassy transition-all text-[15px] truncate placeholder:text-[14px] placeholder:text-muted-foreground/50 focus-visible:border-primary/50 focus-visible:ring-primary/20",
-                            activeFilter && "border-primary/50 ring-1 ring-primary/20"
-                        )}
-                        data-testid="search-input"
-                        readOnly={!!activeFilter}
-                    />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                        <SearchIcon size={20} strokeWidth={1.5} className={cn(activeFilter && "text-primary")}  />
-                    </div>
-                    {(query || activeFilter) && (
-                        <div className="absolute right-0 top-0 h-full flex items-center pr-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                    if (selectedPlaceId) setSelectedPlaceId(null);
-                                    clearSearch();
-                                    inputRef.current?.focus();
-                                }}
-                                className="h-9 w-9 text-muted-foreground"
-                                aria-label={t('search.clearFilter')}
-                            >
-                                <X size={20} strokeWidth={1.5}  />
-                            </Button>
+                <div className="flex h-11 glassy rounded-2xl overflow-hidden transition-all items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" data-testid="search-container">
+                    <CitySwitcher variant="ghost" className="rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-white/5" />
+                    
+                    <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
+                        <Input
+                            ref={inputRef}
+                            aria-label={t('search.placeholder')}
+                            value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', '), count: activeFilter.length }) : query}
+                            onChange={(e) => {
+                                if (activeFilter) {
+                                    onLineSelect(null);
+                                    setQuery('');
+                                } else {
+                                    setQuery(e.target.value);
+                                }
+                                if (selectedPlaceId) {
+                                    setSelectedPlaceId(null);
+                                }
+                                setIsOpen(true);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && results.length > 0) {
+                                    handleStopSelect(results[0]);
+                                }
+                            }}
+                            onFocus={() => setIsOpen(true)}
+                            placeholder={t('search.placeholder')}
+                            className={cn(
+                                "h-full w-full bg-transparent border-0 pl-10 text-[15px] truncate placeholder:text-[14px] placeholder:text-muted-foreground/50 focus-visible:ring-0 rounded-none",
+                                (query || activeFilter) ? "pr-8" : "pr-3",
+                                activeFilter && "text-primary font-medium"
+                            )}
+                            data-testid="search-input"
+                            readOnly={!!activeFilter}
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
+                            <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-primary")}  />
                         </div>
-                    )}
+                        {(query || activeFilter) && (
+                            <div className="absolute right-0 top-0 h-full flex items-center pr-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                        if (selectedPlaceId) setSelectedPlaceId(null);
+                                        clearSearch();
+                                        inputRef.current?.focus();
+                                    }}
+                                    className="h-9 w-9 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                    aria-label={t('search.clearFilter')}
+                                >
+                                    <X size={18} strokeWidth={2}  />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {isOpen && showDropdown && (

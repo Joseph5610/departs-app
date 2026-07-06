@@ -9,7 +9,7 @@
     "cancel": "Zrušit"
   },
   "search": {
-    "placeholder": "Hledat zastávky, adresy nebo linky...",
+    "placeholder": "Hledat zastávky, adresy, linky...",
     "platform": "Nástupiště {{code}}",
     "lineFilter_one": "Filtrovat linku {{line}}",
     "lineFilter_few": "Filtrovat linky {{line}}",
