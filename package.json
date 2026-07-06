@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.52.11",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "description": "Lightweight real-time public transport departures app for Prague and Brno",
   "author": "departs.app",
