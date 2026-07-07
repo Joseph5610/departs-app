@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -14,6 +14,7 @@ interface ShareOptions {
 
 export const useShare = () => {
     const { t } = useTranslation();
+    const isSharing = useRef(false);
 
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
@@ -36,6 +37,8 @@ export const useShare = () => {
     }, [selectedCity]);
 
     const share = useCallback(async (options: ShareOptions) => {
+        if (isSharing.current) return;
+        
         const url = getConstructedUrl(options);
         
         if (!url) {
@@ -54,12 +57,19 @@ export const useShare = () => {
                          (typeof navigator.canShare === 'undefined' || navigator.canShare(shareData));
 
         if (canShare) {
+            isSharing.current = true;
             try {
                 await navigator.share(shareData);
             } catch (err) {
-                if ((err as Error).name !== 'AbortError') {
+                const errorName = (err as Error).name;
+                if (errorName !== 'AbortError' && errorName !== 'InvalidStateError') {
                     console.error('Error sharing:', err);
                 }
+            } finally {
+                // setTimeout to avoid edge cases where system UI closes but browser needs a tick
+                setTimeout(() => {
+                    isSharing.current = false;
+                }, 100);
             }
         } else {
             // Fallback to clipboard
