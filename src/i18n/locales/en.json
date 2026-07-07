@@ -100,7 +100,8 @@
       "zoomIn": "Zoom In",
       "zoomOut": "Zoom Out",
       "resetBearing": "Reset bearing to north",
-      "switchCity": "Switch City"
+      "switchCity": "Switch City",
+      "switchedCity": "Switched to {{city}}"
     },
     "vehicleDetails": {
       "fetching": "Fetching live details...",
@@ -153,10 +154,11 @@
       "showAll": "All vehicles",
       "now": "Now",
       "minutes": "{{count}} min",
+      "platform": "Platform / Track",
+      "trackNumber": "Track {{track}}",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
       "sort": "Sort",
-      "platform": "Platform / Track",
       "distance_one": "{{distance}}m • {{count}} minute walk",
       "distance_other": "{{distance}}m • {{count}} minutes walk",
       "meters": "{{distance}} m",

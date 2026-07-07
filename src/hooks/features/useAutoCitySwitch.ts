@@ -1,4 +1,8 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Building2 } from 'lucide-react';
+import React from 'react';
 import { useCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
@@ -12,6 +16,7 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
  *    changes (e.g. via URL) and the map is currently outside its bounds.
  */
 export const useAutoCitySwitch = () => {
+    const { t } = useTranslation();
     const { data } = useCities();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     
@@ -70,6 +75,11 @@ export const useAutoCitySwitch = () => {
                 // Change state immediately
                 usePreferencesStore.getState().actions.setSelectedCity(newCity.slug);
                 
+                // Trigger toast notification
+                toast(t('map.controls.switchedCity', { city: newCity.name }), {
+                    icon: React.createElement(Building2, { className: "w-4 h-4 text-primary" })
+                });
+                
                 // Also update the URL so useRouteParams doesn't revert it
                 // Preserve the rest of the path (like /stop/123) and search params (lat, lng, z)
                 const currentPath = window.location.pathname;
@@ -94,7 +104,7 @@ export const useAutoCitySwitch = () => {
         return () => {
             map.off('moveend', handleMoveEnd);
         };
-    }, [mapLoaded, mapRef, data]);
+    }, [mapLoaded, mapRef, data, t]);
 
     // 2. State -> Map sync (fly to new city if selectedCity changes via URL)
     useEffect(() => {

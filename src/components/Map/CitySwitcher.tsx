@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Earth } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCities } from '../../hooks/data/useCities';
@@ -25,6 +25,19 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [open, setOpen] = useState(false);
     const [, navigate] = useLocation();
+    
+    // Animation state for when city changes
+    const [isHighlighting, setIsHighlighting] = useState(false);
+    const prevCityRef = useRef(selectedCity);
+
+    useEffect(() => {
+        if (prevCityRef.current !== selectedCity) {
+            setIsHighlighting(true);
+            const timer = setTimeout(() => setIsHighlighting(false), 2000);
+            prevCityRef.current = selectedCity;
+            return () => clearTimeout(timer);
+        }
+    }, [selectedCity]);
 
     const cities = data?.cities || [];
 
@@ -67,10 +80,14 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
                             variant={variant}
                             size="icon"
                             aria-label={t('map.controls.switchCity')}
-                            className={cn("h-11 w-11 shrink-0", className)}
+                            className={cn(
+                                "h-11 w-11 shrink-0 transition-all duration-500",
+                                isHighlighting && "ring-2 ring-primary/80 bg-primary/20 text-primary scale-110 shadow-[0_0_20px_rgba(var(--color-primary),0.4)]",
+                                className
+                            )}
                             data-testid="map-city-switcher-btn"
                         >
-                            <Earth size={20} className="transition-transform group-hover:rotate-12" strokeWidth={1.5} />
+                            <Earth size={20} className={cn("transition-transform", isHighlighting ? "animate-spin" : "group-hover:rotate-12")} strokeWidth={1.5} />
                         </Button>
                     } />
                 } />

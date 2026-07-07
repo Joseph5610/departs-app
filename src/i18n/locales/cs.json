@@ -101,7 +101,8 @@
       "zoomIn": "Přiblížit",
       "zoomOut": "Oddálit",
       "resetBearing": "Vycentrovat na sever",
-      "switchCity": "Změnit město"
+      "switchCity": "Změnit město",
+      "switchedCity": "Přepnuto na {{city}}"
     },
     "vehicleDetails": {
       "fetching": "Načítání podrobností...",
@@ -156,6 +157,7 @@
       "now": "Nyní",
       "minutes": "{{count}} min",
       "platform": "Nástupiště / Kolej",
+      "trackNumber": "Kolej {{track}}",
       "sortByLine": "Seřadit podle linky",
       "sortByDeparture": "Seřadit podle času odjezdu",
       "sort": "Seřadit",

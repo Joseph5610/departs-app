@@ -8,41 +8,50 @@ import { Skeleton } from '@/components/ui/skeleton';
 export const VehicleDetailSkeleton: React.FC = () => {
     return (
         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
-            {/* Header Hero Skeleton - Matches VehicleHero.tsx */}
-            <div className="rounded-2xl bg-muted/40 border border-white/5">
-                <div className="flex flex-col gap-2 relative z-10 px-6 py-6">
-                    {/* Route Badge Skeleton */}
-                    <Skeleton className="h-7 w-12 rounded-lg" />
-                    
-                    {/* Title/Headsign Skeleton */}
-                    <Skeleton className="h-9 w-3/4 max-w-[320px] my-1.5" />
+            <VehicleHeroSkeleton />
+            <StopTimelineSkeleton />
+        </div>
+    );
+};
 
-                    {/* Badge Row Skeleton */}
-                    <div className="flex items-center gap-2">
-                        <Skeleton className="h-6 w-20 rounded-md" />
-                        <Skeleton className="h-6 w-28 rounded-md" />
-                    </div>
+VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
 
-                    {/* Metadata Footer Skeleton */}
-                    <div className="flex items-end justify-between gap-2 mt-4 pt-4 border-t border-white/5">
-                        <div className="flex flex-col gap-1 flex-1">
-                            <Skeleton className="h-2 w-24" />
-                            <div className="flex items-center gap-2">
-                                <Skeleton className="h-3 w-16" />
-                                <Skeleton className="h-3 w-12" />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                            <Skeleton className="w-4 h-4 rounded-full" />
-                            <Skeleton className="w-4 h-4 rounded-full" />
-                            <Skeleton className="w-4 h-4 rounded-full" />
-                        </div>
-                    </div>
-                </div>
+export const VehicleHeroSkeleton: React.FC = () => (
+    <div className="rounded-2xl bg-muted/40 border border-white/5">
+        <div className="flex flex-col gap-2 relative z-10 px-6 py-6">
+            {/* Route Badge Skeleton */}
+            <Skeleton className="h-7 w-12 rounded-lg" />
+            
+            {/* Title/Headsign Skeleton */}
+            <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md" />
+
+            {/* Badge Row Skeleton */}
+            <div className="flex items-center gap-2">
+                <Skeleton className="h-6 w-20 rounded-md" />
+                <Skeleton className="h-6 w-28 rounded-md" />
             </div>
 
-            {/* Stop List Placeholder - Matches StopTimeline.tsx */}
-            <div className="flex flex-col gap-4 mt-2">
+            {/* Metadata Footer Skeleton */}
+            <div className="flex items-end justify-between gap-2 mt-4 pt-4 border-t border-white/5">
+                <div className="flex flex-col gap-1 flex-1">
+                    <Skeleton className="h-2 w-24" />
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-3 w-12" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                    <Skeleton className="w-4 h-4 rounded-full" />
+                    <Skeleton className="w-4 h-4 rounded-full" />
+                    <Skeleton className="w-4 h-4 rounded-full" />
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+export const StopTimelineSkeleton: React.FC = () => (
+    <div className="flex flex-col gap-4 mt-2">
                 <div className="flex items-center justify-between px-1">
                     <Skeleton className="h-3 w-28" />
                     <Skeleton className="h-8 w-32 rounded-xl" />
@@ -61,8 +70,4 @@ export const VehicleDetailSkeleton: React.FC = () => {
                     ))}
                 </div>
             </div>
-        </div>
-    );
-};
-
-VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
+);

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { Train, ArrowRight, ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import type { Departure, SelectedStop } from '../../../types/transit';
@@ -194,13 +194,22 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
                                                 {/* Platform badge (metro only) */}
                                                 {isMetro && subFirstDep.platform && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="h-[18px] px-1.5 rounded-md text-[9px] font-bold tabular-nums flex items-center gap-1 bg-black/20 border-white/10! text-foreground/50 shrink-0"
-                                                    >
-                                                        <Train size={12} strokeWidth={1.5} className="opacity-40"  />
-                                                        <span>{subFirstDep.platform}</span>
-                                                    </Badge>
+                                                    <TooltipProvider delay={300}>
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <div
+                                                                    className="flex items-center justify-center shrink-0 w-[20px] h-[20px] bg-white rounded-full shadow-md border border-black/5 cursor-default"
+                                                                >
+                                                                    <span className="text-black font-extrabold text-[12px] leading-none text-center inline-block">
+                                                                        {subFirstDep.platform}
+                                                                    </span>
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>{t('map.departures.trackNumber', { track: subFirstDep.platform })}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 )}
                                                 </div>
                                             </CardHeader>

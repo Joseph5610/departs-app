@@ -26,4 +26,5 @@ export interface VehicleHeroProps {
     isFollowing: boolean;
     onToggleFollow: () => void;
     liveDataAgeSeconds: number | null;
+    isDetailLoading?: boolean;
 }

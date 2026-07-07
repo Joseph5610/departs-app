@@ -225,7 +225,7 @@ export const Search: React.FC = React.memo(() => {
         >
             <div ref={containerRef}>
                 <div className="flex h-11 glassy rounded-2xl overflow-hidden transition-all items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" data-testid="search-container">
-                    <CitySwitcher variant="ghost" className="rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-white/5" />
+                    <CitySwitcher variant="ghost" className="w-[48px] pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-white/5" />
                     
                     <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                         <Input

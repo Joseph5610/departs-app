@@ -158,7 +158,7 @@ export class KordisVehiclesService {
                 gtfs_trip_id: tripId || '',
                 route_short_name: finalLineName,
                 route_type: rType,
-                trip_headsign: 'Unknown',
+                trip_headsign: '',
                 bearing: attr.Bearing || null,
                 delay: delay,
                 state_position: statePosition,

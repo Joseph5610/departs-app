@@ -23,7 +23,7 @@ export class VehicleDetailMapper {
         const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, finalDelay);
         const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || '#888888');
         
-        const headsign = stations.length > 0 ? stations[stations.length - 1].name : 'Unknown destination';
+        const headsign = stations.length > 0 ? stations[stations.length - 1].name : '';
 
         return {
             vehicle_id: vehicleId,
@@ -116,7 +116,7 @@ export class VehicleDetailMapper {
         return undefined;
     }
 
-    static buildErrorResponse(vehicleId: string | null, tripId: string, headsign: string): AppVehicleDetail {
+    static buildErrorResponse(vehicleId: string | null, tripId: string, headsign: string = ''): AppVehicleDetail {
         return {
             vehicle_id: vehicleId,
             gtfs_trip_id: tripId,

@@ -12,7 +12,7 @@ import {
   useCarousel,
 } from '@/components/ui/carousel';
 
-import { VehicleDetailSkeleton } from './VehicleDetailSkeleton';
+import { VehicleDetailSkeleton, StopTimelineSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
 import { StopTimeline } from './StopTimeline';
 
@@ -144,6 +144,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         isFollowing={isFollowing}
                         onToggleFollow={onToggleFollow}
                         liveDataAgeSeconds={liveDataAgeSeconds}
+                        isDetailLoading={loadingDetail && !vehicleDetail}
                     />
 
                     {/* Alerts */}
@@ -186,7 +187,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             effectiveSequence={displayVehicle.effectiveSequence}
                         />
                     ) : (
-                        loadingDetail && <VehicleDetailSkeleton />
+                        loadingDetail && <StopTimelineSkeleton />
                     )}
                 </>
             )}

@@ -4,9 +4,9 @@ import { Info, MapPin, Snowflake, Accessibility, Zap, Share2 } from 'lucide-reac
 import { cn } from '@/lib/utils';
 import { useShare } from '../../../hooks/features/useShare';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
@@ -15,7 +15,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     displayVehicle,
     isFollowing,
     onToggleFollow,
-    liveDataAgeSeconds
+    liveDataAgeSeconds,
+    isDetailLoading
 }) => {
     const { t } = useTranslation();
     const { share } = useShare();
@@ -72,45 +73,55 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </Button>
                 </div>
                 <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
-                    {displayVehicle.trip_headsign || displayVehicle.next_stop_name || t('map.vehicleDetails.headingToDestination')}
+                    {displayVehicle.trip_headsign || displayVehicle.next_stop_name ? (
+                        <span className="animate-in fade-in duration-500">
+                            {displayVehicle.trip_headsign || displayVehicle.next_stop_name}
+                        </span>
+                    ) : isDetailLoading ? (
+                        <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md bg-white/10 opacity-40" />
+                    ) : (
+                        t('map.vehicleDetails.headingToDestination')
+                    )}
                 </h2>
             </div>
             
             <div className="relative z-10 flex flex-col gap-3 px-4 pb-4">
 
-                <div className="flex gap-2 flex-wrap items-center">
-                    {!displayVehicle.isStaticFallback && (() => {
-                        const delayVal = Number(displayVehicle.delay || 0);
-                        const delayMinutes = Math.round(Math.abs(delayVal) / 60);
-                        const isLate = delayVal > 30;
-                        const isEarly = delayVal < -30;
-                        return (
-                            <Badge
-                                variant="outline"
-                                className={cn(
-                                    "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent",
-                                    isLate ? "bg-rose-500/20 text-rose-500" : isEarly ? "bg-sky-500/20 text-sky-500" : "bg-emerald-500/20 text-emerald-500"
-                                )}
-                            >
-                                {isLate
-                                    ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
-                                    : isEarly
-                                        ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
-                                        : t('map.vehicleDetails.onTime')}
-                            </Badge>
-                        );
-                    })()}
+                {!displayVehicle.isStaticFallback && (
+                    <div className="flex gap-2 flex-wrap items-center">
+                        {(() => {
+                            const delayVal = Number(displayVehicle.delay || 0);
+                            const delayMinutes = Math.round(Math.abs(delayVal) / 60);
+                            const isLate = delayVal > 30;
+                            const isEarly = delayVal < -30;
+                            return (
+                                <Badge
+                                    variant="outline"
+                                    className={cn(
+                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent",
+                                        isLate ? "bg-rose-500/20 text-rose-500" : isEarly ? "bg-sky-500/20 text-sky-500" : "bg-emerald-500/20 text-emerald-500"
+                                    )}
+                                >
+                                    {isLate
+                                        ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
+                                        : isEarly
+                                            ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
+                                            : t('map.vehicleDetails.onTime')}
+                                </Badge>
+                            );
+                        })()}
 
-                    {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && !displayVehicle.isStaticFallback && (
-                        <Badge variant="muted" className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5">
-                            <div className={cn(
-                                "w-1.5 h-1.5 rounded-full shrink-0",
-                                liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
-                            )} />
-                            <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
-                        </Badge>
-                    )}
-                </div>
+                        {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
+                            <Badge variant="muted" className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5">
+                                <div className={cn(
+                                    "w-1.5 h-1.5 rounded-full shrink-0",
+                                    liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
+                                )} />
+                                <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
+                            </Badge>
+                        )}
+                    </div>
+                )}
 
                 {/* Warning Banner & Metadata Footer */}
                 {(() => {
@@ -134,15 +145,17 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     return (
                         <>
                             {isShowBanner && (
-                                <Alert className="mt-2 bg-amber-500/10 text-amber-500 border-amber-500/20">
-                                    <Info size={14} className="mt-0.5 text-amber-500 shrink-0" strokeWidth={1.5} />
-                                    <AlertTitle className="font-bold text-[10px] uppercase tracking-wider leading-none text-amber-500 mb-1">
-                                        {title}
-                                    </AlertTitle>
-                                    <AlertDescription className="text-amber-500/80 text-[11px] leading-snug font-medium">
-                                        {description}
-                                    </AlertDescription>
-                                </Alert>
+                                <div className="mt-1 flex items-start gap-2.5">
+                                    <Info size={16} className="mt-0.5 text-amber-500 shrink-0" strokeWidth={2} />
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-[10px] uppercase tracking-wider leading-none text-amber-500">
+                                            {title}
+                                        </span>
+                                        <span className="text-amber-500/80 text-[11px] leading-snug font-medium">
+                                            {description}
+                                        </span>
+                                    </div>
+                                </div>
                             )}
 
                         </>

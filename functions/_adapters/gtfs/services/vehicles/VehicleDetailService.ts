@@ -7,6 +7,8 @@ import { gtfsFetch } from '../../core/utils';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
+import { ApiError } from '../../../../_core/errors';
+import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 
 export class VehicleDetailService {
     constructor(private city: CityConfig) {}
@@ -20,20 +22,18 @@ export class VehicleDetailService {
             return VehicleDetailMapper.buildErrorResponse(vehicleId, '', 'Unknown destination');
         }
 
-        try {
+        const stations = await this.getTripStops(tripId);
+        const { routes, tripRoutes } = await getGtfsData(this.city.slug);
+        
+        const routeInfo = tripRoutes[tripId];
+        const routeId = routeInfo ? routeInfo.split('|')[0] : undefined;
+        const route = routeId ? routes[routeId] : null;
 
-            const stations = await this.getTripStops(tripId);
-            const { routes, tripRoutes } = await getGtfsData(this.city.slug);
-            
-            const routeInfo = tripRoutes[tripId];
-            const routeId = routeInfo ? routeInfo.split('|')[0] : undefined;
-            const route = routeId ? routes[routeId] : null;
-
-            return VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route);
-        } catch (e) {
-            console.error("Error fetching vehicle detail:", e);
-            return VehicleDetailMapper.buildErrorResponse(vehicleId, tripId, 'Error');
+        if (stations.length === 0 && !route) {
+            throw new ApiError(ERROR_MESSAGES.VEHICLE_NOT_FOUND, 404);
         }
+
+        return VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route);
     }
 
 

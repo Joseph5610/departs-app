@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.53.0] - 2026-07-07
+
+### Added
+
+- **UI Polishing**: Upgraded all dropdown menus (such as the header options in the DetailPanel) to use the premium `glassy` material theme. They now feature a sleek translucent backdrop blur, replacing the old, flat, solid-color design.
+
+### Changed
+
+- **UI Polishing**: Redesigned the metro platform indicator in the departure board to match the official PID virtual boards. Replaced the old subdued transparent badge with a prominent, high-contrast white circle featuring bold black typography, and upgraded the hover behavior to use a premium, custom `Tooltip` that accurately refers to "Tracks" (Kolej) instead of "Platforms".
+- **UI Polishing**: Replaced the generic `Map` icon with the sleeker `Building2` icon in the auto-region-switcher toast notification.
+
+### Fixed
+
+- **UI Polishing**: Optically centered the Earth icon in the CitySwitcher component (inside the search bar). We slightly increased the width and added left padding to perfectly balance the visual weight of the heavily rounded left corner.
+
+## [0.52.16] - 2026-07-07
+
+### Added
+
+- **Region Switching**: The manual city switcher button (the Earth icon) now plays a highly visible pulsing and spinning animation for 2 seconds whenever the city region changes (either manually or automatically via map panning). This provides a premium, diegetic UI cue that works perfectly on both desktop and mobile without relying solely on toast notifications.
+
+## [0.52.15] - 2026-07-07
+
+### Added
+
+- **Region Switching**: Added a sleek toast notification that appears when the active city region automatically changes (e.g. "Switched to Brno") as the user pans the map across territory borders.
+
+## [0.52.14] - 2026-07-07
+
+### Fixed
+
+- **UI Polishing**: Fixed a large vertical gap inside `VehicleHero` that occurred exclusively during static schedule fallbacks. Also streamlined the fallback warning banner (e.g. "Location not available") from a bulky nested card into a sleek, borderless inline layout.
+
+## [0.52.13] - 2026-07-07
+
+### Fixed
+
+- **UI Polishing**: Prevented "Unknown" or "Heading to destination" text from flashing in the `VehicleHero` component while real headsign data is still being fetched from the backend. Since the fetch is near-instant, the headsign now temporarily uses a non-breaking space (invisible, but preserves physical layout height) rather than a visual skeleton, eliminating layout jumps and flickering entirely.
+
+## [0.52.12] - 2026-07-07
+
+### Fixed
+
+- **API/Routing**: Fixed an issue where the static GTFS fallback for vehicles erroneously returned a fallback payload instead of a 404 response when a trip was entirely invalid for the region (e.g., when crossing city boundaries and carrying over a stale vehicle ID).
+- **UI Rendering**: Resolved an issue in `VehicleDetail` where the `VehicleDetailSkeleton` (which included a hero section) would render below the actual loaded hero when the timeline was still loading, causing duplicated UI elements.
+
 ## [0.52.9] - 2026-07-06
 
 ### Changed
