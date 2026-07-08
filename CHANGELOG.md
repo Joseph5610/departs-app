@@ -1,4 +1,28 @@
+## [0.53.4] - 2026-07-08
+### Fixed
+- Fixed an issue where the "Switched to City" toast would incorrectly trigger multiple times on initial map load during programmatic map movements.
+
+
 # Changelog
+
+## [0.53.3] - 2026-07-08
+
+### Fixed
+
+- **Alert Icons**: Fixed an issue where the `GenericAlertCard` would not display the correct icon for specific alert effects (e.g. exclusions), restoring parity with the icons shown in the main Alerts modal.
+
+
+## [0.53.2] - 2026-07-08
+
+### Fixed
+
+- **City Switching**: Fixed an issue where switching to a different city via the manual switcher would not load vehicles and stops until the map was manually interacted with. The map bounds are now immediately updated upon completion of the programmatic camera flight.
+
+## [0.53.1] - 2026-07-08
+
+### Fixed
+
+- **Map Sync**: Fixed an issue where the selected vehicle on the map would "snap back" to its older position when clicking out of it or closing the details panel. The map stream cache is now immediately patched with the newer geometry from the vehicle detail fetch, ensuring smooth tracking and preventing the vehicle from teleporting backward while waiting for the next global refresh cycle.
 
 ## [0.53.0] - 2026-07-07
 

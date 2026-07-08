@@ -26,6 +26,7 @@ interface GenericAlertCardProps {
     cause?: string;
     causeDetail?: { cs?: string; en?: string };
     type?: string;
+    effect?: string;
     hideCauseText?: boolean;
 }
 
@@ -48,6 +49,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
     cause,
     causeDetail,
     type,
+    effect,
     hideCauseText = false
 }) => {
     const { t, i18n } = useTranslation();
@@ -65,7 +67,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
         >
-            <AlertIcon cause={cause} type={type} className={cn(
+            <AlertIcon cause={cause} effect={effect} type={type} className={cn(
                 "h-4 w-4 mt-0.5 shrink-0",
                 isHigh ? "text-destructive!" : isNormal ? "text-amber-500!" : "text-muted-foreground"
             )} />

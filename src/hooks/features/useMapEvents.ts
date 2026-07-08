@@ -66,11 +66,9 @@ export const useMapEvents = () => {
         url.searchParams.set('z', zoom.toFixed(2));
         window.history.replaceState({}, '', url.toString());
 
-        if (evt.originalEvent) {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-            vpActions.setBounds(currentBounds);
-            vpActions.setDebouncedBounds(currentBounds);
-        }
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        vpActions.setBounds(currentBounds);
+        vpActions.setDebouncedBounds(currentBounds);
     }, [isFollowing, getRoundedBounds, vpActions]);
 
     const onDragStart = useCallback(() => {

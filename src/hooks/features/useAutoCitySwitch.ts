@@ -6,6 +6,7 @@ import React from 'react';
 import { useCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { STORAGE_KEYS } from '../../config/constants';
 
 /**
  * useAutoCitySwitch
@@ -23,6 +24,32 @@ export const useAutoCitySwitch = () => {
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
+    const prevCity = React.useRef(selectedCity);
+    const initialWelcomeSeen = React.useRef(
+        typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN) === 'true' : false
+    );
+    const isFirstChange = React.useRef(true);
+
+    useEffect(() => {
+        if (prevCity.current !== selectedCity) {
+            const wasFirstChange = isFirstChange.current;
+            isFirstChange.current = false;
+            
+            const initiallyNotSeen = !initialWelcomeSeen.current;
+            
+            // Skip toast if this is the very first city change for a new user
+            if (!(initiallyNotSeen && wasFirstChange)) {
+                const cityData = data?.cities.find(c => c.slug === selectedCity);
+                if (cityData) {
+                    toast(t('map.controls.switchedCity', { city: cityData.name }), {
+                        icon: React.createElement(Building2, { className: "w-4 h-4 text-primary" })
+                    });
+                }
+            }
+            prevCity.current = selectedCity;
+        }
+    }, [selectedCity, data, t]);
+
     useEffect(() => {
         if (!mapLoaded || !mapRef.current || !data?.cities) {
             return;
@@ -30,7 +57,11 @@ export const useAutoCitySwitch = () => {
 
         const map = mapRef.current.getMap();
 
-        const handleMoveEnd = () => {
+        const handleMoveEnd = (e: { originalEvent?: Event }) => {
+            if (!e.originalEvent) {
+                return;
+            }
+            
             const center = map.getCenter();
             
             let newCity = data.cities.find(city => {
@@ -74,11 +105,6 @@ export const useAutoCitySwitch = () => {
             if (newCity && newCity.slug !== currentSelectedCity) {
                 // Change state immediately
                 usePreferencesStore.getState().actions.setSelectedCity(newCity.slug);
-                
-                // Trigger toast notification
-                toast(t('map.controls.switchedCity', { city: newCity.name }), {
-                    icon: React.createElement(Building2, { className: "w-4 h-4 text-primary" })
-                });
                 
                 // Also update the URL so useRouteParams doesn't revert it
                 // Preserve the rest of the path (like /stop/123) and search params (lat, lng, z)

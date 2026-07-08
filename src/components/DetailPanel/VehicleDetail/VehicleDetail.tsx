@@ -170,6 +170,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                                                 cause={alert.cause}
                                                 causeDetail={alert.causeDetail}
                                                 type={alert.type}
+                                                effect={alert.effect}
                                                 hideCauseText={true}
                                             />
                                         </CarouselItem>
