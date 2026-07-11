@@ -83,7 +83,7 @@ export class KordisVehiclesService {
         return { tripId: finalTrip.trip_id, statePosition };
     }
 
-    async getRawVehicles(): Promise<ArcgisResponse> {
+    async fetchRawArcgisFeed(): Promise<ArcgisResponse> {
         return CacheManager.getOrFetch(
             `vehicles_live_raw_${this.city.slug}`,
             10000,
@@ -92,21 +92,33 @@ export class KordisVehiclesService {
                 if (!arcgisConfigUrl) {
                     throw new Error(`Missing KORDIS ArcGIS configuration.`);
                 }
+
+                let finalArcgisUrl = arcgisConfigUrl;
+                try {
+                    // OPTIMIZATION: Prevent ArcGIS from doing a full table scan by limiting to the last 15 mins
+                    const urlObj = new URL(arcgisConfigUrl);
+                    if (urlObj.searchParams.has('where')) {
+                        const pastMs = Date.now() - (15 * 60 * 1000);
+                        urlObj.searchParams.set('where', `IsInactive='false' AND TimeUpdated > ${pastMs}`);
+                        finalArcgisUrl = urlObj.toString();
+                    }
+                } catch {
+                    // Silently fallback to original url if parsing fails
+                }
+
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8500);
+
                 try {
-                    const resArcgis = await fetch(arcgisConfigUrl, { 
+                    const resArcgis = await fetch(finalArcgisUrl, { 
                         cf: { cacheTtl: 10 },
                         signal: controller.signal
                     });
+                    
                     clearTimeout(timeoutId);
-                    if (!resArcgis.ok) {
-                        return { features: [], status: 'upstream_offline' };
-                    }
                     const data = await resArcgis.json() as ArcgisResponse;
                     return { ...data, status: 'ok' };
                 } catch (e) {
-                    clearTimeout(timeoutId);
                     console.error("KORDIS ArcGIS fetch timed out or failed:", e);
                     return { features: [], status: 'upstream_offline' };
                 }
@@ -179,29 +191,103 @@ export class KordisVehiclesService {
     }
 
 
-    async getAllVehicles(): Promise<AppVehicleCollection> {
+    private getCurrentTimeContext() {
+        const parts = PRAGUE_TZ_FORMATTER.formatToParts(new Date());
+        const y = parts.find(p => p.type === 'year')?.value || '';
+        const m = parts.find(p => p.type === 'month')?.value || '';
+        const d = parts.find(p => p.type === 'day')?.value || '';
+        const hh = parts.find(p => p.type === 'hour')?.value || '0';
+        const mm = parts.find(p => p.type === 'minute')?.value || '0';
+        const ss = parts.find(p => p.type === 'second')?.value || '0';
+
+        const todayLocalStr = `${y}${m}${d}`;
+        const currentMinutes = (Number(hh) % 24) * 60 + Number(mm) + Number(ss) / 60;
+        
+        return { todayLocalStr, currentMinutes };
+    }
+
+    private async getCoreData() {
+        const staticUrl = this.city.adapterConfig?.staticDataUrl;
+        if (!staticUrl) {
+            throw new Error(`Missing KORDIS Static URL configuration.`);
+        }
+        const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
+
+        return Promise.all([
+            CacheManager.getOrFetch<ApiMapping | null>(
+                `api_mapping_${this.city.slug}`, 
+                CACHE_TTL.TWO_HOURS_MS, 
+                async () => {
+                    const resApi = await gtfsFetch(apiUrl, { cf: { cacheTtl: 7200 } });
+                    return await resApi.json() as ApiMapping;
+                }
+            ),
+            this.fetchRawArcgisFeed(),
+            getGtfsData(this.city.slug)
+        ]);
+    }
+
+    async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
+        const [apiMapping, arcgisData, gtfsData] = await this.getCoreData();
+        if (!apiMapping || !arcgisData?.features || arcgisData.features.length === 0) {
+            return {};
+        }
+
+        const targetId = Number(vehicleId);
+        
+        let rawMatch = arcgisData.features.find(f => targetId && f.attributes.ID === targetId);
+        
+        const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
+        let finalTripId: string | null = null;
+        let finalStatePos: string = 'in_transit_to';
+        let finalDelay = 0;
+
+        if (!rawMatch && gtfsTripId) {
+            // Expensive fallback: iterate raw data to find matching tripId
+            for (const feature of arcgisData.features) {
+                const attr = feature.attributes;
+                if (attr.IsInactive === 'true') continue;
+                
+                const delay = (attr.Delay || 0) * 60;
+                const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
+                const { tripId, statePosition } = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay, !!attr.LastStopID);
+                
+                if (tripId === gtfsTripId) {
+                    rawMatch = feature;
+                    finalTripId = tripId;
+                    finalStatePos = statePosition;
+                    finalDelay = delay;
+                    break;
+                }
+            }
+        }
+
+        if (!rawMatch) return {};
+
+        const attr = rawMatch.attributes;
+        if (!finalTripId) {
+            finalDelay = (attr.Delay || 0) * 60;
+            const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
+            const resolved = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, finalDelay, !!attr.LastStopID);
+            finalTripId = resolved.tripId;
+            finalStatePos = resolved.statePosition;
+        }
+        const route = this.resolveRoute(attr, finalTripId, gtfsData);
+
+        const liveMatch = this.mapVehicle(attr, finalTripId, route, finalDelay, finalStatePos);
+
+        return { 
+            liveMatch, 
+            lastStopId: attr.LastStopID?.toString() 
+        };
+    }
+
+    async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_vehicles_${this.city.slug}`, 
             CACHE_TTL.TEN_SECONDS_MS, 
             async () => {
-                const staticUrl = this.city.adapterConfig?.staticDataUrl;
-                if (!staticUrl) {
-                    throw new Error(`Missing KORDIS Static URL configuration.`);
-                }
-                const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
-
-                const [apiMapping, arcgisData, gtfsData] = await Promise.all([
-                    CacheManager.getOrFetch<ApiMapping | null>(
-                        `api_mapping_${this.city.slug}`, 
-                        CACHE_TTL.TWO_HOURS_MS, 
-                        async () => {
-                            const resApi = await gtfsFetch(apiUrl, { cf: { cacheTtl: 7200 } });
-                            return await resApi.json() as ApiMapping;
-                        }
-                    ),
-                    this.getRawVehicles(),
-                    getGtfsData(this.city.slug)
-                ]);
+                const [apiMapping, arcgisData, gtfsData] = await this.getCoreData();
 
                 if (!apiMapping) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -212,16 +298,7 @@ export class KordisVehiclesService {
                     return { type: 'FeatureCollection', features: [], status };
                 }
 
-                const parts = PRAGUE_TZ_FORMATTER.formatToParts(new Date());
-                const y = parts.find(p => p.type === 'year')?.value || '';
-                const m = parts.find(p => p.type === 'month')?.value || '';
-                const d = parts.find(p => p.type === 'day')?.value || '';
-                const hh = parts.find(p => p.type === 'hour')?.value || '0';
-                const mm = parts.find(p => p.type === 'minute')?.value || '0';
-                const ss = parts.find(p => p.type === 'second')?.value || '0';
-
-                const todayLocalStr = `${y}${m}${d}`;
-                const currentMinutes = (Number(hh) % 24) * 60 + Number(mm) + Number(ss) / 60;
+                const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
 
                 const features: AppVehicleFeature[] = [];
                 const THRESHOLD_MS = 20 * 60 * 1000;
@@ -280,8 +357,8 @@ export class KordisVehiclesService {
         );
     }
 
-    async getVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
-        const allVehicles = await this.getAllVehicles();
+    async getFilteredVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
+        const allVehicles = await this.getCachedMappedVehicles();
 
         const { searchParams } = new URL(ctx.request.url);
         const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);
