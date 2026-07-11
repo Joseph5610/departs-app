@@ -16,8 +16,6 @@ import { getEnrichmentData } from "../stops/enrichment";
 export class DeparturesService {
     constructor(private client: GolemioClient) {}
 
-
-
     /**
      * Filters a comma-separated string of stop IDs down to the specific platform nodes (Z-nodes)
      * suitable for querying the departure board API.

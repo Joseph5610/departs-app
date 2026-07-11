@@ -1,12 +1,12 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { CityConfig } from '../../../_core/city-config';
-import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../_core/types";
-import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from './types';
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
-import { getGtfsData, GtfsRoute, GtfsData } from '../../gtfs/core/gtfs-data';
-import { appClient } from '../../../_core/ApiClient';
-import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
-import { getDpmbVehicleMetadata } from '../utils/dpmbVehicleMetadata';
+import type { CityConfig } from '../../../../_core/city-config';
+import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
+import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from '../types';
+import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { getGtfsData, GtfsRoute, GtfsData } from '../../../gtfs/core/gtfs-data';
+import { appClient } from '../../../../_core/ApiClient';
+import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
+import { getDpmbVehicleMetadata } from '../../utils/dpmbVehicleMetadata';
 
 const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Prague',
@@ -19,7 +19,13 @@ const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
     hour12: false
 });
 
-export class KordisVehiclesService {
+/**
+ * Legacy vehicle service for Brno using the older ArcGIS endpoint.
+ * This fetches raw live vehicle locations for all of Brno from a non-GTFS-RT source.
+ * It manually correlates the ArcGIS data with the GTFS static schedule using Kordis-specific mapping rules.
+ * Currently, this is bypassed in favor of the standard GTFS-RT feed (unless USE_GTFS_RT is set to false).
+ */
+export class KordisArcGisVehiclesService {
     constructor(private city: CityConfig) {}
 
     /**
@@ -153,8 +159,6 @@ export class KordisVehiclesService {
         const lineName = attr.LineName || '?';
         const finalLineName = route?.short_name || route?.name || lineName;
 
-        const metadata = getDpmbVehicleMetadata(attr.ID);
-
         return {
             type: 'Feature',
             geometry: {
@@ -171,17 +175,15 @@ export class KordisVehiclesService {
                 delay: delay,
                 state_position: statePosition,
                 run_number: attr.Course || undefined,
+                last_stop_sequence: attr.LastStopID && attr.LastStopID > 0 ? attr.LastStopID : null,
+                is_night: false,
                 vehicle_descriptor: {
                     operator: 'IDS JMK',
-                    vehicle_registration_number: attr.ID.toString(),
-                    is_wheelchair_accessible: attr.LF === 'true',
-                    vehicle_type: metadata?.vehicle_type || undefined,
-                    is_air_conditioned: metadata?.is_air_conditioned !== undefined ? metadata.is_air_conditioned : undefined
+                    vehicle_registration_number: attr.ID.toString()
                 },
                 origin_timestamp: new Date(attr.TimeUpdated).toISOString(),
                 is_static_fallback: false,
-                route_color: routeColor,
-                is_night: false
+                route_color: routeColor
             }
         };
     }
@@ -208,7 +210,6 @@ export class KordisVehiclesService {
             throw new Error(`Missing KORDIS Static URL configuration.`);
         }
         const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
-
         return Promise.all([
             CacheManager.getOrFetch<ApiMapping | null>(
                 `api_mapping_${this.city.slug}`, 
@@ -271,6 +272,17 @@ export class KordisVehiclesService {
         const route = this.resolveRoute(attr, finalTripId, gtfsData);
 
         const liveMatch = this.mapVehicle(attr, finalTripId, route, finalDelay, finalStatePos);
+        
+        if (liveMatch.properties.vehicle_id) {
+            const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
+            if (meta) {
+                liveMatch.properties.vehicle_descriptor = {
+                    ...liveMatch.properties.vehicle_descriptor,
+                    vehicle_type: meta.vehicle_type,
+                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
+                };
+            }
+        }
 
         return { 
             liveMatch, 
@@ -297,7 +309,8 @@ export class KordisVehiclesService {
                 const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
 
                 const features: AppVehicleFeature[] = [];
-                const THRESHOLD_MS = 20 * 60 * 1000;
+                // Filter out vehicles that haven't updated in 10+ minutes
+                const THRESHOLD_MS = 10 * 60 * 1000;
                 const nowMs = Date.now();
                 const seenVehicles = new Set<string>();
                 let maxTimeUpdated = 0;
@@ -321,7 +334,19 @@ export class KordisVehiclesService {
                     const { tripId, statePosition } = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay, !!attr.LastStopID);
  
                     const route = this.resolveRoute(attr, tripId, gtfsData);
-                    features.push(this.mapVehicle(attr, tripId, route, delay, statePosition));
+                    const liveMatch = this.mapVehicle(attr, tripId, route, delay, statePosition);
+                    
+                    if (liveMatch.properties.vehicle_id) {
+                        const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
+                        if (meta) {
+                            liveMatch.properties.vehicle_descriptor = {
+                                ...liveMatch.properties.vehicle_descriptor,
+                                vehicle_type: meta.vehicle_type,
+                                is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
+                            };
+                        }
+                    }
+                    features.push(liveMatch);
                 }
 
                 const isStale = maxTimeUpdated > 0 && (nowMs - maxTimeUpdated > THRESHOLD_MS);

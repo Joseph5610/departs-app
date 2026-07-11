@@ -3,8 +3,9 @@ import type { GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 
-export class AlertsMapper {
-    static mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
+export class BaseGtfsAlertsMapper {
+    
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
         const routesByName = new Map<string, GtfsRoute>();
         for (const r of Object.values(routes)) {
             const staticRoute = r as GtfsRoute;
@@ -16,11 +17,7 @@ export class AlertsMapper {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
             const headerStr = alert.headerText?.translation?.[0]?.text || '';
-            const isDetour = 
-                String(alert.effect) === '4' || // DETOUR
-                String(alert.effect) === '9' || // STOP_MOVED
-                String(alert.effect) === 'DETOUR' ||
-                headerStr.toLowerCase().includes('výluka');
+            const isDetour = this.parseIsDetour(alert, headerStr);
             
             const lines: string[] = [];
             const line_metadata: Array<{ name: string; route_color: string; type: string }> = [];
@@ -48,9 +45,13 @@ export class AlertsMapper {
             }
 
             const uniqueLines = [...new Set(lines)];
-            const uniqueMetadata = line_metadata.filter((meta, index, self) =>
-                index === self.findIndex((m) => m.name === meta.name)
-            );
+            
+            const seenMeta = new Set<string>();
+            const uniqueMetadata = line_metadata.filter(meta => {
+                if (seenMeta.has(meta.name)) return false;
+                seenMeta.add(meta.name);
+                return true;
+            });
 
             const rawDesc = alert.descriptionText?.translation?.[0]?.text;
             let description = null;
@@ -60,6 +61,7 @@ export class AlertsMapper {
                     .replace(/<[^>]+>/g, '')
                     .replace(/&nbsp;/g, ' ');
             }
+            description = this.parseDescription(description);
 
             let valid_from: string | null = null;
             let valid_to: string | null = null;
@@ -76,30 +78,9 @@ export class AlertsMapper {
                 }
             }
 
-            let causeDetail: { cs?: string, en?: string } | undefined = undefined;
-            
-            interface PidAlertExtension {
-                causeDetail?: { translation?: Array<{ text: string, language?: string }> };
-            }
-            const customAlert = alert as transit_realtime.IAlert & PidAlertExtension;
-            
-            if (customAlert.causeDetail?.translation) {
-                causeDetail = {};
-                for (const t of customAlert.causeDetail.translation) {
-                    if (t.language?.startsWith('cs')) {
-                        causeDetail.cs = t.text;
-                    } else if (t.language?.startsWith('en')) {
-                        causeDetail.en = t.text;
-                    }
-                }
-                if (!causeDetail.cs && customAlert.causeDetail.translation.length > 0) {
-                    causeDetail.cs = customAlert.causeDetail.translation[0].text;
-                }
-            }
-
-            return {
+            const appAlert: AppAlert = {
                 type: (isDetour && !forceIncident) ? 'exclusion' : 'incident',
-                title: alert.headerText?.translation?.[0]?.text || 'Mimořádnost',
+                title: headerStr,
                 description: description,
                 link: alert.url?.translation?.[0]?.text || '',
                 valid_from: valid_from,
@@ -111,9 +92,30 @@ export class AlertsMapper {
                 isActive: true,
                 isFuture: false,
                 cause: alert.cause ? String(alert.cause) : undefined,
-                causeDetail: causeDetail,
                 effect: alert.effect ? String(alert.effect) : undefined
             };
+
+            this.parseExtensions(alert, appAlert);
+
+            return appAlert;
         });
+    }
+
+    /** Overridable hooks for city-specific logic */
+
+    protected parseIsDetour(alert: transit_realtime.IAlert, _headerStr: string): boolean {
+        void _headerStr;
+        return String(alert.effect) === '4' || 
+               String(alert.effect) === '9' || 
+               String(alert.effect) === 'DETOUR';
+    }
+
+    protected parseDescription(rawDesc?: string | null): string | null {
+        return rawDesc || null;
+    }
+
+    protected parseExtensions(_alert: transit_realtime.IAlert, _appAlert: AppAlert): void {
+        void _alert;
+        void _appAlert;
     }
 }

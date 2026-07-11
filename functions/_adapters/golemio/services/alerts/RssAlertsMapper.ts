@@ -5,7 +5,8 @@ import { XMLParser } from "fast-xml-parser";
 import { z } from 'zod';
 import { pidRssItemSchema } from "./schemas";
 
-export class AlertsMapper {
+export class RssAlertsMapper {
+    
     private static guessType(name: string): string {
         const n = String(name).toUpperCase();
         if (['A', 'B', 'C'].includes(n)) return 'metro';
@@ -126,7 +127,7 @@ export class AlertsMapper {
                 priority: priority || undefined,
                 lines,
                 line_metadata: lines.map(name => {
-                    const t = AlertsMapper.guessType(name);
+                    const t = RssAlertsMapper.guessType(name);
                     return {
                         name,
                         type: String(t === 'metro' ? 1 : t === 'tram' ? 0 : t === 'train' ? 2 : t === 'trolleybus' ? 11 : 3),

@@ -297,5 +297,52 @@
     "submit": "Submit",
     "success": "Thank you for your feedback!",
     "errorTurnstile": "Please verify that you are human."
+  },
+  "journey": {
+    "tabs": {
+      "stops": "Stops",
+      "journey": "Journey"
+    },
+    "search": {
+      "from": "From",
+      "to": "To",
+      "fromPlaceholder": "Origin stop, address or place",
+      "toPlaceholder": "Destination stop, address or place",
+      "swap": "Swap origin and destination",
+      "departAt": "Depart at",
+      "arriveBy": "Arrive by",
+      "now": "Now",
+      "search": "Search",
+      "noOrigin": "Enter an origin",
+      "noDestination": "Enter a destination"
+    },
+    "result": {
+      "noResults": "No journeys found for this time and route.",
+      "error": "Failed to load journey results.",
+      "duration": "{{minutes}} min",
+      "transfers_zero": "Direct",
+      "transfers_one": "1 transfer",
+      "transfers_other": "{{count}} transfers",
+      "transfer": "Wait / Transfer",
+      "walk": "{{minutes}} min walk",
+      "departure": "Departure",
+      "arrival": "Arrival",
+      "platform": "Platform {{code}}"
+    },
+    "leg": {
+      "transit": "Take {{line}} towards {{headsign}}",
+      "walk": "Walk {{minutes}} min ({{distance}} m)",
+      "rideStops_one": "Ride 1 stop",
+      "rideStops_other": "Ride {{count}} stops",
+      "boardAt": "Board at {{stop}}",
+      "alightAt": "Alight at {{stop}}",
+      "openDepartureBoard": "Open departure board"
+    },
+    "header": {
+      "results": "Journey results",
+      "detail": "Journey detail",
+      "earlier": "Earlier",
+      "later": "Later"
+    }
   }
 }

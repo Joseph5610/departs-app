@@ -26,7 +26,7 @@ export class GolemioAdapter implements CityAdapter {
     private infotextsService: InfotextsService;
 
     constructor(private city: CityConfig) {
-        this.client = new GolemioClient(city);
+        this.client = new GolemioClient();
         this.stopsService = new StopsService(this.client);
         this.vehiclesService = new VehiclesService(this.client);
         this.vehicleDetailService = new VehicleDetailService(this.client);

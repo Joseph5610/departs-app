@@ -1,12 +1,12 @@
-import { AppAlert, AppAlertsResponse, Env } from "../../../../_core/types";
+import { AppAlertsResponse, AppAlert, Env } from "../../../../_core/types";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
-import { AlertsMapper as RssAlertsMapper } from "./AlertsMapper";
-import { AlertsMapper as GtfsAlertsMapper } from "../../../gtfs/services/alerts/AlertsMapper";
+import { RssAlertsMapper } from "./RssAlertsMapper";
 import { transit_realtime } from 'gtfs-realtime-bindings';
+import { GtfsAlertsMapper } from './GtfsAlertsMapper';
+import { GtfsRoute } from '../../../gtfs/core/gtfs-data';
 import { GOLEMIO_CONFIG } from "../../core/config";
-import type { GtfsRoute } from "../../../gtfs/core/gtfs-data";
 
 import { z } from 'zod';
 import { golemioRouteSchema } from './schemas';
@@ -16,6 +16,8 @@ import { appClient } from '../../../../_core/ApiClient';
  * Uses GTFS-RT PB for incidents and PID RSS feeds for exclusions.
  */
 export class AlertsService {
+    private gtfsMapper = new GtfsAlertsMapper();
+
     constructor(private client: GolemioClient) {}
 
     private async fetchExclusionsFeed(): Promise<string> {
@@ -71,7 +73,7 @@ export class AlertsService {
                             route_color: r.route_color ? '#' + r.route_color : undefined
                         };
                     }
-                    incidents = GtfsAlertsMapper.mapAlerts(rawAlerts, routesMap, true);
+                    incidents = this.gtfsMapper.mapAlerts(rawAlerts, routesMap, true);
                 } catch (e) {
                     console.error("Failed to parse GTFS-RT alerts or routes", e);
                 }

@@ -1,5 +1,5 @@
 import { Env } from "../../../_core/types";
-import { CityConfig } from "../../../_core/city-config";
+
 import { CACHE_TTL } from "../../../_core/api-utils";
 import { GOLEMIO_CONFIG } from "./config";
 import { ApiClient, ApiFetchOptions } from "../../../_core/ApiClient";
@@ -8,9 +8,11 @@ export interface GolemioEnv extends Env {
     GOLEMIO_API_KEY: string;
 }
 
-export class GolemioClient extends ApiClient {
-    constructor(private city: CityConfig) {
-        super(GOLEMIO_CONFIG.BASE_URL);
+export class GolemioClient {
+    private client: ApiClient;
+
+    constructor() {
+        this.client = new ApiClient(GOLEMIO_CONFIG.BASE_URL);
     }
 
     /**
@@ -26,7 +28,7 @@ export class GolemioClient extends ApiClient {
         }
         const golemioEnv = env as GolemioEnv;
         
-        return super.fetch(path, {
+        return this.client.fetch(path, {
             ...options,
             cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
             headers: {
@@ -37,12 +39,4 @@ export class GolemioClient extends ApiClient {
         });
     }
 
-    /**
-     * Helper for fetching vehicles with auth headers.
-     * Note: Uses static `departs-app` fallback.
-     */
-    async getVehicles(env: Env): Promise<Response> {
-        // Fallback or override logic if needed, otherwise just delegating
-        return this.fetch('/vehicles', env);
-    }
 }

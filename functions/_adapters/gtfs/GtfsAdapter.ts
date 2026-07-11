@@ -10,12 +10,21 @@ import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { AlertsService } from './services/alerts/AlertsService';
 import { InfotextsService } from './services/infotexts/InfotextsService';
 import { appClient } from '../../_core/ApiClient';
+import { GtfsRtVehicleDetailEnricher } from './services/vehicles/GtfsRtVehicleDetailEnricher';
+import { VehiclesService } from './services/vehicles/VehiclesService';
+import { BaseGtfsAlertsMapper } from './services/alerts/BaseGtfsAlertsMapper';
 
 export class GtfsAdapter implements CityAdapter {
-    private stopsService: StopsService;
+    protected stopsService: StopsService;
+    protected vehiclesService: VehiclesService;
+    protected vehicleDetailService: VehicleDetailService;
+    protected alertsService: AlertsService;
 
-    constructor(private _city: CityConfig) {
+    constructor(protected _city: CityConfig) {
         this.stopsService = new StopsService(this._city);
+        this.vehiclesService = new VehiclesService(this._city);
+        this.vehicleDetailService = new VehicleDetailService(this._city, new GtfsRtVehicleDetailEnricher(this.vehiclesService));
+        this.alertsService = new AlertsService(this._city, new BaseGtfsAlertsMapper());
     }
 
     async handleStops(ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {
@@ -24,8 +33,11 @@ export class GtfsAdapter implements CityAdapter {
     }
     
     async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
-        void ctx;
-        return { type: 'FeatureCollection', features: [] };
+        return this.vehiclesService.getFilteredVehicles(ctx);
+    }
+    
+    async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
+        return this.vehiclesService.getSingleLiveVehicle(vehicleId, gtfsTripId);
     }
     
     async handleDepartures(ctx: EventContext<Env, string, unknown>): Promise<AppDepartureResponse> {
@@ -33,12 +45,12 @@ export class GtfsAdapter implements CityAdapter {
     }
     
     async handleVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
-        return new VehicleDetailService(this._city).getVehicleDetail(ctx);
+        return this.vehicleDetailService.getVehicleDetail(ctx);
     }
     
     async handleAlerts(ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> {
         void ctx;
-        return new AlertsService(this._city).getAlerts();
+        return this.alertsService.getAlerts();
     }
     
     async handleInfotexts(ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]> {
