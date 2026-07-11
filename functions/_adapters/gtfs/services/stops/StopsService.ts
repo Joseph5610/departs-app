@@ -2,7 +2,7 @@ import type { CityConfig } from '../../../../_core/city-config';
 import type { AppStopCollection, AppStopFeature } from '../../../../_core/types';
 import { NotImplementedError } from '../../../../_core/errors';
 import { StopsMapper } from './StopsMapper';
-import { gtfsFetch } from '../../core/utils';
+import { appClient } from '../../../../_core/ApiClient';
 
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
@@ -26,7 +26,7 @@ export class StopsService {
                 return await cached.json();
             }
             
-            const res = await gtfsFetch(`${staticDataUrl}/${this.city.slug}/stops.json`);
+            const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/stops.json`);
             const data = await res.json();
             const rawFeatures = Array.isArray(data) ? data as AppStopFeature[] : (data as { features: AppStopFeature[] }).features;
 

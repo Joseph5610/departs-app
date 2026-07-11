@@ -1,3 +1,4 @@
+
 /**
  * Helper: convert HH:MM:SS to seconds of day
  */
@@ -46,29 +47,4 @@ export const haversineDist = (lat1: number, lon1: number, lat2: number, lon2: nu
     return R * c;
 };
 
-/**
- * Helper to fetch data with a standardized User-Agent to bypass restrictive firewalls (e.g. Cloudflare)
- */
-export const gtfsFetch = async (url: string | URL, init?: RequestInit): Promise<Response> => {
-    const headers = new Headers(init?.headers);
-    if (!headers.has('User-Agent')) {
-        headers.set('User-Agent', 'departs-app-backend/1.0');
-    }
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    try {
-        const res = await fetch(url, { ...init, headers, signal: controller.signal });
-        clearTimeout(timeoutId);
-        
-        if (!res.ok) {
-            throw new Error(`GTFS fetch failed: ${res.status} ${res.statusText} for ${url}`);
-        }
-        
-        return res;
-    } catch (e) {
-        clearTimeout(timeoutId);
-        throw e;
-    }
-};
+

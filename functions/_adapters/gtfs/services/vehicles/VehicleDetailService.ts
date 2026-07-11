@@ -3,7 +3,7 @@ import type { Env, AppVehicleDetail } from "../../../../_core/types";
 
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
-import { gtfsFetch } from '../../core/utils';
+import { appClient } from '../../../../_core/ApiClient';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
@@ -45,7 +45,7 @@ export class VehicleDetailService {
 
         const tripUrl = `${staticDataUrl}/${this.city.slug}/trips/${chunkId}.json`;
         try {
-            const tripRes = await gtfsFetch(tripUrl);
+            const tripRes = await appClient.fetch(tripUrl);
             const chunkData = await tripRes.json() as Record<string, unknown[]>;
             const tripData = chunkData[tripId];
             if (!tripData) return [];

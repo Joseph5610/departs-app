@@ -10,6 +10,7 @@ import type { GtfsRoute } from "../../../gtfs/core/gtfs-data";
 
 import { z } from 'zod';
 import { golemioRouteSchema } from './schemas';
+import { appClient } from '../../../../_core/ApiClient';
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
  * Uses GTFS-RT PB for incidents and PID RSS feeds for exclusions.
@@ -18,27 +19,20 @@ export class AlertsService {
     constructor(private client: GolemioClient) {}
 
     private async fetchExclusionsFeed(): Promise<string> {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        try {
-            const response = await fetch(GOLEMIO_CONFIG.FEEDS.exclusions, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; departs-app/0.1; +https://departs.app)',
-                    'Accept': 'application/rss+xml, application/xml, text/xml'
-                },
-                cf: {
-                    cacheTtl: CACHE_TTL.RSS_EXCLUSIONS,
-                    cacheEverything: true
-                },
-                signal: controller.signal
-            });
-
-            if (!response.ok) throw new ApiError(`Upstream error: ${response.status}`, 502);
-            return await response.text();
-        } finally {
-            clearTimeout(timeoutId);
-        }
+        // We use the unified appClient which brings an 8.5s timeout by default.
+        // RSS Exclusions might be a bit slow, but if it takes > 8.5s we want it to timeout anyway.
+        const response = await appClient.fetch(GOLEMIO_CONFIG.FEEDS.exclusions, {
+            headers: {
+                'Accept': 'application/rss+xml, application/xml, text/xml'
+            },
+            cf: {
+                cacheTtl: CACHE_TTL.RSS_EXCLUSIONS,
+                cacheEverything: true
+            }
+        });
+        
+        // ApiClient automatically throws on !response.ok, so we just return the text
+        return await response.text();
     }
 
     /**

@@ -2,7 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppDepartureResponse, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
-import { gtfsFetch } from '../../core/utils';
+import { appClient } from '../../../../_core/ApiClient';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
@@ -27,7 +27,7 @@ export class DeparturesService {
                 `parent_child_map_${this.city.slug}`,
                 CACHE_TTL.TWO_HOURS_MS,
                 async () => {
-                    const res = await gtfsFetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
+                    const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
                     if (!res.ok) return {};
                     return await res.json() as Record<string, string[]>;
                 }
@@ -59,7 +59,7 @@ export class DeparturesService {
             const fetchPromises = Array.from(chunkMap.entries()).map(async ([chunkId, ids]) => {
                 const dataUrl = `${staticDataUrl}/${this.city.slug}/departures/${chunkId}.json`;
                 try {
-                    const res = await gtfsFetch(dataUrl);
+                    const res = await appClient.fetch(dataUrl);
                     const chunkData = await res.json() as Record<string, GtfsDepartureTuple[]>;
                     for (const id of ids) {
                         if (chunkData[id]) {

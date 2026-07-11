@@ -4,7 +4,7 @@ import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../_cor
 import type { ApiTrip, ApiMapping, ArcgisResponse, ArcgisFeature } from './types';
 import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { getGtfsData, GtfsRoute, GtfsData } from '../../gtfs/core/gtfs-data';
-import { gtfsFetch } from '../../gtfs/core/utils';
+import { appClient } from '../../../_core/ApiClient';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { getDpmbVehicleMetadata } from '../utils/dpmbVehicleMetadata';
 
@@ -106,16 +106,12 @@ export class KordisVehiclesService {
                     // Silently fallback to original url if parsing fails
                 }
 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8500);
-
                 try {
-                    const resArcgis = await fetch(finalArcgisUrl, { 
-                        cf: { cacheTtl: 10 },
-                        signal: controller.signal
+                    // ApiClient automatically brings the 8.5s timeout and standard headers
+                    const resArcgis = await appClient.fetch(finalArcgisUrl, { 
+                        cf: { cacheTtl: 10 }
                     });
                     
-                    clearTimeout(timeoutId);
                     const data = await resArcgis.json() as ArcgisResponse;
                     return { ...data, status: 'ok' };
                 } catch (e) {
@@ -218,7 +214,7 @@ export class KordisVehiclesService {
                 `api_mapping_${this.city.slug}`, 
                 CACHE_TTL.TWO_HOURS_MS, 
                 async () => {
-                    const resApi = await gtfsFetch(apiUrl, { cf: { cacheTtl: 7200 } });
+                    const resApi = await appClient.fetch(apiUrl, { cf: { cacheTtl: 7200 } });
                     return await resApi.json() as ApiMapping;
                 }
             ),
