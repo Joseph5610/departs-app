@@ -35,3 +35,16 @@ export const calculateTimeDifferenceSecs = (realtimeTime: string, scheduledTime:
     return diff;
 };
 
+/**
+ * Formats a timestamp (ISO string or ms number) into a locale-aware date+time string.
+ * Example (cs): "12. 7. 2026, 00:30"
+ */
+export const formatDateTime = (value: string | number, locale: string): string => {
+    return new Date(value).toLocaleString(locale, {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};

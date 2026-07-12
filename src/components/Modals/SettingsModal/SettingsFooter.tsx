@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
 import { DATA_SOURCE_URLS } from '../../../config/constants';
+import { formatDateTime } from '../../../utils/dateUtils';
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -200,14 +201,7 @@ export const SettingsFooter: React.FC = () => {
 
             {updatedAt && (
                 <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
-                    {t('settings.lastStopUpdate', { 
-                        date: new Date(updatedAt).toLocaleString(i18n.language, {
-                            day: 'numeric',
-                            month: 'numeric',
-                            year: 'numeric',
-                            hour: '2-digit',
-                        }) 
-                    })}
+                    {t('settings.lastStopUpdate', { date: formatDateTime(updatedAt, i18n.language) })}
                 </div>
             )}
         </div>
