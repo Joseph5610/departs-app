@@ -114,6 +114,7 @@
       "staticFallbackDescription": "Tento spoj momentálně nemá aktivní sledování polohy. Zobrazen je plánovaný jízdní řád.",
       "headingToDestination": "Směr",
       "onTime": "Na čas",
+      "unknownDelay": "Neznámé zpoždění",
       "delayLabel": "Zpoždění {{minutes}} min",
       "earlyLabel": "Napřed {{minutes}} min",
       "routeSchedule": "Jízdní řád",

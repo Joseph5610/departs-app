@@ -51,7 +51,7 @@ export class DeparturesMapper {
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
-            let delaySecs = 0;
+            let delaySecs: number | null = null;
             let isAirConditioned: boolean | null = null;
             let isWheelchairAccessible: boolean | null = null;
 
@@ -77,7 +77,7 @@ export class DeparturesMapper {
                 }
             }
 
-            const rtTimestampMs = timestamp_ms + (delaySecs * 1000);
+            const rtTimestampMs = timestamp_ms + ((delaySecs || 0) * 1000);
 
             return {
                 tripId: trip_id,

@@ -1,10 +1,9 @@
-import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
+import type { AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
+import type { transit_realtime } from 'gtfs-realtime-bindings';
 import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
-import { getDpmbVehicleMetadata } from '../../utils/dpmbVehicleMetadata';
 
 export interface ApiTripData {
     trip_id: string;
@@ -97,7 +96,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 const nowMs = Date.now();
 
                 // Group entities by label
-                const groupedEntities = new Map<string, any[]>();
+                const groupedEntities = new Map<string, transit_realtime.IFeedEntity[]>();
 
                 for (const entity of feed.entity) {
                     if (!entity.vehicle) continue;
@@ -135,7 +134,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         let minTimeDiff = Infinity;
 
                         for (const entity of entities) {
-                            const tripId = entity.vehicle.trip.tripId;
+                            const tripId = entity.vehicle?.trip?.tripId;
+                            if (!tripId) continue;
                             const tripInfo = tripLookup.get(tripId);
                             
                             if (tripInfo) {
@@ -170,7 +170,11 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     }
 
                     const vp = selectedEntity.vehicle;
-                    const tripId = vp.trip.tripId;
+                    if (!vp) continue;
+
+                    const tripId = vp.trip?.tripId;
+                    if (!tripId) continue;
+
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
@@ -178,26 +182,16 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const route = gtfsData.routes[routeId];
                     if (!route) continue;
 
-                    const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
+                    // vp is guaranteed non-null by the guard above
+                    const vpSafe = vp as NonNullable<typeof vp>;
+                    const lastUpdate = vpSafe.timestamp ? Number(vpSafe.timestamp) * 1000 : nowMs;
                     // Rewrite the vehicle ID to the label so it matches the group correctly
                     // This prevents multiple markers from rendering if the deduplication fails
-                    if (vp.vehicle) {
-                        vp.vehicle.id = label;
+                    if (vpSafe.vehicle) {
+                        vpSafe.vehicle.id = label;
                     }
 
-                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, 0);
-
-                    if (liveMatch.properties.vehicle_id) {
-                        const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
-                        if (meta) {
-                            liveMatch.properties.vehicle_descriptor = {
-                                ...liveMatch.properties.vehicle_descriptor,
-                                vehicle_type: meta.vehicle_type,
-                                is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
-                            };
-                        }
-                    }
-
+                    const liveMatch = VehiclesMapper.mapVehicle(vpSafe, tripId, route, lastUpdate, null);
                     features.push(liveMatch);
                 }
 
@@ -283,18 +277,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
         if (vp.vehicle) vp.vehicle.id = vehicleId;
 
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, 0);
-
-        if (liveMatch.properties.vehicle_id) {
-            const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
-            if (meta) {
-                liveMatch.properties.vehicle_descriptor = {
-                    ...liveMatch.properties.vehicle_descriptor,
-                    vehicle_type: meta.vehicle_type,
-                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
-                };
-            }
-        }
+        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
 
         return { 
             liveMatch, 

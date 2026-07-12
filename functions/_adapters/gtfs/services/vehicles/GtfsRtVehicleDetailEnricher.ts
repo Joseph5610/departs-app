@@ -41,6 +41,10 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         detail.origin_timestamp = liveMatch.properties.origin_timestamp;
         detail.run_number = liveMatch.properties.run_number;
         
+        if (liveMatch.geometry) {
+            detail.geometry = liveMatch.geometry;
+        }
+        
         // 2. Transfer Descriptor
         if (liveMatch.properties.vehicle_descriptor) {
             detail.vehicle_descriptor = {

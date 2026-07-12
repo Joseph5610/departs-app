@@ -58,7 +58,7 @@ export class DeparturesMapper {
         return {
             timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,
             scheduled: item.departure.timestamp_scheduled,
-            delay: item.departure.delay_seconds || 0,
+            delay: typeof item.departure.delay_seconds === 'number' ? item.departure.delay_seconds : null,
             line,
             type,
             directionId: String(directionId),

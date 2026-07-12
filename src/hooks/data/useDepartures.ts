@@ -48,7 +48,7 @@ export const useDepartures = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     // Store previous data to calculate deltas without effects
-    const prevDataRef = useRef<Record<string, { delay: number; timestamp: number }>>({});
+    const prevDataRef = useRef<Record<string, { delay: number | null; timestamp: number }>>({});
 
 
     const query = useQuery<DeparturesResponse | null, AppError>({
@@ -69,7 +69,7 @@ export const useDepartures = () => {
                 let delta: number | undefined = undefined;
                 let lastUpdate: number | undefined = undefined;
 
-                if (prev && prev.delay !== dep.delay) {
+                if (prev && prev.delay !== dep.delay && prev.delay !== null && dep.delay !== null) {
                     delta = dep.delay - prev.delay;
                     lastUpdate = now;
                 } else if (prev) {

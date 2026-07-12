@@ -113,6 +113,7 @@
       "staticFallbackDescription": "This trip currently does not have active real-time tracking. Showing scheduled timetable.",
       "headingToDestination": "Heading to destination",
       "onTime": "On time",
+      "unknownDelay": "Unknown delay",
       "delayLabel": "Delay {{minutes}} min",
       "earlyLabel": "Ahead {{minutes}} min",
       "routeSchedule": "Route Schedule",

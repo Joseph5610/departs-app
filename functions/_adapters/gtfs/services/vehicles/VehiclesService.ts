@@ -58,8 +58,8 @@ export class VehiclesService {
         if (!route) return {};
 
         const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
-        // Delay is not in VehiclePosition (it would be in TripUpdate), so we pass null/0
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, 0);
+        // Delay is not in VehiclePosition (it would be in TripUpdate), so we pass null
+        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
 
         return { 
             liveMatch, 
@@ -102,7 +102,7 @@ export class VehiclesService {
                     const route = gtfsData.routes[routeId];
                     if (!route) continue;
 
-                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, 0));
+                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null));
                 }
 
                 return { type: 'FeatureCollection', features, status: 'ok' };

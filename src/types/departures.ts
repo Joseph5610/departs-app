@@ -1,7 +1,7 @@
 export interface Departure {
     timestamp: string;
     scheduled: string;
-    delay: number;
+    delay: number | null;
     delayDelta?: number;
     lastDelayUpdate?: number;
     line: string;

@@ -20,7 +20,7 @@ export const golemioVehiclePropertiesSchema = z.object({
     trip_headsign: z.string().nullish().transform(v => v ?? undefined),
     gtfs_trip_headsign: z.string().nullish().transform(v => v ?? undefined),
     bearing: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : undefined),
-    delay: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : 0),
+    delay: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : null),
     state_position: z.string().nullish().transform(v => v ?? 'unknown'),
     next_stop_name: z.string().nullish().transform(v => v ?? undefined),
     last_stop_sequence: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : 0),

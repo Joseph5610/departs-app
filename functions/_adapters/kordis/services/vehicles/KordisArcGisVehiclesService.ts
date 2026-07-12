@@ -6,7 +6,6 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { getGtfsData, GtfsRoute, GtfsData } from '../../../gtfs/core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
-import { getDpmbVehicleMetadata } from '../../utils/dpmbVehicleMetadata';
 
 const PRAGUE_TZ_FORMATTER = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Prague',
@@ -35,7 +34,7 @@ export class KordisArcGisVehiclesService {
         trips: ApiTrip[] | undefined, 
         currentMinutes: number, 
         todayLocalStr: string, 
-        delaySecs: number,
+        delaySecs: number | null,
         hasLastStopId: boolean
     ): { tripId: string | null; statePosition: string } {
         const defaultState = hasLastStopId ? 'in_transit_to' : 'stopped_at';
@@ -46,7 +45,7 @@ export class KordisArcGisVehiclesService {
         let closestTrip: ApiTrip = trips[0];
         let minDiff = Infinity;
 
-        const delayMinutes = delaySecs / 60;
+        const delayMinutes = delaySecs !== null ? delaySecs / 60 : 0;
 
         for (const trip of trips) {
             if (trip.start_mins === undefined || trip.end_mins === undefined) continue;
@@ -83,7 +82,7 @@ export class KordisArcGisVehiclesService {
         
         let statePosition = defaultState;
         if (checkMinsForStart < tripStartMins) {
-            statePosition = delaySecs > 60 ? 'before_track_delayed' : 'before_track';
+            statePosition = (delaySecs !== null && delaySecs > 60) ? 'before_track_delayed' : 'before_track';
         }
 
         return { tripId: finalTrip.trip_id, statePosition };
@@ -150,7 +149,7 @@ export class KordisArcGisVehiclesService {
         attr: ArcgisFeature['attributes'], 
         tripId: string | null, 
         route: GtfsRoute | null, 
-        delay: number,
+        delay: number | null,
         statePosition: string
     ): AppVehicleFeature {
         const routeColor = route?.route_color ? (route.route_color.startsWith('#') ? route.route_color : `#${route.route_color}`) : '#4b5563';
@@ -237,7 +236,7 @@ export class KordisArcGisVehiclesService {
         const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
         let finalTripId: string | null = null;
         let finalStatePos: string = 'in_transit_to';
-        let finalDelay = 0;
+        let finalDelay: number | null = null;
 
         if (!rawMatch && gtfsTripId) {
             // Expensive fallback: iterate raw data to find matching tripId
@@ -245,7 +244,7 @@ export class KordisArcGisVehiclesService {
                 const attr = feature.attributes;
                 if (attr.IsInactive === 'true') continue;
                 
-                const delay = (attr.Delay || 0) * 60;
+                const delay = typeof attr.Delay === 'number' && attr.Delay !== 0 ? attr.Delay * 60 : null;
                 const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
                 const { tripId, statePosition } = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay, !!attr.LastStopID);
                 
@@ -263,26 +262,14 @@ export class KordisArcGisVehiclesService {
 
         const attr = rawMatch.attributes;
         if (!finalTripId) {
-            finalDelay = (attr.Delay || 0) * 60;
+            finalDelay = typeof attr.Delay === 'number' && attr.Delay !== 0 ? attr.Delay * 60 : null;
             const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
             const resolved = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, finalDelay, !!attr.LastStopID);
             finalTripId = resolved.tripId;
             finalStatePos = resolved.statePosition;
         }
         const route = this.resolveRoute(attr, finalTripId, gtfsData);
-
         const liveMatch = this.mapVehicle(attr, finalTripId, route, finalDelay, finalStatePos);
-        
-        if (liveMatch.properties.vehicle_id) {
-            const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
-            if (meta) {
-                liveMatch.properties.vehicle_descriptor = {
-                    ...liveMatch.properties.vehicle_descriptor,
-                    vehicle_type: meta.vehicle_type,
-                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
-                };
-            }
-        }
 
         return { 
             liveMatch, 
@@ -328,24 +315,13 @@ export class KordisArcGisVehiclesService {
                     if (seenVehicles.has(vehicleIdStr)) continue;
                     seenVehicles.add(vehicleIdStr);
 
-                    const delay = (attr.Delay || 0) * 60; // Convert minutes to seconds
+                    const delay = typeof attr.Delay === 'number' && attr.Delay !== 0 ? attr.Delay * 60 : null; // Convert minutes to seconds
                     
                     const tripsForCourse = apiMapping[`${attr.LineID}-${attr.RouteID}`];
                     const { tripId, statePosition } = this.resolveActiveTrip(tripsForCourse, currentMinutes, todayLocalStr, delay, !!attr.LastStopID);
  
                     const route = this.resolveRoute(attr, tripId, gtfsData);
                     const liveMatch = this.mapVehicle(attr, tripId, route, delay, statePosition);
-                    
-                    if (liveMatch.properties.vehicle_id) {
-                        const meta = await getDpmbVehicleMetadata(liveMatch.properties.vehicle_id);
-                        if (meta) {
-                            liveMatch.properties.vehicle_descriptor = {
-                                ...liveMatch.properties.vehicle_descriptor,
-                                vehicle_type: meta.vehicle_type,
-                                is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
-                            };
-                        }
-                    }
                     features.push(liveMatch);
                 }
 

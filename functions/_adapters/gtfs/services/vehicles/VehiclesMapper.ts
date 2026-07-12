@@ -48,7 +48,7 @@ export class VehiclesMapper {
                 
                 trip_headsign: '', // Often empty unless we fetch trip details
                 
-                delay: delay ?? 0,
+                delay: delay ?? null,
                 state_position: statePosition,
                 origin_timestamp: new Date(lastUpdate).toISOString(),
                 bearing: bearing ?? null,

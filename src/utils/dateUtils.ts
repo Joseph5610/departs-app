@@ -1,8 +1,9 @@
 /**
  * Formats a delay in seconds into a human readable string (±M:SS or ±Ss).
  */
-export const formatDelay = (seconds: number | null | undefined) => {
-    if (seconds === 0 || seconds === null || seconds === undefined || isNaN(seconds)) return '';
+export const formatDelay = (seconds: number | null | undefined): string | null => {
+    if (seconds === null || seconds === undefined || isNaN(seconds)) return null;
+    if (seconds === 0) return '';
 
     const absSeconds = Math.abs(seconds);
     const mins = Math.floor(absSeconds / 60);
