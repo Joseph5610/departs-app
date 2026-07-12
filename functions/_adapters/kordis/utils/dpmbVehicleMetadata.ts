@@ -37,17 +37,15 @@ export async function getDpmbVehicleMetadata(
 
     if (!ranges || ranges.length === 0) return null;
 
-    // Remove any non-numeric prefixes/suffixes from vehicle ID (e.g., "dpmb-7696" or "3|7696" -> "7696")
-    const cleanId = String(registrationNumber).match(/\d{3,4}/)?.[0] || '';
-    const num = parseInt(cleanId, 10);
+    const num = parseInt(String(registrationNumber), 10);
     if (isNaN(num)) return null;
 
-    const match = ranges.find(r => num >= r.min && num <= r.max);
+    const rangeMatch = ranges.find(r => num >= r.min && num <= r.max);
     
-    if (match) {
+    if (rangeMatch) {
         return {
-            vehicle_type: match.vehicle_type,
-            is_air_conditioned: match.is_air_conditioned
+            vehicle_type: rangeMatch.vehicle_type,
+            is_air_conditioned: rangeMatch.is_air_conditioned
         };
     }
 
