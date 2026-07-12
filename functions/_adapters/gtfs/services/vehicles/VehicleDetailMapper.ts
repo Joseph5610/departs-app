@@ -100,16 +100,40 @@ export class VehicleDetailMapper {
         const coordinates: [number, number][] = stations.map((st) => st.coordinates);
         
         if (coordinates.length > 1) {
-            return {
-                type: 'FeatureCollection' as const,
-                features: [{
+            const lineFeature = {
+                type: 'Feature' as const,
+                geometry: {
+                    type: 'LineString' as const,
+                    coordinates
+                },
+                properties: { route_color: routeColor }
+            };
+
+            // Add Point features for each stop so routeStopsLayer and routeTerminalsLayer render
+            // correctly on the map (matching Prague/Golemio behaviour).
+            const stopFeatures = stations.map((st, index) => {
+                const isStart = index === 0;
+                const isEnd = index === stations.length - 1;
+                return {
                     type: 'Feature' as const,
                     geometry: {
-                        type: 'LineString' as const,
-                        coordinates
+                        type: 'Point' as const,
+                        coordinates: st.coordinates
                     },
-                    properties: { route_color: routeColor }
-                }]
+                    properties: {
+                        stop_id: String(st.id),
+                        stop_name: st.name,
+                        route_color: routeColor,
+                        is_start: isStart,
+                        is_end: isEnd,
+                        is_regular: !isStart && !isEnd
+                    }
+                };
+            });
+
+            return {
+                type: 'FeatureCollection' as const,
+                features: [lineFeature, ...stopFeatures]
             };
         }
         return undefined;
