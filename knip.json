@@ -1,10 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/main.tsx",
     "functions/api/**/*.ts",
-    "functions/_middleware.ts",
-    "scripts/**/*.ts"
+    "functions/_middleware.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx}",
@@ -14,7 +12,6 @@
     "src/components/ui/accordion.tsx",
     "src/components/ui/label.tsx",
     "src/pwa.d.ts",
-    "src/types/react-map-gl.d.ts",
-    "dist/**"
+    "src/types/react-map-gl.d.ts"
   ]
 }

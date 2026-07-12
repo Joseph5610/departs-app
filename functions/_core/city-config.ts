@@ -1,5 +1,14 @@
 type AdapterType = 'golemio' | 'gtfs' | 'kordis';
 
+export interface AdapterConfig {
+    realtimeUrl?: string;
+    staticDataUrl?: string;
+    stopsFile?: string;
+    realtimeArcgisUrl?: string;
+    useGtfsRtVehicles?: boolean;
+    [key: string]: string | boolean | undefined;
+}
+
 export interface CityConfig {
     slug: string;
     name: string;
@@ -7,7 +16,7 @@ export interface CityConfig {
     center: [number, number];
     bounds: [number, number, number, number]; // [w, s, e, n]
     adapter: AdapterType;
-    adapterConfig?: Record<string, string | boolean>;
+    adapterConfig?: AdapterConfig;
     isBeta?: boolean;
     virtualTableUrl?: string;
 }

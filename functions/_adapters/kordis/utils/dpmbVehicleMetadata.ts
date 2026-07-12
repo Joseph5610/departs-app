@@ -7,7 +7,7 @@ export interface BrnoVehicleMetadata {
     is_air_conditioned?: boolean;
 }
 
-export interface DpmbVehicleRange extends BrnoVehicleMetadata {
+interface DpmbVehicleRange extends BrnoVehicleMetadata {
     min: number;
     max: number;
 }

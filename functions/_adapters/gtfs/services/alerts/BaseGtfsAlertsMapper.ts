@@ -1,19 +1,11 @@
 import type { AppAlert } from "../../../../_core/types";
-import type { GtfsRoute } from "../../core/gtfs-data";
+import type { GtfsData, GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 
 export class BaseGtfsAlertsMapper {
     
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], routes: Record<string, unknown>, forceIncident: boolean = false): AppAlert[] {
-        const routesByName = new Map<string, GtfsRoute>();
-        for (const r of Object.values(routes)) {
-            const staticRoute = r as GtfsRoute;
-            if (staticRoute.name) {
-                routesByName.set(staticRoute.name, staticRoute);
-            }
-        }
-
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
             const headerStr = alert.headerText?.translation?.[0]?.text || '';
@@ -26,7 +18,12 @@ export class BaseGtfsAlertsMapper {
                 for (const ie of alert.informedEntity) {
                     if (ie.routeId) {
                         lines.push(ie.routeId);
-                        const matchingRoute = routesByName.get(ie.routeId);
+                        
+                        let matchingRoute: GtfsRoute | undefined;
+                        if (gtfsData) {
+                            matchingRoute = gtfsData.routes[ie.routeId] || gtfsData.routesByName[ie.routeId.toUpperCase()];
+                        }
+
                         if (matchingRoute) {
                             line_metadata.push({
                                 name: (matchingRoute.short_name || matchingRoute.name) as string,

@@ -1,8 +1,13 @@
 ## [0.53.5] - 2026-07-11
 ### Changed
-## [0.53.6] - 2026-07-11
+## [0.53.6] - 2026-07-12
 ### Fixed
 - Performance: Fixed an O(N²) nested loop in `BaseGtfsAlertsMapper.ts` that could cause Cloudflare Worker timeouts under heavy load.
+- Performance: Fixed an O(N) double-fetch in `KordisGtfsRtVehiclesService.ts` (`getCoreData` double call in `Promise.all`).
+- Refactoring: Removed hardcoded `IDS JMK` operator from generic `VehicleDetailMapper.ts` and made it KORDIS-specific via `KordisVehicleDetailEnricher`.
+- Refactoring: Deduplicated `ApiTripData`/`ApiMapping` interfaces into canonical `kordis/services/types.ts`.
+- Cleanup: Removed dead `getSingleLiveVehicle` method from `GtfsAdapter.ts`, unused `crossFix`/`haversineDist` utils, and normalized `_city` member naming.
+- Config: Tightened `knip.json` entries and removed unneeded `dist` ignores.
 
 - Resolved "ghost vehicle" duplication bug on Brno map by deduplicating Kordis GTFS-RT entities using `api.json` static timetable.
 - Fixed greyed-out train timeline UI by implementing ArcGIS-style GTFS-RT Node ID fallback logic for train stops in Kordis.

@@ -7,9 +7,9 @@ import { transit_realtime } from 'gtfs-realtime-bindings';
 import { GtfsAlertsMapper } from './GtfsAlertsMapper';
 import { GtfsRoute } from '../../../gtfs/core/gtfs-data';
 import { GOLEMIO_CONFIG } from "../../core/config";
+import { appClient } from '../../../../_core/ApiClient';
 import { z } from 'zod';
 import { golemioRouteSchema } from './schemas';
-import { appClient } from '../../../../_core/ApiClient';
 
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
@@ -33,7 +33,9 @@ export class AlertsService {
             }
         });
         
-        // ApiClient automatically throws on !response.ok, so we just return the text
+        if (!response.ok) {
+            throw new ApiError(`Upstream error: ${response.status}`, 502);
+        }
         return await response.text();
     }
 
@@ -65,15 +67,22 @@ export class AlertsService {
                     const routesData = parsedRoutes.success ? parsedRoutes.data : [];
                     
                     const routesMap: Record<string, GtfsRoute> = {};
+                    const routesByName: Record<string, GtfsRoute> = {};
                     for (const r of routesData) {
-                        routesMap[r.route_id] = {
+                        const route = {
                             name: r.route_id,
                             short_name: r.route_short_name,
                             type: r.route_type,
                             route_color: r.route_color ? '#' + r.route_color : undefined
                         };
+                        routesMap[r.route_id] = route;
+                        if (r.route_short_name) {
+                            routesByName[r.route_short_name.toUpperCase()] = route;
+                        }
                     }
-                    incidents = this.gtfsMapper.mapAlerts(rawAlerts, routesMap, true);
+                    
+                    const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
+                    incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, true);
                 } catch (e) {
                     console.error("Failed to parse GTFS-RT alerts or routes", e);
                 }

@@ -76,11 +76,6 @@ export class ApiClient {
                 cf: fetchInit.cf ?? (cacheTtl !== undefined ? { cacheTtl, cacheEverything: true } : undefined),
                 signal: controller.signal
             });
-
-            if (!response.ok) {
-                throw new Error(`API fetch failed: ${response.status} ${response.statusText} for ${finalUrl}`);
-            }
-
             return response;
         } finally {
             clearTimeout(timeoutId);

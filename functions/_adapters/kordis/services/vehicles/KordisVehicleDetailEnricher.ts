@@ -50,6 +50,12 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
             }
         }
 
+        enrichedDetail.vehicle_descriptor = {
+            ...enrichedDetail.vehicle_descriptor,
+            operator: 'IDS JMK',
+            vehicle_registration_number: enrichedDetail.vehicle_descriptor?.vehicle_registration_number || ''
+        };
+
         return enrichedDetail;
     }
 

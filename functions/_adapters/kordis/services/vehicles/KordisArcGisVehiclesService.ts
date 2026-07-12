@@ -91,7 +91,7 @@ export class KordisArcGisVehiclesService {
     async fetchRawArcgisFeed(): Promise<ArcgisResponse> {
         return CacheManager.getOrFetch(
             `vehicles_live_raw_${this.city.slug}`,
-            10000,
+            CACHE_TTL.TEN_SECONDS_MS,
             async () => {
                 const arcgisConfigUrl = this.city.adapterConfig?.realtimeArcgisUrl;
                 if (!arcgisConfigUrl) {

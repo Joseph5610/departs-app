@@ -21,15 +21,14 @@ export class AlertsService {
             
             const rawAlerts = feed.entity.filter(e => e.alert != null);
 
-            let routes: Record<string, unknown> = {};
+            let gtfsData = null;
             try {
-                const gtfsData = await getGtfsData(this.city.slug);
-                routes = gtfsData.routes;
+                gtfsData = await getGtfsData(this.city.slug);
             } catch (e) {
                 console.error("Failed to fetch routes for alerts", e);
             }
 
-            const alerts = this.mapper.mapAlerts(rawAlerts, routes);
+            const alerts = this.mapper.mapAlerts(rawAlerts, gtfsData);
 
             return { alerts } as AppAlertsResponse;
         } catch (e) {

@@ -1,6 +1,6 @@
 import type { AppVehicleDetail } from "../../../../_core/types";
 
-import { toSecs } from '../../core/utils';
+import { addSecondsToTime } from '../../core/utils';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
 
@@ -38,7 +38,7 @@ export class VehicleDetailMapper {
             state_position: 'before_track',
             origin_timestamp: undefined,
             vehicle_descriptor: {
-                operator: 'IDS JMK',
+                operator: undefined,
                 vehicle_registration_number: String(vehicleId || '')
             },
             last_stop_sequence: lastStopSequence,
@@ -63,16 +63,7 @@ export class VehicleDetailMapper {
             return String(timeStr);
         };
 
-        const addDelay = (timeStr: string | undefined | null, delaySecs: number | null) => {
-            if (!timeStr || delaySecs === null) return undefined;
-            const SECONDS_IN_DAY = 86400;
-            let secs = toSecs(String(timeStr)) + delaySecs;
-            if (secs < 0) secs += SECONDS_IN_DAY;
-            const h = Math.floor(secs / 3600) % 24;
-            const m = Math.floor((secs % 3600) / 60);
-            const sec = Math.floor(secs % 60);
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-        };
+
 
         return stations.map((s) => {
             const applyDelay = s.sequence >= (lastStopSequence || 0) ? computedDelay : 0;
@@ -88,8 +79,8 @@ export class VehicleDetailMapper {
                     stop_sequence: s.sequence,
                     arrival_time: formatTime(s.arrival_time),
                     departure_time: formatTime(s.departure_time),
-                    realtime_arrival_time: addDelay(s.arrival_time, applyDelay) || formatTime(s.arrival_time),
-                    realtime_departure_time: addDelay(s.departure_time, applyDelay) || formatTime(s.departure_time),
+                    realtime_arrival_time: (applyDelay ? addSecondsToTime(s.arrival_time, applyDelay) : undefined) || formatTime(s.arrival_time),
+                    realtime_departure_time: (applyDelay ? addSecondsToTime(s.departure_time, applyDelay) : undefined) || formatTime(s.departure_time),
                     metro_lines: []
                 }
             };

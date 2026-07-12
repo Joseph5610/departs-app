@@ -4,15 +4,10 @@ import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
+import type { ApiMapping, ApiTrip } from '../types';
 
-export interface ApiTripData {
-    trip_id: string;
-    start_mins: number;
-    end_mins: number;
-    dates: string[];
-}
-
-export type ApiMapping = Record<string, ApiTripData[]>;
+/** Buffer around trip start/end times to tolerate early/delayed vehicles. */
+const BUFFER_MINS = 30;
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     private async getApiMapping(): Promise<ApiMapping | null> {
@@ -66,8 +61,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         return { todayLocalStr, currentMinutes };
     }
 
-    private buildTripLookup(apiMapping: ApiMapping): Map<string, ApiTripData> {
-        const lookup = new Map<string, ApiTripData>();
+    private buildTripLookup(apiMapping: ApiMapping): Map<string, ApiTrip> {
+        const lookup = new Map<string, ApiTrip>();
         for (const trips of Object.values(apiMapping)) {
             for (const trip of trips) {
                 lookup.set(trip.trip_id, trip);
@@ -76,14 +71,55 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         return lookup;
     }
 
+    /**
+     * Selects the best-matching entity from a group of duplicate vehicle entries
+     * by finding the trip active at the current time. Falls back to the first entry.
+     */
+    private selectBestEntity(
+        entities: transit_realtime.IFeedEntity[],
+        tripLookup: Map<string, ApiTrip>,
+        todayStr: string,
+        currentMins: number
+    ): transit_realtime.IFeedEntity {
+        let bestMatch: transit_realtime.IFeedEntity | null = null;
+        let minTimeDiff = Infinity;
+
+        for (const entity of entities) {
+            const tripId = entity.vehicle?.trip?.tripId;
+            if (!tripId) continue;
+            const tripInfo = tripLookup.get(tripId);
+            
+            if (tripInfo) {
+                const operatesToday = tripInfo.dates ? tripInfo.dates.includes(todayStr) : true;
+                
+                if (operatesToday && currentMins >= (tripInfo.start_mins - BUFFER_MINS) && currentMins <= (tripInfo.end_mins + BUFFER_MINS)) {
+                    return entity; // Found perfect active trip
+                }
+
+                // Fallback: find the closest trip in time
+                if (operatesToday) {
+                    let diff = Infinity;
+                    if (currentMins < tripInfo.start_mins) diff = tripInfo.start_mins - currentMins;
+                    else if (currentMins > tripInfo.end_mins) diff = currentMins - tripInfo.end_mins;
+                    
+                    if (diff < minTimeDiff) {
+                        minTimeDiff = diff;
+                        bestMatch = entity;
+                    }
+                }
+            }
+        }
+        
+        return bestMatch ?? entities[0];
+    }
+
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
             CACHE_TTL.TEN_SECONDS_MS, 
             async () => {
-                const [feed, gtfsData, apiMapping] = await Promise.all([
-                    this.getCoreData().then(res => res[0]),
-                    this.getCoreData().then(res => res[1]),
+                const [[feed, gtfsData], apiMapping] = await Promise.all([
+                    this.getCoreData(),
                     this.getApiMapping()
                 ]);
 
@@ -95,7 +131,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 const THRESHOLD_MS = 10 * 60 * 1000;
                 const nowMs = Date.now();
 
-                // Group entities by label
+                // Group entities by label to handle duplicate vehicle IDs in the feed
                 const groupedEntities = new Map<string, transit_realtime.IFeedEntity[]>();
 
                 for (const entity of feed.entity) {
@@ -115,7 +151,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     groupedEntities.get(label)!.push(entity);
                 }
 
-                let tripLookup: Map<string, ApiTripData> | null = null;
+                let tripLookup: Map<string, ApiTrip> | null = null;
                 let todayStr = '';
                 let currentMins = 0;
 
@@ -127,47 +163,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 }
 
                 for (const [label, entities] of groupedEntities.entries()) {
-                    let selectedEntity = entities[0]; // default to first
-
-                    if (entities.length > 1 && tripLookup) {
-                        let bestMatch = null;
-                        let minTimeDiff = Infinity;
-
-                        for (const entity of entities) {
-                            const tripId = entity.vehicle?.trip?.tripId;
-                            if (!tripId) continue;
-                            const tripInfo = tripLookup.get(tripId);
-                            
-                            if (tripInfo) {
-                                // Prefer a trip that operates today and spans the current time
-                                const operatesToday = tripInfo.dates.includes(todayStr);
-                                
-                                // Buffer to include slightly delayed/early trips
-                                const BUFFER_MINS = 30; 
-                                
-                                if (operatesToday && currentMins >= (tripInfo.start_mins - BUFFER_MINS) && currentMins <= (tripInfo.end_mins + BUFFER_MINS)) {
-                                    bestMatch = entity;
-                                    break; // Found perfect active trip
-                                }
-
-                                // Fallback: find the closest trip in time
-                                if (operatesToday) {
-                                    let diff = Infinity;
-                                    if (currentMins < tripInfo.start_mins) diff = tripInfo.start_mins - currentMins;
-                                    else if (currentMins > tripInfo.end_mins) diff = currentMins - tripInfo.end_mins;
-                                    
-                                    if (diff < minTimeDiff) {
-                                        minTimeDiff = diff;
-                                        bestMatch = entity;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if (bestMatch) {
-                            selectedEntity = bestMatch;
-                        }
-                    }
+                    const selectedEntity = (entities.length > 1 && tripLookup)
+                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins)
+                        : entities[0];
 
                     const vp = selectedEntity.vehicle;
                     if (!vp) continue;
@@ -185,8 +183,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     // vp is guaranteed non-null by the guard above
                     const vpSafe = vp as NonNullable<typeof vp>;
                     const lastUpdate = vpSafe.timestamp ? Number(vpSafe.timestamp) * 1000 : nowMs;
-                    // Rewrite the vehicle ID to the label so it matches the group correctly
-                    // This prevents multiple markers from rendering if the deduplication fails
+                    // Rewrite the vehicle ID to the label so it matches the group correctly.
+                    // This prevents multiple markers from rendering if deduplication fails.
                     if (vpSafe.vehicle) {
                         vpSafe.vehicle.id = label;
                     }
@@ -206,9 +204,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             return super.getSingleLiveVehicle(vehicleId, gtfsTripId);
         }
 
-        const [feed, gtfsData, apiMapping] = await Promise.all([
-            this.getCoreData().then(res => res[0]),
-            this.getCoreData().then(res => res[1]),
+        const [[feed, gtfsData], apiMapping] = await Promise.all([
+            this.getCoreData(),
             this.getApiMapping()
         ]);
 
@@ -222,43 +219,14 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
         if (copies.length === 0) return {};
 
-        let rawMatch = copies[0];
+        let rawMatch: transit_realtime.IFeedEntity;
 
         if (copies.length > 1 && apiMapping) {
             const tripLookup = this.buildTripLookup(apiMapping);
             const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
-            
-            let bestMatch = null;
-            let minTimeDiff = Infinity;
-
-            for (const entity of copies) {
-                const tripId = entity.vehicle?.trip?.tripId;
-                if (!tripId) continue;
-                
-                const tripInfo = tripLookup.get(tripId);
-                if (tripInfo) {
-                    const operatesToday = tripInfo.dates.includes(todayLocalStr);
-                    const BUFFER_MINS = 30; 
-                    
-                    if (operatesToday && currentMinutes >= (tripInfo.start_mins - BUFFER_MINS) && currentMinutes <= (tripInfo.end_mins + BUFFER_MINS)) {
-                        bestMatch = entity;
-                        break;
-                    }
-                    if (operatesToday) {
-                        let diff = Infinity;
-                        if (currentMinutes < tripInfo.start_mins) diff = tripInfo.start_mins - currentMinutes;
-                        else if (currentMinutes > tripInfo.end_mins) diff = currentMinutes - tripInfo.end_mins;
-                        
-                        if (diff < minTimeDiff) {
-                            minTimeDiff = diff;
-                            bestMatch = entity;
-                        }
-                    }
-                }
-            }
-            if (bestMatch) {
-                rawMatch = bestMatch;
-            }
+            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMinutes);
+        } else {
+            rawMatch = copies[0];
         }
 
         const vp = rawMatch.vehicle;
