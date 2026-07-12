@@ -110,7 +110,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         mapRef,
         mapLoaded,
         displayVehicles,
-        selectedVehicleFeature
+        selectedVehicleFeature,
+        showVehicles
     );
 
     // Filter GeoJSON based on stop type filters

@@ -7,10 +7,10 @@ import { transit_realtime } from 'gtfs-realtime-bindings';
 import { GtfsAlertsMapper } from './GtfsAlertsMapper';
 import { GtfsRoute } from '../../../gtfs/core/gtfs-data';
 import { GOLEMIO_CONFIG } from "../../core/config";
-
 import { z } from 'zod';
 import { golemioRouteSchema } from './schemas';
 import { appClient } from '../../../../_core/ApiClient';
+
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
  * Uses GTFS-RT PB for incidents and PID RSS feeds for exclusions.

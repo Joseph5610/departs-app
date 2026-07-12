@@ -3,7 +3,16 @@ import { formatDate } from "../../../../_core/api-utils";
 import { GolemioInfotext } from "./schemas";
 
 export class InfotextsMapper {
+    
+    /**
+     * Maps raw Golemio infotext records to the internal `AppInfotext` shape,
+     * filtering out entries whose validity window does not include the current moment.
+     *
+     * @param data - Array of raw `GolemioInfotext` objects from the API response.
+     * @returns Filtered and mapped array of `AppInfotext` objects valid at call time.
+     */
     static map(data: GolemioInfotext[]): AppInfotext[] {
+
         const now = new Date();
         const nowMs = now.getTime();
 

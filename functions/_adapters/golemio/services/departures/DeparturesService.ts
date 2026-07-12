@@ -3,7 +3,6 @@ import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
 import { golemioDepartureItemSchema, type GolemioDepartureItem } from "./schemas";
-
 import { z } from "zod";
 import { GolemioClient } from "../../core/GolemioClient";
 import { DeparturesMapper } from "./DeparturesMapper";

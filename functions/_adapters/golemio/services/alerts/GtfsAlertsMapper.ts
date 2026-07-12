@@ -6,7 +6,12 @@ export interface PidAlertExtension {
     causeDetail?: { translation?: Array<{ text: string, language?: string }> };
 }
 
+/**
+ * Extends the base GTFS-RT alerts mapper with PID-specific
+ * `causeDetail` translations carried in the `PidAlertExtension`.
+ */
 export class GtfsAlertsMapper extends BaseGtfsAlertsMapper {
+    
     protected parseExtensions(alert: transit_realtime.IAlert, appAlert: AppAlert): void {
         const customAlert = alert as transit_realtime.IAlert & PidAlertExtension;
         

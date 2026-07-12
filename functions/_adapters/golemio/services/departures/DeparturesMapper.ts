@@ -9,6 +9,7 @@ import { fixCommaSpacing } from "../../../../_core/api-utils";
  * Groups metro lines by direction (e.g. A-Dejvická vs A-Depo Hostivař) to adhere to UI domain rules.
  */
 export class DeparturesMapper {
+    
     /**
      * Maps the raw array-of-arrays response from Golemio into a unified flat list of departures.
      * 

@@ -37,11 +37,14 @@ const interpolateBearing = (start: number, end: number, t: number): number => {
  * Performance: Bypasses React state completely during animation frames
  * by calling setData directly on MapLibre GeoJSON sources.
  */
+const EMPTY_FC: VehicleCollection = { type: 'FeatureCollection', features: [] };
+
 export const useVehicleAnimation = (
     mapRef: React.RefObject<MapRef | null>,
     mapLoaded: boolean,
     displayVehicles: VehicleCollection | null,
-    selectedVehicleFeature: VehicleCollection | null
+    selectedVehicleFeature: VehicleCollection | null,
+    showVehicles: boolean
 ) => {
     const animationFrameRef = useRef<number | null>(null);
     const lastPositionsRef = useRef<Map<string, TrackedPosition>>(new Map());
@@ -179,7 +182,9 @@ export const useVehicleAnimation = (
             const selectedVehicleSource = map.getSource('selected-vehicle') as maplibregl.GeoJSONSource | undefined;
 
             if (cityVehiclesSource) {
-                cityVehiclesSource.setData(displayGeoJSON);
+                // Respect the showVehicles preference even in the direct-mutation path,
+                // since this bypasses the React prop guard on the <Source> element.
+                cityVehiclesSource.setData(showVehicles ? displayGeoJSON : EMPTY_FC);
             }
 
             if (selectedVehicleSource) {
@@ -202,7 +207,7 @@ export const useVehicleAnimation = (
                 cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, [mapLoaded, displayVehicles, selectedVehicleFeature, mapRef, displayGeoJSON, selectedGeoJSON]);
+    }, [mapLoaded, displayVehicles, selectedVehicleFeature, mapRef, displayGeoJSON, selectedGeoJSON, showVehicles]);
 
     return {
         displayGeoJSON,
