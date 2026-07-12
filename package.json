@@ -93,7 +93,7 @@
     "shadcn": "^4.0.8",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.21.0",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "typescript-eslint": "^8.63.0",
     "vite": "^8.1.3",
     "vite-plugin-pwa": "^1.3.0",
