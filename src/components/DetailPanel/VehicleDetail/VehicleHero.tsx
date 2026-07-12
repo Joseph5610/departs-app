@@ -90,6 +90,17 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                 {!displayVehicle.isStaticFallback && (
                     <div className="flex gap-2 flex-wrap items-center">
                         {(() => {
+                            if (displayVehicle.delay === null) {
+                                return (
+                                    <Badge
+                                        variant="outline"
+                                        className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
+                                    >
+                                        {t('map.vehicleDetails.unknownDelay')}
+                                    </Badge>
+                                );
+                            }
+
                             const delayVal = Number(displayVehicle.delay || 0);
                             const delayMinutes = Math.round(Math.abs(delayVal) / 60);
                             const isLate = delayVal > 30;

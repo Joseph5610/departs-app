@@ -16,8 +16,7 @@ export class VehicleDetailMapper {
         const routeColor = route?.route_color || undefined;
         const rType = route ? Number(route.type) : 3;
 
-        // Since we are completely removing live GTFS-RT for Brno, we just use static data
-        const finalDelay = 0;
+        const finalDelay = null;
         const lastStopSequence = null;
 
         const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, finalDelay);
@@ -51,7 +50,7 @@ export class VehicleDetailMapper {
     }
 
 
-    static buildStopFeatures(stations: Station[], lastStopSequence: number | null, computedDelay: number) {
+    static buildStopFeatures(stations: Station[], lastStopSequence: number | null, computedDelay: number | null) {
         const formatTime = (timeStr: string | undefined | null): string => {
             if (!timeStr) return '';
             const parts = String(timeStr).split(':');
@@ -64,8 +63,8 @@ export class VehicleDetailMapper {
             return String(timeStr);
         };
 
-        const addDelay = (timeStr: string | undefined | null, delaySecs: number) => {
-            if (!timeStr) return undefined;
+        const addDelay = (timeStr: string | undefined | null, delaySecs: number | null) => {
+            if (!timeStr || delaySecs === null) return undefined;
             const SECONDS_IN_DAY = 86400;
             let secs = toSecs(String(timeStr)) + delaySecs;
             if (secs < 0) secs += SECONDS_IN_DAY;
@@ -124,7 +123,7 @@ export class VehicleDetailMapper {
             route_type: 3,
             trip_headsign: headsign,
             bearing: null,
-            delay: 0,
+            delay: null,
             route_color: '#888888',
             is_night: false,
             is_static_fallback: true

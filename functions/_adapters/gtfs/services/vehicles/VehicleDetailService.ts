@@ -3,15 +3,21 @@ import type { Env, AppVehicleDetail } from "../../../../_core/types";
 
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
-import { gtfsFetch } from '../../core/utils';
+import { appClient } from '../../../../_core/ApiClient';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import type { VehicleDetailEnricher } from './VehicleDetailEnricher';
 
+/**
+ * The core orchestrator for the /vehicles/:id detail endpoint.
+ * It builds the static timetable from the raw GTFS schedule data.
+ * If an Enricher is provided, it delegates the live GPS/delay merging to that Enricher.
+ */
 export class VehicleDetailService {
-    constructor(private city: CityConfig) {}
+    constructor(private city: CityConfig, private enricher?: VehicleDetailEnricher) {}
 
     async getVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         const url = new URL(ctx.request.url);
@@ -33,7 +39,13 @@ export class VehicleDetailService {
             throw new ApiError(ERROR_MESSAGES.VEHICLE_NOT_FOUND, 404);
         }
 
-        return VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route);
+        let detail = VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route);
+        
+        if (this.enricher) {
+            detail = await this.enricher.enrich(detail, ctx);
+        }
+        
+        return detail;
     }
 
 
@@ -45,7 +57,7 @@ export class VehicleDetailService {
 
         const tripUrl = `${staticDataUrl}/${this.city.slug}/trips/${chunkId}.json`;
         try {
-            const tripRes = await gtfsFetch(tripUrl);
+            const tripRes = await appClient.fetch(tripUrl);
             const chunkData = await tripRes.json() as Record<string, unknown[]>;
             const tripData = chunkData[tripId];
             if (!tripData) return [];

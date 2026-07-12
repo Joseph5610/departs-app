@@ -1,0 +1,92 @@
+import type { EventContext } from "@cloudflare/workers-types";
+import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core/types";
+import { GtfsRtVehicleDetailEnricher } from "../../../gtfs/services/vehicles/GtfsRtVehicleDetailEnricher";
+import type { VehiclesService } from "../../../gtfs/services/vehicles/VehiclesService";
+import type { KordisArcGisVehiclesService } from "./KordisArcGisVehiclesService";
+import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
+
+/**
+ * Brno-specific vehicle enricher.
+ * Injects local static metadata (e.g., DPMB vehicle models, AC status) before
+ * delegating live GPS/delay enrichment either to the standard GTFS-RT feed or the legacy ArcGIS API.
+ */
+export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
+    constructor(
+        protected vehiclesService: VehiclesService,
+        protected kordisVehiclesService: KordisArcGisVehiclesService,
+        protected useGtfsRt: boolean = true
+    ) {
+        super(vehiclesService);
+    }
+
+    async enrich(detail: AppVehicleDetail, ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
+        let enrichedDetail = detail;
+
+        if (this.useGtfsRt) {
+            // Use the base GtfsRtEnricher logic (which calls vehiclesService.getSingleLiveVehicle)
+            // This might discover the real vehicle_id if it was missing but gtfsTripId was provided.
+            enrichedDetail = await super.enrich(detail, ctx);
+        } else {
+            // Use the legacy ArcGIS service
+            const result = await this.kordisVehiclesService.getSingleLiveVehicle(detail.vehicle_id || '', detail.gtfs_trip_id);
+            const liveMatch = result.liveMatch;
+            const lastStopId = result.lastStopId;
+
+            if (liveMatch) {
+                this.enrichVehicleDetail(enrichedDetail, liveMatch, lastStopId);
+            }
+        }
+
+        // Apply static vehicle metadata for Brno (DPMB)
+        // We do this AFTER the live match so we have the most accurate vehicle_id
+        if (enrichedDetail.vehicle_id) {
+            const meta = await getDpmbVehicleMetadata(enrichedDetail.vehicle_id);
+            if (meta) {
+                enrichedDetail.vehicle_descriptor = {
+                    ...enrichedDetail.vehicle_descriptor,
+                    vehicle_type: meta.vehicle_type,
+                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : enrichedDetail.vehicle_descriptor?.is_air_conditioned
+                };
+            }
+        }
+
+        return enrichedDetail;
+    }
+
+    protected override enrichVehicleDetail(detail: AppVehicleDetail, liveMatch: AppVehicleFeature, lastStopId?: string) {
+        let bestStopId = lastStopId;
+        
+        // In GTFS-RT, Kordis sends stopIds like "U01557Z10". 
+        // For buses/trams, this matches GTFS static (normalized to U1557Z10).
+        // For trains, GTFS static only uses the Node ID (e.g., "1557").
+        // If the exact U...Z... match fails, fallback to Node ID just like the ArcGIS API did.
+        if (lastStopId && lastStopId.startsWith('U') && detail.stop_times?.features) {
+            const normalized = this.normalizeGtfsRtStopId(lastStopId);
+            let stopMatch = detail.stop_times.features.find(s => {
+                const sid = s.properties.stop_id;
+                return sid === normalized || sid.includes(normalized) || sid.startsWith(normalized);
+            });
+            
+            if (!stopMatch) {
+                const nodeMatch = lastStopId.match(/U0*(\d+)Z/);
+                if (nodeMatch) {
+                    const nodeId = nodeMatch[1];
+                    stopMatch = detail.stop_times.features.find(s => s.properties.stop_id === nodeId);
+                    if (stopMatch) {
+                        bestStopId = nodeId;
+                    }
+                }
+            }
+        }
+
+        super.enrichVehicleDetail(detail, liveMatch, bestStopId);
+    }
+
+    protected normalizeGtfsRtStopId(stopId: string): string {
+        // Normalize GTFS-RT stopIds like "U01611Z01" to "U1611Z1" for Brno
+        if (stopId.startsWith('U')) {
+            return stopId.replace(/U0*(\d+)/, 'U$1').replace(/Z0*(\d+)/, 'Z$1');
+        }
+        return stopId;
+    }
+}

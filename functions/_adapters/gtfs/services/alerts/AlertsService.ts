@@ -1,13 +1,12 @@
 import type { AppAlertsResponse } from "../../../../_core/types";
-import { transit_realtime } from 'gtfs-realtime-bindings';
+
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
-import { gtfsFetch } from '../../core/utils';
-import { AlertsMapper } from './AlertsMapper';
-
+import { BaseGtfsAlertsMapper } from './BaseGtfsAlertsMapper';
+import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 
 export class AlertsService {
-    constructor(private city: CityConfig) {}
+    constructor(private city: CityConfig, private mapper: BaseGtfsAlertsMapper) {}
 
     async getAlerts(): Promise<AppAlertsResponse> {
         try {
@@ -17,11 +16,8 @@ export class AlertsService {
                 return { alerts: [] };
             }
 
-            const rtRes = await gtfsFetch(rtUrl, { cf: { cacheTtl: 60 } });
-            if (!rtRes || !rtRes.ok) return { alerts: [] };
-
-            const buffer = await rtRes.arrayBuffer();
-            const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+            const feed = await getGtfsRtFeed(this.city.slug, rtUrl);
+            if (!feed) return { alerts: [] };
             
             const rawAlerts = feed.entity.filter(e => e.alert != null);
 
@@ -33,7 +29,7 @@ export class AlertsService {
                 console.error("Failed to fetch routes for alerts", e);
             }
 
-            const alerts = AlertsMapper.mapAlerts(rawAlerts, routes);
+            const alerts = this.mapper.mapAlerts(rawAlerts, routes);
 
             return { alerts } as AppAlertsResponse;
         } catch (e) {

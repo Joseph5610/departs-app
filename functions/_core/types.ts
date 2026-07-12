@@ -81,7 +81,7 @@ export interface AppVehicleProperties {
     route_type: string | number;
     trip_headsign: string;
     bearing: number | null;
-    delay: number;
+    delay: number | null;
     state_position?: string;
     next_stop_name?: string;
     last_stop_sequence?: number | null;
@@ -143,7 +143,7 @@ export interface AppRouteGeoJSON {
 export interface AppDeparture {
     timestamp: string;
     scheduled: string;
-    delay: number;
+    delay: number | null;
     line: string;
     type: string;
     directionId: string;

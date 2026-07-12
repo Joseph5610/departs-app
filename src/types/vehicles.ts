@@ -16,7 +16,7 @@ export interface BaseVehicleProperties {
     route_type: string | number;
     trip_headsign: string;
     bearing: number | null | undefined;
-    delay: number;
+    delay: number | null;
     state_position?: string;
     next_stop_name?: string;
     run_number?: number | string;

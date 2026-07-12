@@ -40,7 +40,7 @@ export class VehiclesMapper {
         });
 
         const maxTimeUpdated = maxTimeUpdatedStr ? new Date(maxTimeUpdatedStr).getTime() : 0;
-        const THRESHOLD_MS = 20 * 60 * 1000;
+        const THRESHOLD_MS = 10 * 60 * 1000;
         const isStale = maxTimeUpdated > 0 && (Date.now() - maxTimeUpdated > THRESHOLD_MS);
         const status = isStale ? 'stale' : 'ok';
 

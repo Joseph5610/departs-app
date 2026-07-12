@@ -114,6 +114,7 @@
       "staticFallbackDescription": "Tento spoj momentálně nemá aktivní sledování polohy. Zobrazen je plánovaný jízdní řád.",
       "headingToDestination": "Směr",
       "onTime": "Na čas",
+      "unknownDelay": "Neznámé zpoždění",
       "delayLabel": "Zpoždění {{minutes}} min",
       "earlyLabel": "Napřed {{minutes}} min",
       "routeSchedule": "Jízdní řád",
@@ -300,5 +301,53 @@
     "submit": "Odeslat",
     "success": "Děkujeme za zpětnou vazbu!",
     "errorTurnstile": "Prosím, ověřte, že jste člověk."
+  },
+  "journey": {
+    "tabs": {
+      "stops": "Zastávky",
+      "journey": "Spojení"
+    },
+    "search": {
+      "from": "Odkud",
+      "to": "Kam",
+      "fromPlaceholder": "Zastávka, adresa nebo místo odjezdu",
+      "toPlaceholder": "Zastávka, adresa nebo místo příjezdu",
+      "swap": "Prohodit odkud a kam",
+      "departAt": "Odjezd v",
+      "arriveBy": "Příjezd v",
+      "now": "Nyní",
+      "search": "Hledat spojení",
+      "noOrigin": "Zadejte výchozí místo",
+      "noDestination": "Zadejte cíl cesty"
+    },
+    "result": {
+      "noResults": "Pro zadaný čas a trasu nebylo nalezeno žádné spojení.",
+      "error": "Nepodařilo se načíst výsledky hledání.",
+      "duration": "{{minutes}} min",
+      "transfers_zero": "Přímé",
+      "transfers_one": "1 přestup",
+      "transfers_few": "{{count}} přestupy",
+      "transfers_other": "{{count}} přestupů",
+      "transfer": "Čekání / Přestup",
+      "walk": "{{minutes}} min pěšky",
+      "departure": "Odjezd",
+      "arrival": "Příjezd",
+      "platform": "Nástupiště {{code}}"
+    },
+    "leg": {
+      "transit": "Jet linkou {{line}} směr {{headsign}}",
+      "walk": "Jít pěšky {{minutes}} min ({{distance}} m)",
+      "rideStops_one": "Jet 1 zastávku",
+      "rideStops_other": "Jet {{count}} zastávky",
+      "boardAt": "Nastoupit na {{stop}}",
+      "alightAt": "Vystoupit na {{stop}}",
+      "openDepartureBoard": "Otevřít odjezdovou tabuli"
+    },
+    "header": {
+      "results": "Výsledky hledání spojení",
+      "detail": "Detail spojení",
+      "earlier": "Dříve",
+      "later": "Později"
+    }
   }
 }
