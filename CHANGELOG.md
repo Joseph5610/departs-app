@@ -1,7 +1,16 @@
-## [0.53.5] - 2026-07-11
-### Changed
+# Changelog
+
+## [0.53.7] - 2026-07-13
+
+### Added
+
+- Added allowed filter options in the `CityConfig` (`vehicles` and `stops`).
+- Frontend settings panel now dynamically filters available vehicle and stop types based on the selected city's configuration (e.g., removing metro and stops filter for Brno).
+
 ## [0.53.6] - 2026-07-12
+
 ### Fixed
+
 - Performance: Fixed an O(N²) nested loop in `BaseGtfsAlertsMapper.ts` that could cause Cloudflare Worker timeouts under heavy load.
 - Performance: Fixed an O(N) double-fetch in `KordisGtfsRtVehiclesService.ts` (`getCoreData` double call in `Promise.all`).
 - Refactoring: Removed hardcoded `IDS JMK` operator from generic `VehicleDetailMapper.ts` and made it KORDIS-specific via `KordisVehicleDetailEnricher`.
@@ -18,18 +27,16 @@
 - Eliminated redundant data overwriting in Kordis Adapter (e.g. stopping dynamic real-time injections of static UI values like `route_color`).
 
 ## [0.53.4] - 2026-07-08
+
 ### Fixed
+
 - Fixed an issue where the "Switched to City" toast would incorrectly trigger multiple times on initial map load during programmatic map movements.
-
-
-# Changelog
 
 ## [0.53.3] - 2026-07-08
 
 ### Fixed
 
 - **Alert Icons**: Fixed an issue where the `GenericAlertCard` would not display the correct icon for specific alert effects (e.g. exclusions), restoring parity with the icons shown in the main Alerts modal.
-
 
 ## [0.53.2] - 2026-07-08
 

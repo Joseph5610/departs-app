@@ -19,6 +19,10 @@ export interface CityConfig {
     adapterConfig?: AdapterConfig;
     isBeta?: boolean;
     virtualTableUrl?: string;
+    filters?: {
+        vehicles: string[];
+        stops: string[];
+    };
 }
 
 export const CITY_REGISTRY: Record<string, CityConfig> = {
@@ -30,6 +34,10 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         bounds: [14.22, 49.94, 14.71, 50.18],
         adapter: 'golemio',
         virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
+        filters: {
+            vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
+            stops: ['metro', 'train']
+        }
     },
     brno: {
         slug: 'brno',
@@ -46,6 +54,10 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             useGtfsRtVehicles: true
         },
         isBeta: true,
+        filters: {
+            vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
+            stops: []
+        }
     },
 };
 

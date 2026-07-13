@@ -162,20 +162,12 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                          borderBottomColor: subFirstDep.route_color || 'rgba(255,255,255,0.1)'
                                                      }}
                                                 >
-                                                <span
-                                                    className={cn(
-                                                        "inline-flex items-center justify-center font-bold text-white text-[11.5px] shadow-sm shrink-0",
-                                                        (isMetro || ['A', 'B', 'C'].includes(String(lineGroup.line).toUpperCase()))
-                                                            ? "rounded-full w-[24px] h-[24px]"
-                                                            : "rounded-[4px] h-[24px] px-2 min-w-[24px]"
-                                                    )}
-                                                    style={{ 
-                                                        backgroundColor: subFirstDep.route_color || FALLBACK_ROUTE_COLOR,
-                                                        border: '1px solid rgba(255,255,255,0.15)'
-                                                    }}
-                                                >
-                                                    {lineGroup.line}
-                                                </span>
+                                                <LineBadge 
+                                                    name={String(lineGroup.line)} 
+                                                    routeColor={subFirstDep.route_color || FALLBACK_ROUTE_COLOR} 
+                                                    size="lg" 
+                                                    className="shadow-sm" 
+                                                />
                                                 <ArrowRight size={14} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
                                                     <div className="flex flex-col flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 min-w-0">

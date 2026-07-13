@@ -203,6 +203,10 @@ export interface AppCity {
     bounds: [number, number, number, number];
     isBeta?: boolean;
     virtualTableUrl?: string;
+    filters?: {
+        vehicles: string[];
+        stops: string[];
+    };
 }
 
 export interface AppCitiesResponse {

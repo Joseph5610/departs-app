@@ -11,6 +11,7 @@ export async function onRequest() {
             bounds: city.bounds,
             isBeta: city.isBeta,
             virtualTableUrl: city.virtualTableUrl,
+            filters: city.filters,
         }))
     };
     return createSuccessResponse(response, 3600); // cache for 1 hour

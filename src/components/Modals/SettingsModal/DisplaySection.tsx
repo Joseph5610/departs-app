@@ -21,6 +21,8 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useCities } from '../../../hooks/data/useCities';
+import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
 
 const vehicleTypes = [
     { id: 'metro', icon: Subway },
@@ -141,6 +143,14 @@ export const DisplaySection: React.FC = () => {
         setMapBaseStyle
     } = usePreferencesStore(s => s.actions);
 
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { data: citiesData } = useCities();
+    const cityConfig = citiesData?.cities.find(c => c.slug === selectedCity) || FRONTEND_CITIES_CONFIG[selectedCity];
+
+    const allowedVehicles = cityConfig?.filters?.vehicles || vehicleTypes.map(v => v.id);
+    const allowedStops = cityConfig?.filters?.stops || [];
+    const isStopsFilterEnabled = allowedStops.length > 0;
+
     const toggleFilter = (filter: string[], setFilter: (val: string[]) => void, type: string) => {
         if (filter.includes(type)) {
             setFilter(filter.filter(t => t !== type));
@@ -170,7 +180,9 @@ export const DisplaySection: React.FC = () => {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
-                        {vehicleTypes.map(({ id, icon }) => (
+                        {vehicleTypes
+                            .filter(({ id }) => allowedVehicles.includes(id))
+                            .map(({ id, icon }) => (
                             <FilterButton
                                 key={id}
                                 icon={icon}
@@ -203,7 +215,7 @@ export const DisplaySection: React.FC = () => {
                 <Item
                     variant="settings"
                     size="none"
-                    className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none border-b border-white/5"
+                    className={cn("w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none", isStopsFilterEnabled ? "border-b border-white/5" : "border-0")}
                     render={<button onClick={() => setShowStopLabels(!showStopLabels)} />}
                 >
                     <ItemMedia variant="icon" className={cn(showStopLabels ? "text-primary" : "text-muted-foreground")}>
@@ -221,38 +233,44 @@ export const DisplaySection: React.FC = () => {
                     </ItemActions>
                 </Item>
 
-                <div className="flex flex-col gap-3 px-4 py-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-1 h-1 rounded-full bg-primary" />
-                        <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
-                            {t('settings.sections.filters')}
+                {isStopsFilterEnabled && (
+                    <div className="flex flex-col gap-3 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-primary" />
+                            <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
+                                {t('settings.sections.filters')}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                            {allowedStops.includes('metro') && (
+                                <FilterButton
+                                    icon={Subway}
+                                    label={t('settings.vehicleTypes.metro')}
+                                    isActive={stopTypeFilter.includes('metro')}
+                                    onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'metro')}
+                                />
+                            )}
+
+                            {allowedStops.includes('train') && (
+                                <FilterButton
+                                    icon={Train}
+                                    label={t('settings.vehicleTypes.train')}
+                                    isActive={stopTypeFilter.includes('train')}
+                                    onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'train')}
+                                />
+                            )}
+
+                            <FilterButton
+                                icon={CircleSlash}
+                                label={t('common.all')}
+                                isActive={stopTypeFilter.length === 0}
+                                onClick={() => setStopTypeFilter([])}
+                                variant="amber"
+                            />
+                            <div className="hidden sm:block" />
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
-                        <FilterButton
-                            icon={Subway}
-                            label={t('settings.vehicleTypes.metro')}
-                            isActive={stopTypeFilter.includes('metro')}
-                            onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'metro')}
-                        />
-
-                        <FilterButton
-                            icon={Train}
-                            label={t('settings.vehicleTypes.train')}
-                            isActive={stopTypeFilter.includes('train')}
-                            onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'train')}
-                        />
-
-                        <FilterButton
-                            icon={CircleSlash}
-                            label={t('common.all')}
-                            isActive={stopTypeFilter.length === 0}
-                            onClick={() => setStopTypeFilter([])}
-                            variant="amber"
-                        />
-                        <div className="hidden sm:block" />
-                    </div>
-                </div>
+                )}
             </ToggleSection>
 
             <Card variant="subtle" className="mt-3 p-0 gap-0">

@@ -1,5 +1,4 @@
 import { Env } from "../../../_core/types";
-
 import { CACHE_TTL } from "../../../_core/api-utils";
 import { GOLEMIO_CONFIG } from "./config";
 import { ApiClient, ApiFetchOptions } from "../../../_core/ApiClient";
@@ -38,5 +37,4 @@ export class GolemioClient {
             }
         });
     }
-
 }
