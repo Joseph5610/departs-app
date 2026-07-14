@@ -146,10 +146,10 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                 <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-[250px]">
                                     <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
                                         {isEnriched 
-                                            ? t('map.vehicleDetails.enrichedTooltip', 'Tato data jsou aktualizována v reálném čase přímo z vozidla (Live Stream).') 
+                                            ? t('map.vehicleDetails.enrichedTooltip') 
                                             : hasEnrichment 
-                                                ? t('map.vehicleDetails.connectingTooltip', 'Čekáme na spojení s vozidlem (Live Stream). Zatím zobrazujeme standardní data z dispečinku.')
-                                                : t('map.vehicleDetails.standardTooltip', 'Zobrazujeme standardní data o poloze z dispečinku.')
+                                                ? t('map.vehicleDetails.connectingTooltip')
+                                                : t('map.vehicleDetails.standardTooltip')
                                         }
                                     </span>
                                 </PopoverContent>

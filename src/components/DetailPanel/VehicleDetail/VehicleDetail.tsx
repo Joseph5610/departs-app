@@ -150,7 +150,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     {relevantAlerts.length > 0 && (
                         <div className="flex flex-col gap-2 mt-2">
                             <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                                {t('alerts.title', { defaultValue: 'Mimořádnosti a výluky' })}
+                                {t('alerts.title')}
                                 {relevantAlerts.length > 1 && ` (${relevantAlerts.length})`}
                             </span>
                             <Carousel opts={{ loop: true }} className="w-full">
