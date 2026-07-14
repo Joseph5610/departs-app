@@ -5,6 +5,7 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
+import { getDpmbVehicleRanges } from '../../utils/dpmbVehicleMetadata';
 
 /** Buffer around trip start/end times to tolerate early/delayed vehicles. */
 const BUFFER_MINS = 30;
@@ -113,14 +114,21 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         return bestMatch ?? entities[0];
     }
 
+    /**
+     * Overrides the base vehicle fetching logic to process the KORDIS GTFS-RT feed.
+     * In addition to mapping real-time positions, it performs bulk enrichment by fetching
+     * the static DPMB vehicle ranges (e.g., to determine if a vehicle is air-conditioned or a specific model)
+     * and merging them into the final vehicle features.
+     */
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
             CACHE_TTL.TEN_SECONDS_MS, 
             async () => {
-                const [[feed, gtfsData], apiMapping] = await Promise.all([
+                const [[feed, gtfsData], apiMapping, dpmbRanges] = await Promise.all([
                     this.getCoreData(),
-                    this.getApiMapping()
+                    this.getApiMapping(),
+                    getDpmbVehicleRanges()
                 ]);
 
                 if (!feed || !feed.entity) {
@@ -190,6 +198,21 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     }
 
                     const liveMatch = VehiclesMapper.mapVehicle(vpSafe, tripId, route, lastUpdate, null);
+                    
+                    if (dpmbRanges && liveMatch.properties.vehicle_id) {
+                        const num = parseInt(liveMatch.properties.vehicle_id, 10);
+                        if (!isNaN(num)) {
+                            const rangeMatch = dpmbRanges.find(r => num >= r.min && num <= r.max);
+                            if (rangeMatch) {
+                                liveMatch.properties.vehicle_descriptor = {
+                                    ...liveMatch.properties.vehicle_descriptor,
+                                    vehicle_type: rangeMatch.vehicle_type,
+                                    is_air_conditioned: rangeMatch.is_air_conditioned !== undefined ? rangeMatch.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
+                                };
+                            }
+                        }
+                    }
+
                     features.push(liveMatch);
                 }
 

@@ -38,8 +38,12 @@ export class GtfsAdapter implements CityAdapter {
     
 
     
+    /**
+     * Processes departures by injecting the underlying VehiclesService into the DeparturesService.
+     * This allows the departure board to access the live vehicle feed for delays and enriched metadata.
+     */
     async handleDepartures(ctx: EventContext<Env, string, unknown>): Promise<AppDepartureResponse> {
-        return new DeparturesService(this.city).getDepartures(ctx);
+        return new DeparturesService(this.city, this.vehiclesService).getDepartures(ctx);
     }
     
     async handleVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {

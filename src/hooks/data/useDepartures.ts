@@ -7,6 +7,9 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
+import { applyEnrichment } from '../../lib/enrichment';
+import { useEnrichmentStore } from '../../state/enrichmentStore';
+import { useVehicles } from './useVehicles';
 
 export interface DepartureSubGroup {
     groupId: string;
@@ -99,7 +102,41 @@ export const useDepartures = () => {
         staleTime: TRANSIT_REFRESH_MS
     });
 
-    const enrichedDepartures = useMemo((): Departure[] => query.data?.departures || [], [query.data]);
+    const byTripId = useEnrichmentStore(s => s.byTripId);
+    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+    const { vehicles: rawVehicles } = useVehicles();
+
+    const enrichedDepartures = useMemo((): Departure[] => {
+        const deps = query.data?.departures || [];
+        
+        // Build a fresh tripId -> vehicleId map from the frontend's live vehicles
+        // This guarantees we always have the vehicleId even if the backend departures cache missed it.
+        const liveTripToVehicle = new Map<string, string>();
+        if (rawVehicles?.features) {
+            for (const f of rawVehicles.features) {
+                const tId = f.properties.gtfs_trip_id;
+                const vId = f.properties.vehicle_id;
+                if (tId && vId) {
+                    liveTripToVehicle.set(tId, vId);
+                }
+            }
+        }
+
+        const baseTs = query.dataUpdatedAt || 0;
+        const now = baseTs;
+        return deps.map(dep => {
+            const vId = dep.vehicleId || (dep.tripId ? liveTripToVehicle.get(dep.tripId) : undefined);
+            const enriched = applyEnrichment(dep, dep.tripId, vId, byTripId, byVehicleId, baseTs);
+            // Ensure vehicleId is saved on the departure if we found it
+            if (vId && !enriched.vehicleId) {
+                enriched.vehicleId = vId;
+            }
+            return enriched;
+        }).filter(dep => {
+            const rtTime = new Date(dep.timestamp).getTime();
+            return rtTime >= now - 60000;
+        });
+    }, [query.data, query.dataUpdatedAt, byTripId, byVehicleId, rawVehicles]);
 
     const hasAirConditioningData = useMemo(() => {
         return enrichedDepartures.some(dep => dep.is_air_conditioned === true);

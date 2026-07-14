@@ -72,6 +72,9 @@ export const CATCH_BUFFER = 120;
 export const TRANSIT_REFRESH_S = 10;
 export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
 
+export const ENRICHMENT_GRACE_MS = 30_000;      // Gate 1: WS patch must be within 30s of base data
+export const ENRICHMENT_SILENCE_TTL_MS = 90_000; // Gate 2: Prune patches silent for 90s
+
 export const DATA_SOURCE_URLS = {
     prague: 'https://golemio.cz',
     brno: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328'

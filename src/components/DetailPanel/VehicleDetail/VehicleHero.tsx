@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
@@ -16,12 +17,15 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     isFollowing,
     onToggleFollow,
     liveDataAgeSeconds,
-    isDetailLoading
+    isDetailLoading,
+    hasEnrichment
 }) => {
     const { t } = useTranslation();
     const { share } = useShare();
 
     if (!displayVehicle) return null;
+
+    const isEnriched = !!displayVehicle.is_enriched;
 
     const bgColor = displayVehicle.route_color || FALLBACK_ROUTE_COLOR;
 
@@ -123,13 +127,33 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         })()}
 
                         {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
-                            <Badge variant="muted" className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5">
-                                <div className={cn(
-                                    "w-1.5 h-1.5 rounded-full shrink-0",
-                                    liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
-                                )} />
-                                <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
-                            </Badge>
+                            <Popover>
+                                <PopoverTrigger render={<button type="button" className="outline-none" />}>
+                                    <Badge variant="muted" className={cn(
+                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer hover:bg-muted/80 transition-colors",
+                                        isEnriched ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" : 
+                                        (hasEnrichment && !isEnriched) ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" : ""
+                                    )}>
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full shrink-0",
+                                            isEnriched ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
+                                            (hasEnrichment && !isEnriched) ? "bg-amber-500 animate-pulse shadow-[0_0_8px_var(--color-amber-500)]" :
+                                            liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
+                                        )} />
+                                        <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
+                                    </Badge>
+                                </PopoverTrigger>
+                                <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-[250px]">
+                                    <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
+                                        {isEnriched 
+                                            ? t('map.vehicleDetails.enrichedTooltip', 'Tato data jsou aktualizována v reálném čase přímo z vozidla (Live Stream).') 
+                                            : hasEnrichment 
+                                                ? t('map.vehicleDetails.connectingTooltip', 'Čekáme na spojení s vozidlem (Live Stream). Zatím zobrazujeme standardní data z dispečinku.')
+                                                : t('map.vehicleDetails.standardTooltip', 'Zobrazujeme standardní data o poloze z dispečinku.')
+                                        }
+                                    </span>
+                                </PopoverContent>
+                            </Popover>
                         )}
                     </div>
                 )}
@@ -220,7 +244,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
                                 <Zap size={14} className="text-amber-400" strokeWidth={2} />
                             )}
-                            {displayVehicle.vehicle_descriptor?.is_wheelchair_accessible && (
+                            {(displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
                                 <Accessibility size={14} className="text-emerald-400" strokeWidth={2} />
                             )}
                         </div>

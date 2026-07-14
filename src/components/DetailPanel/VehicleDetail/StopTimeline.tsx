@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { calculateTimeDifferenceSecs } from '../../../utils/dateUtils';
+import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
@@ -16,7 +16,7 @@ import type { StopFeature, StopTimelineProps } from './types';
  * Extracted from VehicleDetail to reduce monolith size.
  * The timeline visually shows a vertical line with dots for each stop.
  */
-export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effectiveSequence }) => {
+export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effectiveSequence, delay }) => {
     const { t } = useTranslation();
     const [showPastStops, setShowPastStops] = useState(false);
 
@@ -67,6 +67,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                                     isPast={true}
                                     effectiveSequence={effectiveSequence}
                                     nextStopSequence={nextStopSequence}
+                                    delay={delay}
                                 />
                             ))
                         }
@@ -82,6 +83,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                                 isPast={false}
                                 effectiveSequence={effectiveSequence}
                                 nextStopSequence={nextStopSequence}
+                                delay={delay}
                             />
                         ))
                     }
@@ -93,11 +95,12 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
 
 StopTimeline.displayName = 'StopTimeline';
 
-const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
+const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: {
     stop: StopFeature,
     isPast: boolean,
     effectiveSequence: number | null,
-    nextStopSequence: number | null
+    nextStopSequence: number | null,
+    delay?: number | null
 }) => {
     const { t } = useTranslation();
     const stopSeq = Number(stop.properties.stop_sequence);
@@ -111,7 +114,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
             isPast ? "opacity-40" : "opacity-100"
         )}>
             <div className={cn(
-                "absolute -left-[17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
+                "absolute left-[-17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
                 isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
             <div className="flex flex-col items-start min-w-0 pr-2 flex-1">
@@ -152,14 +155,21 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence }: {
                         ? (departure_time || arrival_time) 
                         : (arrival_time || departure_time);
                         
-                    const realtimeTime = rtTime || schTime;
+                    let realtimeTime = rtTime || schTime;
                     const scheduledTime = schTime;
-                    const hasRealtime = !!rtTime && rtTime !== schTime;
+                    
+                    // Always augment with vehicle delay for current/future stops if a delay exists.
+                    // This overrides the backend's rtTime which may be incorrectly identical to schTime.
+                    if (schTime && typeof delay === 'number' && !isPast) {
+                        realtimeTime = addSecondsToTime(schTime as string, delay);
+                    }
+                    
+                    const hasRealtime = !!rtTime && rtTime !== schTime || (!!delay && delay !== 0 && !isPast);
                     
                     let isLate = false;
                     
-                    if (hasRealtime && schTime) {
-                        const diff = calculateTimeDifferenceSecs(rtTime as string, schTime);
+                    if (hasRealtime && schTime && realtimeTime) {
+                        const diff = calculateTimeDifferenceSecs(realtimeTime as string, schTime as string);
                         isLate = diff > 30;
                     }
                     return (

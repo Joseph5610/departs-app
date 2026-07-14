@@ -36,6 +36,28 @@ export const calculateTimeDifferenceSecs = (realtimeTime: string, scheduledTime:
 };
 
 /**
+ * Adds seconds to an HH:MM:SS time string, returning the new HH:MM:SS string.
+ * Handles crossing midnight correctly.
+ */
+export const addSecondsToTime = (timeStr: string, seconds: number): string => {
+    const [h, m, s] = timeStr.split(':').map(Number);
+    let totalSecs = (h || 0) * 3600 + (m || 0) * 60 + (s || 0) + seconds;
+    
+    if (totalSecs < 0) totalSecs += 86400;
+    if (totalSecs >= 86400) totalSecs -= 86400;
+    
+    const newH = Math.floor(totalSecs / 3600);
+    const newM = Math.floor((totalSecs % 3600) / 60);
+    const newS = Math.floor(totalSecs % 60);
+    
+    return [
+        newH.toString().padStart(2, '0'),
+        newM.toString().padStart(2, '0'),
+        newS.toString().padStart(2, '0')
+    ].join(':');
+};
+
+/**
  * Formats a timestamp (ISO string or ms number) into a locale-aware date+time string.
  * Example (cs): "12. 7. 2026, 00:30"
  */

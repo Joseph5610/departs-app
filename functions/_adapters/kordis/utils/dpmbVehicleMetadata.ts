@@ -12,20 +12,19 @@ interface DpmbVehicleRange extends BrnoVehicleMetadata {
     max: number;
 }
 
+
 /**
- * Resolves static model types and air-conditioning status based on Brno (DPMB) registration numbers,
- * dynamically fetching a JSON array of ranges.
+ * Fetches the static DPMB vehicle metadata ranges from the CDN.
+ * This is used for bulk enrichment of the real-time vehicle feed to inject
+ * static features like air-conditioning availability and specific vehicle model types.
  */
-export async function getDpmbVehicleMetadata(
-    registrationNumber: string | number
-): Promise<BrnoVehicleMetadata | null> {
+export async function getDpmbVehicleRanges(): Promise<DpmbVehicleRange[] | null> {
     const config = getCityConfig('brno');
     const staticDataUrl = config?.adapterConfig?.staticDataUrl;
     if (!staticDataUrl) return null;
 
-    // Bust the cache with a query param and new cache key since the 404 was cached
     const dpmbUrl = `${staticDataUrl}/brno/dpmb-vehicles.json?v=2`;
-    const ranges = await CacheManager.getOrFetch<DpmbVehicleRange[] | null>(
+    return CacheManager.getOrFetch<DpmbVehicleRange[] | null>(
         `dpmb_vehicles_brno_v2`, 
         CACHE_TTL.TWO_HOURS_MS, 
         async () => {
@@ -34,6 +33,16 @@ export async function getDpmbVehicleMetadata(
             return await resApi.json();
         }
     );
+}
+
+/**
+ * Resolves static model types and air-conditioning status for a single vehicle
+ * based on Brno (DPMB) registration numbers by fetching and parsing the JSON array of ranges.
+ */
+export async function getDpmbVehicleMetadata(
+    registrationNumber: string | number
+): Promise<BrnoVehicleMetadata | null> {
+    const ranges = await getDpmbVehicleRanges();
 
     if (!ranges || ranges.length === 0) return null;
 

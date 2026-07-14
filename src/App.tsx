@@ -6,11 +6,18 @@ import { useWebMCP } from './hooks/features/useWebMCP';
 import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
 import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
 import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
+import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
+import { usePreferencesStore } from './state/preferencesStore';
+import { FRONTEND_CITIES_CONFIG } from './config/cities';
 
 
 function App() {
   usePWALifecycle();
   useWebMCP();
+
+  const selectedCity = usePreferencesStore(s => s.selectedCity);
+  const cityConfig = FRONTEND_CITIES_CONFIG[selectedCity];
+  useEnrichmentChannel(cityConfig?.enrichmentChannel ?? null);
 
   return (
     <>

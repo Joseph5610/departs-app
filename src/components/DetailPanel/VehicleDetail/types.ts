@@ -19,6 +19,7 @@ export type StopFeature = Required<Required<DisplayVehicle>['stop_times']>['feat
 export interface StopTimelineProps {
     stopTimes: StopFeature[];
     effectiveSequence: DisplayVehicle['effectiveSequence'];
+    delay?: number | null;
 }
 
 export interface VehicleHeroProps {
@@ -27,4 +28,5 @@ export interface VehicleHeroProps {
     onToggleFollow: () => void;
     liveDataAgeSeconds: number | null;
     isDetailLoading?: boolean;
+    hasEnrichment: boolean;
 }

@@ -1,3 +1,5 @@
+import type { EnrichmentChannelAdapter } from '../types/enrichment';
+
 export interface InitialCityConfig {
     slug: string;
     center: [number, number];
@@ -6,6 +8,7 @@ export interface InitialCityConfig {
         vehicles: string[];
         stops: string[];
     };
+    enrichmentChannel?: EnrichmentChannelAdapter;
 }
 
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
@@ -25,6 +28,30 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []
+        },
+        enrichmentChannel: {
+            url: 'wss://gis.brno.cz/geoevent/ws/services/stream_kordis_26/StreamServer/subscribe',
+            transport: 'websocket',
+            normalize: (rawMsg: unknown) => {
+                const msg = rawMsg as { attributes?: Record<string, unknown> };
+                if (!msg || !msg.attributes) return null;
+                const attr = msg.attributes;
+
+                // Delay is in minutes from WS, our app uses seconds
+                const delaySeconds = typeof attr.Delay === 'number' ? Math.round(attr.Delay * 60) : null;
+                
+                // LF is a string "true" or "false" in the schema
+                const is_wheelchair_accessible = attr.LF === "true" || attr.LF === true ? true : attr.LF === "false" || attr.LF === false ? false : null;
+
+                return {
+                    vehicleId: String(attr.ID),
+                    // KORDIS TimeUpdated is a date integer (Unix timestamp in ms)
+                    dataTimestamp: typeof attr.TimeUpdated === 'number' ? attr.TimeUpdated : Date.now(),
+                    delay: delaySeconds,
+                    is_wheelchair_accessible,
+                    run_number: attr.Course ? String(attr.Course) : undefined,
+                };
+            }
         }
     },
 };

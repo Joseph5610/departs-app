@@ -2,7 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core/types";
 import { GtfsRtVehicleDetailEnricher } from "../../../gtfs/services/vehicles/GtfsRtVehicleDetailEnricher";
 import type { VehiclesService } from "../../../gtfs/services/vehicles/VehiclesService";
-import type { KordisArcGisVehiclesService } from "./KordisArcGisVehiclesService";
+
 import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
 
 /**
@@ -12,30 +12,15 @@ import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
  */
 export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
     constructor(
-        protected vehiclesService: VehiclesService,
-        protected kordisVehiclesService: KordisArcGisVehiclesService,
-        protected useGtfsRt: boolean = true
+        protected vehiclesService: VehiclesService
     ) {
         super(vehiclesService);
     }
 
     async enrich(detail: AppVehicleDetail, ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
-        let enrichedDetail = detail;
-
-        if (this.useGtfsRt) {
-            // Use the base GtfsRtEnricher logic (which calls vehiclesService.getSingleLiveVehicle)
-            // This might discover the real vehicle_id if it was missing but gtfsTripId was provided.
-            enrichedDetail = await super.enrich(detail, ctx);
-        } else {
-            // Use the legacy ArcGIS service
-            const result = await this.kordisVehiclesService.getSingleLiveVehicle(detail.vehicle_id || '', detail.gtfs_trip_id);
-            const liveMatch = result.liveMatch;
-            const lastStopId = result.lastStopId;
-
-            if (liveMatch) {
-                this.enrichVehicleDetail(enrichedDetail, liveMatch, lastStopId);
-            }
-        }
+        // Use the base GtfsRtEnricher logic (which calls vehiclesService.getSingleLiveVehicle)
+        // This might discover the real vehicle_id if it was missing but gtfsTripId was provided.
+        const enrichedDetail = await super.enrich(detail, ctx);
 
         // Apply static vehicle metadata for Brno (DPMB)
         // We do this AFTER the live match so we have the most accurate vehicle_id

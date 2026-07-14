@@ -4,8 +4,7 @@ export interface AdapterConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
     stopsFile?: string;
-    realtimeArcgisUrl?: string;
-    useGtfsRtVehicles?: boolean;
+
     [key: string]: string | boolean | undefined;
 }
 
@@ -49,9 +48,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapterConfig: {
             stopsFile: 'cities/brno/stops.json',
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
-            staticDataUrl: 'https://data.departs.app',
-            realtimeArcgisUrl: 'https://gis.brno.cz/ags1/rest/services/Hosted/Kordis_26_polohy/FeatureServer/0/query?where=IsInactive%3D%27false%27&outFields=ID,TimeUpdated,LineID,RouteID,Delay,VType,LF,LineName,Bearing,LastStopID,Course,Lng,Lat&returnGeometry=false&orderByFields=TimeUpdated+DESC&resultRecordCount=1300&f=json',
-            useGtfsRtVehicles: true
+            staticDataUrl: 'https://data.departs.app'
         },
         isBeta: true,
         filters: {

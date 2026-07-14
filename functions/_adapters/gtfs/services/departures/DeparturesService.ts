@@ -8,8 +8,18 @@ import type { GtfsDepartureTuple } from './types';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
+import type { VehiclesService } from '../vehicles/VehiclesService';
+
 export class DeparturesService {
-    constructor(private city: CityConfig) {}
+    /**
+     * Service to fetch and map GTFS static departures for a specific city.
+     * Optionally accepts a VehiclesService to fetch the live vehicle data, enabling
+     * real-time delays and enriched metadata (like air conditioning) on the departure board.
+     */
+    constructor(
+        protected city: CityConfig,
+        protected vehiclesService?: VehiclesService
+    ) {}
 
     async getDepartures(ctx: EventContext<Env, string, unknown>): Promise<AppDepartureResponse> {
         const url = new URL(ctx.request.url);
@@ -81,7 +91,7 @@ export class DeparturesService {
             }
 
             const { routes } = await getGtfsData(this.city.slug);
-            const rtVehicles = await this.getRealtimeVehiclesCache();
+            const rtVehicles = await this.getRealtimeVehiclesCache(ctx);
             
             const mapped = DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles);
             return { departures: mapped };
@@ -91,16 +101,18 @@ export class DeparturesService {
         }
     }
 
-    private async getRealtimeVehiclesCache(): Promise<AppVehicleCollection | null> {
+    /**
+     * Attempts to resolve real-time vehicle data by invoking the injected VehiclesService.
+     * By using the service directly, it leverages the internal memory cache (CacheManager)
+     * avoiding duplicate remote fetches and bypassing brittle hardcoded edge cache keys.
+     */
+    private async getRealtimeVehiclesCache(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection | null> {
         try {
-            const cache = caches.default;
-            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/vehicles_v1`, { method: 'GET' });
-            const cachedVehicles = await cache.match(jsonCacheKey);
-            if (cachedVehicles) {
-                return await cachedVehicles.json();
+            if (this.vehiclesService) {
+                return await this.vehiclesService.getFilteredVehicles(ctx);
             }
         } catch (e) {
-            console.error('Failed to load RT vehicles for departures:', e);
+            console.error('Failed to load RT vehicles for departures via service:', e);
         }
         return null;
     }

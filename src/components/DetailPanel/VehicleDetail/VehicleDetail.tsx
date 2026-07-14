@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import { useTranslation } from 'react-i18next';
 import { parseISO } from 'date-fns';
+import { usePreferencesStore } from '../../../state/preferencesStore';
+import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
 import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
 import {
   Carousel,
@@ -54,17 +56,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const { rss } = useGlobalAlerts();
     const rssData = rss.data;
     const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const displayVehicle = useMemo<DisplayVehicle | null>(() => {
         if (!selectedVehicle) return null;
-        // Merge strategy: prioritize API detail but never let it override critical state with null/empty
-        const merged = {
-            ...selectedVehicle,
-            ...vehicleDetail,
-            route_short_name: vehicleDetail?.route_short_name || selectedVehicle.route_short_name,
-            route_type: vehicleDetail?.route_type ?? selectedVehicle.route_type,
-            trip_headsign: vehicleDetail?.trip_headsign || selectedVehicle.trip_headsign
-        };
+        // The selectedVehicle is already fully merged and enriched by the useSelectedVehicle hook.
+        // DO NOT spread vehicleDetail over it again, as it will overwrite real-time WS data with stale HTTP data!
+        const merged = { ...selectedVehicle };
         const routeName = String(merged.route_short_name || '');
         const isStaticFallback = !!merged.is_static_fallback;
 
@@ -80,7 +78,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             effectiveSequence,
             routeType: merged.route_type ?? 0
         };
-    }, [selectedVehicle, vehicleDetail]);
+    }, [selectedVehicle]);
 
     React.useEffect(() => {
         const originTs = displayVehicle?.origin_timestamp;
@@ -145,6 +143,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         onToggleFollow={onToggleFollow}
                         liveDataAgeSeconds={liveDataAgeSeconds}
                         isDetailLoading={loadingDetail && !vehicleDetail}
+                        hasEnrichment={!!FRONTEND_CITIES_CONFIG[selectedCity || 'prague']?.enrichmentChannel}
                     />
 
                     {/* Alerts */}
@@ -186,6 +185,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         <StopTimeline
                             stopTimes={displayVehicle.stop_times.features}
                             effectiveSequence={displayVehicle.effectiveSequence}
+                            delay={displayVehicle.delay}
                         />
                     ) : (
                         loadingDetail && <StopTimelineSkeleton />

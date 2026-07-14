@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.53.9] - 2026-07-14
+
+### Changed
+- **Brno Full GTFS-RT Migration**: Completely removed the legacy ArcGIS `KordisArcGisVehiclesService` from the backend adapter. Brno now exclusively uses the modern GTFS-RT feed for all real-time vehicle positions.
+- **Enrichment Typing**: Refactored frontend GTFS-RT websocket enrichment to perfectly align with strict backend types. Real-time data like `is_wheelchair_accessible` is now properly nested inside `vehicle_descriptor` for vehicle objects, preventing type bleed and inline hacks.
+- **Enrichment Metadata**: Added `run_number` mapping to the Kordis web socket parser so that `Course` attributes dynamically populate the run number in the UI.
+
+### Fixed
+- Fixed an exhaustive dependencies loop in `FavoritesPanel`.
+- Fixed multiple typecast errors regarding `tripId` map lookups.
+- Resolved Tailwind arbitrary class warnings.
+
+## [0.53.8] - 2026-07-14
+
+### Fixed
+
+- Fixed missing `is_air_conditioned` and `vehicle_type` metadata on the departure board for Brno by enriching the global real-time vehicles cache.
+- Made vehicle detail popover background more transparent to enhance the glassmorphism blur effect.
+
 ## [0.53.7] - 2026-07-13
 
 ### Added

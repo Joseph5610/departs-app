@@ -14,6 +14,9 @@ import type { StopFeature } from '../../../types/stops';
 import type { DeparturesResponse } from '../../../hooks/data/useDepartures';
 import type { AppError } from '../../../types/error';
 import type { Departure } from '../../../types/transit';
+import { applyEnrichment } from '../../../lib/enrichment';
+import { useEnrichmentStore } from '../../../state/enrichmentStore';
+import { useVehicles } from '../../../hooks/data/useVehicles';
 
 interface FavoritesPanelProps {
     onClose?: () => void;
@@ -53,8 +56,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
 
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    // Fetch all departures in a single bulk API request
-    const { data, isLoading: departuresLoading, isError } = useQuery<DeparturesResponse | null, AppError>({
+    const dataQuery = useQuery<DeparturesResponse | null, AppError>({
         queryKey: ['departures', 'bulk', selectedCity, stopIds.join(',')],
         queryFn: async () => {
             if (stopIds.length === 0 || !selectedCity) return null;
@@ -68,21 +70,54 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
         enabled: stopIds.length > 0
     });
 
-    // Group departures by stopId for fast O(1) lookup
+    const dataUpdatedAt = dataQuery.dataUpdatedAt;
+    const { data, isLoading: departuresLoading, isError } = dataQuery;
+
+    const byTripId = useEnrichmentStore(s => s.byTripId);
+    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+    const { vehicles: rawVehicles } = useVehicles();
+
+    // Group departures by stopId for fast O(1) lookup, apply enrichment, and filter past departures
     const departuresByStop = useMemo(() => {
         const map = new Map<string, Departure[]>();
         if (!data?.departures) return map;
 
-        data.departures.forEach(dep => {
-            if (dep.stopId) {
-                if (!map.has(dep.stopId)) {
-                    map.set(dep.stopId, []);
+        const baseTs = dataUpdatedAt || 0;
+        const now = baseTs;
+
+        // Build a fresh tripId -> vehicleId map from the frontend's live vehicles
+        const liveTripToVehicle = new Map<string, string>();
+        if (rawVehicles?.features) {
+            for (const f of rawVehicles.features) {
+                const tId = f.properties.gtfs_trip_id;
+                const vId = f.properties.vehicle_id;
+                if (tId && vId) {
+                    liveTripToVehicle.set(tId, vId);
                 }
-                map.get(dep.stopId)!.push(dep);
+            }
+        }
+
+        data.departures.forEach(dep => {
+            const stopId = dep.stopId;
+            if (stopId) {
+                const vId = dep.vehicleId || (dep.tripId ? liveTripToVehicle.get(dep.tripId) : undefined);
+                const enriched = applyEnrichment(dep, dep.tripId, vId, byTripId, byVehicleId, baseTs);
+                if (vId && !enriched.vehicleId) {
+                    enriched.vehicleId = vId;
+                }
+
+                // Filter out departures older than 60 seconds
+                const rtTime = new Date(enriched.timestamp).getTime();
+                if (rtTime >= now - 60000) {
+                    if (!map.has(stopId)) {
+                        map.set(stopId, []);
+                    }
+                    map.get(stopId)!.push(enriched);
+                }
             }
         });
         return map;
-    }, [data]);
+    }, [data, dataUpdatedAt, byTripId, byVehicleId, rawVehicles]);
 
     const isLoading = stopsLoading || (departuresLoading && favoriteStops.length > 0);
 

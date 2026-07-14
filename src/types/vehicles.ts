@@ -25,6 +25,7 @@ export interface BaseVehicleProperties {
     vehicle_descriptor?: VehicleDescriptor;
     route_color: string;
     is_night: boolean;
+    is_enriched?: boolean;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {

@@ -19,7 +19,7 @@ export class DeparturesMapper {
         });
 
         const vehicleIndex = new Map<string, string>();
-        const delayIndex = new Map<string, number>();
+        const delayIndex = new Map<string, number | null>();
         const acIndex = new Map<string, boolean | null>();
         const wheelchairIndex = new Map<string, boolean | null>();
 
@@ -98,7 +98,10 @@ export class DeparturesMapper {
         });
 
         return mapped
-            .filter(d => d.rtTimestampMs >= now - 60000)
+            // Send departures that were scheduled/expected up to 15 mins ago to the frontend.
+            // The backend cache for delays often misses, so it thinks the bus already left.
+            // By sending it anyway, the frontend can apply the live map delay and resurrect it.
+            .filter(d => d.rtTimestampMs >= now - (15 * 60000))
             .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
             .slice(0, 150)
             .map(d => ({

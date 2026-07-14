@@ -53,10 +53,7 @@ export class BaseGtfsAlertsMapper {
             const rawDesc = alert.descriptionText?.translation?.[0]?.text;
             let description = null;
             if (rawDesc) {
-                description = rawDesc
-                    .replace(/<br\s*\/?>/gi, '\n')
-                    .replace(/<[^>]+>/g, '')
-                    .replace(/&nbsp;/g, ' ');
+                description = rawDesc;
             }
             description = this.parseDescription(description);
 
@@ -108,7 +105,8 @@ export class BaseGtfsAlertsMapper {
     }
 
     protected parseDescription(rawDesc?: string | null): string | null {
-        return rawDesc || null;
+        if (!rawDesc) return null;
+        return rawDesc.replace(/\t/g, '\n');
     }
 
     protected parseExtensions(_alert: transit_realtime.IAlert, _appAlert: AppAlert): void {
