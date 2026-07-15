@@ -77,11 +77,12 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         detail.last_stop_sequence = resolvedSequence ?? liveMatch.properties.last_stop_sequence ?? undefined;
 
         // 4. Propagate Delays to Subsequent Stops
-        if (typeof detail.delay === 'number' && detail.stop_times?.features) {
+        const delay = detail.delay;
+        if (typeof delay === 'number' && detail.stop_times?.features) {
             detail.stop_times.features.forEach(f => {
                 if (f.properties.stop_sequence >= (detail.last_stop_sequence || 0)) {
-                    f.properties.realtime_arrival_time = addSecondsToTime(f.properties.arrival_time, detail.delay) || f.properties.arrival_time;
-                    f.properties.realtime_departure_time = addSecondsToTime(f.properties.departure_time, detail.delay) || f.properties.departure_time;
+                    f.properties.realtime_arrival_time = addSecondsToTime(f.properties.arrival_time, delay) || f.properties.arrival_time;
+                    f.properties.realtime_departure_time = addSecondsToTime(f.properties.departure_time, delay) || f.properties.departure_time;
                 }
             });
         }

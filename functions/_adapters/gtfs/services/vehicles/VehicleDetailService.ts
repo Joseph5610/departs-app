@@ -1,6 +1,5 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleDetail } from "../../../../_core/types";
-
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
@@ -24,10 +23,6 @@ export class VehicleDetailService {
         const { vehicleId: rawVehicleId, tripId } = parseSearchParams(url.searchParams, vehicleDetailQuerySchema);
         const vehicleId = rawVehicleId || null;
 
-        if (!tripId) {
-            return VehicleDetailMapper.buildErrorResponse(vehicleId, '', 'Unknown destination');
-        }
-
         const stations = await this.getTripStops(tripId);
         const { routes, tripRoutes } = await getGtfsData(this.city.slug);
         
@@ -47,8 +42,6 @@ export class VehicleDetailService {
         
         return detail;
     }
-
-
 
     private async getTripStops(tripId: string): Promise<Station[]> {
         const chunkId = encodeURIComponent(tripId.substring(0, 3).toUpperCase());

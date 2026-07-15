@@ -41,7 +41,8 @@ export class VehiclesService {
             });
 
             if (!response.ok) {
-                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), 502);
+                console.error(`Golemio vehicles feed is down (${response.status})`);
+                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
             }
 
             const rawData = await response.json();
@@ -49,7 +50,7 @@ export class VehiclesService {
             
             if (!parsed.success) {
                 console.error("Critical Golemio vehicles structural change:", parsed.error);
-                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
+                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
             }
             
             const data = parsed.data;

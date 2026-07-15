@@ -1,9 +1,10 @@
 import type { AppAlertsResponse } from "../../../../_core/types";
-
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsData } from '../../core/gtfs-data';
 import { BaseGtfsAlertsMapper } from './BaseGtfsAlertsMapper';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
+import { ApiError } from '../../../../_core/errors';
+import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 
 export class AlertsService {
     constructor(private city: CityConfig, private mapper: BaseGtfsAlertsMapper) {}
@@ -33,7 +34,7 @@ export class AlertsService {
             return { alerts } as AppAlertsResponse;
         } catch (e) {
             console.error("Error fetching GTFS-RT alerts:", e);
-            return { alerts: [] };
+            throw new ApiError(ERROR_MESSAGES.RSS_FEED_ERROR, 502);
         }
     }
 }

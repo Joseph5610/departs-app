@@ -4,6 +4,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env } from "./types";
 import { getCityConfig } from "./city-config";
 import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
+
 /**
  * Centralized Cache TTL Configuration (in seconds).
  */

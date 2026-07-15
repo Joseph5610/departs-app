@@ -93,7 +93,8 @@
     "regions": {
       "title": "Departs aktuálně podporuje tyto regiony:",
       "prague": "Praha a Středočeský kraj",
-      "brno": "Brno a Jihomoravský kraj"
+      "brno": "Brno a Jihomoravský kraj",
+      "duk": "Ústecký kraj"
     },
     "controls": {
       "myLocation": "Moje poloha",

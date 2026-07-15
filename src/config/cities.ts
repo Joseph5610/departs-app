@@ -53,7 +53,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
                 };
             }
         }
-    },
+    }
 };
 
 export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG['prague'];

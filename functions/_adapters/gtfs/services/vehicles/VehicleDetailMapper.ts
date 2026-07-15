@@ -1,5 +1,4 @@
 import type { AppVehicleDetail } from "../../../../_core/types";
-
 import { addSecondsToTime } from '../../core/utils';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
@@ -49,7 +48,6 @@ export class VehicleDetailMapper {
         };
     }
 
-
     static buildStopFeatures(stations: Station[], lastStopSequence: number | null, computedDelay: number | null) {
         const formatTime = (timeStr: string | undefined | null): string => {
             if (!timeStr) return '';
@@ -62,8 +60,6 @@ export class VehicleDetailMapper {
             }
             return String(timeStr);
         };
-
-
 
         return stations.map((s) => {
             const applyDelay = s.sequence >= (lastStopSequence || 0) ? computedDelay : 0;
@@ -130,18 +126,5 @@ export class VehicleDetailMapper {
         return undefined;
     }
 
-    static buildErrorResponse(vehicleId: string | null, tripId: string, headsign: string = ''): AppVehicleDetail {
-        return {
-            vehicle_id: vehicleId,
-            gtfs_trip_id: tripId,
-            route_short_name: '?',
-            route_type: 3,
-            trip_headsign: headsign,
-            bearing: null,
-            delay: null,
-            route_color: '#888888',
-            is_night: false,
-            is_static_fallback: true
-        };
-    }
+
 }

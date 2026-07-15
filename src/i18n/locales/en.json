@@ -92,7 +92,8 @@
     "regions": {
       "title": "Departs currently supports these regions:",
       "prague": "Prague & Central Bohemia",
-      "brno": "Brno & South Moravia"
+      "brno": "Brno & South Moravia",
+      "duk": "Ústí nad Labem Region"
     },
     "controls": {
       "myLocation": "My Location",

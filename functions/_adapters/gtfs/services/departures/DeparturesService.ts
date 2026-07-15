@@ -5,6 +5,8 @@ import { getGtfsData } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
+import { ApiError } from '../../../../_core/errors';
+import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
@@ -38,7 +40,7 @@ export class DeparturesService {
                 CACHE_TTL.TWO_HOURS_MS,
                 async () => {
                     const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
-                    if (!res.ok) return {};
+                    if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
                     return await res.json() as Record<string, string[]>;
                 }
             );
@@ -97,7 +99,7 @@ export class DeparturesService {
             return { departures: mapped };
         } catch (e) {
             console.error('Error loading static departures:', e);
-            return { departures: [] };
+            throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
         }
     }
 
