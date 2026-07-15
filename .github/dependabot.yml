@@ -10,7 +10,15 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      cloudflare:
+        patterns:
+          - "@cloudflare/*"
+          - "wrangler"
       eslint:
         patterns:
           - "eslint*"
           - "@eslint*"
+      typescript-ecosystem:
+        patterns:
+          - "typescript"
+          - "*i18next*"
