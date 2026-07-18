@@ -75,7 +75,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260715.1",
+    "@cloudflare/workers-types": "^5.20260718.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "^4.1.18",
@@ -97,7 +97,7 @@
     "typescript-eslint": "^8.63.0",
     "vite": "^8.1.3",
     "vite-plugin-pwa": "^1.3.0",
-    "wrangler": "^4.111.0"
+    "wrangler": "^4.112.0"
   },
   "lint-staged": {
     "{src,functions}/**/*.{ts,tsx}": [
