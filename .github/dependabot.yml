@@ -14,11 +14,13 @@ updates:
         patterns:
           - "@cloudflare/*"
           - "wrangler"
-      eslint:
+      lint-and-type:
         patterns:
           - "eslint*"
           - "@eslint*"
-      typescript-ecosystem:
-        patterns:
           - "typescript"
+          - "typescript-eslint"
+          - "@types/*"
+      i18n:
+        patterns:
           - "*i18next*"
