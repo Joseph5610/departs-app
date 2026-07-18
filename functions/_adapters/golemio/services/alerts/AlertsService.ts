@@ -40,6 +40,34 @@ export class AlertsService {
     }
 
     /**
+     * Fetches raw alerts data for debug feeds.
+     */
+    async getRawFeed(env: Env) {
+        const [pbRes, exclusionsRes] = await Promise.allSettled([
+            this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS }),
+            this.fetchExclusionsFeed()
+        ]);
+
+        let incidents = null;
+        if (pbRes.status === 'fulfilled' && pbRes.value.ok) {
+            const buffer = await pbRes.value.arrayBuffer();
+            incidents = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+        }
+
+        let exclusions = null;
+        if (exclusionsRes.status === 'fulfilled') {
+            const { XMLParser } = await import("fast-xml-parser");
+            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+            exclusions = parser.parse(exclusionsRes.value);
+        }
+
+        return {
+            incidents: incidents ? incidents.toJSON() : null,
+            exclusions
+        };
+    }
+
+    /**
      * Main entry point to get all alerts.
      * Fetches GTFS-RT Incidents and RSS Exclusions.
      * 

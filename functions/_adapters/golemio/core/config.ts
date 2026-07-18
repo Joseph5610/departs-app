@@ -8,7 +8,5 @@ export const GOLEMIO_CONFIG = {
     ENRICHMENT_DATA_URL: 'https://data.departs.app/prague/stops-enrichment.json',
     FEEDS: {
         exclusions: 'https://pid.cz/feed/rss-vyluky/',
-        alerts_pb: 'https://api.golemio.cz/v2/vehiclepositions/gtfsrt/alerts.pb',
-        routes: '/v2/gtfs/routes'
     }
 } as const;

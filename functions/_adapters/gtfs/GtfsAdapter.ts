@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../_core/city-config';
 import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
-import { transit_realtime } from "gtfs-realtime-bindings";
+
 import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../../_core/types";
 
 import { StopsService } from './services/stops/StopsService';
@@ -9,10 +9,11 @@ import { DeparturesService } from './services/departures/DeparturesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { AlertsService } from './services/alerts/AlertsService';
 import { InfotextsService } from './services/infotexts/InfotextsService';
-import { appClient } from '../../_core/ApiClient';
+
 import { GtfsRtVehicleDetailEnricher } from './services/vehicles/GtfsRtVehicleDetailEnricher';
 import { VehiclesService } from './services/vehicles/VehiclesService';
 import { BaseGtfsAlertsMapper } from './services/alerts/BaseGtfsAlertsMapper';
+import { getGtfsRtFeed } from './core/gtfs-rt-feed';
 
 export class GtfsAdapter implements CityAdapter {
     protected stopsService: StopsService;
@@ -66,12 +67,11 @@ export class GtfsAdapter implements CityAdapter {
         if (!rtUrl) {
             return { error: `No realtimeUrl configured for city: ${this.city.slug}` };
         }
-        const response = await appClient.fetch(rtUrl);
-        if (!response.ok) {
-            throw new Error(`GTFS-RT fetch failed: ${response.status}`);
+        
+        const feed = await getGtfsRtFeed(this.city.slug, rtUrl);
+        if (!feed) {
+            throw new Error(`GTFS-RT fetch failed for city: ${this.city.slug}`);
         }
-        const buffer = await response.arrayBuffer();
-        const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
         
         // Return raw feed entities based on requested type
         const entities = feed.entity as unknown[];

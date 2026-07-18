@@ -68,15 +68,48 @@ export class ApiClient {
         delete fetchInit.searchParams;
         delete fetchInit.timeoutMs;
 
+        const method = fetchInit.method || 'GET';
+        const isCacheableGet = method === 'GET' && cacheTtl !== undefined;
+
         try {
-            const response = await fetch(finalUrl, {
-                ...fetchInit,
-                headers,
-                // Preserve explicitly passed `cf` or generate it from cacheTtl
-                cf: fetchInit.cf ?? (cacheTtl !== undefined ? { cacheTtl, cacheEverything: true } : undefined),
-                signal: controller.signal
-            });
-            return response;
+            if (isCacheableGet) {
+                // caches is a global available in CF Workers
+                const cache = typeof caches !== 'undefined' ? (caches as any).default : null;
+                const cacheKey = new Request(finalUrl, { method: 'GET' });
+
+                if (cache) {
+                    const cachedResponse = await cache.match(cacheKey);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                }
+
+                const response = await fetch(finalUrl, {
+                    ...fetchInit,
+                    headers,
+                    cf: fetchInit.cf ?? { cacheTtl, cacheEverything: true },
+                    signal: controller.signal
+                });
+
+                if (cache && response.status === 200) {
+                    // Cache API requires Cache-Control headers to be set to cache it
+                    const responseToCache = new Response(response.clone().body, response);
+                    responseToCache.headers.set('Cache-Control', `s-maxage=${cacheTtl}`);
+                    
+                    // Await the cache put so it finishes before the worker isolates die
+                    await cache.put(cacheKey, responseToCache).catch((e: unknown) => console.error("Cache put error:", e));
+                }
+
+                return response;
+            } else {
+                const response = await fetch(finalUrl, {
+                    ...fetchInit,
+                    headers,
+                    cf: fetchInit.cf,
+                    signal: controller.signal
+                });
+                return response;
+            }
         } finally {
             clearTimeout(timeoutId);
         }

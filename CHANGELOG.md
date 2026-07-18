@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.56.1] - 2026-07-16
+
+### Fixed
+
+- **Cloudflare caching**: Outbound requests to third party APIs (like Golemio) were ignoring the configured `cf: { cacheTtl }` option due to Cloudflare Workers ignoring caching for responses without permissive origin `Cache-Control` headers. Replaced this with the explicit `caches.default` Web Cache API to forcefully cache API requests on the Cloudflare Edge and prevent rate limits under heavy refreshing.
+
+## [0.56.0] - 2026-07-16
+
+### Changed
+
+- **Adapter Refactoring**: Unified the `handleRawFeed` implementation in both `GtfsAdapter` and `GolemioAdapter`.
+  - Extracted dynamic feeds decoding into `core/gtfs-rt-feed.ts` and used it across `GtfsAdapter`.
+  - Exposed `getRawVehicles` and `getRawFeed` methods in Golemio's `VehiclesService` and `AlertsService` to prevent duplicate implementations of backend fetches and simplify the adapter layer.
+
+
 ## [0.55.0] - 2026-07-16
 
 ### Changed

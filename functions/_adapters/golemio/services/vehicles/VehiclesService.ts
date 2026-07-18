@@ -15,6 +15,23 @@ export class VehiclesService {
     constructor(private client: GolemioClient) {}
 
     /**
+     * Fetches raw vehicle positions directly from Golemio API.
+     * Used for debug feeds and as base data for getVehicles.
+     */
+    async getRawVehicles(env: Env, params: Record<string, string | string[]> = {}) {
+        const response = await this.client.fetch("/v2/public/vehiclepositions", env, {
+            searchParams: params,
+            cacheTtl: CACHE_TTL.VEHICLES
+        });
+
+        if (!response.ok) {
+            throw new ApiError(`Golemio vehicles feed is down (${response.status})`, response.status);
+        }
+
+        return await response.json();
+    }
+
+    /**
      * Fetches real-time positions of all active transit vehicles within given map bounds.
      * Includes normalization of route types, colors, and night route flags.
      * 
@@ -35,17 +52,13 @@ export class VehiclesService {
             if (routeTypes.length > 0) params.routeType = routeTypes;
             if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
-            const response = await this.client.fetch("/v2/public/vehiclepositions", env, {
-                searchParams: params,
-                cacheTtl: CACHE_TTL.VEHICLES
-            });
-
-            if (!response.ok) {
-                console.error(`Golemio vehicles feed is down (${response.status})`);
+            let rawData;
+            try {
+                rawData = await this.getRawVehicles(env, params);
+            } catch (error) {
+                console.error(`Golemio vehicles feed is down`, error);
                 return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
             }
-
-            const rawData = await response.json();
             const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
             
             if (!parsed.success) {

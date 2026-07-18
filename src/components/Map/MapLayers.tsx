@@ -7,28 +7,27 @@ import type { VehicleCollection, StopCollection, StopProperties } from '../../ty
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useVehicleAnimation } from '../../hooks/features/useVehicleAnimation';
 import {
-    clusterLayer,
-    stopPointLayer,
-    transferOuterLayer,
-    transferInnerLayer,
-    stopLabelLayer,
-    platformLabelLayer,
-    entranceLayer,
-    stopPointGlowLayer,
-    favoriteStarLayer,
-    selectedVehiclePulseLayer,
-    selectedVehiclePointLayer,
-    selectedVehicleDirectionLayer,
-    selectedVehicleLabelLayer,
-    vehiclesPointLayer,
-    vehiclesDirectionLayer,
-    vehiclesLabelLayer,
-    routeLineLayer,
-    routeStopsLayer,
-    routeTerminalsLayer,
-    userLocationPulseLayer,
-    userLocationPointLayer,
-    stationIconLayer
+    stopClusters,
+    stopPointsGlow,
+    stopPoints,
+    transferOuterPoints,
+    transferInnerPoints,
+    stopLabels,
+    stopIcons,
+    stopEntrances,
+    stopFavorites,
+    vehicleSelectedPulse,
+    vehicleSelectedPoint,
+    vehicleSelectedDirection,
+    vehicleSelectedLabel,
+    vehiclePoints,
+    vehicleDirections,
+    vehicleLabels,
+    routeLine,
+    routeStops,
+    routeTerminals,
+    userLocationPulse,
+    userLocationPoint
 } from '../../config/mapLayers';
 
 interface MapLayersProps {
@@ -138,18 +137,17 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
 
     return (
         <>
-            {/* Route Shape Layer - UNDER labels */}
             <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                 <Layer
-                    {...routeLineLayer}
+                    {...routeLine}
                     beforeId={labelLayerId}
                 />
                 <Layer
-                    {...routeStopsLayer}
+                    {...routeStops}
                     beforeId={labelLayerId}
                 />
                 <Layer
-                    {...routeTerminalsLayer}
+                    {...routeTerminals}
                     beforeId={labelLayerId}
                 />
             </Source>
@@ -162,25 +160,25 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                     properties: {}
                 }]
             } : EMPTY_GEOJSON}>
-                <Layer {...userLocationPulseLayer} />
-                <Layer {...userLocationPointLayer} />
+                <Layer {...userLocationPulse} />
+                <Layer {...userLocationPoint} />
             </Source>
 
             <Source id="selected-vehicle" type="geojson" data={selectedGeoJSON}>
-                <Layer {...selectedVehiclePulseLayer} />
-                <Layer {...selectedVehiclePointLayer} />
-                <Layer {...selectedVehicleDirectionLayer} />
-                <Layer {...selectedVehicleLabelLayer} />
+                <Layer {...vehicleSelectedPulse} />
+                <Layer {...vehicleSelectedPoint} />
+                <Layer {...vehicleSelectedDirection} />
+                <Layer {...vehicleSelectedLabel} />
             </Source>
 
             <Source id="city-vehicles" type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_GEOJSON}>
-                <Layer {...vehiclesPointLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesDirectionLayer} filter={vehiclesFilter} />
-                <Layer {...vehiclesLabelLayer} filter={vehiclesFilter} />
+                <Layer {...vehiclePoints} filter={vehiclesFilter} />
+                <Layer {...vehicleDirections} filter={vehiclesFilter} />
+                <Layer {...vehicleLabels} filter={vehiclesFilter} />
             </Source>
 
             <Source id="stop-labels-centroids" type="geojson" data={filteredLabelData}>
-                <Layer {...stopLabelLayer} />
+                <Layer {...stopLabels} />
             </Source>
 
             <Source
@@ -192,21 +190,20 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 clusterRadius={25}
             >
 
-                <Layer {...clusterLayer} />
-                <Layer {...stopPointGlowLayer} />
-                <Layer {...stopPointLayer} />
-                <Layer {...transferOuterLayer} />
-                <Layer {...transferInnerLayer} />
-                <Layer {...stationIconLayer} />
-                <Layer {...platformLabelLayer} />
+                <Layer {...stopClusters} />
+                <Layer {...stopPointsGlow} />
+                <Layer {...stopPoints} />
+                <Layer {...transferOuterPoints} />
+                <Layer {...transferInnerPoints} />
+                <Layer {...stopIcons} />
                 {/* Favorite Star Badge - Drawn last to be on top of everything */}
                 {favoriteStops.length > 0 && (
                     <Layer
-                        {...favoriteStarLayer}
+                        {...stopFavorites}
                         filter={['any', ...favoriteStops.map(id => ['==', ['get', 'stop_id'], id])] as FilterSpecification}
                     />
                 )}
-                <Layer {...entranceLayer} />
+                <Layer {...stopEntrances} />
             </Source>
         </>
     );

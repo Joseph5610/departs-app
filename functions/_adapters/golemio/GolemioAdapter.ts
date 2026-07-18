@@ -85,33 +85,9 @@ export class GolemioAdapter implements CityAdapter {
      */
     async handleRawFeed(ctx: EventContext<Env, string, unknown>, type: string = 'vehicles') {
         if (type === 'alerts') {
-            const [pbRes, exclusionsRes] = await Promise.all([
-                this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", ctx.env, { cacheTtl: 10 }),
-                fetch("https://pid.cz/feed/rss-vyluky/").then(r => r.text())
-            ]);
-            
-            const { XMLParser } = await import("fast-xml-parser");
-            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
-            
-            let incidents = null;
-            if (pbRes.ok) {
-                const buffer = await pbRes.arrayBuffer();
-                const { transit_realtime } = await import('gtfs-realtime-bindings');
-                incidents = transit_realtime.FeedMessage.decode(new Uint8Array(buffer)).toJSON();
-            }
-
-            return {
-                incidents,
-                exclusions: parser.parse(exclusionsRes)
-            };
+            return this.alertsService.getRawFeed(ctx.env);
         }
 
-        const response = await this.client.fetch('/v2/public/vehiclepositions', ctx.env, {
-            cacheTtl: 10 // 10 seconds for debug feed
-        });
-        if (!response.ok) {
-            throw new Error(`Golemio API error: ${response.status}`);
-        }
-        return await response.json();
+        return this.vehiclesService.getRawVehicles(ctx.env);
     }
 }
