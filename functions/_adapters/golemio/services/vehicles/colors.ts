@@ -9,8 +9,8 @@ export const VEHICLE_COLORS = {
     TRAM: '#7A0603',
     BUS: '#007DA8',
     TROLLEYBUS: '#80166F',
-    TRAIN: '#1c1745',
-    FERRY: '#00b1b0',
+    TRAIN: '#251E62',
+    FERRY: '#00B3CB',
     NIGHT: '#262050',
     SUBSTITUTE: '#FF4500',
     FALLBACK: '#5A5A5A'
