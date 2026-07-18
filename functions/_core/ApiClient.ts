@@ -74,7 +74,7 @@ export class ApiClient {
         try {
             if (isCacheableGet) {
                 // caches is a global available in CF Workers
-                const cache = typeof caches !== 'undefined' ? (caches as any).default : null;
+                const cache = typeof caches !== 'undefined' ? caches.default : null;
                 const cacheKey = new Request(finalUrl, { method: 'GET' });
 
                 if (cache) {

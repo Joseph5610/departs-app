@@ -100,7 +100,7 @@
     "wrangler": "^4.111.0"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
+    "{src,functions}/**/*.{ts,tsx}": [
       "eslint --max-warnings=0"
     ]
   }
