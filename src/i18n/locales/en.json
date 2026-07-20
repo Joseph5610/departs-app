@@ -377,7 +377,7 @@
     "noData": "No data available.",
     "onScreen": "On Screen",
     "network": "Network",
-    "networkDelayNotice": "Live delay and movement data for the entire network is not available in this region. Please switch to the \"On Screen\" tab to see live data for vehicles currently in view.",
+    "networkDelayNotice": "Live delay data for the entire network is not available in this region. Please switch to the \"On Screen\" tab to see live data for vehicles currently in view.",
     "title": "Network Stats",
     "lines": "Lines",
     "punctuality": "Punctuality",

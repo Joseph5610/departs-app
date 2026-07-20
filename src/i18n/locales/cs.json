@@ -381,7 +381,7 @@
     "noData": "Žádná data k dispozici.",
     "onScreen": "Na obrazovce",
     "network": "Celá síť",
-    "networkDelayNotice": "Živá data o zpoždění a pohybu pro celou síť nejsou v tomto regionu k dispozici. Přepněte prosím na záložku \"Na obrazovce\" pro zobrazení živých dat pro vozidla aktuálně v zorném poli.",
+    "networkDelayNotice": "Živá data o zpoždění pro celou síť nejsou v tomto regionu k dispozici. Přepněte prosím na záložku \"Na obrazovce\" pro zobrazení živých dat pro vozidla aktuálně v zorném poli.",
     "title": "Statistiky sítě",
     "lines": "Linky",
     "punctuality": "Přesnost spojů",

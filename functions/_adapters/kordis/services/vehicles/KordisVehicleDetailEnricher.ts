@@ -8,7 +8,7 @@ import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
 /**
  * Brno-specific vehicle enricher.
  * Injects local static metadata (e.g., DPMB vehicle models, AC status) before
- * delegating live GPS/delay enrichment either to the standard GTFS-RT feed or the legacy ArcGIS API.
+ * delegating live GPS/delay enrichment either to the standard GTFS-RT feed.
  */
 export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
     constructor(

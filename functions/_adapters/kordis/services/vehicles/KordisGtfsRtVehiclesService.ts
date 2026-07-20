@@ -11,6 +11,7 @@ import { getDpmbVehicleRanges } from '../../utils/dpmbVehicleMetadata';
 const BUFFER_MINS = 30;
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
+    
     private async getApiMapping(): Promise<ApiMapping | null> {
         const staticUrl = this.city.adapterConfig?.staticDataUrl;
         if (!staticUrl) return null;

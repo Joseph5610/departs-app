@@ -3,7 +3,6 @@ type AdapterType = 'golemio' | 'gtfs' | 'kordis' | 'duk';
 export interface AdapterConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
-    stopsFile?: string;
     [key: string]: string | boolean | undefined;
 }
 
@@ -45,7 +44,6 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         bounds: [16.44, 49.11, 16.77, 49.28],
         adapter: 'kordis',
         adapterConfig: {
-            stopsFile: 'cities/brno/stops.json',
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
             staticDataUrl: 'https://data.departs.app'
         },

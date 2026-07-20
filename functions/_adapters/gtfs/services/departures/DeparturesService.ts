@@ -28,7 +28,7 @@ export class DeparturesService {
         const { stopId: stopIds } = parseSearchParams(url.searchParams, departuresQuerySchema);
         
         if (!stopIds || stopIds.length === 0) {
-            return { departures: [] };
+            throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
         try {

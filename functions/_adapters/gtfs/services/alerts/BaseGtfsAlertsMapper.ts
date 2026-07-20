@@ -96,7 +96,6 @@ export class BaseGtfsAlertsMapper {
     }
 
     /** Overridable hooks for city-specific logic */
-
     protected parseIsDetour(alert: transit_realtime.IAlert, _headerStr: string): boolean {
         void _headerStr;
         return String(alert.effect) === '4' || 

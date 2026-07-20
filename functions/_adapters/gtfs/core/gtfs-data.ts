@@ -1,5 +1,6 @@
 import { getCityConfig } from '../../../_core/city-config';
 import { appClient } from '../../../_core/ApiClient';
+import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 
 export interface GtfsRoute {
     name: string;
@@ -13,8 +14,6 @@ export interface GtfsData {
     tripRoutes: Record<string, string>;
     routesByName: Record<string, GtfsRoute>;
 }
-
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 
 export async function getGtfsData(citySlug: string): Promise<GtfsData> {
     const cityConfig = getCityConfig(citySlug);

@@ -17,7 +17,7 @@ export class DukDeparturesService {
     async getDepartures(_env: Env, searchParams: URLSearchParams): Promise<AppDepartureResponse> {
         const ids = searchParams.get('ids') || searchParams.get('stopId');
         if (!ids) {
-            return { departures: [] };
+            throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
         // We only take the first ID to determine the node for simplicity.

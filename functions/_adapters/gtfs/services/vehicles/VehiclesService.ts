@@ -117,6 +117,10 @@ export class VehiclesService {
         const { searchParams } = new URL(ctx.request.url);
         const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);
 
+        if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
+            throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
+        }
+
         let filtered = allVehicles.features;
 
         if (routeTypes && routeTypes.length > 0) {
