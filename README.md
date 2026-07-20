@@ -25,7 +25,7 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 
 ### Prerequisites
 
-- **Node.js**: v22 or higher
+- **Node.js**: v24 or higher
 - **Wrangler**: `npm install -g wrangler` (for Cloudflare Functions)
 - **API Key**: A free API key from [api.golemio.cz](https://api.golemio.cz/)
 
@@ -100,4 +100,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ for commuters.
+Built with ❤️ for all commuters.
