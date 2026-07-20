@@ -374,6 +374,22 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 // ROUTES
 // -----------------------------------------------------------------------------
 
+export const routeLineCasing: LineLayerSpecification = {
+    id: 'route-line-casing',
+    type: 'line',
+    source: 'route-shape',
+    filter: ['==', ['geometry-type'], 'LineString'],
+    layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+    },
+    paint: {
+        'line-color': '#71717a',
+        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 4, MAP_TOKENS.zoom.vehicles.max, 8],
+        'line-opacity': 0.8
+    }
+};
+
 export const routeLine: LineLayerSpecification = {
     id: 'route-line',
     type: 'line',
@@ -385,9 +401,8 @@ export const routeLine: LineLayerSpecification = {
     },
     paint: {
         'line-color': ['get', 'route_color'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 3, MAP_TOKENS.zoom.vehicles.max, 8],
-        'line-opacity': 0.8,
-        'line-blur': 0.5
+        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 2, MAP_TOKENS.zoom.vehicles.max, 5],
+        'line-opacity': 1
     }
 };
 

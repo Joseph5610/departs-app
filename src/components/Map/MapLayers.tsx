@@ -24,6 +24,7 @@ import {
     vehiclePoints,
     vehicleDirections,
     vehicleLabels,
+    routeLineCasing,
     routeLine,
     routeStops,
     routeTerminals,
@@ -142,6 +143,9 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     return (
         <>
             <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
+                <Layer
+                    {...routeLineCasing}
+                />
                 <Layer
                     {...routeLine}
                 />

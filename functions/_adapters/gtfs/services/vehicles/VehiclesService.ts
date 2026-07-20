@@ -7,6 +7,8 @@ import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
+import { ApiError } from '../../../../_core/errors';
+import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 
 export class VehiclesService {
     constructor(protected city: CityConfig) {}

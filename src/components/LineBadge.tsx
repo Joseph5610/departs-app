@@ -1,10 +1,10 @@
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
 
 interface LineBadgeProps {
     name: string;
     routeColor: string;
     /** Size variant — defaults to 'md' */
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     className?: string;
 }
 
@@ -32,15 +32,20 @@ export const LineBadge = ({ name, routeColor, size = 'md', className }: LineBadg
         baseWidth = 24;
         charWidth = 8;
         sizeClass = `h-[24px] rounded-[4px] px-1 text-[11px] font-bold`;
+    } else if (size === 'xl') {
+        baseWidth = 28;
+        charWidth = 9;
+        sizeClass = `h-[28px] rounded-[5px] px-1.5 text-[13px] font-extrabold`;
     }
 
     const calculatedMinWidth = baseWidth + (Math.max(0, len - 1) * charWidth);
 
     return (
         <span
-            className={cn(`inline-flex items-center justify-center text-white shrink-0 border border-border/50 ${sizeClass}`, className)}
+            className={cn(`inline-flex items-center justify-center shrink-0 border border-border/50 ${sizeClass}`, className)}
             style={{ 
                 backgroundColor: routeColor,
+                color: getContrastColor(routeColor),
                 minWidth: `${calculatedMinWidth}px`
             }}
         >

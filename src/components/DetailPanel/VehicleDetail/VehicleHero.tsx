@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
+import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useShare } from '../../../hooks/features/useShare';
 import { Card } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
+import { LineBadge } from '../../LineBadge';
 
 export const VehicleHero: React.FC<VehicleHeroProps> = ({
     displayVehicle,
@@ -38,43 +39,55 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
                 <div className="flex justify-between items-start mb-2">
-                        <Button
-                        variant="default"
-                        className={cn(
-                            "flex items-center gap-2 w-fit rounded-lg px-2.5 py-1.5 h-auto text-[15px] font-black text-white transition-all active:scale-95 shadow-sm",
-                            isFollowing ? "ring-2 ring-white/50" : "hover:brightness-110 ring-1 ring-white/15"
+                    <div className="flex items-center">
+                        <LineBadge 
+                            name={displayVehicle.routeName} 
+                            routeColor={bgColor} 
+                            size="xl" 
+                            className="shadow-sm border-white/10" 
+                        />
+                    </div>
+
+                    <div className="flex gap-2">
+                        {isDetailLoading && (
+                            <Skeleton className="w-8 h-8 rounded-full bg-neutral-800/50" />
                         )}
-                        style={{ backgroundColor: bgColor }}
-                        onClick={onToggleFollow}
-                    >
-                        <span className="tracking-tight leading-none">{displayVehicle.routeName}</span>
-                        <div className={cn(
-                            "flex items-center justify-center transition-all",
-                            isFollowing ? "text-white" : "text-white/40"
-                        )}>
-                            <MapPin 
-                                size={16} 
-                                className="" 
-                                strokeWidth={isFollowing ? 2.5 : 2} 
-                            />
-                        </div>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="shrink-0 text-muted-foreground"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            share({
-                                title: t('map.vehicleDetails.shareTitle', { line: displayVehicle.routeName }),
-                                text: t('map.vehicleDetails.shareText', { line: displayVehicle.routeName }),
-                                tripId: displayVehicle.gtfs_trip_id,
-                                vehicleId: displayVehicle.vehicle_id || undefined
-                            });
-                        }}
-                    >
-                        <Share2 size={16} strokeWidth={1.5} />
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onToggleFollow}
+                            className={cn(
+                                "rounded-full w-8 h-8 shrink-0 transition-colors",
+                                isFollowing 
+                                    ? "text-white bg-white/20 hover:bg-white/30" 
+                                    : "text-neutral-400 hover:text-white hover:bg-white/10"
+                            )}
+                            aria-label={t('map.vehicleDetail.track')}
+                        >
+                            {isFollowing ? (
+                                <MapPin size={16} strokeWidth={2.5} />
+                            ) : (
+                                <MapPinOff size={16} strokeWidth={2} />
+                            )}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full w-8 h-8 shrink-0 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                share({
+                                    title: t('map.vehicleDetails.shareTitle', { line: displayVehicle.routeName }),
+                                    text: t('map.vehicleDetails.shareText', { line: displayVehicle.routeName }),
+                                    tripId: displayVehicle.gtfs_trip_id,
+                                    vehicleId: displayVehicle.vehicle_id || undefined
+                                });
+                            }}
+                            aria-label={t('map.vehicleDetail.share')}
+                        >
+                            <Share2 size={16} strokeWidth={1.5} />
+                        </Button>
+                    </div>
                 </div>
                 <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
                     {displayVehicle.trip_headsign || displayVehicle.next_stop_name ? (
