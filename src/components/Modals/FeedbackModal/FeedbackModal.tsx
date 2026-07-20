@@ -140,21 +140,21 @@ export const FeedbackModal: React.FC = () => {
                                                 className="grid grid-cols-3 w-full gap-2 bg-transparent p-0"
                                             >
                                                 <ToggleGroupItem value="bug" variant="outline" className={cn(
-                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-white/5",
+                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-border/50",
                                                     "data-[state=on]:ring-1 data-[state=on]:ring-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-primary"
                                                 )}>
                                                     <Bug className="h-5 w-5" />
                                                     <span className="text-xs">{t('feedback.typeBug')}</span>
                                                 </ToggleGroupItem>
                                                 <ToggleGroupItem value="feature_request" variant="outline" className={cn(
-                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-white/5",
+                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-border/50",
                                                     "data-[state=on]:ring-1 data-[state=on]:ring-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-primary"
                                                 )}>
                                                     <Lightbulb className="h-5 w-5" />
                                                     <span className="text-xs">{t('feedback.typeFeature')}</span>
                                                 </ToggleGroupItem>
                                                 <ToggleGroupItem value="other" variant="outline" className={cn(
-                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-white/5",
+                                                    "h-auto py-3 rounded-xl flex-col gap-2 border-border/50",
                                                     "data-[state=on]:ring-1 data-[state=on]:ring-primary/40 data-[state=on]:bg-primary/5 data-[state=on]:text-primary"
                                                 )}>
                                                     <MessageSquare className="h-5 w-5" />
@@ -211,7 +211,7 @@ export const FeedbackModal: React.FC = () => {
                                 control={form.control}
                                 name="includeDiagnostics"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col rounded-lg border border-white/5 bg-muted/20 overflow-hidden space-y-0">
+                                    <FormItem className="flex flex-col rounded-lg border border-border/50 bg-muted/20 overflow-hidden space-y-0">
                                         <div className="flex items-center justify-between p-4">
                                             <div className="space-y-0.5 pr-4">
                                                 <FormLabel className="text-base">{t('feedback.diagnostics')}</FormLabel>
@@ -229,7 +229,7 @@ export const FeedbackModal: React.FC = () => {
 
                                         {includeDiagnostics && diagnosticSnapshot && (
                                             <div className="px-4 pb-4 pt-2">
-                                                <div className="bg-black/50 rounded-md p-3 overflow-x-auto border border-white/5">
+                                                <div className="bg-muted/30 dark:bg-black/50 rounded-md p-3 overflow-x-auto border border-border/50">
                                                     <pre className="text-[10px] text-muted-foreground font-mono leading-relaxed">
                                                         {JSON.stringify(diagnosticSnapshot, null, 2)}
                                                     </pre>
@@ -258,7 +258,7 @@ export const FeedbackModal: React.FC = () => {
                     </Form>
                 </ScrollArea>
                 
-                <div className="px-6 pb-6 pt-2 shrink-0 border-t border-white/5 flex gap-3">
+                <div className="px-6 pb-6 pt-2 shrink-0 border-t border-border/50 flex gap-3">
                     <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
                         {t('common.cancel')}
                     </Button>

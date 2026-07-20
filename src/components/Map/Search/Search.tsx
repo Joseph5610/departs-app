@@ -78,8 +78,8 @@ export const Search: React.FC = React.memo(() => {
     }, []);
 
     const favoriteStopFeatures = React.useMemo(() => {
-        if (!stops?.allFeatures?.features || favoriteStops.length === 0) return [];
-        return stops.allFeatures.features.filter((s: StopFeature) => favoriteStops.includes(s.properties.stop_id));
+        if (!stops?.stopIndex || favoriteStops.length === 0) return [];
+        return favoriteStops.map(id => stops.stopIndex.get(id)).filter((s): s is StopFeature => s !== undefined);
     }, [stops, favoriteStops]);
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
@@ -225,7 +225,7 @@ export const Search: React.FC = React.memo(() => {
         >
             <div ref={containerRef}>
                 <div className="flex h-11 glassy rounded-2xl overflow-hidden transition-all items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" data-testid="search-container">
-                    <CitySwitcher variant="ghost" className="w-[48px] pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-white/5" />
+                    <CitySwitcher variant="ghost" className="w-[48px] pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-foreground/5" />
                     
                     <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                         <Input
@@ -272,7 +272,7 @@ export const Search: React.FC = React.memo(() => {
                                         clearSearch();
                                         inputRef.current?.focus();
                                     }}
-                                    className="h-9 w-9 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                    className="h-9 w-9 text-muted-foreground hover:bg-black/5 dark:hover:bg-foreground/5"
                                     aria-label={t('search.clearFilter')}
                                 >
                                     <X size={18} strokeWidth={2}  />

@@ -11,17 +11,17 @@ export const DepartureBoardSkeleton: React.FC = () => {
             {[1].map((group) => (
                 <div 
                     key={group} 
-                    className="flex flex-col rounded-xl overflow-hidden border border-white/5 bg-white/1"
+                    className="flex flex-col rounded-xl overflow-hidden border border-border/50 bg-foreground/1 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
                 >
                     {/* Primary Group Header Skeleton */}
-                    <div className="flex items-center gap-2 px-3 py-2 bg-white/4 border-b border-white/5">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-foreground/4 border-b border-border/50">
                         <Skeleton className="h-5 w-8 rounded-md" />
-                        <div className="w-3 h-3 bg-white/5 rounded-full" />
+                        <div className="w-3 h-3 bg-foreground/5 rounded-full" />
                         <Skeleton className="h-4 w-32" />
                     </div>
                     
                     {/* First Sub-group rows */}
-                    <div className="flex flex-col border-b border-white/5">
+                    <div className="flex flex-col border-b border-border/50">
                         {[1, 2].map((item) => (
                             <div key={item} className="flex items-center gap-2 py-2 px-3">
                                 <div className="shrink-0 w-[82px]"><Skeleton className="h-4 w-12" /></div>
@@ -36,9 +36,9 @@ export const DepartureBoardSkeleton: React.FC = () => {
                     </div>
 
                     {/* Secondary Variant Header Skeleton */}
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border-t border-white/10 shadow-[0_-2px_4px_rgba(0,0,0,0.2)]">
-                        <div className="w-[2px] h-3 bg-white/10 rounded-full shrink-0" />
-                        <div className="w-2.5 h-2.5 bg-white/5 rounded-full ml-1" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 border-t border-border/50 shadow-[0_-2px_4px_rgba(0,0,0,0.2)]">
+                        <div className="w-[2px] h-3 bg-foreground/10 rounded-full shrink-0" />
+                        <div className="w-2.5 h-2.5 bg-foreground/5 rounded-full ml-1" />
                         <Skeleton className="h-3 w-24 opacity-50" />
                     </div>
 

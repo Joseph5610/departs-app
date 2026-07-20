@@ -90,4 +90,11 @@ export class GolemioAdapter implements CityAdapter {
 
         return this.vehiclesService.getRawVehicles(ctx.env);
     }
+
+    /**
+     * Calculates city-wide statistics based on raw vehicles.
+     */
+    handleStats(ctx: EventContext<Env, string, unknown>) {
+        return this.vehiclesService.getStats(ctx.env);
+    }
 }

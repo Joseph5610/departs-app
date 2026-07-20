@@ -31,9 +31,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
     return (
         <Card 
-            className="p-0 gap-0 border border-white/10 ring-0 shadow-xl relative flex flex-col transition-colors"
+            className="p-0 gap-0 border border-border/50 ring-0 shadow-xl relative flex flex-col transition-colors"
             style={{
-                backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, rgba(0,0,0,0.4))` : 'rgba(0,0,0,0.4)'
+                backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, var(--hero-base))` : 'var(--card)'
             }}
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
@@ -82,7 +82,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             {displayVehicle.trip_headsign || displayVehicle.next_stop_name}
                         </span>
                     ) : isDetailLoading ? (
-                        <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md bg-white/10 opacity-40" />
+                        <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md bg-muted opacity-40" />
                     ) : (
                         t('map.vehicleDetails.headingToDestination')
                     )}
@@ -113,8 +113,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                 <Badge
                                     variant="outline"
                                     className={cn(
-                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent",
-                                        isLate ? "bg-rose-500/20 text-rose-500" : isEarly ? "bg-sky-500/20 text-sky-500" : "bg-emerald-500/20 text-emerald-500"
+                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
+                                        isLate ? "text-rose-500" : isEarly ? "text-sky-500" : "text-emerald-500"
                                     )}
                                 >
                                     {isLate
@@ -130,9 +130,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             <Popover>
                                 <PopoverTrigger render={<button type="button" className="outline-none" />}>
                                     <Badge variant="muted" className={cn(
-                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer hover:bg-muted/80 transition-colors",
-                                        isEnriched ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" : 
-                                        (hasEnrichment && !isEnriched) ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" : ""
+                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
+                                        isEnriched ? "text-emerald-500" : 
+                                        (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
                                     )}>
                                         <div className={cn(
                                             "w-1.5 h-1.5 rounded-full shrink-0",
@@ -200,7 +200,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
             {/* Render Footer outside CardContent if data exists */}
             {displayVehicle.vehicle_descriptor && (
-                <div className="relative z-10 flex gap-3 p-3 px-4 bg-muted/20 border-t border-white/5 justify-between items-center mt-auto">
+                <div className="relative z-10 flex gap-3 p-3 px-4 bg-muted/20 border-t border-border/50 justify-between items-center mt-auto">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         {displayVehicle.vehicle_descriptor?.operator && (
                             <span className="text-muted-foreground/80 text-[9px] uppercase font-bold tracking-wider line-clamp-1">
@@ -237,7 +237,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
                       displayVehicle.vehicle_descriptor?.has_usb_chargers || 
                       displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                        <div className="flex gap-2 shrink-0 bg-black/20 p-2 rounded-lg items-center h-fit">
+                        <div className="flex gap-2 shrink-0 bg-muted/50 p-2 rounded-lg items-center h-fit">
                             {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
                                 <Snowflake size={14} className="text-sky-400" strokeWidth={2} />
                             )}

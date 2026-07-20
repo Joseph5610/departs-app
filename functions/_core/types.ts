@@ -212,3 +212,48 @@ export interface AppCity {
 export interface AppCitiesResponse {
     cities: AppCity[];
 }
+
+export interface AppCityStats {
+    total_vehicles: number;
+    total_lines: number;
+    average_delay: number | null;
+    low_floor_count: number;
+    air_conditioned_count: number;
+    delayed_over_5_min_count: number;
+    
+    // Distributions
+    delay_distribution: {
+        on_time: number; // <= 1 min
+        delayed_1_to_5: number;
+        delayed_5_plus: number;
+    };
+    state_distribution: {
+        in_transit: number;
+        at_stop: number;
+        off_track: number;
+        other: number;
+    };
+    vehicle_types: Record<string, number>;
+    
+    // Total sum
+    total_delay_seconds: number;
+    
+    // Top lists
+    busiest_lines: Array<{
+        line: string;
+        count: number;
+        route_color: string;
+    }>;
+    
+    // Top 5 delayed
+    most_delayed: Array<{
+        vehicle_id: string;
+        gtfs_trip_id: string;
+        line: string;
+        delay: number;
+        route_type: string | number;
+        route_color: string;
+    }>;
+    
+    timestamp: string;
+}

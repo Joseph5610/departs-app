@@ -1,8 +1,9 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
+import type { Env, AppVehicleCollection, AppVehicleFeature, AppCityStats } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { getGtfsData } from '../../core/gtfs-data';
+import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
@@ -162,5 +163,11 @@ export class VehiclesService {
             features: filtered,
             status: allVehicles.status
         };
+    }
+
+    async getStats(): Promise<AppCityStats> {
+        const allVehicles = await this.getCachedMappedVehicles();
+        const features = allVehicles.features || [];
+        return aggregateCityStats(features);
     }
 }

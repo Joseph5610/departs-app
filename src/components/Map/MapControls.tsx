@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle } from 'lucide-react';
+import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3 } from 'lucide-react';
+import { navigate } from 'wouter/use-browser-location';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
@@ -12,21 +13,17 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-interface MapControlsProps {
-    onToggleFavorites?: () => void;
-    isFavoritesActive?: boolean;
-}
+import { useRouteParams } from '../../hooks/useRouteParams';
 
-/**
- * MapControls Component
- *
- * Unified control palette using Shadcn Card and standard Buttons.
- */
-export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }: MapControlsProps) => {
+export const MapControls = React.memo(() => {
     const { t } = useTranslation();
 
     // Preferences Actions
     const { setIsSettingsOpen, setIsAlertsOpen } = usePreferencesStore(s => s.actions);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+
+    // Routes
+    const { isStatsRoute, isFavoritesRoute } = useRouteParams();
 
     const { rss } = useGlobalAlerts();
     const incidentsCount = React.useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
@@ -47,6 +44,14 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
     const onAlerts = React.useCallback(() => {
         setIsAlertsOpen(true);
     }, [setIsAlertsOpen]);
+
+    const onStats = React.useCallback(() => {
+        navigate(isStatsRoute ? `/${selectedCity}` : `/${selectedCity}/stats`);
+    }, [isStatsRoute, selectedCity]);
+
+    const onToggleFavorites = React.useCallback(() => {
+        navigate(isFavoritesRoute ? `/${selectedCity}` : `/${selectedCity}/favorites`);
+    }, [isFavoritesRoute, selectedCity]);
 
 
 
@@ -132,7 +137,7 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                     </PillButton>
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
                     <PillButton
-                        onClick={onToggleFavorites || (() => {})}
+                        onClick={onToggleFavorites}
                         title={t('favorites.title')}
                         testId="map-favorites-btn"
                     >
@@ -140,9 +145,23 @@ export const MapControls = React.memo(({ onToggleFavorites, isFavoritesActive }:
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isFavoritesActive ? "fill-primary text-primary" : "transition-transform hover:scale-110"
+                                isFavoritesRoute ? "fill-primary text-primary" : "transition-transform hover:scale-110"
                             )}
                          />
+                    </PillButton>
+                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <PillButton
+                        onClick={onStats}
+                        title={t('stats.title')}
+                        testId="map-stats-btn"
+                    >
+                        <BarChart3
+                            size={20}
+                            strokeWidth={1.5}
+                            className={cn(
+                                isStatsRoute ? "text-primary" : "transition-transform hover:scale-110"
+                            )}
+                        />
                     </PillButton>
                 </ButtonGroup>
 

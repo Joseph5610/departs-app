@@ -1,5 +1,5 @@
 import type { CityConfig } from '../../_core/city-config';
-import type { Env, AppVehicleDetail } from '../../_core/types';
+import type { Env, AppVehicleDetail, AppCityStats } from '../../_core/types';
 import { ApiError } from '../../_core/errors';
 import { ERROR_MESSAGES } from '../../_core/api-utils';
 import type { CityAdapter } from '../CityAdapter';
@@ -80,10 +80,25 @@ export class DukAdapter implements CityAdapter {
         return [];
     }
 
-    /**
-     * Handles fetching raw GTFS feed. Not implemented for DUK.
-     */
     async handleRawFeed() {
         return { error: "Not implemented for DUK" };
+    }
+
+    async handleStats(_ctx: EventContext<Env, string, unknown>): Promise<AppCityStats> {
+        return {
+            total_vehicles: 0,
+            total_lines: 0,
+            average_delay: null,
+            low_floor_count: 0,
+            air_conditioned_count: 0,
+            delayed_over_5_min_count: 0,
+            delay_distribution: { on_time: 0, delayed_1_to_5: 0, delayed_5_plus: 0 },
+            state_distribution: { in_transit: 0, at_stop: 0, off_track: 0, other: 0 },
+            total_delay_seconds: 0,
+            vehicle_types: {},
+            busiest_lines: [],
+            most_delayed: [],
+            timestamp: new Date().toISOString()
+        };
     }
 }

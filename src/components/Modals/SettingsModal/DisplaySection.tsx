@@ -51,9 +51,13 @@ const FilterButton: React.FC<FilterButtonProps> = ({ icon: Icon, label, isActive
         variant="outline"
         data-testid={testId}
         className={cn(
-            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl border-white/5 transition-all text-sm font-semibold active:scale-95 group",
-            "data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/50 data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.1)]",
-            "data-[state=off]:bg-muted/40 data-[state=off]:text-foreground/80 hover:bg-white/10 hover:text-foreground"
+            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-all text-sm font-semibold active:scale-95 group",
+            // The border is border-border/80 so it's subtle but visible
+            "border-border/80 hover:bg-foreground/10 hover:text-foreground",
+            // Use highly specific overrides for the ON state to defeat shadcn's default bg-muted
+            "[&[data-state=on]]:!bg-primary/20 [&[data-state=on]]:!text-primary [&[data-state=on]]:!border-primary/50 [&[data-state=on]]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
+            // Ensure OFF state doesn't look completely transparent if we don't want it to, or just leave it
+            "[&[data-state=off]]:bg-transparent [&[data-state=off]]:text-foreground/70"
         )}
     >
         <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
@@ -107,7 +111,7 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden border-t border-white/5"
+                    className="overflow-hidden border-t border-border/50"
                 >
                     <div className="flex flex-col">
                         {children}
@@ -140,7 +144,7 @@ export const DisplaySection: React.FC = () => {
         setRouteTypeFilter,
         setStopTypeFilter,
         setShowStopLabels,
-        setMapBaseStyle
+        setMapBaseStyle,
     } = usePreferencesStore(s => s.actions);
 
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -164,7 +168,6 @@ export const DisplaySection: React.FC = () => {
             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                 {t('settings.sections.display')}
             </h3>
-
             <ToggleSection
                 title={t('settings.liveVehicles.title')}
                 description={t('settings.liveVehicles.description')}
@@ -215,7 +218,7 @@ export const DisplaySection: React.FC = () => {
                 <Item
                     variant="settings"
                     size="none"
-                    className={cn("w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none", isStopsFilterEnabled ? "border-b border-white/5" : "border-0")}
+                    className={cn("w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none", isStopsFilterEnabled ? "border-b border-border/50" : "border-0")}
                     render={<button onClick={() => setShowStopLabels(!showStopLabels)} />}
                 >
                     <ItemMedia variant="icon" className={cn(showStopLabels ? "text-primary" : "text-muted-foreground")}>

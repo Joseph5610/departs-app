@@ -11,18 +11,14 @@ import type { SelectedStop } from '../../types/transit';
  */
 export const useSelectedStop = () => {
     const { stopId } = useRouteParams();
-    const { allFeatures: stopsData } = useStops();
+    const { stopIndex } = useStops();
 
     return useMemo((): SelectedStop | null => {
         if (!stopId) {
             return null;
         }
 
-        if (!stopsData) {
-            return { stop_id: stopId };
-        }
-
-        const feature = stopsData.features.find(f => f.properties.stop_id === stopId);
+        const feature = stopIndex.get(stopId);
 
         if (!feature) {
             return { stop_id: stopId };
@@ -39,5 +35,5 @@ export const useSelectedStop = () => {
             lines,
             coordinates: feature.geometry.coordinates as [number, number]
         };
-    }, [stopId, stopsData]);
+    }, [stopId, stopIndex]);
 };

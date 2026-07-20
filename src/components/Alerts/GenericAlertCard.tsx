@@ -74,7 +74,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
                 {showStatus && (isFuture ? (
-                    <div className="flex gap-1.5 items-center mb-1 w-fit bg-white/5 px-1.5 py-0.5 rounded-md border border-white/5">
+                    <div className="flex gap-1.5 items-center mb-1 w-fit bg-foreground/5 px-1.5 py-0.5 rounded-md border border-border/50">
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
                         <span className="text-[8px] font-bold text-amber-500/90 uppercase tracking-widest">
                             {t('alerts.planned')}
@@ -104,7 +104,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                         {causeDetail && (
                             <span className={cn(
                                 "normal-case font-medium",
-                                (cause && !hideCauseText) ? "text-foreground/50 ml-1.5 border-l border-white/10 pl-1.5" : "text-foreground/80"
+                                (cause && !hideCauseText) ? "text-foreground/50 ml-1.5 border-l border-border/50 pl-1.5" : "text-foreground/80"
                             )}>
                                 {i18n.language.startsWith('en') && causeDetail.en ? causeDetail.en : causeDetail.cs}
                             </span>

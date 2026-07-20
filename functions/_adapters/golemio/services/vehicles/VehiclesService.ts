@@ -1,5 +1,5 @@
 
-import { Env, AppVehicleCollection } from "../../../../_core/types";
+import { Env, AppVehicleCollection, AppCityStats } from "../../../../_core/types";
 
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
@@ -7,6 +7,7 @@ import { GolemioClient } from "../../core/GolemioClient";
 import { VehiclesMapper } from "./VehiclesMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleQuerySchema, parseSearchParams } from "../../../../_core/schemas";
+import { aggregateCityStats } from "../../../../_core/utils/statsAggregator";
 
 /**
  * Service for fetching real-time positions of active transit vehicles.
@@ -25,7 +26,8 @@ export class VehiclesService {
         });
 
         if (!response.ok) {
-            throw new ApiError(`Golemio vehicles feed is down (${response.status})`, response.status);
+            console.error(`Golemio returned ${response.status} for vehicles feed.`);
+            throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
         return await response.json();
@@ -72,5 +74,32 @@ export class VehiclesService {
             }
 
             return VehiclesMapper.map(data as GolemioVehiclePayload);
+    }
+
+    /**
+     * Fetches all raw vehicles and computes global network statistics.
+     */
+    async getStats(env: Env): Promise<AppCityStats> {
+        let rawData;
+        try {
+            rawData = await this.getRawVehicles(env, {});
+        } catch (error) {
+            console.error(`Golemio vehicles feed is down`, error);
+            throw new ApiError(ERROR_MESSAGES.VEHICLES_DATA_UNAVAILABLE, 503, { cause: error });
+        }
+        
+        const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+        if (!parsed.success) {
+            throw new ApiError(ERROR_MESSAGES.DATA_STRUCTURE_CHANGED, 500);
+        }
+
+        const data = parsed.data;
+        if (data.features) {
+            data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+        }
+
+        const mappedCollection = VehiclesMapper.map(data as GolemioVehiclePayload);
+        
+        return aggregateCityStats(mappedCollection.features);
     }
 }

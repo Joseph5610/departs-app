@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
+import { ThemeProvider } from 'next-themes'
 import App from './App'
 import { ErrorBoundary } from './components/Modals/ErrorBoundary'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -36,9 +37,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
-          <TooltipProvider delay={300}>
-            <App />
-          </TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            // TEMP: forcedTheme pins the theme while light mode polish is in progress.
+            // Remove this prop to re-enable user theme switching.
+            forcedTheme="dark"
+            disableTransitionOnChange
+          >
+            <TooltipProvider delay={300}>
+              <App />
+            </TooltipProvider>
+          </ThemeProvider>
         </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -72,7 +72,7 @@ export const SettingsFooter: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-6">
-            <ItemGroup className="rounded-2xl bg-muted/40 border border-white/5 overflow-hidden gap-0">
+            <ItemGroup className="rounded-2xl bg-muted/40 border border-border/50 overflow-hidden gap-0">
                 {searchHistory.length > 0 && (
                     <Item
                         variant="settings"
@@ -127,7 +127,7 @@ export const SettingsFooter: React.FC = () => {
                 <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
                     Attributions
                 </div>
-                <ItemGroup className="rounded-2xl bg-muted/40 border border-white/5 overflow-hidden gap-0">
+                <ItemGroup className="rounded-2xl bg-muted/40 border border-border/50 overflow-hidden gap-0">
                     <Item
                         variant="settings"
                         size="none"

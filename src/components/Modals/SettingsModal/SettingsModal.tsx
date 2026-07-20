@@ -63,7 +63,7 @@ export const SettingsModal: React.FC = () => {
                                         value={lang}
                                         variant="outline"
                                         className={cn(
-                                            "h-auto py-3 px-4 rounded-xl text-sm font-semibold border-white/5",
+                                            "h-auto py-3 px-4 rounded-xl text-sm font-semibold border-border/50",
                                             "data-[state=on]:ring-1 data-[state=on]:ring-inset data-[state=on]:ring-primary/40 data-[state=on]:text-primary data-[state=on]:border-primary/20 data-[state=on]:bg-primary/5",
                                             "data-[state=off]:text-muted-foreground data-[state=off]:bg-muted/40 data-[state=off]:backdrop-blur-md"
                                         )}

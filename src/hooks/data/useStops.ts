@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import localforage from 'localforage';
-import type { StopCollection } from '../../types/transit';
+import type { StopCollection, StopFeature } from '../../types/transit';
 import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
@@ -75,11 +75,26 @@ export const useStops = () => {
         return { stops, centroids };
     }, [query.data]);
 
+    const stopIndex = useMemo(() => {
+        const idx = new Map<string, StopFeature>();
+        if (query.data?.data?.features) {
+            for (const f of query.data.data.features) {
+                idx.set(f.properties.stop_id, f);
+                if (f.properties.all_ids) {
+                    for (const subId of f.properties.all_ids) {
+                        idx.set(subId, f);
+                    }
+                }
+            }
+        }
+        return idx;
+    }, [query.data]);
 
     return {
         ...query,
         stops,
         centroids,
+        stopIndex,
         allFeatures: query.data?.data || null,
         updatedAt: query.data?.updatedAt || null
     };

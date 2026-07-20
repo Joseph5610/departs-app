@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "group/alert relative grid w-full gap-0.5 rounded-xl border px-4 py-3.5 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-4 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current",
+  "group/alert relative grid w-full gap-0.5 rounded-2xl border px-4 py-3.5 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-4 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current",
   {
     variants: {
       variant: {
@@ -13,7 +13,7 @@ const alertVariants = cva(
           "bg-destructive/15 text-destructive border-destructive/50 *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
         warning:
           "bg-amber-500/15 text-amber-500 border-amber-500/40 *:data-[slot=alert-description]:text-amber-500/90 *:[svg]:text-current",
-        subtle: "bg-muted/30 border border-white/10 text-foreground",
+        subtle: "bg-card border border-border/50 shadow-sm text-foreground",
       },
     },
     defaultVariants: {

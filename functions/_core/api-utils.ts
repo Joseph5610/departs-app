@@ -32,6 +32,8 @@ export const ERROR_MESSAGES = {
     VEHICLE_NOT_FOUND: "Vehicle information is currently unavailable.",
     RSS_FEED_ERROR: "Could not retrieve transit alerts from the source feed.",
     STOPS_DATA_UNAVAILABLE: "Stop data is currently unavailable.",
+    VEHICLES_DATA_UNAVAILABLE: "Live vehicle data is currently unavailable.",
+    DATA_STRUCTURE_CHANGED: "The data provider changed their data structure unexpectedly.",
 };
 
 

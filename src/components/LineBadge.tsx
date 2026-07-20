@@ -38,7 +38,7 @@ export const LineBadge = ({ name, routeColor, size = 'md', className }: LineBadg
 
     return (
         <span
-            className={cn(`inline-flex items-center justify-center text-white shrink-0 border border-white/10 ${sizeClass}`, className)}
+            className={cn(`inline-flex items-center justify-center text-white shrink-0 border border-border/50 ${sizeClass}`, className)}
             style={{ 
                 backgroundColor: routeColor,
                 minWidth: `${calculatedMinWidth}px`

@@ -132,18 +132,18 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             variant="subtle"
             className={cn(
                 "w-full cursor-pointer transition-colors relative group/favcard",
-                "bg-white/10 border-white/15 hover:bg-white/20 active:bg-white/25 shadow-sm",
+                "bg-card border-border/50 hover:bg-muted/50 active:bg-muted/80 shadow-sm",
                 "focus-visible:outline-none p-0 gap-0"
             )}
         >
             {/* Header Area */}
-            <CardHeader className="flex items-center justify-between gap-2 space-y-0 border-b border-white/5 p-3 px-4">
+            <CardHeader className="flex items-center justify-between gap-2 space-y-0 border-b border-border/50 p-3 px-4">
                 <div className="min-w-0 flex-1">
                     <CardTitle className="flex items-center gap-1.5 flex-wrap text-[15px] leading-tight truncate min-w-0">
                         {platform_code && (
                             <Badge 
                                 variant="outline"
-                                className="w-5 h-5 rounded-full p-0 flex items-center justify-center bg-white border-white text-black text-[10.5px] font-bold tabular-nums shrink-0"
+                                className="w-5 h-5 p-0 flex items-center justify-center rounded-full shrink-0 tabular-nums border-0 bg-foreground text-background text-[10.5px] font-bold shadow-sm"
                             >
                                 {platform_code}
                             </Badge>
@@ -221,7 +221,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                         {/* Platform (Trains only) */}
                                         {dep.platform && isTrain && (
                                             <div 
-                                                className="flex items-center justify-center shrink-0 min-w-[20px] gap-0.5 px-1 h-[15px] bg-white/5 rounded border border-white/5 shadow-sm text-[8.5px] font-bold text-foreground/50"
+                                                className="flex items-center justify-center shrink-0 min-w-[20px] gap-0.5 px-1 h-[15px] bg-muted/50 rounded border border-border/50 shadow-sm text-[8.5px] font-bold text-foreground/50"
                                             >
                                                 <Train size={12} strokeWidth={1.5} className="opacity-30"  />
                                                 <span>{dep.platform}</span>

@@ -28,26 +28,15 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
     // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
 
-    const { isLoading: stopsLoading, allFeatures: stopsData } = useStops();
+    const { isLoading: stopsLoading, stopIndex } = useStops();
 
-    // Map favoriteStops (IDs) to StopFeature features efficiently using a Map
     const favoriteStopFeatures = useMemo(() => {
-        if (!stopsData?.features || favoriteStops.length === 0) return [];
-
-        const stopLookup = new Map<string, StopFeature>();
-        for (const feature of stopsData.features) {
-            stopLookup.set(feature.properties.stop_id, feature);
-            if (feature.properties.all_ids) {
-                for (const subId of feature.properties.all_ids) {
-                    stopLookup.set(subId, feature);
-                }
-            }
-        }
+        if (!stopIndex || favoriteStops.length === 0) return [];
 
         return favoriteStops
-            .map(id => stopLookup.get(id))
+            .map(id => stopIndex.get(id))
             .filter((f): f is StopFeature => f !== undefined);
-    }, [stopsData, favoriteStops]);
+    }, [stopIndex, favoriteStops]);
 
     // Extract all stop_ids for departures bulk fetching
     const stopIds = useMemo(() => {

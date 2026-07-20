@@ -52,16 +52,14 @@ export const AlertsModal: React.FC = () => {
     const { data: rssData, isLoading: loadingRSS } = rss;
 
     // Grouping and Filtering logic
-    const { groupCounts, items, groups } = useMemo(() => {
+    const groupedData = useMemo(() => {
         const rawItems = rssData?.alerts || [];
 
         // 1. Filter
         const filtered = rawItems.filter(item => {
-            // Filter by type
             if (filterMode === 'incident' && item.type !== 'incident') return false;
             if (filterMode === 'exclusion' && item.type !== 'exclusion') return false;
 
-            // Search
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase();
                 const matchesTitle = item.title.toLowerCase().includes(q);
@@ -72,7 +70,7 @@ export const AlertsModal: React.FC = () => {
             return true;
         });
 
-        // 2. Group by mode
+        // 2. Group
         const groupedMap = new Map<string, RSSItem[]>();
         filtered.forEach(item => {
             const mode = getTransportMode(item);
@@ -80,7 +78,7 @@ export const AlertsModal: React.FC = () => {
             groupedMap.get(mode)!.push(item);
         });
 
-        // 3. Sort groups
+        // 3. Sort groups and items
         const sortedModes = Array.from(groupedMap.keys()).sort((a, b) => {
             const indexA = MODE_ORDER.indexOf(a);
             const indexB = MODE_ORDER.indexOf(b);
@@ -122,6 +120,8 @@ export const AlertsModal: React.FC = () => {
         };
     }, [rssData, filterMode, searchQuery]);
 
+    const { items, groupCounts, groups } = groupedData;
+
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
             <DialogContent aria-describedby={undefined} variant="default" data-testid="alerts-modal-content">
@@ -133,10 +133,10 @@ export const AlertsModal: React.FC = () => {
                 
                 <div className="flex-1 flex flex-col min-h-0">
                     {/* Header Section */}
-                    <div className="pt-1 pb-3 px-6 shrink-0 rounded-none border-b border-white/5 bg-transparent">
+                    <div className="pt-1 pb-3 px-6 shrink-0 rounded-none border-b border-border/50 bg-transparent">
                         <div className="flex flex-col gap-3">
                             <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as 'all' | 'incident' | 'exclusion')}>
-                                <TabsList variant="pill" className="w-full grid grid-cols-3">
+                                <TabsList variant="pill" className="w-full grid grid-cols-3 bg-black/5 dark:bg-white/5">
                                     <TabsTrigger value="all">{t('alerts.all') || 'All'}</TabsTrigger>
                                     <TabsTrigger value="incident">{t('alerts.incidents') || 'Incidents'}</TabsTrigger>
                                     <TabsTrigger value="exclusion">{t('alerts.exclusions') || 'Exclusions'}</TabsTrigger>
@@ -144,13 +144,13 @@ export const AlertsModal: React.FC = () => {
                             </Tabs>
 
                             <div className="relative group">
-                                <Input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder={t('search.placeholder')}
-                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border border-white/5 bg-black/40"
-                                />
+                                    <Input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={t('search.placeholder')}
+                                        className="h-10 pl-10 pr-10 text-sm rounded-xl border border-border/50 bg-black/5 dark:bg-white/5 transition-colors focus-visible:ring-1 focus-visible:ring-primary/30"
+                                    />
                                 <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16}  strokeWidth={1.5} />
                                 {searchQuery && (
                                     <Button
@@ -169,7 +169,7 @@ export const AlertsModal: React.FC = () => {
                     {/* Virtualized List */}
                     <div className="flex-1 min-h-0">
                         {items.length === 0 && !loadingRSS ? (
-                            <div className="flex justify-center items-center flex-1 py-12 text-muted-foreground text-sm h-full">
+                            <div className="flex justify-center items-center flex-1 py-12 px-6 text-muted-foreground text-sm h-full">
                                 <p>{t('alerts.noAlerts')}</p>
                             </div>
                         ) : (
@@ -182,15 +182,13 @@ export const AlertsModal: React.FC = () => {
                                     const modeName = t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) });
                                     
                                     return (
-                                        <div className="sticky top-0 bg-background/95 backdrop-blur-md px-6 py-2 border-b border-white/10 shadow-sm z-10">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                                                    {modeName}
-                                                </span>
-                                                <span className="text-[10px] font-semibold text-muted-foreground/60 bg-white/5 px-2 py-0.5 rounded-full">
-                                                    {count}
-                                                </span>
-                                            </div>
+                                        <div className="sticky top-0 z-10 flex justify-between items-center px-4 py-2 bg-background border-b border-border/30">
+                                            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
+                                                {modeName}
+                                            </h3>
+                                            <span className="text-[10px] font-semibold text-muted-foreground/60 bg-foreground/5 px-2 py-0.5 rounded-full">
+                                                {count}
+                                            </span>
                                         </div>
                                     );
                                 }}

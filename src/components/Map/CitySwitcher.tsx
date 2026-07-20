@@ -101,11 +101,11 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
                     <p className="text-sm text-muted-foreground/80 font-medium">{t('map.regions.title')}</p>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] pr-4 -mr-4">
-                        <CitySelectionList 
-                            cities={cities}
-                            selectedCitySlug={selectedCity || ''}
-                            onSelect={handleSelectCity}
-                        />
+                    <CitySelectionList 
+                        cities={cities}
+                        selectedCitySlug={selectedCity || ''}
+                        onSelect={handleSelectCity}
+                    />
                 </ScrollArea>
             </DialogContent>
         </Dialog>

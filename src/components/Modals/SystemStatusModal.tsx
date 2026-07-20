@@ -133,7 +133,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
 
                 <div className="flex flex-col gap-5">
                     {/* Status Overview Card */}
-                    <div className="flex flex-col gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-md">
+                    <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border/50 bg-card shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 {statusDetails.icon}
@@ -147,14 +147,14 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                                 {status.isOnline ? 'Online' : 'Offline'}
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-white/5">
+                        <p className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">
                             {statusDetails.description}
                         </p>
                     </div>
 
                     {/* Technical Info Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1 p-3.5 rounded-xl border border-white/5 bg-white/[0.01]">
+                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                                 <Wifi className="w-3.5 h-3.5" strokeWidth={1.5} />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.connection')}</span>
@@ -164,7 +164,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                             </span>
                         </div>
 
-                        <div className="flex flex-col gap-1 p-3.5 rounded-xl border border-white/5 bg-white/[0.01]">
+                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                                 <MapPin className="w-3.5 h-3.5" strokeWidth={1.5} />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.region')}</span>
@@ -174,7 +174,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.01] col-span-2">
+                        <div className="flex items-center justify-between p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm col-span-2">
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                                     <Database className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -188,14 +188,14 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                                 href={providerUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/5 font-bold"
+                                className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 bg-foreground/5 hover:bg-foreground/10 px-2.5 py-1.5 rounded-lg border border-border/50 font-bold"
                             >
                                 {t('liveStatus.dataProviderLink')}
                                 <ExternalLink className="w-3 h-3" />
                             </a>
                         </div>
 
-                        <div className="flex flex-col gap-1 p-3.5 rounded-xl border border-white/5 bg-white/[0.01]">
+                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                                 <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.dataFreshness')}</span>
@@ -205,7 +205,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                             </span>
                         </div>
 
-                        <div className="flex flex-col gap-1 p-3.5 rounded-xl border border-white/5 bg-white/[0.01]">
+                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                                 <Activity className="w-3.5 h-3.5" strokeWidth={1.5} />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.nextRefresh')}</span>
@@ -217,7 +217,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                     </div>
 
                     {/* How It Works Info Card */}
-                    <div className="flex gap-3 p-4 rounded-xl border border-primary/10 bg-primary/[0.02] text-xs leading-relaxed text-muted-foreground">
+                    <div className="flex gap-3 p-4 rounded-2xl border border-primary/30 bg-primary/10 shadow-sm text-xs leading-relaxed text-muted-foreground">
                         <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
                         <div className="flex flex-col gap-1">
                             <span className="font-bold text-foreground">{t('liveStatus.explanationTitle')}</span>

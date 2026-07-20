@@ -17,7 +17,7 @@ import { useEnrichmentStore } from '../../state/enrichmentStore';
 export const useSelectedVehicle = () => {
     const { tripId, vehicleId } = useRouteParams();
 
-    const { vehicles: rawVehicles, dataUpdatedAt: vehiclesUpdatedAt } = useVehicles();
+    const { vehicleIndex, tripIndex, dataUpdatedAt: vehiclesUpdatedAt } = useVehicles();
     const { data: vehicleDetail, dataUpdatedAt: detailUpdatedAt } = useVehicleDetail();
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
@@ -28,7 +28,7 @@ export const useSelectedVehicle = () => {
             return null;
         }
 
-        const liveMatch = rawVehicles?.features?.find(f => vehicleId ? f.properties.vehicle_id === vehicleId : f.properties.gtfs_trip_id === tripId);
+        const liveMatch = vehicleId ? vehicleIndex.get(vehicleId) : tripIndex.get(tripId);
 
         const isFallback = !!vehicleDetail?.is_static_fallback;
 
@@ -69,5 +69,5 @@ export const useSelectedVehicle = () => {
 
         const baseTs = Math.max(vehiclesUpdatedAt || 0, detailUpdatedAt || 0);
         return applyEnrichment(merged, merged.gtfs_trip_id, merged.vehicle_id, byTripId, byVehicleId, baseTs);
-    }, [tripId, vehicleId, rawVehicles, vehicleDetail, byTripId, byVehicleId, vehiclesUpdatedAt, detailUpdatedAt]);
+    }, [tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, vehiclesUpdatedAt, detailUpdatedAt]);
 };

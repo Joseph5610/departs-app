@@ -17,7 +17,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
 VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
 
 export const VehicleHeroSkeleton: React.FC = () => (
-    <div className="rounded-2xl bg-muted/40 border border-white/5">
+    <div className="rounded-2xl bg-muted/40 border border-border/50">
         <div className="flex flex-col gap-2 relative z-10 px-6 py-6">
             {/* Route Badge Skeleton */}
             <Skeleton className="h-7 w-12 rounded-lg" />
@@ -32,7 +32,7 @@ export const VehicleHeroSkeleton: React.FC = () => (
             </div>
 
             {/* Metadata Footer Skeleton */}
-            <div className="flex items-end justify-between gap-2 mt-4 pt-4 border-t border-white/5">
+            <div className="flex items-end justify-between gap-2 mt-4 pt-4 border-t border-border/50">
                 <div className="flex flex-col gap-1 flex-1">
                     <Skeleton className="h-2 w-24" />
                     <div className="flex items-center gap-2">

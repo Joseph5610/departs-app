@@ -4,9 +4,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export const FavoritesStopCardSkeleton: React.FC = () => {
     return (
-        <Card variant="subtle" className="w-full relative animate-in fade-in duration-500 bg-white/10 border-white/15 shadow-sm">
+        <Card variant="subtle" className="w-full relative animate-in fade-in duration-500 bg-foreground/10 border-border/50 shadow-sm">
             {/* Header Area */}
-            <CardHeader className="flex items-start justify-between gap-2 space-y-0 border-b border-white/5 pb-3">
+            <CardHeader className="flex items-start justify-between gap-2 space-y-0 border-b border-border/50 pb-3">
                 <div className="min-w-0 flex-1 flex flex-col gap-1.5">
                     <CardTitle className="flex items-center gap-1.5">
                         {/* Platform code skeleton */}

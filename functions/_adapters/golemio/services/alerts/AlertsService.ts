@@ -34,7 +34,7 @@ export class AlertsService {
         });
         
         if (!response.ok) {
-            throw new ApiError(`Upstream error: ${response.status}`, 502);
+            throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
         return await response.text();
     }

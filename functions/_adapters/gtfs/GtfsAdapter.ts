@@ -2,7 +2,7 @@ import type { CityConfig } from '../../_core/city-config';
 import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
 
-import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../../_core/types";
+import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../../_core/types";
 
 import { StopsService } from './services/stops/StopsService';
 import { DeparturesService } from './services/departures/DeparturesService';
@@ -79,5 +79,9 @@ export class GtfsAdapter implements CityAdapter {
             return (entities as Array<{ alert?: unknown }>).filter(e => e.alert);
         }
         return feed;
+    }
+
+    async handleStats(_ctx: EventContext<Env, string, unknown>): Promise<AppCityStats> {
+        return this.vehiclesService.getStats();
     }
 }

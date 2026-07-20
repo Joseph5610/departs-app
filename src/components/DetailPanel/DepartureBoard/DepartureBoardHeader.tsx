@@ -114,7 +114,7 @@ export const DepartureBoardHeader = React.memo(() => {
             {/* Row 1: Distance/Delay (Left) + Actions (Right) */}
             <div className="flex w-full h-7 justify-between items-center">
                 <div className="flex gap-2 shrink-0 items-center">
-                    <div className="flex items-center h-7 rounded-full bg-white/5 border border-white/10 shadow-sm shrink-0 overflow-hidden">
+                    <div className="flex items-center h-7 rounded-full bg-card border border-border/50 shadow-sm shrink-0 overflow-hidden">
                         {/* Distance & Walking Time segment */}
                         <div 
                             className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer"
@@ -292,8 +292,8 @@ export const DepartureBoardHeader = React.memo(() => {
                             <button
                                 onClick={toggleRequireAirConditioned}
                                 className={cn(
-                                    "flex items-center justify-center h-[24px] px-1.5 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-[4px] border border-white/10 text-[11px] font-bold gap-1 shrink-0",
-                                    requireAirConditioned ? "bg-[#0ea5e9] text-white ring-[2.5px] ring-white z-10 shadow-lg" : "bg-[#2a2a2a] text-white/80"
+                                    "flex items-center justify-center h-[24px] px-1.5 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-[4px] border border-border/50 text-[11px] font-bold gap-1 shrink-0",
+                                    requireAirConditioned ? "bg-[#0ea5e9] text-white ring-[2.5px] ring-foreground z-10 shadow-lg" : "bg-secondary text-secondary-foreground"
                                 )}
                             >
                                 <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />
@@ -316,7 +316,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                     className={cn(
                                         "flex transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
                                         isDimmed ? "opacity-30" : "opacity-100",
-                                        isActive && "ring-[2.5px] ring-white z-10 shadow-lg rounded-[4px]"
+                                        isActive && "ring-[2.5px] ring-foreground z-10 shadow-lg rounded-[4px]"
                                     )}
                                 >
                                     {isMetro ? (

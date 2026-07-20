@@ -42,7 +42,7 @@ export function getDiagnosticSnapshot(): DiagnosticData {
         activeLayers: viewport.routeFilter || undefined,
         
         selectedVehicleId: selection.selectedLine || undefined,
-        selectedStopId: selection.lastStopId || undefined,
+        selectedStopId: undefined,
         isFollowing: selection.isFollowing,
 
         selectedCity: preferences.selectedCity,

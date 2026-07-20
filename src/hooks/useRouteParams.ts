@@ -22,6 +22,8 @@ export const useRouteParams = () => {
     const [isStop, stopParams] = useRoute('/:city/stop/:stopId');
     const [isTrip, tripParams] = useRoute('/:city/trip/:tripId');
     const [isTripVehicle, tripVehicleParams] = useRoute('/:city/trip/:tripId/:vehicleId');
+    const [isStatsRoute, statsParams] = useRoute('/:city/stats');
+    const [isFavoritesRoute, favoritesParams] = useRoute('/:city/favorites');
     const [isCityBase, cityBaseParams] = useRoute('/:city');
 
     let city = null;
@@ -39,6 +41,10 @@ export const useRouteParams = () => {
     } else if (isStop) {
         city = decodeURIComponent(stopParams.city);
         stopId = decodeURIComponent(stopParams.stopId);
+    } else if (isStatsRoute) {
+        city = decodeURIComponent(statsParams.city);
+    } else if (isFavoritesRoute) {
+        city = decodeURIComponent(favoritesParams.city);
     } else if (isCityBase) {
         city = decodeURIComponent(cityBaseParams.city);
     }
@@ -87,5 +93,5 @@ export const useRouteParams = () => {
         }
     }, [city, selectedCity, setSelectedCity, citiesData, navigate, isCityBase]);
 
-    return { city, stopId, tripId, vehicleId };
+    return { city, stopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute };
 };

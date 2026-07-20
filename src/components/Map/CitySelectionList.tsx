@@ -22,7 +22,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
     }
 
     return (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 p-2 -mx-2">
             {cities.map((city) => {
                 const isSelected = selectedCitySlug === city.slug;
                 const subtitle = t(`map.regions.${city.slug}`, { defaultValue: '' });
@@ -32,15 +32,15 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                         key={city.slug}
                         onClick={() => onSelect(city)}
                         className={cn(
-                            "group relative w-full h-20 flex items-center justify-start gap-4 p-4 rounded-2xl border transition-all duration-300 outline-none overflow-hidden bg-card",
+                            "group relative w-full h-20 flex items-center justify-start gap-4 p-4 rounded-2xl border transition-all duration-300 outline-none overflow-hidden bg-card dark:bg-[oklch(0.18_0.01_260)]",
                             isSelected 
-                                ? "border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] ring-1 ring-primary/30"
+                                ? "border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] ring-1 ring-inset ring-primary/30"
                                 : "border-border/40 hover:border-border/80 hover:shadow-md"
                         )}
                     >
                         {/* Subdued Background Wallpaper */}
                         <div 
-                            className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-2xl"
+                            className="absolute inset-0 z-0 overflow-hidden pointer-events-none rounded-2xl hidden dark:block"
                             style={{
                                 maskImage: 'linear-gradient(to right, transparent 0%, transparent 35%, black 100%)',
                                 WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 35%, black 100%)'
@@ -62,7 +62,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                             "relative z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 transition-all duration-300 shrink-0",
                             isSelected 
                                 ? "border-primary bg-primary text-primary-foreground shadow-sm" 
-                                : "border-white/20 bg-black/20 text-transparent group-hover:border-white/40"
+                                : "border-border/50 bg-muted/50 text-transparent group-hover:border-border/50"
                         )}>
                             <Check size={14} strokeWidth={3} className={cn("transition-transform duration-300", isSelected ? "scale-100" : "scale-50 opacity-0")} />
                         </div>
@@ -72,7 +72,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                             <div className="flex items-center gap-2">
                                 <span className={cn(
                                     "text-xl font-bold tracking-tight transition-colors",
-                                    isSelected ? "text-primary" : "text-white"
+                                    isSelected ? "text-primary" : "text-foreground"
                                 )}>
                                     {city.name}
                                 </span>
@@ -83,7 +83,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                                 )}
                             </div>
                             {subtitle && (
-                                <span className="text-sm text-white/60 font-medium">
+                                <span className="text-sm text-muted-foreground font-medium">
                                     {subtitle}
                                 </span>
                             )}

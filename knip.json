@@ -1,16 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "functions/api/**/*.ts",
-    "functions/_middleware.ts"
+    "src/main.tsx",
+    "functions/api/**/*.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx}",
     "functions/**/*.{ts,tsx}"
   ],
   "ignore": [
-    "src/components/ui/accordion.tsx",
-    "src/components/ui/label.tsx",
+    "src/components/ui/**/*.tsx",
+    "src/components/ui/**/*.ts",
     "src/pwa.d.ts",
     "src/types/react-map-gl.d.ts"
   ]

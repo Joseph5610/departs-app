@@ -42,7 +42,7 @@ const itemVariants = cva(
         default: "border-transparent",
         outline: "border-border",
         muted: "border-transparent bg-muted/50",
-        settings: "border-0 border-b border-white/5 last:border-0 rounded-none bg-transparent hover:bg-white/5 active:bg-white/10 px-4 py-3",
+        settings: "border-0 border-b border-border/50 last:border-0 rounded-none bg-transparent hover:bg-foreground/5 active:bg-foreground/10 px-4 py-3",
       },
       size: {
         default: "gap-2.5 px-3 py-2.5",

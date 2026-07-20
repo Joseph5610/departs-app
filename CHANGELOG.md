@@ -1,4 +1,41 @@
+## [0.56.5] - 2026-07-19
+
+### Added
+- **Light Mode**: Implemented global light/dark mode support.
+  - Added a new `theme` setting (`system`, `light`, `dark`) with a dedicated toggle in the Display Settings.
+  - Added seamless dynamic switching of the MapLibre base tile layers (`positron` vs `dark_matter`) based on the active theme.
+  - Removed hardcoded `.dark` HTML classes.
+  - Replaced custom theme management logic with the standard `next-themes` library, wrapping the app root in `<ThemeProvider>` to robustly handle system preference, SSR-safe hydration, and component-level theme access without duplicating state in the Zustand store.
+
+### Fixed
+- Fixed ESLint unused variable warnings across backend adapters (`DukAdapter.ts`, `VehiclesService.ts`, `GtfsAdapter.ts`) and frontend hooks (`useSelectedVehicle.ts`), enforcing strict zero-warning builds.
+- **Code Review**: Production-level review of all staged changes resolved the following issues:
+  - `DisplaySection.tsx`: Removed 3 unused icon imports (`Sun`, `Moon`, `Laptop`) and 2 unused store bindings (`theme`, `setTheme`) left from incomplete light mode UI scaffold — restoring zero TS/lint errors.
+  - `DukAdapter.ts`, `GtfsAdapter.ts`: Replaced `void ctx` suppression with proper `_ctx` underscore prefix convention for interface-required but unused parameters.
+  - `eslint.config.js`: Added `argsIgnorePattern: "^_"` to `@typescript-eslint/no-unused-vars` rule, enabling the standard underscore prefix convention for intentionally unused parameters.
+  - `statsAggregator.ts`: Renamed all snake_case local mutable variables to camelCase (`lowFloorCount`, `airConditionedCount`, etc.) — snake_case is reserved for the return object keys which map to `AppCityStats` interface (JSON-style API).
+  - `useVehicleTypeLabel.ts`: Memoized the `typeMap` Record via `useMemo` and wrapped the returned function in `useCallback` to prevent rebuilding the entire translation map on every call-site invocation.
+  - `MostDelayedCard.tsx`: Replaced `key={i}` index-based list keys with stable composite keys (`${v.gtfs_trip_id}-${v.vehicle_id}`) to prevent React reconciliation bugs when sort order changes.
+  - `StatsPanel.tsx`: Removed leftover development comment `// DetailPanel removed from imports`.
+
+
+## [0.56.3] - 2026-07-19
+
+### Fixed
+- Fixed map layer ID for vehicle selection pulse effect (`useMapInterface.ts` -> `vehicle-selected-pulse`).
+- Removed confusing registration number inference logic from Golemio `VehiclesMapper.ts` as it's no longer necessary.
+
 # Changelog
+
+## [0.56.2] - 2026-07-18
+
+### Changed
+
+- **Stats UI Refactoring**: Decomposed the monolithic `StatsPanel.tsx` into single-responsibility, highly-modular card components (`PunctualityCard`, `MovementStateCard`, etc.) for improved maintainability.
+- **Shared Analytics Engine**: Extracted the mathematical aggregation logic into a shared `statsAggregator.ts` utility. Both the frontend and backend adapters (Golemio, GTFS, DUK) now use this exact identical function, ensuring perfect mathematical consistency between client-side screen stats and backend network-wide statistics.
+- **Prague Realtime States**: Discovered and mapped hidden "pre-departure" states (`before_track`, `before_track_delayed`) and "off-track" states in the Golemio API. 
+- **Off Track Visualization**: Separated "Off Track" deviations into their own standalone state category in the Movement State chart (amber colored).
+- **Translations**: Extracted translation of vehicle types into a reusable `useVehicleTypeLabel` hook. Expanded CS/EN locales to include new stats fields.
 
 ## [0.56.1] - 2026-07-16
 
@@ -541,7 +578,7 @@
 - **E2E Tests**: Resolved flaky test failures on slow GitHub Actions runners by mocking the massive `10MB+` `/api/stops` endpoint with a lightweight mock payload containing only `"Hlavní nádraží"`. This prevents CPU/network overloading of the local single-threaded `wrangler dev` server and ensures instant test execution under heavy loads.
 - **E2E Tests**: Upgraded the stop element locator to be space-agnostic and use standard accessibility role selection:
   - Switched to `page.getByRole('button', { name: /Hlavní\snádraží/ })`.
-  - Added support for non-breaking space matching (`\s`) to handle the raw `\u00a0` characters returned in Golemio stop names without breaking string exact-matching.
+  - Added support for non-breaking space matching (`\s`) to handle the raw ` ` characters returned in Golemio stop names without breaking string exact-matching.
   - Increased stop locator visibility timeout to `15000ms`.
 - **E2E Page Object Model (POM)**: Completely refactored all existing specs to adhere strictly to POM principles:
   - Encapsulated close button selectors and closing methods (`close()`) inside `SettingsPage` and `AlertsPage` classes, replacing all flaky coordinate-based `page.mouse.click(10, 10)` clicks with robust accessible button clicks.
@@ -567,7 +604,7 @@
   - Optimized pipeline execution times by removing the redundant production build step, relying on Cloudflare's native deployment previews to validate compile-time integrity on commits.
   - Configured HTML test report upload artifacts on failures to facilitate quick remote troubleshooting.
 - **E2E Tests**: Fixed E2E test failures caused by Mojibake/encoding mismatch in GitHub Actions runners:
-  - Replaced Czech accented text `'Hlavní nádraží'` and regex checks with **safe JavaScript Unicode escape sequences** (e.g. `"Hlavn\u00ed n\u00e1dra\u017e\u00ed"`), making tests completely immune to system/terminal encoding differences.
+  - Replaced Czech accented text `'Hlavní nádraží'` and regex checks with **safe JavaScript Unicode escape sequences** (e.g. `"Hlavní nádraží"`), making tests completely immune to system/terminal encoding differences.
   - Added optimized CI Chromium launch flags (`--disable-dev-shm-usage`, `--no-sandbox`, `--disable-gpu`) in `playwright.config.ts` to prevent OOM/sandbox crashes and maximize speed in headless runner containers.
 
 ## [0.40.1] - 2026-05-17

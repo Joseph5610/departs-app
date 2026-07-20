@@ -1,6 +1,8 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from 'next-themes';
 import { navigate } from 'wouter/use-browser-location';
+import { useLocation } from 'wouter';
 
 import MapGL, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -34,9 +36,19 @@ import { SettingsModal } from '../Modals/SettingsModal/SettingsModal';
 import { WelcomeModal } from '../Modals/WelcomeModal';
 import { AlertsModal } from '../Modals/AlertsModal';
 import { FeedbackModal } from '../Modals/FeedbackModal/FeedbackModal';
+import { StatsPanel } from './Stats/StatsPanel';
+import { StatsTabs } from './Stats/StatsTabs';
 
-const MAP_STYLE_NOLABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
-const MAP_STYLE_LABELS = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const MAP_STYLES = {
+    dark: {
+        nolabels: 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json',
+        labels: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+    },
+    light: {
+        nolabels: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
+        labels: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    }
+};
 
 /**
  * MapInner Component
@@ -71,33 +83,12 @@ const MapInner: React.FC = () => {
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { resolvedTheme } = useTheme();
 
     // Derived State
+    const { isStatsRoute, isFavoritesRoute } = useRouteParams();
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
-
-    const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-
-    useEffect(() => {
-        if (selectedStop || selectedVehicle) {
-            const timer = setTimeout(() => {
-                setIsFavoritesOpen(false);
-            }, 0);
-            return () => clearTimeout(timer);
-        }
-    }, [selectedStop, selectedVehicle]);
-
-    const handleToggleFavorites = useCallback(() => {
-        setIsFavoritesOpen(prev => {
-            const next = !prev;
-            if (next) {
-                setTimeout(() => {
-                    navigate(`/${selectedCity}`);
-                }, 0);
-            }
-            return next;
-        });
-    }, [selectedCity]);
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
@@ -108,28 +99,32 @@ const MapInner: React.FC = () => {
 
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, selectedId);
 
-    const { stopId } = useRouteParams();
-    const lastStopId = useSelectionStore(s => s.lastStopId);
-    const setLastStopId = useSelectionStore(s => s.actions.setLastStopId);
+    const [location] = useLocation();
+    const returnPath = useSelectionStore(s => s.returnPath);
+    const setReturnPath = useSelectionStore(s => s.actions.setReturnPath);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
 
     useEffect(() => {
-        if (stopId) {
-            setLastStopId(stopId);
+        if (!location.includes('/trip/')) {
+            setReturnPath(location);
         }
-    }, [stopId, setLastStopId]);
-
-    useEffect(() => {
-        if (!selectedStop && !selectedVehicle) {
-            setLastStopId(null);
-        }
-    }, [selectedStop, selectedVehicle, setLastStopId]);
+    }, [location, setReturnPath]);
 
     const handleBack = useCallback(() => {
-        if (selectedVehicle && lastStopId) {
-            navigate(`/${selectedCity}/stop/${encodeURIComponent(lastStopId)}`);
+        if (returnPath && returnPath !== location) {
+            navigate(returnPath);
+        } else {
+            navigate(`/${selectedCity}`);
         }
-    }, [selectedVehicle, lastStopId, selectedCity]);
+    }, [returnPath, location, selectedCity]);
+
+    const isRootPath = returnPath === `/${selectedCity}` || returnPath === `/${selectedCity}/` || returnPath === '/';
+    const shouldShowBackButton = Boolean(
+        selectedVehicle && 
+        returnPath && 
+        returnPath !== location && 
+        !isRootPath
+    );
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {
@@ -186,7 +181,7 @@ const MapInner: React.FC = () => {
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
-                mapStyle={mapBaseStyle === 'labels' ? MAP_STYLE_LABELS : MAP_STYLE_NOLABELS}
+                mapStyle={MAP_STYLES[(resolvedTheme as 'dark' | 'light') ?? 'dark'][mapBaseStyle]}
                 onMove={mapEvents?.onMove}
                 onMoveEnd={mapEvents?.onMoveEnd}
                 onLoad={mapEvents?.onLoad}
@@ -234,7 +229,6 @@ const MapInner: React.FC = () => {
                             return;
                         }
                         setIsFollowing(true);
-                        setLastStopId(null);
                         const tId = props.gtfs_trip_id;
                         const vId = props.vehicle_id;
                         if (vId && vId !== tId) {
@@ -291,35 +285,34 @@ const MapInner: React.FC = () => {
 
             <LiveStatus />
             <Search />
-            <MapControls
-                onToggleFavorites={handleToggleFavorites}
-                isFavoritesActive={isFavoritesOpen}
-            />
+            <MapControls />
 
             <WelcomeModal />
             <SettingsModal />
             <AlertsModal />
             <FeedbackModal />
-
             <DetailPanel
-                isOpen={isFavoritesOpen}
-                id="favorites"
-                onClose={() => setIsFavoritesOpen(false)}
-                title={t('favorites.title')}
+                isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle}
+                id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || undefined)}
+                onClose={() => {
+                    navigate(`/${selectedCity}`);
+                }}
+                onBack={shouldShowBackButton ? handleBack : undefined}
+                title={
+                    isStatsRoute ? t('stats.title') :
+                    isFavoritesRoute ? t('favorites.title') :
+                    panelTitle
+                }
+                platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
+                subHeader={isStatsRoute ? <StatsTabs /> : (!isStatsRoute && !isFavoritesRoute) ? <DepartureBoardHeader /> : undefined}
             >
-                <FavoritesPanel />
-            </DetailPanel>
-
-            <DetailPanel
-                isOpen={!!selectedStop || !!selectedVehicle}
-                id={selectedId || selectedStopId || undefined}
-                onClose={() => navigate(`/${selectedCity}`)}
-                onBack={(selectedVehicle && lastStopId) ? handleBack : undefined}
-                title={panelTitle}
-                platformCode={!selectedVehicle ? selectedStop?.platform_code : undefined}
-                subHeader={<DepartureBoardHeader />}
-            >
-                <DetailPanelContent />
+                {isStatsRoute ? (
+                    <StatsPanel />
+                ) : isFavoritesRoute ? (
+                    <FavoritesPanel />
+                ) : (
+                    <DetailPanelContent />
+                )}
             </DetailPanel>
         </>
     );

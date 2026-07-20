@@ -45,7 +45,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-7 rounded-xl text-[10px] bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-3 gap-1.5"
+                                className="h-7 rounded-xl text-[10px] bg-foreground/5 border border-border/50 hover:bg-foreground/10 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-3 gap-1.5"
                             />
                         }>
                             {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}

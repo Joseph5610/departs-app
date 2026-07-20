@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const cardVariants = cva(
-  "group/card flex flex-col gap-(--card-spacing) rounded-xl bg-clip-padding isolate py-(--card-spacing) text-sm [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[size=none]:[--card-spacing:0px] data-[size=none]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+  "group/card flex flex-col gap-(--card-spacing) rounded-2xl bg-clip-padding isolate py-(--card-spacing) text-sm [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[size=none]:[--card-spacing:0px] data-[size=none]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl",
   {
     variants: {
       variant: {
-        default: "bg-card text-card-foreground ring-1 ring-foreground/10",
-        subtle: "bg-muted/40 text-foreground border border-white/5",
+        default: "bg-card text-card-foreground border border-border/50",
+        subtle: "bg-card text-foreground border border-border/50 shadow-sm",
       },
     },
     defaultVariants: {

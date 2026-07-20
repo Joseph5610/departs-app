@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { FilterSpecification } from 'maplibre-gl';
+import type { FilterSpecification, SymbolLayerSpecification } from 'maplibre-gl';
 import type { FeatureCollection } from 'geojson';
+import { useTheme } from 'next-themes';
 import type { VehicleCollection, StopCollection, StopProperties } from '../../types/transit';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useVehicleAnimation } from '../../hooks/features/useVehicleAnimation';
@@ -89,8 +90,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     userLocation,
     selectedVehicleFeature,
     favoriteStops,
-    vehiclesFilter,
-    labelLayerId
+    vehiclesFilter
 }) => {
     // Helper: does this feature pass the stop type filter?
     // Empty filter = show all. Otherwise include only matching types.
@@ -103,6 +103,10 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         // Stop doesn't match any active filter
         return false;
     }, [stopTypeFilter]);
+
+    const { resolvedTheme } = useTheme();
+    const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
+    const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
 
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
@@ -140,15 +144,12 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
                 <Layer
                     {...routeLine}
-                    beforeId={labelLayerId}
                 />
                 <Layer
                     {...routeStops}
-                    beforeId={labelLayerId}
                 />
                 <Layer
                     {...routeTerminals}
-                    beforeId={labelLayerId}
                 />
             </Source>
 
@@ -168,17 +169,17 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...vehicleSelectedPulse} />
                 <Layer {...vehicleSelectedPoint} />
                 <Layer {...vehicleSelectedDirection} />
-                <Layer {...vehicleSelectedLabel} />
+                <Layer {...vehicleSelectedLabel} paint={{ ...vehicleSelectedLabel.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
             <Source id="city-vehicles" type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_GEOJSON}>
                 <Layer {...vehiclePoints} filter={vehiclesFilter} />
                 <Layer {...vehicleDirections} filter={vehiclesFilter} />
-                <Layer {...vehicleLabels} filter={vehiclesFilter} />
+                <Layer {...vehicleLabels} filter={vehiclesFilter} paint={{ ...(vehicleLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
             <Source id="stop-labels-centroids" type="geojson" data={filteredLabelData}>
-                <Layer {...stopLabels} />
+                <Layer {...stopLabels} paint={{ ...(stopLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
             <Source
@@ -195,15 +196,16 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 <Layer {...stopPoints} />
                 <Layer {...transferOuterPoints} />
                 <Layer {...transferInnerPoints} />
-                <Layer {...stopIcons} />
+                <Layer {...stopIcons} paint={{ ...(stopIcons.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
                 {/* Favorite Star Badge - Drawn last to be on top of everything */}
                 {favoriteStops.length > 0 && (
                     <Layer
                         {...stopFavorites}
+                        paint={{ ...(stopFavorites.paint as SymbolLayerSpecification['paint']), 'icon-halo-color': haloColor }}
                         filter={['any', ...favoriteStops.map(id => ['==', ['get', 'stop_id'], id])] as FilterSpecification}
                     />
                 )}
-                <Layer {...stopEntrances} />
+                <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
             </Source>
         </>
     );

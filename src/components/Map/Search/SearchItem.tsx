@@ -49,7 +49,7 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
             })}
             
             {uniqueLines.length > 5 && (
-                <span className="inline-flex items-center justify-center h-[17px] px-1 min-w-[17px] rounded-[3px] bg-white/10 text-white/60 text-[9px] font-bold mr-1.5 border border-white/5">
+                <span className="inline-flex items-center justify-center h-[17px] px-1 min-w-[17px] rounded-[3px] bg-muted text-muted-foreground text-[9px] font-bold mr-1.5 border border-border/50">
                     +{uniqueLines.length - 5}
                 </span>
             )}
@@ -77,13 +77,13 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
                 '[&_svg.lucide-check]:hidden', // hide the default checkmark
                 variant === 'primary'
                     ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15!'
-                    : 'data-[selected=true]:bg-white/10! hover:bg-white/10! active:bg-white/15!'
+                    : 'data-[selected=true]:bg-accent! hover:bg-accent! active:bg-accent/80!'
             )}
         >
             <div className={cn(
                 'rounded-lg shrink-0 w-8 h-8 flex items-center justify-center transition-colors',
                 variant === 'primary' ? 'bg-primary/10 text-primary' :
-                highlight ? 'bg-amber-500/10 text-amber-500' : 'bg-white/5 text-muted-foreground group-data-[selected=true]/command-item:bg-white/10 group-data-[selected=true]/command-item:text-foreground'
+                highlight ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground group-data-[selected=true]/command-item:bg-accent group-data-[selected=true]/command-item:text-accent-foreground'
             )}>
                 {icon}
             </div>

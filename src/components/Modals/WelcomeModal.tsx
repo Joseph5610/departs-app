@@ -95,7 +95,7 @@ export const WelcomeModal: React.FC = () => {
             <DialogContent aria-describedby={undefined} variant="default" showCloseButton={false} className="h-fit gap-8! p-6!">
                 <DialogHeader className="space-y-4 pt-2">
                     <div className="flex justify-center">
-                        <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-white/10 shadow-2xl overflow-hidden relative">
+                        <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-border/50 shadow-2xl overflow-hidden relative">
                             <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
                             <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-2xl relative z-10" />
                         </div>

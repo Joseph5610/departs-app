@@ -40,9 +40,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             onOpenChange={setIsExpanded}
             className={cn(
                 "group relative transition-all block",
-                isExpanded 
-                    ? "bg-muted/30 rounded-xl my-2 shadow-sm border border-white/10" 
-                    : "border-b border-white/5 last:border-0 hover:bg-muted/10",
+                isExpanded ? "bg-black/[0.02] dark:bg-white/5" : "hover:bg-black/[0.02] dark:hover:bg-white/5",
                 isFuture && "opacity-75 grayscale-[0.3]"
             )}
         >
@@ -73,7 +71,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
 
                         {/* Status Badge */}
                         {isFuture ? (
-                            <div className="flex gap-1.5 items-center bg-white/5 px-1.5 py-0.5 rounded-md border border-white/5">
+                            <div className="flex gap-1.5 items-center bg-foreground/5 px-1.5 py-0.5 rounded-md border border-border/50">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
                                 <span className="text-[9px] font-bold text-amber-500/90 uppercase tracking-widest">
                                     {t('alerts.planned')}
@@ -106,7 +104,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                             <div className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
                                 <span>{t(`alerts.causes.${item.cause}`, item.cause)}</span>
                                 {item.causeDetail && (
-                                    <span className="text-foreground/50 ml-1.5 normal-case font-medium border-l border-white/10 pl-1.5">
+                                    <span className="text-foreground/50 ml-1.5 normal-case font-medium border-l border-border/50 pl-1.5">
                                         {i18n.language.startsWith('en') && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
                                     </span>
                                 )}
@@ -131,7 +129,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                         )}
 
                         {item.valid_from && (
-                            <div className="text-[11px] font-medium text-muted-foreground bg-black/20 px-3 py-1.5 rounded-lg border border-white/5 inline-flex w-fit shadow-inner">
+                            <div className="text-[11px] font-medium text-foreground/70 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 inline-flex w-fit shadow-inner">
                                 {validToText ? `${item.valid_from} – ${validToText}` : t('alerts.validFrom', { date: item.valid_from })}
                             </div>
                         )}

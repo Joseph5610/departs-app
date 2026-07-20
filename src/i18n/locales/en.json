@@ -26,6 +26,13 @@
       "language": "Language",
       "filters": "Filters"
     },
+    "theme": {
+      "title": "Appearance",
+      "description": "Light or dark mode",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "liveVehicles": {
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
@@ -349,5 +356,36 @@
       "earlier": "Earlier",
       "later": "Later"
     }
+  },
+  "stats": {
+    "movementState": "Movement State",
+    "inTransit": "In Transit",
+    "atStop": "At Stop",
+    "offTrack": "Off Track",
+    "unknownState": "Unknown",
+    "vehicles": "vehicles",
+    "vehicleMix": "Vehicle Mix",
+    "otherData": "Other Data",
+    "lowFloor": "Low Floor",
+    "airConditioned": "Air Conditioned",
+    "totalDelay": "Total Accumulated Delay",
+    "biggestDelays": "Biggest Delays",
+    "showMore": "Show More (+{{count}})",
+    "showLess": "Show Less",
+    "busiestLines": "Busiest Lines",
+    "cars": "cars",
+    "noData": "No data available.",
+    "onScreen": "On Screen",
+    "network": "Network",
+    "networkDelayNotice": "Live delay and movement data for the entire network is not available in this region. Please switch to the \"On Screen\" tab to see live data for vehicles currently in view.",
+    "title": "Network Stats",
+    "lines": "Lines",
+    "punctuality": "Punctuality",
+    "averageDelay": "Average Delay",
+    "delayedOver5": "Delayed > 5 min",
+    "onTime": "On Time",
+    "delayed1to5": "Delayed 1-5 min",
+    "delayedOver5Plus": "Delayed > 5 min",
+    "unknownDelay": "Unknown"
   }
 }

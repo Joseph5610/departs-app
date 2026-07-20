@@ -27,6 +27,13 @@
       "language": "Jazyk",
       "filters": "Filtry"
     },
+    "theme": {
+      "title": "Vzhled",
+      "description": "Světlý nebo tmavý režim",
+      "system": "Systém",
+      "light": "Světlý",
+      "dark": "Tmavý"
+    },
     "liveVehicles": {
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"
@@ -353,5 +360,35 @@
       "earlier": "Dříve",
       "later": "Později"
     }
+  },
+  "stats": {
+    "movementState": "Stav pohybu",
+    "inTransit": "V pohybu",
+    "atStop": "V zastávce",
+    "offTrack": "Mimo trasu",
+    "unknownState": "Neznámý stav",
+    "vehicles": "vozidel",
+    "vehicleMix": "Složení dopravy",
+    "otherData": "Další údaje",
+    "lowFloor": "Nízkopodlažní",
+    "airConditioned": "Klimatizované",
+    "totalDelay": "Kumulované zpoždění sítě",
+    "biggestDelays": "Největší zpoždění",
+    "showMore": "Zobrazit více (+{{count}})",
+    "showLess": "Zobrazit méně",
+    "busiestLines": "Nejfrekventovanější linky",
+    "cars": "vozů",
+    "noData": "Žádná data k dispozici.",
+    "onScreen": "Na obrazovce",
+    "network": "Celá síť",
+    "networkDelayNotice": "Živá data o zpoždění a pohybu pro celou síť nejsou v tomto regionu k dispozici. Přepněte prosím na záložku \"Na obrazovce\" pro zobrazení živých dat pro vozidla aktuálně v zorném poli.",
+    "title": "Statistiky sítě",
+    "lines": "Linky",
+    "punctuality": "Přesnost spojů",
+    "averageDelay": "Průměrné zpoždění",
+    "delayedOver5": "Zpožděno > 5 min",
+    "onTime": "Na čas",
+    "delayed1to5": "Zpožděno 1-5 min",
+    "delayedOver5Plus": "Zpožděno > 5 min"
   }
 }

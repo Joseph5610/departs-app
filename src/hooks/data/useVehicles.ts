@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { VehicleCollection } from '../../types/transit';
+import type { VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
@@ -51,11 +51,26 @@ export const useVehicles = () => {
         retry: 1,
     });
 
+    const { vehicleIndex, tripIndex } = useMemo(() => {
+        const vIdx = new Map<string, VehicleFeature>();
+        const tIdx = new Map<string, VehicleFeature>();
+        
+        if (query.data?.features) {
+            for (const f of query.data.features) {
+                if (f.properties.vehicle_id) vIdx.set(f.properties.vehicle_id, f);
+                if (f.properties.gtfs_trip_id) tIdx.set(f.properties.gtfs_trip_id, f);
+            }
+        }
+        return { vehicleIndex: vIdx, tripIndex: tIdx };
+    }, [query.data]);
+
     return useMemo(() => ({
         vehicles: query.data,
+        vehicleIndex,
+        tripIndex,
         isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         dataUpdatedAt: query.dataUpdatedAt
-    }), [query.data, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
+    }), [query.data, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
 };

@@ -113,9 +113,9 @@ export const useMapInterface = () => {
                 const opacity = PULSE_BASE_OPACITY - ((radius - 5) / PULSE_OPACITY_DIVISOR);
 
                 try {
-                    if (map.getLayer('selected-vehicle-pulse')) {
-                        map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', radius);
-                        map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', Math.max(0.1, opacity));
+                    if (map.getLayer('vehicle-selected-pulse')) {
+                        map.setPaintProperty('vehicle-selected-pulse', 'circle-radius', radius);
+                        map.setPaintProperty('vehicle-selected-pulse', 'circle-opacity', Math.max(0.1, opacity));
                     }
                 } catch {
                     /* Silent fail */
@@ -133,10 +133,10 @@ export const useMapInterface = () => {
                 cancelAnimationFrame(frame);
             }
             const map = currentMapRef?.getMap();
-            if (map && map.getLayer('selected-vehicle-pulse')) {
+            if (map && map.getLayer('vehicle-selected-pulse')) {
                 try {
-                    map.setPaintProperty('selected-vehicle-pulse', 'circle-radius', 0);
-                    map.setPaintProperty('selected-vehicle-pulse', 'circle-opacity', 0);
+                    map.setPaintProperty('vehicle-selected-pulse', 'circle-radius', 0);
+                    map.setPaintProperty('vehicle-selected-pulse', 'circle-opacity', 0);
                 } catch {
                     /* Silent fail */
                 }

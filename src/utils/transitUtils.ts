@@ -59,7 +59,15 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
  * Handles both standard GTFS types (0-12) and extended Google Transit types (100-999).
  */
 export const getRouteTypeI18nKey = (type: number | string | undefined): string => {
+    if (type === undefined || type === null) return '';
+    const strType = String(type).toLowerCase();
+    if (['tram', 'metro', 'train', 'bus', 'ferry', 'funicular', 'trolleybus'].includes(strType)) {
+        return `settings.vehicleTypes.${strType}`;
+    }
+
     const n = Number(type);
+    if (Number.isNaN(n)) return strType;
+
     if (n >= 100 && n <= 199) return 'settings.vehicleTypes.train';
     if (n >= 700 && n <= 799) return 'settings.vehicleTypes.bus';
     if (n >= 800 && n <= 899) return 'settings.vehicleTypes.trolleybus';

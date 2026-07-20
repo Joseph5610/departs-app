@@ -1,5 +1,5 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext } from "../_core/types";
+import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../_core/types";
 import type { CityConfig } from '../_core/city-config';
 import { GolemioAdapter } from './golemio/GolemioAdapter';
 import { GtfsAdapter } from './gtfs/GtfsAdapter';
@@ -22,6 +22,8 @@ export interface CityAdapter {
     handleInfotexts(ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]>;
     /** Handle /api/[city]/debug-feed */
     handleRawFeed(ctx: EventContext<Env, string, unknown>, type?: string): Promise<unknown>;
+    /** Handle /api/[city]/stats */
+    handleStats(ctx: EventContext<Env, string, unknown>): Promise<AppCityStats>;
 }
 
 /** Returns the correct adapter for a city. Exhaustive — tsc will catch missing cases. */
