@@ -10,8 +10,6 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
     const [visible, setVisible] = useState(false);
     const [prevLastUpdate, setPrevLastUpdate] = useState<number | undefined>(undefined);
 
-    // Sync state from props during render - this is the recommended React pattern
-    // for resetting state when a prop changes.
     if (lastUpdate !== prevLastUpdate) {
         setPrevLastUpdate(lastUpdate);
         if (delta !== 0 && lastUpdate) {
@@ -38,6 +36,7 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 5 }}
+                    transition={{ duration: 0.25 }}
                     className={isInline ? "ml-1" : ""}
                 >
                     <div className={cn(

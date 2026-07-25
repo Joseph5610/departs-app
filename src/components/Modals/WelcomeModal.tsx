@@ -108,7 +108,7 @@ export const WelcomeModal: React.FC = () => {
                             </Badge>
                         </div>
                     </DialogTitle>
-                    <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-[320px] mx-auto">
+                    <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-80 mx-auto">
                         {t('welcome.description')}
                     </p>
                 </DialogHeader>
@@ -133,7 +133,7 @@ export const WelcomeModal: React.FC = () => {
                         size="xl"
                         onClick={handleClose}
                         data-testid="welcome-cta"
-                        className="w-full transition-all flex items-center justify-center gap-2 group font-bold"
+                        className="w-full transition-colors flex items-center justify-center gap-2 group font-bold"
                     >
                         {t('welcome.cta')}
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"  strokeWidth={1.5} />

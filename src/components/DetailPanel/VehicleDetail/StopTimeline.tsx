@@ -39,13 +39,13 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
         <Collapsible open={showPastStops} onOpenChange={setShowPastStops}>
             <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-center px-1">
-                    <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">{t('map.vehicleDetails.routeSchedule')}</span>
+                    <span className="micro-label-widest text-muted-foreground">{t('map.vehicleDetails.routeSchedule')}</span>
                     {effectiveSequence !== null && pastStopsCount > 0 && (
                         <CollapsibleTrigger render={
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-7 rounded-xl text-[10px] bg-foreground/5 border border-border/50 hover:bg-foreground/10 text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider px-3 gap-1.5"
+                                className="h-7 rounded-xl micro-label bg-foreground/5 border border-border/50 hover:bg-foreground/10 text-muted-foreground hover:text-foreground px-3 gap-1.5"
                             />
                         }>
                             {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
@@ -54,7 +54,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                     )}
                 </div>
                 <div className="relative pl-6 overflow-hidden!">
-                    <div className="absolute left-[11px] top-3 bottom-6 w-0.5 bg-border" />
+                    <div className="absolute left-2.75 top-3 bottom-6 w-0.5 bg-border" />
 
                     {/* Past Stops (Collapsible) */}
                     <CollapsibleContent className="transition-[height] duration-300 ease-in-out data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
@@ -114,7 +114,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
             isPast ? "opacity-40" : "opacity-100"
         )}>
             <div className={cn(
-                "absolute left-[-17px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
+                "absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
                 isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
             <div className="flex flex-col items-start min-w-0 pr-2 flex-1">
@@ -132,18 +132,18 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                     </div>
                 </div>
                 <div className="flex gap-2 items-center flex-wrap mt-0.5">
-                    {isCurrent && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{t('map.vehicleDetails.currentStop')}</span>}
-                    {isNext && <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{t('map.vehicleDetails.nextStop')}</span>}
+                    {isCurrent && <span className="micro-label text-primary">{t('map.vehicleDetails.currentStop')}</span>}
+                    {isNext && <span className="micro-label text-muted-foreground">{t('map.vehicleDetails.nextStop')}</span>}
                 </div>
             </div>
             <div className="shrink-0 w-8 flex justify-center items-center">
                 {showZone && (
-                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 tabular-nums leading-none">
+                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 leading-none tabular-nums">
                         {stop.properties.zone_id}
                     </span>
                 )}
             </div>
-            <div className="flex flex-col items-end shrink-0 min-w-[64px]">
+            <div className="flex flex-col items-end shrink-0 min-w-16">
                 {(() => {
                     const { realtime_arrival_time, realtime_departure_time, arrival_time, departure_time } = stop.properties;
                     

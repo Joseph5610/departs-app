@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Toggle } from '@/components/ui/toggle';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { cn } from '@/lib/utils';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useCities } from '../../../hooks/data/useCities';
@@ -51,13 +51,13 @@ const FilterButton: React.FC<FilterButtonProps> = ({ icon: Icon, label, isActive
         variant="outline"
         data-testid={testId}
         className={cn(
-            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-all text-sm font-semibold active:scale-95 group",
+            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-[transform,colors] text-sm font-semibold active:scale-95 group",
             // The border is border-border/80 so it's subtle but visible
             "border-border/80 hover:bg-foreground/10 hover:text-foreground",
             // Use highly specific overrides for the ON state to defeat shadcn's default bg-muted
-            "[&[data-state=on]]:!bg-primary/20 [&[data-state=on]]:!text-primary [&[data-state=on]]:!border-primary/50 [&[data-state=on]]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
+            "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
             // Ensure OFF state doesn't look completely transparent if we don't want it to, or just leave it
-            "[&[data-state=off]]:bg-transparent [&[data-state=off]]:text-foreground/70"
+            "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70"
         )}
     >
         <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
@@ -78,7 +78,7 @@ interface ToggleSectionProps {
 }
 
 const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon: Icon, isChecked, onToggle, children, className }) => (
-    <Card variant="subtle" className={cn("p-0 gap-0", className)}>
+    <Card variant="subtle" size="none" className={className}>
         <Item
             variant="settings"
             size="none"
@@ -105,20 +105,18 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
             </ItemActions>
         </Item>
 
-        <AnimatePresence>
-            {isChecked && children && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden border-t border-border/50"
-                >
-                    <div className="flex flex-col">
-                        {children}
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+        {children && (
+            <div 
+                className={cn(
+                    "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out border-t border-border/50",
+                    isChecked ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none border-t-0"
+                )}
+            >
+                <div className="overflow-hidden flex flex-col">
+                    {children}
+                </div>
+            </div>
+        )}
     </Card>
 );
 
@@ -276,7 +274,7 @@ export const DisplaySection: React.FC = () => {
                 )}
             </ToggleSection>
 
-            <Card variant="subtle" className="mt-3 p-0 gap-0">
+            <Card variant="subtle" size="none" className="mt-3">
                 <Item
                     variant="settings"
                     size="none"

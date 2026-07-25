@@ -218,14 +218,14 @@ export const Search: React.FC = React.memo(() => {
     return (
         <div
             className={cn(
-                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-[420px] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-50 transition-all duration-300 ease-in-out",
-                isSidebarOpen && "md:left-(--visible-center-x) md:w-[360px]"
+                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-105 md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-50 transition-[left,width] duration-300 ease-in-out",
+                isSidebarOpen && "md:left-(--visible-center-x) md:w-90"
             )}
             data-vaul-no-drag
         >
             <div ref={containerRef}>
-                <div className="flex h-11 glassy rounded-2xl overflow-hidden transition-all items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" data-testid="search-container">
-                    <CitySwitcher variant="ghost" className="w-[48px] pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-foreground/5" />
+                <div className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" data-testid="search-container">
+                    <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-foreground/5" />
                     
                     <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                         <Input
@@ -252,7 +252,7 @@ export const Search: React.FC = React.memo(() => {
                             onFocus={() => setIsOpen(true)}
                             placeholder={t('search.placeholder')}
                             className={cn(
-                                "h-full w-full bg-transparent border-0 pl-10 text-[15px] truncate placeholder:text-[14px] placeholder:text-muted-foreground/50 focus-visible:ring-0 rounded-none",
+                                "h-full w-full bg-transparent border-0 pl-10 text-[15px] truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 rounded-none",
                                 (query || activeFilter) ? "pr-8" : "pr-3",
                                 activeFilter && "text-primary font-medium"
                             )}

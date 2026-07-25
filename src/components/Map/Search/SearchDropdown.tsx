@@ -65,11 +65,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     <CommandGroup
                         heading={
                             <div className="flex gap-1.5 items-center">
-                                <Clock size={12} className="text-muted-foreground -mt-[1px]" strokeWidth={1.5} />
+                                <Clock size={12} className="text-muted-foreground -mt-px" strokeWidth={1.5} />
                                 <span className="leading-none">{t('search.recent')}</span>
                             </div>
                         }
-                        className="[&_[cmdk-group-heading]]:bg-muted/50 [&_[cmdk-group-heading]]:border-b [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest p-0"
+                        variant="search"
                     >
                         {searchHistory.map((item) => (
                             <SearchItem
@@ -113,11 +113,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <CommandGroup
                             heading={
                                 <div className="flex gap-1.5 items-center">
-                                    <Star size={12} fill="currentColor" className="text-muted-foreground -mt-[1px]" strokeWidth={1.5} />
+                                    <Star size={12} fill="currentColor" className="text-muted-foreground -mt-px" strokeWidth={1.5} />
                                     <span className="leading-none">{t('search.favorites')}</span>
                                 </div>
                             }
-                            className="[&_[cmdk-group-heading]]:bg-muted/50 [&_[cmdk-group-heading]]:border-b [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest p-0"
+                            variant="search"
                         >
                             {results.map((stop) => (
                                 <SearchItem
@@ -183,11 +183,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <CommandGroup
                             heading={
                                 <div className="flex gap-1.5 items-center">
-                                    <Building2 size={12} className="text-muted-foreground -mt-[1px]" strokeWidth={1.5} />
+                                    <Building2 size={12} className="text-muted-foreground -mt-px" strokeWidth={1.5} />
                                     <span className="leading-none">{t('search.places')}</span>
                                 </div>
                             }
-                            className="[&_[cmdk-group-heading]]:bg-muted/50 [&_[cmdk-group-heading]]:border-b [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest p-0"
+                            variant="search"
                         >
                             {geocodingResults.map((place) => (
                                 <SearchItem

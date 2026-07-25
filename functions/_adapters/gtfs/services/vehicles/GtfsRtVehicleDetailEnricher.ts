@@ -58,12 +58,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         // 3. Resolve Last Stop Sequence (Base generic implementation)
         let resolvedSequence: number | null = null;
         if (lastStopId && detail.stop_times?.features) {
-            const normalizedLastStopId = this.normalizeGtfsRtStopId(lastStopId);
-            
-            const stopMatch = detail.stop_times.features.find(s => {
-                const sid = s.properties.stop_id;
-                return sid === normalizedLastStopId || sid.includes(normalizedLastStopId) || sid.startsWith(normalizedLastStopId);
-            });
+            const stopMatch = this.findMatchingStop(detail.stop_times.features, lastStopId);
             
             if (stopMatch) {
                 let seq = stopMatch.properties.stop_sequence;
@@ -88,6 +83,49 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         }
 
         detail.is_static_fallback = false;
+    }
+
+    protected findMatchingStop(
+        features: NonNullable<NonNullable<AppVehicleDetail['stop_times']>['features']>,
+        lastStopId: string
+    ) {
+        const cleanId = (id: string) => {
+            return id
+                .replace(/^centroid-/, '')
+                .replace(/U0*(\d+)/i, 'U$1')
+                .replace(/Z0*(\d+)/i, 'Z$1');
+        };
+
+        const targetClean = cleanId(lastStopId);
+        const normalizedTarget = this.normalizeGtfsRtStopId(lastStopId);
+
+        // 1. Direct or clean ID match
+        let match = features.find(s => {
+            const sid = s.properties.stop_id;
+            if (!sid) return false;
+            const sClean = cleanId(sid);
+            return (
+                sid === lastStopId ||
+                sid === normalizedTarget ||
+                sClean === targetClean
+            );
+        });
+
+        if (match) return match;
+
+        // 2. Node ID numeric match (e.g. U11006Z01 -> 11006)
+        const nodeMatch = lastStopId.match(/U0*(\d+)Z/i) || lastStopId.match(/(\d+)/);
+        if (nodeMatch) {
+            const nodeId = nodeMatch[1];
+            match = features.find(s => {
+                const sid = s.properties.stop_id;
+                if (!sid) return false;
+                const sidNode = sid.match(/U0*(\d+)Z/i) || sid.match(/(\d+)/);
+                return sid === nodeId || (sidNode && sidNode[1] === nodeId);
+            });
+        }
+
+        return match;
     }
 
     protected normalizeGtfsRtStopId(stopId: string): string {

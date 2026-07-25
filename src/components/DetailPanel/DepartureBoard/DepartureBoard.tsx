@@ -122,7 +122,8 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     return (
                         <Card 
                             key={lineGroup.lineGroupId} 
-                            className="p-0 gap-0 border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm mb-3 overflow-hidden"
+                            size="none"
+                            className="border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm mb-3 overflow-hidden"
                         >
                             {lineGroup.subGroups.map((subGroup, subIdx) => {
                                 const isFirstSub = subIdx === 0;
@@ -148,7 +149,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         {isFirstSub ? (
                                             /* Main Header - Vibrant Sophisticated Gradient */
                                             <CardHeader 
-                                                className="p-0 pb-0! bg-transparent relative space-y-0 border-b-0"
+                                                className="p-0 pb-0! bg-transparent relative border-b-0"
                                             >
                                                 <div 
                                                     className="absolute inset-0 pointer-events-none dark:hidden opacity-[0.15] rounded-t-2xl"
@@ -201,9 +202,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                         <Tooltip>
                                                             <TooltipTrigger>
                                                                 <div
-                                                                    className="flex items-center justify-center shrink-0 w-[20px] h-[20px] bg-foreground rounded-full shadow-sm cursor-default"
+                                                                    className="flex items-center justify-center shrink-0 w-5 h-5 bg-foreground rounded-full shadow-sm cursor-default"
                                                                 >
-                                                                    <span className="text-background font-extrabold text-[12px] leading-none text-center inline-block">
+                                                                    <span className="text-background font-extrabold text-xs leading-none text-center inline-block">
                                                                         {subFirstDep.platform}
                                                                     </span>
                                                                 </div>
@@ -242,7 +243,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                     />
                                                     <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
                                                         <ArrowRight size={12} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
-                                                        <span className="text-foreground/90 text-[14px] font-bold truncate">
+                                                        <span className="text-foreground/90 text-sm font-bold truncate">
                                                             {subGroup.headsign}
                                                         </span>
                                                     </div>
@@ -257,8 +258,8 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                     <div 
                                                         key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx}
                                                         className={cn(
-                                                            "transition-colors hover:bg-black/[0.015] dark:hover:bg-white/[0.02]",
-                                                            idx % 2 === 1 ? "bg-black/[0.01] dark:bg-white/[0.03]" : "bg-transparent"
+                                                            "transition-colors hover:bg-black/1.5 dark:hover:bg-white/2",
+                                                            idx % 2 === 1 ? "bg-black/1 dark:bg-white/3" : "bg-transparent"
                                                         )}
                                                     >
                                                         <DepartureItem
@@ -275,7 +276,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         {hasMore && (
                                             <button
                                                 onClick={() => onToggleGroup(subGroup.groupId)}
-                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-black/[0.03] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/10 transition-colors border-t border-black/5 dark:border-white/5 text-muted-foreground/70 dark:text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider rounded-b-[11px]"
+                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-black/3 hover:bg-black/5 dark:bg-white/4 dark:hover:bg-white/10 transition-colors border-t border-black/5 dark:border-white/5 text-muted-foreground/70 dark:text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider rounded-b-[11px]"
                                             >
                                                 <ChevronDown 
                                                     size={14} 

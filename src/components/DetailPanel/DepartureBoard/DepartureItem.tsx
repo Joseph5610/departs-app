@@ -68,7 +68,7 @@ export const DepartureItem = memo(({
         >
             {/* Time + Delay Block */}
             <div className="flex gap-2 shrink-0 w-[85px] items-baseline">
-                <span className="text-muted-foreground text-sm tabular-nums font-medium">
+                <span className="text-muted-foreground text-sm font-medium tabular-nums">
                     {format(parseISO(dep.scheduled), 'HH:mm')}
                 </span>
                 <div className="flex gap-1 items-center">
@@ -121,12 +121,12 @@ export const DepartureItem = memo(({
                         title={t('map.departures.platform')}
                     >
                         <Train size={12} className="opacity-50"  />
-                        <span className="text-xs font-semibold text-muted-foreground leading-none">{dep.platform}</span>
+                        <span className="text-xs font-semibold text-muted-foreground leading-none tabular-nums">{dep.platform}</span>
                     </div>
                 )}
 
                 {/* Countdown */}
-                <span className="text-sm font-bold tabular-nums leading-none shrink-0 min-w-[48px] text-right">
+                <span className="text-sm font-bold leading-none shrink-0 min-w-[48px] text-right tabular-nums">
                     <Countdown timestamp={dep.timestamp} />
                 </span>
             </div>

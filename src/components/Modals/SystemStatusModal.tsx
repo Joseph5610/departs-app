@@ -123,7 +123,7 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-[420px] p-6 gap-6!">
+            <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-105 p-6 gap-6!">
                 <DialogHeader className="pt-2">
                     <DialogTitle className="flex items-center gap-2">
                         <Activity className="w-5 h-5 text-primary" strokeWidth={1.5} />

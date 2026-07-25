@@ -17,9 +17,9 @@ export const BusiestLinesCard: React.FC<BusiestLinesCardProps> = ({ stats }) => 
     }
 
     return (
-        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
-            <CardHeader className="p-3.5 pb-2 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[14px]">
+        <Card variant="subtle" size="none">
+            <CardHeader className="p-3.5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                     <Hash size={16} className="text-fuchsia-400" />
                     <span>{t('stats.busiestLines')}</span>
                 </CardTitle>

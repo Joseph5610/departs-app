@@ -30,7 +30,7 @@ export const MetroNightMessage: React.FC = () => {
                 <EmptyTitle className="text-base font-bold text-foreground/90">
                     {t('map.departures.metroNight.title')}
                 </EmptyTitle>
-                <EmptyDescription className="text-[13px] max-w-[280px]">
+                <EmptyDescription className="text-[13px] max-w-70">
                     {t('map.departures.metroNight.description')}
                 </EmptyDescription>
             </EmptyHeader>

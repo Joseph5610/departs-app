@@ -40,9 +40,9 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
     }
 
     return (
-        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
-            <CardHeader className="p-3.5 pb-2 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[14px]">
+        <Card variant="subtle" size="none">
+            <CardHeader className="p-3.5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                     <AlertTriangle size={16} className="text-rose-400" />
                     <span>{t('stats.biggestDelays')}</span>
                 </CardTitle>
@@ -93,11 +93,11 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
                                     size="lg"
                                     className="mr-1"
                                 />
-                                <span className="text-[13px] font-medium text-foreground/80 tabular-nums truncate">
+                                <span className="text-[13px] font-medium text-foreground/80 truncate">
                                     #{v.gtfs_trip_id !== 'N/A' ? v.gtfs_trip_id : v.vehicle_id}
                                 </span>
                             </div>
-                            <span className="shrink-0 text-[12px] ml-2 font-bold text-rose-400 tabular-nums bg-rose-500/10 px-2 py-0.5 rounded-full group-hover:bg-rose-500/20 transition-colors">
+                            <span className="shrink-0 text-xs ml-2 font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full group-hover:bg-rose-500/20 transition-colors tabular-nums">
                                 +{Math.round(v.delay / 60)} min
                             </span>
                         </div>

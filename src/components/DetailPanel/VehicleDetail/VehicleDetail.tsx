@@ -149,7 +149,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     {/* Alerts */}
                     {relevantAlerts.length > 0 && (
                         <div className="flex flex-col gap-2 mt-2">
-                            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                            <span className="micro-label-widest text-muted-foreground px-1">
                                 {t('alerts.title')}
                                 {relevantAlerts.length > 1 && ` (${relevantAlerts.length})`}
                             </span>

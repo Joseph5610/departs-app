@@ -1,6 +1,31 @@
+## [0.56.6] - 2026-07-26
+
+### Fixed
+
+- **GTFS-RT Vehicle Stop Matching & Invalid Stop 404 Error Handling**:
+  - Implemented multi-tier stop matching in `GtfsRtVehicleDetailEnricher.findMatchingStop()` to handle leading zero variations (`U011006Z01` vs `U11006Z1`), `centroid-` stripping, and numeric node ID matches for train platforms (e.g. Brno Hlavní nádraží), while eliminating loose `.includes()` checks to prevent false-positive stop matches.
+  - Updated GTFS `DeparturesService` to validate requested stop IDs against a cached `validStopsSet` (built from `parent_child_map.json` and `stops.json`). Real stops with 0 current departures return HTTP 200 OK with empty departures, while non-existent stop IDs throw an HTTP 404 `ApiError`.
+  - Suppressed redundant Sonner toast popups for HTTP 404 errors in `queryCache.onError` (`src/main.tsx`), ensuring invalid stop IDs render inline in the `ErrorState` drawer without unnecessary toast alerts.
+- **GTFS Alert HTML Stripping & KORDIS Header Extraction**:
+  - Implemented `cleanAlertText` utility in `BaseGtfsAlertsMapper` to strip HTML tags (`<p>`, `<div>`, `<span>`, etc.) from GTFS-RT alerts while converting `<br>`, block tags, `\t`, and carriage returns into clean line breaks (`\n`).
+  - Added KORDIS-specific header extraction in `KordisAlertsMapper.parseContent()` to extract the first line of alert description as the main title, falling back to `headerText` if description is missing.
+  - Added `whitespace-pre-line` formatting to `GenericAlertCard` and `CondensedAlertItem` titles & descriptions to render line breaks cleanly.
+- **GTFS Real-Time Vehicle Cache for Departures**:
+  - Fixed `DeparturesService.getRealtimeVehiclesCache()` to invoke `VehiclesService.getCachedMappedVehicles()` directly instead of `getFilteredVehicles(ctx)`, eliminating query param validation failures when `bounds` or `routeType` are not passed.
+
+### Refactored
+
+- **CSS & Component Performance Optimization**:
+  - Cleaned up global CSS rules in `index.css` by removing universal `* { @apply border-border; }` selector cascade.
+  - Added `@utility micro-label` & `@utility micro-label-widest` to `index.css` and consolidated micro-label typography across major components.
+  - Replaced `framer-motion` height animations in `DisplaySection.tsx` with CSS grid property transitions (`grid-rows-[1fr]` / `grid-rows-[0fr]`).
+  - Replaced GPU-heavy `transition-all` with targeted CSS property transitions across components.
+  - Added `variant="search"` to `CommandGroup` in `command.tsx` and converted `<Card>` usages to native `size="none"`.
+
 ## [0.56.5] - 2026-07-19
 
 ### Added
+
 - **Light Mode**: Implemented global light/dark mode support.
   - Added a new `theme` setting (`system`, `light`, `dark`) with a dedicated toggle in the Display Settings.
   - Added seamless dynamic switching of the MapLibre base tile layers (`positron` vs `dark_matter`) based on the active theme.
@@ -8,6 +33,7 @@
   - Replaced custom theme management logic with the standard `next-themes` library, wrapping the app root in `<ThemeProvider>` to robustly handle system preference, SSR-safe hydration, and component-level theme access without duplicating state in the Zustand store.
 
 ### Fixed
+
 - Fixed ESLint unused variable warnings across backend adapters (`DukAdapter.ts`, `VehiclesService.ts`, `GtfsAdapter.ts`) and frontend hooks (`useSelectedVehicle.ts`), enforcing strict zero-warning builds.
 - **Code Review**: Production-level review of all staged changes resolved the following issues:
   - `DisplaySection.tsx`: Removed 3 unused icon imports (`Sun`, `Moon`, `Laptop`) and 2 unused store bindings (`theme`, `setTheme`) left from incomplete light mode UI scaffold — restoring zero TS/lint errors.
@@ -18,10 +44,10 @@
   - `MostDelayedCard.tsx`: Replaced `key={i}` index-based list keys with stable composite keys (`${v.gtfs_trip_id}-${v.vehicle_id}`) to prevent React reconciliation bugs when sort order changes.
   - `StatsPanel.tsx`: Removed leftover development comment `// DetailPanel removed from imports`.
 
-
 ## [0.56.3] - 2026-07-19
 
 ### Fixed
+
 - Fixed map layer ID for vehicle selection pulse effect (`useMapInterface.ts` -> `vehicle-selected-pulse`).
 - Removed confusing registration number inference logic from Golemio `VehiclesMapper.ts` as it's no longer necessary.
 
@@ -33,7 +59,7 @@
 
 - **Stats UI Refactoring**: Decomposed the monolithic `StatsPanel.tsx` into single-responsibility, highly-modular card components (`PunctualityCard`, `MovementStateCard`, etc.) for improved maintainability.
 - **Shared Analytics Engine**: Extracted the mathematical aggregation logic into a shared `statsAggregator.ts` utility. Both the frontend and backend adapters (Golemio, GTFS, DUK) now use this exact identical function, ensuring perfect mathematical consistency between client-side screen stats and backend network-wide statistics.
-- **Prague Realtime States**: Discovered and mapped hidden "pre-departure" states (`before_track`, `before_track_delayed`) and "off-track" states in the Golemio API. 
+- **Prague Realtime States**: Discovered and mapped hidden "pre-departure" states (`before_track`, `before_track_delayed`) and "off-track" states in the Golemio API.
 - **Off Track Visualization**: Separated "Off Track" deviations into their own standalone state category in the Movement State chart (amber colored).
 - **Translations**: Extracted translation of vehicle types into a reusable `useVehicleTypeLabel` hook. Expanded CS/EN locales to include new stats fields.
 
@@ -50,7 +76,6 @@
 - **Adapter Refactoring**: Unified the `handleRawFeed` implementation in both `GtfsAdapter` and `GolemioAdapter`.
   - Extracted dynamic feeds decoding into `core/gtfs-rt-feed.ts` and used it across `GtfsAdapter`.
   - Exposed `getRawVehicles` and `getRawFeed` methods in Golemio's `VehiclesService` and `AlertsService` to prevent duplicate implementations of backend fetches and simplify the adapter layer.
-
 
 ## [0.55.0] - 2026-07-16
 

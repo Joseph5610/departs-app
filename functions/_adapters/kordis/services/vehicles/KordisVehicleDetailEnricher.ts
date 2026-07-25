@@ -45,32 +45,7 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
     }
 
     protected override enrichVehicleDetail(detail: AppVehicleDetail, liveMatch: AppVehicleFeature, lastStopId?: string) {
-        let bestStopId = lastStopId;
-        
-        // In GTFS-RT, Kordis sends stopIds like "U01557Z10". 
-        // For buses/trams, this matches GTFS static (normalized to U1557Z10).
-        // For trains, GTFS static only uses the Node ID (e.g., "1557").
-        // If the exact U...Z... match fails, fallback to Node ID just like the ArcGIS API did.
-        if (lastStopId && lastStopId.startsWith('U') && detail.stop_times?.features) {
-            const normalized = this.normalizeGtfsRtStopId(lastStopId);
-            let stopMatch = detail.stop_times.features.find(s => {
-                const sid = s.properties.stop_id;
-                return sid === normalized || sid.includes(normalized) || sid.startsWith(normalized);
-            });
-            
-            if (!stopMatch) {
-                const nodeMatch = lastStopId.match(/U0*(\d+)Z/);
-                if (nodeMatch) {
-                    const nodeId = nodeMatch[1];
-                    stopMatch = detail.stop_times.features.find(s => s.properties.stop_id === nodeId);
-                    if (stopMatch) {
-                        bestStopId = nodeId;
-                    }
-                }
-            }
-        }
-
-        super.enrichVehicleDetail(detail, liveMatch, bestStopId);
+        super.enrichVehicleDetail(detail, liveMatch, lastStopId);
     }
 
     protected normalizeGtfsRtStopId(stopId: string): string {

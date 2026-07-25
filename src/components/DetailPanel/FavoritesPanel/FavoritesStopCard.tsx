@@ -130,20 +130,21 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
         <Card 
             onClick={handleCardClick}
             variant="subtle"
+            size="none"
             className={cn(
                 "w-full cursor-pointer transition-colors relative group/favcard",
                 "bg-card border-border/50 hover:bg-muted/50 active:bg-muted/80 shadow-sm",
-                "focus-visible:outline-none p-0 gap-0"
+                "focus-visible:outline-none"
             )}
         >
             {/* Header Area */}
-            <CardHeader className="flex items-center justify-between gap-2 space-y-0 border-b border-border/50 p-3 px-4">
+            <CardHeader className="flex items-center justify-between gap-2 border-b border-border/50 p-3 px-4">
                 <div className="min-w-0 flex-1">
                     <CardTitle className="flex items-center gap-1.5 flex-wrap text-[15px] leading-tight truncate min-w-0">
                         {platform_code && (
                             <Badge 
                                 variant="outline"
-                                className="w-5 h-5 p-0 flex items-center justify-center rounded-full shrink-0 tabular-nums border-0 bg-foreground text-background text-[10.5px] font-bold shadow-sm"
+                                className="w-5 h-5 p-0 flex items-center justify-center rounded-full shrink-0 border-0 bg-foreground text-background text-[10.5px] font-bold shadow-sm tabular-nums"
                             >
                                 {platform_code}
                             </Badge>
@@ -167,7 +168,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                     size="icon-xs"
                     onClick={handleUnpin}
                     title={t('map.departures.removeFromFavorites')}
-                    className="hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-all duration-150 shrink-0 group"
+                    className="hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-[colors,opacity,transform] duration-150 shrink-0 group"
                     aria-label={t('map.departures.removeFromFavorites')}
                 >
                     <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110" />
@@ -221,7 +222,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                         {/* Platform (Trains only) */}
                                         {dep.platform && isTrain && (
                                             <div 
-                                                className="flex items-center justify-center shrink-0 min-w-[20px] gap-0.5 px-1 h-[15px] bg-muted/50 rounded border border-border/50 shadow-sm text-[8.5px] font-bold text-foreground/50"
+                                                className="flex items-center justify-center shrink-0 min-w-5 gap-0.5 px-1 h-3.75 bg-muted/50 rounded border border-border/50 shadow-sm text-[8.5px] font-bold text-foreground/50 tabular-nums"
                                             >
                                                 <Train size={12} strokeWidth={1.5} className="opacity-30"  />
                                                 <span>{dep.platform}</span>
@@ -239,7 +240,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                         )}
 
                                         {/* Countdown */}
-                                        <span className="text-[12px] font-bold tabular-nums text-foreground/90 text-right min-w-[40px]">
+                                        <span className="text-xs font-bold text-foreground/90 text-right min-w-10 tabular-nums">
                                             <Countdown timestamp={dep.timestamp} />
                                         </span>
                                     </div>

@@ -12,8 +12,8 @@ export const useGlobalAlerts = () => {
             return await apiFetch<{ alerts: RSSItem[] }>(`/${selectedCity}/alerts`);
         },
         enabled: !!selectedCity,
-        refetchInterval: 5 * 60 * 1000,
-        staleTime: 5 * 60 * 1000,
+        refetchInterval: 2 * 60 * 1000,
+        staleTime: 60 * 1000,
     });
 
     const infotextsQuery = useQuery<Infotext[]>({
@@ -22,8 +22,8 @@ export const useGlobalAlerts = () => {
             return await apiFetch<Infotext[]>(`/${selectedCity}/infotexts`);
         },
         enabled: !!selectedCity,
-        refetchInterval: 5 * 60 * 1000,
-        staleTime: 5 * 60 * 1000,
+        refetchInterval: 2 * 60 * 1000,
+        staleTime: 60 * 1000,
     });
 
     return {

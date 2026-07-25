@@ -130,7 +130,7 @@ export const MapControls = React.memo(() => {
                     >
                         <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
                         {incidentsCount > 0 && (
-                            <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[9px] font-bold px-1 py-0 rounded-full min-w-[16px] text-center shadow-sm pointer-events-none">
+                            <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[9px] font-bold px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
                                 {incidentsCount}
                             </span>
                         )}

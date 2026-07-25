@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useViewportStore } from '../../state/viewportStore';
 import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
@@ -11,7 +10,7 @@ import { SystemStatusModal } from '../Modals/SystemStatusModal';
 /**
  * LiveStatus Component
  *
- * Uses semantic components and standardized layout.
+ * Displays the real-time system connection status pill.
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
@@ -47,49 +46,41 @@ export const LiveStatus: React.FC = () => {
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}
         >
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key="live-pill"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="pointer-events-auto"
+            <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/8 active:bg-white/12 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
                 >
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
-                    >
-                        <div className="flex items-center gap-2">
-                            <div className={cn(
-                                "w-2 h-2 rounded-full transition-colors duration-500",
-                                status.type === 'offline' ? "bg-neutral-500" :
-                                    status.type === 'app_error' ? "bg-destructive shadow-[0_0_8px_var(--color-destructive)]" :
-                                        status.type === 'upstream_offline' ? "bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]" :
-                                            status.type === 'stale' ? "bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]" :
-                                                status.type === 'refreshing' ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
-                            )} />
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
-                                {status.type === 'offline' ? (
-                                    <span className="text-neutral-500">{t('liveStatus.offline')}</span>
-                                ) : status.type === 'app_error' ? (
-                                    <span className="text-destructive">{t('liveStatus.appError')}</span>
-                                ) : status.type === 'upstream_offline' ? (
-                                    <span className="text-orange-500">{t('liveStatus.upstreamError')}</span>
-                                ) : status.type === 'stale' ? (
-                                    <span className="text-amber-500">{t('liveStatus.stale')}</span>
-                                ) : status.type === 'refreshing' ? (
-                                    <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
-                                ) : (
-                                    <>
-                                        <span className="text-primary">{t('liveStatus.live')}</span>
-                                        <span className="text-muted-foreground/60 tabular-nums">{nextRefreshIn}s</span>
-                                    </>
-                                )}
-                            </span>
-                        </div>
-                    </button>
-                </motion.div>
-            </AnimatePresence>
+                    <div className="flex items-center gap-2">
+                        <div className={cn(
+                            "w-2 h-2 rounded-full transition-colors duration-500",
+                            status.type === 'offline' ? "bg-neutral-500" :
+                                status.type === 'app_error' ? "bg-destructive shadow-[0_0_8px_var(--color-destructive)]" :
+                                    status.type === 'upstream_offline' ? "bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]" :
+                                        status.type === 'stale' ? "bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]" :
+                                            status.type === 'refreshing' ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
+                        )} />
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+                            {status.type === 'offline' ? (
+                                <span className="text-neutral-500">{t('liveStatus.offline')}</span>
+                            ) : status.type === 'app_error' ? (
+                                <span className="text-destructive">{t('liveStatus.appError')}</span>
+                            ) : status.type === 'upstream_offline' ? (
+                                <span className="text-orange-500">{t('liveStatus.upstreamError')}</span>
+                            ) : status.type === 'stale' ? (
+                                <span className="text-amber-500">{t('liveStatus.stale')}</span>
+                            ) : status.type === 'refreshing' ? (
+                                <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
+                            ) : (
+                                <>
+                                    <span className="text-primary">{t('liveStatus.live')}</span>
+                                    <span className="text-muted-foreground/60 tabular-nums">{nextRefreshIn}s</span>
+                                </>
+                            )}
+                        </span>
+                    </div>
+                </button>
+            </div>
 
             <SystemStatusModal 
                 isOpen={isModalOpen} 

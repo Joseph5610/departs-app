@@ -23,7 +23,7 @@ export const VehicleHeroSkeleton: React.FC = () => (
             <Skeleton className="h-7 w-12 rounded-lg" />
             
             {/* Title/Headsign Skeleton */}
-            <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md" />
+            <Skeleton className="h-7 w-3/4 max-w-80 rounded-md" />
 
             {/* Badge Row Skeleton */}
             <div className="flex items-center gap-2">
@@ -57,10 +57,10 @@ export const StopTimelineSkeleton: React.FC = () => (
                     <Skeleton className="h-8 w-32 rounded-xl" />
                 </div>
                 <div className="relative pl-6 space-y-8 mt-4">
-                    <div className="absolute left-[11px] top-0 bottom-0 w-0.5 bg-border/40" />
+                    <div className="absolute left-2.75 top-0 bottom-0 w-0.5 bg-border/40" />
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="flex items-center justify-between relative pr-2">
-                            <div className="absolute -left-[19px] w-2.5 h-2.5 rounded-full bg-muted z-10 top-1.5" />
+                            <div className="absolute -left-4.75 w-2.5 h-2.5 rounded-full bg-muted z-10 top-1.5" />
                             <div className="flex flex-col gap-2 flex-1">
                                 <Skeleton className="h-4 w-40" />
                                 <Skeleton className="h-2 w-20" />

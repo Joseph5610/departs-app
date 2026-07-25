@@ -32,7 +32,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                         key={city.slug}
                         onClick={() => onSelect(city)}
                         className={cn(
-                            "group relative w-full h-20 flex items-center justify-start gap-4 p-4 rounded-2xl border transition-all duration-300 outline-none overflow-hidden bg-card dark:bg-[oklch(0.18_0.01_260)]",
+                            "group relative w-full h-20 flex items-center justify-start gap-4 p-4 rounded-2xl border transition-[border-color,box-shadow,background-color] duration-300 outline-none overflow-hidden bg-card dark:bg-[oklch(0.18_0.01_260)]",
                             isSelected 
                                 ? "border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.1)] ring-1 ring-inset ring-primary/30"
                                 : "border-border/40 hover:border-border/80 hover:shadow-md"
@@ -50,7 +50,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                                 src={`/cities/${city.slug}.png`} 
                                 alt=""
                                 className={cn(
-                                    "absolute right-0 h-full w-auto object-contain mix-blend-lighten transition-all duration-500",
+                                    "absolute right-0 h-full w-auto object-contain mix-blend-lighten transition-[opacity,transform] duration-500",
                                     isSelected ? "opacity-80 scale-[2]" : "opacity-30 scale-[1.8] group-hover:opacity-50 group-hover:scale-[1.9]"
                                 )}
                                 style={{ transformOrigin: 'right center' }}
@@ -59,7 +59,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                         
                         {/* Checkbox Layer */}
                         <div className={cn(
-                            "relative z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 transition-all duration-300 shrink-0",
+                            "relative z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 transition-[border-color,background-color,color] duration-300 shrink-0",
                             isSelected 
                                 ? "border-primary bg-primary text-primary-foreground shadow-sm" 
                                 : "border-border/50 bg-muted/50 text-transparent group-hover:border-border/50"

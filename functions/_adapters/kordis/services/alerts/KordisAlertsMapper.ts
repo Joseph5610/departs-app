@@ -1,13 +1,65 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
-import { BaseGtfsAlertsMapper } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
+import { BaseGtfsAlertsMapper, cleanAlertText } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
+import type { AppAlert } from '../../../../_core/types';
+import type { GtfsData } from '../../../gtfs/core/gtfs-data';
 
 export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
-    protected parseIsDetour(alert: transit_realtime.IAlert, headerStr: string): boolean {
-        return super.parseIsDetour(alert, headerStr) || headerStr.toLowerCase().includes('výluka');
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
+        const mapped = super.mapAlerts(rawAlerts, gtfsData, forceIncident);
+        
+        // Sort Kordis alerts by newest ID first (descending numeric ID)
+        return mapped.sort((a, b) => this.extractNumericId(b.guid) - this.extractNumericId(a.guid));
     }
 
-    protected parseDescription(rawDesc?: string | null): string | null {
-        if (!rawDesc) return null;
-        return rawDesc.startsWith('TWEET:') ? rawDesc.replace('TWEET:', '').trim() : rawDesc;
+    private extractNumericId(guid?: string): number {
+        if (!guid) return 0;
+        const match = guid.match(/\d+/);
+        return match ? parseInt(match[0], 10) : 0;
+    }
+
+    private stripTweetPrefix(text?: string | null): string | null {
+        if (!text) return null;
+        return text.startsWith('TWEET:') ? text.slice(6).trim() : text.trim();
+    }
+
+    protected parseIsDetour(alert: transit_realtime.IAlert, headerStr: string, rawHeader?: string, rawDesc?: string | null): boolean {
+        const isTweet = Boolean(
+            (rawHeader && rawHeader.toUpperCase().includes('TWEET')) || 
+            (rawDesc && rawDesc.toUpperCase().includes('TWEET:'))
+        );
+        if (isTweet) {
+            return false;
+        }
+
+        if (super.parseIsDetour(alert, headerStr, rawHeader, rawDesc)) {
+            return true;
+        }
+        
+        const combinedText = `${rawHeader || ''} ${headerStr} ${rawDesc || ''}`.toLowerCase();
+        return combinedText.includes('výluka');
+    }
+
+    protected parseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
+        const cleanedDesc = cleanAlertText(this.stripTweetPrefix(rawDesc));
+        const cleanedHeader = cleanAlertText(this.stripTweetPrefix(rawHeader)) || '';
+
+        if (!cleanedDesc) {
+            return { title: cleanedHeader, description: null };
+        }
+
+        const newlineIndex = cleanedDesc.indexOf('\n');
+        if (newlineIndex !== -1) {
+            const title = cleanedDesc.slice(0, newlineIndex).trim();
+            const description = cleanedDesc.slice(newlineIndex + 1).trim();
+            return {
+                title: title || cleanedHeader,
+                description: description || null
+            };
+        }
+
+        return {
+            title: cleanedDesc,
+            description: null
+        };
     }
 }

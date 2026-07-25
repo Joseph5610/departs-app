@@ -112,7 +112,7 @@ export const FeedbackModal: React.FC = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent variant="default" className="sm:max-w-[425px]" data-testid="feedback-modal-content">
+            <DialogContent variant="default" className="sm:max-w-106.25" data-testid="feedback-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>{t('feedback.title')}</DialogTitle>
                     <DialogDescription>
@@ -177,7 +177,7 @@ export const FeedbackModal: React.FC = () => {
                                         <FormControl>
                                             <Textarea 
                                                 placeholder={t('feedback.messagePlaceholder')}
-                                                className="min-h-[120px] resize-none"
+                                                className="min-h-30 resize-none"
                                                 {...field}
                                             />
                                         </FormControl>

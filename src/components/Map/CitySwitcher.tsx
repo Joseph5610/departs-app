@@ -81,7 +81,7 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
                             size="icon"
                             aria-label={t('map.controls.switchCity')}
                             className={cn(
-                                "h-11 w-11 shrink-0 transition-all duration-500",
+                                "h-11 w-11 shrink-0 transition-[transform,box-shadow,background-color] duration-500",
                                 isHighlighting && "ring-2 ring-primary/80 bg-primary/20 text-primary scale-110 shadow-[0_0_20px_rgba(var(--color-primary),0.4)]",
                                 className
                             )}
@@ -95,7 +95,7 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
                     <p className="font-medium text-xs">{t('map.controls.switchCity')}</p>
                 </TooltipContent>
             </Tooltip>
-            <DialogContent className="sm:max-w-[400px] p-6 h-auto border-border/40 shadow-2xl">
+            <DialogContent className="sm:max-w-100 p-6 h-auto border-border/40 shadow-2xl">
                 <DialogHeader className="pb-4 space-y-1.5">
                     <DialogTitle className="text-xl font-bold">{t('map.controls.switchCity')}</DialogTitle>
                     <p className="text-sm text-muted-foreground/80 font-medium">{t('map.regions.title')}</p>

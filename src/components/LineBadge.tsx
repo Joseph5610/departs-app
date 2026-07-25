@@ -22,20 +22,20 @@ export const LineBadge = ({ name, routeColor, size = 'md', className }: LineBadg
     // bypassing proportional font metric issues where "1" is narrower.
     let baseWidth = 18;
     let charWidth = 6;
-    let sizeClass = `h-[18px] rounded-[3px] px-1 text-[10px] font-bold`;
+    let sizeClass = `h-4.5 rounded-xs px-1 text-[10px] font-bold`;
 
     if (size === 'sm') {
         baseWidth = 14;
         charWidth = 5;
-        sizeClass = `h-[14px] rounded-[2px] px-0.5 ${isLong ? 'text-[8px]' : 'text-[9px]'} font-bold`;
+        sizeClass = `h-3.5 rounded-xs px-0.5 ${isLong ? 'text-[8px]' : 'text-[9px]'} font-bold`;
     } else if (size === 'lg') {
         baseWidth = 24;
         charWidth = 8;
-        sizeClass = `h-[24px] rounded-[4px] px-1 text-[11px] font-bold`;
+        sizeClass = `h-6 rounded-sm px-1 text-[11px] font-bold`;
     } else if (size === 'xl') {
         baseWidth = 28;
         charWidth = 9;
-        sizeClass = `h-[28px] rounded-[5px] px-1.5 text-[13px] font-extrabold`;
+        sizeClass = `h-7 rounded-md px-1.5 text-[13px] font-extrabold`;
     }
 
     const calculatedMinWidth = baseWidth + (Math.max(0, len - 1) * charWidth);

@@ -212,7 +212,7 @@ Please locate the source code files mentioned in the stack traces above, diagnos
 
             <div className="flex gap-4 flex-1 min-h-0 relative">
                 {/* Left Column: List */}
-                <div className={`w-full lg:w-[350px] shrink-0 flex flex-col gap-2 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:w-87.5 shrink-0 flex flex-col gap-2 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {filteredItems?.length === 0 && data?.items?.length !== 0 && (
                         <div className="text-center py-8 text-muted-foreground">
                             No results found for filter "{filterText}".
@@ -333,7 +333,7 @@ Please locate the source code files mentioned in the stack traces above, diagnos
                                 {/* Diagnostics Collapsible */}
                                 {selectedItem.diagnostics && (
                                     <Collapsible className="bg-muted/30 rounded-lg border border-border">
-                                        <CollapsibleTrigger className="w-full flex justify-between items-center p-4 h-auto hover:bg-muted/50 transition-colors rounded-lg [&[data-state=open]>svg]:rotate-180">
+                                        <CollapsibleTrigger className="w-full flex justify-between items-center p-4 h-auto hover:bg-muted/50 transition-colors rounded-lg data-[state=open]:[&>svg]:rotate-180">
                                             <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                                 <Bug className="w-4 h-4" />
                                                 Full Diagnostic Data

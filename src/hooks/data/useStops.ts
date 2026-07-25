@@ -64,12 +64,12 @@ export const useStops = () => {
 
         const stops = {
             type: 'FeatureCollection',
-            features: features.filter(f => hasCentroids ? !f.properties.is_centroid : true)
+            features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? !f.properties.is_centroid : true))
         } as StopCollection;
 
         const centroids = {
             type: 'FeatureCollection',
-            features: features.filter(f => hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1)
+            features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1))
         } as StopCollection;
 
         return { stops, centroids };

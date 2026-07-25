@@ -17,7 +17,8 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       const appError = error as AppError;
-      // Only show toast for non-upstream errors to avoid double notifications (pill already shows upstream errors)
+      // Do not show toast for 404 (Not Found) or upstream errors to avoid double notifications (UI component renders inline error state)
+      if (appError.status === 404) return;
       if (appError.isUpstream === false || appError.code === 'NETWORK_ERROR') {
         toast.error(appError.message || 'Something went wrong');
       }

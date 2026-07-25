@@ -62,7 +62,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
         <Alert
             variant={alertVariant}
             className={cn(
-                "relative transition-all p-3 sm:p-4 rounded-2xl h-full",
+                "relative transition-[filter,transform] p-3 sm:p-4 rounded-2xl h-full",
                 link && "hover:brightness-125 cursor-pointer group",
                 isFuture && "opacity-60 grayscale-[0.3]"
             )}
@@ -90,7 +90,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                 ) : null)}
 
                 <span className={cn(
-                    "font-bold text-sm leading-tight transition-colors text-foreground/95",
+                    "font-bold text-sm leading-tight transition-colors text-foreground/95 whitespace-pre-line",
                     link && "group-hover:text-primary"
                 )}>
                     {title}
@@ -112,7 +112,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
                     </div>
                 )}
                 {description && (
-                    <div className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium">
+                    <div className="text-[11px] line-clamp-3 leading-normal text-foreground/90 font-medium whitespace-pre-line">
                         {description}
                     </div>
                 )}
@@ -142,7 +142,7 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
             </AlertDescription>
 
             {link && (
-                <div className="absolute top-3 right-3 p-1.5 rounded-full bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-all">
+                <div className="absolute top-3 right-3 p-1.5 rounded-full bg-foreground/5 text-muted-foreground group-hover:text-foreground group-hover:bg-foreground/10 transition-colors">
                     <ExternalLink size={14}  strokeWidth={1.5} />
                 </div>
             )}

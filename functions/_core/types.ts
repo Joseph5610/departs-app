@@ -37,6 +37,7 @@ export interface AppStopProperties {
     parent_station: string | null;
     zone_id: string | null;
     is_centroid?: boolean;
+    is_drop_off_only?: boolean;
     is_train?: number;
     metro_a?: number;
     metro_b?: number;

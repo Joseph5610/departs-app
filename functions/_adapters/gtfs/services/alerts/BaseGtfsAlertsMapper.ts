@@ -3,13 +3,61 @@ import type { GtfsData, GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 
+const HTML_ENTITY_MAP: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'"
+};
+
+/**
+ * Cleans GTFS alert text by stripping HTML tags while preserving line breaks.
+ * Converts <br>, block elements (<p>, <div>, <li>, etc.), \t, and existing newlines
+ * into formatted line breaks, strips all remaining HTML tags, and decodes HTML entities.
+ */
+export function cleanAlertText(text: string | null | undefined): string | null {
+    if (!text) return null;
+
+    const cleaned = text
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
+        .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
+        .replace(/[\r\t]+/g, '\n');
+
+    const lines = cleaned.split('\n').map(l => l.trim());
+    const resultLines: string[] = [];
+    let previousWasEmpty = false;
+
+    for (const line of lines) {
+        if (line === '') {
+            if (!previousWasEmpty) {
+                resultLines.push('');
+                previousWasEmpty = true;
+            }
+        } else {
+            resultLines.push(line);
+            previousWasEmpty = false;
+        }
+    }
+
+    const result = resultLines.join('\n').trim();
+    return result || null;
+}
+
 export class BaseGtfsAlertsMapper {
     
     public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
-            const headerStr = alert.headerText?.translation?.[0]?.text || '';
-            const isDetour = this.parseIsDetour(alert, headerStr);
+            const rawHeader = alert.headerText?.translation?.[0]?.text || '';
+            const rawDesc = alert.descriptionText?.translation?.[0]?.text;
+            const { title: headerStr, description } = this.parseContent(rawHeader, rawDesc);
+            const isDetour = this.parseIsDetour(alert, headerStr, rawHeader, rawDesc);
             
             const lines: string[] = [];
             const line_metadata: Array<{ name: string; route_color: string; type: string }> = [];
@@ -50,13 +98,6 @@ export class BaseGtfsAlertsMapper {
                 return true;
             });
 
-            const rawDesc = alert.descriptionText?.translation?.[0]?.text;
-            let description = null;
-            if (rawDesc) {
-                description = rawDesc;
-            }
-            description = this.parseDescription(description);
-
             let valid_from: string | null = null;
             let valid_to: string | null = null;
             
@@ -96,16 +137,29 @@ export class BaseGtfsAlertsMapper {
     }
 
     /** Overridable hooks for city-specific logic */
-    protected parseIsDetour(alert: transit_realtime.IAlert, _headerStr: string): boolean {
+    protected parseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
+        const title = this.parseTitle(rawHeader);
+        const description = this.parseDescription(rawDesc);
+        return { title, description };
+    }
+
+    protected parseIsDetour(alert: transit_realtime.IAlert, _headerStr: string, _rawHeader?: string, _rawDesc?: string | null): boolean {
         void _headerStr;
+        void _rawHeader;
+        void _rawDesc;
         return String(alert.effect) === '4' || 
                String(alert.effect) === '9' || 
                String(alert.effect) === 'DETOUR';
     }
 
+    protected parseTitle(rawTitle?: string | null): string {
+        if (!rawTitle) return '';
+        return cleanAlertText(rawTitle) || '';
+    }
+
     protected parseDescription(rawDesc?: string | null): string | null {
         if (!rawDesc) return null;
-        return rawDesc.replace(/\t/g, '\n');
+        return cleanAlertText(rawDesc);
     }
 
     protected parseExtensions(_alert: transit_realtime.IAlert, _appAlert: AppAlert): void {
@@ -113,3 +167,4 @@ export class BaseGtfsAlertsMapper {
         void _appAlert;
     }
 }
+

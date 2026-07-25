@@ -6,6 +6,7 @@ export interface StopProperties {
     parent_station?: string;
     zone_id?: string;
     is_centroid?: boolean;
+    is_drop_off_only?: boolean;
     is_train?: number;
     metro_a?: number;
     metro_b?: number;

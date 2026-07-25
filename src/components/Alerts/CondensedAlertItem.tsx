@@ -39,8 +39,8 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             open={isExpanded}
             onOpenChange={setIsExpanded}
             className={cn(
-                "group relative transition-all block",
-                isExpanded ? "bg-black/[0.02] dark:bg-white/5" : "hover:bg-black/[0.02] dark:hover:bg-white/5",
+                "group relative transition-colors block",
+                isExpanded ? "bg-black/2 dark:bg-white/5" : "hover:bg-black/2 dark:hover:bg-white/5",
                 isFuture && "opacity-75 grayscale-[0.3]"
             )}
         >
@@ -83,7 +83,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
 
                     {/* Title */}
                     <div className={cn(
-                        "text-sm font-semibold leading-tight text-foreground/95",
+                        "text-sm font-semibold leading-tight text-foreground/95 whitespace-pre-line",
                         !isExpanded && "line-clamp-2"
                     )}>
                         {item.title}
@@ -111,7 +111,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                             </div>
                         )}
                         {item.description && (
-                            <div className="text-[12px] leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap">
+                            <div className="text-xs leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap">
                                 {item.description}
                             </div>
                         )}

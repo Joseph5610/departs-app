@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+
 import { useTranslation } from 'react-i18next';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -133,7 +133,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
                     <EmptyTitle className="text-base font-bold text-foreground/90">
                         {t('favorites.empty')}
                     </EmptyTitle>
-                    <EmptyDescription className="text-[13px] max-w-[220px]">
+                    <EmptyDescription className="text-[13px] max-w-55">
                         {t('favorites.emptySub')}
                     </EmptyDescription>
                 </EmptyHeader>
@@ -143,29 +143,24 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
 
     return (
         <div className="flex flex-col gap-3 pt-2">
-            <AnimatePresence mode="popLayout" initial={false}>
-                {favoriteStopFeatures.map((feature) => {
-                    const stopId = feature.properties.stop_id;
-                    const stopDepartures = departuresByStop.get(stopId) || [];
-                    return (
-                        <motion.div
-                            key={stopId}
-                            layout
-                            initial={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, scale: 0.95, height: 0, overflow: 'hidden' }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <FavoritesStopCard 
-                                stopFeature={feature} 
-                                departures={stopDepartures}
-                                isLoading={departuresLoading}
-                                isError={isError}
-                                onClosePanel={onClose} 
-                            />
-                        </motion.div>
-                    );
-                })}
-            </AnimatePresence>
+            {favoriteStopFeatures.map((feature) => {
+                const stopId = feature.properties.stop_id;
+                const stopDepartures = departuresByStop.get(stopId) || [];
+                return (
+                    <div 
+                        key={stopId}
+                        className="animate-in fade-in slide-in-from-bottom-1 duration-200"
+                    >
+                        <FavoritesStopCard 
+                            stopFeature={feature} 
+                            departures={stopDepartures}
+                            isLoading={departuresLoading}
+                            isError={isError}
+                            onClosePanel={onClose} 
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 };

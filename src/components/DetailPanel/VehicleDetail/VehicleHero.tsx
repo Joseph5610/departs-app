@@ -32,7 +32,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
     return (
         <Card 
-            className="p-0 gap-0 border border-border/50 ring-0 shadow-xl relative flex flex-col transition-colors"
+            size="none"
+            className="border border-border/50 ring-0 shadow-xl relative flex flex-col transition-colors"
             style={{
                 backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, var(--hero-base))` : 'var(--card)'
             }}
@@ -95,7 +96,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             {displayVehicle.trip_headsign || displayVehicle.next_stop_name}
                         </span>
                     ) : isDetailLoading ? (
-                        <Skeleton className="h-7 w-3/4 max-w-[320px] rounded-md bg-muted opacity-40" />
+                        <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
                     ) : (
                         t('map.vehicleDetails.headingToDestination')
                     )}
@@ -156,7 +157,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                         <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
                                     </Badge>
                                 </PopoverTrigger>
-                                <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-[250px]">
+                                <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-62.5">
                                     <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
                                         {isEnriched 
                                             ? t('map.vehicleDetails.enrichedTooltip') 
@@ -196,7 +197,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                 <div className="mt-1 flex items-start gap-2.5">
                                     <Info size={16} className="mt-0.5 text-amber-500 shrink-0" strokeWidth={2} />
                                     <div className="flex flex-col gap-1">
-                                        <span className="font-bold text-[10px] uppercase tracking-wider leading-none text-amber-500">
+                                        <span className="micro-label leading-none text-amber-500">
                                             {title}
                                         </span>
                                         <span className="text-amber-500/80 text-[11px] leading-snug font-medium">
@@ -216,7 +217,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                 <div className="relative z-10 flex gap-3 p-3 px-4 bg-muted/20 border-t border-border/50 justify-between items-center mt-auto">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         {displayVehicle.vehicle_descriptor?.operator && (
-                            <span className="text-muted-foreground/80 text-[9px] uppercase font-bold tracking-wider line-clamp-1">
+                            <span className="micro-label text-muted-foreground/80 line-clamp-1">
                                 {displayVehicle.vehicle_descriptor.operator}
                             </span>
                         )}
@@ -234,7 +235,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
                             <div className="flex items-center gap-2 mt-0.5 min-w-0">
                                 {displayVehicle.run_number && (
-                                    <span className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold shrink-0">
+                                    <span className="micro-label text-muted-foreground shrink-0">
                                         {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
                                     </span>
                                 )}

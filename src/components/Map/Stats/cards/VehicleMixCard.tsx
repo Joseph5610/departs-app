@@ -17,9 +17,9 @@ export const VehicleMixCard: React.FC<VehicleMixCardProps> = ({ stats }) => {
     }
 
     return (
-        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
-            <CardHeader className="p-3.5 pb-2 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[14px]">
+        <Card variant="subtle" size="none">
+            <CardHeader className="p-3.5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                     <Activity size={16} className="text-primary" />
                     <span>{t('stats.vehicleMix')}</span>
                 </CardTitle>

@@ -292,8 +292,8 @@ export const DepartureBoardHeader = React.memo(() => {
                             <button
                                 onClick={toggleRequireAirConditioned}
                                 className={cn(
-                                    "flex items-center justify-center h-[24px] px-1.5 transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-[4px] border border-border/50 text-[11px] font-bold gap-1 shrink-0",
-                                    requireAirConditioned ? "bg-[#0ea5e9] text-white ring-[2.5px] ring-foreground z-10 shadow-lg" : "bg-secondary text-secondary-foreground"
+                                    "flex items-center justify-center h-6 px-1.5 transition-[transform,colors] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-sm border border-border/50 text-[11px] font-bold gap-1 shrink-0",
+                                    requireAirConditioned ? "bg-[#0ea5e9] text-white z-10 shadow-lg" : "bg-secondary text-secondary-foreground"
                                 )}
                             >
                                 <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />
@@ -307,23 +307,18 @@ export const DepartureBoardHeader = React.memo(() => {
 
                             const isActive = selectedLine === name;
                             const isDimmed = !!selectedLine && !isActive;
-                            const isMetro = line.type === '1' || ['A', 'B', 'C'].includes(name);
 
                             return (
                                 <button 
                                     key={name}
                                     onClick={() => toggleLineFilter(name)}
                                     className={cn(
-                                        "flex transition-all active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
+                                        "flex transition-[transform,opacity] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
                                         isDimmed ? "opacity-30" : "opacity-100",
-                                        isActive && "ring-[2.5px] ring-foreground z-10 shadow-lg rounded-[4px]"
+                                        isActive && "z-10 shadow-lg rounded-sm"
                                     )}
                                 >
-                                    {isMetro ? (
-                                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
-                                    ) : (
-                                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
-                                    )}
+                                    <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
                                 </button>
                             );
                         })}

@@ -15,7 +15,7 @@ export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, netwo
     const renderStatRow = (label: string, value: React.ReactNode) => (
         <div className="flex justify-between items-center py-2.5 border-b border-border/50 last:border-0">
             <span className="text-[15px] font-medium text-foreground/80">{label}</span>
-            <span className="text-[15px] font-bold text-foreground tabular-nums tracking-tight">
+            <span className="text-[15px] font-bold text-foreground tracking-tight tabular-nums">
                 {value}
             </span>
         </div>
@@ -35,9 +35,9 @@ export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, netwo
     }
 
     return (
-        <Card variant="subtle" className="p-0 gap-0 rounded-2xl mb-4">
-            <CardHeader className="p-3.5 pb-2 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[14px]">
+        <Card variant="subtle" size="none" className="mb-4">
+            <CardHeader className="p-3.5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                     <TrendingUp size={16} className="text-primary" />
                     <span>{t('stats.otherData')}</span>
                 </CardTitle>

@@ -118,13 +118,19 @@ function CommandEmpty({
 
 function CommandGroup({
   className,
+  variant = "default",
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+}: React.ComponentProps<typeof CommandPrimitive.Group> & {
+  variant?: "default" | "search"
+}) {
   return (
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "overflow-hidden p-1 text-foreground **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground",
+        "overflow-hidden text-foreground",
+        variant === "search"
+          ? "p-0 **:[[cmdk-group-heading]]:bg-muted/50 **:[[cmdk-group-heading]]:border-b **:[[cmdk-group-heading]]:px-4 **:[[cmdk-group-heading]]:py-2 **:[[cmdk-group-heading]]:text-[10px] **:[[cmdk-group-heading]]:font-bold **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-widest"
+          : "p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground",
         className
       )}
       {...props}

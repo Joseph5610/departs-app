@@ -17,9 +17,9 @@ export const MovementStateCard: React.FC<MovementStateCardProps> = ({ stats }) =
     }
 
     return (
-        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
-            <CardHeader className="p-3.5 pb-2 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[14px]">
+        <Card variant="subtle" size="none">
+            <CardHeader className="p-3.5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
                     <Navigation2 size={16} className="text-sky-400" />
                     <span>{t('stats.movementState')}</span>
                 </CardTitle>

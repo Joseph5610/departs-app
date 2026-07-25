@@ -183,7 +183,7 @@ export const AlertsModal: React.FC = () => {
                                     
                                     return (
                                         <div className="sticky top-0 z-10 flex justify-between items-center px-4 py-2 bg-background border-b border-border/30">
-                                            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">
+                                            <h3 className="micro-label-widest text-muted-foreground">
                                                 {modeName}
                                             </h3>
                                             <span className="text-[10px] font-semibold text-muted-foreground/60 bg-foreground/5 px-2 py-0.5 rounded-full">

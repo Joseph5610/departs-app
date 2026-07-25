@@ -75,15 +75,15 @@ export const StatsPanel = React.memo(() => {
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     {/* Top Level Totals */}
                     <div className="grid grid-cols-2 gap-3">
-                        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
+                        <Card variant="subtle" size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <span className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-0.5">{t('stats.vehicles')}</span>
+                                <span className="micro-label text-foreground/60 mb-0.5">{t('stats.vehicles')}</span>
                                 <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_vehicles}</span>
                             </CardContent>
                         </Card>
-                        <Card variant="subtle" className="p-0 gap-0 rounded-2xl">
+                        <Card variant="subtle" size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <span className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-0.5">{t('stats.lines')}</span>
+                                <span className="micro-label text-foreground/60 mb-0.5">{t('stats.lines')}</span>
                                 <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_lines}</span>
                             </CardContent>
                         </Card>
@@ -91,7 +91,7 @@ export const StatsPanel = React.memo(() => {
 
                     {/* Network Delay Notice */}
                     {hasEnrichment && tab === 'network' && (
-                        <Card variant="subtle" className="p-0 gap-0 bg-amber-500/10 border-amber-500/20 shadow-none rounded-2xl">
+                        <Card variant="subtle" size="none" className="bg-amber-500/10 border-amber-500/20 shadow-none">
                             <CardContent className="p-3.5 flex items-start gap-3">
                                 <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                                 <div className="text-xs text-amber-500/90 leading-relaxed">

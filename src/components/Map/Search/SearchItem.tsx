@@ -49,7 +49,7 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
             })}
             
             {uniqueLines.length > 5 && (
-                <span className="inline-flex items-center justify-center h-[17px] px-1 min-w-[17px] rounded-[3px] bg-muted text-muted-foreground text-[9px] font-bold mr-1.5 border border-border/50">
+                <span className="inline-flex items-center justify-center h-4.25 px-1 min-w-4.25 rounded-xs bg-muted text-muted-foreground text-[9px] font-bold mr-1.5 border border-border/50">
                     +{uniqueLines.length - 5}
                 </span>
             )}

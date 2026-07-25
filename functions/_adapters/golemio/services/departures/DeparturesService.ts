@@ -78,7 +78,8 @@ export class DeparturesService {
 
             if (!response.ok) {
                 const status = (response.status === 404 || response.status === 400) ? response.status : 502;
-                throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), status);
+                const errorMsg = (response.status === 404 || response.status === 400) ? ERROR_MESSAGES.INVALID_STOP_ID : ERROR_MESSAGES.UPSTREAM_ERROR(response.status);
+                throw new ApiError(errorMsg, status);
             }
 
             const rawData = await response.json();
