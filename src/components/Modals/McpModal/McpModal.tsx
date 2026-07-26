@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { toast } from 'sonner';
 
@@ -44,89 +45,105 @@ export const McpModal: React.FC = () => {
                         </p>
 
                         {/* Endpoint URL Box */}
-                        <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-muted/40 border border-border/50">
-                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                                {t('mcp.endpointLabel')}
-                            </span>
-                            <div className="flex items-center justify-between gap-2">
-                                <code className="text-xs font-mono text-primary font-semibold select-all">
-                                    {MCP_ENDPOINT_URL}
-                                </code>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-8 gap-1.5 text-xs font-semibold shrink-0"
-                                    onClick={() => handleCopy(MCP_ENDPOINT_URL, 'endpoint')}
-                                >
-                                    {copiedKey === 'endpoint' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                    <span>{t('mcp.copyUrl')}</span>
-                                </Button>
+                        <Card variant="subtle" size="none">
+                            <div className="p-4 flex flex-col gap-2">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                    {t('mcp.endpointLabel')}
+                                </span>
+                                <div className="flex items-center justify-between gap-2">
+                                    <code className="text-xs font-mono text-primary font-semibold select-all break-all">
+                                        {MCP_ENDPOINT_URL}
+                                    </code>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 gap-1.5 text-xs font-semibold shrink-0 cursor-pointer"
+                                        onClick={() => handleCopy(MCP_ENDPOINT_URL, 'endpoint')}
+                                    >
+                                        {copiedKey === 'endpoint' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                        <span>{t('mcp.copyUrl')}</span>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
+                        </Card>
 
                         {/* Guides List */}
                         <div className="flex flex-col gap-4">
                             {/* 1. Claude Desktop GUI */}
-                            <div className="flex flex-col gap-2 p-4 rounded-xl border border-border/40 bg-card/50">
-                                <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                    <Laptop className="size-4 text-primary" />
-                                    <span>{t('mcp.claudeDesktopTitle')} (GUI)</span>
+                            <Card variant="subtle" size="none">
+                                <div className="p-4 flex flex-col gap-2.5">
+                                    <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
+                                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                                            <Laptop className="size-4" />
+                                        </div>
+                                        <span>{t('mcp.claudeDesktopTitle')} (GUI)</span>
+                                    </div>
+                                    <ol className="text-xs text-muted-foreground leading-relaxed list-decimal list-inside space-y-1 pl-1">
+                                        <li>{t('mcp.claudeDesktopStep1')}</li>
+                                        <li>{t('mcp.claudeDesktopStep2')}</li>
+                                        <li>{t('mcp.claudeDesktopStep3')}</li>
+                                    </ol>
                                 </div>
-                                <ol className="text-xs text-muted-foreground leading-relaxed list-decimal list-inside space-y-1">
-                                    <li>{t('mcp.claudeDesktopStep1')}</li>
-                                    <li>{t('mcp.claudeDesktopStep2')}</li>
-                                    <li>{t('mcp.claudeDesktopStep3')}</li>
-                                </ol>
-                            </div>
+                            </Card>
 
                             {/* 2. Claude Code CLI */}
-                            <div className="flex flex-col gap-2 p-4 rounded-xl border border-border/40 bg-card/50">
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                        <Terminal className="size-4 text-primary" />
-                                        <span>{t('mcp.claudeCodeTitle')}</span>
+                            <Card variant="subtle" size="none">
+                                <div className="p-4 flex flex-col gap-2.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
+                                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                                                <Terminal className="size-4" />
+                                            </div>
+                                            <span>{t('mcp.claudeCodeTitle')}</span>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer"
+                                            onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode', 'mcp.copyCommandSuccess')}
+                                        >
+                                            {copiedKey === 'claudeCode' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                            <span className="sr-only sm:not-sr-only">Copy</span>
+                                        </Button>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 px-2 text-xs"
-                                        onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode', 'mcp.copyCommandSuccess')}
-                                    >
-                                        {copiedKey === 'claudeCode' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                    </Button>
+                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
+                                        claude mcp add --transport sse departs {MCP_ENDPOINT_URL}
+                                    </pre>
                                 </div>
-                                <pre className="p-2.5 rounded-lg bg-black/40 text-[11px] font-mono text-muted-foreground overflow-x-auto select-all">
-                                    claude mcp add --transport sse departs {MCP_ENDPOINT_URL}
-                                </pre>
-                            </div>
+                            </Card>
 
                             {/* 3. Cursor & Windsurf */}
-                            <div className="flex flex-col gap-2 p-4 rounded-xl border border-border/40 bg-card/50">
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                        <Code2 className="size-4 text-primary" />
-                                        <span>{t('mcp.cursorTitle')}</span>
+                            <Card variant="subtle" size="none">
+                                <div className="p-4 flex flex-col gap-2.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
+                                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                                                <Code2 className="size-4" />
+                                            </div>
+                                            <span>{t('mcp.cursorTitle')}</span>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer"
+                                            onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor', 'mcp.copyConfigSuccess')}
+                                        >
+                                            {copiedKey === 'cursor' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                                            <span className="sr-only sm:not-sr-only">Copy</span>
+                                        </Button>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 px-2 text-xs"
-                                        onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor', 'mcp.copyConfigSuccess')}
-                                    >
-                                        {copiedKey === 'cursor' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                    </Button>
-                                </div>
-                                <pre className="p-2.5 rounded-lg bg-black/40 text-[11px] font-mono text-muted-foreground overflow-x-auto select-all">
-                                    {JSON.stringify({
-                                        mcpServers: {
-                                            departs: {
-                                                command: "npx",
-                                                args: ["-y", "mcp-remote", MCP_ENDPOINT_URL]
+                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
+                                        {JSON.stringify({
+                                            mcpServers: {
+                                                departs: {
+                                                    command: "npx",
+                                                    args: ["-y", "mcp-remote", MCP_ENDPOINT_URL]
+                                                }
                                             }
-                                        }
-                                    }, null, 2)}
-                                </pre>
-                            </div>
+                                        }, null, 2)}
+                                    </pre>
+                                </div>
+                            </Card>
                         </div>
                     </div>
                 </ScrollArea>

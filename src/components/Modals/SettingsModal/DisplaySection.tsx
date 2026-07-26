@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from 'next-themes';
 import {
     Eye,
     EyeOff,
@@ -13,6 +14,9 @@ import {
     CircleSlash,
     Type,
     Map as MapIcon,
+    Sun,
+    Moon,
+    Monitor,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
@@ -127,6 +131,7 @@ const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon:
  */
 export const DisplaySection: React.FC = () => {
     const { t } = useTranslation();
+    const { theme, setTheme } = useTheme();
 
     // Preferences
     const showVehicles = usePreferencesStore(s => s.showVehicles);
@@ -162,10 +167,45 @@ export const DisplaySection: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col gap-3">
-            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                {t('settings.sections.display')}
-            </h3>
+        <div className="flex flex-col gap-6">
+            {/* Theme / Appearance Selection */}
+            <div className="flex flex-col gap-3">
+                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    {t('settings.theme.title')}
+                </h3>
+                <Card variant="subtle" size="none">
+                    <div className="p-3">
+                        <div className="grid grid-cols-3 gap-2">
+                            <FilterButton
+                                icon={Sun}
+                                label={t('settings.theme.light')}
+                                isActive={theme === 'light'}
+                                onClick={() => setTheme('light')}
+                                testId="theme-light"
+                            />
+                            <FilterButton
+                                icon={Moon}
+                                label={t('settings.theme.dark')}
+                                isActive={theme === 'dark'}
+                                onClick={() => setTheme('dark')}
+                                testId="theme-dark"
+                            />
+                            <FilterButton
+                                icon={Monitor}
+                                label={t('settings.theme.system')}
+                                isActive={theme === 'system'}
+                                onClick={() => setTheme('system')}
+                                testId="theme-system"
+                            />
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    {t('settings.sections.display')}
+                </h3>
             <ToggleSection
                 title={t('settings.liveVehicles.title')}
                 description={t('settings.liveVehicles.description')}
@@ -297,6 +337,7 @@ export const DisplaySection: React.FC = () => {
                     </ItemActions>
                 </Item>
             </Card>
+            </div>
         </div>
     );
 };

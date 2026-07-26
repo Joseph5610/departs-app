@@ -48,7 +48,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     );
 
     const platformBadge = platformCode && (
-        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white border border-white text-black text-[13px] font-bold tabular-nums mr-1.5">
+        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-foreground text-background text-[13px] font-bold tabular-nums mr-1.5 shadow-sm">
             {platformCode}
         </span>
     );

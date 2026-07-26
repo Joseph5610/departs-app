@@ -1,7 +1,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, X } from 'lucide-react';
+import {
+    Search as SearchIcon,
+    X,
+    TrainFront as SubwayIcon,
+    Bus as BusIcon,
+    TramFront as TramIcon,
+    Train as TrainIcon,
+    Ship as ShipIcon,
+    AlertTriangle as AlertIcon,
+} from 'lucide-react';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import type { RSSItem } from '../../types/transit';
@@ -11,11 +20,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GroupedVirtuoso } from 'react-virtuoso';
+import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Helper to determine the primary transport mode of an alert
 const getTransportMode = (item: RSSItem): string => {
@@ -33,10 +43,19 @@ const getTransportMode = (item: RSSItem): string => {
 
 const MODE_ORDER = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'other'];
 
+const ModeIcon: React.FC<{ mode: string; className?: string }> = ({ mode, className }) => {
+    switch (mode) {
+        case 'metro': return <SubwayIcon className={className} size={16} strokeWidth={2} />;
+        case 'tram': return <TramIcon className={className} size={16} strokeWidth={2} />;
+        case 'bus': case 'trolleybus': return <BusIcon className={className} size={16} strokeWidth={2} />;
+        case 'train': return <TrainIcon className={className} size={16} strokeWidth={2} />;
+        case 'ferry': return <ShipIcon className={className} size={16} strokeWidth={2} />;
+        default: return <AlertIcon className={className} size={16} strokeWidth={2} />;
+    }
+};
+
 /**
- * Alerts Component
- *
- * Redesigned with GroupedVirtuoso for performance and grouped by transport mode.
+ * AlertsModal Component
  */
 export const AlertsModal: React.FC = () => {
     const { t } = useTranslation();
@@ -52,7 +71,7 @@ export const AlertsModal: React.FC = () => {
     const { data: rssData, isLoading: loadingRSS } = rss;
 
     // Grouping and Filtering logic
-    const groupedData = useMemo(() => {
+    const sections = useMemo(() => {
         const rawItems = rssData?.alerts || [];
 
         // 1. Filter
@@ -85,46 +104,27 @@ export const AlertsModal: React.FC = () => {
             return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
         });
 
-        // 4. Flatten for GroupedVirtuoso
-        const flatItems: RSSItem[] = [];
-        const groupSizes: number[] = [];
-        const groupNames: string[] = [];
-
-        sortedModes.forEach(mode => {
+        // 4. Create mode sections
+        return sortedModes.map(mode => {
             const groupItems = groupedMap.get(mode)!;
-            // Sort items within group: Incidents first, then Active first, then by priority
             groupItems.sort((a, b) => {
-                // 1. Incidents first
                 if (a.type === 'incident' && b.type !== 'incident') return -1;
                 if (a.type !== 'incident' && b.type === 'incident') return 1;
 
-                // 2. Active first
                 if (a.isActive && !b.isActive) return -1;
                 if (!a.isActive && b.isActive) return 1;
 
-                // 3. High priority first
                 const priorityA = a.priority === '1' || a.priority === 'high' ? 1 : 0;
                 const priorityB = b.priority === '1' || b.priority === 'high' ? 1 : 0;
                 return priorityB - priorityA;
             });
-
-            flatItems.push(...groupItems);
-            groupSizes.push(groupItems.length);
-            groupNames.push(mode);
+            return { mode, items: groupItems };
         });
-
-        return {
-            items: flatItems,
-            groupCounts: groupSizes,
-            groups: groupNames
-        };
     }, [rssData, filterMode, searchQuery]);
-
-    const { items, groupCounts, groups } = groupedData;
 
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
-            <DialogContent aria-describedby={undefined} variant="default" data-testid="alerts-modal-content">
+            <DialogContent aria-describedby={undefined} variant="default" className="max-w-xl" data-testid="alerts-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('alerts.title')}
@@ -133,77 +133,71 @@ export const AlertsModal: React.FC = () => {
                 
                 <div className="flex-1 flex flex-col min-h-0">
                     {/* Header Section */}
-                    <div className="pt-1 pb-3 px-6 shrink-0 rounded-none border-b border-border/50 bg-transparent">
+                    <div className="pt-1 pb-3 px-6 shrink-0 border-b border-border/50 bg-transparent">
                         <div className="flex flex-col gap-3">
                             <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as 'all' | 'incident' | 'exclusion')}>
-                                <TabsList variant="pill" className="w-full grid grid-cols-3 bg-black/5 dark:bg-white/5">
-                                    <TabsTrigger value="all">{t('alerts.all') || 'All'}</TabsTrigger>
-                                    <TabsTrigger value="incident">{t('alerts.incidents') || 'Incidents'}</TabsTrigger>
-                                    <TabsTrigger value="exclusion">{t('alerts.exclusions') || 'Exclusions'}</TabsTrigger>
+                                <TabsList variant="pill" className="w-full grid grid-cols-3">
+                                    <TabsTrigger value="all" className="cursor-pointer">{t('alerts.all') || 'All'}</TabsTrigger>
+                                    <TabsTrigger value="incident" className="cursor-pointer">{t('alerts.incidents') || 'Incidents'}</TabsTrigger>
+                                    <TabsTrigger value="exclusion" className="cursor-pointer">{t('alerts.exclusions') || 'Exclusions'}</TabsTrigger>
                                 </TabsList>
                             </Tabs>
 
                             <div className="relative group">
-                                    <Input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={t('search.placeholder')}
-                                        className="h-10 pl-10 pr-10 text-sm rounded-xl border border-border/50 bg-black/5 dark:bg-white/5 transition-colors focus-visible:ring-1 focus-visible:ring-primary/30"
-                                    />
-                                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16}  strokeWidth={1.5} />
+                                <Input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t('search.placeholder')}
+                                    className="h-10 pl-10 pr-10 text-sm rounded-xl border border-border/80 bg-card focus-visible:ring-primary/40 transition-colors"
+                                />
+                                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} strokeWidth={1.5} />
                                 {searchQuery && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setSearchQuery('')}
-                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
                                     >
-                                        <X size={16} strokeWidth={1.5}  />
+                                        <X size={16} strokeWidth={1.5} />
                                     </Button>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Virtualized List */}
-                    <div className="flex-1 min-h-0">
-                        {items.length === 0 && !loadingRSS ? (
-                            <div className="flex justify-center items-center flex-1 py-12 px-6 text-muted-foreground text-sm h-full">
+                    {/* Scrollable Content */}
+                    <ScrollArea className="flex-1 min-h-0 px-6">
+                        {sections.length === 0 && !loadingRSS ? (
+                            <div className="flex justify-center items-center py-12 text-muted-foreground text-sm">
                                 <p>{t('alerts.noAlerts')}</p>
                             </div>
                         ) : (
-                            <GroupedVirtuoso
-                                groupCounts={groupCounts}
-                                groupContent={(index) => {
-                                    const mode = groups[index];
-                                    const count = groupCounts[index];
-                                    // Basic translations for mode, fallback to capitalized key
-                                    const modeName = t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) });
-                                    
-                                    return (
-                                        <div className="sticky top-0 z-10 flex justify-between items-center px-4 py-2 bg-background border-b border-border/30">
-                                            <h3 className="micro-label-widest text-muted-foreground">
-                                                {modeName}
-                                            </h3>
-                                            <span className="text-[10px] font-semibold text-muted-foreground/60 bg-foreground/5 px-2 py-0.5 rounded-full">
-                                                {count}
+                            <div className="flex flex-col gap-6 py-3 pb-6">
+                                {sections.map(({ mode, items: modeItems }) => (
+                                    <div key={mode} className="flex flex-col gap-2.5">
+                                        <div className="sticky top-0 z-10 flex items-center justify-between px-1 py-2 bg-background/90 backdrop-blur-md">
+                                            <div className="flex items-center gap-2">
+                                                <ModeIcon mode={mode} className="text-primary" />
+                                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                                    {t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) })}
+                                                </h3>
+                                            </div>
+                                            <span className="text-[10px] font-semibold text-muted-foreground bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full">
+                                                {modeItems.length}
                                             </span>
                                         </div>
-                                    );
-                                }}
-                                itemContent={(index) => {
-                                    const item = items[index];
-                                    return (
-                                        <div className="px-2">
-                                            <CondensedAlertItem item={item} />
-                                        </div>
-                                    );
-                                }}
-                                className="h-full"
-                            />
+
+                                        <Card variant="subtle" size="none" className="overflow-hidden divide-y divide-border/50">
+                                            {modeItems.map((item, idx) => (
+                                                <CondensedAlertItem key={item.guid || `${item.title}-${idx}`} item={item} />
+                                            ))}
+                                        </Card>
+                                    </div>
+                                ))}
+                            </div>
                         )}
-                    </div>
+                    </ScrollArea>
                 </div>
             </DialogContent>
         </Dialog>

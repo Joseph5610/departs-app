@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Card } from '@/components/ui/card';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -66,33 +67,37 @@ export const SettingsModal: React.FC = () => {
                             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.language')}
                             </h3>
-                            <ToggleGroup
-                                value={[(i18n.resolvedLanguage || i18n.language).split('-')[0]]}
-                                onValueChange={(val: string[]) => {
-                                    if (val && val.length > 0) {
-                                        i18n.changeLanguage(val[0]);
-                                    }
-                                }}
-                                className="grid grid-cols-2 gap-3 bg-transparent p-0"
-                            >
-                                {(['en', 'cs'] as const).map((lang) => (
-                                    <ToggleGroupItem
-                                        key={lang}
-                                        value={lang}
-                                        variant="outline"
-                                        className={cn(
-                                            "h-auto py-3 px-4 rounded-xl text-sm font-semibold border-border/50",
-                                            "data-[state=on]:ring-1 data-[state=on]:ring-inset data-[state=on]:ring-primary/40 data-[state=on]:text-primary data-[state=on]:border-primary/20 data-[state=on]:bg-primary/5",
-                                            "data-[state=off]:text-muted-foreground data-[state=off]:bg-muted/40 data-[state=off]:backdrop-blur-md"
-                                        )}
+                            <Card variant="subtle" size="none">
+                                <div className="p-3">
+                                    <ToggleGroup
+                                        value={[(i18n.resolvedLanguage || i18n.language).split('-')[0]]}
+                                        onValueChange={(val: string[]) => {
+                                            if (val && val.length > 0) {
+                                                i18n.changeLanguage(val[0]);
+                                            }
+                                        }}
+                                        className="grid grid-cols-2 gap-2 bg-transparent p-0"
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇨🇿'}</span>
-                                            <span>{t(`settings.language.${lang}`)}</span>
-                                        </div>
-                                    </ToggleGroupItem>
-                                ))}
-                            </ToggleGroup>
+                                        {(['en', 'cs'] as const).map((lang) => (
+                                            <ToggleGroupItem
+                                                key={lang}
+                                                value={lang}
+                                                variant="outline"
+                                                className={cn(
+                                                    "h-auto py-2.5 px-4 rounded-xl text-sm font-semibold border-border/80 transition-[transform,colors] active:scale-95 cursor-pointer",
+                                                    "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
+                                                    "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇨🇿'}</span>
+                                                    <span>{t(`settings.language.${lang}`)}</span>
+                                                </div>
+                                            </ToggleGroupItem>
+                                        ))}
+                                    </ToggleGroup>
+                                </div>
+                            </Card>
                         </div>
 
 

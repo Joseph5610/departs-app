@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePreferencesStore } from '../../../state/preferencesStore';
-import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const StatsTabs: React.FC = () => {
     const { t } = useTranslation();
@@ -9,25 +9,19 @@ export const StatsTabs: React.FC = () => {
     const setTab = usePreferencesStore(s => s.actions.setStatsTab);
 
     return (
-        <div className="flex p-1 bg-black/5 dark:bg-white/10 rounded-xl mt-2 mx-6">
-            <button
-                onClick={() => setTab('screen')}
-                className={cn(
-                    "flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors",
-                    tab === 'screen' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-            >
-                {t('stats.onScreen')}
-            </button>
-            <button
-                onClick={() => setTab('network')}
-                className={cn(
-                    "flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors",
-                    tab === 'network' ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-            >
-                {t('stats.network')}
-            </button>
+        <div className="pt-1 pb-3 px-6 shrink-0">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as 'screen' | 'network')}>
+                <TabsList variant="pill" className="w-full grid grid-cols-2">
+                    <TabsTrigger value="screen" className="cursor-pointer">
+                        {t('stats.onScreen')}
+                    </TabsTrigger>
+                    <TabsTrigger value="network" className="cursor-pointer">
+                        {t('stats.network')}
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
         </div>
     );
 };
+
+StatsTabs.displayName = 'StatsTabs';

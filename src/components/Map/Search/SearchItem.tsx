@@ -73,30 +73,30 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
             onSelect={onClick}
             data-testid={testId}
             className={cn(
-                'w-full px-4 py-2.5 flex items-center gap-3 rounded-none cursor-pointer',
+                'w-full px-3 py-2 flex items-center gap-3 rounded-xl cursor-pointer transition-colors my-0.5',
                 '[&_svg.lucide-check]:hidden', // hide the default checkmark
                 variant === 'primary'
-                    ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15!'
+                    ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15! text-primary'
                     : 'data-[selected=true]:bg-accent! hover:bg-accent! active:bg-accent/80!'
             )}
         >
             <div className={cn(
-                'rounded-lg shrink-0 w-8 h-8 flex items-center justify-center transition-colors',
-                variant === 'primary' ? 'bg-primary/10 text-primary' :
-                highlight ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground group-data-[selected=true]/command-item:bg-accent group-data-[selected=true]/command-item:text-accent-foreground'
+                'rounded-lg shrink-0 w-7 h-7 flex items-center justify-center transition-colors',
+                variant === 'primary' ? 'bg-primary/15 text-primary' :
+                highlight ? 'bg-amber-500/15 text-amber-500' : 'bg-foreground/5 text-muted-foreground/80 group-data-[selected=true]/command-item:text-foreground'
             )}>
                 {icon}
             </div>
-            <div className="flex flex-col gap-1 min-w-0 flex-1">
-                <span className="text-foreground font-medium line-clamp-2 leading-tight text-[13px]">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <span className="text-foreground font-semibold leading-tight text-[13px] truncate">
                     {title}
                 </span>
                 
-                <div className="flex flex-wrap items-center gap-y-1 mt-0.5">
+                <div className="flex flex-wrap items-center gap-y-1">
                     <LineBadges lines={displayLines} />
 
                     {subtitle && (
-                        <span className="text-muted-foreground/60 text-[10.5px] font-medium line-clamp-1">
+                        <span className="text-muted-foreground/70 text-[10.5px] font-medium truncate">
                             {subtitle}
                         </span>
                     )}

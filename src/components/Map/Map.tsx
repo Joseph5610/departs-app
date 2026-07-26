@@ -45,8 +45,8 @@ const MAP_STYLES = {
         labels: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
     },
     light: {
-        nolabels: 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json',
-        labels: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        nolabels: 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json',
+        labels: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
     }
 };
 

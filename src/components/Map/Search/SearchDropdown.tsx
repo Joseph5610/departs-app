@@ -7,7 +7,6 @@ import {
     Command,
     CommandList,
     CommandGroup,
-    CommandSeparator,
 } from '@/components/ui/command';
 
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
@@ -55,18 +54,23 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
     return (
-        <div className="mt-2 overflow-hidden max-h-[60vh] rounded-2xl glassy">
+        <div className="mt-2 overflow-hidden max-h-[60vh] rounded-2xl glassy p-1.5 shadow-xl">
             <Command
                 shouldFilter={false}
                 className="bg-transparent! p-0 rounded-none!"
             >
-                <CommandList className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <CommandList className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
                 {showHistory && (
                     <CommandGroup
                         heading={
-                            <div className="flex gap-1.5 items-center">
-                                <Clock size={12} className="text-muted-foreground -mt-px" strokeWidth={1.5} />
-                                <span className="leading-none">{t('search.recent')}</span>
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex gap-2 items-center">
+                                    <Clock size={14} className="text-primary" strokeWidth={2} />
+                                    <span>{t('search.recent')}</span>
+                                </div>
+                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+                                    {searchHistory.length}
+                                </span>
                             </div>
                         }
                         variant="search"
@@ -108,32 +112,34 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
                 {/* Favorites heading */}
                 {query === '' && results.length > 0 && (
-                    <>
-                        {showHistory && <CommandSeparator />}
-                        <CommandGroup
-                            heading={
-                                <div className="flex gap-1.5 items-center">
-                                    <Star size={12} fill="currentColor" className="text-muted-foreground -mt-px" strokeWidth={1.5} />
-                                    <span className="leading-none">{t('search.favorites')}</span>
+                    <CommandGroup
+                        heading={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex gap-2 items-center">
+                                    <Star size={14} className="text-amber-500 fill-amber-500/20" strokeWidth={2} />
+                                    <span>{t('search.favorites')}</span>
                                 </div>
-                            }
-                            variant="search"
-                        >
-                            {results.map((stop) => (
-                                <SearchItem
-                                    key={stop.properties.stop_id}
-                                    icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
-                                    title={stop.properties.stop_name}
-                                    subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
-                                    metroLines={stop.properties.metro_lines}
-                                    lines={stop.properties.lines}
-                                    highlight={favoriteStops.includes(stop.properties.stop_id)}
-                                    testId={`search-item-fav-stop-${stop.properties.stop_id}`}
-                                    onClick={() => onStopSelect(stop)}
-                                />
-                            ))}
-                        </CommandGroup>
-                    </>
+                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+                                    {results.length}
+                                </span>
+                            </div>
+                        }
+                        variant="search"
+                    >
+                        {results.map((stop) => (
+                            <SearchItem
+                                key={stop.properties.stop_id}
+                                icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
+                                title={stop.properties.stop_name}
+                                subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+                                metroLines={stop.properties.metro_lines}
+                                lines={stop.properties.lines}
+                                highlight={favoriteStops.includes(stop.properties.stop_id)}
+                                testId={`search-item-fav-stop-${stop.properties.stop_id}`}
+                                onClick={() => onStopSelect(stop)}
+                            />
+                        ))}
+                    </CommandGroup>
                 )}
 
                 {/* Line filter suggestion */}
@@ -178,29 +184,31 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
                 {/* Geocoding / places */}
                 {geocodingResults.length > 0 && (
-                    <>
-                        <CommandSeparator />
-                        <CommandGroup
-                            heading={
-                                <div className="flex gap-1.5 items-center">
-                                    <Building2 size={12} className="text-muted-foreground -mt-px" strokeWidth={1.5} />
-                                    <span className="leading-none">{t('search.places')}</span>
+                    <CommandGroup
+                        heading={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex gap-2 items-center">
+                                    <Building2 size={14} className="text-primary" strokeWidth={2} />
+                                    <span>{t('search.places')}</span>
                                 </div>
-                            }
-                            variant="search"
-                        >
-                            {geocodingResults.map((place) => (
-                                <SearchItem
-                                    key={place.id}
-                                    icon={<Building2 size={16} strokeWidth={1.5} />}
-                                    title={place.name}
-                                    subtitle={place.subtitle || undefined}
-                                    testId={`search-item-place-${place.id}`}
-                                    onClick={() => onPlaceSelect(place)}
-                                />
-                            ))}
-                        </CommandGroup>
-                    </>
+                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+                                    {geocodingResults.length}
+                                </span>
+                            </div>
+                        }
+                        variant="search"
+                    >
+                        {geocodingResults.map((place) => (
+                            <SearchItem
+                                key={place.id}
+                                icon={<Building2 size={16} strokeWidth={1.5} />}
+                                title={place.name}
+                                subtitle={place.subtitle || undefined}
+                                testId={`search-item-place-${place.id}`}
+                                onClick={() => onPlaceSelect(place)}
+                            />
+                        ))}
+                    </CommandGroup>
                 )}
             </CommandList>
         </Command>

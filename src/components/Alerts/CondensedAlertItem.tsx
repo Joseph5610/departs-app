@@ -40,12 +40,12 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             onOpenChange={setIsExpanded}
             className={cn(
                 "group relative transition-colors block",
-                isExpanded ? "bg-black/2 dark:bg-white/5" : "hover:bg-black/2 dark:hover:bg-white/5",
+                isExpanded ? "bg-primary/5" : "hover:bg-foreground/5",
                 isFuture && "opacity-75 grayscale-[0.3]"
             )}
         >
             <CollapsibleTrigger
-                className="w-full text-left px-4 py-3 flex items-start gap-3 outline-none"
+                className="w-full text-left px-4 py-3 flex items-start gap-3 outline-none cursor-pointer"
             >
                 {/* Icon Column */}
                 <div className="shrink-0 pt-0.5">
@@ -129,7 +129,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
                         )}
 
                         {item.valid_from && (
-                            <div className="text-[11px] font-medium text-foreground/70 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/10 dark:border-white/10 inline-flex w-fit shadow-inner">
+                            <div className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50 inline-flex w-fit">
                                 {validToText ? `${item.valid_from} – ${validToText}` : t('alerts.validFrom', { date: item.valid_from })}
                             </div>
                         )}

@@ -1,3 +1,36 @@
+## [0.57.4] - 2026-07-27
+
+### Changed
+
+- **Search Bar & Command Panel Redesign**:
+  - Unified top search bar and dropdown into a single continuous glass command panel (`Search.tsx`, `SearchDropdown.tsx`) when active.
+  - Stripped input focus ring borders from search input field so focus outlines don't clash with glassy container.
+  - Redesigned search dropdown items into smooth 12px rounded pill rows (`SearchItem.tsx`) with `p-1.5` container padding.
+  - Refined dropdown category headers with vibrant accent icons (`Clock`, `Star`, `Building2`) and count badges matching the `AlertsModal` design system.
+  - Updated search item highlight token to standard `bg-accent`.
+  - Expanded `isSidebarOpen` detection in `Search.tsx` to include `isStatsRoute` and `isFavoritesRoute`, properly centering the search bar in the remaining map viewport on desktop when Statistics or Favorites sidebars are open.
+  - Inverted platform code badge styling (`bg-foreground text-background`) in `DetailPanel.tsx` header for contrast across light and dark themes.
+  - Refined Light Mode typography contrast in `src/index.css` to Rich Deep Slate (`oklch(0.22 0.01 260)`).
+
+## [0.57.3] - 2026-07-26
+
+### Added
+
+- **Light Mode Re-enabled & Theme Switcher**:
+  - Removed temporary `forcedTheme="dark"` pin in `ThemeProvider` (`src/main.tsx`) to allow light/dark/system mode switching.
+  - Switched light mode basemap from CARTO Positron to CARTO Voyager (`voyager-gl-style`) for richer map contrast, greenery, water rendering, and vehicle readability (`src/components/Map/Map.tsx`).
+  - Updated Appearance theme switcher in `DisplaySection.tsx` to use the standardized `FilterButton` grid layout (`Sun`, `Moon`, `Monitor`), achieving 100% visual consistency with transit vehicle and stop filter controls.
+  - Connected Sonner toast notifications to dynamic `next-themes` theme state.
+
+## [0.57.2] - 2026-07-26
+
+### Refactored
+
+- **Remote MCP Server Architecture (`functions/_mcp/`)**:
+  - Reorganized single 875-line `functions/mcp.ts` into a clean modular package structure inside `functions/_mcp/`.
+  - Extracted MCP tool definitions (`tools.ts`), context & helper utilities (`utils.ts`), protocol router (`rpc.ts`), and individual tool handlers (`searchStops`, `getNextDepartures`, `getNearestDepartures`, etc.).
+  - Reduced `functions/mcp.ts` entrypoint to a sleek 10-line Cloudflare Pages Function delegate while preserving 100% logic and API contract compatibility.
+
 ## [0.57.1] - 2026-07-26
 
 ### Fixed

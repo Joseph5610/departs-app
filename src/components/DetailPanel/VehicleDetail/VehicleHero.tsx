@@ -58,10 +58,10 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             size="icon"
                             onClick={onToggleFollow}
                             className={cn(
-                                "rounded-full w-8 h-8 shrink-0 transition-colors",
+                                "rounded-full w-8 h-8 shrink-0 transition-colors cursor-pointer",
                                 isFollowing 
-                                    ? "text-white bg-white/20 hover:bg-white/30" 
-                                    : "text-neutral-400 hover:text-white hover:bg-white/10"
+                                    ? "bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30" 
+                                    : "text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40"
                             )}
                             aria-label={t('map.vehicleDetail.track')}
                         >
@@ -74,7 +74,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="rounded-full w-8 h-8 shrink-0 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                            className="rounded-full w-8 h-8 shrink-0 text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40 transition-colors cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 share({

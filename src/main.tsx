@@ -41,9 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
-            // TEMP: forcedTheme pins the theme while light mode polish is in progress.
-            // Remove this prop to re-enable user theme switching.
-            forcedTheme="dark"
+            enableSystem
             disableTransitionOnChange
           >
             <TooltipProvider delay={300}>
