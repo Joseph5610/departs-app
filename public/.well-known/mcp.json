@@ -9,6 +9,9 @@
     "type": "sse",
     "url": "https://departs.app/mcp"
   },
+  "authentication": {
+    "type": "none"
+  },
   "capabilities": {
     "tools": [
       {

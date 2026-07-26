@@ -1,0 +1,9 @@
+{
+  "name": "departs",
+  "title": "Departs.app Public Transit",
+  "description": "Real-time Czech public transit departures, vehicle tracking, and alerts for Prague & Brno.",
+  "endpoint": "https://departs.app/mcp",
+  "authentication": {
+    "type": "none"
+  }
+}

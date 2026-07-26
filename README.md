@@ -40,13 +40,8 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 claude mcp add --transport sse departs https://departs.app/mcp
 ```
 
-#### Claude Desktop (GUI - Recommended for BFUs)
-1. Open **Claude Desktop** $\rightarrow$ **Settings** $\rightarrow$ **Add custom connector**.
-2. **Name**: `departs`
-3. **Remote MCP server URL**: `https://departs.app/mcp`
-4. Click **Add**.
-
-#### Claude Desktop (`claude_desktop_config.json` alternative)
+#### Claude Desktop (`claude_desktop_config.json`)
+Claude Desktop connects to public remote SSE endpoints using `mcp-remote` (no login/OAuth needed):
 ```json
 {
   "mcpServers": {

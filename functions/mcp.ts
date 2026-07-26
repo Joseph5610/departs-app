@@ -458,6 +458,9 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
                         capabilities: {
                             tools: {}
                         },
+                        authentication: {
+                            type: "none"
+                        },
                         serverInfo: {
                             name: "departs-mcp",
                             version: "1.0.0"
