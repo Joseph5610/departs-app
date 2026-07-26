@@ -29,7 +29,7 @@
   --ring: oklch(0.6959 0.1491 162.4796);
   --radius: 0.5rem;
   --glass-tint: var(--background);
-  --glass-bg: oklch(0.96 0 0 / 0.88);
+  --glass-bg: oklch(0.96 0 0 / 0.90);
   --glass-fallback: oklch(0.96 0 0 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
@@ -80,7 +80,7 @@
   --input: oklch(0.30 0.01 260);
   --ring: oklch(0.6959 0.1491 162.4796);
   --glass-tint: var(--background);
-  --glass-bg: oklch(0.21 0.01 260 / 0.85);
+  --glass-bg: oklch(0.21 0.01 260 / 0.90);
   --glass-fallback: oklch(0.21 0.01 260 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
@@ -283,10 +283,16 @@
   @apply border border-border/40 shadow-2xl relative;
   isolation: isolate;
   background-color: var(--card);
-  background: var(--glass-bg, color-mix(in srgb, var(--background) 85%, transparent));
+  background: var(--glass-bg, color-mix(in srgb, var(--background) 90%, transparent));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   backface-visibility: hidden;
+
+  /* Firefox WebGL backdrop-filter workaround (Firefox Bug 1746885) */
+  @supports (-moz-appearance: none) {
+    background-color: var(--card);
+    background: var(--glass-fallback, color-mix(in srgb, var(--background) 96%, transparent));
+  }
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background-color: var(--card);
@@ -296,8 +302,13 @@
   &.dark,
   .dark & {
     background-color: var(--card);
-    background: var(--glass-bg, color-mix(in srgb, var(--background) 85%, transparent));
+    background: var(--glass-bg, color-mix(in srgb, var(--background) 90%, transparent));
     @apply border-white/10;
+
+    @supports (-moz-appearance: none) {
+      background-color: var(--card);
+      background: var(--glass-fallback, color-mix(in srgb, var(--background) 96%, transparent));
+    }
 
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       background-color: var(--card);
