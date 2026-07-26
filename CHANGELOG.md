@@ -1,3 +1,10 @@
+## [0.56.7] - 2026-07-26
+
+### Fixed
+
+- **KORDIS RT Vehicle Filtering**:
+  - Filtered out invalid vehicles from KORDIS GTFS-RT feed where `vehicle.licensePlate` starts with `dpmb` (case-insensitive) in both bulk vehicle mapping (`getCachedMappedVehicles`) and single live vehicle details (`getSingleLiveVehicle`).
+
 ## [0.56.6] - 2026-07-26
 
 ### Fixed

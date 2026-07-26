@@ -5,7 +5,7 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
-import { getDpmbVehicleRanges } from '../../utils/dpmbVehicleMetadata';
+import { getDpmbVehicleRanges, type DpmbVehicleRange } from '../../utils/dpmbVehicleMetadata';
 
 /** Buffer around trip start/end times to tolerate early/delayed vehicles. */
 const BUFFER_MINS = 30;
@@ -48,12 +48,17 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         });
 
         const parts = formatter.formatToParts(now);
-        const y = parts.find(p => p.type === 'year')?.value || '';
-        const m = parts.find(p => p.type === 'month')?.value || '';
-        const d = parts.find(p => p.type === 'day')?.value || '';
-        const hh = parts.find(p => p.type === 'hour')?.value || '0';
-        const mm = parts.find(p => p.type === 'minute')?.value || '0';
-        const ss = parts.find(p => p.type === 'second')?.value || '0';
+        const partMap: Record<string, string> = {};
+        for (const p of parts) {
+            partMap[p.type] = p.value;
+        }
+
+        const y = partMap.year || '';
+        const m = partMap.month || '';
+        const d = partMap.day || '';
+        const hh = partMap.hour || '0';
+        const mm = partMap.minute || '0';
+        const ss = partMap.second || '0';
 
         const todayLocalStr = `${y}${m}${d}`;
         // Handle Intl midnight edge case (sometimes 24 instead of 0)
@@ -71,6 +76,35 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             }
         }
         return lookup;
+    }
+
+    /**
+     * Checks whether a feed entity is an invalid DPMB entry (license plate starts with 'dpmb').
+     */
+    private isInvalidDpmbVehicle(entity: transit_realtime.IFeedEntity): boolean {
+        const lp = entity.vehicle?.vehicle?.licensePlate;
+        return Boolean(lp && lp.trim().toLowerCase().startsWith('dpmb'));
+    }
+
+    /**
+     * Binary search to find a matching DPMB vehicle range for a given vehicle number.
+     * Expects ranges to be sorted by `min`.
+     */
+    private findDpmbRange(num: number, sortedRanges: DpmbVehicleRange[]): DpmbVehicleRange | null {
+        let low = 0;
+        let high = sortedRanges.length - 1;
+        while (low <= high) {
+            const mid = (low + high) >> 1;
+            const range = sortedRanges[mid];
+            if (num >= range.min && num <= range.max) {
+                return range;
+            } else if (num < range.min) {
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return null;
     }
 
     /**
@@ -136,6 +170,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
                 }
 
+                const sortedDpmbRanges: DpmbVehicleRange[] | null = dpmbRanges
+                    ? [...dpmbRanges].sort((a, b) => a.min - b.min)
+                    : null;
+
                 const features: AppVehicleFeature[] = [];
                 const THRESHOLD_MS = 10 * 60 * 1000;
                 const nowMs = Date.now();
@@ -145,10 +183,12 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
                 for (const entity of feed.entity) {
                     if (!entity.vehicle) continue;
+                    if (this.isInvalidDpmbVehicle(entity)) continue;
+
                     const vp = entity.vehicle;
                     const tripId = vp.trip?.tripId;
                     if (!tripId) continue;
-                    
+
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     if (nowMs - lastUpdate > THRESHOLD_MS) continue;
                     
@@ -189,21 +229,19 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const route = gtfsData.routes[routeId];
                     if (!route) continue;
 
-                    // vp is guaranteed non-null by the guard above
-                    const vpSafe = vp as NonNullable<typeof vp>;
-                    const lastUpdate = vpSafe.timestamp ? Number(vpSafe.timestamp) * 1000 : nowMs;
+                    const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     // Rewrite the vehicle ID to the label so it matches the group correctly.
                     // This prevents multiple markers from rendering if deduplication fails.
-                    if (vpSafe.vehicle) {
-                        vpSafe.vehicle.id = label;
+                    if (vp.vehicle) {
+                        vp.vehicle.id = label;
                     }
 
-                    const liveMatch = VehiclesMapper.mapVehicle(vpSafe, tripId, route, lastUpdate, null);
+                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
                     
-                    if (dpmbRanges && liveMatch.properties.vehicle_id) {
+                    if (sortedDpmbRanges && liveMatch.properties.vehicle_id) {
                         const num = parseInt(liveMatch.properties.vehicle_id, 10);
                         if (!isNaN(num)) {
-                            const rangeMatch = dpmbRanges.find(r => num >= r.min && num <= r.max);
+                            const rangeMatch = this.findDpmbRange(num, sortedDpmbRanges);
                             if (rangeMatch) {
                                 liveMatch.properties.vehicle_descriptor = {
                                     ...liveMatch.properties.vehicle_descriptor,
@@ -223,11 +261,6 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
-        // If gtfsTripId is provided, we can reliably fetch it without guessing
-        if (gtfsTripId) {
-            return super.getSingleLiveVehicle(vehicleId, gtfsTripId);
-        }
-
         const [[feed, gtfsData], apiMapping] = await Promise.all([
             this.getCoreData(),
             this.getApiMapping()
@@ -235,11 +268,26 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
         if (!feed || !feed.entity || feed.entity.length === 0) return {};
 
-        const copies = feed.entity.filter(e => 
-            e.vehicle?.vehicle?.id === vehicleId || 
-            e.vehicle?.vehicle?.label === vehicleId ||
-            e.id === vehicleId
-        );
+        const validEntities = feed.entity.filter(e => !this.isInvalidDpmbVehicle(e));
+
+        if (validEntities.length === 0) return {};
+
+        let copies: transit_realtime.IFeedEntity[] = [];
+
+        if (gtfsTripId) {
+            const matchByTrip = validEntities.find(e => e.vehicle?.trip?.tripId === gtfsTripId);
+            if (matchByTrip) {
+                copies = [matchByTrip];
+            }
+        }
+
+        if (copies.length === 0 && vehicleId) {
+            copies = validEntities.filter(e => 
+                e.vehicle?.vehicle?.id === vehicleId || 
+                e.vehicle?.vehicle?.label === vehicleId ||
+                e.id === vehicleId
+            );
+        }
 
         if (copies.length === 0) return {};
 
@@ -256,7 +304,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const vp = rawMatch.vehicle;
         if (!vp) return {};
 
-        const tripId = vp.trip?.tripId || '';
+        const tripId = vp.trip?.tripId || gtfsTripId || '';
         if (!tripId) return {};
 
         const routeInfo = gtfsData.tripRoutes[tripId];
