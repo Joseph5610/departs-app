@@ -121,6 +121,37 @@ const MCP_TOOLS = [
         }
     },
     {
+        name: "search_nearest_stops",
+        description: "Find public transit stops/stations closest to a geographic location (latitude and longitude) in Prague (PID) or Brno (IDS JMK). Returns nearest stops with distance_meters, coordinates, and serving transit lines.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                city: {
+                    type: "string",
+                    enum: ["prague", "brno"],
+                    description: "City transit system (default: 'prague')."
+                },
+                latitude: {
+                    type: "number",
+                    description: "User latitude coordinate (e.g. 50.0875)."
+                },
+                longitude: {
+                    type: "number",
+                    description: "User longitude coordinate (e.g. 14.4213)."
+                },
+                radius_meters: {
+                    type: "number",
+                    description: "Search radius in meters around coordinates (default: 1000)."
+                },
+                limit: {
+                    type: "number",
+                    description: "Max number of nearest stops to return (default: 10)."
+                }
+            },
+            required: ["latitude", "longitude"]
+        }
+    },
+    {
         name: "get_realtime_vehicles",
         description: "Get live vehicle positions, current delays, vehicle numbers, and status in Prague or Brno.",
         inputSchema: {
@@ -334,6 +365,48 @@ async function handleToolCall(
                 stops: filtered.map((f) => ({
                     stop_id: f.properties?.stop_id,
                     stop_name: f.properties?.stop_name,
+                    is_centroid: f.properties?.is_centroid,
+                    coordinates: f.geometry?.coordinates,
+                    lines: f.properties?.lines || []
+                }))
+            };
+        }
+
+        case "search_nearest_stops": {
+            const lat = Number(args.latitude);
+            const lon = Number(args.longitude);
+            if (isNaN(lat) || isNaN(lon)) {
+                return { error: "Valid 'latitude' and 'longitude' numeric coordinates are required." };
+            }
+
+            const radiusMeters = Number(args.radius_meters) || 1000;
+            const limit = Number(args.limit) || 10;
+            const searchCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/stops`);
+            const stopsData = await adapter.handleStops(searchCtx) as AppStopCollection;
+
+            const stopsWithDistance: Array<{ feature: AppStopCollection['features'][0]; distance: number }> = [];
+
+            for (const f of stopsData?.features || []) {
+                if (f.geometry?.coordinates) {
+                    const [stopLon, stopLat] = f.geometry.coordinates;
+                    const dist = calculateHaversineDistanceMeters(lat, lon, stopLat, stopLon);
+                    if (dist <= radiusMeters) {
+                        stopsWithDistance.push({ feature: f, distance: Math.round(dist) });
+                    }
+                }
+            }
+
+            stopsWithDistance.sort((a, b) => a.distance - b.distance);
+
+            return {
+                city: resolvedCity,
+                search_location: { latitude: lat, longitude: lon },
+                radius_meters: radiusMeters,
+                count: Math.min(stopsWithDistance.length, limit),
+                stops: stopsWithDistance.slice(0, limit).map(({ feature: f, distance }) => ({
+                    stop_id: f.properties?.stop_id,
+                    stop_name: f.properties?.stop_name,
+                    distance_meters: distance,
                     is_centroid: f.properties?.is_centroid,
                     coordinates: f.geometry?.coordinates,
                     lines: f.properties?.lines || []

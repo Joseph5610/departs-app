@@ -19,8 +19,16 @@
         "description": "Search public transit stops/stations by name or ID in Prague or Brno."
       },
       {
+        "name": "search_nearest_stops",
+        "description": "Find public transit stops/stations closest to geographic coordinates (latitude and longitude)."
+      },
+      {
         "name": "get_next_departures",
         "description": "Get real-time upcoming transit departures from a stop."
+      },
+      {
+        "name": "get_nearest_departures",
+        "description": "Get real-time upcoming departures for stops closest to geographic coordinates (latitude and longitude)."
       },
       {
         "name": "get_realtime_vehicles",

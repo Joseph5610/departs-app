@@ -16,7 +16,9 @@ This application hosts a native **Remote Model Context Protocol (MCP) Server** a
 Exposed MCP Tools:
 
 - **`search_stops`**: Search stops/stations by name or ID in Prague (PID) or Brno (IDS JMK).
-- **`get_next_departures`**: Real-time departure board for any stop, including delays, headsigns, and accessibility info.
+- **`search_nearest_stops`**: Find public transit stops/stations closest to geographic coordinates (latitude and longitude).
+- **`get_next_departures`**: Real-time departure board for any stop, including inline stop notice Banners/Infotexts, delays, headsigns, and accessibility info.
+- **`get_nearest_departures`**: Real-time departures for stops closest to geographic coordinates (latitude and longitude), with optional route_type filter (bus, tram, metro, train).
 - **`get_realtime_vehicles`**: Live vehicle GPS positions, line numbers, delays, and tracking status.
 - **`get_service_alerts`**: Active transit disruptions, closures, detours, and news alerts.
 - **`get_vehicle_detail`**: Trip itinerary, stop schedule progress, and vehicle specs.
