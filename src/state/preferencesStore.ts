@@ -127,6 +127,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 selectedCity: state.selectedCity,
                 routeTypeFilter: state.routeTypeFilter,
                 requireAirConditioned: state.requireAirConditioned,
+                isMcpBannerDismissed: state.isMcpBannerDismissed,
             }),
         }
     )
