@@ -21,10 +21,10 @@ export const McpModal: React.FC = () => {
 
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-    const handleCopy = (text: string, key: string) => {
+    const handleCopy = (text: string, key: string, toastMsgKey: string = 'mcp.copySuccess') => {
         navigator.clipboard.writeText(text);
         setCopiedKey(key);
-        toast.success(t('mcp.copySuccess'));
+        toast.success(t(toastMsgKey));
         setTimeout(() => setCopiedKey(null), 2000);
     };
 
@@ -90,7 +90,7 @@ export const McpModal: React.FC = () => {
                                         size="sm"
                                         variant="ghost"
                                         className="h-7 px-2 text-xs"
-                                        onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode')}
+                                        onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode', 'mcp.copyCommandSuccess')}
                                     >
                                         {copiedKey === 'claudeCode' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                     </Button>
@@ -111,7 +111,7 @@ export const McpModal: React.FC = () => {
                                         size="sm"
                                         variant="ghost"
                                         className="h-7 px-2 text-xs"
-                                        onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor')}
+                                        onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor', 'mcp.copyConfigSuccess')}
                                     >
                                         {copiedKey === 'cursor' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
                                     </Button>

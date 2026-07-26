@@ -397,6 +397,8 @@
     "newBadge": "New",
     "copyUrl": "Copy Endpoint URL",
     "copySuccess": "MCP Endpoint URL copied to clipboard!",
+    "copyCommandSuccess": "Command copied to clipboard!",
+    "copyConfigSuccess": "Configuration JSON copied to clipboard!",
     "learnMore": "Setup Instructions",
     "endpointLabel": "Remote MCP Endpoint URL:",
     "claudeCodeTitle": "Claude Code CLI",

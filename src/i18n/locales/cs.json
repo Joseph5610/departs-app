@@ -400,6 +400,8 @@
     "newBadge": "Nové",
     "copyUrl": "Kopírovat URL MCP",
     "copySuccess": "URL adresa MCP serveru zkopírována do schránky!",
+    "copyCommandSuccess": "Příkaz zkopírován do schránky!",
+    "copyConfigSuccess": "Konfigurace JSON zkopírována do schránky!",
     "learnMore": "Návod k nastavení",
     "endpointLabel": "URL adresa Remote MCP endpointu:",
     "claudeCodeTitle": "Claude Code CLI",

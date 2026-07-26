@@ -5,7 +5,8 @@
 - **Glass Utility Rendering on Firefox & Low-End Devices**:
   - Added `@supports (-moz-appearance: none)` Firefox targeting in `@utility glassy` to handle Gecko Bug 1746885 (Firefox ignoring `backdrop-filter` over WebGL `<canvas>`).
   - Increased base glass opacity to 90% (`--glass-bg`) and high-contrast fallback to 96% (`--glass-fallback`).
-  - Added solid/high-opacity fallback backgrounds (`background-color: var(--card)` and `@supports not (backdrop-filter)`) to ensure UI legibility on low-end Android phones and budget GPUs where `backdrop-filter` is disabled or unsupported.
+- **MCP Modal Copy Toast Messages**:
+  - Fixed copy toast messages in `McpModal` when copying the Claude CLI command or Cursor/Windsurf JSON config (previously erroneously showed "MCP Endpoint URL copied to clipboard!"). Now shows "Command copied to clipboard!" and "Configuration JSON copied to clipboard!".
 
 ## [0.57.0] - 2026-07-26
 
