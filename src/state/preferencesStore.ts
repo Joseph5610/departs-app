@@ -18,6 +18,8 @@ export interface PreferencesState {
     selectedCity: string;
     requireAirConditioned: boolean;
     statsTab: 'screen' | 'network';
+    isMcpBannerDismissed: boolean;
+    isMcpModalOpen: boolean;
 }
 
 export interface PreferencesActions {
@@ -28,6 +30,8 @@ export interface PreferencesActions {
     setIsSettingsOpen: (open: boolean) => void;
     setIsFeedbackOpen: (open: boolean) => void;
     setIsAlertsOpen: (open: boolean) => void;
+    setIsMcpModalOpen: (open: boolean) => void;
+    setIsMcpBannerDismissed: (dismissed: boolean) => void;
     setDepartureSort: (sort: 'line' | 'departure') => void;
     setRouteTypeFilter: (filter: string[]) => void;
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
@@ -62,6 +66,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
             selectedCity: 'prague',
             requireAirConditioned: false,
             statsTab: 'screen',
+            isMcpBannerDismissed: false,
+            isMcpModalOpen: false,
 
             // Actions
             actions: {
@@ -72,6 +78,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
                 setIsFeedbackOpen: (open) => set({ isFeedbackOpen: open }),
                 setIsAlertsOpen: (open) => set({ isAlertsOpen: open }),
+                setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
+                setIsMcpBannerDismissed: (dismissed) => set({ isMcpBannerDismissed: dismissed }),
                 setDepartureSort: (sort) => set({ departureSort: sort }),
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),

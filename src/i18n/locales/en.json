@@ -24,7 +24,8 @@
     "sections": {
       "display": "Display",
       "language": "Language",
-      "filters": "Filters"
+      "filters": "Filters",
+      "ai": "AI & Integrations"
     },
     "theme": {
       "title": "Appearance",
@@ -387,5 +388,22 @@
     "delayed1to5": "Delayed 1-5 min",
     "delayedOver5Plus": "Delayed > 5 min",
     "unknownDelay": "Unknown"
+  },
+  "mcp": {
+    "title": "AI Integration",
+    "subtitle": "Connect AI tools and assistants directly to real-time transit data.",
+    "bannerTitle": "AI Integration",
+    "bannerDesc": "Query live departures & vehicle tracking directly in your AI tools.",
+    "newBadge": "New",
+    "copyUrl": "Copy Endpoint URL",
+    "copySuccess": "MCP Endpoint URL copied to clipboard!",
+    "learnMore": "Setup Instructions",
+    "endpointLabel": "Remote MCP Endpoint URL:",
+    "claudeCodeTitle": "Claude Code CLI",
+    "claudeDesktopTitle": "Claude Desktop",
+    "claudeDesktopStep1": "Open Settings → Connectors → Add → Add custom connector.",
+    "claudeDesktopStep2": "Set Name to departs",
+    "claudeDesktopStep3": "Set Remote URL to https://departs.app/mcp",
+    "cursorTitle": "AI IDEs & Editors"
   }
 }

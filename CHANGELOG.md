@@ -1,3 +1,11 @@
+## [0.57.1] - 2026-07-26
+
+### Fixed
+
+- **Glass Utility Rendering on Low-End Android Devices**:
+  - Replaced invalid `color-mix(in oklch, var(--glass-tint) calc(... * 100%), transparent)` CSS expression in `@utility glassy` with robust, cross-browser `--glass-bg` and `--glass-fallback` properties.
+  - Added solid/high-opacity fallback backgrounds (`background-color: var(--card)` and `@supports not (backdrop-filter)`) to ensure UI legibility on low-end Android phones and budget GPUs where `backdrop-filter` is disabled or unsupported.
+
 ## [0.57.0] - 2026-07-26
 
 ### Added
@@ -8,6 +16,14 @@
   - Exposed 5 transit tools reusing 100% of internal adapter logic, caching, and normalizers: `search_stops`, `get_next_departures`, `get_realtime_vehicles`, `get_service_alerts`, `get_vehicle_detail`.
   - Added `.well-known/mcp.json` metadata specification for discovery by Claude Code, Cursor, Windsurf, Smithery, and Glama.
   - Documented setup instructions for Claude Code (`claude mcp add --transport sse departs https://departs.app/mcp`) and Claude Desktop (`claude_desktop_config.json`) in `README.md`.
+- **Remote MCP Server (`/mcp`) Features**:
+  - Implemented `get_nearest_departures` tool allowing location-based departure queries by `latitude` & `longitude`.
+  - Added `route_type` filtering (`bus`, `tram`, `metro`, `train`, `trolleybus`) to both `get_nearest_departures` and `get_next_departures`.
+  - Integrated 0-cost cached stop notice banners (`infotexts`) directly into departure board responses for high situational awareness.
+- **Remote MCP UI Promotion & Modal**:
+  - Added floating, glassmorphic dismissable banner (`McpPromoBanner.tsx`) in main map view with local storage persistence.
+  - Added dedicated setup guide modal (`McpModal.tsx`) with copyable setup snippets for Claude Code, Claude Desktop, and Cursor.
+  - Added permanent **AI Copilot & Remote MCP** item row in `SettingsModal` (`SettingsFooter.tsx`).
 - **Removed Obsolete WebMCP Hook**:
   - Deleted experimental frontend WebMCP hook (`src/hooks/features/useWebMCP.ts`) in favor of the native Cloudflare Edge Remote MCP Server (`/mcp`).
 

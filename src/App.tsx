@@ -8,6 +8,8 @@ import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
 import { usePreferencesStore } from './state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from './config/cities';
+import { McpPromoBanner } from './components/McpPromo/McpPromoBanner';
+import { McpModal } from './components/Modals/McpModal/McpModal';
 
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
 
   return (
     <>
+      <McpPromoBanner />
+      <McpModal />
       {/* Visually hidden SEO content */}
       <div className="sr-only">
         <h1>departs.app — MHD Praha & Brno LIVE</h1>

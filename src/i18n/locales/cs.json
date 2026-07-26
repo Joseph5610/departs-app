@@ -25,7 +25,8 @@
     "sections": {
       "display": "Zobrazení",
       "language": "Jazyk",
-      "filters": "Filtry"
+      "filters": "Filtry",
+      "ai": "AI a integrace"
     },
     "theme": {
       "title": "Vzhled",
@@ -390,5 +391,22 @@
     "onTime": "Na čas",
     "delayed1to5": "Zpožděno 1-5 min",
     "delayedOver5Plus": "Zpožděno > 5 min"
+  },
+  "mcp": {
+    "title": "AI Integrace",
+    "subtitle": "Připojte AI asistenty a vývojové nástroje přímo k živým datům MHD.",
+    "bannerTitle": "AI Integrace",
+    "bannerDesc": "Ptejte se AI na aktuální odjezdy a polohu spojů přímo ve svém nástroji.",
+    "newBadge": "Nové",
+    "copyUrl": "Kopírovat URL MCP",
+    "copySuccess": "URL adresa MCP serveru zkopírována do schránky!",
+    "learnMore": "Návod k nastavení",
+    "endpointLabel": "URL adresa Remote MCP endpointu:",
+    "claudeCodeTitle": "Claude Code CLI",
+    "claudeDesktopTitle": "Claude Desktop",
+    "claudeDesktopStep1": "Otevřete Nastavení → Connectors → Add → Add custom connector.",
+    "claudeDesktopStep2": "Zadejte Název: departs",
+    "claudeDesktopStep3": "Zadejte Remote URL: https://departs.app/mcp",
+    "cursorTitle": "AI IDE a editory"
   }
 }

@@ -87,7 +87,6 @@ export const SettingsFooter: React.FC = () => {
                         </ItemContent>
                     </Item>
                 )}
-
                 <Item
                     variant="settings"
                     size="none"

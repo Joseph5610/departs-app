@@ -41,7 +41,7 @@ const MCP_TOOLS = [
     },
     {
         name: "get_next_departures",
-        description: "Get real-time upcoming public transit departures from a specific stop in Prague (PID) or Brno (IDS JMK).",
+        description: "Get real-time upcoming public transit departures from a SPECIFIC stop name or stop ID in Prague (PID) or Brno (IDS JMK). Use when the user specifies a stop name (e.g., 'Hlavní nádraží', 'Sídliště Čakovice') or stop ID. Includes inline stop notice Banners/Infotexts.",
         inputSchema: {
             type: "object",
             properties: {
@@ -58,6 +58,18 @@ const MCP_TOOLS = [
                     type: "string",
                     description: "Optional stop name search if stop_id is unknown."
                 },
+                latitude: {
+                    type: "number",
+                    description: "Optional latitude coordinate to find closest stop if stop_id/stop_name are omitted."
+                },
+                longitude: {
+                    type: "number",
+                    description: "Optional longitude coordinate to find closest stop if stop_id/stop_name are omitted."
+                },
+                route_type: {
+                    type: "string",
+                    description: "Optional transport mode filter: 'bus', 'tram', 'metro', 'train', 'trolleybus'."
+                },
                 line: {
                     type: "string",
                     description: "Optional line number filter (e.g., '136', '9', 'C')."
@@ -67,6 +79,45 @@ const MCP_TOOLS = [
                     description: "Max number of departures to retrieve (default: 10)."
                 }
             }
+        }
+    },
+    {
+        name: "get_nearest_departures",
+        description: "Get real-time upcoming departures for stops closest to a GEOGRAPHIC LOCATION (latitude and longitude) in Prague (PID) or Brno (IDS JMK). Use for proximity queries like: 'What departures are near me?', 'Will I catch the bus at 50.087, 14.421?', 'Any trams nearby?', 'Show closest departures to my location'. Can filter by route_type ('bus', 'tram', 'metro', 'train') or line number.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                city: {
+                    type: "string",
+                    enum: ["prague", "brno"],
+                    description: "City transit system (default: 'prague')."
+                },
+                latitude: {
+                    type: "number",
+                    description: "User latitude coordinate (e.g. 50.0875 for Prague)."
+                },
+                longitude: {
+                    type: "number",
+                    description: "User longitude coordinate (e.g. 14.4213 for Prague)."
+                },
+                radius_meters: {
+                    type: "number",
+                    description: "Search radius in meters around coordinates (default: 500)."
+                },
+                route_type: {
+                    type: "string",
+                    description: "Optional transport mode filter: 'bus', 'tram', 'metro', 'train', 'trolleybus'."
+                },
+                line: {
+                    type: "string",
+                    description: "Optional line number filter (e.g. '136', '9', 'C')."
+                },
+                limit: {
+                    type: "number",
+                    description: "Max number of departures per stop (default: 10)."
+                }
+            },
+            required: ["latitude", "longitude"]
         }
     },
     {
@@ -193,6 +244,65 @@ function resolveAdapter(citySlug?: string): { adapter: CityAdapter; citySlug: st
 }
 
 /**
+ * Haversine distance in meters between two lat/lon coordinates.
+ */
+function calculateHaversineDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+/**
+ * Route type matching helper for transit types (bus, tram, metro, train, trolleybus).
+ */
+function matchesRouteType(departureType: string | number, routeTypeQuery: string): boolean {
+    const query = String(routeTypeQuery).trim().toLowerCase();
+    const typeStr = String(departureType).trim().toLowerCase();
+
+    if (query === typeStr) return true;
+
+    if (query === 'bus' || query === '3') return typeStr === 'bus' || typeStr === '3';
+    if (query === 'tram' || query === '0') return typeStr === 'tram' || typeStr === '0';
+    if (query === 'metro' || query === '1') return typeStr === 'metro' || typeStr === '1';
+    if (query === 'train' || query === 'rail' || query === '2') return typeStr === 'train' || typeStr === 'rail' || typeStr === '2';
+    if (query === 'trolleybus' || query === '11' || query === '800') return typeStr === 'trolleybus' || typeStr === '11' || typeStr === '800';
+    if (query === 'ferry' || query === '4') return typeStr === 'ferry' || typeStr === '4';
+    if (query === 'funicular' || query === '7') return typeStr === 'funicular' || typeStr === '7';
+
+    return false;
+}
+
+/**
+ * Retrieves cached stop notice banners (infotexts) for a given stopId (0 extra cost).
+ */
+async function getMatchingInfotexts(
+    ctx: EventContext<Env, string, unknown>,
+    adapter: CityAdapter,
+    resolvedCity: string,
+    targetStopId: string
+): Promise<AppInfotext[]> {
+    try {
+        const infoCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/infotexts`);
+        const allInfotexts = await adapter.handleInfotexts(infoCtx) as AppInfotext[];
+        if (!Array.isArray(allInfotexts)) return [];
+
+        const stopIdLower = targetStopId.toLowerCase();
+        return allInfotexts.filter((info) => {
+            if (!info.relatedStopIds || info.relatedStopIds.length === 0) return false;
+            return info.relatedStopIds.some((sId) => String(sId).toLowerCase() === stopIdLower || stopIdLower.includes(String(sId).toLowerCase()));
+        });
+    } catch {
+        return [];
+    }
+}
+
+/**
  * Tool Execution Handlers
  */
 async function handleToolCall(
@@ -233,9 +343,10 @@ async function handleToolCall(
 
         case "get_next_departures": {
             let stopId = args.stop_id as string | undefined;
+            let stopNameResolved: string | undefined;
             const limit = Number(args.limit) || 10;
 
-            // If stop_id is missing but stop_name is provided, search stops first
+            // 1. If stop_id is missing but stop_name is provided, search stops
             if (!stopId && args.stop_name) {
                 const searchCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/stops`);
                 const stopsData = await adapter.handleStops(searchCtx) as AppStopCollection;
@@ -244,13 +355,41 @@ async function handleToolCall(
                 );
                 if (match) {
                     stopId = match.properties?.stop_id;
+                    stopNameResolved = match.properties?.stop_name;
                 } else {
                     return { error: `No stop found matching '${args.stop_name}' in ${resolvedCity}.` };
                 }
             }
 
+            // 2. If stop_id & stop_name are missing but latitude & longitude are provided, find closest stop
+            if (!stopId && args.latitude !== undefined && args.longitude !== undefined) {
+                const lat = Number(args.latitude);
+                const lon = Number(args.longitude);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    const searchCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/stops`);
+                    const stopsData = await adapter.handleStops(searchCtx) as AppStopCollection;
+                    let minDistance = Infinity;
+                    let closest = null;
+
+                    for (const f of stopsData?.features || []) {
+                        if (f.geometry?.coordinates) {
+                            const [stopLon, stopLat] = f.geometry.coordinates;
+                            const dist = calculateHaversineDistanceMeters(lat, lon, stopLat, stopLon);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                closest = f;
+                            }
+                        }
+                    }
+                    if (closest) {
+                        stopId = closest.properties?.stop_id;
+                        stopNameResolved = closest.properties?.stop_name;
+                    }
+                }
+            }
+
             if (!stopId) {
-                return { error: "Either 'stop_id' or 'stop_name' must be provided." };
+                return { error: "Either 'stop_id', 'stop_name', or ('latitude' and 'longitude') must be provided." };
             }
 
             // Note: Api query parameter schema expects 'stopId', not 'ids'
@@ -264,12 +403,27 @@ async function handleToolCall(
                 departures = departures.filter((d) => String(d.line).toLowerCase() === lineQuery);
             }
 
+            if (args.route_type) {
+                const rType = String(args.route_type);
+                departures = departures.filter((d) => matchesRouteType(d.type, rType));
+            }
+
+            const matchingInfotexts = await getMatchingInfotexts(ctx, adapter, resolvedCity, stopId);
+
             return {
                 city: resolvedCity,
                 stop_id: stopId,
+                stop_name: stopNameResolved,
                 count: departures.slice(0, limit).length,
+                infotexts: matchingInfotexts.map((i) => ({
+                    id: i.id,
+                    text: i.text,
+                    text_en: i.textEn,
+                    priority: i.priority
+                })),
                 departures: departures.slice(0, limit).map((d) => ({
                     line: d.line,
+                    type: d.type,
                     headsign: d.headsign,
                     timestamp: d.timestamp,
                     scheduled: d.scheduled,
@@ -279,6 +433,102 @@ async function handleToolCall(
                     trip_id: d.tripId,
                     vehicle_id: d.vehicleId
                 }))
+            };
+        }
+
+        case "get_nearest_departures": {
+            const lat = Number(args.latitude);
+            const lon = Number(args.longitude);
+            if (isNaN(lat) || isNaN(lon)) {
+                return { error: "Valid 'latitude' and 'longitude' numeric coordinates are required." };
+            }
+
+            const radiusMeters = Number(args.radius_meters) || 500;
+            const limit = Number(args.limit) || 10;
+            const searchCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/stops`);
+            const stopsData = await adapter.handleStops(searchCtx) as AppStopCollection;
+
+            const stopsWithDistance: Array<{ feature: AppStopCollection['features'][0]; distance: number }> = [];
+
+            for (const f of stopsData?.features || []) {
+                if (f.geometry?.coordinates) {
+                    const [stopLon, stopLat] = f.geometry.coordinates;
+                    const dist = calculateHaversineDistanceMeters(lat, lon, stopLat, stopLon);
+                    stopsWithDistance.push({ feature: f, distance: dist });
+                }
+            }
+
+            stopsWithDistance.sort((a, b) => a.distance - b.distance);
+
+            let nearby = stopsWithDistance.filter((s) => s.distance <= radiusMeters);
+            if (nearby.length === 0) {
+                nearby = stopsWithDistance.slice(0, 3);
+            } else {
+                nearby = nearby.slice(0, 5);
+            }
+
+            const nearestStopsResult = [];
+
+            for (const { feature, distance } of nearby) {
+                const sId = feature.properties?.stop_id;
+                const sName = feature.properties?.stop_name;
+                if (!sId) continue;
+
+                const searchParams: Record<string, string> = { stopId: sId, limit: String(limit) };
+                const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/departures`, searchParams);
+
+                try {
+                    const departuresData = await adapter.handleDepartures(mockCtx) as AppDepartureResponse;
+                    let departures = departuresData?.departures || [];
+
+                    if (args.line) {
+                        const lineQuery = String(args.line).trim().toLowerCase();
+                        departures = departures.filter((d) => String(d.line).toLowerCase() === lineQuery);
+                    }
+
+                    if (args.route_type) {
+                        const rType = String(args.route_type);
+                        departures = departures.filter((d) => matchesRouteType(d.type, rType));
+                    }
+
+                    const stopInfotexts = await getMatchingInfotexts(ctx, adapter, resolvedCity, sId);
+
+                    if (departures.length > 0 || stopInfotexts.length > 0) {
+                        nearestStopsResult.push({
+                            stop_id: sId,
+                            stop_name: sName,
+                            distance_meters: Math.round(distance),
+                            infotexts: stopInfotexts.map((i) => ({
+                                id: i.id,
+                                text: i.text,
+                                text_en: i.textEn,
+                                priority: i.priority
+                            })),
+                            departures: departures.slice(0, limit).map((d) => ({
+                                line: d.line,
+                                type: d.type,
+                                headsign: d.headsign,
+                                timestamp: d.timestamp,
+                                scheduled: d.scheduled,
+                                delay_seconds: d.delay ?? 0,
+                                delay_minutes: Math.round((d.delay || 0) / 60 * 10) / 10,
+                                is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
+                                trip_id: d.tripId,
+                                vehicle_id: d.vehicleId
+                            }))
+                        });
+                    }
+                } catch {
+                    // Skip stop if departure request fails
+                }
+            }
+
+            return {
+                city: resolvedCity,
+                search_location: { latitude: lat, longitude: lon },
+                radius_meters: radiusMeters,
+                stops_count: nearestStopsResult.length,
+                nearest_stops: nearestStopsResult
             };
         }
 

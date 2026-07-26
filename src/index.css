@@ -29,7 +29,8 @@
   --ring: oklch(0.6959 0.1491 162.4796);
   --radius: 0.5rem;
   --glass-tint: var(--background);
-  --glass-tint-opacity: 0.85;
+  --glass-bg: oklch(0.96 0 0 / 0.88);
+  --glass-fallback: oklch(0.96 0 0 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
   --chart-2: oklch(0.5960 0.1274 163.2254);
@@ -79,7 +80,8 @@
   --input: oklch(0.30 0.01 260);
   --ring: oklch(0.6959 0.1491 162.4796);
   --glass-tint: var(--background);
-  --glass-tint-opacity: 0.80;
+  --glass-bg: oklch(0.21 0.01 260 / 0.85);
+  --glass-fallback: oklch(0.21 0.01 260 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
   --chart-2: oklch(0.5960 0.1274 163.2254);
@@ -280,15 +282,27 @@
 @utility glassy {
   @apply border border-border/40 shadow-2xl relative;
   isolation: isolate;
+  background-color: var(--card);
+  background: var(--glass-bg, color-mix(in srgb, var(--background) 85%, transparent));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: color-mix(in oklch, var(--glass-tint) calc(var(--glass-tint-opacity) * 100%), transparent);
   backface-visibility: hidden;
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--card);
+    background: var(--glass-fallback, var(--card));
+  }
 
   &.dark,
   .dark & {
-    background: color-mix(in oklch, var(--glass-tint) calc(var(--glass-tint-opacity) * 100%), transparent);
+    background-color: var(--card);
+    background: var(--glass-bg, color-mix(in srgb, var(--background) 85%, transparent));
     @apply border-white/10;
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      background-color: var(--card);
+      background: var(--glass-fallback, var(--card));
+    }
   }
 }
 
