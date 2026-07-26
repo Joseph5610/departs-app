@@ -9,16 +9,21 @@
 - **Smart Search**: Quick stop and station discovery.
 - **Supported Regions**: Prague Integrated Transport (PID) and South Moravian Region (IDS JMK).
 
-## AI capabilities and WebMCP
+## AI Capabilities & Remote MCP Server
 
-This website exposes its internal state and features directly to AI assistants via WebMCP (`navigator.modelContext`). AI agents can interact with the app on behalf of the user using the following tools:
+This application hosts a native **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. AI assistants (Claude Code, Claude Desktop, Cursor, Windsurf, ChatGPT) can connect directly to real-time transit data over Server-Sent Events (SSE) or Streamable HTTP POST.
 
-- **`search_stops`**: Resolves a stop name (e.g., "Hlavní nádraží") to an exact Stop ID.
-- **`get_departures`**: Fetches the raw JSON of real-time upcoming departures, including delays, for a specific Stop ID.
-- **`navigate_to_stop`** and **`navigate_to_trip`**: Visually opens a specific stop or tracks a specific vehicle on the user's screen.
-- **`set_active_city`**: Switches the active transit network between `prague` and `brno`.
+Exposed MCP Tools:
 
-Using these tools allows agents to provide immediate, accurate transit data (such as upcoming connections and delay times in seconds) without hallucinating timetables.
+- **`search_stops`**: Search stops/stations by name or ID in Prague (PID) or Brno (IDS JMK).
+- **`get_next_departures`**: Real-time departure board for any stop, including delays, headsigns, and accessibility info.
+- **`get_realtime_vehicles`**: Live vehicle GPS positions, line numbers, delays, and tracking status.
+- **`get_service_alerts`**: Active transit disruptions, closures, detours, and news alerts.
+- **`get_vehicle_detail`**: Trip itinerary, stop schedule progress, and vehicle specs.
+
+### MCP Integration URLs
+- **Remote MCP Endpoint**: `https://departs.app/mcp` (SSE / Streamable HTTP)
+- **MCP Metadata Specification**: `https://departs.app/.well-known/mcp.json`
 
 ## URL Structure
 
@@ -30,5 +35,5 @@ For direct navigation or linking, the app uses the following routing structures:
 ## Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind v4, Zustand, MapLibre GL JS
-- **Backend**: Cloudflare Pages Functions
+- **Backend & Edge APIs**: Cloudflare Pages Functions
 - **Source**: https://github.com/joseph5610/departs-app

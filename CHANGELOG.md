@@ -1,3 +1,16 @@
+## [0.57.0] - 2026-07-26
+
+### Added
+
+- **Native Remote MCP Server (`/mcp`)**:
+  - Implemented a zero-dependency Remote Model Context Protocol (MCP 2024-11-05) Server at `https://departs.app/mcp` on Cloudflare Pages Functions (`functions/mcp.ts`).
+  - Added support for SSE (`text/event-stream`) and JSON-RPC 2.0 (`initialize`, `ping`, `tools/list`, `tools/call`).
+  - Exposed 5 transit tools reusing 100% of internal adapter logic, caching, and normalizers: `search_stops`, `get_next_departures`, `get_realtime_vehicles`, `get_service_alerts`, `get_vehicle_detail`.
+  - Added `.well-known/mcp.json` metadata specification for discovery by Claude Code, Cursor, Windsurf, Smithery, and Glama.
+  - Documented setup instructions for Claude Code (`claude mcp add --transport sse departs https://departs.app/mcp`) and Claude Desktop (`claude_desktop_config.json`) in `README.md`.
+- **Removed Obsolete WebMCP Hook**:
+  - Deleted experimental frontend WebMCP hook (`src/hooks/features/useWebMCP.ts`) in favor of the native Cloudflare Edge Remote MCP Server (`/mcp`).
+
 ## [0.56.7] - 2026-07-26
 
 ### Fixed

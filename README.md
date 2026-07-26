@@ -20,6 +20,44 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 - **Backend**: Cloudflare Pages Functions (Edge Computing)
 - **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno)
 - **Styling**: Tailwind CSS 4, Framer Motion
+- **MCP Protocol**: Native Remote MCP Server at `/mcp` (Server-Sent Events / Streamable HTTP)
+
+## 🤖 Remote MCP Server (AI Copilot Integration)
+
+`departs.app` hosts a native **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. No local package or CLI installation is required. You can connect AI assistants like **Claude Code**, **Claude Desktop**, **Cursor**, or **Windsurf** directly to real-time transit data.
+
+### Features & Available Tools
+- `search_stops`: Search stops/stations in Prague (PID) or Brno (IDS JMK).
+- `get_next_departures`: Real-time departures with delays, headsigns, and accessibility.
+- `get_realtime_vehicles`: Live vehicle GPS locations, line numbers, and delays.
+- `get_service_alerts`: Active traffic disruptions, closures, detours, and news.
+- `get_vehicle_detail`: Trip itinerary, schedule progress, and vehicle info.
+
+### Quick Connect
+
+#### Claude Code CLI
+```bash
+claude mcp add --transport sse departs https://departs.app/mcp
+```
+
+#### Claude Desktop (GUI - Recommended for BFUs)
+1. Open **Claude Desktop** $\rightarrow$ **Settings** $\rightarrow$ **Add custom connector**.
+2. **Name**: `departs`
+3. **Remote MCP server URL**: `https://departs.app/mcp`
+4. Click **Add**.
+
+#### Claude Desktop (`claude_desktop_config.json` alternative)
+```json
+{
+  "mcpServers": {
+    "departs": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://departs.app/mcp"]
+    }
+  }
+}
+```
+
 
 ## 🚀 Local Development
 

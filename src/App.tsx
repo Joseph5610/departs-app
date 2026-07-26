@@ -2,7 +2,6 @@ import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
 import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
-import { useWebMCP } from './hooks/features/useWebMCP';
 import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
 import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
 import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
@@ -13,7 +12,6 @@ import { FRONTEND_CITIES_CONFIG } from './config/cities';
 
 function App() {
   usePWALifecycle();
-  useWebMCP();
 
   const selectedCity = usePreferencesStore(s => s.selectedCity);
   const cityConfig = FRONTEND_CITIES_CONFIG[selectedCity];
