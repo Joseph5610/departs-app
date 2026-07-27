@@ -1,3 +1,32 @@
+## [0.57.7] - 2026-07-27
+
+### Added
+
+- **Unified Empty State for Alerts Modal**:
+  - Replaced plain text empty state in `AlertsModal.tsx` with shadcn UI `Empty` component suite (`Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`).
+  - Added a positive green `CheckCircle2` icon with emerald background/border highlights for an optimistic "all clear / no active alerts" visual state.
+  - Added localized descriptive subtitles (`noAlertsDescription` & `noAlertsSearchDescription`) in Czech and English for empty feed and search-filtered empty results.
+
+## [0.57.6] - 2026-07-27
+
+### Fixed
+
+- **Service Alerts Categorization**:
+  - Unified buses and trolleybuses into a combined category ("Autobusy a trolejbusy" / "Buses & Trolleybuses") in `AlertsModal.tsx`.
+  - Added explicit mode guessing and mapping for funiculars (`LD` / Petřín funicular, GTFS type 7) with a dedicated `CableCar` icon and category ("Lanovky" / "Funiculars"), as well as ferries (`P1`–`P8`, GTFS type 4, "Přívozy" / "Ferries").
+  - Added support for Extended GTFS route types (800–899 for trolleybuses, 700–799 for buses, 1000–1099 for ferries, 1400–1499 for funiculars) in `getTransportMode`, preventing Prague & Brno alerts from falling back into the "OSTATNÍ" ("Other") or default bus category.
+  - Improved transport mode matching by iterating through all line metadata items attached to an alert.
+
+## [0.57.5] - 2026-07-27
+
+### Fixed
+
+- **Line Badges & Filter Buttons**:
+  - Restored proper corner rounding across all `LineBadge` sizes (`LineBadge.tsx`), replacing sharp `rounded-xs` (2px) corners with proportional Tailwind radius tokens (`rounded-sm` for `sm`/`md`, `rounded-md` for `lg`, `rounded-lg` for `xl`).
+  - Switched line badge borders to borderless (`border-transparent`) for dark/colored transit badges, reserving a subtle dark stroke (`border-black/15 dark:border-black/40`) strictly for light/white badges (`getContrastColor === '#000000'`).
+  - Increased horizontal padding (`px-2` for `lg`, `px-1.5` for `md`) and refined deterministic character width metrics to prevent line numbers from crowding curved badge corners.
+  - Aligned header AC/Klima filter button borders and corner radius (`DepartureBoardHeader.tsx`) with `LineBadge` design tokens.
+
 ## [0.57.4] - 2026-07-27
 
 ### Changed

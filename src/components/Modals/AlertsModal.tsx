@@ -9,7 +9,9 @@ import {
     TramFront as TramIcon,
     Train as TrainIcon,
     Ship as ShipIcon,
+    CableCar as CableCarIcon,
     AlertTriangle as AlertIcon,
+    CheckCircle2,
 } from 'lucide-react';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
@@ -26,22 +28,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+    Empty,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+    EmptyDescription,
+} from '@/components/ui/empty';
 
 // Helper to determine the primary transport mode of an alert
 const getTransportMode = (item: RSSItem): string => {
     if (!item.line_metadata || item.line_metadata.length === 0) return 'other';
-    const type = item.line_metadata[0].type;
-    switch (String(type)) {
-        case '1': return 'metro';
-        case '0': return 'tram';
-        case '3': return 'bus';
-        case '11': return 'trolleybus';
-        case '2': return 'train';
-        default: return 'other';
+
+    for (const meta of item.line_metadata) {
+        const rawType = String(meta.type || '').toLowerCase();
+        const typeNum = Number(rawType);
+
+        if (rawType === '1' || typeNum === 1 || rawType === 'metro') return 'metro';
+        if (rawType === '0' || typeNum === 0 || (typeNum >= 900 && typeNum <= 999) || rawType === 'tram') return 'tram';
+        if (rawType === '4' || typeNum === 4 || (typeNum >= 1000 && typeNum <= 1099) || rawType === 'ferry') return 'ferry';
+        if (rawType === '7' || typeNum === 7 || (typeNum >= 1400 && typeNum <= 1499) || rawType === 'funicular') return 'funicular';
+        if (rawType === '3' || rawType === '11' || typeNum === 3 || typeNum === 11 || (typeNum >= 700 && typeNum <= 899) || rawType === 'bus' || rawType === 'trolleybus') return 'bus';
+        if (rawType === '2' || typeNum === 2 || (typeNum >= 100 && typeNum <= 199) || rawType === 'train') return 'train';
     }
+
+    return 'other';
 };
 
-const MODE_ORDER = ['metro', 'tram', 'bus', 'trolleybus', 'train', 'other'];
+const MODE_ORDER = ['metro', 'tram', 'bus', 'train', 'ferry', 'funicular', 'other'];
 
 const ModeIcon: React.FC<{ mode: string; className?: string }> = ({ mode, className }) => {
     switch (mode) {
@@ -50,6 +64,7 @@ const ModeIcon: React.FC<{ mode: string; className?: string }> = ({ mode, classN
         case 'bus': case 'trolleybus': return <BusIcon className={className} size={16} strokeWidth={2} />;
         case 'train': return <TrainIcon className={className} size={16} strokeWidth={2} />;
         case 'ferry': return <ShipIcon className={className} size={16} strokeWidth={2} />;
+        case 'funicular': return <CableCarIcon className={className} size={16} strokeWidth={2} />;
         default: return <AlertIcon className={className} size={16} strokeWidth={2} />;
     }
 };
@@ -169,8 +184,26 @@ export const AlertsModal: React.FC = () => {
                     {/* Scrollable Content */}
                     <ScrollArea className="flex-1 min-h-0 px-6">
                         {sections.length === 0 && !loadingRSS ? (
-                            <div className="flex justify-center items-center py-12 text-muted-foreground text-sm">
-                                <p>{t('alerts.noAlerts')}</p>
+                            <div className="flex flex-1 items-center justify-center py-12">
+                                <Empty className="animate-in fade-in zoom-in-95 duration-300">
+                                    <EmptyHeader>
+                                        <EmptyMedia
+                                            variant="icon"
+                                            className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.12)] [&_svg:not([class*='size-'])]:size-7"
+                                        >
+                                            <CheckCircle2 strokeWidth={1.5} />
+                                        </EmptyMedia>
+                                        <EmptyTitle className="text-base font-bold text-foreground/90">
+                                            {t('alerts.noAlerts')}
+                                        </EmptyTitle>
+                                        <EmptyDescription className="text-sm max-w-64">
+                                            {searchQuery.trim()
+                                                ? t('alerts.noAlertsSearchDescription')
+                                                : t('alerts.noAlertsDescription')
+                                            }
+                                        </EmptyDescription>
+                                    </EmptyHeader>
+                                </Empty>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-6 py-3 pb-6">

@@ -250,6 +250,8 @@
     "incidents": "Incidents",
     "exclusions": "Exclusions",
     "noAlerts": "No active alerts",
+    "noAlertsDescription": "All routes are running smoothly without reported disruptions.",
+    "noAlertsSearchDescription": "No reported alerts match your search query.",
     "error": "Error loading alerts",
     "moreInfo": "More info",
     "all": "All",
@@ -276,9 +278,11 @@
   "transportModes": {
     "metro": "Metro",
     "tram": "Trams",
-    "bus": "Buses",
+    "bus": "Buses & Trolleybuses",
     "trolleybus": "Trolleybuses",
     "train": "Trains",
+    "ferry": "Ferries",
+    "funicular": "Funiculars",
     "other": "Other"
   },
   "errors": {

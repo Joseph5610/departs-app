@@ -8,8 +8,10 @@ import { pidRssItemSchema } from "./schemas";
 export class RssAlertsMapper {
     
     private static guessType(name: string): string {
-        const n = String(name).toUpperCase();
+        const n = String(name).toUpperCase().trim();
         if (['A', 'B', 'C'].includes(n)) return 'metro';
+        if (n === 'LD' || /^LD[0-9]/.test(n) || n.includes('LANOVKA')) return 'funicular';
+        if (/^P[1-9][0-9]?$/.test(n)) return 'ferry';
         const num = parseInt(n, 10);
         if (!isNaN(num) && num >= 50 && num <= 60) return 'trolleybus';
         if (/^[1-9][0-9]?$/.test(n)) return 'tram';
@@ -128,10 +130,11 @@ export class RssAlertsMapper {
                 lines,
                 line_metadata: lines.map(name => {
                     const t = RssAlertsMapper.guessType(name);
+                    const typeCode = t === 'metro' ? '1' : t === 'tram' ? '0' : t === 'train' ? '2' : t === 'trolleybus' ? '11' : t === 'ferry' ? '4' : t === 'funicular' ? '7' : '3';
                     return {
                         name,
-                        type: String(t === 'metro' ? 1 : t === 'tram' ? 0 : t === 'train' ? 2 : t === 'trolleybus' ? 11 : 3),
-                        route_color: getVehicleColor(t === 'metro' ? '1' : t === 'tram' ? '0' : t === 'train' ? '2' : t === 'trolleybus' ? '11' : '3', name)
+                        type: typeCode,
+                        route_color: getVehicleColor(typeCode, name)
                     };
                 }),
                 isActive,

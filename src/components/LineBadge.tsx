@@ -8,6 +8,13 @@ interface LineBadgeProps {
     className?: string;
 }
 
+const SIZE_CONFIGS = {
+    sm: { baseWidth: 16, charWidth: 5, classes: 'h-3.5 rounded-sm px-1 text-[9px] font-bold' },
+    md: { baseWidth: 20, charWidth: 6, classes: 'h-4.5 rounded-sm px-1.5 text-[10px] font-bold' },
+    lg: { baseWidth: 26, charWidth: 7, classes: 'h-6 rounded-md px-2 text-[11px] font-bold' },
+    xl: { baseWidth: 30, charWidth: 8, classes: 'h-7 rounded-lg px-2.5 text-[13px] font-extrabold' },
+} as const;
+
 /**
  * LineBadge
  *
@@ -15,37 +22,24 @@ interface LineBadgeProps {
  */
 export const LineBadge = ({ name, routeColor, size = 'md', className }: LineBadgeProps) => {
     const len = name.length;
-    const isLong = len > 1;
+    const config = SIZE_CONFIGS[size] || SIZE_CONFIGS.md;
+    const calculatedMinWidth = config.baseWidth + Math.max(0, len - 1) * config.charWidth;
 
-    // We calculate a deterministic min-width based on character count.
-    // This ensures that "911" and "136" are exactly the same width in pixels,
-    // bypassing proportional font metric issues where "1" is narrower.
-    let baseWidth = 18;
-    let charWidth = 6;
-    let sizeClass = `h-4.5 rounded-xs px-1 text-[10px] font-bold`;
-
-    if (size === 'sm') {
-        baseWidth = 14;
-        charWidth = 5;
-        sizeClass = `h-3.5 rounded-xs px-0.5 ${isLong ? 'text-[8px]' : 'text-[9px]'} font-bold`;
-    } else if (size === 'lg') {
-        baseWidth = 24;
-        charWidth = 8;
-        sizeClass = `h-6 rounded-sm px-1 text-[11px] font-bold`;
-    } else if (size === 'xl') {
-        baseWidth = 28;
-        charWidth = 9;
-        sizeClass = `h-7 rounded-md px-1.5 text-[13px] font-extrabold`;
-    }
-
-    const calculatedMinWidth = baseWidth + (Math.max(0, len - 1) * charWidth);
+    const textColor = getContrastColor(routeColor);
+    const isLightBg = textColor === '#000000';
 
     return (
         <span
-            className={cn(`inline-flex items-center justify-center shrink-0 border border-border/50 ${sizeClass}`, className)}
+            className={cn(
+                'inline-flex items-center justify-center shrink-0 border',
+                isLightBg ? 'border-black/15 dark:border-black/40' : 'border-transparent',
+                config.classes,
+                size === 'sm' && len > 1 && 'text-[8px]',
+                className
+            )}
             style={{ 
                 backgroundColor: routeColor,
-                color: getContrastColor(routeColor),
+                color: textColor,
                 minWidth: `${calculatedMinWidth}px`
             }}
         >

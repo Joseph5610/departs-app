@@ -11,6 +11,7 @@ export const VEHICLE_COLORS = {
     TROLLEYBUS: '#80166F',
     TRAIN: '#251E62',
     FERRY: '#00B3CB',
+    FUNICULAR: '#B2B943',
     NIGHT: '#262050',
     SUBSTITUTE: '#FF4500',
     FALLBACK: '#5A5A5A'
@@ -42,6 +43,11 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
     const type = String(routeType ?? '').toLowerCase();
     const nameStr = String(routeName ?? '');
     const nameUpper = nameStr.toUpperCase();
+
+    // 0. Line-Specific Overrides (Funicular LD)
+    if (nameUpper === 'LD' || nameUpper.startsWith('LD')) {
+        return VEHICLE_COLORS.FUNICULAR;
+    }
 
     // 1. Metro Specifics (Priority)
     if (type === '1' || type === 'metro') {
@@ -83,6 +89,9 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
         case '4':
         case 'ferry':
             return VEHICLE_COLORS.FERRY;
+        case '7':
+        case 'funicular':
+            return VEHICLE_COLORS.FUNICULAR;
         default:
             return VEHICLE_COLORS.FALLBACK;
     }

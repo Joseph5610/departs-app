@@ -292,8 +292,8 @@ export const DepartureBoardHeader = React.memo(() => {
                             <button
                                 onClick={toggleRequireAirConditioned}
                                 className={cn(
-                                    "flex items-center justify-center h-6 px-1.5 transition-[transform,colors] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-sm border border-border/50 text-[11px] font-bold gap-1 shrink-0",
-                                    requireAirConditioned ? "bg-[#0ea5e9] text-white z-10 shadow-lg" : "bg-secondary text-secondary-foreground"
+                                    "flex items-center justify-center h-6 px-2 transition-[transform,colors] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-md border border-border/50 text-[11px] font-bold gap-1 shrink-0",
+                                    requireAirConditioned ? "bg-[#0ea5e9] text-white z-10 shadow-lg border-transparent" : "bg-secondary text-secondary-foreground"
                                 )}
                             >
                                 <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />
@@ -313,9 +313,9 @@ export const DepartureBoardHeader = React.memo(() => {
                                     key={name}
                                     onClick={() => toggleLineFilter(name)}
                                     className={cn(
-                                        "flex transition-[transform,opacity] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110",
+                                        "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-md",
                                         isDimmed ? "opacity-30" : "opacity-100",
-                                        isActive && "z-10 shadow-lg rounded-sm"
+                                        isActive && "z-10 ring-2 ring-primary/40"
                                     )}
                                 >
                                     <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />

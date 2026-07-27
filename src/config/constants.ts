@@ -7,8 +7,6 @@ export const SIDEBAR_WIDTH = 420;
 export const MOBILE_BREAKPOINT = 768;
 export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
 
-
-
 export const MAP_BOUNDS_DEBOUNCE = 800;
 export const MAP_MIN_ZOOM_FOR_DATA = 9;
 

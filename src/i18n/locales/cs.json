@@ -253,6 +253,8 @@
     "incidents": "Mimořádnosti",
     "exclusions": "Výluky",
     "noAlerts": "Žádné aktuální upozornění",
+    "noAlertsDescription": "Všechny spoje jezdí podle plánu a bez hlášených omezení.",
+    "noAlertsSearchDescription": "Žádná hlášená upozornění neodpovídají zadanému vyhledávání.",
     "error": "Chyba při načítání upozornění",
     "moreInfo": "Více informací",
     "all": "Vše",
@@ -279,9 +281,11 @@
   "transportModes": {
     "metro": "Metro",
     "tram": "Tramvaje",
-    "bus": "Autobusy",
+    "bus": "Autobusy a trolejbusy",
     "trolleybus": "Trolejbusy",
     "train": "Vlaky",
+    "ferry": "Přívozy",
+    "funicular": "Lanovky",
     "other": "Ostatní"
   },
   "errors": {
