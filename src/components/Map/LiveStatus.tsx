@@ -14,11 +14,11 @@ import { SystemStatusModal } from '../Modals/SystemStatusModal';
  */
 export const LiveStatus: React.FC = () => {
     const { t } = useTranslation();
-    const { stopId: selectedStopId, vehicleId: selectedVehicleId } = useRouteParams();
+    const { stopId: selectedStopId, vehicleId: selectedVehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
     const bounds = useViewportStore(s => s.bounds);
     const status = useSystemStatus();
 
-    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId;
+    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
     const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -49,7 +49,7 @@ export const LiveStatus: React.FC = () => {
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/8 active:bg-white/12 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
+                    className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
                 >
                     <div className="flex items-center gap-2">
                         <div className={cn(

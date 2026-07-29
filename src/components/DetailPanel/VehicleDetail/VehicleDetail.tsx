@@ -5,7 +5,7 @@ import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import { useTranslation } from 'react-i18next';
 import { parseISO } from 'date-fns';
 import { usePreferencesStore } from '../../../state/preferencesStore';
-import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { getCityConfig } from '../../../config/cities';
 import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
 import {
   Carousel,
@@ -143,7 +143,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         onToggleFollow={onToggleFollow}
                         liveDataAgeSeconds={liveDataAgeSeconds}
                         isDetailLoading={loadingDetail && !vehicleDetail}
-                        hasEnrichment={!!FRONTEND_CITIES_CONFIG[selectedCity || 'prague']?.enrichmentChannel}
+                        hasEnrichment={!!getCityConfig(selectedCity).enrichmentChannel}
                     />
 
                     {/* Alerts */}

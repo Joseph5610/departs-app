@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
+import { DEFAULT_CITY_SLUG } from '../config/cities';
 
 export interface PreferencesState {
     showVehicles: boolean;
@@ -63,7 +64,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             favoriteStops: [],
             searchHistory: [],
             mapBaseStyle: 'labels',
-            selectedCity: 'prague',
+            selectedCity: DEFAULT_CITY_SLUG,
             requireAirConditioned: false,
             statsTab: 'screen',
             isMcpBannerDismissed: false,

@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import type { AppCity } from '../../../functions/_core/types';
 
 interface CitySelectionListProps {
@@ -77,9 +78,9 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                                     {city.name}
                                 </span>
                                 {city.isBeta && (
-                                    <span className="bg-amber-500/20 text-amber-500 text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 uppercase font-bold tracking-wider bg-amber-500/20 text-amber-500 border-amber-500/30">
                                         Beta
-                                    </span>
+                                    </Badge>
                                 )}
                             </div>
                             {subtitle && (

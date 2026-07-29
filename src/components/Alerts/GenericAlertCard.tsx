@@ -7,6 +7,7 @@ import {
     AlertDescription,
     AlertTitle
 } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { LineBadge } from '../LineBadge';
 import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 import { AlertIcon } from './AlertIcon';
@@ -74,19 +75,15 @@ export const GenericAlertCard: React.FC<GenericAlertCardProps> = ({
 
             <AlertTitle className={cn("flex flex-col gap-1 mb-2", link && "pr-6 sm:pr-8")}>
                 {showStatus && (isFuture ? (
-                    <div className="flex gap-1.5 items-center mb-1 w-fit bg-foreground/5 px-1.5 py-0.5 rounded-md border border-border/50">
+                    <Badge variant="outline" className="mb-1 w-fit text-[8px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                        <span className="text-[8px] font-bold text-amber-500/90 uppercase tracking-widest">
-                            {t('alerts.planned')}
-                        </span>
-                    </div>
+                        <span>{t('alerts.planned')}</span>
+                    </Badge>
                 ) : isActive ? (
-                    <div className="flex gap-1 items-center mb-0.5">
+                    <Badge variant="outline" className="mb-0.5 w-fit text-[8px] font-bold text-primary bg-primary/10 border-primary/30 uppercase tracking-widest gap-1 px-1.5 py-0.5">
                         <div className="w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" />
-                        <span className="text-[8px] font-bold text-primary uppercase tracking-widest">
-                            {t('alerts.active')}
-                        </span>
-                    </div>
+                        <span>{t('alerts.active')}</span>
+                    </Badge>
                 ) : null)}
 
                 <span className={cn(

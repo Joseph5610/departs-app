@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 import { Train, ArrowRight, ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
@@ -253,13 +254,13 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
                                         {/* Departure Rows with zebra striping */}
                                         <CardContent className="p-0">
-                                            <div className="flex flex-col divide-y divide-black/5 dark:divide-white/4">
+                                            <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
                                                 {visibleDepartures.map((dep: Departure, idx: number) => (
                                                     <div 
                                                         key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx}
                                                         className={cn(
-                                                            "transition-colors hover:bg-black/1.5 dark:hover:bg-white/2",
-                                                            idx % 2 === 1 ? "bg-black/1 dark:bg-white/3" : "bg-transparent"
+                                                            "transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]",
+                                                            idx % 2 === 1 ? "bg-black/[0.015] dark:bg-white/[0.02]" : "bg-transparent"
                                                         )}
                                                     >
                                                         <DepartureItem
@@ -274,9 +275,10 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
                                         {/* Expansion for this Sub-group */}
                                         {hasMore && (
-                                            <button
+                                            <Button
+                                                variant="ghost"
                                                 onClick={() => onToggleGroup(subGroup.groupId)}
-                                                className="w-full py-2.5 flex items-center justify-center gap-2 bg-black/3 hover:bg-black/5 dark:bg-white/4 dark:hover:bg-white/10 transition-colors border-t border-black/5 dark:border-white/5 text-muted-foreground/70 dark:text-muted-foreground/50 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider rounded-b-[11px]"
+                                                className="w-full h-auto py-2.5 flex items-center justify-center gap-2 bg-black/[0.03] hover:bg-black/[0.06] dark:bg-white/[0.03] dark:hover:bg-white/[0.08] transition-colors border-t border-black/5 dark:border-white/5 text-muted-foreground/70 dark:text-muted-foreground/60 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider rounded-b-[11px] rounded-t-none"
                                             >
                                                 <ChevronDown 
                                                     size={14} 
@@ -287,7 +289,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                         ? t('map.departures.showLess') 
                                                         : t('map.departures.moreConnections', { count: hiddenCount })}
                                                 </span>
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
                                 );

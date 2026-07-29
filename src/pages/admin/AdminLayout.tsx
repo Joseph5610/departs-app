@@ -21,14 +21,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   return (
     <div className="flex flex-col h-dvh bg-background text-foreground overflow-hidden">
       {/* Header Area */}
-      <div className="flex-none border-b border-border bg-card p-3 shadow-sm z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex-none border-b border-border/40 bg-card/80 backdrop-blur-md px-4 py-3 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href={backUrl}>
-            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9" aria-label="Go back">
-              <ArrowLeft size={20} />
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-foreground/5 hover:bg-foreground/10 border border-border/40 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" aria-label="Go back">
+              <ArrowLeft size={16} />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">{title}</h1>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-md hidden sm:inline-block">
+              Admin
+            </span>
+          </div>
         </div>
 
         {/* Dynamic header actions (tabs, buttons, etc) */}

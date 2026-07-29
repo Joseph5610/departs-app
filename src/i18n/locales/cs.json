@@ -26,8 +26,10 @@
       "display": "Zobrazení",
       "language": "Jazyk",
       "filters": "Filtry",
-      "ai": "AI integrace"
+      "ai": "AI integrace",
+      "attributions": "Zdroje a autorství"
     },
+    "dataSource": "Datový zdroj",
     "theme": {
       "title": "Vzhled",
       "description": "Světlý nebo tmavý režim",
@@ -402,6 +404,8 @@
     "bannerTitle": "AI Integrace",
     "bannerDesc": "Ptejte se AI na aktuální odjezdy a polohu spojů přímo ve svém nástroji.",
     "newBadge": "Nové",
+    "copy": "Kopírovat",
+    "copied": "Zkopírováno!",
     "copyUrl": "Kopírovat URL MCP",
     "copySuccess": "URL adresa MCP serveru zkopírována do schránky!",
     "copyCommandSuccess": "Příkaz zkopírován do schránky!",

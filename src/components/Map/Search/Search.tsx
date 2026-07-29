@@ -228,7 +228,7 @@ export const Search: React.FC = React.memo(() => {
                     className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" 
                     data-testid="search-container"
                 >
-                    <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-black/5 dark:hover:bg-foreground/5" />
+                    <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-muted/50" />
                     
                     <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                         <Input
@@ -274,7 +274,7 @@ export const Search: React.FC = React.memo(() => {
                                         clearSearch();
                                         inputRef.current?.focus();
                                     }}
-                                    className="h-9 w-9 text-muted-foreground hover:bg-black/5 dark:hover:bg-foreground/5"
+                                    className="h-9 w-9 text-muted-foreground hover:bg-muted/50"
                                     aria-label={t('search.clearFilter')}
                                 >
                                     <X size={18} strokeWidth={2}  />

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Copy, Check, X, Info } from 'lucide-react';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { MCP_ENDPOINT_URL } from '../Modals/McpModal/McpModal';
 
@@ -34,9 +35,9 @@ export const McpPromoBanner: React.FC = () => {
                 <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <span>{t('mcp.bannerTitle')}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
+                        <Badge variant="soft" className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full">
                             {t('mcp.newBadge')}
-                        </span>
+                        </Badge>
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
                         {t('mcp.bannerDesc')}
@@ -46,32 +47,34 @@ export const McpPromoBanner: React.FC = () => {
                         <Button
                             size="sm"
                             variant="default"
-                            className="h-7 px-2.5 text-[11px] font-semibold gap-1 rounded-lg"
+                            className="h-7 px-3 text-xs font-semibold gap-1.5 rounded-lg cursor-pointer"
                             onClick={handleCopy}
                         >
-                            {isCopied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
-                            <span>{t('mcp.copyUrl')}</span>
+                            {isCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                            <span>{isCopied ? t('mcp.copied', 'Copied!') : t('mcp.copyUrl')}</span>
                         </Button>
 
                         <Button
                             size="sm"
-                            variant="outline"
-                            className="h-7 px-2.5 text-[11px] font-semibold gap-1 rounded-lg border-border/60"
+                            variant="ghost"
+                            className="h-7 px-3 text-xs font-semibold gap-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 border border-border/40 text-foreground transition-colors cursor-pointer"
                             onClick={() => setIsMcpModalOpen(true)}
                         >
-                            <Info className="size-3" />
+                            <Info className="size-3.5 text-muted-foreground" />
                             <span>{t('mcp.learnMore')}</span>
                         </Button>
                     </div>
                 </div>
 
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setIsMcpBannerDismissed(true)}
-                    className="shrink-0 p-1 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
                     aria-label="Dismiss banner"
                 >
                     <X className="size-4" />
-                </button>
+                </Button>
             </div>
         </div>
     );

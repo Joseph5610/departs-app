@@ -4,10 +4,11 @@ import { useVehicles } from '../../../hooks/data/useVehicles';
 import { useCityStats } from '../../../hooks/data/useCityStats';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { applyEnrichment } from '../../../lib/enrichment';
 import { useEnrichmentStore } from '../../../state/enrichmentStore';
-import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { getCityConfig } from '../../../config/cities';
 import { aggregateCityStats } from '../../../../functions/_core/utils/statsAggregator';
 import type { AppVehicleFeature } from '../../../../functions/_core/types';
 
@@ -25,7 +26,7 @@ export const StatsPanel = React.memo(() => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     
-    const hasEnrichment = !!FRONTEND_CITIES_CONFIG[selectedCity || 'prague']?.enrichmentChannel;
+    const hasEnrichment = !!getCityConfig(selectedCity).enrichmentChannel;
     
     const tab = usePreferencesStore(s => s.statsTab);
 
@@ -91,21 +92,19 @@ export const StatsPanel = React.memo(() => {
 
                     {/* Network Delay Notice */}
                     {hasEnrichment && tab === 'network' && (
-                        <Card variant="subtle" size="none" className="bg-amber-500/10 border-amber-500/20 shadow-none">
-                            <CardContent className="p-3.5 flex items-start gap-3">
-                                <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                                <div className="text-xs text-amber-500/90 leading-relaxed">
-                                    {t('stats.networkDelayNotice', 'Live delay and movement data for the entire network is not available in this region. Please switch to the "On Screen" tab to see live data for vehicles currently in view.')}
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <Alert variant="warning">
+                            <AlertTriangle size={16} />
+                            <AlertDescription className="text-xs leading-relaxed">
+                                {t('stats.networkDelayNotice', 'Live delay and movement data for the entire network is not available in this region. Please switch to the "On Screen" tab to see live data for vehicles currently in view.')}
+                            </AlertDescription>
+                        </Alert>
                     )}
 
                     {/* Delay Dependent Charts */}
                     {!(hasEnrichment && tab === 'network') && (
                         <>
                             <PunctualityCard stats={activeStats} />
-                            <MostDelayedCard stats={activeStats} selectedCity={selectedCity || 'prague'} />
+                            <MostDelayedCard stats={activeStats} selectedCity={getCityConfig(selectedCity).slug} />
                         </>
                     )}
 

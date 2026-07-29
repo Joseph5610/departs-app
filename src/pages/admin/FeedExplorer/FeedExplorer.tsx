@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useCities } from '../../../hooks/data/useCities';
+import { DEFAULT_CITY_SLUG } from '../../../config/cities';
 import { apiFetch } from '../../../lib/api-client';
 import { RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { JsonView, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { toast } from 'sonner';
@@ -49,7 +52,7 @@ export const FeedExplorer: React.FC = () => {
     const getItemsCount = () => {
         if (!data) return 0;
         if (feedType === 'alerts') {
-            if (selectedCity === 'prague') {
+            if (selectedCity === DEFAULT_CITY_SLUG) {
                 const prgData = data as { incidents?: { entity?: unknown[], rss?: { channel?: { item?: unknown } } }, exclusions?: { rss?: { channel?: { item?: unknown } } } };
                 const inc = prgData.incidents?.entity || prgData.incidents?.rss?.channel?.item;
                 const exc = prgData.exclusions?.rss?.channel?.item;
@@ -67,39 +70,39 @@ export const FeedExplorer: React.FC = () => {
     };
 
     const headerActions = (
-        <>
-            <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="hidden sm:block w-full sm:w-auto">
-                <TabsList variant="pill" className="w-full sm:w-auto grid grid-cols-2">
+        <div className="flex items-center gap-2">
+            <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="hidden sm:block">
+                <TabsList variant="pill">
                     {citiesData?.cities.map(city => (
                         <TabsTrigger key={city.slug} value={city.slug}>{city.name}</TabsTrigger>
                     ))}
                 </TabsList>
             </Tabs>
 
-            <Tabs value={feedType} onValueChange={(v) => setFeedType(v as 'vehicles' | 'alerts')} className="w-full sm:w-auto">
-                <TabsList variant="pill" className="w-full sm:w-auto grid grid-cols-2">
-                    <TabsTrigger value="vehicles" className="flex gap-2">
-                        <Bus size={14} /> Vehicles
+            <Tabs value={feedType} onValueChange={(v) => setFeedType(v as 'vehicles' | 'alerts')}>
+                <TabsList variant="pill">
+                    <TabsTrigger value="vehicles" className="gap-1.5">
+                        <Bus size={14} />
+                        <span>Vehicles</span>
                     </TabsTrigger>
-                    <TabsTrigger value="alerts" className="flex gap-2">
-                        <Info size={14} /> Alerts
+                    <TabsTrigger value="alerts" className="gap-1.5">
+                        <Info size={14} />
+                        <span>Alerts</span>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
-            
-            <div className="hidden sm:flex items-center gap-2">
-                <Button 
-                    onClick={handleRefresh}
-                    disabled={isLoading || isRefreshing}
-                    variant="outline"
-                    size="sm"
-                    title="Refresh Data"
-                >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing || isLoading ? "animate-spin" : ""}`} />
-                    Refresh
-                </Button>
-            </div>
-        </>
+
+            <Button 
+                onClick={handleRefresh}
+                disabled={isLoading || isRefreshing}
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 shrink-0 cursor-pointer"
+                title="Refresh Feed"
+            >
+                <RefreshCw size={16} className={isRefreshing || isLoading ? "animate-spin text-primary" : ""} />
+            </Button>
+        </div>
     );
 
     const titleNode = (
@@ -112,9 +115,9 @@ export const FeedExplorer: React.FC = () => {
         <AdminLayout title={titleNode} headerActions={headerActions} contentClassName="p-2 sm:p-4 flex flex-col min-h-0 h-full">
             <div className="flex items-center gap-2 sm:hidden shrink-0">
                 <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="w-full">
-                    <TabsList variant="pill" className="grid grid-cols-2 w-full">
-                        <TabsTrigger value="prague">PRG</TabsTrigger>
-                        <TabsTrigger value="brno">BRQ</TabsTrigger>
+                    <TabsList variant="default" className="grid grid-cols-2 w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
+                        <TabsTrigger value="prague" className="h-7 text-xs font-semibold rounded-lg">PRG</TabsTrigger>
+                        <TabsTrigger value="brno" className="h-7 text-xs font-semibold rounded-lg">BRQ</TabsTrigger>
                     </TabsList>
                 </Tabs>
             </div>
@@ -128,39 +131,43 @@ export const FeedExplorer: React.FC = () => {
 
             {isError && (
                 <div className="flex h-full items-center justify-center p-4">
-                    <div className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-xl max-w-md text-center shadow-sm">
-                        <AlertCircle size={40} className="mx-auto mb-4 opacity-80" />
-                        <h2 className="text-lg font-bold mb-2">Upstream Connection Error</h2>
-                        <p className="text-sm opacity-90 font-mono wrap-break-word">{error instanceof Error ? error.message : 'Unknown error occurred'}</p>
-                        <button onClick={handleRefresh} className="mt-4 px-4 py-2 bg-destructive/20 hover:bg-destructive/30 rounded-md font-medium text-sm transition-colors">Try Again</button>
-                    </div>
+                    <Alert variant="destructive" className="max-w-md p-6 flex flex-col items-center text-center">
+                        <AlertCircle size={40} className="mb-4 opacity-80" />
+                        <AlertTitle className="text-lg font-bold mb-2">Upstream Connection Error</AlertTitle>
+                        <AlertDescription className="text-sm opacity-90 font-mono wrap-break-word">
+                            {error instanceof Error ? error.message : 'Unknown error occurred'}
+                        </AlertDescription>
+                        <Button variant="outline" onClick={handleRefresh} className="mt-4 border-destructive/40 hover:bg-destructive/10 text-destructive">
+                            Try Again
+                        </Button>
+                    </Alert>
                 </div>
             )}
 
             {!!data && !isLoading && !isError && (
-                <div className="bg-card rounded-xl shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col border border-border relative mt-2 sm:mt-0">
-                    <div className="bg-muted/30 px-4 py-2 flex items-center justify-between border-b border-border select-none overflow-x-auto">
-                        <div className="text-xs text-muted-foreground font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                            <span>{selectedCity === 'brno' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
+                <div className="bg-card/80 backdrop-blur-md rounded-2xl shadow-xs overflow-hidden flex-1 min-h-0 flex flex-col border border-border/40 relative mt-2 sm:mt-0">
+                    <div className="bg-foreground/2 px-4 py-2.5 flex items-center justify-between border-b border-border/40 select-none overflow-x-auto">
+                        <div className="text-xs text-muted-foreground/80 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
+                            <span className="font-semibold">{selectedCity === 'brno' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-auto">
-                            <div className="text-xs text-muted-foreground font-mono bg-muted/50 border border-border px-2 py-1 rounded-md hidden sm:block">
+                            <Badge variant="outline" className="text-[10px] font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">
                                 {getItemsCount()} {feedType === 'vehicles' ? 'vehicles' : 'alerts'}
-                            </div>
+                            </Badge>
                             <Button
-                                variant="ghost" size="sm"
+                                variant="outline" size="sm"
                                 onClick={() => setIsExpandedAll(!isExpandedAll)}
-                                className="h-7 text-xs flex items-center gap-1.5"
+                                className="h-7 text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer"
                             >
-                                {isExpandedAll ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                                {isExpandedAll ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                                 <span className="hidden sm:inline">{isExpandedAll ? 'Collapse All' : 'Expand All'}</span>
                             </Button>
                             <Button
-                                variant="ghost" size="sm"
+                                variant="outline" size="sm"
                                 onClick={handleCopy}
-                                className="h-7 text-xs flex items-center gap-1.5"
+                                className="h-7 text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer"
                             >
-                                {isCopied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                {isCopied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                                 <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Copy JSON'}</span>
                             </Button>
                         </div>

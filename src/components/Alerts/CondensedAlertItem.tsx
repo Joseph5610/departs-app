@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import type { RSSItem } from '../../types/transit';
 import { LineBadge } from '../LineBadge';
 import { AlertIcon } from './AlertIcon';
@@ -71,12 +72,10 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
 
                         {/* Status Badge */}
                         {isFuture ? (
-                            <div className="flex gap-1.5 items-center bg-foreground/5 px-1.5 py-0.5 rounded-md border border-border/50">
+                            <Badge variant="outline" className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                                <span className="text-[9px] font-bold text-amber-500/90 uppercase tracking-widest">
-                                    {t('alerts.planned')}
-                                </span>
-                            </div>
+                                <span>{t('alerts.planned')}</span>
+                            </Badge>
                         ) : null}
 
                     </div>

@@ -56,4 +56,13 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     }
 };
 
-export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG['prague'];
+export const DEFAULT_CITY_SLUG = 'prague';
+export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG[DEFAULT_CITY_SLUG];
+
+/**
+ * Resolves a city configuration by slug, safely falling back to the default city config.
+ */
+export function getCityConfig(citySlug?: string | null): InitialCityConfig {
+    if (!citySlug) return FALLBACK_CITY_CONFIG;
+    return FRONTEND_CITIES_CONFIG[citySlug] || FALLBACK_CITY_CONFIG;
+}

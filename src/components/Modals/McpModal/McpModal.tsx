@@ -57,11 +57,20 @@ export const McpModal: React.FC = () => {
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 gap-1.5 text-xs font-semibold shrink-0 cursor-pointer"
+                                        className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
                                         onClick={() => handleCopy(MCP_ENDPOINT_URL, 'endpoint')}
                                     >
-                                        {copiedKey === 'endpoint' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                        <span>{t('mcp.copyUrl')}</span>
+                                        {copiedKey === 'endpoint' ? (
+                                            <>
+                                                <Check className="size-3.5 text-emerald-500" />
+                                                <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="size-3.5 text-muted-foreground" />
+                                                <span>{t('mcp.copyUrl', 'Copy Endpoint URL')}</span>
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </div>
@@ -98,12 +107,21 @@ export const McpModal: React.FC = () => {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="ghost"
-                                            className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer"
+                                            variant="outline"
+                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
                                             onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode', 'mcp.copyCommandSuccess')}
                                         >
-                                            {copiedKey === 'claudeCode' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                            <span className="sr-only sm:not-sr-only">Copy</span>
+                                            {copiedKey === 'claudeCode' ? (
+                                                <>
+                                                    <Check className="size-3.5 text-emerald-500" />
+                                                    <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="size-3.5 text-muted-foreground" />
+                                                    <span>{t('mcp.copy', 'Copy')}</span>
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
                                     <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
@@ -124,12 +142,21 @@ export const McpModal: React.FC = () => {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="ghost"
-                                            className="h-8 px-2.5 text-xs font-semibold gap-1.5 cursor-pointer"
+                                            variant="outline"
+                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
                                             onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor', 'mcp.copyConfigSuccess')}
                                         >
-                                            {copiedKey === 'cursor' ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                                            <span className="sr-only sm:not-sr-only">Copy</span>
+                                            {copiedKey === 'cursor' ? (
+                                                <>
+                                                    <Check className="size-3.5 text-emerald-500" />
+                                                    <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="size-3.5 text-muted-foreground" />
+                                                    <span>{t('mcp.copy', 'Copy')}</span>
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
                                     <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">

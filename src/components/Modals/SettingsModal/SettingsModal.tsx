@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -41,9 +42,10 @@ export const SettingsModal: React.FC = () => {
                             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.ai')}
                             </h3>
-                            <button
+                            <Button
+                                variant="ghost"
                                 onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), 150); }}
-                                className="w-full text-left p-4 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start gap-3.5 group"
+                                className="w-full text-left p-4 h-auto rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-start gap-3.5 group whitespace-normal font-normal"
                             >
                                 <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
                                     <Sparkles size={18} strokeWidth={2} className="animate-pulse" />
@@ -56,7 +58,7 @@ export const SettingsModal: React.FC = () => {
                                         {t('mcp.subtitle')}
                                     </p>
                                 </div>
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Display Toggles & Vehicle Type Filters */}

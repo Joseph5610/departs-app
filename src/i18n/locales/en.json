@@ -25,8 +25,10 @@
       "display": "Display",
       "language": "Language",
       "filters": "Filters",
-      "ai": "AI Integrations"
+      "ai": "AI Integrations",
+      "attributions": "Attributions"
     },
+    "dataSource": "Data Source",
     "theme": {
       "title": "Appearance",
       "description": "Light or dark mode",
@@ -160,8 +162,8 @@
         "description": "Please use night trams and buses which provide transportation until the early morning hours."
       },
       "delay": "+{{minutes}}min delay",
-      "moreConnections_one": "+ {{count}} more connection",
-      "moreConnections_other": "+ {{count}} more connections",
+      "moreConnections_one": "{{count}} more connection",
+      "moreConnections_other": "{{count}} more connections",
       "showLess": "Show less",
       "showAirConditioned": "AC vehicles only",
       "showAll": "All vehicles",
@@ -399,6 +401,8 @@
     "bannerTitle": "AI Integration",
     "bannerDesc": "Query live departures & vehicle tracking directly in your AI tools.",
     "newBadge": "New",
+    "copy": "Copy",
+    "copied": "Copied!",
     "copyUrl": "Copy Endpoint URL",
     "copySuccess": "MCP Endpoint URL copied to clipboard!",
     "copyCommandSuccess": "Command copied to clipboard!",

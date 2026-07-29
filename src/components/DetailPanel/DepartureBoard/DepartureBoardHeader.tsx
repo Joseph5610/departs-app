@@ -293,7 +293,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                 onClick={toggleRequireAirConditioned}
                                 className={cn(
                                     "flex items-center justify-center h-6 px-2 transition-[transform,colors] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-md border border-border/50 text-[11px] font-bold gap-1 shrink-0",
-                                    requireAirConditioned ? "bg-[#0ea5e9] text-white z-10 shadow-lg border-transparent" : "bg-secondary text-secondary-foreground"
+                                    requireAirConditioned ? "bg-sky-500 text-white z-10 shadow-lg border-transparent" : "bg-secondary text-secondary-foreground"
                                 )}
                             >
                                 <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />

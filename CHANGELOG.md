@@ -1,3 +1,17 @@
+## [0.57.8] - 2026-07-29
+
+### Refactored
+
+- **Code Quality & Component Architecture Refactoring**:
+  - Fixed React render body state mutation invariant in `WelcomeModal.tsx`.
+  - Replaced un-reused raw elements (`<button>`, `<span>`, callout `<div>`s) across `McpPromoBanner`, `CitySelectionList`, `StatsPanel`, `SystemStatusModal`, `SettingsModal`, `SettingsFooter`, `CondensedAlertItem`, `GenericAlertCard`, `FeedExplorer`, and `McpModal` with standard Shadcn UI primitives (`<Button>`, `<Badge>`, `<Alert>`).
+  - Unified copy button design system in `McpModal.tsx` (`<Button variant="outline">` with sleek `bg-foreground/5` pill, consistent height `h-7`, gap, copy icon, and emerald check feedback).
+  - Fixed layout alignment bug in `LiveStatus.tsx` where the live status pill did not shift horizontally alongside `Search` when opening stats (`/stats`) or favorites (`/favorites`) sidebars (`isStatsRoute`, `isFavoritesRoute`).
+  - Refined badge styling in `SettingsFooter.tsx` (`variant="outline"` with subtle `bg-foreground/5` fill) and Website link button in `SystemStatusModal.tsx` for a sleek, non-chunky appearance.
+  - Fine-tuned zebra striping opacity (`dark:bg-white/[0.02]`) and subgroup expand button background (`dark:bg-white/[0.03]`) in `DepartureBoard.tsx` for smooth, cohesive visual contrast.
+  - Added `getCityConfig(citySlug?: string | null)` helper in `src/config/cities.ts` to encapsulate city lookup and fallback logic in a single place. Refactored `VehicleDetail.tsx` and `StatsPanel.tsx` to use `getCityConfig(selectedCity)` instead of repeating dictionary fallback expressions.
+  - Complete design overhaul of the Admin UI (`AdminLayout.tsx`, `AdminFeedback.tsx`, `AdminIndex.tsx`, `FeedExplorer.tsx`): upgraded layout to glassmorphic header bars with admin badges, unified filter tracks, refined badge tokens (`<Badge variant="outline">`), sleek list card hover states, and modernized action buttons.
+
 ## [0.57.7] - 2026-07-27
 
 ### Added

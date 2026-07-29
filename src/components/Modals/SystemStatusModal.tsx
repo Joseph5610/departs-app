@@ -6,6 +6,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { DATA_SOURCE_URLS } from '../../config/constants';
@@ -184,15 +186,15 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                                     {providerName}
                                 </span>
                             </div>
-                            <a 
-                                href={providerUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 bg-foreground/5 hover:bg-foreground/10 px-2.5 py-1.5 rounded-lg border border-border/50 font-bold"
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 px-2.5 rounded-lg border border-border/40 font-bold gap-1.5 transition-colors"
+                                render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}
                             >
                                 {t('liveStatus.dataProviderLink')}
                                 <ExternalLink className="w-3 h-3" />
-                            </a>
+                            </Button>
                         </div>
 
                         <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
@@ -217,13 +219,15 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
                     </div>
 
                     {/* How It Works Info Card */}
-                    <div className="flex gap-3 p-4 rounded-2xl border border-primary/30 bg-primary/10 shadow-sm text-xs leading-relaxed text-muted-foreground">
-                        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-foreground">{t('liveStatus.explanationTitle')}</span>
-                            <span>{t('liveStatus.explanationText')}</span>
-                        </div>
-                    </div>
+                    <Alert variant="subtle" className="border-primary/30 bg-primary/10">
+                        <Info className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                        <AlertTitle className="text-xs font-bold text-foreground">
+                            {t('liveStatus.explanationTitle')}
+                        </AlertTitle>
+                        <AlertDescription className="text-xs leading-relaxed text-muted-foreground">
+                            {t('liveStatus.explanationText')}
+                        </AlertDescription>
+                    </Alert>
                 </div>
             </DialogContent>
         </Dialog>

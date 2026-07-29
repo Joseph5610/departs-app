@@ -10,6 +10,7 @@ import { useCities } from '../../hooks/data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useLocation } from 'wouter';
+import { DEFAULT_CITY_SLUG } from '../../config/cities';
 import { CitySelectionList } from '../Map/CitySelectionList';
 
 /**
@@ -28,11 +29,17 @@ export const WelcomeModal: React.FC = () => {
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [, navigate] = useLocation();
 
-    const [localSelectedCitySlug, setLocalSelectedCitySlug] = useState<string>(globalSelectedCity || 'prague');
+    const [userChosenSlug, setUserChosenSlug] = useState<string | null>(null);
 
-    if (cities.length > 0 && (!localSelectedCitySlug || !cities.find(c => c.slug === localSelectedCitySlug))) {
-        setLocalSelectedCitySlug(cities[0].slug);
-    }
+    const activeCitySlug = useMemo(() => {
+        if (userChosenSlug && cities.some(c => c.slug === userChosenSlug)) {
+            return userChosenSlug;
+        }
+        if (globalSelectedCity && cities.some(c => c.slug === globalSelectedCity)) {
+            return globalSelectedCity;
+        }
+        return cities[0]?.slug || DEFAULT_CITY_SLUG;
+    }, [userChosenSlug, globalSelectedCity, cities]);
 
     const [isOpen, setIsOpen] = useState(() => {
         if (typeof window === 'undefined') return false;
@@ -70,8 +77,8 @@ export const WelcomeModal: React.FC = () => {
         setIsOpen(false);
         handleLocate();
 
-        if (localSelectedCitySlug) {
-            const city = cities.find(c => c.slug === localSelectedCitySlug);
+        if (activeCitySlug) {
+            const city = cities.find(c => c.slug === activeCitySlug);
             if (city) {
                 if (city.slug !== globalSelectedCity) {
                     setSelectedCity(city.slug);
@@ -124,8 +131,8 @@ export const WelcomeModal: React.FC = () => {
                         </div>
                         <CitySelectionList 
                             cities={cities}
-                            selectedCitySlug={localSelectedCitySlug}
-                            onSelect={(c) => setLocalSelectedCitySlug(c.slug)}
+                            selectedCitySlug={activeCitySlug}
+                            onSelect={(c) => setUserChosenSlug(c.slug)}
                         />
                     </div>
 

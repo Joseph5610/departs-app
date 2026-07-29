@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
@@ -11,6 +11,7 @@ import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown,
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AdminLayout } from '../AdminLayout';
 import { toast } from 'sonner';
@@ -30,53 +31,46 @@ export const AdminFeedback: React.FC = () => {
         }
     });
 
-    const filteredItems = data?.items?.filter(item => {
-        // Type filter
-        if (filterType === 'crash' && item.type !== 'crash') return false;
-        if (filterType === 'feedback' && item.type === 'crash') return false;
-
-        // Text filter
-        if (!filterText) return true;
-        const search = filterText.toLowerCase();
+    const filteredItems = useMemo(() => {
+        if (!data?.items) return [];
+        const search = filterText.trim().toLowerCase();
         
-        const matchBasic = (
-            item.message.toLowerCase().includes(search) ||
-            item.type.toLowerCase().includes(search) ||
-            item.id.toLowerCase().includes(search) ||
-            (item.email && item.email.toLowerCase().includes(search)) ||
-            (item.ipAddress && item.ipAddress.toLowerCase().includes(search))
-        );
+        return data.items.filter(item => {
+            if (filterType === 'crash' && item.type !== 'crash') return false;
+            if (filterType === 'feedback' && item.type === 'crash') return false;
+            if (!search) return true;
 
-        if (matchBasic) return true;
+            const matchBasic = (
+                item.message.toLowerCase().includes(search) ||
+                item.type.toLowerCase().includes(search) ||
+                item.id.toLowerCase().includes(search) ||
+                (item.email && item.email.toLowerCase().includes(search)) ||
+                (item.ipAddress && item.ipAddress.toLowerCase().includes(search))
+            );
 
-        if (item.diagnostics) {
-            return JSON.stringify(item.diagnostics).toLowerCase().includes(search);
-        }
+            if (matchBasic) return true;
+            if (item.diagnostics) {
+                return JSON.stringify(item.diagnostics).toLowerCase().includes(search);
+            }
+            return false;
+        });
+    }, [data, filterType, filterText]);
 
-        return false;
-    });
+    const selectedItem = useMemo(() => {
+        if (!filteredItems.length) return null;
+        return filteredItems.find(item => item.id === selectedItemId) || filteredItems[0];
+    }, [filteredItems, selectedItemId]);
 
-    const isValidSelection = selectedItemId && filteredItems?.find(i => i.id === selectedItemId);
-    const activeItemId = isValidSelection ? selectedItemId : (filteredItems?.[0]?.id || null);
-    const selectedItem = filteredItems?.find(item => item.id === activeItemId) || null;
+    const activeItemId = selectedItem?.id || null;
 
     const isDark = document.documentElement.classList.contains('dark');
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'crash': return <AlertOctagon className="w-4 h-4 text-red-600" />;
-            case 'bug': return <Bug className="w-4 h-4 text-red-500" />;
-            case 'feature_request': return <Lightbulb className="w-4 h-4 text-yellow-500" />;
-            default: return <MessageSquare className="w-4 h-4 text-blue-500" />;
-        }
-    };
-
-    const getBadgeVariant = (type: string): 'destructive' | 'default' | 'secondary' => {
-        switch (type) {
-            case 'crash': return 'destructive';
-            case 'bug': return 'destructive';
-            case 'feature_request': return 'default';
-            default: return 'secondary';
+            case 'crash': return <AlertOctagon className="w-4 h-4 text-red-500" />;
+            case 'bug': return <Bug className="w-4 h-4 text-red-400" />;
+            case 'feature_request': return <Lightbulb className="w-4 h-4 text-amber-400" />;
+            default: return <MessageSquare className="w-4 h-4 text-sky-400" />;
         }
     };
 
@@ -137,9 +131,15 @@ Please locate the source code files mentioned in the stack traces above, diagnos
     };
 
     const headerActions = (
-        <Button onClick={() => refetch()} disabled={isFetching} variant="outline" size="sm">
-            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh
+        <Button 
+            onClick={() => refetch()} 
+            disabled={isFetching} 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 shrink-0 cursor-pointer"
+            title="Refresh Feedback"
+        >
+            <RefreshCw size={16} className={isFetching ? 'animate-spin text-primary' : ''} />
         </Button>
     );
 
@@ -163,159 +163,167 @@ Please locate the source code files mentioned in the stack traces above, diagnos
             )}
 
             {!isLoading && !isError && data?.items?.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-border border-dashed shrink-0">
-                    No feedback yet.
+                <div className="text-center py-12 text-muted-foreground bg-card/50 rounded-2xl border border-border/40 border-dashed shrink-0 flex flex-col items-center justify-center gap-3">
+                    <MessageSquare size={32} className="opacity-30 text-muted-foreground" />
+                    <p className="font-mono text-xs">No feedback or bug reports collected yet.</p>
                 </div>
             )}
 
             {!isLoading && !isError && (data?.items?.length || 0) > 0 && (
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70" />
                         <Input 
-                            placeholder="Filter by text, email, ID or IP address..." 
-                            className="pl-10"
+                            placeholder="Filter by message, email, ID or IP..." 
+                            className="h-9 pl-9 text-xs rounded-xl bg-foreground/5 border-border/40 text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/50"
                             value={filterText}
                             onChange={(e) => setFilterText(e.target.value)}
                         />
                     </div>
-                    <div className="flex bg-muted/50 p-1 rounded-md border border-border shrink-0">
-                        <Button 
-                            variant={filterType === 'all' ? 'default' : 'ghost'} 
-                            size="sm" 
-                            onClick={() => setFilterType('all')}
-                            className="flex-1 sm:flex-none h-8"
-                        >
-                            All
-                        </Button>
-                        <Button 
-                            variant={filterType === 'feedback' ? 'default' : 'ghost'} 
-                            size="sm" 
-                            onClick={() => setFilterType('feedback')}
-                            className="flex-1 sm:flex-none h-8"
-                        >
-                            <MessageSquare className="w-3.5 h-3.5 mr-1.5 opacity-70" />
-                            Feedback
-                        </Button>
-                        <Button 
-                            variant={filterType === 'crash' ? 'destructive' : 'ghost'} 
-                            size="sm" 
-                            onClick={() => setFilterType('crash')}
-                            className={`flex-1 sm:flex-none h-8 ${filterType === 'crash' ? '' : 'text-red-500 hover:text-red-600 hover:bg-red-500/10'}`}
-                        >
-                            <AlertOctagon className="w-3.5 h-3.5 mr-1.5" />
-                            Crashes
-                        </Button>
-                    </div>
+                    <Tabs value={filterType} onValueChange={(v) => setFilterType(v as 'all' | 'feedback' | 'crash')}>
+                        <TabsList variant="default" className="h-9 p-1 rounded-xl bg-foreground/5 border border-border/40 shrink-0">
+                            <TabsTrigger value="all" className="h-7 text-xs font-semibold rounded-lg px-3">
+                                All ({data?.items?.length || 0})
+                            </TabsTrigger>
+                            <TabsTrigger value="feedback" className="h-7 text-xs font-semibold rounded-lg px-3 gap-1.5">
+                                <MessageSquare className="w-3.5 h-3.5 opacity-70" />
+                                Feedback
+                            </TabsTrigger>
+                            <TabsTrigger value="crash" className="h-7 text-xs font-semibold rounded-lg px-3 gap-1.5 data-active:text-red-400">
+                                <AlertOctagon className="w-3.5 h-3.5 text-red-500" />
+                                Crashes
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </div>
             )}
 
             <div className="flex gap-4 flex-1 min-h-0 relative">
                 {/* Left Column: List */}
-                <div className={`w-full lg:w-87.5 shrink-0 flex flex-col gap-2 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:w-87.5 shrink-0 flex flex-col gap-2.5 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {filteredItems?.length === 0 && data?.items?.length !== 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                            No results found for filter "{filterText}".
+                        <div className="text-center py-8 text-muted-foreground/70 font-mono text-xs">
+                            No results found for "{filterText}".
                         </div>
                     )}
-                    {filteredItems?.map((item) => (
-                        <div 
-                            key={item.id} 
-                            onClick={() => {
-                                setSelectedItemId(item.id);
-                                setShowMobileDetail(true);
-                            }}
-                            className={`cursor-pointer rounded-lg p-3.5 transition-colors border text-left flex flex-col gap-2 ${activeItemId === item.id ? 'bg-muted/60 border-primary/30 shadow-sm' : 'bg-card hover:bg-muted/30 border-border'} ${item.type === 'crash' ? (activeItemId === item.id ? 'bg-red-500/10 border-red-500/40' : 'bg-red-500/5 hover:bg-red-500/10 border-red-500/20') : ''}`}
-                        >
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                    {getIcon(item.type)}
-                                    <span className="text-xs font-semibold uppercase tracking-wider">{item.type.replace('_', ' ')}</span>
+                    {filteredItems?.map((item) => {
+                        const isSelected = activeItemId === item.id;
+                        const isCrash = item.type === 'crash';
+                        return (
+                            <div 
+                                key={item.id} 
+                                onClick={() => {
+                                    setSelectedItemId(item.id);
+                                    setShowMobileDetail(true);
+                                }}
+                                className={`cursor-pointer rounded-xl p-3.5 transition-all border text-left flex flex-col gap-2 ${
+                                    isSelected 
+                                        ? (isCrash ? 'bg-red-500/10 border-red-500/40 ring-1 ring-red-500/20 shadow-xs' : 'bg-card border-primary/50 ring-1 ring-primary/20 shadow-xs') 
+                                        : (isCrash ? 'bg-red-500/3 hover:bg-red-500/8 border-red-500/20' : 'bg-card/60 hover:bg-card border-border/40 hover:border-border/70')
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                        {getIcon(item.type)}
+                                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-foreground/5 border-border/40 text-muted-foreground">
+                                            {item.type.replace('_', ' ')}
+                                        </Badge>
+                                    </div>
+                                    <span className="text-[11px] font-mono text-muted-foreground/70 whitespace-nowrap">
+                                        {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                    </span>
                                 </div>
-                                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                                    {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
-                                </span>
+                                <p className="text-xs line-clamp-2 text-foreground/90 font-medium leading-relaxed">
+                                    {item.message}
+                                </p>
+                                {item.email && (
+                                    <div className="text-[11px] font-mono text-primary/90 truncate flex items-center gap-1 mt-0.5">
+                                        <span className="opacity-60">@</span> {item.email}
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-sm line-clamp-2 text-foreground/90 font-medium">
-                                {item.message}
-                            </p>
-                            {item.email && (
-                                <div className="text-[10px] text-primary mt-1 truncate">
-                                    {item.email}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Right Column: Detail */}
-                <div className={`flex-1 min-w-0 bg-card rounded-xl border border-border overflow-hidden flex flex-col shadow-sm ${!showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`flex-1 min-w-0 bg-card/80 backdrop-blur-md rounded-2xl border border-border/40 overflow-hidden flex flex-col shadow-xs ${!showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {selectedItem ? (
-                        <ScrollArea className={`h-full w-full ${selectedItem.type === 'crash' ? 'bg-red-500/5' : ''}`}>
-                            <div className="p-4 sm:p-6 flex flex-col gap-6">
+                        <ScrollArea className={`h-full w-full ${selectedItem.type === 'crash' ? 'bg-red-500/2' : ''}`}>
+                            <div className="p-4 sm:p-6 flex flex-col gap-5">
                                 {/* Mobile back button */}
                                 <div className="lg:hidden flex items-center mb-1">
-                                    <Button variant="ghost" size="sm" onClick={() => setShowMobileDetail(false)} className="-ml-2">
-                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                    <Button variant="ghost" size="sm" onClick={() => setShowMobileDetail(false)} className="-ml-2 h-8 text-xs font-semibold gap-1 rounded-lg">
+                                        <ArrowLeft className="w-4 h-4" />
                                         Back to list
                                     </Button>
                                 </div>
 
-                                {/* Header */}
-                                <div className="flex justify-between items-start gap-4 flex-col sm:flex-row sm:items-center">
-                                    <div className="flex flex-wrap items-center gap-3">
+                                {/* Header Bar */}
+                                <div className="flex justify-between items-start gap-4 flex-col sm:flex-row sm:items-center border-b border-border/40 pb-4">
+                                    <div className="flex flex-wrap items-center gap-2.5">
                                         {getIcon(selectedItem.type)}
-                                        <Badge variant={getBadgeVariant(selectedItem.type)} className="capitalize px-3 py-1 text-sm">
+                                        <Badge variant="outline" className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-foreground/5 border-border/40 text-foreground">
                                             {selectedItem.type.replace('_', ' ')}
                                         </Badge>
-                                        <span className="text-sm text-muted-foreground">
+                                        <span className="text-xs font-mono text-muted-foreground/70">
                                             {formatDistanceToNow(new Date(selectedItem.timestamp), { addSuffix: true })}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                                        <Button variant="outline" size="sm" onClick={handleCopyRawJson} className="flex-1 sm:flex-none">
-                                            <Copy className="w-4 h-4 mr-2" />
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={handleCopyRawJson} 
+                                            className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer flex-1 sm:flex-none"
+                                        >
+                                            <Copy className="w-3.5 h-3.5" />
                                             Copy Raw JSON
                                         </Button>
-                                        <Button variant="default" size="sm" onClick={handleCopyAgentPrompt} className="flex-1 sm:flex-none">
-                                            <Terminal className="w-4 h-4 mr-2" />
+                                        <Button 
+                                            variant="default" 
+                                            size="sm" 
+                                            onClick={handleCopyAgentPrompt} 
+                                            className="h-8 px-3 rounded-lg text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all cursor-pointer flex-1 sm:flex-none"
+                                        >
+                                            <Terminal className="w-3.5 h-3.5" />
                                             Copy Agent Prompt
                                         </Button>
                                     </div>
                                 </div>
 
                                 {selectedItem.email && (
-                                    <div className="text-sm font-medium px-3 py-1.5 bg-primary/10 text-primary rounded-full truncate max-w-xs self-start">
+                                    <div className="text-xs font-mono font-semibold px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg truncate max-w-xs self-start">
                                         {selectedItem.email}
                                     </div>
                                 )}
                                 
                                 {/* Message */}
-                                <div className="bg-background rounded-lg p-5 border border-border shadow-sm">
-                                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground font-semibold">{selectedItem.message}</p>
+                                <div className="bg-foreground/3 rounded-xl p-4.5 border border-border/40 shadow-2xs">
+                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground font-medium">{selectedItem.message}</p>
                                 </div>
 
                                 {/* Crash Stack Traces */}
                                 {selectedItem.type === 'crash' && selectedItem.diagnostics?.crashInfo && (
-                                    <div className="flex flex-col gap-4">
+                                    <div className="flex flex-col gap-3">
                                         {selectedItem.diagnostics.crashInfo.errorStack && (
-                                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 shadow-sm">
-                                                <p className="text-sm font-bold text-red-600 uppercase tracking-wide mb-2 flex items-center gap-2">
-                                                    <AlertOctagon className="w-4 h-4" />
+                                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 shadow-2xs">
+                                                <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                    <AlertOctagon className="w-3.5 h-3.5" />
                                                     Error Stack
                                                 </p>
-                                                <pre className="text-xs text-red-700/90 whitespace-pre-wrap font-mono overflow-x-auto bg-red-500/5 p-3 rounded-md border border-red-500/10">
+                                                <pre className="text-[11px] text-red-400 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-red-500/20">
                                                     {selectedItem.diagnostics.crashInfo.errorStack}
                                                 </pre>
                                             </div>
                                         )}
                                         {selectedItem.diagnostics.crashInfo.componentStack && (
-                                            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4 shadow-sm">
-                                                <p className="text-sm font-bold text-orange-600 uppercase tracking-wide mb-2 flex items-center gap-2">
-                                                    <AlertOctagon className="w-4 h-4" />
+                                            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 shadow-2xs">
+                                                <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                    <AlertOctagon className="w-3.5 h-3.5" />
                                                     Component Stack
                                                 </p>
-                                                <pre className="text-xs text-orange-700/90 whitespace-pre-wrap font-mono overflow-x-auto bg-orange-500/5 p-3 rounded-md border border-orange-500/10">
+                                                <pre className="text-[11px] text-orange-300 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-orange-500/20">
                                                     {selectedItem.diagnostics.crashInfo.componentStack}
                                                 </pre>
                                             </div>
@@ -324,25 +332,34 @@ Please locate the source code files mentioned in the stack traces above, diagnos
                                 )}
                                 
                                 {/* Meta Information */}
-                                <div className="flex flex-col gap-2 text-xs text-muted-foreground/80 bg-muted/30 p-4 rounded-lg border border-border/50">
-                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Feedback ID:</span><span className="font-mono break-all">{selectedItem.id}</span></p>
-                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Client IP:</span><span className="font-mono">{selectedItem.ipAddress}</span></p>
-                                    <p className="flex flex-col sm:flex-row sm:gap-2"><span className="uppercase text-[10px] font-bold tracking-wider sm:w-28">Exact Time:</span><span>{new Date(selectedItem.timestamp).toLocaleString()}</span></p>
+                                <div className="flex flex-col gap-2 text-xs font-mono text-muted-foreground/80 bg-foreground/2 p-4 rounded-xl border border-border/40">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Feedback ID:</span>
+                                        <span className="text-foreground/90 font-mono break-all">{selectedItem.id}</span>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Client IP:</span>
+                                        <span className="text-foreground/90 font-mono">{selectedItem.ipAddress}</span>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Exact Time:</span>
+                                        <span className="text-foreground/90 font-mono">{new Date(selectedItem.timestamp).toLocaleString()}</span>
+                                    </div>
                                 </div>
                                 
                                 {/* Diagnostics Collapsible */}
                                 {selectedItem.diagnostics && (
-                                    <Collapsible className="bg-muted/30 rounded-lg border border-border">
-                                        <CollapsibleTrigger className="w-full flex justify-between items-center p-4 h-auto hover:bg-muted/50 transition-colors rounded-lg data-[state=open]:[&>svg]:rotate-180">
-                                            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                                <Bug className="w-4 h-4" />
-                                                Full Diagnostic Data
+                                    <Collapsible className="bg-foreground/2 rounded-xl border border-border/40 overflow-hidden">
+                                        <CollapsibleTrigger className="w-full flex justify-between items-center p-3.5 hover:bg-foreground/5 transition-colors cursor-pointer data-[state=open]:[&>svg]:rotate-180">
+                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                                <Bug className="w-3.5 h-3.5 text-primary" />
+                                                Full Diagnostic Payload
                                             </span>
-                                            <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
                                         </CollapsibleTrigger>
-                                        <CollapsibleContent className="px-4 pb-4">
-                                            <div className="w-full rounded-md mt-2 bg-background p-4 border border-border shadow-inner overflow-hidden">
-                                                <div className="text-sm [&>div]:bg-transparent! font-mono overflow-x-auto">
+                                        <CollapsibleContent className="px-3.5 pb-3.5">
+                                            <div className="w-full rounded-xl bg-black/40 p-3.5 border border-border/40 shadow-inner overflow-hidden">
+                                                <div className="text-xs [&>div]:bg-transparent! font-mono overflow-x-auto">
                                                     <JsonView 
                                                         data={selectedItem.diagnostics} 
                                                         shouldExpandNode={allExpanded} 
@@ -356,10 +373,10 @@ Please locate the source code files mentioned in the stack traces above, diagnos
                             </div>
                         </ScrollArea>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-12 text-center gap-4">
-                            <MessageSquare className="w-12 h-12 opacity-20" />
-                            <p className="text-lg font-medium">Select an item from the list</p>
-                            <p className="text-sm opacity-70">Click on a feedback or crash report on the left to view its detailed payload here.</p>
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-12 text-center gap-3">
+                            <MessageSquare className="w-10 h-10 opacity-20" />
+                            <p className="text-sm font-semibold text-foreground/80">Select an item from the list</p>
+                            <p className="text-xs opacity-70 max-w-xs font-mono">Click on a feedback or crash report on the left to view its detailed diagnostics.</p>
                         </div>
                     )}
                 </div>

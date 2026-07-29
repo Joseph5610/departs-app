@@ -14,7 +14,7 @@ export const DepartureBoardSkeleton: React.FC = () => {
                     className="flex flex-col rounded-xl overflow-hidden border border-border/50 bg-foreground/1 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
                 >
                     {/* Primary Group Header Skeleton */}
-                    <div className="flex items-center gap-2 px-3 py-2 bg-foreground/4 border-b border-border/50">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-foreground/5 border-b border-border/50">
                         <Skeleton className="h-5 w-8 rounded-md" />
                         <div className="w-3 h-3 bg-foreground/5 rounded-full" />
                         <Skeleton className="h-4 w-32" />

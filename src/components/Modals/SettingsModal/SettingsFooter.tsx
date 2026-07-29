@@ -8,6 +8,7 @@ import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
 import { DATA_SOURCE_URLS } from '../../../config/constants';
 import { formatDateTime } from '../../../utils/dateUtils';
@@ -117,9 +118,9 @@ export const SettingsFooter: React.FC = () => {
                             </ItemTitle>
                         </ItemContent>
                         <ItemActions>
-                            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-md">
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
                                 {t('settings.versionBadge', { version })}
-                            </span>
+                            </Badge>
                         </ItemActions>
                     </Item>
                 </ItemGroup>
@@ -127,7 +128,7 @@ export const SettingsFooter: React.FC = () => {
 
             <div className="flex flex-col gap-2">
                 <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
-                    Attributions
+                    {t('settings.sections.attributions')}
                 </div>
                 <Card variant="subtle" size="none" className="overflow-hidden gap-0">
                     <ItemGroup className="gap-0">
@@ -143,9 +144,9 @@ export const SettingsFooter: React.FC = () => {
                                 <ItemTitle className="text-foreground">Golemio (Prague)</ItemTitle>
                             </ItemContent>
                             <ItemActions>
-                                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-md">
-                                    Data Source
-                                </span>
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                                    {t('settings.dataSource')}
+                                </Badge>
                             </ItemActions>
                         </Item>
 
@@ -161,9 +162,9 @@ export const SettingsFooter: React.FC = () => {
                                 <ItemTitle className="text-foreground">IDS JMK (Brno)</ItemTitle>
                             </ItemContent>
                             <ItemActions>
-                                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-md">
-                                    Data Source
-                                </span>
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                                    {t('settings.dataSource')}
+                                </Badge>
                             </ItemActions>
                         </Item>
 
@@ -179,9 +180,9 @@ export const SettingsFooter: React.FC = () => {
                                 <ItemTitle className="text-foreground">{t('settings.license')}</ItemTitle>
                             </ItemContent>
                             <ItemActions>
-                                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-md">
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
                                     CC BY 4.0
-                                </span>
+                                </Badge>
                             </ItemActions>
                         </Item>
                     </ItemGroup>
