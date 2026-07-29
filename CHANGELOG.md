@@ -9,6 +9,7 @@
   - Fixed layout alignment bug in `LiveStatus.tsx` where the live status pill did not shift horizontally alongside `Search` when opening stats (`/stats`) or favorites (`/favorites`) sidebars (`isStatsRoute`, `isFavoritesRoute`).
   - Refined badge styling in `SettingsFooter.tsx` (`variant="outline"` with subtle `bg-foreground/5` fill) and Website link button in `SystemStatusModal.tsx` for a sleek, non-chunky appearance.
   - Fine-tuned zebra striping opacity (`dark:bg-white/[0.02]`) and subgroup expand button background (`dark:bg-white/[0.03]`) in `DepartureBoard.tsx` for smooth, cohesive visual contrast.
+  - Restored `<GroupedVirtuoso>` virtualization from `react-virtuoso` in `src/components/Modals/AlertsModal.tsx` to handle large transport disruption and alert lists smoothly without DOM bloat or modal rendering lag.
   - Added `getCityConfig(citySlug?: string | null)` helper in `src/config/cities.ts` to encapsulate city lookup and fallback logic in a single place. Refactored `VehicleDetail.tsx` and `StatsPanel.tsx` to use `getCityConfig(selectedCity)` instead of repeating dictionary fallback expressions.
   - Complete design overhaul of the Admin UI (`AdminLayout.tsx`, `AdminFeedback.tsx`, `AdminIndex.tsx`, `FeedExplorer.tsx`): upgraded layout to glassmorphic header bars with admin badges, unified filter tracks, refined badge tokens (`<Badge variant="outline">`), sleek list card hover states, and modernized action buttons.
 

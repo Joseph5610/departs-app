@@ -16,7 +16,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
 
 VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
 
-export const VehicleHeroSkeleton: React.FC = () => (
+const VehicleHeroSkeleton: React.FC = () => (
     <div className="rounded-2xl bg-muted/40 border border-border/50">
         <div className="flex flex-col gap-2 relative z-10 px-6 py-6">
             {/* Route Badge Skeleton */}

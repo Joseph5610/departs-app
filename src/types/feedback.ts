@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-export const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other', 'crash']);
+const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other', 'crash']);
 
 export type FeedbackType = z.infer<typeof feedbackTypeEnum>;
 
 // Represents the diagnostic data sent from the client
-export const diagnosticDataSchema = z.object({
+const diagnosticDataSchema = z.object({
   url: z.string(),
   userAgent: z.string(),
   appVersion: z.string(),
@@ -60,10 +60,10 @@ export const feedbackPayloadSchema = z.object({
 export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
 
 // Represents the full stored entity in KV
-export const storedFeedbackSchema = feedbackPayloadSchema.omit({ turnstileToken: true }).extend({
+const _storedFeedbackSchema = feedbackPayloadSchema.omit({ turnstileToken: true }).extend({
   id: z.string(),
   timestamp: z.string(),
   ipAddress: z.string().optional(),
 });
 
-export type StoredFeedback = z.infer<typeof storedFeedbackSchema>;
+export type StoredFeedback = z.infer<typeof _storedFeedbackSchema>;

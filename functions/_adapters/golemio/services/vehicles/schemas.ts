@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const golemioVehicleDescriptorSchema = z.object({
+const golemioVehicleDescriptorSchema = z.object({
     operator: z.string().nullish().transform(v => v ?? undefined),
     vehicle_type: z.string().nullish().transform(v => v ?? undefined),
     is_wheelchair_accessible: z.boolean().nullish().transform(v => v ?? undefined),
@@ -10,7 +10,7 @@ export const golemioVehicleDescriptorSchema = z.object({
 });
 
 
-export const golemioVehiclePropertiesSchema = z.object({
+const golemioVehiclePropertiesSchema = z.object({
     vehicle_id: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? String(v) : undefined),
     id: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? String(v) : undefined),
     gtfs_trip_id: z.string().nullish().transform(v => v ?? undefined),
@@ -30,7 +30,7 @@ export const golemioVehiclePropertiesSchema = z.object({
 });
 
 
-export const golemioVehicleFeatureSchema = z.object({
+const golemioVehicleFeatureSchema = z.object({
     type: z.literal('Feature'),
     geometry: z.object({
         type: z.literal('Point'),
@@ -40,7 +40,7 @@ export const golemioVehicleFeatureSchema = z.object({
 });
 export type GolemioVehicleFeature = z.infer<typeof golemioVehicleFeatureSchema>;
 
-export const golemioStopTimePropertiesSchema = z.object({
+const golemioStopTimePropertiesSchema = z.object({
     stop_id: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? String(v) : undefined),
     stop_name: z.string().nullish().transform(v => v ?? undefined),
     stop_sequence: z.number().nullish().transform(v => v ?? undefined),
@@ -54,7 +54,7 @@ export const golemioStopTimePropertiesSchema = z.object({
 });
 
 
-export const golemioStopTimeFeatureSchema = z.object({
+const golemioStopTimeFeatureSchema = z.object({
     type: z.literal('Feature'),
     geometry: z.object({
         type: z.string(),
@@ -64,7 +64,7 @@ export const golemioStopTimeFeatureSchema = z.object({
 });
 export type GolemioStopTimeFeature = z.infer<typeof golemioStopTimeFeatureSchema>;
 
-export const golemioShapeFeatureSchema = z.object({
+const golemioShapeFeatureSchema = z.object({
     type: z.literal('Feature'),
     geometry: z.object({
         type: z.literal('Point'),

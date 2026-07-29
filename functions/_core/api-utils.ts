@@ -44,7 +44,7 @@ export const ERROR_MESSAGES = {
  * @param status HTTP status code (default: 500)
  * @returns Response object
  */
-export function createErrorResponse(message: string, status: number = 500): Response {
+function createErrorResponse(message: string, status: number = 500): Response {
     return new Response(JSON.stringify({
         error: true,
         message,
@@ -61,7 +61,7 @@ export function createErrorResponse(message: string, status: number = 500): Resp
 /**
  * Converts thrown errors (like ApiError) into standardized JSON Responses.
  */
-export function handleError(error: unknown): Response {
+function handleError(error: unknown): Response {
     if (error instanceof ZodError) {
         return createErrorResponse("Invalid request parameters", 400);
     }
@@ -129,7 +129,7 @@ export function fixCommaSpacing(text: string | undefined | null): string | undef
     return text.replace(/,([^\s])/g, ', $1');
 }
 
-export const ALLOWED_PATTERNS = [
+const ALLOWED_PATTERNS = [
     /^https:\/\/(www\.)?departs\.app$/,      // Main domain (with or without www)
     /^https:\/\/.*departs-app\.pages\.dev$/, // Cloudflare Pages (all environments)
     /^http:\/\/localhost:\d+$/,              // Localhost

@@ -4,7 +4,7 @@ import type {
     LineLayerSpecification
 } from 'maplibre-gl';
 
-export const MAP_TOKENS = {
+const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
         stops: { min: 13, max: 17 },

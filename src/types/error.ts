@@ -22,12 +22,6 @@ export interface AppError extends Error {
     isUpstream?: boolean;
 }
 
-/**
- * Type guard for AppError.
- */
-export function isAppError(error: unknown): error is AppError {
-    return error !== null && typeof error === 'object' && 'code' in error;
-}
 
 /**
  * Creates an AppError from a fetch response or caught error.

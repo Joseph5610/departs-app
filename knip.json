@@ -1,17 +1,22 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/main.tsx",
-    "functions/api/**/*.ts"
+    "functions/api/**/*.ts",
+    "functions/*.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx}",
     "functions/**/*.{ts,tsx}"
   ],
   "ignore": [
-    "src/components/ui/**/*.tsx",
-    "src/components/ui/**/*.ts",
+    "src/components/ui/**/*.{ts,tsx}",
     "src/pwa.d.ts",
     "src/types/react-map-gl.d.ts"
+  ],
+  "ignoreDependencies": [
+    "@fontsource-variable/geist",
+    "tw-animate-css",
+    "tailwindcss",
+    "shadcn"
   ]
 }

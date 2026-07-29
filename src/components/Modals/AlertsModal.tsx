@@ -23,11 +23,12 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GroupedVirtuoso } from 'react-virtuoso';
 import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import {
     Empty,
     EmptyHeader,
@@ -137,9 +138,26 @@ export const AlertsModal: React.FC = () => {
         });
     }, [rssData, filterMode, searchQuery]);
 
+    const groupCounts = useMemo(() => sections.map(s => s.items.length), [sections]);
+    const groupModes = useMemo(() => sections.map(s => s.mode), [sections]);
+    const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
+
+    const itemGroupMeta = useMemo(() => {
+        const meta: { itemIndexInGroup: number; countInGroup: number }[] = [];
+        groupCounts.forEach((count) => {
+            for (let i = 0; i < count; i++) {
+                meta.push({
+                    itemIndexInGroup: i,
+                    countInGroup: count,
+                });
+            }
+        });
+        return meta;
+    }, [groupCounts]);
+
     return (
         <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
-            <DialogContent aria-describedby={undefined} variant="default" className="max-w-xl" data-testid="alerts-modal-content">
+            <DialogContent aria-describedby={undefined} variant="default" className="max-w-xl flex flex-col h-[calc(85dvh)] p-0 overflow-hidden gap-0" data-testid="alerts-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>
                         {t('alerts.title')}
@@ -181,10 +199,10 @@ export const AlertsModal: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Scrollable Content */}
-                    <ScrollArea className="flex-1 min-h-0 px-6">
+                    {/* Virtualized Scroll Container */}
+                    <div className="flex-1 min-h-0 px-6 py-2">
                         {sections.length === 0 && !loadingRSS ? (
-                            <div className="flex flex-1 items-center justify-center py-12">
+                            <div className="flex flex-1 items-center justify-center py-12 h-full">
                                 <Empty className="animate-in fade-in zoom-in-95 duration-300">
                                     <EmptyHeader>
                                         <EmptyMedia
@@ -206,31 +224,48 @@ export const AlertsModal: React.FC = () => {
                                 </Empty>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-6 py-3 pb-6">
-                                {sections.map(({ mode, items: modeItems }) => (
-                                    <div key={mode} className="flex flex-col gap-2.5">
-                                        <div className="sticky top-0 z-10 flex items-center justify-between px-1 py-2 bg-background/90 backdrop-blur-md">
+                            <GroupedVirtuoso
+                                style={{ height: '100%' }}
+                                groupCounts={groupCounts}
+                                groupContent={(index) => {
+                                    const mode = groupModes[index];
+                                    const count = groupCounts[index];
+                                    return (
+                                        <div className="sticky top-0 z-10 flex items-center justify-between px-1 py-2 bg-background/95 backdrop-blur-md">
                                             <div className="flex items-center gap-2">
                                                 <ModeIcon mode={mode} className="text-primary" />
                                                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     {t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) })}
                                                 </h3>
                                             </div>
-                                            <span className="text-[10px] font-semibold text-muted-foreground bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full">
-                                                {modeItems.length}
-                                            </span>
+                                            <Badge variant="outline" className="text-[10px] font-mono font-bold bg-foreground/5 border-border/40 text-muted-foreground px-2 py-0.5 rounded-full">
+                                                {count}
+                                            </Badge>
                                         </div>
+                                    );
+                                }}
+                                itemContent={(index) => {
+                                    const item = flatItems[index];
+                                    const { itemIndexInGroup, countInGroup } = itemGroupMeta[index] || { itemIndexInGroup: 0, countInGroup: 1 };
+                                    const isFirst = itemIndexInGroup === 0;
+                                    const isLast = itemIndexInGroup === countInGroup - 1;
 
-                                        <Card variant="subtle" size="none" className="overflow-hidden divide-y divide-border/50">
-                                            {modeItems.map((item, idx) => (
-                                                <CondensedAlertItem key={item.guid || `${item.title}-${idx}`} item={item} />
-                                            ))}
-                                        </Card>
-                                    </div>
-                                ))}
-                            </div>
+                                    return (
+                                        <div
+                                            className={cn(
+                                                "bg-card/70 backdrop-blur-xs border-x border-border/40 transition-colors overflow-hidden",
+                                                isFirst && "rounded-t-2xl border-t mt-1.5",
+                                                isLast && "rounded-b-2xl border-b mb-3 shadow-xs",
+                                                !isLast && "border-b border-border/40"
+                                            )}
+                                        >
+                                            <CondensedAlertItem item={item} />
+                                        </div>
+                                    );
+                                }}
+                            />
                         )}
-                    </ScrollArea>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

@@ -2,7 +2,7 @@
 /**
  * Helper: convert HH:MM:SS to seconds of day
  */
-export const toSecs = (t: string) => { 
+const toSecs = (t: string) => { 
     const [h, m, s] = t.split(':').map(Number); 
     return h * 3600 + m * 60 + (s || 0); 
 };

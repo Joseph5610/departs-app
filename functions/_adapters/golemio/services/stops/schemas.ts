@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const golemioStopPropertiesSchema = z.object({
+const golemioStopPropertiesSchema = z.object({
     stop_id: z.string(),
     stop_name: z.string().nullable().transform(v => v || ''),
     location_type: z.number(),
@@ -12,7 +12,7 @@ export const golemioStopPropertiesSchema = z.object({
 });
 
 
-export const golemioStopFeatureSchema = z.object({
+const golemioStopFeatureSchema = z.object({
     type: z.literal('Feature'),
     geometry: z.object({
         type: z.literal('Point'),
