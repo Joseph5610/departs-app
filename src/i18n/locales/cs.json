@@ -29,7 +29,7 @@
       "ai": "AI integrace",
       "attributions": "Zdroje a autorství"
     },
-    "dataSource": "Datový zdroj",
+    "dataSource": "Zdroj dat",
     "theme": {
       "title": "Vzhled",
       "description": "Světlý nebo tmavý režim",
@@ -66,7 +66,6 @@
       "cs": "Čeština"
     },
     "viewSource": "Zdrojový kód na GitHubu",
-    "dataSource": "Zdroj dat",
     "license": "Data PID & KORDIS JMK (CC BY 4.0)",
     "version": "Verze {{version}}",
     "versionBadge": "v{{version}}",
@@ -396,7 +395,23 @@
     "delayedOver5": "Zpožděno > 5 min",
     "onTime": "Na čas",
     "delayed1to5": "Zpožděno 1-5 min",
-    "delayedOver5Plus": "Zpožděno > 5 min"
+    "delayedOver5Plus": "Zpožděno > 5 min",
+    "monitor": {
+      "overview": "Přehled",
+      "vehicles": "Seznam vozidel",
+      "searchPlaceholder": "Hledat podle linky (58), ev. č. (6978), modelu...",
+      "allModes": "Vše",
+      "sortLine": "Číslo linky",
+      "sortReg": "Evidenční číslo",
+      "sortDelay": "Zpoždění",
+      "sortTime": "Čas aktualizace",
+      "showingCount": "Zobrazeno {{count}} z {{total}} vozidel",
+      "noVehiclesFound": "Žádná vozidla neodpovídají zadaným filtrům.",
+      "fieldLine": "Linka",
+      "fieldVehicle": "Ev. č.",
+      "searchByLine": "Číslo linky...",
+      "searchByVehicle": "Ev. číslo..."
+    }
   },
   "mcp": {
     "title": "AI Integrace",

@@ -65,7 +65,6 @@
       "cs": "Čeština"
     },
     "viewSource": "View source on GitHub",
-    "dataSource": "Data Source",
     "license": "Data PID & KORDIS JMK (CC BY 4.0)",
     "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
@@ -393,7 +392,15 @@
     "onTime": "On Time",
     "delayed1to5": "Delayed 1-5 min",
     "delayedOver5Plus": "Delayed > 5 min",
-    "unknownDelay": "Unknown"
+    "unknownDelay": "Unknown",
+    "monitor": {
+      "fieldLine": "Line",
+      "fieldVehicle": "Veh. No.",
+      "searchByLine": "Line number...",
+      "searchByVehicle": "Vehicle number...",
+      "showingCount": "Showing {{count}} of {{total}} vehicles",
+      "noVehiclesFound": "No vehicles match the current filters."
+    }
   },
   "mcp": {
     "title": "AI Integration",

@@ -256,7 +256,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 }
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
-            }
+            },
+            (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
         );
     }
 

@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { getRouteTypeI18nKey } from '../../../../utils/transitUtils';
 import { LineBadge } from '../../../LineBadge';
+
 import type { AppCityStats } from '../../../../../functions/_core/types';
 
 interface MostDelayedCardProps {
@@ -39,28 +40,31 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
         return null;
     }
 
+    const displayedItems = isDelayedExpanded ? filteredDelayed : filteredDelayed.slice(0, 5);
+
     return (
         <Card variant="subtle" size="none">
             <CardHeader className="p-3.5 pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                     <AlertTriangle size={16} className="text-rose-400" />
-                    <span>{t('stats.biggestDelays')}</span>
+                    <span>{t('stats.biggestDelays', 'Největší zpoždění')}</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-3.5 pt-0">
+            <CardContent className="p-3.5 pt-0 flex flex-col gap-3">
+                {/* Mode Filter Pills */}
                 {delayTypes.length > 1 && (
-                    <div className="flex gap-1 mb-3 overflow-x-auto no-scrollbar pb-1">
-                        <Badge 
-                            variant={delayFilterType === 'all' ? "default" : "secondary"}
+                    <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
+                        <Badge
+                            variant={delayFilterType === 'all' ? 'default' : 'secondary'}
                             className="cursor-pointer whitespace-nowrap text-[10px] h-5 px-2"
                             onClick={() => setDelayFilterType('all')}
                         >
-                            {t('common.all')}
+                            {t('common.all', 'Vše')}
                         </Badge>
                         {delayTypes.map(tType => (
                             <Badge
                                 key={tType}
-                                variant={delayFilterType === tType ? "default" : "secondary"}
+                                variant={delayFilterType === tType ? 'default' : 'secondary'}
                                 className="cursor-pointer whitespace-nowrap text-[10px] h-5 px-2"
                                 onClick={() => setDelayFilterType(tType)}
                             >
@@ -69,47 +73,69 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
                         ))}
                     </div>
                 )}
-                <div className="flex flex-col gap-1">
-                    {(isDelayedExpanded ? filteredDelayed : filteredDelayed.slice(0, 5)).map((v) => (
-                        <div 
-                            key={`${v.gtfs_trip_id}-${v.vehicle_id}`}
-                            onClick={() => {
-                                if (v.gtfs_trip_id && v.gtfs_trip_id !== 'N/A') {
-                                    if (v.vehicle_id && v.vehicle_id !== v.gtfs_trip_id) {
-                                        setLocation(`/${selectedCity}/trip/${encodeURIComponent(v.gtfs_trip_id)}/${encodeURIComponent(v.vehicle_id)}`);
-                                    } else {
-                                        setLocation(`/${selectedCity}/trip/${encodeURIComponent(v.gtfs_trip_id)}`);
+
+                {/* Rows — same layout as VehicleMonitorRow */}
+                <div className="flex flex-col -mx-3.5">
+                    {displayedItems.map((v) => {
+                        const displayId = v.vehicle_id || '—';
+                        const delayMinutes = Math.round(v.delay / 60);
+
+                        return (
+                            <div
+                                key={`${v.gtfs_trip_id}-${v.vehicle_id}`}
+                                onClick={() => {
+                                    if (v.gtfs_trip_id && v.gtfs_trip_id !== 'N/A') {
+                                        if (v.vehicle_id && v.vehicle_id !== v.gtfs_trip_id) {
+                                            setLocation(`/${selectedCity}/trip/${encodeURIComponent(v.gtfs_trip_id)}/${encodeURIComponent(v.vehicle_id)}`);
+                                        } else {
+                                            setLocation(`/${selectedCity}/trip/${encodeURIComponent(v.gtfs_trip_id)}`);
+                                        }
                                     }
-                                }
-                            }}
-                            className="flex items-center justify-between hover:bg-muted/50 p-1.5 -mx-1.5 rounded-lg transition-colors text-left cursor-pointer group"
-                            role="button"
-                            tabIndex={0}
-                        >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <LineBadge 
-                                    name={v.line} 
-                                    routeColor={v.route_color || '#5A5A5A'} 
-                                    size="lg"
-                                    className="mr-1"
-                                />
-                                <span className="text-[13px] font-medium text-foreground/80 truncate">
-                                    #{v.gtfs_trip_id !== 'N/A' ? v.gtfs_trip_id : v.vehicle_id}
-                                </span>
+                                }}
+                                className="group flex items-center justify-between gap-3 px-3 py-2 border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer select-none"
+                                role="button"
+                                tabIndex={0}
+                            >
+                                {/* Left: Line Badge & ID */}
+                                <div className="flex items-center gap-2.5 shrink-0 min-w-40">
+                                    <LineBadge
+                                        name={v.line}
+                                        routeColor={v.route_color || '#5A5A5A'}
+                                        size="md"
+                                        className="shadow-xs shrink-0"
+                                    />
+                                    <span className="text-xs font-semibold font-mono tracking-tight text-foreground/90 truncate max-w-28">
+                                        {displayId}
+                                    </span>
+                                </div>
+
+                                {/* Middle: spacer */}
+                                <div className="flex items-center min-w-0 flex-1" />
+
+                                {/* Right: Delay badge & chevron */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[10px] font-bold tabular-nums px-2 py-0.5 border-transparent shadow-2xs bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                    >
+                                        +{delayMinutes || 1} min
+                                    </Badge>
+                                    <ChevronRight size={14} className="text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                                </div>
                             </div>
-                            <span className="shrink-0 text-xs ml-2 font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full group-hover:bg-rose-500/20 transition-colors tabular-nums">
-                                +{Math.round(v.delay / 60)} min
-                            </span>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
+
                 {filteredDelayed.length > 5 && (
                     <Button
                         variant="ghost"
                         onClick={() => setIsDelayedExpanded(!isDelayedExpanded)}
                         className="w-full mt-2 h-7 text-[11px] font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 bg-muted/50 border border-border/50 rounded-lg"
                     >
-                        {isDelayedExpanded ? t('stats.showLess') : t('stats.showMore', { count: filteredDelayed.length - 5 })}
+                        {isDelayedExpanded
+                            ? t('stats.showLess', 'Zobrazit méně')
+                            : t('stats.showMore', { count: filteredDelayed.length - 5, defaultValue: `Zobrazit více (+${filteredDelayed.length - 5})` })}
                     </Button>
                 )}
             </CardContent>

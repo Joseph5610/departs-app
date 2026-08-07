@@ -42,14 +42,9 @@ export class VehiclesService {
      * @returns {Promise<AppVehicleCollection>} Feature collection of active vehicles
      */
     async getVehicles(env: Env, searchParams: URLSearchParams): Promise<AppVehicleCollection> {
-
         const { bounds, routeType: routeTypes, routeShortName: routeShortNames } = parseSearchParams(searchParams, vehicleQuerySchema);
 
-        if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
-            throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
-        }
-
-            const params: Record<string, string | string[]> = {};
+        const params: Record<string, string | string[]> = {};
             if (bounds) params.boundingBox = bounds;
             if (routeTypes.length > 0) params.routeType = routeTypes;
             if (routeShortNames.length > 0) params.routeShortName = routeShortNames;

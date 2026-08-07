@@ -19,6 +19,7 @@ export interface PreferencesState {
     selectedCity: string;
     requireAirConditioned: boolean;
     statsTab: 'screen' | 'network';
+    statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
     isMcpModalOpen: boolean;
 }
@@ -42,6 +43,7 @@ export interface PreferencesActions {
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
+    setStatsViewMode: (mode: 'overview' | 'vehicles') => void;
 }
 
 export interface PreferencesStore extends PreferencesState {
@@ -67,6 +69,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             selectedCity: DEFAULT_CITY_SLUG,
             requireAirConditioned: false,
             statsTab: 'screen',
+            statsViewMode: 'overview',
             isMcpBannerDismissed: false,
             isMcpModalOpen: false,
 
@@ -111,6 +114,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 clearHistory: () => set({ searchHistory: [] }),
                 toggleRequireAirConditioned: () => set((state) => ({ requireAirConditioned: !state.requireAirConditioned })),
                 setStatsTab: (tab) => set({ statsTab: tab }),
+                setStatsViewMode: (mode) => set({ statsViewMode: mode }),
             },
         }),
         {

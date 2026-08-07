@@ -109,7 +109,8 @@ export class VehiclesService {
                 }
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
-            }
+            },
+            (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
         );
     }
 
@@ -122,6 +123,8 @@ export class VehiclesService {
         if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
+
+
 
         let filtered = allVehicles.features;
 

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Activity, AlertTriangle } from 'lucide-react';
 import { useVehicles } from '../../../hooks/data/useVehicles';
+import { useNetworkVehicles } from '../../../hooks/data/useNetworkVehicles';
 import { useCityStats } from '../../../hooks/data/useCityStats';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +12,8 @@ import { useEnrichmentStore } from '../../../state/enrichmentStore';
 import { getCityConfig } from '../../../config/cities';
 import { aggregateCityStats } from '../../../../functions/_core/utils/statsAggregator';
 import type { AppVehicleFeature } from '../../../../functions/_core/types';
+import { VehicleMonitorList } from './VehicleMonitor/VehicleMonitorList';
+import { cn } from '@/lib/utils';
 
 import { PunctualityCard } from './cards/PunctualityCard';
 import { MovementStateCard } from './cards/MovementStateCard';
@@ -29,14 +32,15 @@ export const StatsPanel = React.memo(() => {
     const hasEnrichment = !!getCityConfig(selectedCity).enrichmentChannel;
     
     const tab = usePreferencesStore(s => s.statsTab);
+    const setTab = usePreferencesStore(s => s.actions.setStatsTab);
+    const viewMode = usePreferencesStore(s => s.statsViewMode);
 
     const { vehicles } = useVehicles();
+    const { data: networkVehicles, isFetching: isNetworkFetching } = useNetworkVehicles();
     
     // Compute Screen Stats using the shared aggregator
     const screenStats = useMemo(() => {
         if (!vehicles || !vehicles.features) return null;
-
-        const baseTs = Date.now();
 
         // 1. Apply enrichment
         const enrichedFeatures = vehicles.features.map(f => {
@@ -47,7 +51,7 @@ export const StatsPanel = React.memo(() => {
                 vehicleId,
                 byTripId,
                 byVehicleId,
-                baseTs
+                0
             ) as typeof f.properties;
             
             return {
@@ -60,13 +64,76 @@ export const StatsPanel = React.memo(() => {
         return aggregateCityStats(enrichedFeatures as unknown as AppVehicleFeature[]);
     }, [vehicles, byTripId, byVehicleId]);
 
-    const { data: networkStats, isFetching: isNetworkFetching } = useCityStats();
+    // Compute Network Stats client-side using networkVehicles + WS enrichment (full network delay support)
+    const enrichedNetworkStats = useMemo(() => {
+        if (!networkVehicles || !networkVehicles.features || networkVehicles.features.length === 0) return null;
+
+        const enrichedFeatures = networkVehicles.features.map(f => {
+            const vehicleId = f.properties.vehicle_id || f.properties.vehicle_descriptor?.vehicle_registration_number?.toString() || undefined;
+            const p = applyEnrichment(
+                f.properties,
+                f.properties.gtfs_trip_id,
+                vehicleId,
+                byTripId,
+                byVehicleId,
+                0
+            ) as typeof f.properties;
+
+            return {
+                ...f,
+                properties: p
+            } as typeof f;
+        });
+
+        return aggregateCityStats(enrichedFeatures as unknown as AppVehicleFeature[]);
+    }, [networkVehicles, byTripId, byVehicleId]);
+
+    const { data: networkApiStats, isFetching: isApiFetching } = useCityStats();
+
+    if (viewMode === 'vehicles') {
+        return <VehicleMonitorList />;
+    }
     
-    const activeStats = tab === 'screen' ? screenStats : networkStats;
-    const isFetching = tab === 'network' && isNetworkFetching && !networkStats;
+    const activeStats = tab === 'screen' ? screenStats : (enrichedNetworkStats || networkApiStats);
+    const isFetching = tab === 'network' && (isNetworkFetching || isApiFetching) && !activeStats;
+    const hasNetworkDelayData = !hasEnrichment || !!enrichedNetworkStats;
 
     return (
         <div className="flex flex-col gap-0 pt-0">
+            {/* Scope Switcher Header (Clean Segmented Control matching design system) */}
+            <div className="flex items-center justify-between px-1 pb-3">
+                <span className="text-xs font-semibold text-muted-foreground">
+                    {t('stats.scopeLabel', 'Rozsah statistik:')}
+                </span>
+
+                <div className="flex items-center gap-0.5 bg-muted/30 p-0.5 rounded-lg border border-border/40">
+                    <button
+                        type="button"
+                        onClick={() => setTab('screen')}
+                        className={cn(
+                            "px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer",
+                            tab === 'screen'
+                                ? "bg-background text-foreground shadow-2xs"
+                                : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        {t('stats.onScreen', 'Na obrazovce')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setTab('network')}
+                        className={cn(
+                            "px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer",
+                            tab === 'network'
+                                ? "bg-background text-foreground shadow-2xs"
+                                : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        {t('stats.network', 'Celá síť')}
+                    </button>
+                </div>
+            </div>
+
             {isFetching ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground opacity-60">
                     <Activity className="animate-pulse" size={24} />
@@ -91,7 +158,7 @@ export const StatsPanel = React.memo(() => {
                     </div>
 
                     {/* Network Delay Notice */}
-                    {hasEnrichment && tab === 'network' && (
+                    {!hasNetworkDelayData && tab === 'network' && (
                         <Alert variant="warning">
                             <AlertTriangle size={16} />
                             <AlertDescription className="text-xs leading-relaxed">
@@ -101,7 +168,7 @@ export const StatsPanel = React.memo(() => {
                     )}
 
                     {/* Delay Dependent Charts */}
-                    {!(hasEnrichment && tab === 'network') && (
+                    {(tab === 'screen' || hasNetworkDelayData) && (
                         <>
                             <PunctualityCard stats={activeStats} />
                             <MostDelayedCard stats={activeStats} selectedCity={getCityConfig(selectedCity).slug} />
@@ -111,7 +178,7 @@ export const StatsPanel = React.memo(() => {
                     <MovementStateCard stats={activeStats} />
                     <VehicleMixCard stats={activeStats} />
                     <BusiestLinesCard stats={activeStats} />
-                    <OtherDataCard activeStats={activeStats} networkStats={networkStats} />
+                    <OtherDataCard activeStats={activeStats} networkStats={enrichedNetworkStats || networkApiStats} />
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center py-12 text-muted-foreground text-sm">
