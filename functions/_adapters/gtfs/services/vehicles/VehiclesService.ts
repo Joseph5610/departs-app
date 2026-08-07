@@ -7,8 +7,6 @@ import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
-import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 
 export class VehiclesService {
     constructor(protected city: CityConfig) {}
@@ -119,13 +117,6 @@ export class VehiclesService {
 
         const { searchParams } = new URL(ctx.request.url);
         const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);
-
-        if (!bounds && routeShortNames.length === 0 && routeTypes.length === 0) {
-            throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
-        }
-
-
-
         let filtered = allVehicles.features;
 
         if (routeTypes && routeTypes.length > 0) {

@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.2] - 2026-08-07
+
+### Fixed
+
+- **Stats API Error**: Resolved an issue where fetching statistics triggered a 'missing parameters' API error instead of returning full data.
+
 ## [0.59.1] - 2026-08-07
 
 ### Fixed
