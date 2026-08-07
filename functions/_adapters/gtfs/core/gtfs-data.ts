@@ -13,6 +13,7 @@ export interface GtfsData {
     routes: Record<string, GtfsRoute>;
     tripRoutes: Record<string, string>;
     routesByName: Record<string, GtfsRoute>;
+    tripAliases?: Record<string, string>;
 }
 
 export async function getGtfsData(citySlug: string): Promise<GtfsData> {
@@ -25,18 +26,20 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
 
     return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const [rRes, trRes] = await Promise.all([
+            const [rRes, trRes, aliasRes] = await Promise.all([
                 appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`),
-                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)
+                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`),
+                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`).catch(() => null)
             ]);
 
             if (!rRes.ok || !trRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}, TripRoutes: ${trRes.status}`);
-                return { routes: {}, tripRoutes: {}, routesByName: {} };
+                return { routes: {}, tripRoutes: {}, routesByName: {}, tripAliases: {} };
             }
 
             const routes = await rRes.json() as Record<string, GtfsRoute>;
             const tripRoutes = await trRes.json() as Record<string, string>;
+            const tripAliases = (aliasRes && aliasRes.ok) ? await aliasRes.json() as Record<string, string> : {};
 
             const routesByName: Record<string, GtfsRoute> = {};
             for (const rId in routes) {
@@ -49,10 +52,10 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
                 }
             }
 
-            return { routes, tripRoutes, routesByName };
+            return { routes, tripRoutes, routesByName, tripAliases };
         } catch (e) {
             console.error(`Failed to parse or fetch GTFS static data for ${citySlug}:`, e);
-            return { routes: {}, tripRoutes: {}, routesByName: {} };
+            return { routes: {}, tripRoutes: {}, routesByName: {}, tripAliases: {} };
         }
     });
 }

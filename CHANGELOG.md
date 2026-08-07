@@ -4,11 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.59.0] - 2026-08-07
+## [0.59.1] - 2026-08-07
 
 ### Fixed
 
-- **Brno GTFS-RT Coverage**: Updated static GTFS pipeline to map all schedule trips in `trip_routes.json`, increasing real-time vehicle matching coverage from ~54% to 98.4%.
+- **Brno GTFS-RT Trip Alignment**: Introduced `trip_aliases.json` support to resolve legacy `trip_id`s from the live feed to updated static schedule trip IDs following timetable updates.
 
 ## [0.58.0] - 2026-07-31
 

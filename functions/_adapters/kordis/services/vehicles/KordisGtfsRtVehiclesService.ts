@@ -219,8 +219,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const vp = selectedEntity.vehicle;
                     if (!vp) continue;
 
-                    const tripId = vp.trip?.tripId;
-                    if (!tripId) continue;
+                    const rawTripId = vp.trip?.tripId;
+                    if (!rawTripId) continue;
+
+                    const tripId = (gtfsData.tripAliases && gtfsData.tripAliases[rawTripId]) ? gtfsData.tripAliases[rawTripId] : rawTripId;
 
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
@@ -276,7 +278,11 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         let copies: transit_realtime.IFeedEntity[] = [];
 
         if (gtfsTripId) {
-            const matchByTrip = validEntities.find(e => e.vehicle?.trip?.tripId === gtfsTripId);
+            const matchByTrip = validEntities.find(e => {
+                const id = e.vehicle?.trip?.tripId;
+                if (!id) return false;
+                return id === gtfsTripId || (gtfsData.tripAliases && gtfsData.tripAliases[id] === gtfsTripId);
+            });
             if (matchByTrip) {
                 copies = [matchByTrip];
             }
@@ -305,8 +311,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const vp = rawMatch.vehicle;
         if (!vp) return {};
 
-        const tripId = vp.trip?.tripId || gtfsTripId || '';
-        if (!tripId) return {};
+        const rawTripId = vp.trip?.tripId || gtfsTripId || '';
+        if (!rawTripId) return {};
+
+        const tripId = (gtfsData.tripAliases && gtfsData.tripAliases[rawTripId]) ? gtfsData.tripAliases[rawTripId] : rawTripId;
 
         const routeInfo = gtfsData.tripRoutes[tripId];
         if (!routeInfo) return {};
