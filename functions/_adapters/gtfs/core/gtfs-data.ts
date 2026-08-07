@@ -13,7 +13,7 @@ export interface GtfsData {
     routes: Record<string, GtfsRoute>;
     tripRoutes: Record<string, string>;
     routesByName: Record<string, GtfsRoute>;
-    tripAliases?: Record<string, string>;
+    tripAliases?: Record<string, string | null>;
 }
 
 export async function getGtfsData(citySlug: string): Promise<GtfsData> {
@@ -39,7 +39,7 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
 
             const routes = await rRes.json() as Record<string, GtfsRoute>;
             const tripRoutes = await trRes.json() as Record<string, string>;
-            const tripAliases = (aliasRes && aliasRes.ok) ? await aliasRes.json() as Record<string, string> : {};
+            const tripAliases = (aliasRes && aliasRes.ok) ? await aliasRes.json() as Record<string, string | null> : {};
 
             const routesByName: Record<string, GtfsRoute> = {};
             for (const rId in routes) {

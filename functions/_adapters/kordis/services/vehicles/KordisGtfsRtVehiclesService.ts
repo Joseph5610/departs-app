@@ -222,7 +222,14 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const rawTripId = vp.trip?.tripId;
                     if (!rawTripId) continue;
 
-                    const tripId = (gtfsData.tripAliases && gtfsData.tripAliases[rawTripId]) ? gtfsData.tripAliases[rawTripId] : rawTripId;
+                    let tripId: string;
+                    if (gtfsData.tripAliases && rawTripId in gtfsData.tripAliases) {
+                        const resolved = gtfsData.tripAliases[rawTripId];
+                        if (!resolved) continue; // null = no equivalent in new GTFS, drop vehicle
+                        tripId = resolved;
+                    } else {
+                        tripId = rawTripId;
+                    }
 
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
@@ -314,7 +321,14 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const rawTripId = vp.trip?.tripId || gtfsTripId || '';
         if (!rawTripId) return {};
 
-        const tripId = (gtfsData.tripAliases && gtfsData.tripAliases[rawTripId]) ? gtfsData.tripAliases[rawTripId] : rawTripId;
+        let tripId: string;
+        if (gtfsData.tripAliases && rawTripId in gtfsData.tripAliases) {
+            const resolved = gtfsData.tripAliases[rawTripId];
+            if (!resolved) return {}; // null = no equivalent in new GTFS, drop
+            tripId = resolved;
+        } else {
+            tripId = rawTripId;
+        }
 
         const routeInfo = gtfsData.tripRoutes[tripId];
         if (!routeInfo) return {};
