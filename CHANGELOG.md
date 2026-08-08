@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.3] - 2026-08-08
+
+### Fixed
+
+- **Brno RT Map Feed**: Prioritized active GTFS routes over historical aliases in the RT feed mapping to fix a bug where valid reused trip IDs were incorrectly dropped or hallucinated due to stale alias history.
+
 ## [0.59.2] - 2026-08-07
 
 ### Fixed
