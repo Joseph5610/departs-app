@@ -55,8 +55,8 @@ export async function handleGetRealtimeVehicles(
                 gtfs_trip_id: props.gtfs_trip_id,
                 line: props.route_short_name,
                 headsign: props.trip_headsign,
-                delay_seconds: props.delay ?? 0,
-                delay_minutes: Math.round((props.delay || 0) / 60 * 10) / 10,
+                delay_seconds: props.delay ?? null,
+                delay_minutes: props.delay != null ? Math.round((props.delay) / 60 * 10) / 10 : null,
                 coordinates: v.geometry?.coordinates || null
             };
         })

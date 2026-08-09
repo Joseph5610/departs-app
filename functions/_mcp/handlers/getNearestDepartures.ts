@@ -92,8 +92,8 @@ export async function handleGetNearestDepartures(
                         headsign: d.headsign,
                         timestamp: d.timestamp,
                         scheduled: d.scheduled,
-                        delay_seconds: d.delay ?? 0,
-                        delay_minutes: Math.round((d.delay || 0) / 60 * 10) / 10,
+                        delay_seconds: d.delay ?? null,
+                        delay_minutes: d.delay != null ? Math.round((d.delay) / 60 * 10) / 10 : null,
                         is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
                         trip_id: d.tripId,
                         vehicle_id: d.vehicleId
