@@ -192,7 +192,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     if (nowMs - lastUpdate > THRESHOLD_MS) continue;
                     
-                    const label = vp.vehicle?.label || vp.vehicle?.id || entity.id;
+                    const label = vp.vehicle?.licensePlate || vp.vehicle?.label || vp.vehicle?.id || entity.id;
                     
                     if (!groupedEntities.has(label)) {
                         groupedEntities.set(label, []);
@@ -301,6 +301,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             copies = validEntities.filter(e => 
                 e.vehicle?.vehicle?.id === vehicleId || 
                 e.vehicle?.vehicle?.label === vehicleId ||
+                e.vehicle?.vehicle?.licensePlate === vehicleId ||
                 e.id === vehicleId
             );
         }
