@@ -1,5 +1,7 @@
 import type { FeatureCollection, LineString } from 'geojson';
 
+export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
+
 export interface VehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
@@ -13,7 +15,7 @@ export interface BaseVehicleProperties {
     vehicle_id: string | null;
     gtfs_trip_id: string;
     route_short_name: string;
-    route_type: string | number;
+    route_type: RouteType;
     trip_headsign: string;
     bearing: number | null | undefined;
     delay: number | null;
@@ -74,6 +76,7 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 realtime_departure_time?: string;
                 stop_id: string;
                 metro_lines?: Array<{ name: string; route_color: string }>;
+                is_request_stop?: boolean;
             };
         }>;
     };

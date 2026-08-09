@@ -70,19 +70,19 @@ export const DepartureBoardHeader = React.memo(() => {
 
         const getLineGroup = (line: { name: string, type: string }) => {
             const name = line.name.toUpperCase();
-            const typeStr = String(line.type);
+            const typeStr = line.type;
             
-            if (typeStr === '1' || typeStr === 'metro' || ['A', 'B', 'C'].includes(name)) return 0; // Metro
-            if (typeStr === '2' || typeStr === 'train' || name.startsWith('S') || name.startsWith('R')) return 1; // Train
+            if (typeStr === 'metro' || ['A', 'B', 'C'].includes(name)) return 0; // Metro
+            if (typeStr === 'train' || name.startsWith('S') || name.startsWith('R')) return 1; // Train
             
             const num = parseInt(name.replace(/\D/g, ''), 10);
-            const isNightTram = (typeStr === '0' || typeStr === 'tram') && !isNaN(num) && num >= 90 && num < 100;
-            const isNightBus = (typeStr === '3' || typeStr === 'bus') && !isNaN(num) && num >= 900;
+            const isNightTram = typeStr === 'tram' && !isNaN(num) && num >= 90 && num < 100;
+            const isNightBus = typeStr === 'bus' && !isNaN(num) && num >= 900;
 
-            if (typeStr === '0' || typeStr === 'tram') return isNightTram ? 6 : 2; // Tram / Night Tram
-            if (typeStr === '3' || typeStr === 'bus') return isNightBus ? 7 : 3; // Bus / Night Bus
-            if (typeStr === '11' || typeStr === 'trolleybus') return 4; // Trolleybus
-            if (typeStr === '4' || typeStr === 'ferry' || typeStr === '7' || typeStr === 'funicular') return 5; // Other
+            if (typeStr === 'tram') return isNightTram ? 6 : 2; // Tram / Night Tram
+            if (typeStr === 'bus') return isNightBus ? 7 : 3; // Bus / Night Bus
+            if (typeStr === 'trolleybus') return 4; // Trolleybus
+            if (typeStr === 'ferry' || typeStr === 'funicular') return 5; // Other
             
             return 8; // Unknown
         };

@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import type { VehicleProperties, VehicleCollection } from '../../types/transit';
-import { getRouteTypeSlug } from '../../utils/transitUtils';
 
 export interface EnrichedVehicleItem {
     id: string;
@@ -45,7 +44,7 @@ export const useVehicleMonitor = ({
         for (const feature of rawFeatures) {
             const p = feature.properties as VehicleProperties;
             const vId = p.vehicle_id || p.vehicle_descriptor?.vehicle_registration_number?.toString() || undefined;
-            const slug = getRouteTypeSlug(p.route_type);
+            const slug = p.route_type;
 
             modeCounts[slug] = (modeCounts[slug] || 0) + 1;
 

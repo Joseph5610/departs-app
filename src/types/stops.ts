@@ -1,3 +1,5 @@
+import type { RouteType } from './vehicles';
+
 export interface StopProperties {
     stop_id: string;
     stop_name: string;
@@ -15,7 +17,7 @@ export interface StopProperties {
     metro_color?: string;
     metro_color_2?: string;
     all_ids?: string[];
-    lines?: Array<{ name: string; type: string; route_color: string }>;
+    lines?: Array<{ name: string; type: RouteType; route_color: string }>;
     wheelchair_boarding?: number;
     level_id?: string;
 }

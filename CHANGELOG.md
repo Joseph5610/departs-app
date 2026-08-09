@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.5] - 2026-08-09
+
+### Changed
+- **Type Standardization**: Refactored `route_type` and `type` to use strictly standardized string slugs ('bus', 'tram', 'train', etc.) across all backend adapters and frontend interfaces, removing reliance on numerical GTFS route types.
+
+## [0.59.4] - 2026-08-09
+
+### Fixed
+- Fixed bug in Brno vehicle map selection caused by overlapping duplicate Kordis RT entities sharing the same coordinates.
+
 ## [0.59.3] - 2026-08-08
 
 ### Fixed

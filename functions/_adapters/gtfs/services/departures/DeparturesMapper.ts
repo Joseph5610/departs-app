@@ -1,6 +1,7 @@
 import type { AppDeparture, AppVehicleCollection } from "../../../../_core/types";
 import type { GtfsDepartureTuple } from "./types";
 import type { GtfsRoute } from "../../core/gtfs-data";
+import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 export class DeparturesMapper {
     static mapDepartures(
@@ -47,7 +48,7 @@ export class DeparturesMapper {
 
         const mapped = filtered.map(d => {
             const { stopId, tuple } = d;
-            const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible] = tuple;
+            const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible, is_request_stop_num] = tuple;
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
@@ -83,7 +84,7 @@ export class DeparturesMapper {
                 tripId: trip_id,
                 vehicleId: vId,
                 line: route ? String(route.name) : route_id,
-                type: route ? String(route.type) : 'unknown', 
+                type: normalizeRouteType(route ? route.type : 'unknown'), 
                 directionId: '0', 
                 headsign: headsign,
                 scheduledTimestampMs: timestamp_ms,
@@ -93,7 +94,8 @@ export class DeparturesMapper {
                 route_color: route ? String(route.route_color) : undefined,
                 stopId: stopId,
                 is_air_conditioned: isAirConditioned,
-                is_wheelchair_accessible: isWheelchairAccessible
+                is_wheelchair_accessible: isWheelchairAccessible,
+                is_request_stop: is_request_stop_num === 1
             };
         });
 
@@ -118,7 +120,8 @@ export class DeparturesMapper {
                 route_color: d.route_color,
                 stopId: d.stopId,
                 is_air_conditioned: d.is_air_conditioned,
-                is_wheelchair_accessible: d.is_wheelchair_accessible
+                is_wheelchair_accessible: d.is_wheelchair_accessible,
+                is_request_stop: d.is_request_stop
             } as AppDeparture));
     }
 }

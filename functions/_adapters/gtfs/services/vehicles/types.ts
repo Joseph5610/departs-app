@@ -7,4 +7,5 @@ export interface Station {
     coordinates: [number, number];
     is_wheelchair_accessible: null;
     zone_id: null;
+    is_request_stop?: boolean;
 }

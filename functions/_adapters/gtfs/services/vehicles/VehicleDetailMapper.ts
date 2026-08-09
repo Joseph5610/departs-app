@@ -2,6 +2,7 @@ import type { AppVehicleDetail } from "../../../../_core/types";
 import { addSecondsToTime } from '../../core/utils';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
+import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
 
 export class VehicleDetailMapper {
 
@@ -13,7 +14,7 @@ export class VehicleDetailMapper {
     ): AppVehicleDetail {
         const lineName = route?.name || undefined;
         const routeColor = route?.route_color || undefined;
-        const rType = route ? Number(route.type) : 3;
+        const rType = normalizeRouteType(route ? route.type : '3');
 
         const finalDelay = null;
         const lastStopSequence = null;
@@ -77,7 +78,8 @@ export class VehicleDetailMapper {
                     departure_time: formatTime(s.departure_time),
                     realtime_arrival_time: (applyDelay ? addSecondsToTime(s.arrival_time, applyDelay) : undefined) || formatTime(s.arrival_time),
                     realtime_departure_time: (applyDelay ? addSecondsToTime(s.departure_time, applyDelay) : undefined) || formatTime(s.departure_time),
-                    metro_lines: []
+                    metro_lines: [],
+                    is_request_stop: s.is_request_stop
                 }
             };
         });

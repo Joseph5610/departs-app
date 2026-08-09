@@ -2,6 +2,7 @@ import { AppVehicleFeature, AppVehicleCollection } from "../../../../_core/types
 import { GolemioVehiclePayload, GolemioVehicleFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
+import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 export class VehiclesMapper {
     static map(data: GolemioVehiclePayload): AppVehicleCollection {
@@ -9,7 +10,7 @@ export class VehiclesMapper {
 
         const features: AppVehicleFeature[] = (data.features || []).map((f: GolemioVehicleFeature) => {
             const p = f.properties;
-            const route_type = p.route_type || '';
+            const route_type = normalizeRouteType(p.route_type || '');
             const route_short_name = p.gtfs_route_short_name || p.route_short_name || '';
 
             if (p.origin_timestamp && p.origin_timestamp > maxTimeUpdatedStr) {

@@ -1,3 +1,5 @@
+import type { RouteType } from './vehicles';
+
 export interface RSSItem {
     type: 'incident' | 'exclusion';
     title: string;
@@ -8,7 +10,7 @@ export interface RSSItem {
     guid?: string;
     priority?: string;
     lines?: string[];
-    line_metadata?: Array<{ name: string; route_color: string; type: string }>;
+    line_metadata?: Array<{ name: string; route_color: string; type: RouteType }>;
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;

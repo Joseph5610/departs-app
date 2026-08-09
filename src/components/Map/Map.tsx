@@ -25,6 +25,7 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { MapControls } from './MapControls';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
+import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useStops } from '../../hooks/data/useStops';
 import { useRouteShape } from '../../hooks/derived/useRouteShape';
@@ -301,7 +302,7 @@ const MapInner: React.FC = () => {
                 title={
                     isStatsRoute ? t('stats.title') :
                     isFavoritesRoute ? t('favorites.title') :
-                    panelTitle
+                    (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
                 }
                 platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
                 subHeader={isStatsRoute ? <StatsTabs /> : (!isStatsRoute && !isFavoritesRoute) ? <DepartureBoardHeader /> : undefined}

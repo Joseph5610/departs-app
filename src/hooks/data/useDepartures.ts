@@ -142,6 +142,10 @@ export const useDepartures = () => {
         return enrichedDepartures.some(dep => dep.is_air_conditioned === true);
     }, [enrichedDepartures]);
 
+    const hasRequestStop = useMemo(() => {
+        return enrichedDepartures.some(dep => dep.is_request_stop === true);
+    }, [enrichedDepartures]);
+
     const filteredDepartures = useMemo(() => {
         let result = enrichedDepartures;
         if (selectedLine) {
@@ -225,9 +229,18 @@ export const useDepartures = () => {
         });
 
         if (departureSort === 'line') {
+            const typeOrder: Record<string, number> = {
+                'metro': 1,
+                'train': 2,
+                'tram': 3,
+                'trolleybus': 4,
+                'bus': 5,
+                'ferry': 6,
+                'funicular': 7
+            };
             result.sort((a, b) => {
-                const typeA = Number(a.type) || 0;
-                const typeB = Number(b.type) || 0;
+                const typeA = typeOrder[a.type as string] || 99;
+                const typeB = typeOrder[b.type as string] || 99;
                 if (typeA !== typeB) {
                     return typeA - typeB;
                 }
@@ -276,5 +289,5 @@ export const useDepartures = () => {
         return { averageDelayMin, trend, sampleSize: realTimeDeps.length };
     }, [filteredDepartures, query.dataUpdatedAt]);
 
-    return { ...query, groupedDepartures, delayStats, isFiltered: !!selectedLine || (requireAirConditioned && hasAirConditioningData), selectedLine, hasAirConditioningData };
+    return { ...query, groupedDepartures, delayStats, isFiltered: !!selectedLine || (requireAirConditioned && hasAirConditioningData), selectedLine, hasAirConditioningData, hasRequestStop };
 };

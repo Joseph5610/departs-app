@@ -25,7 +25,7 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
         if (!stats?.most_delayed) return [];
         const types = new Set<string>();
         stats.most_delayed.forEach(v => {
-            if (v.route_type !== undefined) types.add(String(v.route_type).toLowerCase());
+            if (v.route_type !== undefined) types.add(v.route_type);
         });
         return Array.from(types);
     }, [stats]);
@@ -33,7 +33,7 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats, selecte
     const filteredDelayed = useMemo(() => {
         if (!stats?.most_delayed) return [];
         if (delayFilterType === 'all') return stats.most_delayed;
-        return stats.most_delayed.filter(v => String(v.route_type).toLowerCase() === delayFilterType);
+        return stats.most_delayed.filter(v => v.route_type === delayFilterType);
     }, [stats, delayFilterType]);
 
     if (!stats.most_delayed || stats.most_delayed.length === 0) {

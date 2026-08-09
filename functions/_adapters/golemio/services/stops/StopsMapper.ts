@@ -1,4 +1,4 @@
-import { AppStopFeature, AppStopProperties } from "../../../../_core/types";
+import { AppStopFeature, AppStopProperties, AppRouteType } from "../../../../_core/types";
 import { GolemioStopFeature } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
 import { ProcessedEnrichmentData } from "./enrichment";
@@ -14,7 +14,7 @@ export class StopsMapper {
             .map(f => {
                 const enrichment = enrichmentData.enrichmentMap[f.properties.stop_id];
                 const lines: NonNullable<AppStopProperties['lines']> = enrichment
-                    ? enrichment.l.map(l => ({ name: l.n, type: l.t, route_color: getVehicleColor(l.t, l.n) }))
+                    ? enrichment.l.map(l => ({ name: l.n, type: l.t as AppRouteType, route_color: getVehicleColor(l.t, l.n) }))
                     : [];
                 return {
                     type: 'Feature' as const,

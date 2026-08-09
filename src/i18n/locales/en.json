@@ -147,7 +147,8 @@
       "scheduledTime": "sched.",
       "shareTitle": "Line {{line}}",
       "shareText": "Track line {{line}} live on departs.app",
-      "zone": "Zone"
+      "zone": "Zone",
+      "requestStop": "Request Stop"
     },
     "departures": {
       "upcoming": "Upcoming Departures",

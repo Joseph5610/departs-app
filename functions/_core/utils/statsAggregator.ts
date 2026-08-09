@@ -1,4 +1,4 @@
-import type { AppVehicleFeature, AppCityStats } from '../types';
+import type { AppVehicleFeature, AppCityStats, AppRouteType } from '../types';
 
 /**
  * Aggregates network-wide statistics from a collection of active vehicle features.
@@ -24,7 +24,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         gtfs_trip_id: string;
         line: string;
         delay: number;
-        route_type: string | number;
+        route_type: AppRouteType;
         route_color: string;
     }> = [];
 
@@ -50,7 +50,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         if (p.vehicle_descriptor?.is_air_conditioned) airConditionedCount++;
         
         // Distributions
-        const rType = String(p.route_type || 'unknown').toLowerCase();
+        const rType = String(p.route_type || 'unknown').toLowerCase() as AppRouteType;
         vehicleTypes[rType] = (vehicleTypes[rType] || 0) + 1;
         
         const state = String(p.state_position || 'unknown').toLowerCase();

@@ -11,19 +11,21 @@ export const DUK_TRACTION_MAPPING: Record<number, string> = {
     2: 'trolleybus',
     3: 'bus',
     5: 'train',
-    6: 'boat'
+    6: 'ferry'
 };
 
+import type { AppRouteType } from '../../../_core/types';
+
 /**
- * Maps a generic string line name to a standard GTFS route_type (0=tram, 2=rail, 3=bus, 11=trolleybus).
+ * Maps a generic string line name to a standard slug route_type ('tram', 'train', 'bus', 'trolleybus').
  */
-export function getDukRouteTypeFromLineName(lineName: string): number {
+export function getDukRouteTypeFromLineName(lineName: string): AppRouteType {
     if (/^U\d+/.test(lineName) || /^R\d+/.test(lineName) || /^Os/.test(lineName)) {
-        return 2; // Rail
+        return 'train';
     } else if (lineName === '1' || lineName === '2' || lineName === '3' || lineName === '4') {
-        return 0; // Tram (Wait, actually Usti trams don't exist anymore, but we'll leave it for legacy)
+        return 'tram'; // (Wait, actually Usti trams don't exist anymore, but we'll leave it for legacy)
     } else if (/^\d{2}$/.test(lineName) && parseInt(lineName, 10) >= 50 && parseInt(lineName, 10) <= 69) {
-        return 11; // Trolleybus (rough guess for Usti)
+        return 'trolleybus'; // (rough guess for Usti)
     }
-    return 3; // Bus default
+    return 'bus'; // default
 }

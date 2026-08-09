@@ -193,7 +193,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                 ) : (
                     <div className="flex flex-col gap-2">
                         {next2Departures.map((dep, idx) => {
-                            const isTrain = dep.type === '2' || dep.type === 'train';
+                            const isTrain = dep.type === 'train';
 
                             return (
                                 <div 

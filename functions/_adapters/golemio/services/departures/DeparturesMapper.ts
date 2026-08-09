@@ -3,6 +3,7 @@ import { GolemioDepartureItem } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
 import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
+import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 /**
  * Mapper for flattening and normalizing Golemio's deeply nested departure boards.
@@ -40,9 +41,9 @@ export class DeparturesMapper {
 
     private static normalizeDeparture(item: GolemioDepartureItem, enrichmentData: ProcessedEnrichmentData): AppDeparture {
         const line = String(item.route?.short_name || '?').toUpperCase();
-        const type = String(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
-        const isMetro = type === '1' || ['A', 'B', 'C'].includes(line);
-        const isTrain = type === '2' || type === 'rail' || type === 'train';
+        const type = normalizeRouteType(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
+        const isMetro = type === 'metro';
+        const isTrain = type === 'train';
 
         let directionId: string | number | null | undefined = item.trip?.direction_id;
 

@@ -1,7 +1,8 @@
-import type { AppAlert } from "../../../../_core/types";
+import type { AppAlert, AppRouteType } from "../../../../_core/types";
 import type { GtfsData, GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
+import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 const HTML_ENTITY_MAP: Record<string, string> = {
     '&nbsp;': ' ',
@@ -60,7 +61,7 @@ export class BaseGtfsAlertsMapper {
             const isDetour = this.parseIsDetour(alert, headerStr, rawHeader, rawDesc);
             
             const lines: string[] = [];
-            const line_metadata: Array<{ name: string; route_color: string; type: string }> = [];
+            const line_metadata: Array<{ name: string; route_color: string; type: AppRouteType }> = [];
 
             if (alert.informedEntity) {
                 for (const ie of alert.informedEntity) {
@@ -76,13 +77,13 @@ export class BaseGtfsAlertsMapper {
                             line_metadata.push({
                                 name: (matchingRoute.short_name || matchingRoute.name) as string,
                                 route_color: (matchingRoute.route_color as string) || '#888888',
-                                type: String(matchingRoute.type)
+                                type: normalizeRouteType(matchingRoute.type)
                             });
                         } else {
                             line_metadata.push({
                                 name: ie.routeId,
                                 route_color: '#888888',
-                                type: '3'
+                                type: 'bus'
                             });
                         }
                     }

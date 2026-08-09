@@ -50,7 +50,7 @@ export const DepartureItem = memo(({
         clickStartPos.current = null;
     };
 
-    const isTrain = dep.type === '2' || dep.type === 'train';
+    const isTrain = dep.type === 'train';
 
     return (
         <Button

@@ -20,7 +20,7 @@ interface DetailPanelProps {
     isOpen: boolean;
     onClose: () => void;
     onBack?: () => void;
-    title?: string;
+    title?: React.ReactNode;
     id?: string;
     platformCode?: string;
     subHeader?: React.ReactNode;

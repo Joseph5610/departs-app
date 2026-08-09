@@ -1,4 +1,4 @@
-import { AppAlert } from "../../../../_core/types";
+import { AppAlert, AppRouteType } from "../../../../_core/types";
 import { formatDate } from "../../../../_core/api-utils";
 import { getVehicleColor } from "../vehicles/colors";
 import { XMLParser } from "fast-xml-parser";
@@ -7,7 +7,7 @@ import { pidRssItemSchema } from "./schemas";
 
 export class RssAlertsMapper {
     
-    private static guessType(name: string): string {
+    private static guessType(name: string): AppRouteType {
         const n = String(name).toUpperCase().trim();
         if (['A', 'B', 'C'].includes(n)) return 'metro';
         if (n === 'LD' || /^LD[0-9]/.test(n) || n.includes('LANOVKA')) return 'funicular';
@@ -130,11 +130,10 @@ export class RssAlertsMapper {
                 lines,
                 line_metadata: lines.map(name => {
                     const t = RssAlertsMapper.guessType(name);
-                    const typeCode = t === 'metro' ? '1' : t === 'tram' ? '0' : t === 'train' ? '2' : t === 'trolleybus' ? '11' : t === 'ferry' ? '4' : t === 'funicular' ? '7' : '3';
                     return {
                         name,
-                        type: typeCode,
-                        route_color: getVehicleColor(typeCode, name)
+                        type: t,
+                        route_color: getVehicleColor(t, name)
                     };
                 }),
                 isActive,

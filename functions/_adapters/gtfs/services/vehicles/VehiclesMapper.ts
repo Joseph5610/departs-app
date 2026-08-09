@@ -1,6 +1,7 @@
 import type { AppVehicleFeature, AppVehicleProperties } from '../../../../_core/types';
 import type { transit_realtime } from 'gtfs-realtime-bindings';
 import type { GtfsRoute } from '../../core/gtfs-data';
+import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
 
 export class VehiclesMapper {
     static mapVehicle(
@@ -44,7 +45,7 @@ export class VehiclesMapper {
                 
                 route_short_name: route.short_name || route.name || '',
                 route_color: route.route_color || '',
-                route_type: route.type,
+                route_type: normalizeRouteType(route.type),
                 
                 trip_headsign: '', // Often empty unless we fetch trip details
                 

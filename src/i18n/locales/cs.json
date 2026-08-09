@@ -148,7 +148,8 @@
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
       "shareText": "Sledujte polohu spoje linky {{line}} živě na departs.app",
-      "zone": "Pásmo"
+      "zone": "Pásmo",
+      "requestStop": "Zastávka na znamení"
     },
     "departures": {
       "upcoming": "Nejbližší odjezdy",

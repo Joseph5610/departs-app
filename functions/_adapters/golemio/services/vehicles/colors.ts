@@ -39,8 +39,8 @@ export const isNightRoute = (routeName: string | number): boolean => {
  * Returns a hex color string for a given route type and name.
  * Uses PID official branding colors for Metro, Trams, and Buses.
  */
-export const getVehicleColor = (routeType: string | number | undefined, routeName: string | undefined): string => {
-    const type = String(routeType ?? '').toLowerCase();
+export const getVehicleColor = (routeType: string | undefined, routeName: string | undefined): string => {
+    const type = routeType ?? '';
     const nameStr = String(routeName ?? '');
     const nameUpper = nameStr.toUpperCase();
 
@@ -50,7 +50,7 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
     }
 
     // 1. Metro Specifics (Priority)
-    if (type === '1' || type === 'metro') {
+    if (type === 'metro') {
         switch (nameUpper) {
             case 'A': return VEHICLE_COLORS.METRO_A;
             case 'B': return VEHICLE_COLORS.METRO_B;
@@ -70,26 +70,18 @@ export const getVehicleColor = (routeType: string | number | undefined, routeNam
 
     // 4. Fallback by Type
     switch (type) {
-        case '0':
         case 'tram':
             return VEHICLE_COLORS.TRAM;
-        case '1':
         case 'metro':
             return VEHICLE_COLORS.METRO_DEFAULT;
-        case '11':
         case 'trolleybus':
             return VEHICLE_COLORS.TROLLEYBUS;
-        case '3':
         case 'bus':
             return VEHICLE_COLORS.BUS;
-        case '2':
-        case '109':
         case 'train':
             return VEHICLE_COLORS.TRAIN;
-        case '4':
         case 'ferry':
             return VEHICLE_COLORS.FERRY;
-        case '7':
         case 'funicular':
             return VEHICLE_COLORS.FUNICULAR;
         default:

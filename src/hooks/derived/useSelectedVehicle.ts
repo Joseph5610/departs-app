@@ -38,7 +38,7 @@ export const useSelectedVehicle = () => {
             vehicle_id: vehicleId || liveMatch?.properties.vehicle_id || vehicleDetail?.vehicle_id || null,
             gtfs_trip_id: tripId,
             route_short_name: vehicleDetail?.route_short_name || liveMatch?.properties.route_short_name || '',
-            route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? '',
+            route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? 'unknown',
             trip_headsign: vehicleDetail?.trip_headsign || liveMatch?.properties.trip_headsign || '',
             route_color: vehicleDetail?.route_color || liveMatch?.properties.route_color || '',
             is_night: vehicleDetail?.is_night ?? liveMatch?.properties.is_night ?? false,

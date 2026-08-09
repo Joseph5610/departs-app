@@ -1,3 +1,5 @@
+import type { RouteType } from './vehicles';
+
 export interface Departure {
     timestamp: string;
     scheduled: string;
@@ -5,7 +7,7 @@ export interface Departure {
     delayDelta?: number;
     lastDelayUpdate?: number;
     line: string;
-    type: string;
+    type: RouteType;
     directionId: string;
     headsign: string;
     isCanceled: boolean;
@@ -17,4 +19,5 @@ export interface Departure {
     is_air_conditioned?: boolean | null;
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
     stopId?: string;
+    is_request_stop?: boolean;
 }

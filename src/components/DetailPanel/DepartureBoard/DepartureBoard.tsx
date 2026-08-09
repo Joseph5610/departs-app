@@ -119,7 +119,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 groupedDepartures.map((lineGroup) => {
                     const firstSub = lineGroup.subGroups[0];
                     const firstDep = firstSub.departures[0];
-                    const isMetro = firstDep.type === '1' || firstDep.type === 'metro' || ['A', 'B', 'C'].includes(String(firstDep.line).toUpperCase());
+                    const isMetro = firstDep.type === 'metro' || ['A', 'B', 'C'].includes(String(firstDep.line).toUpperCase());
                     return (
                         <Card 
                             key={lineGroup.lineGroupId} 

@@ -1,5 +1,5 @@
 import type { CityConfig } from '../../../../_core/city-config';
-import type { Env, AppDepartureResponse, AppDeparture } from '../../../../_core/types';
+import type { Env, AppDepartureResponse, AppDeparture, AppRouteType } from '../../../../_core/types';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
@@ -89,7 +89,7 @@ export class DukDeparturesService {
                         }
                     }
 
-                    const routeType = DUK_TRACTION_MAPPING[dep.Traction] || 'bus';
+                    const routeType = (DUK_TRACTION_MAPPING[dep.Traction] || 'bus') as AppRouteType;
                     const lineName = String(dep.LineName || '');
                     const safeDateStr = (str: string) => str ? str.replace(' ', 'T') : str;
 

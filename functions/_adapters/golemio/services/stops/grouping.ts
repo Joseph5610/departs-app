@@ -1,4 +1,4 @@
-import { AppStopFeature, AppStopProperties } from "../../../../_core/types";
+import { AppStopFeature, AppStopProperties, AppRouteType } from "../../../../_core/types";
 import { getVehicleColor } from "../../services/vehicles/colors";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 
@@ -130,7 +130,7 @@ function enrichPublicStops(ctx: HierarchyContext): EnrichmentContext {
             const childrenList = ctx.stationChildren.get(stopId) || [];
             const childFeatures = ctx.stationChildrenFeatures.get(stopId) || [];
             
-            const uniqueLinesMap = new Map<string, { name: string, type: string | number, route_color: string }>();
+            const uniqueLinesMap = new Map<string, { name: string, type: AppRouteType, route_color: string }>();
             let aggIsTrain = 0;
             const aggMetroSet = new Set<string>();
 
@@ -138,7 +138,7 @@ function enrichPublicStops(ctx: HierarchyContext): EnrichmentContext {
                 for (const l of (cf.properties.lines ?? [])) {
                     const key = `${l.name}_${l.type}`;
                     if (!uniqueLinesMap.has(key)) {
-                        uniqueLinesMap.set(key, { name: l.name, type: l.type, route_color: getVehicleColor(String(l.type), l.name) });
+                        uniqueLinesMap.set(key, { name: l.name, type: l.type as AppRouteType, route_color: getVehicleColor(String(l.type), l.name) });
                     }
                     const t = String(l.type);
                     if (t === 'metro') {

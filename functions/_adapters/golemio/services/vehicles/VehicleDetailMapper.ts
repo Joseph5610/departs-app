@@ -3,6 +3,7 @@ import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } fr
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor, isNightRoute } from "./colors";
 import { ProcessedEnrichmentData } from "../stops/enrichment";
+import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 /**
  * Mapper for parsing vehicle details from the Golemio API.
@@ -30,7 +31,7 @@ export class VehicleDetailMapper {
         const extracted_vehicle_id = p.vehicle_id || p.id || '';
         const gtfs_trip_id = p.gtfs_trip_id || tripId;
         const route_short_name = p.route_short_name || '';
-        const route_type = String(p.route_type || '');
+        const route_type = normalizeRouteType(p.route_type || '');
         const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
         const bearing = p.bearing ?? null;
         const delay = p.delay ?? 0;

@@ -42,15 +42,12 @@ const getTransportMode = (item: RSSItem): string => {
     if (!item.line_metadata || item.line_metadata.length === 0) return 'other';
 
     for (const meta of item.line_metadata) {
-        const rawType = String(meta.type || '').toLowerCase();
-        const typeNum = Number(rawType);
-
-        if (rawType === '1' || typeNum === 1 || rawType === 'metro') return 'metro';
-        if (rawType === '0' || typeNum === 0 || (typeNum >= 900 && typeNum <= 999) || rawType === 'tram') return 'tram';
-        if (rawType === '4' || typeNum === 4 || (typeNum >= 1000 && typeNum <= 1099) || rawType === 'ferry') return 'ferry';
-        if (rawType === '7' || typeNum === 7 || (typeNum >= 1400 && typeNum <= 1499) || rawType === 'funicular') return 'funicular';
-        if (rawType === '3' || rawType === '11' || typeNum === 3 || typeNum === 11 || (typeNum >= 700 && typeNum <= 899) || rawType === 'bus' || rawType === 'trolleybus') return 'bus';
-        if (rawType === '2' || typeNum === 2 || (typeNum >= 100 && typeNum <= 199) || rawType === 'train') return 'train';
+        const type = meta.type;
+        
+        if (type === 'trolleybus') return 'bus';
+        if (type === 'unknown') continue;
+        
+        return type;
     }
 
     return 'other';

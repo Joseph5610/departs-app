@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Hand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import type { StopFeature, StopTimelineProps } from './types';
 
@@ -125,6 +126,16 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                     )}>
                         {stop.properties.stop_name}
                     </span>
+                    {stop.properties.is_request_stop && (
+                        <Popover>
+                            <PopoverTrigger className="flex items-center text-muted-foreground shrink-0 cursor-pointer outline-none hover:text-foreground transition-colors">
+                                <Hand size={14} strokeWidth={1.5} />
+                            </PopoverTrigger>
+                            <PopoverContent side="top" className="w-auto px-3 py-1.5 min-w-30 text-center">
+                                <span className="text-sm font-medium">{t('map.vehicleDetails.requestStop', 'Request Stop')}</span>
+                            </PopoverContent>
+                        </Popover>
+                    )}
                     <div className="flex gap-1 shrink-0 translate-y-px">
                         {stop.properties.metro_lines?.map((line) => (
                             <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />

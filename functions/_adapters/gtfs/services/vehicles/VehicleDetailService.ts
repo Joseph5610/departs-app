@@ -65,7 +65,8 @@ export class VehicleDetailService {
                     departure_time: s.departure_time as string,
                     coordinates: [Number(s.lon) || 0, Number(s.lat) || 0] as [number, number],
                     is_wheelchair_accessible: null,
-                    zone_id: null
+                    zone_id: null,
+                    is_request_stop: s.is_request_stop as boolean | undefined
                 };
             });
         } catch (e) {

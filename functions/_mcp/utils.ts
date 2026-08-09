@@ -83,13 +83,8 @@ export function matchesRouteType(departureType: string | number, routeTypeQuery:
 
     if (query === typeStr) return true;
 
-    if (query === 'bus' || query === '3') return typeStr === 'bus' || typeStr === '3';
-    if (query === 'tram' || query === '0') return typeStr === 'tram' || typeStr === '0';
-    if (query === 'metro' || query === '1') return typeStr === 'metro' || typeStr === '1';
-    if (query === 'train' || query === 'rail' || query === '2') return typeStr === 'train' || typeStr === 'rail' || typeStr === '2';
-    if (query === 'trolleybus' || query === '11' || query === '800') return typeStr === 'trolleybus' || typeStr === '11' || typeStr === '800';
-    if (query === 'ferry' || query === '4') return typeStr === 'ferry' || typeStr === '4';
-    if (query === 'funicular' || query === '7') return typeStr === 'funicular' || typeStr === '7';
+    if (query === 'rail' || query === 'train') return typeStr === 'train';
+    if (query === 'subway' || query === 'metro') return typeStr === 'metro';
 
     return false;
 }

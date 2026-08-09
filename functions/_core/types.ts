@@ -15,6 +15,8 @@ export interface AppVehicleDescriptor {
     vehicle_registration_number?: string | number;
 }
 
+export type AppRouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
+
 export interface AppStopTimeProperties {
     stop_id: string;
     stop_name: string;
@@ -27,6 +29,7 @@ export interface AppStopTimeProperties {
     is_wheelchair_accessible?: boolean | null;
     shape_dist_traveled?: number;
     metro_lines: Array<{ name: string; route_color: string }>;
+    is_request_stop?: boolean;
 }
 
 export interface AppStopProperties {
@@ -48,7 +51,7 @@ export interface AppStopProperties {
     all_ids?: string[];
     lines?: Array<{
         name: string;
-        type: string | number;
+        type: AppRouteType;
         route_color: string;
     }>;
 }
@@ -79,7 +82,7 @@ export interface AppVehicleProperties {
     vehicle_id?: string | null;
     gtfs_trip_id: string;
     route_short_name: string;
-    route_type: string | number;
+    route_type: AppRouteType;
     trip_headsign: string;
     bearing: number | null;
     delay: number | null;
@@ -146,7 +149,7 @@ export interface AppDeparture {
     scheduled: string;
     delay: number | null;
     line: string;
-    type: string;
+    type: AppRouteType;
     directionId: string;
     headsign: string;
     isCanceled: boolean;
@@ -158,6 +161,7 @@ export interface AppDeparture {
     is_air_conditioned?: boolean | null;
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
     stopId?: string;
+    is_request_stop?: boolean;
 }
 
 export interface AppDepartureResponse {
@@ -174,7 +178,7 @@ export interface AppAlert {
     guid?: string;
     priority?: string;
     lines?: string[];
-    line_metadata?: Array<{ name: string; route_color: string; type: string }>;
+    line_metadata?: Array<{ name: string; route_color: string; type: AppRouteType }>;
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;
@@ -252,7 +256,7 @@ export interface AppCityStats {
         gtfs_trip_id: string;
         line: string;
         delay: number;
-        route_type: string | number;
+        route_type: AppRouteType;
         route_color: string;
     }>;
     

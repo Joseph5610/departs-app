@@ -120,29 +120,8 @@ export class VehiclesService {
         let filtered = allVehicles.features;
 
         if (routeTypes && routeTypes.length > 0) {
-            // Frontend sends human-readable labels (e.g. "tram", "bus") — map them to
-            // the numeric GTFS route_type values stored on each feature.
-            const ROUTE_TYPE_MAP: Record<string, number[]> = {
-                tram:       [0, ...Array.from({ length: 100 }, (_, i) => 900 + i)],   // 0, 900-999
-                metro:      [1, ...Array.from({ length: 100 }, (_, i) => 400 + i)],   // 1, 400-499
-                train:      [2, ...Array.from({ length: 100 }, (_, i) => 100 + i)],   // 2, 100-199
-                bus:        [3, ...Array.from({ length: 100 }, (_, i) => 700 + i)],   // 3, 700-799
-                ferry:      [4, ...Array.from({ length: 100 }, (_, i) => 1000 + i)],  // 4, 1000-1099
-                funicular:  [7, ...Array.from({ length: 100 }, (_, i) => 1400 + i)],  // 7, 1400-1499
-                trolleybus: [11, ...Array.from({ length: 100 }, (_, i) => 800 + i)],  // 11, 800-899
-            };
-            const allowedTypes = new Set<number>();
-            for (const label of routeTypes) {
-                const nums = ROUTE_TYPE_MAP[label.toLowerCase()];
-                if (nums) {
-                    nums.forEach(n => allowedTypes.add(n));
-                } else {
-                    // Fallback: treat as a raw numeric value if it parses
-                    const n = Number(label);
-                    if (!isNaN(n)) allowedTypes.add(n);
-                }
-            }
-            filtered = filtered.filter(f => allowedTypes.has(Number(f.properties.route_type)));
+            const allowedTypes = new Set(routeTypes.map(r => r.toLowerCase()));
+            filtered = filtered.filter(f => allowedTypes.has(f.properties.route_type));
         }
 
         if (routeShortNames && routeShortNames.length > 0) {
