@@ -109,6 +109,17 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
     const isNext = stopSeq === nextStopSequence;
     const showZone = !!stop.properties.zone_id;
 
+    if (String(stop.properties.stop_id).startsWith('incomplete-gap')) {
+        return (
+            <div className="flex items-center relative py-2 opacity-50">
+                <div className="absolute -left-3.75 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground/30 z-10" />
+                <div className="flex-1 pl-2">
+                    <span className="text-xs text-muted-foreground italic">...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={cn(
             "flex justify-between items-center relative py-2.5 transition-opacity",
@@ -175,7 +186,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                         realtimeTime = addSecondsToTime(schTime as string, delay);
                     }
                     
-                    const hasRealtime = !!rtTime && rtTime !== schTime || (!!delay && delay !== 0 && !isPast);
+                    const hasRealtime = (!!rtTime && rtTime !== schTime) || (!!schTime && !!delay && delay !== 0 && !isPast);
                     
                     let isLate = false;
                     

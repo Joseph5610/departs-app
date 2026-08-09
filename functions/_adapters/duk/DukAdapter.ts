@@ -51,13 +51,14 @@ export class DukAdapter implements CityAdapter {
      */
     async handleVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         const { searchParams } = new URL(ctx.request.url);
-        const vehicleId = searchParams.get('id');
+        const vehicleId = searchParams.get('vehicleId');
+        const tripId = searchParams.get('tripId');
         
-        if (!vehicleId) {
+        if (!vehicleId && !tripId) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
-        const vehicleDetail = await this.vehiclesService.getSingleLiveVehicle(vehicleId);
+        const vehicleDetail = await this.vehiclesService.getSingleLiveVehicle(vehicleId, tripId);
         
         if (!vehicleDetail) {
             throw new ApiError(ERROR_MESSAGES.VEHICLE_NOT_FOUND, 404);

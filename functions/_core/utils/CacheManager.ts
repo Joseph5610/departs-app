@@ -47,8 +47,8 @@ export class CacheManager {
             try {
                 const data = await fetcher();
 
-                const isInvalid = data == null || (isFallbackData ? isFallbackData(data) : false);
-                const hasValidCache = cached && cached.data != null && !(isFallbackData ? isFallbackData(cached.data as T) : false);
+                const isInvalid = isFallbackData ? isFallbackData(data) : false;
+                const hasValidCache = cached && !(isFallbackData ? isFallbackData(cached.data as T) : false);
 
                 if (isInvalid && hasValidCache) {
                     console.warn(`[CacheManager] Fetcher for '${key}' returned invalid/fallback data. Preserving stale cache.`);
@@ -57,9 +57,7 @@ export class CacheManager {
                     return cached.data as T;
                 }
 
-                if (data != null) {
-                    memoryCache.set(key, { data, timestamp: Date.now() });
-                }
+                memoryCache.set(key, { data, timestamp: Date.now() });
                 return data;
             } catch (err) {
                 const hasValidCache = cached && cached.data != null && !(isFallbackData ? isFallbackData(cached.data as T) : false);

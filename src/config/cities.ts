@@ -53,7 +53,16 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
                 };
             }
         }
-    }
+    },
+    // duk: {
+    //     slug: 'duk',
+    //     center: [14.0322, 50.6607],
+    //     bounds: [12.93, 50.11, 14.61, 51.05],
+    //     filters: {
+    //         vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
+    //         stops: []
+    //     }
+    // }
 };
 
 export const DEFAULT_CITY_SLUG = 'prague';

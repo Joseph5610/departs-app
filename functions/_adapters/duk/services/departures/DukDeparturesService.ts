@@ -5,6 +5,7 @@ import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 import type { DukDeparturesResponse } from '../../types';
 import { DUK_TRACTION_MAPPING } from '../../utils/dukConstants';
+import { getDukVehicleColor } from '../../utils/colors';
 
 export class DukDeparturesService {
 
@@ -76,7 +77,13 @@ export class DukDeparturesService {
                 for (const dep of data.DeparturesList || []) {
                     // Filter by requested posts if applicable
                     const depPost = String(dep.StationPost);
-                    if (requestedPosts && !requestedPosts.has(depPost) && depPost !== '999') {
+                    
+                    // We filtered out 999 from our structural mapping.
+                    // If the upstream API still returns a departure on post 999, we should map it to post '1'
+                    // as 999 is just an alias for 1.
+                    const mappedPost = depPost === '999' ? '1' : depPost;
+                    
+                    if (requestedPosts && !requestedPosts.has(mappedPost)) {
                         continue;
                     }
 
@@ -104,11 +111,11 @@ export class DukDeparturesService {
                         isCanceled: false,
                         tripId: undefined, // GTFS trip ID isn't directly exposed here unless we fetch full GTFS
                         vehicleId: undefined,
-                        platform: depPost === '999' ? undefined : depPost,
-                        route_color: '#2563EB',
+                        platform: mappedPost,
+                        route_color: getDukVehicleColor(routeType, lineName),
                         is_wheelchair_accessible: null,
                         is_air_conditioned: null,
-                        stopId: `duk-${node}-${depPost}`
+                        stopId: `duk-${node}-${mappedPost}`
                     });
                 }
 

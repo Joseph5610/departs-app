@@ -53,24 +53,22 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             stops: []
         }
     },
-    /*
-    duk: {
-        slug: 'duk',
-        name: 'Ústecký kraj',
-        timezone: 'Europe/Prague',
-        center: [14.0322, 50.6607],
-        bounds: [12.93, 50.11, 14.61, 51.05],
-        adapter: 'duk',
-        adapterConfig: {
-            baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis'
-        },
-        isBeta: true,
-        filters: {
-            vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
-            stops: []
-        }
-    },
-    */
+    // duk: {
+    //     slug: 'duk',
+    //     name: 'Ústecký kraj',
+    //     timezone: 'Europe/Prague',
+    //     center: [14.0322, 50.6607],
+    //     bounds: [12.93, 50.11, 14.61, 51.05],
+    //     adapter: 'duk',
+    //     adapterConfig: {
+    //         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis'
+    //     },
+    //     isBeta: true,
+    //     filters: {
+    //         vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
+    //         stops: []
+    //     }
+    // },
 };
 
 export function getCityConfig(slug: string): CityConfig | null {

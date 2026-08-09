@@ -37,6 +37,8 @@ export class DukStopsService {
         // Group by Node
         const nodes = new Map<number, DukStationItem[]>();
         for (const item of data.ItemList || []) {
+            if (item.Post === 999) continue; // Filter out virtual catch-all platforms
+            
             if (!nodes.has(item.Node)) {
                 nodes.set(item.Node, []);
             }
