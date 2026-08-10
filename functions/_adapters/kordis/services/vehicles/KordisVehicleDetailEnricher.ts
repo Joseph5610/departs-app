@@ -24,9 +24,11 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
 
         // Apply static vehicle metadata for Brno (DPMB)
         // We do this AFTER the live match so we have the most accurate vehicle_id
+        let operator = 'IDS JMK';
         if (enrichedDetail.vehicle_id) {
             const meta = await getDpmbVehicleMetadata(enrichedDetail.vehicle_id);
             if (meta) {
+                operator = 'DPMB';
                 enrichedDetail.vehicle_descriptor = {
                     ...enrichedDetail.vehicle_descriptor,
                     vehicle_type: meta.vehicle_type,
@@ -37,7 +39,7 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
 
         enrichedDetail.vehicle_descriptor = {
             ...enrichedDetail.vehicle_descriptor,
-            operator: 'IDS JMK',
+            operator,
             vehicle_registration_number: enrichedDetail.vehicle_descriptor?.vehicle_registration_number || ''
         };
 
