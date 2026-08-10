@@ -37,7 +37,7 @@ export interface AppStopTimeProperties {
     zone_id?: string;
     is_wheelchair_accessible?: boolean | null;
     shape_dist_traveled?: number;
-    metro_lines: Array<{ name: string; route_color: string }>;
+    metro_lines?: Array<{ name: string; route_color: string }>;
     is_request_stop?: boolean;
 }
 
@@ -92,18 +92,16 @@ export interface AppVehicleProperties {
     gtfs_trip_id: string;
     route_short_name: string;
     route_type: AppRouteType;
-    trip_headsign: string;
+    trip_headsign?: string;
     bearing: number | null;
     delay: number | null;
     state_position?: AppVehicleState;
-    next_stop_name?: string;
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
-    run_number?: string;
+    run_number?: string | number;
     vehicle_descriptor?: AppVehicleDescriptor;
     is_static_fallback?: boolean;
     route_color: string;
-    is_night: boolean;
 }
 
 export interface AppVehicleFeature {
@@ -141,9 +139,7 @@ export interface AppRouteFeature {
     };
     properties: {
         route_color: string;
-        is_start?: boolean;
-        is_end?: boolean;
-        is_regular?: boolean;
+        is_terminal?: boolean;
         [key: string]: unknown;
     };
 }

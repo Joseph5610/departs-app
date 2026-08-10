@@ -1,7 +1,7 @@
 import { AppVehicleFeature, AppVehicleCollection } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioVehicleFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
-import { getVehicleColor, isNightRoute } from "./colors";
+import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 export class VehiclesMapper {
@@ -25,16 +25,14 @@ export class VehiclesMapper {
                     gtfs_trip_id: p.gtfs_trip_id || '',
                     route_short_name,
                     route_type,
-                    trip_headsign: fixCommaSpacing(p.gtfs_trip_headsign || p.trip_headsign) || '',
+                    ...(p.gtfs_trip_headsign || p.trip_headsign ? { trip_headsign: fixCommaSpacing(p.gtfs_trip_headsign || p.trip_headsign) } : {}),
                     bearing: p.bearing ?? null,
                     delay: p.delay,
                     state_position: (p.state_position || 'unknown') as AppVehicleFeature['properties']['state_position'],
-                    next_stop_name: p.next_stop_name ? fixCommaSpacing(p.next_stop_name) || undefined : undefined,
-                    last_stop_sequence: p.last_stop_sequence,
+                    ...(p.last_stop_sequence ? { last_stop_sequence: p.last_stop_sequence } : {}),
                     origin_timestamp: p.origin_timestamp,
-                    run_number: p.run_number || '',
+                    ...(p.run_number ? { run_number: p.run_number } : {}),
                     route_color: getVehicleColor(route_type, route_short_name),
-                    is_night: isNightRoute(route_short_name),
                     vehicle_descriptor: p.vehicle_descriptor
                 }
             };

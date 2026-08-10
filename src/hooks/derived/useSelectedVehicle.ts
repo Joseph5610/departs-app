@@ -41,7 +41,6 @@ export const useSelectedVehicle = () => {
             route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? 'unknown',
             trip_headsign: vehicleDetail?.trip_headsign || liveMatch?.properties.trip_headsign || '',
             route_color: vehicleDetail?.route_color || liveMatch?.properties.route_color || '',
-            is_night: vehicleDetail?.is_night ?? liveMatch?.properties.is_night ?? false,
             bearing: vehicleDetail?.bearing ?? liveMatch?.properties.bearing ?? null,
             delay: vehicleDetail?.delay ?? liveMatch?.properties.delay ?? null,
         };
@@ -56,7 +55,9 @@ export const useSelectedVehicle = () => {
             merged.delay = liveMatch.properties.delay;
             merged.bearing = liveMatch.properties.bearing;
             merged.state_position = liveMatch.properties.state_position;
-            merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
+            if (liveMatch.properties.last_stop_sequence !== undefined) {
+                merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
+            }
         }
 
         const isValid = (g: VehicleDetail['geometry'] | undefined) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);

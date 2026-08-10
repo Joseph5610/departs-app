@@ -25,17 +25,15 @@ export interface BaseVehicleProperties {
     gtfs_trip_id: string;
     route_short_name: string;
     route_type: RouteType;
-    trip_headsign: string;
+    trip_headsign?: string;
     bearing: number | null | undefined;
     delay: number | null;
     state_position?: VehicleState;
-    next_stop_name?: string;
     run_number?: number | string;
     last_stop_sequence?: number | null;
     origin_timestamp?: string;
     vehicle_descriptor?: VehicleDescriptor;
     route_color: string;
-    is_night: boolean;
     is_enriched?: boolean;
 }
 

@@ -1,7 +1,7 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
-import { getVehicleColor, isNightRoute } from "./colors";
+import { getVehicleColor } from "./colors";
 import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
@@ -36,14 +36,12 @@ export class VehicleDetailMapper {
         const bearing = p.bearing ?? null;
         const delay = p.delay ?? 0;
         const state_position = (p.state_position ?? 'unknown') as AppVehicleDetail['state_position'];
-        const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name) || '';
         
         const run_number = p.run_number || '';
         const last_stop_sequence = data.last_stop_sequence ?? p.last_stop_sequence ?? 0;
         const origin_timestamp = data.origin_timestamp ?? p.origin_timestamp;
 
         const routeColor = getVehicleColor(route_type, route_short_name);
-        const is_night = isNightRoute(route_short_name);
 
         const vehicleData: AppVehicleDetail = {
             vehicle_id: extracted_vehicle_id || requestedVehicleId || null,
@@ -54,12 +52,10 @@ export class VehicleDetailMapper {
             bearing,
             delay,
             state_position,
-            next_stop_name,
             last_stop_sequence,
             origin_timestamp,
             run_number,
             route_color: routeColor,
-            is_night,
             vehicle_descriptor: (data.vehicle_descriptor || p.vehicle_descriptor) ?? undefined,
             geometry,
             is_static_fallback: isStatic,
@@ -85,7 +81,7 @@ export class VehicleDetailMapper {
                         properties: {
                             ...stProps,
                             stop_id: stopId,
-                            metro_lines: metroLines
+                            ...(metroLines.length > 0 ? { metro_lines: metroLines } : {})
                         } as AppStopTimeProperties
                     };
                 })
@@ -121,18 +117,14 @@ export class VehicleDetailMapper {
             ?.filter(st => st.geometry && st.geometry.type === 'Point' && Array.isArray(st.geometry.coordinates)) || [];
 
         validStops.forEach((st: typeof validStops[0], index: number) => {
-            const isStart = index === 0;
-            const isEnd = index === validStops.length - 1;
+            const isTerminal = index === 0 || index === validStops.length - 1;
             if (st.geometry) {
                 routeFeatures.push({
                     type: 'Feature',
                     geometry: st.geometry as { type: 'Point'; coordinates: number[] },
                     properties: {
-                        ...st.properties,
                         route_color: routeColor,
-                        is_start: isStart,
-                        is_end: isEnd,
-                        is_regular: !isStart && !isEnd
+                        is_terminal: isTerminal
                     }
                 });
             }

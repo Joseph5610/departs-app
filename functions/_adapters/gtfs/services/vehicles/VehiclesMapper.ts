@@ -47,16 +47,12 @@ export class VehiclesMapper {
                 route_color: route.route_color || '',
                 route_type: normalizeRouteType(route.type),
                 
-                trip_headsign: '', // Often empty unless we fetch trip details
-                
                 delay: delay ?? null,
                 state_position: statePosition,
                 origin_timestamp: new Date(lastUpdate).toISOString(),
                 bearing: bearing ?? null,
                 
-                run_number: undefined,
-                last_stop_sequence: vp.currentStopSequence && vp.currentStopSequence > 0 ? vp.currentStopSequence : null,
-                is_night: false,
+                ...(vp.currentStopSequence && vp.currentStopSequence > 0 ? { last_stop_sequence: vp.currentStopSequence } : {}),
                 
                 vehicle_descriptor: {
                     vehicle_registration_number: licensePlate || vehicleLabel || vehicleId

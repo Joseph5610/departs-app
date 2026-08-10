@@ -33,7 +33,6 @@ export class VehicleDetailMapper {
             bearing: null,
             delay: finalDelay,
             route_color: routeColor || '',
-            is_night: false,
             is_static_fallback: true,
             state_position: 'before_track',
             origin_timestamp: undefined,
@@ -78,7 +77,6 @@ export class VehicleDetailMapper {
                     departure_time: formatTime(s.departure_time),
                     realtime_arrival_time: (applyDelay ? addSecondsToTime(s.arrival_time, applyDelay) : undefined) || formatTime(s.arrival_time),
                     realtime_departure_time: (applyDelay ? addSecondsToTime(s.departure_time, applyDelay) : undefined) || formatTime(s.departure_time),
-                    metro_lines: [],
                     is_request_stop: s.is_request_stop
                 }
             };
@@ -101,8 +99,7 @@ export class VehicleDetailMapper {
             // Add Point features for each stop so routeStopsLayer and routeTerminalsLayer render
             // correctly on the map (matching Prague/Golemio behaviour).
             const stopFeatures = stations.map((st, index) => {
-                const isStart = index === 0;
-                const isEnd = index === stations.length - 1;
+                const isTerminal = index === 0 || index === stations.length - 1;
                 return {
                     type: 'Feature' as const,
                     geometry: {
@@ -110,12 +107,8 @@ export class VehicleDetailMapper {
                         coordinates: st.coordinates
                     },
                     properties: {
-                        stop_id: String(st.id),
-                        stop_name: st.name,
                         route_color: routeColor,
-                        is_start: isStart,
-                        is_end: isEnd,
-                        is_regular: !isStart && !isEnd
+                        is_terminal: isTerminal
                     }
                 };
             });

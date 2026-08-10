@@ -55,11 +55,10 @@ export class DukVehiclesService {
                 gtfs_trip_id: v.qride_tripID || `dummy-${v.ID}`,
                 route_short_name: lineName,
                 route_type: route_type,
-                trip_headsign: v.FinalNode && nodeNames[v.FinalNode] ? nodeNames[v.FinalNode] : v.FinalNode ? String(v.FinalNode) : '',
+                ...(v.FinalNode && nodeNames[v.FinalNode] ? { trip_headsign: nodeNames[v.FinalNode] } : v.FinalNode ? { trip_headsign: String(v.FinalNode) } : {}),
                 bearing: v.Azimut || null,
                 delay: v.Delay ? v.Delay * 60 : 0, // Delay is in minutes, convert to seconds
                 route_color: getDukVehicleColor(route_type, lineName),
-                is_night: false,
                 state_position: DUK_STATE_MAPPING[v.State] || 'unknown',
                 // Portabo API has a bug where SŽ trains report GPSPositionDT exactly 2 hours in the future.
                 // LastActivityDT is correctly synchronized across all carriers (buses and trains).
@@ -172,8 +171,7 @@ export class DukVehiclesService {
                             stop_name: '...',
                             stop_sequence: seq++,
                             arrival_time: '',
-                            departure_time: '',
-                            metro_lines: []
+                            departure_time: ''
                         }
                     });
 
@@ -184,8 +182,7 @@ export class DukVehiclesService {
                             stop_name: nodeNames[vehicle.StationNode] || String(vehicle.StationNode),
                             stop_sequence: seq++,
                             arrival_time: extractTime(vehicle.ArrivalDT) || '',
-                            departure_time: extractTime(vehicle.TODepartureDT) || '',
-                            metro_lines: []
+                            departure_time: extractTime(vehicle.TODepartureDT) || ''
                         }
                     });
                 }
@@ -198,8 +195,7 @@ export class DukVehiclesService {
                             stop_name: '...',
                             stop_sequence: seq++,
                             arrival_time: '',
-                            departure_time: '',
-                            metro_lines: []
+                            departure_time: ''
                         }
                     });
 
@@ -210,8 +206,7 @@ export class DukVehiclesService {
                             stop_name: nodeNames[vehicle.FinalNode] || String(vehicle.FinalNode),
                             stop_sequence: seq,
                             arrival_time: '',
-                            departure_time: '',
-                            metro_lines: []
+                            departure_time: ''
                         }
                     });
                 }

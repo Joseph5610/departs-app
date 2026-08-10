@@ -91,9 +91,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </div>
                 </div>
                 <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
-                    {displayVehicle.trip_headsign || displayVehicle.next_stop_name ? (
+                    {displayVehicle.trip_headsign ? (
                         <span className="animate-in fade-in duration-500">
-                            {displayVehicle.trip_headsign || displayVehicle.next_stop_name}
+                            {displayVehicle.trip_headsign}
                         </span>
                     ) : isDetailLoading ? (
                         <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />

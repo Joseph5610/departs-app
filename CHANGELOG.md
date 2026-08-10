@@ -4,6 +4,32 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.12] - 2026-08-10
+
+### Refactored
+- Made `metro_lines` property optional in backend models and omitted empty `metro_lines` arrays from vehicle detail payloads.
+- Streamlined live `/vehicles` Map GeoJSON stream payload by omitting unpopulated redundant properties (`trip_headsign`, `last_stop_sequence`, `run_number`).
+
+## [0.59.11] - 2026-08-10
+
+### Fixed
+- Cleaned up redundant timetable properties from `route_geojson` point features in vehicle detail responses for Prague and Brno.
+
+## [0.59.10] - 2026-08-10
+
+### Removed
+- Removed unused `next_stop_name` property across frontend types, backend mappers, and schemas.
+
+## [0.59.9] - 2026-08-10
+
+### Refactored
+- Replaced redundant `is_start`, `is_end`, and `is_regular` stop point properties with a single `is_terminal` flag in vehicle detail responses and map layers.
+
+## [0.59.8] - 2026-08-10
+
+### Removed
+- Removed redundant `is_night` field from vehicle models and backend mappers.
+
 ## [0.59.7] - 2026-08-10
 
 ### Fixed

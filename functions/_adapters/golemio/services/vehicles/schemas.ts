@@ -21,7 +21,6 @@ const golemioVehiclePropertiesSchema = z.object({
     bearing: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : undefined),
     delay: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : null),
     state_position: z.string().nullish().transform(v => v ?? 'unknown'),
-    next_stop_name: z.string().nullish().transform(v => v ?? undefined),
     last_stop_sequence: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : 0),
     origin_timestamp: z.string().nullish().transform(v => v ?? undefined),
     run_number: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? String(v) : undefined),
@@ -95,6 +94,5 @@ export const golemioVehiclePayloadSchema = golemioVehiclePropertiesSchema.partia
     vehicle_descriptor: golemioVehicleDescriptorSchema.nullish().transform(v => v ?? undefined),
     last_stop_sequence: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : 0),
     origin_timestamp: z.string().nullish().transform(v => v ?? undefined),
-    next_stop_name: z.string().nullish().transform(v => v ?? undefined),
 });
 export type GolemioVehiclePayload = z.infer<typeof golemioVehiclePayloadSchema>;

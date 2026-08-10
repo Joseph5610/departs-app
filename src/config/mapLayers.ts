@@ -413,9 +413,7 @@ const createRouteNodeLayer = (id: string, isTerminal: boolean): CircleLayerSpeci
         source: 'route-shape',
         filter: ['all', 
             ['==', ['geometry-type'], 'Point'],
-            isTerminal 
-                ? ['any', ['==', ['get', 'is_start'], true], ['==', ['get', 'is_end'], true]] 
-                : ['==', ['get', 'is_regular'], true]
+            ['==', ['get', 'is_terminal'], isTerminal]
         ],
         paint: {
             'circle-radius': ['interpolate', ['linear'], ['zoom'], 
