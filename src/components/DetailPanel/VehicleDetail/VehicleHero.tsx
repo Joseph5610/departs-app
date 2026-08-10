@@ -175,32 +175,46 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                 {/* Warning Banner & Metadata Footer */}
                 {(() => {
                     const state = displayVehicle.state_position;
-                    const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(state || '');
+                    const isCanceled = state === 'canceled';
+                    const isBeforeTrack = state === 'before_track';
+                    const isBeforeTrackDelayed = state === 'before_track_delayed';
                     const isOffTrack = state === 'off_track';
-                    const isShowBanner = isBeforeTrack || isOffTrack || displayVehicle.isStaticFallback;
+                    const isShowBanner = isCanceled || isBeforeTrack || isBeforeTrackDelayed || isOffTrack || displayVehicle.isStaticFallback;
 
-                    const title = displayVehicle.isStaticFallback
-                        ? t('map.vehicleDetails.staticFallback')
-                        : isBeforeTrack
-                            ? t('map.vehicleDetails.previousTrip')
-                            : t('map.vehicleDetails.offTrack');
+                    let title = '';
+                    let description = '';
+                    let iconColor = 'text-amber-500';
+                    let textColor = 'text-amber-500/80';
 
-                    const description = displayVehicle.isStaticFallback
-                        ? t('map.vehicleDetails.staticFallbackDescription')
-                        : isBeforeTrack
-                            ? t('map.vehicleDetails.previousTripDescription')
-                            : t('map.vehicleDetails.offTrackDescription');
+                    if (isCanceled) {
+                        title = t('map.vehicleDetails.canceled');
+                        description = t('map.vehicleDetails.canceledDescription');
+                        iconColor = 'text-rose-500';
+                        textColor = 'text-rose-500/80';
+                    } else if (displayVehicle.isStaticFallback) {
+                        title = t('map.vehicleDetails.staticFallback');
+                        description = t('map.vehicleDetails.staticFallbackDescription');
+                    } else if (isBeforeTrackDelayed) {
+                        title = t('map.vehicleDetails.beforeTrackDelayed');
+                        description = t('map.vehicleDetails.beforeTrackDelayedDescription');
+                    } else if (isBeforeTrack) {
+                        title = t('map.vehicleDetails.previousTrip');
+                        description = t('map.vehicleDetails.previousTripDescription');
+                    } else if (isOffTrack) {
+                        title = t('map.vehicleDetails.offTrack');
+                        description = t('map.vehicleDetails.offTrackDescription');
+                    }
 
                     return (
                         <>
                             {isShowBanner && (
                                 <div className="mt-1 flex items-start gap-2.5">
-                                    <Info size={16} className="mt-0.5 text-amber-500 shrink-0" strokeWidth={2} />
+                                    <Info size={16} className={cn("mt-0.5 shrink-0", iconColor)} strokeWidth={2} />
                                     <div className="flex flex-col gap-1">
-                                        <span className="micro-label leading-none text-amber-500">
+                                        <span className={cn("micro-label leading-none", iconColor)}>
                                             {title}
                                         </span>
-                                        <span className="text-amber-500/80 text-[11px] leading-snug font-medium">
+                                        <span className={cn("text-[11px] leading-snug font-medium", textColor)}>
                                             {description}
                                         </span>
                                     </div>

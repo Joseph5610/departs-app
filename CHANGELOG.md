@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.13] - 2026-08-10
+
+### Added
+- Added distinct `before_track_delayed` and `canceled` vehicle state banners and localization in `VehicleHero`.
+
 ## [0.59.12] - 2026-08-10
 
 ### Refactored
