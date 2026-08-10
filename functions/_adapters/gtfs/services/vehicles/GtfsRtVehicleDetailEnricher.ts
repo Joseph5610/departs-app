@@ -62,7 +62,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             
             if (stopMatch) {
                 let seq = stopMatch.properties.stop_sequence;
-                if (detail.state_position === 'in_transit_to') {
+                if (detail.state_position === 'on_track') {
                     seq = Math.max(1, seq - 1);
                 }
                 resolvedSequence = seq;

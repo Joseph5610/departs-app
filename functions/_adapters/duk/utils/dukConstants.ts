@@ -1,9 +1,11 @@
-export const DUK_STATE_MAPPING: Record<number, string> = {
+import type { AppVehicleState } from '../../../_core/types';
+
+export const DUK_STATE_MAPPING: Record<number, AppVehicleState> = {
     255: 'off_track',            // Vypnuto
-    0: 'in_transit_to',          // V jízdě
-    1: 'stopped_at',             // V zastávce/stanici
+    0: 'on_track',               // V jízdě
+    1: 'at_stop',                // V zastávce/stanici
     2: 'before_track',           // Čeká před jízdou
-    3: 'before_track'           // V jízdě na první zastávku
+    3: 'before_track'            // V jízdě na první zastávku
 };
 
 export const DUK_TRACTION_MAPPING: Record<number, string> = {

@@ -54,11 +54,11 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         vehicleTypes[rType] = (vehicleTypes[rType] || 0) + 1;
         
         const state = String(p.state_position || 'unknown').toLowerCase();
-        if (['at_stop', 'stopped_at', 'before_track', 'before_track_delayed'].includes(state)) {
+        if (['at_stop', 'before_track', 'before_track_delayed'].includes(state)) {
             stateDistribution.at_stop++;
         } else if (state === 'off_track') {
             stateDistribution.off_track++;
-        } else if (['in_transit', 'on_track', 'in_transit_to', 'incoming_at'].includes(state)) {
+        } else if (state === 'on_track') {
             stateDistribution.in_transit++;
         } else {
             stateDistribution.other++;

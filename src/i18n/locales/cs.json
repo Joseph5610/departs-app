@@ -389,6 +389,7 @@
     "onScreen": "Na obrazovce",
     "network": "Celá síť",
     "networkDelayNotice": "Živá data o zpoždění pro celou síť nejsou v tomto regionu k dispozici. Přepněte prosím na záložku \"Na obrazovce\" pro zobrazení živých dat pro vozidla aktuálně v zorném poli.",
+    "scopeLabel": "Rozsah statistik:",
     "title": "Statistiky sítě",
     "lines": "Linky",
     "punctuality": "Přesnost spojů",

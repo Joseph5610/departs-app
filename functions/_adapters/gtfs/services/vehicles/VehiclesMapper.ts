@@ -13,12 +13,12 @@ export class VehiclesMapper {
     ): AppVehicleFeature {
         const vp = vehicleObj;
         
-        let statePosition: AppVehicleProperties['state_position'] = 'in_transit_to';
+        let statePosition: AppVehicleProperties['state_position'] = 'on_track';
         // '0' = INCOMING_AT, '1' = STOPPED_AT, '2' = IN_TRANSIT_TO
         if (vp.currentStatus === 0) {
-            statePosition = 'in_transit_to'; // INCOMING_AT maps closely to approaching
+            statePosition = 'on_track'; // INCOMING_AT maps closely to on_track
         } else if (vp.currentStatus === 1) {
-            statePosition = 'stopped_at';
+            statePosition = 'at_stop';
             
             // Heuristic for before_track: if stopped at the very first stop of the sequence
             // Only trigger if > 0 because missing currentStopSequence defaults to 0 in protobuf

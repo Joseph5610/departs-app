@@ -17,6 +17,15 @@ export interface AppVehicleDescriptor {
 
 export type AppRouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
 
+export type AppVehicleState = 
+    | 'at_stop' 
+    | 'before_track' 
+    | 'before_track_delayed' 
+    | 'canceled' 
+    | 'off_track' 
+    | 'on_track'
+    | 'unknown';
+
 export interface AppStopTimeProperties {
     stop_id: string;
     stop_name: string;
@@ -86,7 +95,7 @@ export interface AppVehicleProperties {
     trip_headsign: string;
     bearing: number | null;
     delay: number | null;
-    state_position?: string;
+    state_position?: AppVehicleState;
     next_stop_name?: string;
     last_stop_sequence?: number | null;
     origin_timestamp?: string;

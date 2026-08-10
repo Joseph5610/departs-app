@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 const golemioVehicleDescriptorSchema = z.object({
     operator: z.string().nullish().transform(v => v ?? undefined),
     vehicle_type: z.string().nullish().transform(v => v ?? undefined),

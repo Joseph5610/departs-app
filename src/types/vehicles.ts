@@ -11,6 +11,15 @@ export interface VehicleDescriptor {
     vehicle_registration_number?: string | number;
 }
 
+export type VehicleState = 
+    | 'at_stop' 
+    | 'before_track' 
+    | 'before_track_delayed' 
+    | 'canceled' 
+    | 'off_track' 
+    | 'on_track'
+    | 'unknown';
+
 export interface BaseVehicleProperties {
     vehicle_id: string | null;
     gtfs_trip_id: string;
@@ -19,7 +28,7 @@ export interface BaseVehicleProperties {
     trip_headsign: string;
     bearing: number | null | undefined;
     delay: number | null;
-    state_position?: string;
+    state_position?: VehicleState;
     next_stop_name?: string;
     run_number?: number | string;
     last_stop_sequence?: number | null;
@@ -31,7 +40,7 @@ export interface BaseVehicleProperties {
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
-    state_position: string; // Required in map features
+    state_position: VehicleState; // Required in map features
     last_updated?: string;
 }
 

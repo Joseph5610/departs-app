@@ -35,7 +35,7 @@ export class VehicleDetailMapper {
         const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
         const bearing = p.bearing ?? null;
         const delay = p.delay ?? 0;
-        const state_position = p.state_position ?? 'unknown';
+        const state_position = (p.state_position ?? 'unknown') as AppVehicleDetail['state_position'];
         const next_stop_name = fixCommaSpacing(p.next_stop_name || data.next_stop_name) || '';
         
         const run_number = p.run_number || '';

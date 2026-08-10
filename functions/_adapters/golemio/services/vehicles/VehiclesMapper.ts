@@ -28,7 +28,7 @@ export class VehiclesMapper {
                     trip_headsign: fixCommaSpacing(p.gtfs_trip_headsign || p.trip_headsign) || '',
                     bearing: p.bearing ?? null,
                     delay: p.delay,
-                    state_position: p.state_position,
+                    state_position: (p.state_position || 'unknown') as AppVehicleFeature['properties']['state_position'],
                     next_stop_name: p.next_stop_name ? fixCommaSpacing(p.next_stop_name) || undefined : undefined,
                     last_stop_sequence: p.last_stop_sequence,
                     origin_timestamp: p.origin_timestamp,
