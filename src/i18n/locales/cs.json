@@ -41,6 +41,15 @@
       "title": "Poloha vozidel v reálném čase",
       "description": "Zobrazit autobusy, tramvaje a metro"
     },
+    "colorVehiclesByDelay": {
+      "title": "Barvy vozidel dle zpoždění",
+      "description": "Zobrazit barvu vozidel podle jejich aktuálního zpoždění místo barvy linky",
+      "filterTitle": "Filtrovat podle zpoždění",
+      "onTime": "Na čas (≤2m)",
+      "moderate": "2–5 min",
+      "high": "5–10 min",
+      "severe": ">10 min"
+    },
     "showStops": {
       "title": "Zobrazit zastávky",
       "description": "Zobrazit zastávky a stanice",

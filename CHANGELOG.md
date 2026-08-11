@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.14] - 2026-08-11
+
+### Added
+- Added togglable vehicle coloring by delay feature with green, orange, red, and purple delay threshold markers on map layers.
+
 ## [0.59.13] - 2026-08-10
 
 ### Added

@@ -284,6 +284,43 @@ export const stopFavorites: SymbolLayerSpecification = {
 // VEHICLES (Factories)
 // -----------------------------------------------------------------------------
 
+export const getVehicleColorExpression = (colorVehiclesByDelay: boolean) => {
+    if (!colorVehiclesByDelay) {
+        return ['get', 'route_color'];
+    }
+    return [
+        'case',
+        ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], '#4ade80', // Sage Green (On time / null)
+        ['<=', ['to-number', ['get', 'delay']], 120], '#4ade80', // Sage Green
+        ['<=', ['to-number', ['get', 'delay']], 300], '#fbbf24', // Warm Gold
+        ['<=', ['to-number', ['get', 'delay']], 600], '#f87171', // Terracotta Coral
+        '#6b21a8' // Deep Dark Radar Purple
+    ];
+};
+
+export const getDelayFilterExpression = (delayFilter: string[]) => {
+    if (!delayFilter || delayFilter.length === 0) {
+        return null;
+    }
+    const conditions = [];
+    if (delayFilter.includes('onTime')) {
+        conditions.push(['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null], ['<=', ['to-number', ['coalesce', ['get', 'delay'], 0]], 120]]);
+    }
+    if (delayFilter.includes('moderate')) {
+        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 120], ['<=', ['to-number', ['get', 'delay']], 300]]);
+    }
+    if (delayFilter.includes('high')) {
+        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 300], ['<=', ['to-number', ['get', 'delay']], 600]]);
+    }
+    if (delayFilter.includes('severe')) {
+        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 600]]);
+    }
+    if (conditions.length === 0) {
+        return null;
+    }
+    return ['any', ...conditions];
+};
+
 const createVehicleLayers = (sourceId: string, idPrefix: string, minzoom?: number) => {
     const point: CircleLayerSpecification = {
         id: `${idPrefix}-point`,

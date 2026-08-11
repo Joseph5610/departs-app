@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import type { VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useEnrichmentStore } from '../../state/enrichmentStore';
+import { applyEnrichment } from '../../lib/enrichment';
 import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
@@ -40,6 +42,9 @@ export const useVehicles = () => {
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
+    const byTripId = useEnrichmentStore(s => s.byTripId);
+    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+
     const query = useQuery<VehicleCollection | null, AppError>({
         queryKey: ['vehicles', selectedCity, bounds, routeFilter, routeTypeFilter],
         queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
@@ -51,26 +56,53 @@ export const useVehicles = () => {
         retry: 1,
     });
 
+    const enrichedCollection = useMemo((): VehicleCollection | null => {
+        if (!query.data) return null;
+        if (!query.data.features || query.data.features.length === 0) return query.data;
+
+        const baseTs = query.dataUpdatedAt || 0;
+        const features = query.data.features.map((f): VehicleFeature => {
+            const enrichedProps = applyEnrichment(
+                f.properties,
+                f.properties.gtfs_trip_id,
+                f.properties.vehicle_id,
+                byTripId,
+                byVehicleId,
+                baseTs
+            );
+            if (enrichedProps === f.properties) return f;
+            return {
+                ...f,
+                properties: enrichedProps
+            };
+        });
+
+        return {
+            ...query.data,
+            features
+        };
+    }, [query.data, query.dataUpdatedAt, byTripId, byVehicleId]);
+
     const { vehicleIndex, tripIndex } = useMemo(() => {
         const vIdx = new Map<string, VehicleFeature>();
         const tIdx = new Map<string, VehicleFeature>();
         
-        if (query.data?.features) {
-            for (const f of query.data.features) {
+        if (enrichedCollection?.features) {
+            for (const f of enrichedCollection.features) {
                 if (f.properties.vehicle_id) vIdx.set(f.properties.vehicle_id, f);
                 if (f.properties.gtfs_trip_id) tIdx.set(f.properties.gtfs_trip_id, f);
             }
         }
         return { vehicleIndex: vIdx, tripIndex: tIdx };
-    }, [query.data]);
+    }, [enrichedCollection]);
 
     return useMemo(() => ({
-        vehicles: query.data,
+        vehicles: enrichedCollection,
         vehicleIndex,
         tripIndex,
         isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         dataUpdatedAt: query.dataUpdatedAt
-    }), [query.data, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
+    }), [enrichedCollection, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
 };

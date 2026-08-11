@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
 import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
+import { getDelayFilterExpression } from '../../config/mapLayers';
 
 const EMPTY_GEOJSON: VehicleCollection = {
     type: 'FeatureCollection',
@@ -15,7 +16,8 @@ const EMPTY_GEOJSON: VehicleCollection = {
  */
 export const useMapFilters = (
     selectedVehicle: VehicleDetail | null,
-    selectedId: string | null | undefined
+    selectedId: string | null | undefined,
+    delayFilter: string[] = []
 ) => {
     // 1. Create a standalone GeoJSON for the selected vehicle
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
@@ -45,13 +47,21 @@ export const useMapFilters = (
     }, [selectedVehicle]);
 
     // 2. Create a filter to hide the selected vehicle from the main stream layer
-    // This prevents "double rendering" of the same vehicle.
+    // and filter by delay range when delayFilter is active.
     const vehiclesFilter = useMemo<FilterSpecification>(() => {
-        return ['!', ['any',
+        const baseExcludeFilter = ['!', ['any',
             ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], '']], selectedId || 'NOMATCH'],
             ['==', ['to-string', ['coalesce', ['get', 'gtfs_trip_id'], '']], selectedVehicle?.gtfs_trip_id || 'NOMATCH']
-        ]] as FilterSpecification;
-    }, [selectedId, selectedVehicle?.gtfs_trip_id]);
+        ]];
+
+        const delayExpr = getDelayFilterExpression(delayFilter);
+
+        if (!delayExpr) {
+            return baseExcludeFilter as unknown as FilterSpecification;
+        }
+
+        return ['all', baseExcludeFilter, delayExpr] as unknown as FilterSpecification;
+    }, [selectedId, selectedVehicle?.gtfs_trip_id, delayFilter]);
 
     return {
         selectedVehicleFeature,

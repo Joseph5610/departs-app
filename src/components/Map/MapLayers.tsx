@@ -29,7 +29,8 @@ import {
     routeStops,
     routeTerminals,
     userLocationPulse,
-    userLocationPoint
+    userLocationPoint,
+    getVehicleColorExpression
 } from '../../config/mapLayers';
 
 interface MapLayersProps {
@@ -59,6 +60,8 @@ interface MapLayersProps {
     favoriteStops: string[];
     /** Filter expression to exclude selected vehicle from the main vehicle layer */
     vehiclesFilter: FilterSpecification;
+    /** Whether to color vehicles by delay */
+    colorVehiclesByDelay?: boolean;
     /** ID of the first label layer in the style, used for correct layering (Z-index) */
     labelLayerId?: string;
 }
@@ -91,7 +94,8 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     userLocation,
     selectedVehicleFeature,
     favoriteStops,
-    vehiclesFilter
+    vehiclesFilter,
+    colorVehiclesByDelay = false
 }) => {
     // Helper: does this feature pass the stop type filter?
     // Empty filter = show all. Otherwise include only matching types.
@@ -116,6 +120,13 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
         displayVehicles,
         selectedVehicleFeature,
         showVehicles
+    );
+
+    // Dynamic vehicle color expression based on user preferences
+    const vehicleColorExpr = React.useMemo(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        () => getVehicleColorExpression(colorVehiclesByDelay) as any,
+        [colorVehiclesByDelay]
     );
 
     // Filter GeoJSON based on stop type filters
@@ -170,15 +181,15 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
             </Source>
 
             <Source id="selected-vehicle" type="geojson" data={selectedGeoJSON}>
-                <Layer {...vehicleSelectedPulse} />
-                <Layer {...vehicleSelectedPoint} />
-                <Layer {...vehicleSelectedDirection} />
+                <Layer {...vehicleSelectedPulse} paint={{ ...vehicleSelectedPulse.paint, 'circle-color': vehicleColorExpr }} />
+                <Layer {...vehicleSelectedPoint} paint={{ ...vehicleSelectedPoint.paint, 'circle-color': vehicleColorExpr }} />
+                <Layer {...vehicleSelectedDirection} paint={{ ...vehicleSelectedDirection.paint, 'icon-color': vehicleColorExpr }} />
                 <Layer {...vehicleSelectedLabel} paint={{ ...vehicleSelectedLabel.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
             <Source id="city-vehicles" type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_GEOJSON}>
-                <Layer {...vehiclePoints} filter={vehiclesFilter} />
-                <Layer {...vehicleDirections} filter={vehiclesFilter} />
+                <Layer {...vehiclePoints} filter={vehiclesFilter} paint={{ ...vehiclePoints.paint, 'circle-color': vehicleColorExpr }} />
+                <Layer {...vehicleDirections} filter={vehiclesFilter} paint={{ ...vehicleDirections.paint, 'icon-color': vehicleColorExpr }} />
                 <Layer {...vehicleLabels} filter={vehiclesFilter} paint={{ ...(vehicleLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 

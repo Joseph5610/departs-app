@@ -40,6 +40,15 @@
       "title": "Live vehicle locations",
       "description": "Show buses, trams, and metro"
     },
+    "colorVehiclesByDelay": {
+      "title": "Vehicle colors by delay",
+      "description": "Color map vehicle markers based on current delay instead of line color",
+      "filterTitle": "Filter by delay",
+      "onTime": "On time (≤2m)",
+      "moderate": "2–5 min",
+      "high": "5–10 min",
+      "severe": ">10 min"
+    },
     "showStops": {
       "title": "Show stops",
       "description": "Show transport stops and stations",

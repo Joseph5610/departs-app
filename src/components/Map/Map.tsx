@@ -84,6 +84,8 @@ const MapInner: React.FC = () => {
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
+    const delayFilter = usePreferencesStore(s => s.delayFilter);
     const { resolvedTheme } = useTheme();
 
     // Derived State
@@ -98,7 +100,7 @@ const MapInner: React.FC = () => {
 
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
-    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, selectedId);
+    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, selectedId, delayFilter);
 
     const [location] = useLocation();
     const returnPath = useSelectionStore(s => s.returnPath);
@@ -263,6 +265,7 @@ const MapInner: React.FC = () => {
                     selectedVehicleFeature={selectedVehicleFeature}
                     favoriteStops={favoriteStops}
                     vehiclesFilter={vehiclesFilter}
+                    colorVehiclesByDelay={colorVehiclesByDelay}
                     labelLayerId={labelLayerId}
                 />
                 

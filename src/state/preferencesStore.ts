@@ -18,6 +18,8 @@ export interface PreferencesState {
     mapBaseStyle: 'nolabels' | 'labels';
     selectedCity: string;
     requireAirConditioned: boolean;
+    colorVehiclesByDelay: boolean;
+    delayFilter: string[];
     statsTab: 'screen' | 'network';
     statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
@@ -39,9 +41,11 @@ export interface PreferencesActions {
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
     setSelectedCity: (city: string) => void;
     toggleFavorite: (stopId: string) => void;
-    addToHistory: (item: SearchHistoryBase) => void;
+    addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
+    setColorVehiclesByDelay: (enabled: boolean) => void;
+    setDelayFilter: (filter: string[]) => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
     setStatsViewMode: (mode: 'overview' | 'vehicles') => void;
 }
@@ -68,6 +72,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
             mapBaseStyle: 'labels',
             selectedCity: DEFAULT_CITY_SLUG,
             requireAirConditioned: false,
+            colorVehiclesByDelay: false,
+            delayFilter: [],
             statsTab: 'screen',
             statsViewMode: 'overview',
             isMcpBannerDismissed: false,
@@ -113,6 +119,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
                     }),
                 clearHistory: () => set({ searchHistory: [] }),
                 toggleRequireAirConditioned: () => set((state) => ({ requireAirConditioned: !state.requireAirConditioned })),
+                setColorVehiclesByDelay: (enabled) => set({ colorVehiclesByDelay: enabled }),
+                setDelayFilter: (filter) => set({ delayFilter: filter }),
                 setStatsTab: (tab) => set({ statsTab: tab }),
                 setStatsViewMode: (mode) => set({ statsViewMode: mode }),
             },
@@ -132,6 +140,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 selectedCity: state.selectedCity,
                 routeTypeFilter: state.routeTypeFilter,
                 requireAirConditioned: state.requireAirConditioned,
+                colorVehiclesByDelay: state.colorVehiclesByDelay,
+                delayFilter: state.delayFilter,
                 isMcpBannerDismissed: state.isMcpBannerDismissed,
             }),
         }
