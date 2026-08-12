@@ -21,7 +21,7 @@ const VEHICLE_COLORS = {
  * Determines if a route is a night route based on its number.
  * Trams 90-99 and Buses 900+ are considered night routes.
  */
-export const isNightRoute = (routeName: string | number): boolean => {
+const isNightRoute = (routeName: string | number): boolean => {
     const nameStr = String(routeName);
     const nameNum = parseInt(nameStr, 10);
     if (isNaN(nameNum)) return false;
