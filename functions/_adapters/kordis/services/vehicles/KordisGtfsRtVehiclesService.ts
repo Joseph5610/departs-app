@@ -289,8 +289,13 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const speed = vp.position?.speed;
         const isStationary = speed === undefined || speed === null || Number(speed) === 0;
 
-        // Time check: departure is more than 1 minute (60 seconds) in the future
-        const isBeforeDeparture = tripInfo.start_mins > (currentMins + 1);
+        // Time check: departure is more than 1 minute (60 seconds) in the future.
+        // Handles 24h / midnight wrap-around (e.g. 23:55 vs 00:12 or start_mins 1452 vs 5 mins).
+        let diffMins = tripInfo.start_mins - currentMins;
+        if (diffMins < -720) diffMins += 1440;
+        if (diffMins > 720) diffMins -= 1440;
+
+        const isBeforeDeparture = diffMins > 1;
 
         return isStationary && isBeforeDeparture;
     }
