@@ -13,11 +13,14 @@ import type { AppError } from '@/types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
 
 
+import { PointOfSaleDetail } from './PointOfSaleDetail';
+import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
+
 /**
  * DetailPanelContent
  *
  * Orchestrator for the content area of the DetailPanel.
- * Switches between VehicleDetail and DepartureBoard based on selection.
+ * Switches between VehicleDetail, DepartureBoard, and PointOfSaleDetail based on selection.
  */
 export const DetailPanelContent: React.FC = memo(() => {
     // Stores
@@ -25,11 +28,15 @@ export const DetailPanelContent: React.FC = memo(() => {
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
     const clearLineFilter = useSelectionStore(s => s.actions.clearLineFilter);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const { tripId, stopId } = useRouteParams();
+    const { tripId, stopId, posId } = useRouteParams();
 
     // Derived State
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
+
+    // PoS Data
+    const { data: posList } = usePointsOfSale();
+    const selectedPos = posId ? posList?.find((p) => p.id === posId) : null;
 
     // Data Hooks
     const { 
@@ -67,28 +74,34 @@ export const DetailPanelContent: React.FC = memo(() => {
 
     return (
         <div className="flex flex-col gap-0 pt-0">
-            <VehicleDetail
-                selectedVehicle={selectedVehicle}
-                vehicleDetail={vehicleDetail || null}
-                loadingDetail={loadingDetail}
-                isError={isVehicleError}
-                error={vehicleError as AppError}
-                onRetry={refetchVehicle}
-                isFollowing={isFollowing}
-                onToggleFollow={() => setIsFollowing(!isFollowing)}
-            />
+            {selectedPos ? (
+                <PointOfSaleDetail pos={selectedPos} />
+            ) : (
+                <>
+                    <VehicleDetail
+                        selectedVehicle={selectedVehicle}
+                        vehicleDetail={vehicleDetail || null}
+                        loadingDetail={loadingDetail}
+                        isError={isVehicleError}
+                        error={vehicleError as AppError}
+                        onRetry={refetchVehicle}
+                        isFollowing={isFollowing}
+                        onToggleFollow={() => setIsFollowing(!isFollowing)}
+                    />
 
-            {showDepartureBoard && (
-                <DepartureBoard 
-                    selectedStop={selectedStop}
-                    onDepartureClick={async (tripId, vehicleId) => {
-                        if (vehicleId && vehicleId !== tripId) {
-                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}/${encodeURIComponent(vehicleId)}`);
-                        } else {
-                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}`);
-                        }
-                    }}
-                />
+                    {showDepartureBoard && (
+                        <DepartureBoard 
+                            selectedStop={selectedStop}
+                            onDepartureClick={async (tripId, vehicleId) => {
+                                if (vehicleId && vehicleId !== tripId) {
+                                    navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}/${encodeURIComponent(vehicleId)}`);
+                                } else {
+                                    navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}`);
+                                }
+                            }}
+                        />
+                    )}
+                </>
             )}
         </div>
     );

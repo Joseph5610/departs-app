@@ -15,6 +15,7 @@ export interface CityConfig {
     adapter: AdapterType;
     adapterConfig?: AdapterConfig;
     isBeta?: boolean;
+    hasPointsOfSale?: boolean;
     virtualTableUrl?: string;
     filters?: {
         vehicles: string[];
@@ -30,6 +31,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         adapter: 'golemio',
+        hasPointsOfSale: true,
         virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],

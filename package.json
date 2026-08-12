@@ -1,7 +1,7 @@
 {
   "name": "departs-app",
   "private": true,
-  "version": "0.59.14",
+  "version": "0.59.16",
   "engines": {
     "node": ">=24.0.0"
   },

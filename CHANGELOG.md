@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.59.16] - 2026-08-11
+
+### Fixed
+- Added `before_track` status estimation for KORDIS GTFS-RT vehicles based on stationary speed and time before scheduled departure.
+
+## [0.59.15] - 2026-08-11
+
+### Added
+- Added dynamic Points of Sale map layer and DetailPanel view for ticket machines, info centers, and offices.
+
 ## [0.59.14] - 2026-08-11
 
 ### Added

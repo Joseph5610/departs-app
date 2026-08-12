@@ -55,6 +55,10 @@
       "labels": "Show labels",
       "labelsDescription": "Show stop name labels on the map"
     },
+    "showPointsOfSale": {
+      "title": "Points of Sale",
+      "description": "Show ticket machines, info centers, and offices on map"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tram",
@@ -445,5 +449,33 @@
     "claudeDesktopStep2": "Set Name to departs",
     "claudeDesktopStep3": "Set Remote URL to https://departs.app/mcp",
     "cursorTitle": "AI IDEs & Editors"
+  },
+  "pos": {
+    "title": "Point of Sale",
+    "types": {
+      "ticketMachine": "Ticket Machine",
+      "ticketOfficeMetro": "Metro Pre-sale Office",
+      "informationCenter": "Information Center",
+      "trainStation": "Railway Ticket Office",
+      "carrierOffice": "Carrier Office",
+      "chipCardDispense": "Chip Card Issue Point"
+    },
+    "services": {
+      "card_application": "Chip Card Applications",
+      "card_issuance": "Chip Card Issuance",
+      "coupons": "Season Passes / Coupons",
+      "paper_tickets": "Paper Tickets",
+      "penalties": "Penalty Payments",
+      "information": "Information Services",
+      "tkt_prep": "Ticket Preparation"
+    },
+    "payMethods": {
+      "cash": "Cash",
+      "card": "Card Payment",
+      "contactless": "Contactless / Mobile"
+    },
+    "openingHours": "Opening Hours",
+    "servicesTitle": "Available Services",
+    "payMethodsTitle": "Payment Methods"
   }
 }

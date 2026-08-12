@@ -247,7 +247,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         vp.vehicle.id = label;
                     }
 
-                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
+                    const tripInfo = tripLookup?.get(tripId) || tripLookup?.get(rawTripId);
+                    const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
+
+                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
                     
                     if (sortedDpmbRanges && liveMatch.properties.vehicle_id) {
                         const num = parseInt(liveMatch.properties.vehicle_id, 10);
@@ -270,6 +273,26 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             },
             (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
         );
+    }
+
+    /**
+     * Checks if vehicle is standing still at origin before departure.
+     */
+    private isVehicleBeforeTrack(
+        vp: transit_realtime.IVehiclePosition,
+        tripInfo: ApiTrip | undefined,
+        currentMins: number
+    ): boolean {
+        if (!tripInfo) return false;
+        
+        // Speed check: speed is 0 km/h (or missing/undefined when stationary)
+        const speed = vp.position?.speed;
+        const isStationary = speed === undefined || speed === null || Number(speed) === 0;
+
+        // Time check: departure is more than 1 minute (60 seconds) in the future
+        const isBeforeDeparture = tripInfo.start_mins > (currentMins + 1);
+
+        return isStationary && isBeforeDeparture;
     }
 
     override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
@@ -309,11 +332,19 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         if (copies.length === 0) return {};
 
         let rawMatch: transit_realtime.IFeedEntity;
+        let tripLookup: Map<string, ApiTrip> | null = null;
+        let currentMins = 0;
+        let todayLocalStr = '';
 
-        if (copies.length > 1 && apiMapping) {
-            const tripLookup = this.buildTripLookup(apiMapping);
-            const { todayLocalStr, currentMinutes } = this.getCurrentTimeContext();
-            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMinutes);
+        if (apiMapping) {
+            tripLookup = this.buildTripLookup(apiMapping);
+            const ctx = this.getCurrentTimeContext();
+            currentMins = ctx.currentMinutes;
+            todayLocalStr = ctx.todayLocalStr;
+        }
+
+        if (copies.length > 1 && apiMapping && tripLookup) {
+            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMins);
         } else {
             rawMatch = copies[0];
         }
@@ -345,7 +376,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
         if (vp.vehicle) vp.vehicle.id = vehicleId;
 
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
+        const tripInfo = tripLookup?.get(tripId) || tripLookup?.get(rawTripId);
+        const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
+
+        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
 
         return { 
             liveMatch, 

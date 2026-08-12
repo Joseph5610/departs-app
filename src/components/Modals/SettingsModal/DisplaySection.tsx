@@ -18,6 +18,7 @@ import {
     Moon,
     Monitor,
     Palette,
+    Ticket,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
@@ -182,6 +183,7 @@ export const DisplaySection: React.FC = () => {
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
     const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
     const showStopLabels = usePreferencesStore(s => s.showStopLabels);
+    const showPointsOfSale = usePreferencesStore(s => s.showPointsOfSale);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
     const delayFilter = usePreferencesStore(s => s.delayFilter);
@@ -189,6 +191,7 @@ export const DisplaySection: React.FC = () => {
     const {
         setShowVehicles,
         setShowStops,
+        setShowPointsOfSale,
         setRouteTypeFilter,
         setStopTypeFilter,
         setShowStopLabels,
@@ -462,6 +465,32 @@ export const DisplaySection: React.FC = () => {
                     </div>
                 )}
             </ToggleSection>
+
+            {cityConfig?.hasPointsOfSale && (
+                <Card variant="subtle" size="none" className="mt-3">
+                    <Item
+                        variant="settings"
+                        size="none"
+                        className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-xl border-0"
+                        render={<button onClick={() => setShowPointsOfSale(!showPointsOfSale)} />}
+                    >
+                        <ItemMedia variant="icon" className={cn(showPointsOfSale ? "text-primary" : "text-muted-foreground")}>
+                            <Ticket size={20} strokeWidth={1.5} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('settings.showPointsOfSale.title')}</ItemTitle>
+                            <ItemDescription className="text-xs">{t('settings.showPointsOfSale.description')}</ItemDescription>
+                        </ItemContent>
+                        <ItemActions>
+                            <Switch
+                                checked={showPointsOfSale}
+                                onCheckedChange={setShowPointsOfSale}
+                                className="ml-3 sm:ml-4"
+                            />
+                        </ItemActions>
+                    </Item>
+                </Card>
+            )}
 
             <Card variant="subtle" size="none" className="mt-3">
                 <Item

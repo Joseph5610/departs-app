@@ -118,7 +118,7 @@ export const DepartureBoardHeader = React.memo(() => {
                         {/* Distance & Walking Time segment */}
                         <div 
                             className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer"
-                            onClick={handleNavigate}
+                            onClick={() => handleNavigate()}
                         >
                              <MapPin size={12} className="text-muted-foreground/80 mr-1"  strokeWidth={1.5} />
                              <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap flex items-center">

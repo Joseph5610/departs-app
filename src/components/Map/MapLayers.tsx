@@ -205,7 +205,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 clusterMaxZoom={13}
                 clusterRadius={25}
             >
-
+                <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
                 <Layer {...stopClusters} />
                 <Layer {...stopPointsGlow} />
                 <Layer {...stopPoints} />
@@ -220,7 +220,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                         filter={['any', ...favoriteStops.map(id => ['==', ['get', 'stop_id'], id])] as FilterSpecification}
                     />
                 )}
-                <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
             </Source>
         </>
     );

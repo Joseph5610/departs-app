@@ -165,9 +165,112 @@ const addBusIcon = (map: Map) => {
     }
 };
 
+const addPosIcons = (map: Map) => {
+    const size = 64;
+
+    // Helper to add canvas as image
+    const registerIcon = (name: string, draw: (ctx: CanvasRenderingContext2D) => void) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.clearRect(0, 0, size, size);
+            draw(ctx);
+            if (map.hasImage(name)) map.removeImage(name);
+            map.addImage(name, ctx.getImageData(0, 0, size, size), { sdf: false });
+        }
+    };
+
+    // 1. Ticket Machine (Ticket Icon: Emerald circle badge + ticket outline with notch)
+    registerIcon('pos-machine-icon', (ctx) => {
+        ctx.fillStyle = '#10b981'; // Emerald
+        ctx.beginPath();
+        ctx.arc(32, 32, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // White Ticket symbol inside
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(19, 23, 26, 18, 3);
+        } else {
+            ctx.rect(19, 23, 26, 18);
+        }
+        ctx.fill();
+
+        // Ticket notch line
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(28, 23);
+        ctx.lineTo(28, 41);
+        ctx.stroke();
+    });
+
+    // 2. Info Center (Cyan Circle + clean "i" symbol inside)
+    registerIcon('pos-info-icon', (ctx) => {
+        ctx.fillStyle = '#06b6d4'; // Cyan
+        ctx.beginPath();
+        ctx.arc(32, 32, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // White 'i' dot
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(32, 22, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White 'i' stem
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(29, 28, 6, 14, 1.5);
+        } else {
+            ctx.rect(29, 28, 6, 14);
+        }
+        ctx.fill();
+    });
+
+    // 3. Office / Counter (Purple Circle + Classic counter / bank columns design)
+    registerIcon('pos-office-icon', (ctx) => {
+        ctx.fillStyle = '#8b5cf6'; // Purple
+        ctx.beginPath();
+        ctx.arc(32, 32, 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+
+        // Roof / Pediment
+        ctx.beginPath();
+        ctx.moveTo(32, 19);
+        ctx.lineTo(19, 26);
+        ctx.lineTo(45, 26);
+        ctx.closePath();
+        ctx.fill();
+
+        // Base
+        ctx.fillRect(19, 41, 26, 3);
+
+        // Columns
+        ctx.fillRect(21, 28, 4, 11);
+        ctx.fillRect(30, 28, 4, 11);
+        ctx.fillRect(39, 28, 4, 11);
+    });
+};
+
 export const addAllIcons = (map: Map) => {
     addArrowIcon(map);
     addTrainIcon(map);
     addBusIcon(map);
     addStarIcon(map);
+    addPosIcons(map);
 };

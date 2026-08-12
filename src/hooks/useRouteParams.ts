@@ -20,6 +20,7 @@ import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG } from '../config/cities';
  */
 export const useRouteParams = () => {
     const [isStop, stopParams] = useRoute('/:city/stop/:stopId');
+    const [isPos, posRouteParams] = useRoute('/:city/pos/:posId');
     const [isTrip, tripParams] = useRoute('/:city/trip/:tripId');
     const [isTripVehicle, tripVehicleParams] = useRoute('/:city/trip/:tripId/:vehicleId');
     const [isStatsRoute, statsParams] = useRoute('/:city/stats');
@@ -28,6 +29,7 @@ export const useRouteParams = () => {
 
     let city = null;
     let stopId = null;
+    let posId = null;
     let tripId = null;
     let vehicleId = null;
 
@@ -41,6 +43,9 @@ export const useRouteParams = () => {
     } else if (isStop) {
         city = decodeURIComponent(stopParams.city);
         stopId = decodeURIComponent(stopParams.stopId);
+    } else if (isPos) {
+        city = decodeURIComponent(posRouteParams.city);
+        posId = decodeURIComponent(posRouteParams.posId);
     } else if (isStatsRoute) {
         city = decodeURIComponent(statsParams.city);
     } else if (isFavoritesRoute) {
@@ -93,5 +98,5 @@ export const useRouteParams = () => {
         }
     }, [city, selectedCity, setSelectedCity, citiesData, navigate, isCityBase]);
 
-    return { city, stopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute };
+    return { city, stopId, posId, tripId, vehicleId, isStatsRoute, isFavoritesRoute };
 };

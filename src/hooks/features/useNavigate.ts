@@ -14,10 +14,11 @@ export const useNavigate = () => {
     const selectedStop = useSelectedStop();
     const stopDistanceInfo = useStopDistance();
 
-    const handleNavigate = useCallback(() => {
-        if (!selectedStop?.coordinates) return;
+    const handleNavigate = useCallback((targetCoordinates?: [number, number]) => {
+        const coords = targetCoordinates || selectedStop?.coordinates;
+        if (!coords) return;
 
-        const [lon, lat] = selectedStop.coordinates;
+        const [lon, lat] = coords;
         const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
 
         if (isAppleDevice) {

@@ -56,6 +56,10 @@
       "labels": "Zobrazit popisky",
       "labelsDescription": "Zobrazit názvy zastávek na mapě"
     },
+    "showPointsOfSale": {
+      "title": "Prodejní místa",
+      "description": "Zobrazit automaty, infocentrá a pokladny na mapě"
+    },
     "vehicleTypes": {
       "metro": "Metro",
       "tram": "Tramvaj",
@@ -448,5 +452,33 @@
     "claudeDesktopStep2": "Zadejte Název: departs",
     "claudeDesktopStep3": "Zadejte Remote URL: https://departs.app/mcp",
     "cursorTitle": "AI IDE a editory"
+  },
+  "pos": {
+    "title": "Prodejní místo",
+    "types": {
+      "ticketMachine": "Automat na jízdenky",
+      "ticketOfficeMetro": "Předprodej v metru",
+      "informationCenter": "Infocentrum",
+      "trainStation": "Pokladna v žel. stanici",
+      "carrierOffice": "Kancelář dopravce",
+      "chipCardDispense": "Výdejní místo čipových kariet"
+    },
+    "services": {
+      "card_application": "Žádosti o čipové karty",
+      "card_issuance": "Výdej čipových kariet",
+      "coupons": "Předplatní kupóny",
+      "paper_tickets": "Papírové jízdenky",
+      "penalties": "Doplatky a pokuty",
+      "information": "Informace",
+      "tkt_prep": "Příprava jízdenek"
+    },
+    "payMethods": {
+      "cash": "Hotovost",
+      "card": "Platba kartou",
+      "contactless": "Bezkontaktní platba"
+    },
+    "openingHours": "Otvírací doba",
+    "servicesTitle": "Poskytované služby",
+    "payMethodsTitle": "Způsoby platby"
   }
 }

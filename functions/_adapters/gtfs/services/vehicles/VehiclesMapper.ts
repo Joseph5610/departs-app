@@ -9,23 +9,18 @@ export class VehiclesMapper {
         tripId: string,
         route: GtfsRoute,
         lastUpdate: number,
-        delay: number | null
+        delay: number | null,
+        isBeforeTrack: boolean = false
     ): AppVehicleFeature {
         const vp = vehicleObj;
         
         let statePosition: AppVehicleProperties['state_position'] = 'on_track';
-        // '0' = INCOMING_AT, '1' = STOPPED_AT, '2' = IN_TRANSIT_TO
-        if (vp.currentStatus === 0) {
-            statePosition = 'on_track'; // INCOMING_AT maps closely to on_track
-        } else if (vp.currentStatus === 1) {
+        
+        if (isBeforeTrack) {
+            const delaySecs = delay ?? 0;
+            statePosition = delaySecs > 60 ? 'before_track_delayed' : 'before_track';
+        } else if (vp.currentStatus === 1) { // 1 = STOPPED_AT
             statePosition = 'at_stop';
-            
-            // Heuristic for before_track: if stopped at the very first stop of the sequence
-            // Only trigger if > 0 because missing currentStopSequence defaults to 0 in protobuf
-            if (vp.currentStopSequence === 1) {
-                const delaySecs = delay ?? 0;
-                statePosition = delaySecs > 60 ? 'before_track_delayed' : 'before_track';
-            }
         }
 
         const bearing = vp.position?.bearing ? Number(vp.position.bearing) : undefined;

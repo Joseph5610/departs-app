@@ -212,6 +212,7 @@ export interface AppCity {
     center: [number, number];
     bounds: [number, number, number, number];
     isBeta?: boolean;
+    hasPointsOfSale?: boolean;
     virtualTableUrl?: string;
     filters?: {
         vehicles: string[];

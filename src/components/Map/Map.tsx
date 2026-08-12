@@ -10,6 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
+import { PointOfSaleHeader } from '../DetailPanel/PointOfSaleHeader';
 import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
@@ -24,10 +25,13 @@ import { geocodingCache } from '../../hooks/data/useGeocoding';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { MapControls } from './MapControls';
+import { PointsOfSaleLayer } from './PointsOfSaleLayer';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
 import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useStops } from '../../hooks/data/useStops';
+import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
+import type { PointOfSale } from '../../types/pointsOfSale';
 import { useRouteShape } from '../../hooks/derived/useRouteShape';
 import { useMapFilters } from '../../hooks/derived/useMapFilters';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
@@ -89,9 +93,13 @@ const MapInner: React.FC = () => {
     const { resolvedTheme } = useTheme();
 
     // Derived State
-    const { isStatsRoute, isFavoritesRoute } = useRouteParams();
+    const { isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
+
+    // PoS Data
+    const { data: posList } = usePointsOfSale();
+    const selectedPos = useMemo(() => posId ? posList?.find((p: PointOfSale) => p.id === posId) : null, [posId, posList]);
 
     // Data Hooks
     const { vehicles: displayVehicles } = useVehicles();
@@ -136,8 +144,11 @@ const MapInner: React.FC = () => {
         if (selectedStop) {
             return selectedStop.stop_name;
         }
+        if (selectedPos) {
+            return t('pos.title');
+        }
         return '';
-    }, [selectedVehicle, selectedStop, t]);
+    }, [selectedVehicle, selectedStop, selectedPos, t]);
 
     const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — MHD Praha & Brno LIVE';
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : 'https://departs.app/';
@@ -247,10 +258,20 @@ const MapInner: React.FC = () => {
                         if (stopId) {
                             navigate(`/${selectedCity}/stop/${encodeURIComponent(stopId)}`);
                         }
+                        return;
+                    }
+
+                    if (f.layer.id === 'pos-point') {
+                        const id = f.properties?.id;
+                        if (id) {
+                            navigate(`/${selectedCity}/pos/${encodeURIComponent(id)}`);
+                        }
+                        return;
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'station-icons', 'transfer-outer', 'transfer-inner', 'clusters', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all']}
+                interactiveLayerIds={['unclustered-point', 'station-icons', 'transfer-outer', 'transfer-inner', 'clusters', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all', 'pos-point']}
             >
+                <PointsOfSaleLayer mapLoaded={mapLoaded} />
                 <MapLayers
                     mapLoaded={mapLoaded}
                     showVehicles={showVehicles}
@@ -296,8 +317,8 @@ const MapInner: React.FC = () => {
             <AlertsModal />
             <FeedbackModal />
             <DetailPanel
-                isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle}
-                id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || undefined)}
+                isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
+                id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined)}
                 onClose={() => {
                     navigate(`/${selectedCity}`);
                 }}
@@ -308,7 +329,11 @@ const MapInner: React.FC = () => {
                     (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
                 }
                 platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
-                subHeader={isStatsRoute ? <StatsTabs /> : (!isStatsRoute && !isFavoritesRoute) ? <DepartureBoardHeader /> : undefined}
+                subHeader={
+                    isStatsRoute ? <StatsTabs /> :
+                    selectedPos ? <PointOfSaleHeader pos={selectedPos} /> :
+                    (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
+                }
             >
                 {isStatsRoute ? (
                     <StatsPanel />

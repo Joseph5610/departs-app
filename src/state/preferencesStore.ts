@@ -7,6 +7,7 @@ export interface PreferencesState {
     showVehicles: boolean;
     showStops: boolean;
     showStopLabels: boolean;
+    showPointsOfSale: boolean;
     stopTypeFilter: string[];
     isSettingsOpen: boolean;
     isFeedbackOpen: boolean;
@@ -30,6 +31,7 @@ export interface PreferencesActions {
     setShowVehicles: (show: boolean) => void;
     setShowStops: (show: boolean) => void;
     setShowStopLabels: (show: boolean) => void;
+    setShowPointsOfSale: (show: boolean) => void;
     setStopTypeFilter: (filter: string[]) => void;
     setIsSettingsOpen: (open: boolean) => void;
     setIsFeedbackOpen: (open: boolean) => void;
@@ -61,6 +63,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             showVehicles: true,
             showStops: true,
             showStopLabels: true,
+            showPointsOfSale: false,
             stopTypeFilter: [],
             isSettingsOpen: false,
             isFeedbackOpen: false,
@@ -84,6 +87,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setShowVehicles: (show) => set({ showVehicles: show }),
                 setShowStops: (show) => set({ showStops: show }),
                 setShowStopLabels: (show) => set({ showStopLabels: show }),
+                setShowPointsOfSale: (show) => set({ showPointsOfSale: show }),
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
                 setIsFeedbackOpen: (open) => set({ isFeedbackOpen: open }),
@@ -132,6 +136,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 showVehicles: state.showVehicles,
                 showStops: state.showStops,
                 showStopLabels: state.showStopLabels,
+                showPointsOfSale: state.showPointsOfSale,
                 stopTypeFilter: state.stopTypeFilter,
                 departureSort: state.departureSort,
                 mapBaseStyle: state.mapBaseStyle,

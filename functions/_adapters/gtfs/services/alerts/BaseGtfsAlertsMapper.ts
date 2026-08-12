@@ -66,22 +66,19 @@ export class BaseGtfsAlertsMapper {
             if (alert.informedEntity) {
                 for (const ie of alert.informedEntity) {
                     if (ie.routeId) {
-                        lines.push(ie.routeId);
-                        
-                        let matchingRoute: GtfsRoute | undefined;
-                        if (gtfsData) {
-                            matchingRoute = gtfsData.routes[ie.routeId] || gtfsData.routesByName[ie.routeId.toUpperCase()];
-                        }
+                        const matchingRoute = this.resolveRoute(ie.routeId, gtfsData);
+                        const lineDisplayName = (matchingRoute?.short_name || matchingRoute?.name || ie.routeId) as string;
+                        lines.push(lineDisplayName);
 
                         if (matchingRoute) {
                             line_metadata.push({
-                                name: (matchingRoute.short_name || matchingRoute.name) as string,
+                                name: lineDisplayName,
                                 route_color: (matchingRoute.route_color as string) || '#888888',
                                 type: normalizeRouteType(matchingRoute.type)
                             });
                         } else {
                             line_metadata.push({
-                                name: ie.routeId,
+                                name: lineDisplayName,
                                 route_color: '#888888',
                                 type: 'bus'
                             });
@@ -161,6 +158,15 @@ export class BaseGtfsAlertsMapper {
     protected parseDescription(rawDesc?: string | null): string | null {
         if (!rawDesc) return null;
         return cleanAlertText(rawDesc);
+    }
+
+    /**
+     * Resolves a raw GTFS-RT routeId to GTFS route metadata.
+     * Can be overridden by city-specific mappers to handle custom route ID formats.
+     */
+    protected resolveRoute(routeId: string, gtfsData: GtfsData | null): GtfsRoute | undefined {
+        if (!gtfsData) return undefined;
+        return gtfsData.routes[routeId] || gtfsData.routesByName[routeId.toUpperCase()];
     }
 
     protected parseExtensions(_alert: transit_realtime.IAlert, _appAlert: AppAlert): void {
