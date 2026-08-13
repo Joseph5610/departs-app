@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight } from 'lucide-react';
-import { STORAGE_KEYS } from '../../config/constants';
 import { useGeolocation } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,8 @@ export const WelcomeModal: React.FC = () => {
     const { data } = useCities();
     const cities = useMemo(() => data?.cities || [], [data?.cities]);
     const globalSelectedCity = usePreferencesStore(s => s.selectedCity);
-    const { setSelectedCity } = usePreferencesStore(s => s.actions);
+    const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
+    const { setSelectedCity, setHasSeenWelcome } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [, navigate] = useLocation();
 
@@ -41,40 +41,31 @@ export const WelcomeModal: React.FC = () => {
         return cities[0]?.slug || DEFAULT_CITY_SLUG;
     }, [userChosenSlug, globalSelectedCity, cities]);
 
-    const [isOpen, setIsOpen] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        
-        const path = window.location.pathname;
-        const isHomepage = path === '/';
-        
-        // Skip welcome modal on any deep links or city subpaths, and mark it as seen
-        if (!isHomepage) {
-            localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
-            return false;
-        }
-
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('skipTutorial')) return false;
-        return !localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
-    });
-
+    const isHomepage = typeof window !== 'undefined' && window.location.pathname === '/';
+    const isSkipTutorial = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('skipTutorial');
+    
+    // Auto-mark as seen if navigating on deep links or if skipTutorial param is present
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const params = new URLSearchParams(window.location.search);
-        
-        if (params.has('skipTutorial')) {
-            localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
+
+        if (!isHomepage && !hasSeenWelcome) {
+            setHasSeenWelcome(true);
+        }
+
+        if (isSkipTutorial) {
+            setHasSeenWelcome(true);
             handleLocate();
 
             const url = new URL(window.location.href);
             url.searchParams.delete('skipTutorial');
             window.history.replaceState({}, '', url.toString());
         }
-    }, [handleLocate]);
+    }, [isHomepage, hasSeenWelcome, isSkipTutorial, setHasSeenWelcome, handleLocate]);
+
+    const isOpen = isHomepage && !hasSeenWelcome && !isSkipTutorial;
 
     const handleClose = () => {
-        localStorage.setItem(STORAGE_KEYS.WELCOME_SEEN, 'true');
-        setIsOpen(false);
+        setHasSeenWelcome(true);
         handleLocate();
 
         if (activeCitySlug) {

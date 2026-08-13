@@ -5,8 +5,10 @@ import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-vie
 import 'react-json-view-lite/dist/index.css';
 
 import type { StoredFeedback } from '../../../types/feedback';
+import { apiFetch } from '@/lib/api-client';
 
 import { Badge } from '@/components/ui/badge';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon, Copy, Terminal, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,11 +26,7 @@ export const AdminFeedback: React.FC = () => {
 
     const { data, isLoading, isError, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
         queryKey: ['adminFeedback'],
-        queryFn: async () => {
-            const res = await fetch('/api/admin/feedback');
-            if (!res.ok) throw new Error('Failed to fetch feedback');
-            return res.json();
-        }
+        queryFn: () => apiFetch<{ items: StoredFeedback[] }>('/admin/feedback')
     });
 
     const filteredItems = useMemo(() => {
@@ -163,10 +161,16 @@ Please locate the source code files mentioned in the stack traces above, diagnos
             )}
 
             {!isLoading && !isError && data?.items?.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground bg-card/50 rounded-2xl border border-border/40 border-dashed shrink-0 flex flex-col items-center justify-center gap-3">
-                    <MessageSquare size={32} className="opacity-30 text-muted-foreground" />
-                    <p className="font-mono text-xs">No feedback or bug reports collected yet.</p>
-                </div>
+                <Empty className="py-12 bg-card/50 rounded-2xl border-border/40 shrink-0">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon" className="size-12 rounded-xl bg-muted/60 text-muted-foreground">
+                            <MessageSquare size={24} />
+                        </EmptyMedia>
+                        <EmptyTitle className="font-mono text-xs text-muted-foreground">
+                            No feedback or bug reports collected yet.
+                        </EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
             )}
 
             {!isLoading && !isError && (data?.items?.length || 0) > 0 && (

@@ -8,6 +8,7 @@ import type { VehicleCollection } from '../../../../types/transit';
 import { useVehicleMonitor } from '../../../../hooks/derived/useVehicleMonitor';
 import type { SearchField } from '../../../../hooks/derived/useVehicleMonitor';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 import { usePreferencesStore } from '../../../../state/preferencesStore';
 import { useEnrichmentStore } from '../../../../state/enrichmentStore';
@@ -189,9 +190,13 @@ export const VehicleMonitorList: React.FC = () => {
                     />
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground text-xs text-center border border-dashed rounded-xl p-6 bg-muted/20">
-                    <span>{t('stats.monitor.noVehiclesFound', 'Žádná vozidla neodpovídají zadaným filtrům.')}</span>
-                </div>
+                <Empty className="py-10 bg-muted/20">
+                    <EmptyHeader>
+                        <EmptyTitle className="text-xs font-medium text-muted-foreground">
+                            {t('stats.monitor.noVehiclesFound', 'Žádná vozidla neodpovídají zadaným filtrům.')}
+                        </EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
             )}
         </div>
     );

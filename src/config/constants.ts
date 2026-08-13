@@ -31,14 +31,6 @@ export const PULSE_BASE_OPACITY = 0.85;
 export const PULSE_OPACITY_DIVISOR = 65;
 
 /**
- * Local Storage Keys
- */
-export const STORAGE_KEYS = {
-    LAST_LOCATION: 'lastUserLocation',
-    WELCOME_SEEN: 'departs_welcome_seen',
-};
-
-/**
  * API and Transit constants
  */
 export const API_BASE_URL = '/api';

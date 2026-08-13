@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { Bug, Lightbulb, MessageSquare, Loader2, Send, MessageSquareHeart } from 'lucide-react';
 import { z } from 'zod';
+import { apiFetch } from '@/lib/api-client';
 
 import {
     Dialog,
@@ -84,19 +85,12 @@ export const FeedbackModal: React.FC = () => {
     }, [isOpen]);
 
     const submitMutation = useMutation({
-        mutationFn: async (payload: FeedbackPayload) => {
-            const res = await fetch('/api/feedback', {
+        mutationFn: (payload: FeedbackPayload) =>
+            apiFetch<{ success: boolean }>('/feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            });
-            
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || 'Failed to submit feedback');
-            }
-            return res.json();
-        },
+            }),
         onSuccess: () => {
             toast.success(t('feedback.success'));
             form.reset();

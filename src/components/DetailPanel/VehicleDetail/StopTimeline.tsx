@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react';
+import { navigate } from 'wouter/use-browser-location';
 import { cn } from '@/lib/utils';
 import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { usePreferencesStore } from '../../../state/preferencesStore';
 
 import type { StopFeature, StopTimelineProps } from './types';
 
@@ -58,7 +60,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                     <div className="absolute left-2.75 top-3 bottom-6 w-0.5 bg-border" />
 
                     {/* Past Stops (Collapsible) */}
-                    <CollapsibleContent className="transition-[height] duration-300 ease-in-out data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
+                    <CollapsibleContent className="transition-all duration-200 ease-in-out animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
                         {stopTimes
                             .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
                             .map((stop, idx: number) => (
@@ -104,12 +106,16 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
     delay?: number | null
 }) => {
     const { t } = useTranslation();
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const stopSeq = Number(stop.properties.stop_sequence);
     const isCurrent = stopSeq === effectiveSequence;
     const isNext = stopSeq === nextStopSequence;
     const showZone = !!stop.properties.zone_id;
 
-    if (String(stop.properties.stop_id).startsWith('incomplete-gap')) {
+    const rawStopId = stop.properties.stop_id ? String(stop.properties.stop_id) : '';
+    const hasValidStopId = Boolean(rawStopId) && !rawStopId.startsWith('incomplete-gap');
+
+    if (rawStopId.startsWith('incomplete-gap')) {
         return (
             <div className="flex items-center relative py-2 opacity-50">
                 <div className="absolute -left-3.75 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground/30 z-10" />
@@ -119,6 +125,12 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
             </div>
         );
     }
+
+    const handleStopClick = () => {
+        if (hasValidStopId) {
+            navigate(`/${selectedCity}/stop/${encodeURIComponent(rawStopId)}`);
+        }
+    };
 
     return (
         <div className={cn(
@@ -131,12 +143,26 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
             )} />
             <div className="flex flex-col items-start min-w-0 pr-2 flex-1">
                 <div className="flex items-center gap-1.5 w-full">
-                    <span className={cn(
-                        "text-sm truncate min-w-0",
-                        isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
-                    )}>
-                        {stop.properties.stop_name}
-                    </span>
+                    {hasValidStopId ? (
+                        <button
+                            type="button"
+                            onClick={handleStopClick}
+                            aria-label={t('map.vehicleDetails.viewStopDepartures', { stopName: stop.properties.stop_name, defaultValue: `View departures for ${stop.properties.stop_name}` })}
+                            className={cn(
+                                "text-sm truncate min-w-0 text-left cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs hover:underline hover:text-primary active:opacity-80",
+                                isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                            )}
+                        >
+                            {stop.properties.stop_name}
+                        </button>
+                    ) : (
+                        <span className={cn(
+                            "text-sm truncate min-w-0",
+                            isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
+                        )}>
+                            {stop.properties.stop_name}
+                        </span>
+                    )}
                     {stop.properties.is_request_stop && (
                         <Popover>
                             <PopoverTrigger className="flex items-center text-muted-foreground shrink-0 cursor-pointer outline-none hover:text-foreground transition-colors">

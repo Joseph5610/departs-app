@@ -4,70 +4,96 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.61.0] - 2026-08-13
+
+### Added
+
+- Clickable stop items in vehicle schedule timeline when GTFS `stop_id` is present (such as in Brno/KORDIS).
+- Bi-directional back button navigation between stop departure boards and vehicle details.
+
+## [0.60.0] - 2026-08-13
+
+### Changed
+
+- Standardized API requests to `apiFetch`, migrated persistent user location/welcome state to Zustand `persist` stores, standardized shadcn `Empty` UI components, and added Zod boundary validation.
+
 ## [0.59.16] - 2026-08-11
 
 ### Fixed
+
 - Added `before_track` status estimation for KORDIS GTFS-RT vehicles based on stationary speed and time before scheduled departure.
 
 ## [0.59.15] - 2026-08-11
 
 ### Added
+
 - Added dynamic Points of Sale map layer and DetailPanel view for ticket machines, info centers, and offices.
 
 ## [0.59.14] - 2026-08-11
 
 ### Added
+
 - Added togglable vehicle coloring by delay feature with green, orange, red, and purple delay threshold markers on map layers.
 
 ## [0.59.13] - 2026-08-10
 
 ### Added
+
 - Added distinct `before_track_delayed` and `canceled` vehicle state banners and localization in `VehicleHero`.
 
 ## [0.59.12] - 2026-08-10
 
 ### Refactored
+
 - Made `metro_lines` property optional in backend models and omitted empty `metro_lines` arrays from vehicle detail payloads.
 - Streamlined live `/vehicles` Map GeoJSON stream payload by omitting unpopulated redundant properties (`trip_headsign`, `last_stop_sequence`, `run_number`).
 
 ## [0.59.11] - 2026-08-10
 
 ### Fixed
+
 - Cleaned up redundant timetable properties from `route_geojson` point features in vehicle detail responses for Prague and Brno.
 
 ## [0.59.10] - 2026-08-10
 
 ### Removed
+
 - Removed unused `next_stop_name` property across frontend types, backend mappers, and schemas.
 
 ## [0.59.9] - 2026-08-10
 
 ### Refactored
+
 - Replaced redundant `is_start`, `is_end`, and `is_regular` stop point properties with a single `is_terminal` flag in vehicle detail responses and map layers.
 
 ## [0.59.8] - 2026-08-10
 
 ### Removed
+
 - Removed redundant `is_night` field from vehicle models and backend mappers.
 
 ## [0.59.7] - 2026-08-10
 
 ### Fixed
+
 - Fixed missing English translations for the network stats panel and monitor tabs.
 
 ## [0.59.6] - 2026-08-09
 
 ### Added
+
 - Added strict `VehicleState` typing for vehicle tracking state.
 
 ## [0.59.5] - 2026-08-09
 
 ### Changed
+
 - **Type Standardization**: Refactored `route_type` and `type` to use strictly standardized string slugs ('bus', 'tram', 'train', etc.) across all backend adapters and frontend interfaces, removing reliance on numerical GTFS route types.
 
 ## [0.59.4] - 2026-08-09
 
 ### Fixed
+
 - Fixed bug in Brno vehicle map selection caused by overlapping duplicate Kordis RT entities sharing the same coordinates.
 
 ## [0.59.3] - 2026-08-08

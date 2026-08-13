@@ -330,6 +330,16 @@ export const DisplaySection: React.FC = () => {
 
                         <div className="grid grid-cols-2 gap-2">
                             <DelayFilterCard
+                                label={t('settings.colorVehiclesByDelay.aheadOfTime')}
+                                isActive={isDelayTierActive('aheadOfTime')}
+                                onClick={() => toggleDelayTier('aheadOfTime')}
+                                accentClass="bg-sky-500 dark:bg-sky-400"
+                                activeBg="bg-sky-500/10 dark:bg-sky-500/20"
+                                activeBorder="border-sky-500/40 dark:border-sky-500/50"
+                                activeText="text-sky-950 dark:text-sky-300"
+                            />
+
+                            <DelayFilterCard
                                 label={t('settings.colorVehiclesByDelay.onTime')}
                                 isActive={isDelayTierActive('onTime')}
                                 onClick={() => toggleDelayTier('onTime')}

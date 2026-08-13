@@ -5,10 +5,8 @@ import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
-const fetchNetworkVehicles = async (selectedCity: string): Promise<VehicleCollection | null> => {
-    const url = new URL(`/${selectedCity}/vehicles`, window.location.origin);
-    return apiFetch<VehicleCollection>(url);
-};
+const fetchNetworkVehicles = (selectedCity: string): Promise<VehicleCollection | null> =>
+    apiFetch<VehicleCollection>(`/${selectedCity}/vehicles`);
 
 /**
  * useNetworkVehicles

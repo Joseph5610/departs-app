@@ -1,8 +1,9 @@
 import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import i18n from '../../i18n/config';
-import { STORAGE_KEYS, MAP_VEHICLE_SELECT_ZOOM, MAP_FLY_DURATION } from '../../config/constants';
+import { MAP_VEHICLE_SELECT_ZOOM, MAP_FLY_DURATION } from '../../config/constants';
 import { useGeolocationStore } from '../../state/geolocationStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 
 export const useGeolocation = () => {
@@ -11,12 +12,16 @@ export const useGeolocation = () => {
     const isGeoPending = useGeolocationStore(s => s.isGeoPending);
     const lastUpdatedAt = useGeolocationStore(s => s.lastUpdatedAt);
     
+    const lastLocation = useGeolocationStore(s => s.lastLocation);
+    const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
+    
     const { 
         setUserLocation, 
         setUserSpeed, 
         setLastUpdatedAt, 
         setIsGeoPending, 
-        setWatchId 
+        setWatchId,
+        setLastLocation
     } = useGeolocationStore(s => s.actions);
 
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
@@ -32,7 +37,7 @@ export const useGeolocation = () => {
                 setUserSpeed(pos.coords.speed);
                 setLastUpdatedAt(Date.now());
                 setIsGeoPending(false);
-                localStorage.setItem(STORAGE_KEYS.LAST_LOCATION, JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
+                setLastLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
             },
             (err) => {
                 setIsGeoPending(false);
@@ -46,7 +51,7 @@ export const useGeolocation = () => {
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
         setWatchId(id);
-    }, [watchId, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending, setWatchId]);
+    }, [watchId, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending, setWatchId, setLastLocation]);
 
     const handleLocate = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -64,12 +69,8 @@ export const useGeolocation = () => {
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             toast.error(i18n.t('toasts.geoNotSupported'));
-            const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
-            if (saved && map) {
-                try {
-                    const { lat, lng } = JSON.parse(saved);
-                    map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
-                } catch (e) { console.warn('Failed to parse saved LAST_LOCATION', e); }
+            if (lastLocation && map) {
+                map.flyTo({ center: [lastLocation.lng, lastLocation.lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
             }
             return;
         }
@@ -83,24 +84,21 @@ export const useGeolocation = () => {
                 setUserSpeed(pos.coords.speed);
                 setLastUpdatedAt(Date.now());
                 setIsGeoPending(false);
+                setLastLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                 if (map) map.flyTo({ center: coords, zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
             },
             () => {
                 setIsGeoPending(false);
                 toast.error(i18n.t('toasts.geoError'));
-                const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
-                if (saved && map) {
-                    try {
-                        const { lat, lng } = JSON.parse(saved);
-                        map.flyTo({ center: [lng, lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
-                    } catch (e) { console.warn('Failed to parse saved LAST_LOCATION during zoom check', e); }
+                if (lastLocation && map) {
+                    map.flyTo({ center: [lastLocation.lng, lastLocation.lat], zoom: MAP_VEHICLE_SELECT_ZOOM, duration: MAP_FLY_DURATION });
                 }
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
         );
 
         if (watchId === null) performGeolocation();
-    }, [isGeoPending, lastUpdatedAt, userLocation, watchId, mapRef, performGeolocation, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending]);
+    }, [isGeoPending, lastUpdatedAt, userLocation, watchId, mapRef, performGeolocation, setUserLocation, setUserSpeed, setLastUpdatedAt, setIsGeoPending, lastLocation, setLastLocation]);
 
     // Auto-start watcher on mount
     useEffect(() => {
@@ -108,9 +106,8 @@ export const useGeolocation = () => {
 
         const params = new URLSearchParams(window.location.search);
         const skipTutorial = params.has('skipTutorial');
-        const welcomeSeen = localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN);
 
-        if (welcomeSeen || skipTutorial) {
+        if (hasSeenWelcome || skipTutorial) {
             performGeolocation();
         }
 
@@ -120,7 +117,7 @@ export const useGeolocation = () => {
                 setWatchId(null);
             }
         };
-    }, [performGeolocation, watchId, setWatchId]);
+    }, [performGeolocation, watchId, setWatchId, hasSeenWelcome]);
 
     // Initial map focus
     useEffect(() => {

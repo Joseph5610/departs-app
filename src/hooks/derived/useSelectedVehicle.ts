@@ -35,6 +35,7 @@ export const useSelectedVehicle = () => {
         const merged: VehicleDetail = {
             ...liveMatch?.properties,
             ...vehicleDetail,
+            state_position: liveMatch?.properties.state_position ?? vehicleDetail?.state_position ?? 'on_track',
             vehicle_id: vehicleId || liveMatch?.properties.vehicle_id || vehicleDetail?.vehicle_id || null,
             gtfs_trip_id: tripId,
             route_short_name: vehicleDetail?.route_short_name || liveMatch?.properties.route_short_name || '',

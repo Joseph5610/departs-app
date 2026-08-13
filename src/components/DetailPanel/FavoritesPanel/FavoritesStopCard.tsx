@@ -5,7 +5,7 @@ import { navigate } from 'wouter/use-browser-location';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
-import { calculateDistance } from '../../../utils/transitUtils';
+import { getStopDistanceInfo } from '../../../hooks/derived/useStopDistance';
 import { formatDelay } from '../../../utils/dateUtils';
 import { cn } from '../../../lib/utils';
 import { Countdown } from '../DepartureBoard/Countdown';
@@ -14,9 +14,6 @@ import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card';
 import {
-    WALKING_SPEED,
-    AT_STOP_THRESHOLD_METERS,
-    MAX_REASONABLE_WALKING_DISTANCE,
     MAP_STOP_SELECT_ZOOM,
     MAP_FLY_DURATION,
     FALLBACK_ROUTE_COLOR
@@ -54,28 +51,18 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
     const coordinates = stopFeature.geometry.coordinates as [number, number];
 
     // Distance and Walking Time Calculations
-    const stopDistanceInfo = useMemo(() => {
-        if (!userLocation || !coordinates) return null;
-        const dist = calculateDistance(userLocation, coordinates);
-        const isAtStop = dist < AT_STOP_THRESHOLD_METERS;
-        const walkingTimeSec = dist / WALKING_SPEED;
-        const timeMins = Math.ceil(walkingTimeSec / 60);
-
-        return {
-            distance: Math.round(dist),
-            time: timeMins,
-            isAtStop,
-            isReasonable: dist < MAX_REASONABLE_WALKING_DISTANCE
-        };
-    }, [userLocation, coordinates]);
+    const stopDistanceInfo = useMemo(
+        () => getStopDistanceInfo(userLocation, coordinates),
+        [userLocation, coordinates]
+    );
 
     // Format distance & walking label
     const distanceLabel = useMemo(() => {
         if (!stopDistanceInfo) return '';
         if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
 
-        const { distance, time, isReasonable } = stopDistanceInfo;
-        if (isReasonable) {
+        const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
+        if (isReasonableWalkingDistance) {
             return t('map.departures.distance', {
                 distance,
                 count: time

@@ -247,7 +247,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         vp.vehicle.id = label;
                     }
 
-                    const tripInfo = tripLookup?.get(tripId) || tripLookup?.get(rawTripId);
+                    const tripInfo = this.findTripInfo(tripId, rawTripId, tripLookup);
                     const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
 
                     const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
@@ -276,7 +276,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-     * Checks if vehicle is standing still at origin before departure.
+     * Checks if vehicle is at origin before departure.
      */
     private isVehicleBeforeTrack(
         vp: transit_realtime.IVehiclePosition,
@@ -284,20 +284,13 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         currentMins: number
     ): boolean {
         if (!tripInfo) return false;
-        
-        // Speed check: speed is 0 km/h (or missing/undefined when stationary)
-        const speed = vp.position?.speed;
-        const isStationary = speed === undefined || speed === null || Number(speed) === 0;
 
-        // Time check: departure is more than 1 minute (60 seconds) in the future.
-        // Handles 24h / midnight wrap-around (e.g. 23:55 vs 00:12 or start_mins 1452 vs 5 mins).
-        let diffMins = tripInfo.start_mins - currentMins;
+        const start = tripInfo.start_mins % 1440;
+        const current = currentMins % 1440;
+        let diffMins = start - current;
         if (diffMins < -720) diffMins += 1440;
-        if (diffMins > 720) diffMins -= 1440;
 
-        const isBeforeDeparture = diffMins > 1;
-
-        return isStationary && isBeforeDeparture;
+        return diffMins > 1 && diffMins <= 60;
     }
 
     override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
@@ -381,7 +374,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
         if (vp.vehicle) vp.vehicle.id = vehicleId;
 
-        const tripInfo = tripLookup?.get(tripId) || tripLookup?.get(rawTripId);
+        const tripInfo = this.findTripInfo(tripId, rawTripId, tripLookup);
         const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
 
         const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
@@ -390,5 +383,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             liveMatch, 
             lastStopId: vp.stopId?.toString() 
         };
+    }
+
+    private findTripInfo(tripId: string, rawTripId: string | undefined, tripLookup: Map<string, ApiTrip> | null): ApiTrip | undefined {
+        if (!tripLookup) return undefined;
+        return tripLookup.get(tripId) || (rawTripId ? tripLookup.get(rawTripId) : undefined);
     }
 }

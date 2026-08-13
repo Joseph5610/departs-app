@@ -1,5 +1,5 @@
 import { FRONTEND_CITIES_CONFIG, FALLBACK_CITY_CONFIG } from '../config/cities';
-import { STORAGE_KEYS } from '../config/constants';
+import { useGeolocationStore } from '../state/geolocationStore';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -27,26 +27,20 @@ export const getInitialViewState = () => {
     let z = 12; // default overview zoom
     const userZoom = 16; // default zoom for user locations
 
-    // Try to get from localStorage if no URL params are present
+    // Try to get from persisted geolocation store if no URL params are present
     if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
-        const saved = localStorage.getItem(STORAGE_KEYS.LAST_LOCATION);
-        if (saved) {
-            try {
-                const { lat: sLat, lng: sLng } = JSON.parse(saved);
-                if (typeof sLat === 'number' && typeof sLng === 'number') {
-                    // Check if saved location belongs to the requested city.
-                    // If we navigate to /brno but saved location is Prague, ignore it!
-                    const [minLng, minLat, maxLng, maxLat] = defaultCity.bounds;
-                    const isInsideCity = (sLng >= minLng && sLng <= maxLng && sLat >= minLat && sLat <= maxLat);
-                    
-                    if (isInsideCity) {
-                        lat = sLat;
-                        lng = sLng;
-                        z = userZoom;
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to parse lastUserLocation', e);
+        const savedLocation = useGeolocationStore.getState().lastLocation;
+        if (savedLocation && typeof savedLocation.lat === 'number' && typeof savedLocation.lng === 'number') {
+            const { lat: sLat, lng: sLng } = savedLocation;
+            // Check if saved location belongs to the requested city.
+            // If we navigate to /brno but saved location is Prague, ignore it!
+            const [minLng, minLat, maxLng, maxLat] = defaultCity.bounds;
+            const isInsideCity = (sLng >= minLng && sLng <= maxLng && sLat >= minLat && sLat <= maxLat);
+            
+            if (isInsideCity) {
+                lat = sLat;
+                lng = sLng;
+                z = userZoom;
             }
         }
     }

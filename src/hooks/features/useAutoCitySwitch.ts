@@ -6,7 +6,6 @@ import React from 'react';
 import { useCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { STORAGE_KEYS } from '../../config/constants';
 
 /**
  * useAutoCitySwitch
@@ -20,14 +19,13 @@ export const useAutoCitySwitch = () => {
     const { t } = useTranslation();
     const { data } = useCities();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
     
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
     const prevCity = React.useRef(selectedCity);
-    const initialWelcomeSeen = React.useRef(
-        typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.WELCOME_SEEN) === 'true' : false
-    );
+    const initialWelcomeSeen = React.useRef(hasSeenWelcome);
     const isFirstChange = React.useRef(true);
 
     useEffect(() => {

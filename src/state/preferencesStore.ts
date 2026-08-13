@@ -25,6 +25,7 @@ export interface PreferencesState {
     statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
     isMcpModalOpen: boolean;
+    hasSeenWelcome: boolean;
 }
 
 export interface PreferencesActions {
@@ -38,6 +39,7 @@ export interface PreferencesActions {
     setIsAlertsOpen: (open: boolean) => void;
     setIsMcpModalOpen: (open: boolean) => void;
     setIsMcpBannerDismissed: (dismissed: boolean) => void;
+    setHasSeenWelcome: (seen: boolean) => void;
     setDepartureSort: (sort: 'line' | 'departure') => void;
     setRouteTypeFilter: (filter: string[]) => void;
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
@@ -81,6 +83,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             statsViewMode: 'overview',
             isMcpBannerDismissed: false,
             isMcpModalOpen: false,
+            hasSeenWelcome: false,
 
             // Actions
             actions: {
@@ -94,6 +97,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setIsAlertsOpen: (open) => set({ isAlertsOpen: open }),
                 setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
                 setIsMcpBannerDismissed: (dismissed) => set({ isMcpBannerDismissed: dismissed }),
+                setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
                 setDepartureSort: (sort) => set({ departureSort: sort }),
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),
@@ -148,6 +152,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 colorVehiclesByDelay: state.colorVehiclesByDelay,
                 delayFilter: state.delayFilter,
                 isMcpBannerDismissed: state.isMcpBannerDismissed,
+                hasSeenWelcome: state.hasSeenWelcome,
             }),
         }
     )

@@ -10,23 +10,24 @@ import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
 const fetchVehicles = async (selectedCity: string, bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
-    const url = new URL(`/${selectedCity}/vehicles`, window.location.origin);
+    const params = new URLSearchParams();
 
     if (bounds) {
-        url.searchParams.set('bounds', bounds);
+        params.set('bounds', bounds);
     }
     if (routeFilter && routeFilter.length > 0) {
         routeFilter.forEach((line) => {
-            url.searchParams.append('routeShortName', line);
+            params.append('routeShortName', line);
         });
     }
     if (routeTypeFilter.length > 0) {
         routeTypeFilter.forEach((type) => {
-            url.searchParams.append('routeType', type);
+            params.append('routeType', type);
         });
     }
 
-    return apiFetch<VehicleCollection>(url);
+    const queryStr = params.toString();
+    return apiFetch<VehicleCollection>(`/${selectedCity}/vehicles${queryStr ? `?${queryStr}` : ''}`);
 };
 
 /**

@@ -44,7 +44,8 @@
       "title": "Vehicle colors by delay",
       "description": "Color map vehicle markers based on current delay instead of line color",
       "filterTitle": "Filter by delay",
-      "onTime": "On time (≤2m)",
+      "aheadOfTime": "Ahead of time (≥1m)",
+      "onTime": "On time (-1–2m)",
       "moderate": "2–5 min",
       "high": "5–10 min",
       "severe": ">10 min"
@@ -144,6 +145,7 @@
       "delayLabel": "Delay {{minutes}} min",
       "earlyLabel": "Ahead {{minutes}} min",
       "routeSchedule": "Route Schedule",
+      "viewStopDepartures": "View departures for {{stopName}}",
       "vehicleId": "Vehicle ID",
       "status": "Status",
       "inTransit": "In transit",

@@ -124,8 +124,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
 
     // Dynamic vehicle color expression based on user preferences
     const vehicleColorExpr = React.useMemo(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        () => getVehicleColorExpression(colorVehiclesByDelay) as any,
+        () => getVehicleColorExpression(colorVehiclesByDelay),
         [colorVehiclesByDelay]
     );
 

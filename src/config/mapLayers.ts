@@ -1,7 +1,8 @@
 import type {
     CircleLayerSpecification,
     SymbolLayerSpecification,
-    LineLayerSpecification
+    LineLayerSpecification,
+    ExpressionSpecification
 } from 'maplibre-gl';
 
 const MAP_TOKENS = {
@@ -284,18 +285,19 @@ export const stopFavorites: SymbolLayerSpecification = {
 // VEHICLES (Factories)
 // -----------------------------------------------------------------------------
 
-export const getVehicleColorExpression = (colorVehiclesByDelay: boolean) => {
+export const getVehicleColorExpression = (colorVehiclesByDelay: boolean): ExpressionSpecification => {
     if (!colorVehiclesByDelay) {
-        return ['get', 'route_color'];
+        return ['get', 'route_color'] as ExpressionSpecification;
     }
     return [
         'case',
-        ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], '#4ade80', // Sage Green (On time / null)
-        ['<=', ['to-number', ['get', 'delay']], 120], '#4ade80', // Sage Green
-        ['<=', ['to-number', ['get', 'delay']], 300], '#fbbf24', // Warm Gold
-        ['<=', ['to-number', ['get', 'delay']], 600], '#f87171', // Terracotta Coral
-        '#6b21a8' // Deep Dark Radar Purple
-    ];
+        ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], '#4ade80', // Sage Green (null / default)
+        ['<=', ['to-number', ['get', 'delay']], -60], '#38bdf8', // Light Blue / Sky Blue (Ahead of time: >= 1 min early)
+        ['<=', ['to-number', ['get', 'delay']], 120], '#4ade80', // Sage Green (On time: -1 to +2 min)
+        ['<=', ['to-number', ['get', 'delay']], 300], '#fbbf24', // Warm Gold (2 to 5 min)
+        ['<=', ['to-number', ['get', 'delay']], 600], '#f87171', // Terracotta Coral (5 to 10 min)
+        '#6b21a8' // Deep Dark Radar Purple (> 10 min)
+    ] as ExpressionSpecification;
 };
 
 export const getDelayFilterExpression = (delayFilter: string[]) => {
@@ -303,8 +305,16 @@ export const getDelayFilterExpression = (delayFilter: string[]) => {
         return null;
     }
     const conditions = [];
+    if (delayFilter.includes('aheadOfTime')) {
+        conditions.push(['all', ['!=', ['get', 'delay'], null], ['<=', ['to-number', ['get', 'delay']], -60]]);
+    }
     if (delayFilter.includes('onTime')) {
-        conditions.push(['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null], ['<=', ['to-number', ['coalesce', ['get', 'delay'], 0]], 120]]);
+        conditions.push([
+            'any',
+            ['!', ['has', 'delay']],
+            ['==', ['get', 'delay'], null],
+            ['all', ['>', ['to-number', ['coalesce', ['get', 'delay'], 0]], -60], ['<=', ['to-number', ['coalesce', ['get', 'delay'], 0]], 120]]
+        ]);
     }
     if (delayFilter.includes('moderate')) {
         conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 120], ['<=', ['to-number', ['get', 'delay']], 300]]);

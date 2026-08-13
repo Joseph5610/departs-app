@@ -62,7 +62,10 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ### Forbidden Patterns (STRICT NEGATIVES)
 
+- **NEVER** use raw `fetch()`. All internal API calls MUST use `apiFetch` (from `@/lib/api-client`).
+- **NEVER** use manual `localStorage` / `sessionStorage` or raw `JSON.parse` for app state persistence; use Zustand stores with `persist` middleware.
 - **NEVER** use repetitive emojis, icons, or visual filler.
+- **NEVER** construct ad-hoc `border-dashed` or custom empty containers; use established shadcn `Empty` primitives.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
 - **NEVER** use ad-hoc utility classes for core layout; use established design system tokens.
 - **NEVER** store UI state (like drawer height) in global selection context.
@@ -89,6 +92,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **Centroid Authority**: Centroids MUST be generated for every logical stop node. Must have `is_centroid: true` and ID prefixed with `centroid-`.
 - **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
 - **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppStopFeature`, `AppVehicleFeature`).
+- **Zod Validation Boundaries**: Untrusted external inputs (user form payloads, KV storage reads, external API JSON responses) MUST be validated using Zod schemas (`safeParse` or `parse`) before casting or processing.
 
 ## 6. LOCAL ENVIRONMENT
 

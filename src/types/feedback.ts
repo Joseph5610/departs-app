@@ -60,10 +60,10 @@ export const feedbackPayloadSchema = z.object({
 export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
 
 // Represents the full stored entity in KV
-const _storedFeedbackSchema = feedbackPayloadSchema.omit({ turnstileToken: true }).extend({
+export const storedFeedbackSchema = feedbackPayloadSchema.omit({ turnstileToken: true }).extend({
   id: z.string(),
   timestamp: z.string(),
   ipAddress: z.string().optional(),
 });
 
-export type StoredFeedback = z.infer<typeof _storedFeedbackSchema>;
+export type StoredFeedback = z.infer<typeof storedFeedbackSchema>;

@@ -6,10 +6,8 @@ import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 import type { AppCityStats } from '../../../functions/_core/types';
 
-const fetchCityStats = async (selectedCity: string): Promise<AppCityStats> => {
-    const url = new URL(`/${selectedCity}/stats`, window.location.origin);
-    return apiFetch<AppCityStats>(url);
-};
+const fetchCityStats = (selectedCity: string): Promise<AppCityStats> =>
+    apiFetch<AppCityStats>(`/${selectedCity}/stats`);
 
 export const useCityStats = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);

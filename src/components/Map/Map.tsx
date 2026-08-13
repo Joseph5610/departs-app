@@ -115,9 +115,12 @@ const MapInner: React.FC = () => {
     const setReturnPath = useSelectionStore(s => s.actions.setReturnPath);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
 
+    const prevLocationRef = React.useRef(location);
+
     useEffect(() => {
-        if (!location.includes('/trip/')) {
-            setReturnPath(location);
+        if (prevLocationRef.current !== location) {
+            setReturnPath(prevLocationRef.current);
+            prevLocationRef.current = location;
         }
     }, [location, setReturnPath]);
 
@@ -129,13 +132,9 @@ const MapInner: React.FC = () => {
         }
     }, [returnPath, location, selectedCity]);
 
-    const isRootPath = returnPath === `/${selectedCity}` || returnPath === `/${selectedCity}/` || returnPath === '/';
-    const shouldShowBackButton = Boolean(
-        selectedVehicle && 
-        returnPath && 
-        returnPath !== location && 
-        !isRootPath
-    );
+    const isRootPath = !returnPath || returnPath === `/${selectedCity}` || returnPath === `/${selectedCity}/` || returnPath === '/';
+    const hasActiveDetailPanel = Boolean(selectedVehicle || selectedStop || selectedPos);
+    const shouldShowBackButton = hasActiveDetailPanel && returnPath !== null && returnPath !== location && !isRootPath;
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {

@@ -1,4 +1,4 @@
-import { StoredFeedback } from "../../../src/types/feedback";
+import { storedFeedbackSchema, type StoredFeedback } from "../../../src/types/feedback";
 
 interface Env {
   FEEDBACK_STORE: KVNamespace;
@@ -15,7 +15,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       const value = await context.env.FEEDBACK_STORE.get(keyObj.name);
       if (value) {
         try {
-          return JSON.parse(value) as StoredFeedback;
+          const parsed = JSON.parse(value);
+          const result = storedFeedbackSchema.safeParse(parsed);
+          return result.success ? result.data : null;
         } catch {
           return null;
         }

@@ -7,12 +7,9 @@ import { TRANSIT_REFRESH_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 
 const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
-    const url = new URL(`/${city}/vehicle-detail`, window.location.origin);
-    url.searchParams.set('tripId', tripId);
-    if (vehicleId) {
-        url.searchParams.set('vehicleId', vehicleId);
-    }
-    return apiFetch<VehicleDetail>(url.toString());
+    const params = new URLSearchParams({ tripId });
+    if (vehicleId) params.set('vehicleId', vehicleId);
+    return apiFetch<VehicleDetail>(`/${city}/vehicle-detail?${params.toString()}`);
 };
 
 export const useVehicleDetail = () => {
@@ -22,7 +19,7 @@ export const useVehicleDetail = () => {
 
     const query = useQuery({
         queryKey: ['vehicle-detail', selectedCity, vehicleId, tripId],
-        queryFn: () => { return fetchVehicleDetail(selectedCity, vehicleId, tripId!); },
+        queryFn: () => fetchVehicleDetail(selectedCity, vehicleId, tripId!),
         enabled: !!tripId && !!selectedCity,
         staleTime: TRANSIT_REFRESH_MS,
         refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
