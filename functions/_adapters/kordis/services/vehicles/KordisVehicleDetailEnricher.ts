@@ -1,8 +1,7 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core/types";
+import type { Env, AppVehicleDetail } from "../../../../_core/types";
 import { GtfsRtVehicleDetailEnricher } from "../../../gtfs/services/vehicles/GtfsRtVehicleDetailEnricher";
 import type { VehiclesService } from "../../../gtfs/services/vehicles/VehiclesService";
-
 import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
 
 /**
@@ -17,10 +16,10 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
         super(vehiclesService);
     }
 
-    async enrich(detail: AppVehicleDetail, ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
+    async enrich(detail: AppVehicleDetail, _ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         // Use the base GtfsRtEnricher logic (which calls vehiclesService.getSingleLiveVehicle)
         // This might discover the real vehicle_id if it was missing but gtfsTripId was provided.
-        const enrichedDetail = await super.enrich(detail, ctx);
+        const enrichedDetail = await super.enrich(detail, _ctx);
 
         // Apply static vehicle metadata for Brno (DPMB)
         // We do this AFTER the live match so we have the most accurate vehicle_id
@@ -46,15 +45,8 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
         return enrichedDetail;
     }
 
-    protected override enrichVehicleDetail(detail: AppVehicleDetail, liveMatch: AppVehicleFeature, lastStopId?: string) {
-        super.enrichVehicleDetail(detail, liveMatch, lastStopId);
-    }
-
-    protected normalizeGtfsRtStopId(stopId: string): string {
+    protected override normalizeStopId(stopId: string): string {
         // Normalize GTFS-RT stopIds like "U01611Z01" to "U1611Z1" for Brno
-        if (stopId.startsWith('U')) {
-            return stopId.replace(/U0*(\d+)/, 'U$1').replace(/Z0*(\d+)/, 'Z$1');
-        }
-        return stopId;
+        return stopId.replace(/U0*(\d+)/i, 'U$1').replace(/Z0*(\d+)/i, 'Z$1');
     }
 }

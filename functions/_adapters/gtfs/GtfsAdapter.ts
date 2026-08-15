@@ -21,23 +21,20 @@ export class GtfsAdapter implements CityAdapter {
     protected vehicleDetailService: VehicleDetailService;
     protected alertsService: AlertsService;
 
-    constructor(protected city: CityConfig) {
+    constructor(public readonly city: CityConfig) {
         this.stopsService = new StopsService(this.city);
         this.vehiclesService = new VehiclesService(this.city);
         this.vehicleDetailService = new VehicleDetailService(this.city, new GtfsRtVehicleDetailEnricher(this.vehiclesService));
         this.alertsService = new AlertsService(this.city, new BaseGtfsAlertsMapper());
     }
 
-    async handleStops(ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {
-        void ctx;
+    async handleStops(_ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {
         return this.stopsService.getStops();
     }
     
     async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
         return this.vehiclesService.getFilteredVehicles(ctx);
     }
-    
-
     
     /**
      * Processes departures by injecting the underlying VehiclesService into the DeparturesService.
@@ -51,18 +48,15 @@ export class GtfsAdapter implements CityAdapter {
         return this.vehicleDetailService.getVehicleDetail(ctx);
     }
     
-    async handleAlerts(ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> {
-        void ctx;
+    async handleAlerts(_ctx: EventContext<Env, string, unknown>): Promise<AppAlertsResponse> {
         return this.alertsService.getAlerts();
     }
     
-    async handleInfotexts(ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]> {
-        void ctx;
+    async handleInfotexts(_ctx: EventContext<Env, string, unknown>): Promise<AppInfotext[]> {
         return new InfotextsService(this.city).getInfotexts();
     }
 
-    async handleRawFeed(ctx: EventContext<Env, string, unknown>, type: string = 'vehicles'): Promise<unknown> {
-        void ctx;
+    async handleRawFeed(_ctx: EventContext<Env, string, unknown>, type: string = 'vehicles'): Promise<unknown> {
         const rtUrl = this.city.adapterConfig?.realtimeUrl;
         if (!rtUrl) {
             return { error: `No realtimeUrl configured for city: ${this.city.slug}` };

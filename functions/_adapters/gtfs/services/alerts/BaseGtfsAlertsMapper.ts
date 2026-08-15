@@ -14,44 +14,56 @@ const HTML_ENTITY_MAP: Record<string, string> = {
     '&apos;': "'"
 };
 
-/**
- * Cleans GTFS alert text by stripping HTML tags while preserving line breaks.
- * Converts <br>, block elements (<p>, <div>, <li>, etc.), \t, and existing newlines
- * into formatted line breaks, strips all remaining HTML tags, and decodes HTML entities.
- */
-export function cleanAlertText(text: string | null | undefined): string | null {
-    if (!text) return null;
-
-    const cleaned = text
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
-        .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
-        .replace(/<[^>]*>/g, '')
-        .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
-        .replace(/[\r\t]+/g, '\n');
-
-    const lines = cleaned.split('\n').map(l => l.trim());
-    const resultLines: string[] = [];
-    let previousWasEmpty = false;
-
-    for (const line of lines) {
-        if (line === '') {
-            if (!previousWasEmpty) {
-                resultLines.push('');
-                previousWasEmpty = true;
-            }
-        } else {
-            resultLines.push(line);
-            previousWasEmpty = false;
-        }
-    }
-
-    const result = resultLines.join('\n').trim();
-    return result || null;
-}
-
 export class BaseGtfsAlertsMapper {
     
+    /**
+     * Cleans GTFS alert text by stripping HTML tags while preserving line breaks.
+     * Converts <br>, block elements (<p>, <div>, <li>, etc.), \t, and existing newlines
+     * into formatted line breaks, strips all remaining HTML tags, and decodes HTML entities.
+     */
+    protected static cleanAlertText(text: string | null | undefined): string | null {
+        if (!text) return null;
+
+        const cleaned = text
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
+            .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
+            .replace(/[\r\t]+/g, '\n');
+
+        const lines = cleaned.split('\n').map(l => l.trim());
+        const resultLines: string[] = [];
+        let previousWasEmpty = false;
+
+        for (const line of lines) {
+            if (line === '') {
+                if (!previousWasEmpty) {
+                    resultLines.push('');
+                    previousWasEmpty = true;
+                }
+            } else {
+                resultLines.push(line);
+                previousWasEmpty = false;
+            }
+        }
+
+        const result = resultLines.join('\n').trim();
+        return result || null;
+    }
+    
+    /**
+     * Maps raw GTFS-RT feed entities into application-specific AppAlert structures.
+     * 
+     * This method orchestrates the translation of standard GTFS fields (headers, descriptions, 
+     * affected routes, active periods) and delegates to overridable hooks (e.g. `parseContent`, 
+     * `parseIsDetour`, `resolveRoute`) to allow city-specific adapters to customize the extraction logic.
+     * 
+     * @param rawAlerts The array of GTFS-RT feed entities containing alerts.
+     * @param gtfsData Static GTFS data used to resolve route names, colors, and types for affected entities.
+     * @param forceIncident If true, overrides the detour detection logic and forces the alert type to 'incident'.
+     * @returns A mapped array of AppAlert objects ready for frontend consumption.
+     */
     public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
@@ -80,7 +92,7 @@ export class BaseGtfsAlertsMapper {
                             line_metadata.push({
                                 name: lineDisplayName,
                                 route_color: '#888888',
-                                type: 'bus'
+                                type: 'unknown'
                             });
                         }
                     }
@@ -142,9 +154,6 @@ export class BaseGtfsAlertsMapper {
     }
 
     protected parseIsDetour(alert: transit_realtime.IAlert, _headerStr: string, _rawHeader?: string, _rawDesc?: string | null): boolean {
-        void _headerStr;
-        void _rawHeader;
-        void _rawDesc;
         return String(alert.effect) === '4' || 
                String(alert.effect) === '9' || 
                String(alert.effect) === 'DETOUR';
@@ -152,12 +161,12 @@ export class BaseGtfsAlertsMapper {
 
     protected parseTitle(rawTitle?: string | null): string {
         if (!rawTitle) return '';
-        return cleanAlertText(rawTitle) || '';
+        return BaseGtfsAlertsMapper.cleanAlertText(rawTitle) || '';
     }
 
     protected parseDescription(rawDesc?: string | null): string | null {
         if (!rawDesc) return null;
-        return cleanAlertText(rawDesc);
+        return BaseGtfsAlertsMapper.cleanAlertText(rawDesc);
     }
 
     /**
@@ -170,8 +179,6 @@ export class BaseGtfsAlertsMapper {
     }
 
     protected parseExtensions(_alert: transit_realtime.IAlert, _appAlert: AppAlert): void {
-        void _alert;
-        void _appAlert;
     }
 }
 

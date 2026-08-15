@@ -4,6 +4,19 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.1] - 2026-08-15
+
+### Fixed
+
+- Derived `before_track` state position directly from initial stop scheduled departure in GTFS vehicle detail enricher.
+
+## [0.62.0] - 2026-08-14
+
+### Added
+
+- Distinction between travelled (faded) and upcoming (solid) route line segments in vehicle detail map view.
+- Vehicle travel direction arrows along active route lines.
+
 ## [0.61.0] - 2026-08-13
 
 ### Added

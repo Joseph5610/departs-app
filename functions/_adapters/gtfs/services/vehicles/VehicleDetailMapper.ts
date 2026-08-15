@@ -1,8 +1,8 @@
 import type { AppVehicleDetail } from "../../../../_core/types";
-import { addSecondsToTime } from '../../core/utils';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
 import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
+import { GTFS_CONFIG } from '../../core/config';
 
 export class VehicleDetailMapper {
 
@@ -16,11 +16,8 @@ export class VehicleDetailMapper {
         const routeColor = route?.route_color || undefined;
         const rType = normalizeRouteType(route ? route.type : '3');
 
-        const finalDelay = null;
-        const lastStopSequence = null;
-
-        const stopFeatures = this.buildStopFeatures(stations, lastStopSequence, finalDelay);
-        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || '#888888');
+        const stopFeatures = this.buildStopFeatures(stations);
+        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR);
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : '';
 
@@ -31,7 +28,7 @@ export class VehicleDetailMapper {
             route_type: rType,
             trip_headsign: headsign,
             bearing: null,
-            delay: finalDelay,
+            delay: null,
             route_color: routeColor || '',
             is_static_fallback: true,
             state_position: 'before_track',
@@ -40,7 +37,7 @@ export class VehicleDetailMapper {
                 operator: undefined,
                 vehicle_registration_number: String(vehicleId || '')
             },
-            last_stop_sequence: lastStopSequence,
+            last_stop_sequence: undefined,
             route_geojson: routeGeoJson,
             stop_times: {
                 features: stopFeatures
@@ -48,7 +45,7 @@ export class VehicleDetailMapper {
         };
     }
 
-    static buildStopFeatures(stations: Station[], lastStopSequence: number | null, computedDelay: number | null) {
+    static buildStopFeatures(stations: Station[]) {
         const formatTime = (timeStr: string | undefined | null): string => {
             if (!timeStr) return '';
             const parts = String(timeStr).split(':');
@@ -62,7 +59,6 @@ export class VehicleDetailMapper {
         };
 
         return stations.map((s) => {
-            const applyDelay = s.sequence >= (lastStopSequence || 0) ? computedDelay : 0;
             return {
                 type: 'Feature' as const,
                 geometry: {
@@ -75,8 +71,8 @@ export class VehicleDetailMapper {
                     stop_sequence: s.sequence,
                     arrival_time: formatTime(s.arrival_time),
                     departure_time: formatTime(s.departure_time),
-                    realtime_arrival_time: (applyDelay ? addSecondsToTime(s.arrival_time, applyDelay) : undefined) || formatTime(s.arrival_time),
-                    realtime_departure_time: (applyDelay ? addSecondsToTime(s.departure_time, applyDelay) : undefined) || formatTime(s.departure_time),
+                    realtime_arrival_time: formatTime(s.arrival_time),
+                    realtime_departure_time: formatTime(s.departure_time),
                     is_request_stop: s.is_request_stop
                 }
             };

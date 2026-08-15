@@ -59,6 +59,7 @@ export class VehicleDetailMapper {
             vehicle_descriptor: (data.vehicle_descriptor || p.vehicle_descriptor) ?? undefined,
             geometry,
             is_static_fallback: isStatic,
+            shape_dist_traveled: p.shape_dist_traveled ?? (data as { shape_dist_traveled?: number }).shape_dist_traveled ?? undefined,
         };
 
         // Process Stop Times (The schedule of stops for this trip)
@@ -96,9 +97,9 @@ export class VehicleDetailMapper {
             const shapesFeatures = 'features' in shapes ? shapes.features : (Array.isArray(shapes) ? shapes : null);
             
             if (shapesFeatures && shapesFeatures.length >= 2) {
-                const coordinates = shapesFeatures
-                    .filter((sf: GolemioShapeFeature) => sf.geometry?.type === 'Point')
-                    .map((sf: GolemioShapeFeature) => sf.geometry.coordinates as [number, number]);
+                const validFeatures = shapesFeatures.filter((sf: GolemioShapeFeature) => sf.geometry?.type === 'Point');
+                const coordinates = validFeatures.map((sf: GolemioShapeFeature) => sf.geometry.coordinates as [number, number]);
+                const shapeDists = validFeatures.map((sf: GolemioShapeFeature) => sf.properties?.shape_dist_traveled ?? 0);
                 
                 routeFeatures.push({
                     type: 'Feature',
@@ -107,7 +108,8 @@ export class VehicleDetailMapper {
                         coordinates: coordinates
                     },
                     properties: {
-                        route_color: routeColor
+                        route_color: routeColor,
+                        shape_dist_traveled: shapeDists
                     }
                 });
             }

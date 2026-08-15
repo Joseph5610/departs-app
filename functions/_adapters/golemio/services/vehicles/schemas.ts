@@ -24,6 +24,7 @@ const golemioVehiclePropertiesSchema = z.object({
     last_stop_sequence: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? Number(v) : 0),
     origin_timestamp: z.string().nullish().transform(v => v ?? undefined),
     run_number: z.union([z.string(), z.number()]).nullish().transform(v => v != null ? String(v) : undefined),
+    shape_dist_traveled: z.number().nullish().transform(v => v ?? undefined),
     vehicle_descriptor: golemioVehicleDescriptorSchema.nullish().transform(v => v ?? undefined),
 });
 

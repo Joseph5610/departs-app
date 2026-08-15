@@ -3,7 +3,8 @@ import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "./VehiclesService";
 
-import { addSecondsToTime } from '../../core/utils';
+import { addSecondsToTime, getMinutesUntil } from '../../core/utils';
+import { GTFS_CONFIG } from '../../core/config';
 
 /**
  * The standard GTFS-RT vehicle enricher.
@@ -14,9 +15,7 @@ import { addSecondsToTime } from '../../core/utils';
 export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
     constructor(protected vehiclesService: VehiclesService) {}
 
-    async enrich(detail: AppVehicleDetail, ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
-        void ctx; // ctx is not used in base yet
-
+    async enrich(detail: AppVehicleDetail, _ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         if (!detail.vehicle_id && !detail.gtfs_trip_id) {
             return detail;
         }
@@ -82,53 +81,60 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             });
         }
 
+        // 5. Evaluate Before-Track Status directly from first stop schedule
+        this.evaluateBeforeTrack(detail);
+
         detail.is_static_fallback = false;
+    }
+
+    protected evaluateBeforeTrack(detail: AppVehicleDetail) {
+        if (detail.state_position === 'canceled') return;
+
+        const firstStop = detail.stop_times?.features?.[0];
+        if (!firstStop) return;
+
+        const seq = detail.last_stop_sequence;
+        // If the vehicle has already proceeded past stop 1, it is no longer before track
+        if (seq !== undefined && seq !== null && seq > 1) {
+            return;
+        }
+
+        const depTimeStr = firstStop.properties.realtime_departure_time || firstStop.properties.departure_time;
+        if (!depTimeStr) return;
+
+        const diffMins = getMinutesUntil(depTimeStr, this.vehiclesService.city.timezone);
+
+        // If departure is in the future (within window) and vehicle is at origin terminal
+        if (diffMins > 0 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS) {
+            const delaySecs = detail.delay ?? 0;
+            detail.state_position = delaySecs > GTFS_CONFIG.BEFORE_TRACK_DELAY_THRESHOLD_SECS ? 'before_track_delayed' : 'before_track';
+        }
     }
 
     protected findMatchingStop(
         features: NonNullable<NonNullable<AppVehicleDetail['stop_times']>['features']>,
         lastStopId: string
     ) {
-        const cleanId = (id: string) => {
-            return id
-                .replace(/^centroid-/, '')
-                .replace(/U0*(\d+)/i, 'U$1')
-                .replace(/Z0*(\d+)/i, 'Z$1');
-        };
-
-        const targetClean = cleanId(lastStopId);
-        const normalizedTarget = this.normalizeGtfsRtStopId(lastStopId);
+        const normalizedTarget = this.normalizeStopId(lastStopId);
 
         // 1. Direct or clean ID match
-        let match = features.find(s => {
+        const match = features.find(s => {
             const sid = s.properties.stop_id;
             if (!sid) return false;
-            const sClean = cleanId(sid);
             return (
                 sid === lastStopId ||
                 sid === normalizedTarget ||
-                sClean === targetClean
+                this.normalizeStopId(sid) === normalizedTarget
             );
         });
-
-        if (match) return match;
-
-        // 2. Node ID numeric match (e.g. U11006Z01 -> 11006)
-        const nodeMatch = lastStopId.match(/U0*(\d+)Z/i) || lastStopId.match(/(\d+)/);
-        if (nodeMatch) {
-            const nodeId = nodeMatch[1];
-            match = features.find(s => {
-                const sid = s.properties.stop_id;
-                if (!sid) return false;
-                const sidNode = sid.match(/U0*(\d+)Z/i) || sid.match(/(\d+)/);
-                return sid === nodeId || (sidNode && sidNode[1] === nodeId);
-            });
-        }
 
         return match;
     }
 
-    protected normalizeGtfsRtStopId(stopId: string): string {
+    /**
+     * Override this method in city-specific enrichers to handle stop ID normalization.
+     */
+    protected normalizeStopId(stopId: string): string {
         return stopId;
     }
 }

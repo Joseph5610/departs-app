@@ -6,12 +6,17 @@ import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
 import { getDpmbVehicleRanges, type DpmbVehicleRange } from '../../utils/dpmbVehicleMetadata';
+import { GTFS_CONFIG } from '../../../gtfs/core/config';
+import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 
 /** Buffer around trip start/end times to tolerate early/delayed vehicles. */
 const BUFFER_MINS = 30;
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
+    /**
+     * Fetches the mapping of static trips from the adapter config staticDataUrl.
+     */
     private async getApiMapping(): Promise<ApiMapping | null> {
         const staticUrl = this.city.adapterConfig?.staticDataUrl;
         if (!staticUrl) return null;
@@ -33,41 +38,18 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         );
     }
 
+    /**
+     * Retrieves the current time context (today's string and current minutes) for the configured timezone.
+     */
     private getCurrentTimeContext() {
-        // Use Prague time since api.json mins are in Prague local time
-        const now = new Date();
-        const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'Europe/Prague',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            hour12: false
-        });
-
-        const parts = formatter.formatToParts(now);
-        const partMap: Record<string, string> = {};
-        for (const p of parts) {
-            partMap[p.type] = p.value;
-        }
-
-        const y = partMap.year || '';
-        const m = partMap.month || '';
-        const d = partMap.day || '';
-        const hh = partMap.hour || '0';
-        const mm = partMap.minute || '0';
-        const ss = partMap.second || '0';
-
-        const todayLocalStr = `${y}${m}${d}`;
-        // Handle Intl midnight edge case (sometimes 24 instead of 0)
-        const hour = Number(hh) % 24;
-        const currentMinutes = hour * 60 + Number(mm) + Number(ss) / 60;
-        
-        return { todayLocalStr, currentMinutes };
+        const todayLocalStr = getZonedDateString(this.city.timezone);
+        const currentSeconds = getCurrentLocalSeconds(this.city.timezone);
+        return { todayLocalStr, currentMinutes: currentSeconds / 60 };
     }
 
+    /**
+     * Builds a map of all trips from the API mapping for O(1) lookups.
+     */
     private buildTripLookup(apiMapping: ApiMapping): Map<string, ApiTrip> {
         const lookup = new Map<string, ApiTrip>();
         for (const trips of Object.values(apiMapping)) {
@@ -175,7 +157,6 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     : null;
 
                 const features: AppVehicleFeature[] = [];
-                const THRESHOLD_MS = 10 * 60 * 1000;
                 const nowMs = Date.now();
 
                 // Group entities by label to handle duplicate vehicle IDs in the feed
@@ -190,7 +171,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     if (!tripId) continue;
 
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
-                    if (nowMs - lastUpdate > THRESHOLD_MS) continue;
+                    if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
                     
                     const label = vp.vehicle?.licensePlate || vp.vehicle?.label || vp.vehicle?.id || entity.id;
                     
@@ -385,6 +366,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         };
     }
 
+    /**
+     * Resolves the correct trip information from the api mapping using the final or raw trip ID.
+     */
     private findTripInfo(tripId: string, rawTripId: string | undefined, tripLookup: Map<string, ApiTrip> | null): ApiTrip | undefined {
         if (!tripLookup) return undefined;
         return tripLookup.get(tripId) || (rawTripId ? tripLookup.get(rawTripId) : undefined);

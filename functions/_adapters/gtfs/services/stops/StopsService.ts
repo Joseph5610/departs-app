@@ -7,7 +7,7 @@ import { appClient } from '../../../../_core/ApiClient';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
 export class StopsService {
-    constructor(private city: CityConfig) {}
+    constructor(public readonly city: CityConfig) {}
 
     async getStops(): Promise<AppStopCollection> {
         const staticDataUrl = this.city.adapterConfig?.staticDataUrl;

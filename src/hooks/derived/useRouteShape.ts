@@ -1,36 +1,57 @@
 import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useSelectedVehicle } from './useSelectedVehicle';
-import type { FeatureCollection, LineString } from 'geojson';
-import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
+import type { FeatureCollection, Feature, LineString } from 'geojson';
 
-export const useRouteShape = () => {
+export const useRouteShape = (): FeatureCollection | null => {
     const { data: vehicleDetail } = useVehicleDetail();
     const selectedVehicle = useSelectedVehicle();
 
     return useMemo(() => {
-        if (!selectedVehicle || !vehicleDetail?.route_geojson) {
-            return null;
+        const geojson = vehicleDetail?.route_geojson as FeatureCollection | undefined;
+        if (!selectedVehicle || !geojson?.features?.length) return null;
+
+        const lineFeature = geojson.features.find(f => f.geometry?.type === 'LineString') as Feature<LineString> | undefined;
+        if (!lineFeature) return geojson;
+
+        const vDist = vehicleDetail?.shape_dist_traveled;
+        const statePos = vehicleDetail?.state_position ?? selectedVehicle.state_position;
+
+        // Unstarted trip, missing distance, or before_track => render entire line as upcoming
+        if (vDist === undefined || vDist === 0 || statePos === 'before_track' || statePos === 'before_track_delayed') {
+            return geojson;
         }
 
-        const geojson = vehicleDetail.route_geojson as FeatureCollection<LineString>;
-        if (!geojson.features || geojson.features.length === 0) {
-            return null;
+        const coords = lineFeature.geometry.coordinates;
+        const shapeDists = lineFeature.properties?.shape_dist_traveled as number[] | undefined;
+
+        let splitIdx = shapeDists
+            ? shapeDists.findIndex(d => d > vDist) - 1
+            : -1;
+
+        if (splitIdx < 0 && !shapeDists) {
+            const pos = vehicleDetail?.geometry?.coordinates ?? selectedVehicle.geometry?.coordinates;
+            if (pos) {
+                let minDist = Infinity;
+                coords.forEach(([lng, lat], i) => {
+                    const dist = (lng - pos[0]) ** 2 + (lat - pos[1]) ** 2;
+                    if (dist < minDist) { minDist = dist; splitIdx = i; }
+                });
+            }
         }
 
-        // The backend now provides route_color directly in the first feature's properties
-        const color = geojson.features[0].properties?.route_color || FALLBACK_ROUTE_COLOR;
+        if (splitIdx <= 0) return geojson;
 
-        // Ensure all segments have the correct color injected (safety)
+        const otherFeatures = geojson.features.filter(f => f !== lineFeature);
+        const props = lineFeature.properties;
+
         return {
-            ...geojson,
-            features: geojson.features.map(feature => ({
-                ...feature,
-                properties: {
-                    ...feature.properties,
-                    route_color: color
-                }
-            }))
+            type: 'FeatureCollection',
+            features: [
+                { type: 'Feature', geometry: { type: 'LineString', coordinates: coords.slice(0, splitIdx + 1) }, properties: { ...props, status: 'traversed' } },
+                { type: 'Feature', geometry: { type: 'LineString', coordinates: coords.slice(splitIdx) }, properties: { ...props, status: 'upcoming' } },
+                ...otherFeatures
+            ]
         };
     }, [selectedVehicle, vehicleDetail]);
 };

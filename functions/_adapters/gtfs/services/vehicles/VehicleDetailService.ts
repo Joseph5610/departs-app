@@ -16,7 +16,7 @@ import type { VehicleDetailEnricher } from './VehicleDetailEnricher';
  * If an Enricher is provided, it delegates the live GPS/delay merging to that Enricher.
  */
 export class VehicleDetailService {
-    constructor(private city: CityConfig, private enricher?: VehicleDetailEnricher) {}
+    constructor(public readonly city: CityConfig, private enricher?: VehicleDetailEnricher) {}
 
     async getVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         const url = new URL(ctx.request.url);

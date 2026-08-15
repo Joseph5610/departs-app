@@ -1,5 +1,5 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
-import { BaseGtfsAlertsMapper, cleanAlertText } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
+import { BaseGtfsAlertsMapper } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
 import type { AppAlert } from '../../../../_core/types';
 import type { GtfsData, GtfsRoute } from '../../../gtfs/core/gtfs-data';
 
@@ -40,8 +40,8 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
     }
 
     protected parseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
-        const cleanedDesc = cleanAlertText(this.stripTweetPrefix(rawDesc));
-        const cleanedHeader = cleanAlertText(this.stripTweetPrefix(rawHeader)) || '';
+        const cleanedDesc = BaseGtfsAlertsMapper.cleanAlertText(this.stripTweetPrefix(rawDesc));
+        const cleanedHeader = BaseGtfsAlertsMapper.cleanAlertText(this.stripTweetPrefix(rawHeader)) || '';
 
         if (!cleanedDesc) {
             return { title: cleanedHeader, description: null };

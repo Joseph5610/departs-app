@@ -3,6 +3,7 @@ type AdapterType = 'golemio' | 'gtfs' | 'kordis' | 'duk';
 export interface AdapterConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
+    hasTripAliases?: boolean;
     [key: string]: string | boolean | undefined;
 }
 
@@ -47,7 +48,8 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapter: 'kordis',
         adapterConfig: {
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
-            staticDataUrl: 'https://data.departs.app'
+            staticDataUrl: 'https://data.departs.app',
+            hasTripAliases: true
         },
         isBeta: true,
         filters: {

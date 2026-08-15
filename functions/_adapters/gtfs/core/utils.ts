@@ -1,10 +1,10 @@
 
 /**
- * Helper: convert HH:MM:SS to seconds of day
+ * Helper: convert HH:MM:SS (or HH:MM) to seconds of day
  */
-const toSecs = (t: string) => { 
+export const toSecs = (t: string): number => { 
     const [h, m, s] = t.split(':').map(Number); 
-    return h * 3600 + m * 60 + (s || 0); 
+    return (h || 0) * 3600 + (m || 0) * 60 + (s || 0); 
 };
 
 /**
@@ -21,6 +21,55 @@ export const addSecondsToTime = (timeStr: string | undefined | null, delaySecs: 
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 };
 
+/**
+ * Returns current local time in seconds since midnight for a given IANA timezone.
+ */
+export const getCurrentLocalSeconds = (timezone = 'Europe/Prague'): number => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+    });
+    const pMap: Record<string, string> = {};
+    for (const p of formatter.formatToParts(now)) {
+        pMap[p.type] = p.value;
+    }
+    const h = Number(pMap.hour || 0) % 24;
+    const m = Number(pMap.minute || 0);
+    const s = Number(pMap.second || 0);
+    return h * 3600 + m * 60 + s;
+};
 
+/**
+ * Calculates the difference in minutes between a target time (HH:MM:SS) and current local time.
+ * Handles bidirectional 24h midnight wrap-around.
+ */
+export const getMinutesUntil = (timeStr: string, timezone = 'Europe/Prague'): number => {
+    const targetSecs = toSecs(timeStr);
+    const currentSecs = getCurrentLocalSeconds(timezone);
+    let diffSecs = targetSecs - currentSecs;
+    if (diffSecs < -43200) diffSecs += 86400; // -12h wrap
+    if (diffSecs > 43200) diffSecs -= 86400;  // +12h wrap
+    return diffSecs / 60;
+};
 
-
+/**
+ * Returns the current date in YYYYMMDD format for a given IANA timezone.
+ */
+export const getZonedDateString = (timezone = 'Europe/Prague'): string => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+    const parts = formatter.formatToParts(now);
+    const y = parts.find(p => p.type === 'year')?.value || '';
+    const m = parts.find(p => p.type === 'month')?.value || '';
+    const d = parts.find(p => p.type === 'day')?.value || '';
+    return `${y}${m}${d}`;
+};

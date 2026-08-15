@@ -26,11 +26,19 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
 
     return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const [rRes, trRes, aliasRes] = await Promise.all([
+            const fetchPromises = [
                 appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`),
-                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`),
-                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`).catch(() => null)
-            ]);
+                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)
+            ];
+
+            if (cityConfig.adapterConfig?.hasTripAliases) {
+                fetchPromises.push(appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`).catch(() => new Response(null, { status: 404 })));
+            }
+
+            const results = await Promise.all(fetchPromises);
+            const rRes = results[0];
+            const trRes = results[1];
+            const aliasRes = results[2];
 
             if (!rRes.ok || !trRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}, TripRoutes: ${trRes.status}`);

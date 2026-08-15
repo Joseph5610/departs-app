@@ -102,6 +102,7 @@ export interface AppVehicleProperties {
     vehicle_descriptor?: AppVehicleDescriptor;
     is_static_fallback?: boolean;
     route_color: string;
+    shape_dist_traveled?: number;
 }
 
 export interface AppVehicleFeature {

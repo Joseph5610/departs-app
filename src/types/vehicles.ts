@@ -35,6 +35,7 @@ export interface BaseVehicleProperties {
     vehicle_descriptor?: VehicleDescriptor;
     route_color: string;
     is_enriched?: boolean;
+    shape_dist_traveled?: number;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {

@@ -7,9 +7,10 @@ import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
+import { GTFS_CONFIG } from '../../core/config';
 
 export class VehiclesService {
-    constructor(protected city: CityConfig) {}
+    constructor(public readonly city: CityConfig) {}
 
     protected async getCoreData() {
         const rtUrl = this.city.adapterConfig?.realtimeUrl;
@@ -80,8 +81,7 @@ export class VehiclesService {
                 }
 
                 const features: AppVehicleFeature[] = [];
-                // Filter out vehicles that haven't updated in 10+ minutes
-                const THRESHOLD_MS = 10 * 60 * 1000;
+                // Filter out vehicles that haven't updated in GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS
                 const nowMs = Date.now();
 
                 for (const entity of feed.entity) {
@@ -92,7 +92,7 @@ export class VehiclesService {
                     if (!tripId) continue;
 
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
-                    if (nowMs - lastUpdate > THRESHOLD_MS) {
+                    if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) {
                         continue;
                     }
 

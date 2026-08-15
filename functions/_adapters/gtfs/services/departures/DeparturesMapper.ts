@@ -1,9 +1,26 @@
-import type { AppDeparture, AppVehicleCollection } from "../../../../_core/types";
+import type { AppDeparture, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
 import type { GtfsDepartureTuple } from "./types";
 import type { GtfsRoute } from "../../core/gtfs-data";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
+import { GTFS_CONFIG } from "../../core/config";
 
 export class DeparturesMapper {
+    
+    /**
+     * Maps raw GTFS static departure tuples into application-specific AppDeparture structures.
+     * 
+     * This method handles:
+     * 1. Filtering out departures that are outside the past/future time windows.
+     * 2. Indexing real-time vehicles by `gtfs_trip_id` for fast O(1) lookups.
+     * 3. Merging static scheduled data with real-time delays, vehicle IDs, and AC/wheelchair metadata.
+     * 4. Resurrecting departed vehicles that the backend cache might have prematurely dropped,
+     *    allowing the frontend to render them based on real-time delays.
+     * 
+     * @param deps An array of static GTFS departure tuples (compact arrays) for a given stop.
+     * @param routes A dictionary of GTFS routes used to resolve route names, colors, and types.
+     * @param rtVehicles The latest cached collection of real-time vehicles, used to inject live delays and metadata.
+     * @returns A sorted, mapped array of AppDeparture objects ready for frontend consumption, capped at 150 entries.
+     */
     static mapDepartures(
         deps: Array<{ stopId: string, tuple: GtfsDepartureTuple }>, 
         routes: Record<string, GtfsRoute>, 
@@ -11,37 +28,19 @@ export class DeparturesMapper {
     ): AppDeparture[] {
         const now = Date.now();
         
-        const PAST_WINDOW_MS = 120 * 60 * 1000; // 2 hours
-        const FUTURE_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
-
         const filtered = deps.filter(d => {
             const ts = d.tuple[3];
-            return ts >= now - PAST_WINDOW_MS && ts <= now + FUTURE_WINDOW_MS;
+            return ts >= now - GTFS_CONFIG.DEPARTURES_PAST_WINDOW_MS && ts <= now + GTFS_CONFIG.DEPARTURES_FUTURE_WINDOW_MS;
         });
 
-        const vehicleIndex = new Map<string, string>();
-        const delayIndex = new Map<string, number | null>();
-        const acIndex = new Map<string, boolean | null>();
-        const wheelchairIndex = new Map<string, boolean | null>();
+        const tripIndex = new Map<string, NonNullable<AppVehicleFeature['properties']>>();
 
         if (rtVehicles) {
             for (const f of rtVehicles.features) {
-                const vId = f.properties.vehicle_id;
-                const tripId = f.properties.gtfs_trip_id;
-                const delay = f.properties.delay;
-                const desc = f.properties.vehicle_descriptor;
-
-                if (vId && tripId) {
-                    vehicleIndex.set(tripId, vId);
-                    delayIndex.set(tripId, delay);
-                    if (desc) {
-                        if (desc.is_air_conditioned !== undefined) {
-                            acIndex.set(tripId, desc.is_air_conditioned);
-                        }
-                        if (desc.is_wheelchair_accessible !== undefined) {
-                            wheelchairIndex.set(tripId, desc.is_wheelchair_accessible);
-                        }
-                    }
+                const props = f.properties;
+                const tripId = props.gtfs_trip_id;
+                if (tripId && props.vehicle_id) {
+                    tripIndex.set(tripId, props);
                 }
             }
         }
@@ -63,18 +62,18 @@ export class DeparturesMapper {
             }
 
             if (rtVehicles) {
-                vId = vehicleIndex.get(trip_id);
-                const rtDelay = delayIndex.get(trip_id);
-                if (typeof rtDelay === 'number') {
-                    delaySecs = rtDelay;
-                }
-                const rtAc = acIndex.get(trip_id);
-                if (rtAc !== undefined) {
-                    isAirConditioned = rtAc;
-                }
-                const rtWheelchair = wheelchairIndex.get(trip_id);
-                if (rtWheelchair !== undefined) {
-                    isWheelchairAccessible = rtWheelchair;
+                const rtProps = tripIndex.get(trip_id);
+                if (rtProps) {
+                    vId = rtProps.vehicle_id || undefined;
+                    if (typeof rtProps.delay === 'number') {
+                        delaySecs = rtProps.delay;
+                    }
+                    if (rtProps.vehicle_descriptor?.is_air_conditioned !== undefined) {
+                        isAirConditioned = rtProps.vehicle_descriptor.is_air_conditioned;
+                    }
+                    if (rtProps.vehicle_descriptor?.is_wheelchair_accessible !== undefined) {
+                        isWheelchairAccessible = rtProps.vehicle_descriptor.is_wheelchair_accessible;
+                    }
                 }
             }
 
@@ -103,7 +102,7 @@ export class DeparturesMapper {
             // Send departures that were scheduled/expected up to 15 mins ago to the frontend.
             // The backend cache for delays often misses, so it thinks the bus already left.
             // By sending it anyway, the frontend can apply the live map delay and resurrect it.
-            .filter(d => d.rtTimestampMs >= now - (15 * 60000))
+            .filter(d => d.rtTimestampMs >= now - GTFS_CONFIG.DEPARTURES_RESURRECT_WINDOW_MS)
             .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
             .slice(0, 150)
             .map(d => ({

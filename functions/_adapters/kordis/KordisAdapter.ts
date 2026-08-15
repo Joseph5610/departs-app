@@ -7,7 +7,7 @@ import { AlertsService } from '../gtfs/services/alerts/AlertsService';
 import { KordisAlertsMapper } from './services/alerts/KordisAlertsMapper';
 
 export class KordisAdapter extends GtfsAdapter {
-    constructor(protected readonly city: CityConfig) {
+    constructor(public readonly city: CityConfig) {
         super(city);
         
         this.vehiclesService = new KordisGtfsRtVehiclesService(city);

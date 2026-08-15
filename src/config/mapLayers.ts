@@ -448,8 +448,12 @@ export const routeLine: LineLayerSpecification = {
     },
     paint: {
         'line-color': ['get', 'route_color'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 2, MAP_TOKENS.zoom.vehicles.max, 5],
-        'line-opacity': 1
+        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 2.5, MAP_TOKENS.zoom.vehicles.max, 6],
+        'line-opacity': [
+            'case',
+            ['==', ['get', 'status'], 'traversed'], 0.4,
+            1.0
+        ]
     }
 };
 

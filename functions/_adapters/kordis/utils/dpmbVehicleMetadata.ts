@@ -12,7 +12,6 @@ export interface DpmbVehicleRange extends BrnoVehicleMetadata {
     max: number;
 }
 
-
 /**
  * Fetches the static DPMB vehicle metadata ranges from the CDN.
  * This is used for bulk enrichment of the real-time vehicle feed to inject

@@ -29,6 +29,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
     }> = [];
 
     const lines = new Set<string>();
+    const AT_STOP_STATES = new Set(['at_stop', 'before_track', 'before_track_delayed']);
 
     for (const feature of features) {
         if (!feature) continue;
@@ -54,7 +55,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         vehicleTypes[rType] = (vehicleTypes[rType] || 0) + 1;
         
         const state = String(p.state_position || 'unknown').toLowerCase();
-        if (['at_stop', 'before_track', 'before_track_delayed'].includes(state)) {
+        if (AT_STOP_STATES.has(state)) {
             stateDistribution.at_stop++;
         } else if (state === 'off_track') {
             stateDistribution.off_track++;
@@ -64,8 +65,8 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
             stateDistribution.other++;
         }
         
-        // Filter delays > 120 mins as ghost vehicles
-        if (delay !== null && delay < 7200) {
+        // Filter delays > 120 mins (or early > 120 mins) as ghost vehicles
+        if (delay !== null && Math.abs(delay) < 7200) {
             delaySum += delay;
             delayCount++;
             if (delay > 300) {

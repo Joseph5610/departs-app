@@ -17,7 +17,7 @@ import type { VehiclesService } from '../vehicles/VehiclesService';
  */
 export class DeparturesService {
     constructor(
-        protected city: CityConfig,
+        public readonly city: CityConfig,
         protected vehiclesService?: VehiclesService
     ) {}
 
@@ -36,10 +36,7 @@ export class DeparturesService {
             const parentToChildMap = await this.getParentChildMap(staticDataUrl);
             const allValidStopIds = await this.getAllValidStopIds(parentToChildMap);
 
-            const hasValidStop = stopIds.some(id => {
-                const clean = id.replace(/^centroid-/, '');
-                return allValidStopIds.has(id) || allValidStopIds.has(clean);
-            });
+            const hasValidStop = stopIds.some(id => allValidStopIds.has(id));
 
             if (!hasValidStop) {
                 throw new ApiError(ERROR_MESSAGES.INVALID_STOP_ID, 404);
@@ -93,8 +90,7 @@ export class DeparturesService {
         const childToRequestedMap = new Map<string, string>();
 
         for (const rawId of stopIds) {
-            const cleanId = rawId.replace(/^centroid-/, '');
-            const children = parentToChildMap[rawId] || parentToChildMap[cleanId];
+            const children = parentToChildMap[rawId];
 
             if (children && children.length > 0) {
                 targetIds.push(...children);

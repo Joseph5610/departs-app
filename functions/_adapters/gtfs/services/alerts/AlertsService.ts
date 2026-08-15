@@ -7,7 +7,7 @@ import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 
 export class AlertsService {
-    constructor(private city: CityConfig, private mapper: BaseGtfsAlertsMapper) {}
+    constructor(public readonly city: CityConfig, private mapper: BaseGtfsAlertsMapper) {}
 
     async getAlerts(): Promise<AppAlertsResponse> {
         try {
