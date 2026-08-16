@@ -6,6 +6,6 @@ export interface Station {
     departure_time: string;
     coordinates: [number, number];
     is_wheelchair_accessible: null;
-    zone_id: null;
+    zone_id: string | null;
     is_request_stop?: boolean;
 }

@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.4] - 2026-08-16
+
+### Added
+- Feature parity for Brno GTFS static data to extract and display `zone_id` on the vehicle timeline.
+
 ## [0.62.3] - 2026-08-16
 
 ### Fixed
