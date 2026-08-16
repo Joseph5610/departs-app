@@ -19,7 +19,7 @@ test.describe('WelcomeModal skipTutorial parameter', () => {
             if (!prefs) return null;
             try {
                 return JSON.parse(prefs).state.hasSeenWelcome;
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         });
