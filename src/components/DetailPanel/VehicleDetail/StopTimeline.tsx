@@ -60,7 +60,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                     <div className="absolute left-2.75 top-3 bottom-6 w-0.5 bg-border" />
 
                     {/* Past Stops (Collapsible) */}
-                    <CollapsibleContent className="transition-all duration-200 ease-in-out animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
+                    <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
                         {stopTimes
                             .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
                             .map((stop, idx: number) => (

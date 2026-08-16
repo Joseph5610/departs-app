@@ -10,7 +10,7 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 - **Real-Time Data**: Live departures for public transport (Metro, Trams, Buses, Trains).
 - **Interactive Map**: Live vehicle locations with accurate delay information and route shapes.
 - **Smart Search**: Find any stop by name and view its upcoming connections.
-- **PWA Ready**: Installable on iOS and Android for a native app experience.
+- **PWA**: Web-App installable on iOS and Android for a native app experience.
 - **Privacy First**: No ads, no tracking, just the data you need.
 
 ## 🛠️ Stack
@@ -20,13 +20,13 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 - **Backend**: Cloudflare Pages Functions (Edge Computing)
 - **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno)
 - **Styling**: Tailwind CSS 4, Framer Motion
-- **MCP Protocol**: Native Remote MCP Server at `/mcp` (Server-Sent Events / Streamable HTTP)
 
-## 🤖 Remote MCP Server (AI Copilot Integration)
+## 🤖 Remote MCP Server (AI Integration)
 
-`departs.app` hosts a native **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. No local package or CLI installation is required. You can connect AI assistants like **Claude Code**, **Claude Desktop**, **Cursor**, or **Windsurf** directly to real-time transit data.
+`departs.app` hosts a public **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. No local package or CLI installation is required. You can connect AI assistants like **Claude** or other MCP-compatible clients directly to real-time transit data.
 
 ### Features & Available Tools
+
 - `search_stops`: Search stops/stations in Prague (PID) or Brno (IDS JMK).
 - `get_next_departures`: Real-time departures with delays, headsigns, and accessibility.
 - `get_realtime_vehicles`: Live vehicle GPS locations, line numbers, and delays.
@@ -36,12 +36,15 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 ### Quick Connect
 
 #### Claude Code CLI
+
 ```bash
 claude mcp add --transport sse departs https://departs.app/mcp
 ```
 
 #### Claude Desktop (`claude_desktop_config.json`)
+
 Claude Desktop connects to public remote SSE endpoints using `mcp-remote` (no login/OAuth needed):
+
 ```json
 {
   "mcpServers": {
@@ -53,14 +56,13 @@ Claude Desktop connects to public remote SSE endpoints using `mcp-remote` (no lo
 }
 ```
 
-
 ## 🚀 Local Development
 
 ### Prerequisites
 
 - **Node.js**: v24 or higher
 - **Wrangler**: `npm install -g wrangler` (for Cloudflare Functions)
-- **API Key**: A free API key from [api.golemio.cz](https://api.golemio.cz/)
+- **API Keys**: A free API key from [api.golemio.cz](https://api.golemio.cz/), free Cloudflare Turnstile API key for the Feedback system
 
 ### Quick Setup
 
