@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.2] - 2026-08-16
+
+### Fixed
+
+- Made `routeShortName` line filter evaluation case-insensitive across backend APIs to fix search matching for mixed-case line names like `xS41`.
+
 ## [0.62.1] - 2026-08-15
 
 ### Fixed

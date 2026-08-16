@@ -8,6 +8,7 @@ import type { ApiMapping, ApiTrip } from '../types';
 import { getDpmbVehicleRanges, type DpmbVehicleRange } from '../../utils/dpmbVehicleMetadata';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
+import type { GtfsData } from '../../../gtfs/core/gtfs-data';
 
 /** Buffer around trip start/end times to tolerate early/delayed vehicles. */
 const BUFFER_MINS = 30;
@@ -97,14 +98,27 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         entities: transit_realtime.IFeedEntity[],
         tripLookup: Map<string, ApiTrip>,
         todayStr: string,
-        currentMins: number
+        currentMins: number,
+        gtfsData: GtfsData | null
     ): transit_realtime.IFeedEntity {
         let bestMatch: transit_realtime.IFeedEntity | null = null;
         let minTimeDiff = Infinity;
 
         for (const entity of entities) {
-            const tripId = entity.vehicle?.trip?.tripId;
-            if (!tripId) continue;
+            const rawTripId = entity.vehicle?.trip?.tripId;
+            if (!rawTripId) continue;
+            
+            let tripId: string;
+            if (gtfsData?.tripRoutes && rawTripId in gtfsData.tripRoutes) {
+                tripId = rawTripId;
+            } else if (gtfsData?.tripAliases && rawTripId in gtfsData.tripAliases) {
+                const resolved = gtfsData.tripAliases[rawTripId];
+                if (!resolved) continue; // dropped trip
+                tripId = resolved;
+            } else {
+                tripId = rawTripId;
+            }
+            
             const tripInfo = tripLookup.get(tripId);
             
             if (tripInfo) {
@@ -173,7 +187,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
                     
-                    const label = vp.vehicle?.licensePlate || vp.vehicle?.label || vp.vehicle?.id || entity.id;
+                    const label = vp.vehicle?.label || vp.vehicle?.licensePlate || vp.vehicle?.id || entity.id;
                     
                     if (!groupedEntities.has(label)) {
                         groupedEntities.set(label, []);
@@ -194,7 +208,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
                 for (const [label, entities] of groupedEntities.entries()) {
                     const selectedEntity = (entities.length > 1 && tripLookup)
-                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins)
+                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins, gtfsData)
                         : entities[0];
 
                     const vp = selectedEntity.vehicle;
@@ -323,7 +337,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         }
 
         if (copies.length > 1 && apiMapping && tripLookup) {
-            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMins);
+            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMins, gtfsData);
         } else {
             rawMatch = copies[0];
         }

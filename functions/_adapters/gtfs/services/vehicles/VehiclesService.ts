@@ -125,7 +125,8 @@ export class VehiclesService {
         }
 
         if (routeShortNames && routeShortNames.length > 0) {
-            filtered = filtered.filter(f => routeShortNames.includes(f.properties.route_short_name.toString()));
+            const allowedNames = new Set(routeShortNames.map(r => r.toUpperCase()));
+            filtered = filtered.filter(f => allowedNames.has(f.properties.route_short_name.toString().toUpperCase()));
         }
 
         if (bounds) {
