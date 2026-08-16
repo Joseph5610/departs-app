@@ -9,7 +9,7 @@ export class BasePage {
 
     async goto(path: string = '/') {
         await this.page.addInitScript(() => {
-            window.localStorage.setItem('departs_welcome_seen', 'true');
+            window.localStorage.setItem('departs-preferences', JSON.stringify({ state: { hasSeenWelcome: true }, version: 0 }));
         });
         await this.page.goto(path);
     }

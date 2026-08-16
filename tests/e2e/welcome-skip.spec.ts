@@ -14,8 +14,16 @@ test.describe('WelcomeModal skipTutorial parameter', () => {
         await expect(welcomeCta).not.toBeVisible();
 
         // Verify localStorage is set
-        const welcomeSeen = await page.evaluate(() => localStorage.getItem('departs_welcome_seen'));
-        expect(welcomeSeen).toBe('true');
+        const welcomeSeen = await page.evaluate(() => {
+            const prefs = localStorage.getItem('departs-preferences');
+            if (!prefs) return null;
+            try {
+                return JSON.parse(prefs).state.hasSeenWelcome;
+            } catch (e) {
+                return null;
+            }
+        });
+        expect(welcomeSeen).toBe(true);
     });
 
     test('should show welcome modal when ?skipTutorial is NOT present and not seen before', async ({ page }) => {

@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.3] - 2026-08-16
+
+### Fixed
+- E2E tests: Correctly configure `departs-preferences` localStorage structure, preventing the Welcome Modal from blocking tests.
+
 ## [0.62.2] - 2026-08-16
 
 ### Fixed
