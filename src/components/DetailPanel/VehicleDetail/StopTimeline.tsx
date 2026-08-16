@@ -184,14 +184,14 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                     {isNext && <span className="micro-label text-muted-foreground">{t('map.vehicleDetails.nextStop')}</span>}
                 </div>
             </div>
-            <div className="shrink-0 w-8 flex justify-center items-center">
+            <div className="shrink-0 px-2 flex justify-center items-center">
                 {showZone && (
-                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 leading-none tabular-nums">
+                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 leading-none tabular-nums text-center min-w-[20px]">
                         {stop.properties.zone_id}
                     </span>
                 )}
             </div>
-            <div className="flex flex-col items-end shrink-0 min-w-16">
+            <div className="flex flex-col items-end shrink-0 min-w-[68px]">
                 {(() => {
                     const { realtime_arrival_time, realtime_departure_time, arrival_time, departure_time } = stop.properties;
                     
