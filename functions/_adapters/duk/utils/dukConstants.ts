@@ -1,4 +1,4 @@
-import type { AppVehicleState } from '../../../_core/types';
+import type { AppVehicleState, AppRouteType } from '../../../_core/types';
 
 export const DUK_STATE_MAPPING: Record<number, AppVehicleState> = {
     255: 'off_track',            // Vypnuto
@@ -15,8 +15,6 @@ export const DUK_TRACTION_MAPPING: Record<number, string> = {
     5: 'train',
     6: 'ferry'
 };
-
-import type { AppRouteType } from '../../../_core/types';
 
 /**
  * Maps a generic string line name to a standard slug route_type ('tram', 'train', 'bus', 'trolleybus').

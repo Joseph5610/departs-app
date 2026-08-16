@@ -1,8 +1,6 @@
 import { type AppError, AppErrorCode, parseFetchError } from '../types/error';
-
-const DEFAULT_TIMEOUT = 10000; // 10s
-
 import { API_BASE_URL } from '../config/constants';
+const DEFAULT_TIMEOUT = 10000; // 10s
 
 /**
  * Enhanced fetch wrapper with timeout and automatic error normalization.

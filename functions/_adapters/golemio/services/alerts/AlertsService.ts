@@ -3,14 +3,13 @@ import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { RssAlertsMapper } from "./RssAlertsMapper";
-import gtfsRt from 'gtfs-realtime-bindings';
-const { transit_realtime } = gtfsRt;
 import { GtfsAlertsMapper } from './GtfsAlertsMapper';
 import { GtfsRoute } from '../../../gtfs/core/gtfs-data';
 import { GOLEMIO_CONFIG } from "../../core/config";
 import { appClient } from '../../../../_core/ApiClient';
 import { z } from 'zod';
 import { golemioRouteSchema } from './schemas';
+import { transit_realtime } from 'gtfs-realtime-bindings';
 
 /**
  * Service for fetching and processing transit alerts (incidents and exclusions).
