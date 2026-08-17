@@ -57,7 +57,10 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                     )}
                 </div>
                 <div className="relative pl-6 overflow-hidden!">
-                    <div className="absolute left-2.75 top-3 bottom-6 w-0.5 bg-border" />
+                    <div className={cn(
+                        "absolute left-2.75 bottom-6 w-0.5 bg-border",
+                        (pastStopsCount === 0 || showPastStops) ? "top-6" : "top-0"
+                    )} />
 
                     {/* Past Stops (Collapsible) */}
                     <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
@@ -65,7 +68,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                             .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
                             .map((stop, idx: number) => (
                                 <StopItem
-                                    key={`past-${idx}`}
+                                    key={`past-${stop.properties.stop_sequence || idx}`}
                                     stop={stop}
                                     isPast={true}
                                     effectiveSequence={effectiveSequence}
@@ -81,7 +84,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                         .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
                         .map((stop, idx: number) => (
                             <StopItem
-                                key={`future-${idx}`}
+                                key={`future-${stop.properties.stop_sequence || idx}`}
                                 stop={stop}
                                 isPast={false}
                                 effectiveSequence={effectiveSequence}
@@ -98,7 +101,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
 
 StopTimeline.displayName = 'StopTimeline';
 
-const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: {
+const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence, delay }: {
     stop: StopFeature,
     isPast: boolean,
     effectiveSequence: number | null,
@@ -134,22 +137,43 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
 
     return (
         <div className={cn(
-            "flex justify-between items-center relative py-2.5 transition-opacity",
+            "flex justify-between items-center relative py-2 min-h-11 transition-opacity duration-700",
             isPast ? "opacity-40" : "opacity-100"
         )}>
+            {/* The base grey dot */}
             <div className={cn(
-                "absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md",
-                isCurrent ? "bg-primary ring-[5px] ring-primary/20" : isPast ? "bg-foreground/20" : "bg-foreground/50"
+                "absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-0 shadow-md transition-colors duration-700",
+                isPast ? "bg-foreground/20" : "bg-foreground/50"
             )} />
+
+            {/* The animated green dot */}
+            {isCurrent && (
+                <div className="absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-10 shadow-md bg-primary ring-4 ring-primary/20">
+                    <div className="absolute inset-0 rounded-full bg-primary/60 animate-ping" style={{ animationDuration: '2s' }} />
+                </div>
+            )}
+            
+            {/* The animated next chevron */}
+            {isNext && (
+                <div className="absolute -left-5 -top-2 text-primary animate-slide-down-fade z-20">
+                    <ChevronDown size={16} strokeWidth={3} />
+                </div>
+            )}
+
             <div className="flex flex-col items-start min-w-0 pr-2 flex-1">
                 <div className="flex items-center gap-1.5 w-full">
+                    {showZone && (
+                        <span className="text-[9px] text-muted-foreground/80 font-semibold bg-foreground/5 px-1 py-0.5 rounded-[3px] border border-border/40 leading-none tabular-nums flex-shrink-0 transition-colors duration-700">
+                            {stop.properties.zone_id}
+                        </span>
+                    )}
                     {hasValidStopId ? (
                         <button
                             type="button"
                             onClick={handleStopClick}
                             aria-label={t('map.vehicleDetails.viewStopDepartures', { stopName: stop.properties.stop_name, defaultValue: `View departures for ${stop.properties.stop_name}` })}
                             className={cn(
-                                "text-sm truncate min-w-0 text-left cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs hover:underline hover:text-primary active:opacity-80",
+                                "text-sm truncate min-w-0 text-left cursor-pointer transition-colors duration-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs hover:underline hover:text-primary active:opacity-80",
                                 isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                             )}
                         >
@@ -157,7 +181,7 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                         </button>
                     ) : (
                         <span className={cn(
-                            "text-sm truncate min-w-0",
+                            "text-sm truncate min-w-0 transition-colors duration-700",
                             isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
                         )}>
                             {stop.properties.stop_name}
@@ -179,19 +203,8 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
                         ))}
                     </div>
                 </div>
-                <div className="flex gap-2 items-center flex-wrap mt-0.5">
-                    {isCurrent && <span className="micro-label text-primary">{t('map.vehicleDetails.currentStop')}</span>}
-                    {isNext && <span className="micro-label text-muted-foreground">{t('map.vehicleDetails.nextStop')}</span>}
-                </div>
             </div>
-            <div className="shrink-0 px-2 flex justify-center items-center">
-                {showZone && (
-                    <span className="text-[10px] text-muted-foreground/60 font-bold bg-muted/30 px-1.5 py-0.5 rounded-md border border-border/50 leading-none tabular-nums text-center min-w-[20px]">
-                        {stop.properties.zone_id}
-                    </span>
-                )}
-            </div>
-            <div className="flex flex-col items-end shrink-0 min-w-[68px]">
+            <div className="flex flex-col items-end shrink-0 min-w-17">
                 {(() => {
                     const { realtime_arrival_time, realtime_departure_time, arrival_time, departure_time } = stop.properties;
                     
@@ -239,4 +252,6 @@ const StopItem = ({ stop, isPast, effectiveSequence, nextStopSequence, delay }: 
             </div>
         </div>
     );
-};
+});
+
+StopItem.displayName = 'StopItem';

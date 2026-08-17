@@ -388,3 +388,24 @@
   mask-repeat: no-repeat !important;
   mask-position: center !important;
 }
+
+@keyframes slide-down-fade {
+  0% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+@utility animate-slide-down-fade {
+  animation: slide-down-fade 2s infinite;
+}
