@@ -78,7 +78,7 @@ export class DukVehiclesService {
     async getVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             'duk_vehicles',
-            CACHE_TTL.TEN_SECONDS_MS,
+            CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const baseUrl = this.city.adapterConfig?.baseUrl;
                 const response = await fetch(`${baseUrl}/GetTraffic/0`, {
@@ -122,7 +122,7 @@ export class DukVehiclesService {
     async getSingleLiveVehicle(vehicleId: string | null, tripId: string | null): Promise<AppVehicleDetail | null> {
         return CacheManager.getOrFetch<AppVehicleDetail | null>(
             `duk_vehicle_detail_${vehicleId || tripId}`,
-            CACHE_TTL.TEN_SECONDS_MS,
+            CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const baseUrl = this.city.adapterConfig?.baseUrl;
                 const response = await fetch(`${baseUrl}/GetTraffic/0`, {

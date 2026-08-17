@@ -5,7 +5,7 @@ interface CacheEntry<T> {
 
 export const CACHE_TTL = {
     TWO_HOURS_MS: 2 * 60 * 60 * 1000,
-    TEN_SECONDS_MS: 10 * 1000,
+    SHORT_DEBOUNCE_MS: 5000, // safety debounce for internal worker caching
 } as const;
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();

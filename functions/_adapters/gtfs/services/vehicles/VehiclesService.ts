@@ -72,7 +72,7 @@ export class VehiclesService {
     async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `gtfs_vehicles_collection_${this.city.slug}`, 
-            CACHE_TTL.TEN_SECONDS_MS, 
+            CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
                 const [feed, gtfsData] = await this.getCoreData();
 

@@ -1,5 +1,5 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
-import { CacheManager } from '../../../_core/utils/CacheManager';
+import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { appClient } from '../../../_core/ApiClient';
 
 /**
@@ -10,9 +10,9 @@ import { appClient } from '../../../_core/ApiClient';
 export async function getGtfsRtFeed(citySlug: string, rtUrl: string): Promise<transit_realtime.FeedMessage | null> {
     return CacheManager.getOrFetch<transit_realtime.FeedMessage | null>(
         `gtfs_rt_feed_${citySlug}`,
-        10000, // 10 seconds TTL
+        CACHE_TTL.SHORT_DEBOUNCE_MS, // 3 seconds internal debounce
         async () => {
-            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: 10 } }).catch((err) => {
+            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: 3 } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${citySlug}:`, err?.message || err);
                 return null;
             });

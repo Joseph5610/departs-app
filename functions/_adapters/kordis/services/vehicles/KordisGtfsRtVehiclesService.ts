@@ -154,7 +154,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
-            CACHE_TTL.TEN_SECONDS_MS, 
+            CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
                 const [[feed, gtfsData], apiMapping, dpmbRanges] = await Promise.all([
                     this.getCoreData(),

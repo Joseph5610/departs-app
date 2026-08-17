@@ -57,7 +57,7 @@ export class DukDeparturesService {
         const cacheKey = `duk_departures_${node}_${post}_${ids}`;
         return CacheManager.getOrFetch<AppDepartureResponse>(
             cacheKey,
-            CACHE_TTL.TEN_SECONDS_MS,
+            CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const baseUrl = this.city.adapterConfig?.baseUrl;
                 const response = await fetch(`${baseUrl}/GetStationDeparturesWCount/${node}/${post}/30/0`, {
