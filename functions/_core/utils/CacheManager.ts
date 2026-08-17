@@ -9,7 +9,7 @@ export const CACHE_TTL = {
 } as const;
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();
-const processingPromises = new Map<string, Promise<unknown>>();
+const processingPromises = new Map<string, { promise: Promise<unknown>, startedAt: number }>();
 
 export class CacheManager {
     /**
@@ -39,8 +39,14 @@ export class CacheManager {
             return cached.data as T;
         }
 
-        if (processingPromises.has(key)) {
-            return processingPromises.get(key) as Promise<T>;
+        const pending = processingPromises.get(key);
+        if (pending) {
+            if (now - pending.startedAt < 15000) { // 15s deadlock timeout
+                return pending.promise as Promise<T>;
+            } else {
+                console.warn(`[CacheManager] Shared promise for '${key}' exceeded 15s. Assuming deadlocked from a canceled request. Dropping it.`);
+                processingPromises.delete(key);
+            }
         }
 
         const fetchPromise = (async () => {
@@ -72,7 +78,7 @@ export class CacheManager {
             }
         })();
 
-        processingPromises.set(key, fetchPromise);
+        processingPromises.set(key, { promise: fetchPromise, startedAt: Date.now() });
         return fetchPromise;
     }
 
