@@ -1,4 +1,4 @@
-import { AppVehicleFeature, AppVehicleCollection } from "../../../../_core/types";
+import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioVehicleFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor } from "./colors";
@@ -27,13 +27,16 @@ export class VehiclesMapper {
                     route_type,
                     ...(p.gtfs_trip_headsign || p.trip_headsign ? { trip_headsign: fixCommaSpacing(p.gtfs_trip_headsign || p.trip_headsign) } : {}),
                     bearing: p.bearing ?? null,
-                    delay: p.delay,
+                    delay: p.delay ?? null,
                     state_position: (p.state_position || 'unknown') as AppVehicleFeature['properties']['state_position'],
-                    ...(p.last_stop_sequence ? { last_stop_sequence: p.last_stop_sequence } : {}),
-                    origin_timestamp: p.origin_timestamp,
-                    ...(p.run_number ? { run_number: p.run_number } : {}),
+                    ...(p.last_stop_sequence != null ? { last_stop_sequence: p.last_stop_sequence } : {}),
+                    origin_timestamp: p.origin_timestamp ?? undefined,
+                    ...(p.run_number != null ? { run_number: p.run_number } : {}),
                     route_color: getVehicleColor(route_type, route_short_name),
-                    vehicle_descriptor: p.vehicle_descriptor
+                    vehicle_descriptor: (() => {
+                        if (!p.vehicle_descriptor) return undefined;
+                        return Object.fromEntries(Object.entries(p.vehicle_descriptor).filter(([_, v]) => v != null)) as AppVehicleDescriptor;
+                    })()
                 }
             };
         });

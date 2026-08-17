@@ -1,4 +1,4 @@
-import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature } from "../../../../_core/types";
+import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature, AppVehicleDescriptor } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor } from "./colors";
@@ -53,11 +53,15 @@ export class VehicleDetailMapper {
             delay,
             state_position,
             last_stop_sequence,
-            origin_timestamp,
+            origin_timestamp: origin_timestamp ?? undefined,
             run_number,
             route_color: routeColor,
-            vehicle_descriptor: (data.vehicle_descriptor || p.vehicle_descriptor) ?? undefined,
-            geometry,
+            vehicle_descriptor: (() => {
+                const desc = data.vehicle_descriptor || p.vehicle_descriptor;
+                if (!desc) return undefined;
+                return Object.fromEntries(Object.entries(desc).filter(([_, v]) => v != null)) as AppVehicleDescriptor;
+            })(),
+            geometry: geometry ?? undefined,
             is_static_fallback: isStatic,
             shape_dist_traveled: p.shape_dist_traveled ?? (data as { shape_dist_traveled?: number }).shape_dist_traveled ?? undefined,
         };
@@ -78,9 +82,9 @@ export class VehicleDetailMapper {
 
                     return {
                         type: 'Feature' as const,
-                        geometry: st.geometry,
+                        geometry: st.geometry ?? undefined,
                         properties: {
-                            ...stProps,
+                            ...Object.fromEntries(Object.entries(stProps).filter(([_, v]) => v != null)),
                             stop_id: stopId,
                             ...(metroLines.length > 0 ? { metro_lines: metroLines } : {})
                         } as AppStopTimeProperties
