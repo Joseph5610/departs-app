@@ -74,7 +74,7 @@ export class VehicleDetailMapper {
                     realtime_arrival_time: formatTime(s.arrival_time),
                     realtime_departure_time: formatTime(s.departure_time),
                     is_request_stop: s.is_request_stop,
-                    zone_id: s.zone_id
+                    zone_id: s.zone_id ?? undefined
                 }
             };
         });
