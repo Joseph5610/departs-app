@@ -49,8 +49,8 @@ export const useVehicles = () => {
     const query = useQuery<VehicleCollection | null, AppError>({
         queryKey: ['vehicles', selectedCity, bounds, routeFilter, routeTypeFilter],
         queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
-        enabled: !!selectedCity && (!!bounds || (!!routeFilter && routeFilter.length > 0) || routeTypeFilter.length > 0),
-        refetchInterval: TRANSIT_REFRESH_MS,
+        enabled: !!selectedCity && !!bounds,
+        refetchInterval: (query) => (bounds && query.state.dataUpdatedAt ? TRANSIT_REFRESH_MS : false),
         staleTime: 5000,
         gcTime: 60000,
         placeholderData: keepPreviousData,
