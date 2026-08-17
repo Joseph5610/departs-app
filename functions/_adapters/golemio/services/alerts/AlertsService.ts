@@ -1,5 +1,6 @@
 import { AppAlertsResponse, AppAlert, Env } from "../../../../_core/types";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { CacheManager } from "../../../../_core/utils/CacheManager";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { RssAlertsMapper } from "./RssAlertsMapper";
@@ -67,6 +68,37 @@ export class AlertsService {
         };
     }
 
+    private async getCachedRoutesMap(env: Env): Promise<{ routesMap: Record<string, GtfsRoute>, routesByName: Record<string, GtfsRoute> }> {
+        return CacheManager.getOrFetch(
+            'prague_routes_map',
+            86400 * 1000, // 1 day
+            async () => {
+                const routesRes = await this.client.fetch("/v2/gtfs/routes", env, { cacheTtl: 86400 });
+                if (!routesRes.ok) throw new Error("Failed to fetch routes");
+                
+                const routesJson = await routesRes.json();
+                const parsedRoutes = z.array(golemioRouteSchema).safeParse(routesJson);
+                const routesData = parsedRoutes.success ? parsedRoutes.data : [];
+                
+                const routesMap: Record<string, GtfsRoute> = {};
+                const routesByName: Record<string, GtfsRoute> = {};
+                for (const r of routesData) {
+                    const route = {
+                        name: r.route_id,
+                        short_name: r.route_short_name,
+                        type: r.route_type,
+                        route_color: r.route_color ? '#' + r.route_color : undefined
+                    };
+                    routesMap[r.route_id] = route;
+                    if (r.route_short_name) {
+                        routesByName[r.route_short_name.toUpperCase()] = route;
+                    }
+                }
+                return { routesMap, routesByName };
+            }
+        );
+    }
+
     /**
      * Main entry point to get all alerts.
      * Fetches GTFS-RT Incidents and RSS Exclusions.
@@ -76,48 +108,31 @@ export class AlertsService {
      */
     async getAlerts(env: Env): Promise<AppAlertsResponse> {
         try {
-            const [pbRes, routesRes, exclusionsRes] = await Promise.allSettled([
+            const [pbRes, routesCache, exclusionsRes] = await Promise.allSettled([
                 this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS }),
-                this.client.fetch("/v2/gtfs/routes", env, { cacheTtl: 86400 }), // Cache routes for a day
+                this.getCachedRoutesMap(env),
                 this.fetchExclusionsFeed()
             ]);
 
             // Handle GTFS-RT Incidents
             let incidents: AppAlert[] = [];
-            if (pbRes.status === 'fulfilled' && pbRes.value.ok && routesRes.status === 'fulfilled' && routesRes.value.ok) {
+            if (pbRes.status === 'fulfilled' && pbRes.value.ok && routesCache.status === 'fulfilled') {
                 try {
                     const buffer = await pbRes.value.arrayBuffer();
                     const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
                     const rawAlerts = feed.entity.filter(e => e.alert != null);
 
-                    const routesJson = await routesRes.value.json();
-                    const parsedRoutes = z.array(golemioRouteSchema).safeParse(routesJson);
-                    const routesData = parsedRoutes.success ? parsedRoutes.data : [];
-                    
-                    const routesMap: Record<string, GtfsRoute> = {};
-                    const routesByName: Record<string, GtfsRoute> = {};
-                    for (const r of routesData) {
-                        const route = {
-                            name: r.route_id,
-                            short_name: r.route_short_name,
-                            type: r.route_type,
-                            route_color: r.route_color ? '#' + r.route_color : undefined
-                        };
-                        routesMap[r.route_id] = route;
-                        if (r.route_short_name) {
-                            routesByName[r.route_short_name.toUpperCase()] = route;
-                        }
-                    }
+                    const { routesMap, routesByName } = routesCache.value;
                     
                     const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
                     incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, true);
                 } catch (e) {
-                    console.error("Failed to parse GTFS-RT alerts or routes", e);
+                    console.error("Failed to parse GTFS-RT alerts", e);
                 }
             } else {
                 console.error("Failed to fetch PB alerts or Routes", 
                     pbRes.status === 'rejected' ? pbRes.reason : 'PB response not OK',
-                    routesRes.status === 'rejected' ? routesRes.reason : 'Routes response not OK'
+                    routesCache.status === 'rejected' ? routesCache.reason : 'Routes Cache failed'
                 );
             }
 
