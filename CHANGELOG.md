@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.5] - 2026-08-18
+
+### Fixed
+- Fixed an issue where the Kordis vehicle mapping logic incorrectly prioritized stale trips over active ones if they appeared earlier in the GTFS-RT feed.
+
 ## [0.62.4] - 2026-08-16
 
 ### Added

@@ -10,8 +10,7 @@ import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 import type { GtfsData } from '../../../gtfs/core/gtfs-data';
 
-/** Buffer around trip start/end times to tolerate early/delayed vehicles. */
-const BUFFER_MINS = 30;
+
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
@@ -124,15 +123,14 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             if (tripInfo) {
                 const operatesToday = tripInfo.dates ? tripInfo.dates.includes(todayStr) : true;
                 
-                if (operatesToday && currentMins >= (tripInfo.start_mins - BUFFER_MINS) && currentMins <= (tripInfo.end_mins + BUFFER_MINS)) {
-                    return entity; // Found perfect active trip
-                }
-
-                // Fallback: find the closest trip in time
                 if (operatesToday) {
-                    let diff = Infinity;
+                    let diff = 0;
                     if (currentMins < tripInfo.start_mins) diff = tripInfo.start_mins - currentMins;
                     else if (currentMins > tripInfo.end_mins) diff = currentMins - tripInfo.end_mins;
+
+                    if (diff === 0) {
+                        return entity; // Found perfect active trip
+                    }
                     
                     if (diff < minTimeDiff) {
                         minTimeDiff = diff;
