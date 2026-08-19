@@ -48,7 +48,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                             }}
                         >
                             <img 
-                                src={`/cities/${city.slug}.png`} 
+                                src={`/cities/${city.slug}.webp`} 
                                 alt=""
                                 className={cn(
                                     "absolute right-0 h-full w-auto object-contain mix-blend-lighten transition-[opacity,transform] duration-500",
