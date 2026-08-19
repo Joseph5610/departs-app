@@ -11,13 +11,10 @@ export class AlertsService {
 
     async getAlerts(): Promise<AppAlertsResponse> {
         try {
-            const rtUrl = this.city.adapterConfig?.realtimeUrl;
-            if (!rtUrl) {
-                console.warn(`[GTFS Alerts] No realtimeUrl configured for city: ${this.city.slug}`);
-                return { alerts: [] };
-            }
-
-            const feed = await getGtfsRtFeed(this.city.slug, rtUrl);
+            const feed = await getGtfsRtFeed(this.city).catch((e) => {
+                console.warn(`[GTFS Alerts] getGtfsRtFeed failed: ${e.message}`);
+                return null;
+            });
             if (!feed) return { alerts: [] };
             
             const rawAlerts = feed.entity.filter(e => e.alert != null);

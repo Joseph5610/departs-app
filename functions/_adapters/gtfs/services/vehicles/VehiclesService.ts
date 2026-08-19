@@ -13,12 +13,7 @@ export class VehiclesService {
     constructor(public readonly city: CityConfig) {}
 
     protected async getCoreData() {
-        const rtUrl = this.city.adapterConfig?.realtimeUrl;
-        if (!rtUrl) {
-            throw new Error(`Missing GTFS-RT URL configuration for ${this.city.slug}.`);
-        }
-
-        const rtPromise = getGtfsRtFeed(this.city.slug, rtUrl).catch((err) => {
+        const rtPromise = getGtfsRtFeed(this.city).catch((err) => {
             console.error(`GTFS-RT feed error for ${this.city.slug}:`, err.message);
             return null; // Gracefully degrade to static-only if feed is unreachable (e.g. 404)
         });

@@ -57,15 +57,7 @@ export class GtfsAdapter implements CityAdapter {
     }
 
     async handleRawFeed(_ctx: EventContext<Env, string, unknown>, type: string = 'vehicles'): Promise<unknown> {
-        const rtUrl = this.city.adapterConfig?.realtimeUrl;
-        if (!rtUrl) {
-            return { error: `No realtimeUrl configured for city: ${this.city.slug}` };
-        }
-        
-        const feed = await getGtfsRtFeed(this.city.slug, rtUrl);
-        if (!feed) {
-            throw new Error(`GTFS-RT fetch failed for city: ${this.city.slug}`);
-        }
+        const feed = await getGtfsRtFeed(this.city);
         
         // Return raw feed entities based on requested type
         const entities = feed.entity as unknown[];
