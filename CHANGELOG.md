@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.6] - 2026-08-19
+
+### Fixed
+- Fixed an issue where Cloudflare Access authorization flows (paths under `/cdn-cgi/`) were being intercepted by the PWA service worker, breaking the `/admin` login redirect.
+
 ## [0.62.5] - 2026-08-18
 
 ### Fixed
