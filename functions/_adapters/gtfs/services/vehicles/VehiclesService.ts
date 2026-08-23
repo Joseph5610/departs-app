@@ -23,44 +23,22 @@ export class VehiclesService {
     }
 
     async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
-        const [feed, gtfsData] = await this.getCoreData();
-        if (!feed || !feed.entity || feed.entity.length === 0) return {};
+        if (!vehicleId && !gtfsTripId) return {};
 
-        // GTFS-RT entities may use tripId as id, or vehicleId as id.
-        // The frontend currently passes either 'vehicleId' (like 1207) or we can use 'gtfsTripId'
-        let rawMatch = null;
-        if (gtfsTripId) {
-            rawMatch = feed.entity.find(e => e.vehicle?.trip?.tripId === gtfsTripId);
-        }
-        if (!rawMatch && vehicleId) {
-            rawMatch = feed.entity.find(e => 
-                e.vehicle?.vehicle?.id === vehicleId || 
-                e.vehicle?.vehicle?.label === vehicleId ||
-                e.id === vehicleId
-            );
-        }
+        const collection = await this.getCachedMappedVehicles();
+        if (!collection || !collection.features || collection.features.length === 0) return {};
 
-        if (!rawMatch || !rawMatch.vehicle) return {};
+        const liveMatch = collection.features.find(f => {
+            if (gtfsTripId && f.properties.gtfs_trip_id === gtfsTripId) return true;
+            if (vehicleId && (f.properties.vehicle_id === vehicleId || f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId)) return true;
+            return false;
+        });
 
-        const vp = rawMatch.vehicle;
-        const tripId = vp.trip?.tripId || gtfsTripId || '';
-        if (!tripId) return {};
-
-        const tripRoutes = gtfsData.tripRoutes;
-        const routeInfo = tripRoutes[tripId];
-        if (!routeInfo) return {};
-
-        const routeId = routeInfo.split('|')[0];
-        const route = gtfsData.routes[routeId];
-        if (!route) return {};
-
-        const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
-        // Delay is not in VehiclePosition (it would be in TripUpdate), so we pass null
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
+        if (!liveMatch) return {};
 
         return { 
             liveMatch, 
-            lastStopId: vp.stopId?.toString() 
+            lastStopId: undefined
         };
     }
 

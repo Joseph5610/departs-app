@@ -287,94 +287,22 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
-        const [[feed, gtfsData], apiMapping] = await Promise.all([
-            this.getCoreData(),
-            this.getApiMapping()
-        ]);
+        if (!vehicleId && !gtfsTripId) return {};
 
-        if (!feed || !feed.entity || feed.entity.length === 0) return {};
+        const collection = await this.getCachedMappedVehicles();
+        if (!collection || !collection.features || collection.features.length === 0) return {};
 
-        const validEntities = feed.entity.filter(e => !this.isInvalidDpmbVehicle(e));
+        const liveMatch = collection.features.find(f => {
+            if (gtfsTripId && f.properties.gtfs_trip_id === gtfsTripId) return true;
+            if (vehicleId && (f.properties.vehicle_id === vehicleId || f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId)) return true;
+            return false;
+        });
 
-        if (validEntities.length === 0) return {};
-
-        let copies: transit_realtime.IFeedEntity[] = [];
-
-        if (gtfsTripId) {
-            const matchByTrip = validEntities.find(e => {
-                const id = e.vehicle?.trip?.tripId;
-                if (!id) return false;
-                return id === gtfsTripId || (gtfsData.tripAliases && gtfsData.tripAliases[id] === gtfsTripId);
-            });
-            if (matchByTrip) {
-                copies = [matchByTrip];
-            }
-        }
-
-        if (copies.length === 0 && vehicleId) {
-            copies = validEntities.filter(e => 
-                e.vehicle?.vehicle?.id === vehicleId || 
-                e.vehicle?.vehicle?.label === vehicleId ||
-                e.vehicle?.vehicle?.licensePlate === vehicleId ||
-                e.id === vehicleId
-            );
-        }
-
-        if (copies.length === 0) return {};
-
-        let rawMatch: transit_realtime.IFeedEntity;
-        let tripLookup: Map<string, ApiTrip> | null = null;
-        let currentMins = 0;
-        let todayLocalStr = '';
-
-        if (apiMapping) {
-            tripLookup = this.buildTripLookup(apiMapping);
-            const ctx = this.getCurrentTimeContext();
-            currentMins = ctx.currentMinutes;
-            todayLocalStr = ctx.todayLocalStr;
-        }
-
-        if (copies.length > 1 && apiMapping && tripLookup) {
-            rawMatch = this.selectBestEntity(copies, tripLookup, todayLocalStr, currentMins, gtfsData);
-        } else {
-            rawMatch = copies[0];
-        }
-
-        const vp = rawMatch.vehicle;
-        if (!vp) return {};
-
-        const rawTripId = vp.trip?.tripId || gtfsTripId || '';
-        if (!rawTripId) return {};
-
-        let tripId: string;
-        if (gtfsData.tripRoutes && rawTripId in gtfsData.tripRoutes) {
-            tripId = rawTripId; // Active in current GTFS, trust it
-        } else if (gtfsData.tripAliases && rawTripId in gtfsData.tripAliases) {
-            const resolved = gtfsData.tripAliases[rawTripId];
-            if (!resolved) return {}; // null = dropped old trip
-            tripId = resolved;
-        } else {
-            tripId = rawTripId;
-        }
-
-        const routeInfo = gtfsData.tripRoutes[tripId];
-        if (!routeInfo) return {};
-
-        const routeId = routeInfo.split('|')[0];
-        const route = gtfsData.routes[routeId];
-        if (!route) return {};
-
-        const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
-        if (vp.vehicle) vp.vehicle.id = vehicleId;
-
-        const tripInfo = this.findTripInfo(tripId, rawTripId, tripLookup);
-        const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
-
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
+        if (!liveMatch) return {};
 
         return { 
             liveMatch, 
-            lastStopId: vp.stopId?.toString() 
+            lastStopId: undefined
         };
     }
 
