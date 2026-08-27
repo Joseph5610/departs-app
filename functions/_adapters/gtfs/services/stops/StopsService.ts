@@ -20,7 +20,7 @@ export class StopsService {
         // 1. CacheManager: In-memory cache for fast, concurrent access (2h TTL).
         // 2. caches.default: Cloudflare's edge cache for persistence across worker isolations (24h TTL).
         // If the in-memory cache expires, we fetch from the CF cache before hitting the upstream API.
-        return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
+        return CacheManager.getOrFetch(cacheKey, CACHE_TTL.FOUR_HOURS_MS, async () => {
             const cache = caches.default;
             const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v4`, { method: 'GET' });
             const cached = await cache.match(jsonCacheKey);

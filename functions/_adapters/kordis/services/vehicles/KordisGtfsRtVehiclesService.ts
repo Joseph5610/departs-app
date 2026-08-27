@@ -25,7 +25,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
         return CacheManager.getOrFetch<ApiMapping | null>(
             `api_mapping_${this.city.slug}`, 
-            CACHE_TTL.TWO_HOURS_MS, 
+            CACHE_TTL.FOUR_HOURS_MS,
             async () => {
                 try {
                     const resApi = await appClient.fetch(apiUrl, { cf: { cacheTtl: 7200 } });

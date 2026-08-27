@@ -30,7 +30,7 @@ const METRO_DEFS: Record<string, EnrichedLine> = {
  * Uses CacheManager to prevent concurrent fetch stampedes and keep data in memory.
  */
 export async function getEnrichmentData(): Promise<ProcessedEnrichmentData> {
-    return CacheManager.getOrFetch('prague_enrichment', CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch('prague_enrichment', CACHE_TTL.FOUR_HOURS_MS, async () => {
         try {
             const res = await fetch(GOLEMIO_CONFIG.ENRICHMENT_DATA_URL, {
                 cf: { cacheTtl: 86400 } // Cache at Cloudflare edge for 24h

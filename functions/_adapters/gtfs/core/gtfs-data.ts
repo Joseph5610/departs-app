@@ -24,7 +24,7 @@ export async function getGtfsData(citySlug: string): Promise<GtfsData> {
 
     const cacheKey = `gtfs_data_${citySlug}`;
 
-    return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch(cacheKey, CACHE_TTL.FOUR_HOURS_MS, async () => {
         try {
             const fetchPromises = [
                 appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`),
