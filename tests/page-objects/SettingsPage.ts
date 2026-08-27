@@ -13,7 +13,7 @@ export class SettingsPage extends BasePage {
     readonly showStopsSwitch: Locator = this.container.locator('button[role="switch"]').nth(1);
     
     // Close Button
-    readonly closeButton: Locator = this.container.getByRole('button', { name: 'Close' });
+    readonly closeButton: Locator = this.page.getByRole('button', { name: 'Close' }).first();
     
     // Vehicle Types
     async toggleVehicleType(id: string) {
@@ -31,7 +31,7 @@ export class SettingsPage extends BasePage {
             await this.page.keyboard.press('Escape');
             await this.container.waitFor({ state: 'hidden', timeout: 2000 });
         } catch {
-            await this.closeButton.click({ force: true });
+            await this.container.locator("button:has(svg.lucide-x)").first().click({ force: true });
         }
     }
 }
