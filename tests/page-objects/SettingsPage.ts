@@ -13,7 +13,7 @@ export class SettingsPage extends BasePage {
     readonly showStopsSwitch: Locator = this.container.locator('button[role="switch"]').nth(1);
     
     // Close Button
-    readonly closeButton: Locator = this.container.getByRole('button', { name: 'Close' });
+    readonly closeButton: Locator = this.page.locator('button:has(span:has-text("Close"))').first();
     
     // Vehicle Types
     async toggleVehicleType(id: string) {

@@ -25,7 +25,12 @@ export class VehicleDetailService {
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
     async getVehicleDetail(env: Env, searchParams: URLSearchParams): Promise<AppVehicleDetail> {
-        const enrichmentData = await getEnrichmentData();
+        let enrichmentData;
+try {
+    enrichmentData = await getEnrichmentData();
+} catch (e) {
+    enrichmentData = { enrichmentMap: {}, headsignLookup: new Map(), stopIdToMetroLines: new Map() };
+}
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
