@@ -1,8 +1,8 @@
 
 import { Env, AppVehicleCollection, AppCityStats } from "../../../../_core/types";
 
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
-import { CacheManager } from "../../../../_core/utils/CacheManager";
+import { CACHE_TTL as HTTP_CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehiclesMapper } from "./VehiclesMapper";
@@ -23,7 +23,7 @@ export class VehiclesService {
     async getRawVehicles(env: Env, params: Record<string, string | string[]> = {}) {
         const response = await this.client.fetch("/v2/public/vehiclepositions", env, {
             searchParams: params,
-            cacheTtl: CACHE_TTL.VEHICLES
+            cacheTtl: HTTP_CACHE_TTL.VEHICLES
         });
 
         if (!response.ok) {
@@ -42,7 +42,7 @@ export class VehiclesService {
     async getCachedMappedVehicles(env: Env): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `golemio_vehicles_collection`,
-            5000, // SHORT_DEBOUNCE_MS
+            CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 let rawData;
                 try {
