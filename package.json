@@ -65,7 +65,7 @@
     "react-hook-form": "^7.85.0",
     "react-i18next": "^17.0.11",
     "react-json-view-lite": "^2.5.0",
-    "react-map-gl": "^8.1.0",
+    "react-map-gl": "^8.1.2",
     "react-virtuoso": "^4.18.7",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
