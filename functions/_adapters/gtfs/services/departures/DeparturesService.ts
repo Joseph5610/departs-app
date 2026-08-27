@@ -63,7 +63,7 @@ export class DeparturesService {
     private async getParentChildMap(staticDataUrl: string): Promise<Record<string, string[]>> {
         return CacheManager.getOrFetch(
             `parent_child_map_${this.city.slug}`,
-            CACHE_TTL.FOUR_HOURS_MS,
+            CACHE_TTL.TWO_HOURS_MS,
             async () => {
                 const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
                 if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
@@ -75,7 +75,7 @@ export class DeparturesService {
     private async getAllValidStopIds(parentToChildMap: Record<string, string[]>): Promise<Set<string>> {
         return CacheManager.getOrFetch(
             `valid_stops_set_${this.city.slug}`,
-            CACHE_TTL.FOUR_HOURS_MS,
+            CACHE_TTL.TWO_HOURS_MS,
             async () => {
                 return new Set([
                     ...Object.keys(parentToChildMap),

@@ -32,7 +32,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             stops: []
         },
         enrichmentChannel: {
-            url: 'wss://gis.brno.cz/geoevent/ws/services/stream_kordis_26/StreamServer/subscribe',
+            url: 'wss://gis.brno.cz/geoevent/ws/services/Kordis_stream/StreamServer/subscribe',
             transport: 'websocket',
             normalize: (rawMsg: unknown) => {
                 const msg = rawMsg as { attributes?: Record<string, unknown> };

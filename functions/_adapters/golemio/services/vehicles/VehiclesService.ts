@@ -1,8 +1,7 @@
 
 import { Env, AppVehicleCollection, AppCityStats } from "../../../../_core/types";
 
-import { CACHE_TTL as HTTP_CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
-import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehiclesMapper } from "./VehiclesMapper";
@@ -23,7 +22,7 @@ export class VehiclesService {
     async getRawVehicles(env: Env, params: Record<string, string | string[]> = {}) {
         const response = await this.client.fetch("/v2/public/vehiclepositions", env, {
             searchParams: params,
-            cacheTtl: HTTP_CACHE_TTL.VEHICLES
+            cacheTtl: CACHE_TTL.VEHICLES
         });
 
         if (!response.ok) {
@@ -32,41 +31,6 @@ export class VehiclesService {
         }
 
         return await response.json();
-    }
-
-    /**
-     * Fetches the entire vehicle feed from Golemio, parses, and maps it.
-     * Caches the mapped collection using CacheManager to prevent CPU limit
-     * exceeded (503) errors during concurrent map movements.
-     */
-    async getCachedMappedVehicles(env: Env): Promise<AppVehicleCollection> {
-        return CacheManager.getOrFetch<AppVehicleCollection>(
-            `golemio_vehicles_collection`,
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
-            async () => {
-                let rawData;
-                try {
-                    rawData = await this.getRawVehicles(env, {});
-                } catch (error) {
-                    console.error(`Golemio vehicles feed is down`, error);
-                    return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
-                }
-
-                const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
-                if (!parsed.success) {
-                    console.error("Critical Golemio vehicles structural change:", parsed.error);
-                    return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
-                }
-
-                const data = parsed.data;
-                if (data.features) {
-                    data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
-                }
-
-                return VehiclesMapper.map(data as GolemioVehiclePayload);
-            },
-            (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
-        );
     }
 
     /**
@@ -80,45 +44,57 @@ export class VehiclesService {
     async getVehicles(env: Env, searchParams: URLSearchParams): Promise<AppVehicleCollection> {
         const { bounds, routeType: routeTypes, routeShortName: routeShortNames } = parseSearchParams(searchParams, vehicleQuerySchema);
 
-        const allVehicles = await this.getCachedMappedVehicles(env);
-        let filtered = allVehicles.features;
+        const params: Record<string, string | string[]> = {};
+            if (bounds) params.boundingBox = bounds;
+            if (routeTypes.length > 0) params.routeType = routeTypes;
+            if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
-        if (routeTypes && routeTypes.length > 0) {
-            const allowedTypes = new Set(routeTypes.map(r => r.toLowerCase()));
-            filtered = filtered.filter(f => allowedTypes.has(f.properties.route_type));
-        }
+            let rawData;
+            try {
+                rawData = await this.getRawVehicles(env, params);
+            } catch (error) {
+                console.error(`Golemio vehicles feed is down`, error);
+                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+            }
+            const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
 
-        if (routeShortNames && routeShortNames.length > 0) {
-            const allowedNames = new Set(routeShortNames.map(r => r.toUpperCase()));
-            filtered = filtered.filter(f => allowedNames.has(f.properties.route_short_name.toString().toUpperCase()));
-        }
+            if (!parsed.success) {
+                console.error("Critical Golemio vehicles structural change:", parsed.error);
+                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+            }
 
-        if (bounds) {
-            const [minLat, minLng, maxLat, maxLng] = bounds.split(',').map(Number);
-            filtered = filtered.filter(f => {
-                if (!f.geometry || !f.geometry.coordinates) return false;
-                const [lng, lat] = f.geometry.coordinates;
-                return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
-            });
-        }
+            const data = parsed.data;
+            if (data.features) {
+                data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+            }
 
-        return {
-            type: 'FeatureCollection',
-            features: filtered,
-            status: allVehicles.status,
-            last_updated: allVehicles.last_updated
-        };
+            return VehiclesMapper.map(data as GolemioVehiclePayload);
     }
 
     /**
      * Fetches all raw vehicles and computes global network statistics.
      */
     async getStats(env: Env): Promise<AppCityStats> {
-        const allVehicles = await this.getCachedMappedVehicles(env);
-        if (allVehicles.status === 'upstream_offline') {
-            throw new ApiError(ERROR_MESSAGES.VEHICLES_DATA_UNAVAILABLE, 503);
+        let rawData;
+        try {
+            rawData = await this.getRawVehicles(env, {});
+        } catch (error) {
+            console.error(`Golemio vehicles feed is down`, error);
+            throw new ApiError(ERROR_MESSAGES.VEHICLES_DATA_UNAVAILABLE, 503, { cause: error });
         }
         
-        return aggregateCityStats(allVehicles.features);
+        const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+        if (!parsed.success) {
+            throw new ApiError(ERROR_MESSAGES.DATA_STRUCTURE_CHANGED, 500);
+        }
+
+        const data = parsed.data;
+        if (data.features) {
+            data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+        }
+
+        const mappedCollection = VehiclesMapper.map(data as GolemioVehiclePayload);
+
+        return aggregateCityStats(mappedCollection.features);
     }
 }

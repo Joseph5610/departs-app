@@ -25,7 +25,7 @@ export async function getDpmbVehicleRanges(): Promise<DpmbVehicleRange[] | null>
     const dpmbUrl = `${staticDataUrl}/brno/dpmb-vehicles.json?v=2`;
     return CacheManager.getOrFetch<DpmbVehicleRange[] | null>(
         `dpmb_vehicles_brno_v2`, 
-        CACHE_TTL.FOUR_HOURS_MS,
+        CACHE_TTL.TWO_HOURS_MS,
         async () => {
             const resApi = await appClient.fetch(dpmbUrl, { cf: { cacheTtl: 7200 } });
             if (!resApi.ok) return null;
