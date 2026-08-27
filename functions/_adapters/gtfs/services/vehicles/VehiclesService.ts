@@ -23,44 +23,45 @@ export class VehiclesService {
     }
 
     async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
-        const [feed, gtfsData] = await this.getCoreData();
-        if (!feed || !feed.entity || feed.entity.length === 0) return {};
+        // 1. O(1) Fast lookup for the mapped vehicle data
+        const collection = await this.getCachedMappedVehicles();
+        if (!collection.features || collection.features.length === 0) return {};
 
-        // GTFS-RT entities may use tripId as id, or vehicleId as id.
-        // The frontend currently passes either 'vehicleId' (like 1207) or we can use 'gtfsTripId'
-        let rawMatch = null;
+        let liveMatch: AppVehicleFeature | undefined;
         if (gtfsTripId) {
-            rawMatch = feed.entity.find(e => e.vehicle?.trip?.tripId === gtfsTripId);
+            liveMatch = collection.features.find(f => f.properties.gtfs_trip_id === gtfsTripId);
         }
-        if (!rawMatch && vehicleId) {
-            rawMatch = feed.entity.find(e => 
-                e.vehicle?.vehicle?.id === vehicleId || 
-                e.vehicle?.vehicle?.label === vehicleId ||
-                e.id === vehicleId
+        if (!liveMatch && vehicleId) {
+            liveMatch = collection.features.find(f =>
+                f.properties.vehicle_id === vehicleId ||
+                f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId
             );
         }
 
-        if (!rawMatch || !rawMatch.vehicle) return {};
+        if (!liveMatch) return {};
 
-        const vp = rawMatch.vehicle;
-        const tripId = vp.trip?.tripId || gtfsTripId || '';
-        if (!tripId) return {};
+        // 2. To get the raw stopId (which we intentionally don't bloat the public AppVehicleFeature with),
+        // we pull the already-cached raw feed and do a quick search for this specific vehicle.
+        const [feed] = await this.getCoreData();
+        let lastStopId: string | undefined;
 
-        const tripRoutes = gtfsData.tripRoutes;
-        const routeInfo = tripRoutes[tripId];
-        if (!routeInfo) return {};
-
-        const routeId = routeInfo.split('|')[0];
-        const route = gtfsData.routes[routeId];
-        if (!route) return {};
-
-        const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : Date.now();
-        // Delay is not in VehiclePosition (it would be in TripUpdate), so we pass null
-        const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null);
+        if (feed && feed.entity) {
+            const rawMatch = feed.entity.find(e =>
+                (gtfsTripId && e.vehicle?.trip?.tripId === gtfsTripId) ||
+                (vehicleId && (
+                    e.vehicle?.vehicle?.id === vehicleId ||
+                    e.vehicle?.vehicle?.label === vehicleId ||
+                    e.id === vehicleId
+                ))
+            );
+            if (rawMatch && rawMatch.vehicle?.stopId) {
+                lastStopId = rawMatch.vehicle.stopId.toString();
+            }
+        }
 
         return { 
             liveMatch, 
-            lastStopId: vp.stopId?.toString() 
+            lastStopId
         };
     }
 
