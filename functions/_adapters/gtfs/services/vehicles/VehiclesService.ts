@@ -23,22 +23,45 @@ export class VehiclesService {
     }
 
     async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
-        if (!vehicleId && !gtfsTripId) return {};
-
+        // 1. O(1) Fast lookup for the mapped vehicle data
         const collection = await this.getCachedMappedVehicles();
-        if (!collection || !collection.features || collection.features.length === 0) return {};
+        if (!collection.features || collection.features.length === 0) return {};
 
-        const liveMatch = collection.features.find(f => {
-            if (gtfsTripId && f.properties.gtfs_trip_id === gtfsTripId) return true;
-            if (vehicleId && (f.properties.vehicle_id === vehicleId || f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId)) return true;
-            return false;
-        });
+        let liveMatch: AppVehicleFeature | undefined;
+        if (gtfsTripId) {
+            liveMatch = collection.features.find(f => f.properties.gtfs_trip_id === gtfsTripId);
+        }
+        if (!liveMatch && vehicleId) {
+            liveMatch = collection.features.find(f =>
+                f.properties.vehicle_id === vehicleId ||
+                f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId
+            );
+        }
 
         if (!liveMatch) return {};
 
+        // 2. To get the raw stopId (which we intentionally don't bloat the public AppVehicleFeature with),
+        // we pull the already-cached raw feed and do a quick search for this specific vehicle.
+        const [feed] = await this.getCoreData();
+        let lastStopId: string | undefined;
+
+        if (feed && feed.entity) {
+            const rawMatch = feed.entity.find(e =>
+                (gtfsTripId && e.vehicle?.trip?.tripId === gtfsTripId) ||
+                (vehicleId && (
+                    e.vehicle?.vehicle?.id === vehicleId ||
+                    e.vehicle?.vehicle?.label === vehicleId ||
+                    e.id === vehicleId
+                ))
+            );
+            if (rawMatch && rawMatch.vehicle?.stopId) {
+                lastStopId = rawMatch.vehicle.stopId.toString();
+            }
+        }
+
         return { 
             liveMatch, 
-            lastStopId: undefined
+            lastStopId
         };
     }
 

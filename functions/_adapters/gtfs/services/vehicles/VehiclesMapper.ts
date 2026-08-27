@@ -48,7 +48,6 @@ export class VehiclesMapper {
                 bearing: bearing ?? null,
                 
                 ...(vp.currentStopSequence && vp.currentStopSequence > 0 ? { last_stop_sequence: vp.currentStopSequence } : {}),
-                ...(vp.stopId ? { last_stop_id: String(vp.stopId) } : {}),
                 
                 vehicle_descriptor: {
                     vehicle_registration_number: licensePlate || vehicleLabel || vehicleId

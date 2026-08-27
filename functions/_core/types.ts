@@ -97,7 +97,6 @@ export interface AppVehicleProperties {
     delay: number | null;
     state_position?: AppVehicleState;
     last_stop_sequence?: number | null;
-    last_stop_id?: string | null;
     origin_timestamp?: string;
     run_number?: string | number;
     vehicle_descriptor?: AppVehicleDescriptor;

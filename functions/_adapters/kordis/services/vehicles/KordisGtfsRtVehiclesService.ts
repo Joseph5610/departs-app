@@ -287,22 +287,59 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
-        if (!vehicleId && !gtfsTripId) return {};
-
+        // 1. O(1) Fast lookup for the mapped vehicle data
         const collection = await this.getCachedMappedVehicles();
-        if (!collection || !collection.features || collection.features.length === 0) return {};
+        if (!collection.features || collection.features.length === 0) return {};
 
-        const liveMatch = collection.features.find(f => {
-            if (gtfsTripId && f.properties.gtfs_trip_id === gtfsTripId) return true;
-            if (vehicleId && (f.properties.vehicle_id === vehicleId || f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId)) return true;
-            return false;
-        });
+        let liveMatch = gtfsTripId
+            ? collection.features.find(f => f.properties.gtfs_trip_id === gtfsTripId)
+            : undefined;
+
+        if (!liveMatch && vehicleId) {
+            liveMatch = collection.features.find(f =>
+                f.properties.vehicle_id === vehicleId ||
+                f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId
+            );
+        }
 
         if (!liveMatch) return {};
 
+        // 2. Scan the already-cached raw feed to extract only the lastStopId without rebuilding everything
+        const [[feed, gtfsData]] = await Promise.all([
+            this.getCoreData()
+        ]);
+
+        let lastStopId: string | undefined;
+
+        if (feed && feed.entity) {
+            const validEntities = feed.entity.filter(e => !this.isInvalidDpmbVehicle(e));
+
+            let rawMatch: transit_realtime.IFeedEntity | undefined;
+
+            if (gtfsTripId) {
+                rawMatch = validEntities.find(e => {
+                    const id = e.vehicle?.trip?.tripId;
+                    return id && (id === gtfsTripId || (gtfsData.tripAliases && gtfsData.tripAliases[id] === gtfsTripId));
+                });
+            }
+
+            if (!rawMatch && vehicleId) {
+                rawMatch = validEntities.find(e =>
+                    e.vehicle?.vehicle?.id === vehicleId ||
+                    e.vehicle?.vehicle?.label === vehicleId ||
+                    e.vehicle?.vehicle?.licensePlate === vehicleId ||
+                    e.id === vehicleId
+                );
+            }
+
+            if (rawMatch && rawMatch.vehicle?.stopId) {
+                lastStopId = rawMatch.vehicle.stopId.toString();
+            }
+        }
+
         return { 
             liveMatch, 
-            lastStopId: undefined
+            lastStopId
         };
     }
 
