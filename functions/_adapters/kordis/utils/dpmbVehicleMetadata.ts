@@ -29,33 +29,29 @@ export async function getDpmbVehicleRanges(): Promise<DpmbVehicleRange[] | null>
         async () => {
             const resApi = await appClient.fetch(dpmbUrl, { cf: { cacheTtl: 7200 } });
             if (!resApi.ok) return null;
-            return await resApi.json();
+            const data = await resApi.json() as DpmbVehicleRange[];
+            return data.sort((a, b) => a.min - b.min);
         }
     );
 }
 
 /**
- * Resolves static model types and air-conditioning status for a single vehicle
- * based on Brno (DPMB) registration numbers by fetching and parsing the JSON array of ranges.
+ * Binary search to find a matching DPMB vehicle range for a given vehicle number.
+ * Expects ranges to be sorted by `min`.
  */
-export async function getDpmbVehicleMetadata(
-    registrationNumber: string | number
-): Promise<BrnoVehicleMetadata | null> {
-    const ranges = await getDpmbVehicleRanges();
-
-    if (!ranges || ranges.length === 0) return null;
-
-    const num = parseInt(String(registrationNumber), 10);
-    if (isNaN(num)) return null;
-
-    const rangeMatch = ranges.find(r => num >= r.min && num <= r.max);
-    
-    if (rangeMatch) {
-        return {
-            vehicle_type: rangeMatch.vehicle_type,
-            is_air_conditioned: rangeMatch.is_air_conditioned
-        };
+export function findDpmbRange(num: number, sortedRanges: DpmbVehicleRange[]): DpmbVehicleRange | null {
+    let low = 0;
+    let high = sortedRanges.length - 1;
+    while (low <= high) {
+        const mid = (low + high) >> 1;
+        const range = sortedRanges[mid];
+        if (num >= range.min && num <= range.max) {
+            return range;
+        } else if (num < range.min) {
+            high = mid - 1;
+        } else {
+            low = mid + 1;
+        }
     }
-
     return null;
 }

@@ -5,7 +5,7 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
-import { getDpmbVehicleRanges, type DpmbVehicleRange } from '../../utils/dpmbVehicleMetadata';
+import { getDpmbVehicleRanges, findDpmbRange } from '../../utils/dpmbVehicleMetadata';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 import type { GtfsData } from '../../../gtfs/core/gtfs-data';
@@ -53,34 +53,11 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-
-    /**
-     * Checks whether a feed entity is an invalid DPMB entry (license plate starts with 'dpmb').
+     * Checks whether a feed entity is an invalid DPMB entry (license plate starts with 'dpmb' or 'DPMB').
      */
     private isInvalidDpmbVehicle(entity: transit_realtime.IFeedEntity): boolean {
         const lp = entity.vehicle?.vehicle?.licensePlate;
-        return Boolean(lp && lp.trim().toLowerCase().startsWith('dpmb'));
-    }
-
-    /**
-     * Binary search to find a matching DPMB vehicle range for a given vehicle number.
-     * Expects ranges to be sorted by `min`.
-     */
-    private findDpmbRange(num: number, sortedRanges: DpmbVehicleRange[]): DpmbVehicleRange | null {
-        let low = 0;
-        let high = sortedRanges.length - 1;
-        while (low <= high) {
-            const mid = (low + high) >> 1;
-            const range = sortedRanges[mid];
-            if (num >= range.min && num <= range.max) {
-                return range;
-            } else if (num < range.min) {
-                high = mid - 1;
-            } else {
-                low = mid + 1;
-            }
-        }
-        return null;
+        return Boolean(lp && /^dpmb/i.test(lp.trim()));
     }
 
     /**
@@ -158,9 +135,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
                 }
 
-                const sortedDpmbRanges: DpmbVehicleRange[] | null = dpmbRanges
-                    ? [...dpmbRanges].sort((a, b) => a.min - b.min)
-                    : null;
+
 
                 const features: AppVehicleFeature[] = [];
                 const nowMs = Date.now();
@@ -239,10 +214,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
                     const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
                     
-                    if (sortedDpmbRanges && liveMatch.properties.vehicle_id) {
+                    if (dpmbRanges && liveMatch.properties.vehicle_id) {
                         const num = parseInt(liveMatch.properties.vehicle_id, 10);
                         if (!isNaN(num)) {
-                            const rangeMatch = this.findDpmbRange(num, sortedDpmbRanges);
+                            const rangeMatch = findDpmbRange(num, dpmbRanges);
                             if (rangeMatch) {
                                 liveMatch.properties.vehicle_descriptor = {
                                     ...liveMatch.properties.vehicle_descriptor,

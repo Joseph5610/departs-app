@@ -21,6 +21,9 @@ export const MapControls = React.memo(() => {
     // Preferences Actions
     const { setIsSettingsOpen, setIsAlertsOpen } = usePreferencesStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const isFiltered = usePreferencesStore(
+        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
+    );
 
     // Routes
     const { isStatsRoute, isFavoritesRoute } = useRouteParams();
@@ -120,7 +123,10 @@ export const MapControls = React.memo(() => {
                         title={t('map.controls.settings')}
                         testId="map-settings-btn"
                     >
-                        <Settings size={20} strokeWidth={1.5} className="transition-transform hover:rotate-45" />
+                        <Settings size={20} strokeWidth={1.5} className={cn("transition-transform hover:rotate-45", isFiltered && "text-purple-400")} />
+                        {isFiltered && (
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_var(--color-purple-500)] pointer-events-none" />
+                        )}
                     </PillButton>
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
                     <PillButton

@@ -2,7 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleDetail } from "../../../../_core/types";
 import { GtfsRtVehicleDetailEnricher } from "../../../gtfs/services/vehicles/GtfsRtVehicleDetailEnricher";
 import type { VehiclesService } from "../../../gtfs/services/vehicles/VehiclesService";
-import { getDpmbVehicleMetadata } from "../../utils/dpmbVehicleMetadata";
+import { getDpmbVehicleRanges, findDpmbRange } from "../../utils/dpmbVehicleMetadata";
 
 /**
  * Brno-specific vehicle enricher.
@@ -22,17 +22,27 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
         const enrichedDetail = await super.enrich(detail, _ctx);
 
         // Apply static vehicle metadata for Brno (DPMB)
-        // We do this AFTER the live match so we have the most accurate vehicle_id
         let operator = 'IDS JMK';
-        if (enrichedDetail.vehicle_id) {
-            const meta = await getDpmbVehicleMetadata(enrichedDetail.vehicle_id);
-            if (meta) {
-                operator = 'DPMB';
-                enrichedDetail.vehicle_descriptor = {
-                    ...enrichedDetail.vehicle_descriptor,
-                    vehicle_type: meta.vehicle_type,
-                    is_air_conditioned: meta.is_air_conditioned !== undefined ? meta.is_air_conditioned : enrichedDetail.vehicle_descriptor?.is_air_conditioned
-                };
+        
+        // If the live match already enriched this with DPMB metadata
+        if (enrichedDetail.vehicle_descriptor?.vehicle_type) {
+            operator = 'DPMB';
+        } else if (enrichedDetail.vehicle_id) {
+            // Fallback for offline vehicles where we only have the ID and no live match
+            const num = parseInt(enrichedDetail.vehicle_id, 10);
+            if (!isNaN(num)) {
+                const ranges = await getDpmbVehicleRanges();
+                if (ranges) {
+                    const rangeMatch = findDpmbRange(num, ranges);
+                    if (rangeMatch) {
+                        operator = 'DPMB';
+                        enrichedDetail.vehicle_descriptor = {
+                            ...enrichedDetail.vehicle_descriptor,
+                            vehicle_type: rangeMatch.vehicle_type,
+                            is_air_conditioned: rangeMatch.is_air_conditioned !== undefined ? rangeMatch.is_air_conditioned : enrichedDetail.vehicle_descriptor?.is_air_conditioned
+                        };
+                    }
+                }
             }
         }
 

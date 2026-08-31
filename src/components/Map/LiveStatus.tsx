@@ -6,6 +6,8 @@ import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
 import { SystemStatusModal } from '../Modals/SystemStatusModal';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { Filter } from 'lucide-react';
 
 /**
  * LiveStatus Component
@@ -19,6 +21,9 @@ export const LiveStatus: React.FC = () => {
     const status = useSystemStatus();
 
     const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
+    const isFiltered = usePreferencesStore(
+        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
+    );
     const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -37,6 +42,29 @@ export const LiveStatus: React.FC = () => {
 
     if (!bounds) return null;
 
+    const getConfig = () => {
+        if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', dot: 'bg-neutral-500' };
+        if (status.type === 'app_error') return { text: t('liveStatus.appError'), color: 'text-destructive', dot: 'bg-destructive shadow-[0_0_8px_var(--color-destructive)]' };
+        if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-orange-500', dot: 'bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]' };
+        if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]' };
+        if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-amber-500', dot: 'bg-amber-500 animate-pulse' };
+        if (isFiltered) return {
+            text: t('liveStatus.filtered', 'FILTERED'),
+            color: 'text-purple-400',
+            dot: 'bg-purple-500 shadow-[0_0_8px_var(--color-purple-500)]',
+            icon: <Filter className="w-3 h-3 text-purple-400 shrink-0" />,
+            showCountdown: true
+        };
+        return {
+            text: t('liveStatus.live'),
+            color: 'text-primary',
+            dot: 'bg-primary shadow-[0_0_8px_var(--color-primary)]',
+            showCountdown: true
+        };
+    };
+
+    const config = getConfig();
+
     return (
         <div
             data-testid="live-status"
@@ -51,33 +79,21 @@ export const LiveStatus: React.FC = () => {
                     onClick={() => setIsModalOpen(true)}
                     className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
                 >
-                    <div className="flex items-center gap-2">
-                        <div className={cn(
-                            "w-2 h-2 rounded-full transition-colors duration-500",
-                            status.type === 'offline' ? "bg-neutral-500" :
-                                status.type === 'app_error' ? "bg-destructive shadow-[0_0_8px_var(--color-destructive)]" :
-                                    status.type === 'upstream_offline' ? "bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]" :
-                                        status.type === 'stale' ? "bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]" :
-                                            status.type === 'refreshing' ? "bg-amber-500 animate-pulse" : "bg-primary shadow-[0_0_8px_var(--color-primary)]"
-                        )} />
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
-                            {status.type === 'offline' ? (
-                                <span className="text-neutral-500">{t('liveStatus.offline')}</span>
-                            ) : status.type === 'app_error' ? (
-                                <span className="text-destructive">{t('liveStatus.appError')}</span>
-                            ) : status.type === 'upstream_offline' ? (
-                                <span className="text-orange-500">{t('liveStatus.upstreamError')}</span>
-                            ) : status.type === 'stale' ? (
-                                <span className="text-amber-500">{t('liveStatus.stale')}</span>
-                            ) : status.type === 'refreshing' ? (
-                                <span className="text-amber-500">{t('liveStatus.refreshing')}</span>
-                            ) : (
-                                <>
-                                    <span className="text-primary">{t('liveStatus.live')}</span>
-                                    <span className="text-muted-foreground/60 tabular-nums">{nextRefreshIn}s</span>
-                                </>
+                    <div className="flex items-center gap-1.5 h-3">
+                        <div className={cn("w-2 h-2 rounded-full transition-colors duration-500 shrink-0", config.dot)} />
+                        
+                        {config.icon}
+                        
+                        <div className="flex items-center gap-1.5 pt-[1px]">
+                            <span className={cn("text-[9px] font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
+                                {config.text}
+                            </span>
+                            {config.showCountdown && (
+                                <span className="text-[9px] font-bold text-muted-foreground/60 tabular-nums leading-none">
+                                    {nextRefreshIn}s
+                                </span>
                             )}
-                        </span>
+                        </div>
                     </div>
                 </button>
             </div>
