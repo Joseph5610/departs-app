@@ -21,40 +21,12 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 - **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno)
 - **Styling**: Tailwind CSS 4, Framer Motion
 
-## 🤖 Remote MCP Server (AI Integration)
+## 📚 Documentation
 
-`departs.app` hosts a public **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. No local package or CLI installation is required. You can connect AI assistants like **Claude** or other MCP-compatible clients directly to real-time transit data.
+For deep dives into how Departs works and how to set it up, check out our documentation:
 
-### Features & Available Tools
-
-- `search_stops`: Search stops/stations in Prague (PID) or Brno (IDS JMK).
-- `get_next_departures`: Real-time departures with delays, headsigns, and accessibility.
-- `get_realtime_vehicles`: Live vehicle GPS locations, line numbers, and delays.
-- `get_service_alerts`: Active traffic disruptions, closures, detours, and news.
-- `get_vehicle_detail`: Trip itinerary, schedule progress, and vehicle info.
-
-### Quick Connect
-
-#### Claude Code CLI
-
-```bash
-claude mcp add --transport sse departs https://departs.app/mcp
-```
-
-#### Claude Desktop (`claude_desktop_config.json`)
-
-Claude Desktop connects to public remote SSE endpoints using `mcp-remote` (no login/OAuth needed):
-
-```json
-{
-  "mcpServers": {
-    "departs": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://departs.app/mcp"]
-    }
-  }
-}
-```
+- [🚀 Production Deployment Guide](./docs/deployment.md) - Full Cloudflare deployment (KV, Turnstile, Zero Trust).
+- [🤖 Remote MCP Server](./docs/mcp-server.md) - Connect AI assistants to real-time transit data.
 
 ## 🚀 Local Development
 
@@ -62,7 +34,7 @@ Claude Desktop connects to public remote SSE endpoints using `mcp-remote` (no lo
 
 - **Node.js**: v24 or higher
 - **Wrangler**: `npm install -g wrangler` (for Cloudflare Functions)
-- **API Keys**: A free API key from [api.golemio.cz](https://api.golemio.cz/), free Cloudflare Turnstile API key for the Feedback system
+- **API Keys**: A free API key from [api.golemio.cz](https://api.golemio.cz/)
 
 ### Quick Setup
 
@@ -98,30 +70,6 @@ To create an optimized production build:
 ```bash
 npm run build
 ```
-
-## 🛡️ Feedback System & Admin Hub
-
-The application includes a built-in user feedback widget and an admin dashboard protected by Cloudflare Zero Trust. To set this up for production:
-
-1. **Cloudflare KV**:
-   - Create a KV namespace in your Cloudflare dashboard (e.g., `FEEDBACK_STORE`).
-   - Add the binding to your `wrangler.toml`:
-     ```toml
-     [[kv_namespaces]]
-     binding = "FEEDBACK_STORE"
-     id = "your_kv_namespace_id"
-     ```
-
-2. **Cloudflare Turnstile (Bot Protection)**:
-   - Create a Turnstile widget in Cloudflare.
-   - Add the keys to your Cloudflare Pages Environment Variables:
-     - `VITE_TURNSTILE_SITE_KEY` (Public)
-     - `TURNSTILE_SECRET_KEY` (Secret)
-
-3. **Cloudflare Access (Zero Trust)**:
-   - The `/admin/*` and `/api/admin/*` routes contain sensitive user feedback and diagnostic data.
-   - In your Cloudflare dashboard, navigate to Zero Trust and create an **Access Application** for the paths `/admin/*` and `/api/admin/*`.
-   - Set up a policy to allow only your personal email address or identity provider (e.g., GitHub) to access the dashboard.
 
 ## 🏗️ Project Structure
 
