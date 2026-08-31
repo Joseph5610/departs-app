@@ -1,5 +1,6 @@
 {
   "name": "departs-app",
+  "owner": "Joseph5610",
   "description": "Real-time Czech public transit (Prague PID & Brno IDS JMK) departures, live vehicle tracking, and traffic alerts.",
   "plugins": [
     {
@@ -9,6 +10,7 @@
       "version": "1.0.0",
       "mcpServers": {
         "departs": {
+          "type": "sse",
           "url": "https://departs.app/mcp"
         }
       }
