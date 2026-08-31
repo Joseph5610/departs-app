@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Scale, MessageSquareHeart } from 'lucide-react';
+import { RefreshCw, Clock, Database, Scale, MessageSquareHeart, GitBranch } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -120,6 +120,24 @@ export const SettingsFooter: React.FC = () => {
                         <ItemActions>
                             <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
                                 {t('settings.versionBadge', { version })}
+                            </Badge>
+                        </ItemActions>
+                    </Item>
+
+                    <Item
+                        variant="settings"
+                        size="none"
+                        render={<a href="https://github.com/joseph5610/departs-app" target="_blank" rel="noopener noreferrer" />}
+                    >
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <GitBranch size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">Open Source on GitHub</ItemTitle>
+                        </ItemContent>
+                        <ItemActions>
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                                Source
                             </Badge>
                         </ItemActions>
                     </Item>
