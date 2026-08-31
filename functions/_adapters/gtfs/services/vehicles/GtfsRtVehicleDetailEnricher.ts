@@ -3,7 +3,7 @@ import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "./VehiclesService";
 
-import { addSecondsToTime, getMinutesUntil } from '../../core/utils';
+import { addSecondsToTime, getMinutesUntil, getLocalSecondsFromISO, toSecs } from '../../core/utils';
 import { GTFS_CONFIG } from '../../core/config';
 
 /**
@@ -70,6 +70,14 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         
         detail.last_stop_sequence = resolvedSequence ?? liveMatch.properties.last_stop_sequence ?? undefined;
 
+        // 3.5. Estimate Delay if missing
+        if (detail.delay == null) {
+            const estimatedDelay = this.estimateLocalDelay(detail);
+            if (estimatedDelay !== null) {
+                detail.delay = estimatedDelay;
+            }
+        }
+
         // 4. Propagate Delays to Subsequent Stops
         const delay = detail.delay;
         if (typeof delay === 'number' && detail.stop_times?.features) {
@@ -129,6 +137,87 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         });
 
         return match;
+    }
+
+    /**
+     * Estimates the local delay by comparing the vehicle's real-time GPS timestamp
+     * against the static scheduled time for its current position.
+     * 
+     * @param detail The vehicle detail containing static stop times and live state.
+     * @returns The estimated delay in seconds, or null if it cannot be calculated.
+     */
+    protected estimateLocalDelay(detail: AppVehicleDetail): number | null {
+        if (!detail.origin_timestamp || !detail.stop_times?.features || detail.last_stop_sequence == null) {
+            return null;
+        }
+
+        if (detail.state_position && detail.state_position.startsWith('before_track')) {
+            return null;
+        }
+
+        const currentSeq = detail.last_stop_sequence;
+        
+        // Find the relevant stop in the static schedule
+        const currentTargetStopIndex = detail.stop_times.features.findIndex(f => f.properties.stop_sequence === currentSeq);
+        if (currentTargetStopIndex === -1) return null;
+        
+        const targetStop = detail.stop_times.features[currentTargetStopIndex];
+
+        const realSecs = getLocalSecondsFromISO(detail.origin_timestamp, this.vehiclesService.city.timezone);
+        if (realSecs === null) return null;
+
+        if (detail.state_position === 'at_stop') {
+            const targetTimeStr = targetStop.properties.arrival_time;
+            if (!targetTimeStr) return null;
+            const targetSecs = toSecs(targetTimeStr);
+            return this.calculateDelaySeconds(realSecs, targetSecs, detail.state_position);
+        }
+
+        // --- on_track logic (Time Bounding Box) ---
+        // For vehicles between stops, we establish a window based on the departure of the stop it just left (Stop A)
+        // and the arrival of the next stop it is approaching (Stop B).
+        const timeAStr = targetStop.properties.departure_time || targetStop.properties.arrival_time;
+        if (!timeAStr) return null;
+        const delayA = this.calculateDelaySeconds(realSecs, toSecs(timeAStr)); // Delay relative to leaving Stop A
+
+        const nextTargetStop = detail.stop_times.features[currentTargetStopIndex + 1];
+        if (nextTargetStop) {
+            const timeBStr = nextTargetStop.properties.arrival_time || nextTargetStop.properties.departure_time;
+            if (timeBStr) {
+                const delayB = this.calculateDelaySeconds(realSecs, toSecs(timeBStr)); // Delay relative to arriving at Stop B
+
+                // If real time is between Stop A departure and Stop B arrival, the bus is within its scheduled transit window.
+                if (delayA > 0 && delayB < 0) return 0; // Assume perfectly on time
+                
+                // If real time is past Stop B arrival, it is definitively late. We return the conservative lower bound.
+                if (delayB >= 0) return delayB;
+
+                // If real time is before Stop A departure, it is definitively early. We return the conservative lower bound.
+                if (delayA <= 0) return delayA;
+            }
+        }
+
+        // Fallback if there is no Stop B (e.g. end of line)
+        return delayA > 0 ? 0 : delayA;
+    }
+
+    /**
+     * Calculates the delay in seconds given real and scheduled times in seconds since midnight.
+     * Handles 24h/12h wrap-around boundaries and caps negative delays for vehicles already at a stop.
+     */
+    protected calculateDelaySeconds(realSecs: number, targetSecs: number, statePosition?: string): number {
+        let delaySecs = realSecs - targetSecs;
+        
+        // Handle midnight boundaries (e.g. 23:59 vs 00:01)
+        if (delaySecs < -43200) delaySecs += 86400; // -12h wrap
+        if (delaySecs > 43200) delaySecs -= 86400;  // +12h wrap
+
+        // Cap negative delay if stopped early, because the vehicle will wait for its scheduled departure
+        if (statePosition === 'at_stop' && delaySecs < 0) {
+            return 0;
+        }
+
+        return delaySecs;
     }
 
     /**

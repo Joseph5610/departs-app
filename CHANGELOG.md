@@ -4,6 +4,10 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.63.0] - 2026-08-31
+### Added
+- Local delay estimation fallback for GTFS-RT vehicles based on static schedules and real-time position.
+
 ## [0.62.9] - 2026-08-31
 
 ### Added

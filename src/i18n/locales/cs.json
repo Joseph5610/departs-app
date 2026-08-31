@@ -144,6 +144,7 @@
       "onTime": "Na čas",
       "unknownDelay": "Neznámé zpoždění",
       "delayLabel": "Zpoždění {{minutes}} min",
+      "estimatedPrefix": "Odh.",
       "earlyLabel": "Napřed {{minutes}} min",
       "routeSchedule": "Jízdní řád",
       "viewStopDepartures": "Zobrazit odjezdy pro {{stopName}}",

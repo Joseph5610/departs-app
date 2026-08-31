@@ -143,6 +143,7 @@
       "onTime": "On time",
       "unknownDelay": "Unknown delay",
       "delayLabel": "Delay {{minutes}} min",
+      "estimatedPrefix": "Est.",
       "earlyLabel": "Ahead {{minutes}} min",
       "routeSchedule": "Route Schedule",
       "viewStopDepartures": "View departures for {{stopName}}",

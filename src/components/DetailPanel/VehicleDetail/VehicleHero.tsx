@@ -131,6 +131,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                         isLate ? "text-rose-500" : isEarly ? "text-sky-500" : "text-emerald-500"
                                     )}
                                 >
+                                    {(!isEnriched && hasEnrichment) && `${t('map.vehicleDetails.estimatedPrefix')} `}
                                     {isLate
                                         ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
                                         : isEarly

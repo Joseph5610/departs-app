@@ -73,3 +73,31 @@ export const getZonedDateString = (timezone = 'Europe/Prague'): string => {
     const d = parts.find(p => p.type === 'day')?.value || '';
     return `${y}${m}${d}`;
 };
+
+/**
+ * Converts an ISO timestamp string to local seconds since midnight in the given IANA timezone.
+ * Returns null if the timestamp is invalid.
+ */
+export const getLocalSecondsFromISO = (isoString: string, timezone = 'Europe/Prague'): number | null => {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return null;
+
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+    });
+    
+    const pMap: Record<string, string> = {};
+    for (const p of formatter.formatToParts(date)) {
+        pMap[p.type] = p.value;
+    }
+    
+    const h = Number(pMap.hour || 0) % 24;
+    const m = Number(pMap.minute || 0);
+    const s = Number(pMap.second || 0);
+    
+    return h * 3600 + m * 60 + s;
+};
