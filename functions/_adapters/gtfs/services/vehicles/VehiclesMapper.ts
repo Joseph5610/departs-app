@@ -8,7 +8,7 @@ export class VehiclesMapper {
         vehicleObj: transit_realtime.IVehiclePosition,
         tripId: string,
         route: GtfsRoute,
-        lastUpdate: number,
+        originTimestamp: string,
         delay: number | null,
         isBeforeTrack: boolean = false
     ): AppVehicleFeature {
@@ -44,7 +44,7 @@ export class VehiclesMapper {
                 
                 delay: delay ?? null,
                 state_position: statePosition,
-                origin_timestamp: new Date(lastUpdate).toISOString(),
+                origin_timestamp: originTimestamp,
                 bearing: bearing ?? null,
                 
                 ...(vp.currentStopSequence && vp.currentStopSequence > 0 ? { last_stop_sequence: vp.currentStopSequence } : {}),

@@ -95,11 +95,11 @@ export class VehiclesService {
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
-                    const routeId = routeInfo.split('|')[0];
+                    const routeId = routeInfo.substring(0, routeInfo.indexOf('|'));
                     const route = gtfsData.routes[routeId];
                     if (!route) continue;
 
-                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null));
+                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null));
                 }
 
                 return { type: 'FeatureCollection', features, status: 'ok' };

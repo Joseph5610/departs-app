@@ -19,6 +19,7 @@ export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.
         `gtfs_rt_feed_${city.slug}`,
         CACHE_TTL.SHORT_DEBOUNCE_MS, // 3 seconds internal debounce
         async () => {
+            const t0 = Date.now();
             const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: 3 } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
@@ -28,8 +29,15 @@ export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.
                 return null;
             }
 
+            const t1 = Date.now();
             const buffer = await rtRes.arrayBuffer();
-            return transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+            const t2 = Date.now();
+            const decoded = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+            const t3 = Date.now();
+            
+            console.log(`[PERF] ${city.slug} GTFS-RT: fetch=${t1-t0}ms, buffer=${t2-t1}ms, decode=${t3-t2}ms, total=${t3-t0}ms`);
+            
+            return decoded;
         },
         (feed) => !feed || !feed.entity || feed.entity.length === 0
     );

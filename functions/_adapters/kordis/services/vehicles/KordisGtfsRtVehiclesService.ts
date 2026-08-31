@@ -58,7 +58,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
      */
     private isInvalidDpmbVehicle(entity: transit_realtime.IFeedEntity): boolean {
         const lp = entity.vehicle?.vehicle?.licensePlate;
-        return Boolean(lp && /^dpmb/i.test(lp.trim()));
+        if (!lp) return false;
+        return lp.trim().toLowerCase().startsWith('dpmb');
     }
 
     /**
@@ -126,6 +127,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
             CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
+                const tInitStart = Date.now();
                 const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
 
                 const [[feed, gtfsData], dpmbRanges] = await Promise.all([
@@ -138,6 +140,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 if (!isColdStart) {
                     apiData = await this.getApiMapping();
                 }
+                const tInitEnd = Date.now();
+                if (!isColdStart && apiData) {
+                    console.log(`[PERF] Brno api.json loading: ${tInitEnd - tInitStart}ms`);
+                }
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -145,15 +151,19 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
 
 
+                const tMapStart = Date.now();
                 const features: AppVehicleFeature[] = [];
                 const nowMs = Date.now();
 
                 // Group entities by label to handle duplicate vehicle IDs in the feed
-                const groupedEntities = new Map<string, transit_realtime.IFeedEntity[]>();
+                const groupedEntities: Record<string, transit_realtime.IFeedEntity[]> = {};
 
-                for (const entity of feed.entity) {
+                for (let i = 0; i < feed.entity.length; i++) {
+                    const entity = feed.entity[i];
                     if (!entity.vehicle) continue;
-                    if (this.isInvalidDpmbVehicle(entity)) continue;
+                    
+                    const lp = entity.vehicle.vehicle?.licensePlate;
+                    if (lp && lp.trim().toLowerCase().startsWith('dpmb')) continue;
 
                     const vp = entity.vehicle;
                     const tripId = vp.trip?.tripId;
@@ -162,12 +172,12 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
                     
-                    const label = vp.vehicle?.label || vp.vehicle?.licensePlate || vp.vehicle?.id || entity.id;
+                    const label = vp.vehicle?.label || lp || vp.vehicle?.id || entity.id;
                     
-                    if (!groupedEntities.has(label)) {
-                        groupedEntities.set(label, []);
+                    if (!groupedEntities[label]) {
+                        groupedEntities[label] = [];
                     }
-                    groupedEntities.get(label)!.push(entity);
+                    groupedEntities[label].push(entity);
                 }
 
                 let tripLookup: Record<string, ApiTrip> | null = null;
@@ -181,7 +191,11 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     currentMins = ctx.currentMinutes;
                 }
 
-                for (const [label, entities] of groupedEntities.entries()) {
+                const keys = Object.keys(groupedEntities);
+                for (let i = 0; i < keys.length; i++) {
+                    const label = keys[i];
+                    const entities = groupedEntities[label];
+
                     const selectedEntity = (entities.length > 1 && tripLookup)
                         ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins, gtfsData)
                         : entities[0];
@@ -206,11 +220,13 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
-                    const routeId = routeInfo.split('|')[0];
+                    const routeId = routeInfo.substring(0, routeInfo.indexOf('|'));
                     const route = gtfsData.routes[routeId];
                     if (!route) continue;
 
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
+                    const originTimestamp = new Date(lastUpdate).toISOString();
+                    
                     // Rewrite the vehicle ID to the label so it matches the group correctly.
                     // This prevents multiple markers from rendering if deduplication fails.
                     if (vp.vehicle) {
@@ -220,7 +236,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const tripInfo = this.findTripInfo(tripId, rawTripId, tripLookup);
                     const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
 
-                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, lastUpdate, null, isBeforeTrack);
+                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, originTimestamp, null, isBeforeTrack);
                     
                     if (dpmbRanges && liveMatch.properties.vehicle_id) {
                         const num = parseInt(liveMatch.properties.vehicle_id, 10);
@@ -238,6 +254,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
                     features.push(liveMatch);
                 }
+
+                const tMapEnd = Date.now();
+                console.log(`[PERF] Brno total array mapping loop: ${tMapEnd - tMapStart}ms (entities: ${feed.entity.length})`);
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
             },
