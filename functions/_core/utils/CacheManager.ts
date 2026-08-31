@@ -83,6 +83,18 @@ export class CacheManager {
     }
 
     /**
+     * Checks if a valid, unexpired entry exists in the memory cache
+     * @param key Unique key for the cache entry
+     * @param ttlMs Optional TTL to check against. If omitted, checks if it exists at all.
+     */
+    static has(key: string, ttlMs?: number): boolean {
+        const cached = memoryCache.get(key);
+        if (!cached) return false;
+        if (ttlMs === undefined) return true;
+        return Date.now() - cached.timestamp < ttlMs;
+    }
+
+    /**
      * Manually invalidates a cache entry
      */
     static invalidate(key: string) {

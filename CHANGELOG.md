@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Local delay estimation fallback for GTFS-RT vehicles based on static schedules and real-time position.
 
+### Fixed
+- Fixed critical "Worker exceeded CPU time limit" crashes in Brno caused by heavy API JSON parsing during cold starts.
+
 ## [0.62.9] - 2026-08-31
 
 ### Added

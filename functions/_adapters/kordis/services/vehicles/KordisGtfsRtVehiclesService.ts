@@ -15,23 +15,24 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     /**
      * Fetches the mapping of static trips from the adapter config staticDataUrl.
      */
-    private async getApiMapping(): Promise<{ mapping: ApiMapping, lookup: Map<string, ApiTrip> } | null> {
+    private async getApiMapping(): Promise<{ mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null> {
         const staticUrl = this.city.adapterConfig?.staticDataUrl;
         if (!staticUrl) return null;
         
         const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
 
-        return CacheManager.getOrFetch<{ mapping: ApiMapping, lookup: Map<string, ApiTrip> } | null>(
+        return CacheManager.getOrFetch<{ mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null>(
             `api_mapping_with_lookup_${this.city.slug}`, 
             CACHE_TTL.TWO_HOURS_MS,
             async () => {
                 try {
                     const resApi = await appClient.fetch(apiUrl, { cf: { cacheTtl: 7200 } });
                     const mapping = await resApi.json() as ApiMapping;
-                    const lookup = new Map<string, ApiTrip>();
+                    const lookup: Record<string, ApiTrip> = {};
                     for (const trips of Object.values(mapping)) {
-                        for (const trip of trips) {
-                            lookup.set(trip.trip_id, trip);
+                        for (let i = 0; i < trips.length; i++) {
+                            const trip = trips[i];
+                            lookup[trip.trip_id] = trip;
                         }
                     }
                     return { mapping, lookup };
@@ -66,7 +67,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
      */
     private selectBestEntity(
         entities: transit_realtime.IFeedEntity[],
-        tripLookup: Map<string, ApiTrip>,
+        tripLookup: Record<string, ApiTrip>,
         todayStr: string,
         currentMins: number,
         gtfsData: GtfsData | null
@@ -89,7 +90,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 tripId = rawTripId;
             }
             
-            const tripInfo = tripLookup.get(tripId);
+            const tripInfo = tripLookup[tripId];
             
             if (tripInfo) {
                 const operatesToday = tripInfo.dates ? tripInfo.dates.includes(todayStr) : true;
@@ -125,11 +126,18 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
             CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
-                const [[feed, gtfsData], apiData, dpmbRanges] = await Promise.all([
+                const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
+
+                const [[feed, gtfsData], dpmbRanges] = await Promise.all([
                     this.getCoreData(),
-                    this.getApiMapping(),
                     getDpmbVehicleRanges()
                 ]);
+
+                let apiData: { mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null = null;
+                // Defer heavy API mapping fetch on cold start to avoid CPU death loop
+                if (!isColdStart) {
+                    apiData = await this.getApiMapping();
+                }
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -162,7 +170,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     groupedEntities.get(label)!.push(entity);
                 }
 
-                let tripLookup: Map<string, ApiTrip> | null = null;
+                let tripLookup: Record<string, ApiTrip> | null = null;
                 let todayStr = '';
                 let currentMins = 0;
 
@@ -315,8 +323,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     /**
      * Resolves the correct trip information from the api mapping using the final or raw trip ID.
      */
-    private findTripInfo(tripId: string, rawTripId: string | undefined, tripLookup: Map<string, ApiTrip> | null): ApiTrip | undefined {
+    private findTripInfo(tripId: string, rawTripId: string | undefined, tripLookup: Record<string, ApiTrip> | null): ApiTrip | undefined {
         if (!tripLookup) return undefined;
-        return tripLookup.get(tripId) || (rawTripId ? tripLookup.get(rawTripId) : undefined);
+        return tripLookup[tripId] || (rawTripId ? tripLookup[rawTripId] : undefined);
     }
 }
