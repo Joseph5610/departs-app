@@ -10,6 +10,7 @@ export interface InitialCityConfig {
         stops: string[];
     };
     enrichmentChannel?: EnrichmentChannelAdapter;
+    hasInfotexts?: boolean;
 }
 
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
@@ -21,7 +22,8 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']
-        }
+        },
+        hasInfotexts: true
     },
     brno: {
         slug: 'brno',
@@ -31,6 +33,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []
         },
+        hasInfotexts: false,
         enrichmentChannel: {
             url: 'wss://gis.brno.cz/geoevent/ws/services/Kordis_stream/StreamServer/subscribe',
             transport: 'websocket',

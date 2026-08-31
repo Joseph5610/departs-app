@@ -79,8 +79,10 @@ export class VehiclesService {
                 const features: AppVehicleFeature[] = [];
                 // Filter out vehicles that haven't updated in GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS
                 const nowMs = Date.now();
+                const defaultIsoStr = new Date(nowMs).toISOString();
 
-                for (const entity of feed.entity) {
+                for (let i = 0; i < feed.entity.length; i++) {
+                    const entity = feed.entity[i];
                     if (!entity.vehicle) continue;
                     const vp = entity.vehicle;
                     
@@ -98,7 +100,8 @@ export class VehiclesService {
                     const route = gtfsData.routes[routeInfo];
                     if (!route) continue;
 
-                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null));
+                    const originTimestamp = lastUpdate === nowMs ? defaultIsoStr : new Date(lastUpdate).toISOString();
+                    features.push(VehiclesMapper.mapVehicle(vp, tripId, route, originTimestamp, null));
                 }
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
