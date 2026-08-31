@@ -32,4 +32,6 @@ export interface EnrichmentChannelAdapter<T = unknown> {
     pollIntervalMs?: number;
     /** Parses a raw message from the transport into our internal patch shape */
     normalize: EnrichmentNormalizer<T>;
+    /** Optional JSON payload to send upon WebSocket connection (e.g. for ArcGIS StreamServer filtering) */
+    wsFilterPayload?: Record<string, unknown>;
 }

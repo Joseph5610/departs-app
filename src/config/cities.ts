@@ -34,6 +34,12 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         enrichmentChannel: {
             url: 'wss://gis.brno.cz/geoevent/ws/services/Kordis_stream/StreamServer/subscribe',
             transport: 'websocket',
+            // Send filtering instructions right after the websocket connects
+            wsFilterPayload: { 
+                filter: { 
+                    outFields: "ID,Delay,LF,Course,TimeUpdated"
+                }
+            },
             normalize: (rawMsg: unknown) => {
                 const msg = rawMsg as { attributes?: Record<string, unknown> };
                 if (!msg || !msg.attributes) return null;

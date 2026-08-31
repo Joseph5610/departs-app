@@ -32,6 +32,11 @@ export const useEnrichmentChannel = (adapter: EnrichmentChannelAdapter | null) =
             ws.onopen = () => {
                 console.info(`[Enrichment] Connected to ${adapter.url}`);
                 attempt = 0;
+
+                if (adapter.wsFilterPayload && ws) {
+                    ws.send(JSON.stringify(adapter.wsFilterPayload));
+                }
+
                 flushInterval = window.setInterval(() => {
                     if (pendingPatches.length > 0) {
                         applyBatchedPatches(pendingPatches);

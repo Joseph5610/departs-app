@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.62.7] - 2026-08-31
+
+### Changed
+- Optimized Brno ArcGIS StreamServer connection by requesting only necessary fields (`outFields`) and adding dynamic attribute filtering support.
+
 ## [0.62.6] - 2026-08-19
 
 ### Fixed
