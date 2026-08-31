@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.63.2] - 2026-09-01
+### Fixed
+- Fixed 1px right border clipping issue across all ScrollArea components by introducing a 1px viewport padding.
+
+## [0.63.1] - 2026-09-01
+### Fixed
+- Fixed missing backdrop-filter blur on Map overlays in production and Firefox by resolving CSS minification conflicts and native support.
+
 ## [0.63.0] - 2026-08-31
 ### Added
 - Local delay estimation fallback for GTFS-RT vehicles based on static schedules and real-time position.
