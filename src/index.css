@@ -288,12 +288,6 @@
   
   backface-visibility: hidden;
 
-  /* Firefox WebGL backdrop-filter workaround (Firefox Bug 1746885) */
-  @supports (-moz-appearance: none) {
-    background-color: var(--card);
-    background: var(--glass-fallback, color-mix(in srgb, var(--background) 96%, transparent));
-  }
-
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background-color: var(--card);
     background: var(--glass-fallback, var(--card));
@@ -304,11 +298,6 @@
     background-color: var(--card);
     background: var(--glass-bg, color-mix(in srgb, var(--background) 90%, transparent));
     @apply border-white/10;
-
-    @supports (-moz-appearance: none) {
-      background-color: var(--card);
-      background: var(--glass-fallback, color-mix(in srgb, var(--background) 96%, transparent));
-    }
 
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       background-color: var(--card);
