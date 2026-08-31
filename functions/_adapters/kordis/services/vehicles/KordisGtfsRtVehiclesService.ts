@@ -220,8 +220,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
-                    const routeId = routeInfo.substring(0, routeInfo.indexOf('|'));
-                    const route = gtfsData.routes[routeId];
+                    const route = gtfsData.routes[routeInfo];
                     if (!route) continue;
 
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;

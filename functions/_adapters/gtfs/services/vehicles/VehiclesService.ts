@@ -95,8 +95,7 @@ export class VehiclesService {
                     const routeInfo = gtfsData.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
-                    const routeId = routeInfo.substring(0, routeInfo.indexOf('|'));
-                    const route = gtfsData.routes[routeId];
+                    const route = gtfsData.routes[routeInfo];
                     if (!route) continue;
 
                     features.push(VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null));
