@@ -21,7 +21,7 @@ export class StopsMapper {
                     geometry: f.geometry,
                     properties: {
                         stop_id: f.properties.stop_id,
-                        stop_name: enrichment?.n || f.properties.stop_name,
+                        stop_name: enrichment?.n || f.properties.stop_name || '',
                         location_type: f.properties.location_type,
                         parent_station: f.properties.parent_station ?? null,
                         platform_code: f.properties.platform_code ?? null,

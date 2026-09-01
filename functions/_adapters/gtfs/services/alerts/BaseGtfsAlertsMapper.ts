@@ -27,8 +27,10 @@ export class BaseGtfsAlertsMapper {
         const cleaned = text
             .replace(/<br\s*\/?>/gi, '\n')
             .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
-            .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
-            .replace(/<[^>]*>/g, '')
+            // Simplified from /<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi to prevent regex backtracking overhead
+            .replace(/<(p|div|li|ul|ol|h[1-6])\b.*?>/gi, '\n')
+            // Simplified from /<[^>]*>/g
+            .replace(/<.*?>/g, '')
             .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
             .replace(/[\r\t]+/g, '\n');
 

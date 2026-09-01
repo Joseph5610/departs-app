@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const golemioStopPropertiesSchema = z.object({
     stop_id: z.string(),
-    stop_name: z.string().nullable().transform(v => v || ''),
+    stop_name: z.string().nullable(),
     location_type: z.number(),
     parent_station: z.string().nullable().optional(),
     platform_code: z.string().nullable().optional(),
@@ -24,11 +24,6 @@ export type GolemioStopFeature = z.infer<typeof golemioStopFeatureSchema>;
 
 export const golemioStopPayloadSchema = z.object({
     type: z.literal('FeatureCollection'),
-    features: z.array(golemioStopFeatureSchema.nullable().catch((ctx) => {
-        const inputObj = ctx.value as { properties?: { stop_id?: string | number } } | null | undefined;
-        const stopId = inputObj?.properties?.stop_id ? String(inputObj.properties.stop_id) : 'unknown';
-        console.warn(`[WARNING] Skipping invalid stop feature (${stopId}):`, ctx);
-        return null;
-    })).transform(arr => arr.filter((f): f is GolemioStopFeature => f !== null))
+    features: z.array(golemioStopFeatureSchema.nullable())
 });
 

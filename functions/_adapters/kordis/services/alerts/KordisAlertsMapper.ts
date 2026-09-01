@@ -77,11 +77,11 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
         let map = this.kordisRouteMapCache.get(gtfsData);
         if (!map) {
             map = new Map<string, GtfsRoute>();
-            for (const [key, route] of Object.entries(gtfsData.routes)) {
+            for (const key in gtfsData.routes) {
                 // GTFS key format: "L120D99" -> shortId = "120"
                 const match = /^L([A-Z0-9]+)D/i.exec(key);
                 if (match) {
-                    map.set(match[1].toUpperCase(), route);
+                    map.set(match[1].toUpperCase(), gtfsData.routes[key]);
                 }
             }
             this.kordisRouteMapCache.set(gtfsData, map);

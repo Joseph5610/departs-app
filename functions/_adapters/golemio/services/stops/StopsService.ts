@@ -1,13 +1,14 @@
 
 import { Env, AppStopCollection } from "../../../../_core/types";
-import { GolemioStopFeature, golemioStopPayloadSchema } from "./schemas";
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { GolemioStopFeature } from "./schemas";
+import { ERROR_MESSAGES } from "../../../../_core/api-utils";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
 import { GolemioClient } from "../../core/GolemioClient";
 import { processStops } from "./grouping";
 import { StopsMapper } from "./StopsMapper";
 import { getEnrichmentData } from "./enrichment";
+import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
 
 /**
  * Service for fetching and processing physical transit stops.
@@ -24,30 +25,39 @@ export class StopsService {
      * @returns {Promise<AppStopCollection>} Object containing a FeatureCollection of grouped and enriched stop features
      */
     async getStops(env: Env): Promise<AppStopCollection> {
-        const enrichmentData = await getEnrichmentData();
+        return CacheManager.getOrFetch('golemio_stops_prague', CACHE_TTL.TWO_HOURS_MS, async () => {
+            const enrichmentData = await getEnrichmentData();
 
-        const fetchAllGolemioStops = async (): Promise<GolemioStopFeature[]> => {
-            const limit = GOLEMIO_CONFIG.STOPS_FETCH_LIMIT;
-            const maxOffset = GOLEMIO_CONFIG.STOPS_MAX_OFFSET;
-            const pageCount = Math.ceil(maxOffset / limit);
-            const offsets = Array.from({ length: pageCount }, (_, i) => i * limit);
-            const results = await Promise.all(offsets.map(async (offset) => {
-                const res = await this.client.fetch("/v2/gtfs/stops", env, {
-                    cacheTtl: CACHE_TTL.GTFS_DATA,
-                    searchParams: { limit: limit.toString(), offset: offset.toString() }
-                });
-                if (!res.ok) return [];
-                const rawData = await res.json();
-                const parsed = golemioStopPayloadSchema.safeParse(rawData);
-                if (!parsed.success) {
-                    console.error("Critical Golemio stops structural change:", parsed.error);
-                    return [];
-                }
-                const features = parsed.data.features;
-                return features.filter((f): f is NonNullable<typeof f> => f !== null);
-            }));
-            return results.flat();
-        };
+            const fetchAllGolemioStops = async (): Promise<GolemioStopFeature[]> => {
+                const limit = GOLEMIO_CONFIG.STOPS_FETCH_LIMIT;
+                const maxOffset = GOLEMIO_CONFIG.STOPS_MAX_OFFSET;
+                const pageCount = Math.ceil(maxOffset / limit);
+                const offsets = Array.from({ length: pageCount }, (_, i) => i * limit);
+                
+                const results = await Promise.all(offsets.map(async (offset) => {
+                    const res = await this.client.fetch("/v2/gtfs/stops", env, {
+                        cacheTtl: 7200,
+                        searchParams: { limit: limit.toString(), offset: offset.toString() }
+                    });
+                    if (!res.ok) return [];
+                    
+                    const rawData = await res.json() as { features?: unknown[] };
+                    
+                    // Bypass Zod safeParse here to prevent 10ms CPU limit crashes on cold cache
+                    if (!rawData || !Array.isArray(rawData.features)) {
+                        console.error("Critical Golemio stops structural change: missing features array");
+                        return [];
+                    }
+                    
+                    const features = rawData.features;
+                    return features.filter((f: unknown): f is GolemioStopFeature => 
+                        f !== null && 
+                        typeof f === 'object' && 
+                        'properties' in f
+                    );
+                }));
+                return results.flat();
+            };
 
             const allRawStops = await fetchAllGolemioStops();
             if (allRawStops.length === 0) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
@@ -57,5 +67,6 @@ export class StopsService {
 
             const features = processStops(enrichedStops);
             return { type: "FeatureCollection", features };
+        });
     }
 }

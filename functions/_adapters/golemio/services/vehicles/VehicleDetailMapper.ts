@@ -28,7 +28,7 @@ export class VehicleDetailMapper {
         const feature = data.features?.[0];
         const p = feature?.properties ?? data;
         const geometry = feature?.geometry ?? data.geometry;
-        const extracted_vehicle_id = p.vehicle_id || p.id || '';
+        const extracted_vehicle_id = p.vehicle_id ? String(p.vehicle_id) : (p.id ? String(p.id) : '');
         const gtfs_trip_id = p.gtfs_trip_id || tripId;
         const route_short_name = p.route_short_name || '';
         const route_type = normalizeRouteType(p.route_type || '');
@@ -67,11 +67,12 @@ export class VehicleDetailMapper {
         };
 
         // Process Stop Times (The schedule of stops for this trip)
-        const stopTimesData = data.stop_times;
-        if (stopTimesData?.features) {
+        if (data.stop_times && Array.isArray(data.stop_times.features)) {
             vehicleData.stop_times = {
-                features: stopTimesData.features.map((st: GolemioStopTimeFeature) => {
-                    const stProps = st.properties;
+                features: data.stop_times.features
+                    .filter((st: GolemioStopTimeFeature | null): st is GolemioStopTimeFeature => st != null && st.properties != null)
+                    .map((st) => {
+                        const stProps = st.properties;
                     const stopId = stProps.stop_id || '';
                     const stopName = stProps.stop_name;
                     let metroLines = enrichmentData.stopIdToMetroLines.get(stopId) || [];

@@ -10,20 +10,20 @@ const golemioVehicleDescriptorSchema = z.object({
 
 
 const golemioVehiclePropertiesSchema = z.object({
-    vehicle_id: z.coerce.string().nullish(),
-    id: z.coerce.string().nullish(),
+    vehicle_id: z.union([z.string(), z.number()]).nullish(),
+    id: z.union([z.string(), z.number()]).nullish(),
     gtfs_trip_id: z.string().nullish(),
     route_short_name: z.string().nullish(),
     gtfs_route_short_name: z.string().nullish(),
-    route_type: z.coerce.string().nullish(),
+    route_type: z.union([z.string(), z.number()]).nullish(),
     trip_headsign: z.string().nullish(),
     gtfs_trip_headsign: z.string().nullish(),
-    bearing: z.coerce.number().nullish(),
-    delay: z.coerce.number().nullish(),
-    state_position: z.string().nullish().transform(v => v ?? 'unknown'),
-    last_stop_sequence: z.coerce.number().nullish(),
+    bearing: z.number().nullish(),
+    delay: z.number().nullish(),
+    state_position: z.string().nullish(),
+    last_stop_sequence: z.number().nullish(),
     origin_timestamp: z.string().nullish(),
-    run_number: z.coerce.string().nullish(),
+    run_number: z.union([z.string(), z.number()]).nullish(),
     shape_dist_traveled: z.number().nullish(),
     vehicle_descriptor: golemioVehicleDescriptorSchema.nullish(),
 });
@@ -77,10 +77,10 @@ export type GolemioShapeFeature = z.infer<typeof golemioShapeFeatureSchema>;
 
 export const golemioVehiclePayloadSchema = golemioVehiclePropertiesSchema.partial().extend({
     type: z.string().optional(),
-    features: z.array(golemioVehicleFeatureSchema.nullable().catch(null)).nullish().transform(arr => arr ? arr.filter((f): f is GolemioVehicleFeature => f !== null) : undefined),
+    features: z.array(golemioVehicleFeatureSchema.nullable()).nullish(),
     geometry: z.object({ type: z.literal('Point'), coordinates: z.tuple([z.number(), z.number()]) }).nullish(),
     stop_times: z.object({ 
-        features: z.array(golemioStopTimeFeatureSchema.nullable().catch(null)).transform(arr => arr.filter((f): f is GolemioStopTimeFeature => f !== null))
+        features: z.array(golemioStopTimeFeatureSchema.nullable())
     }).nullish(),
     shapes: z.union([
         z.array(golemioShapeFeatureSchema),
