@@ -28,7 +28,8 @@ export async function handleSearchStops(
     const filtered = features.filter((f) => {
         const nameMatch = f.properties?.stop_name?.toLowerCase().includes(query);
         const idMatch = String(f.properties?.stop_id || "").toLowerCase().includes(query);
-        return nameMatch || idMatch;
+        const isCentroid = f.properties?.is_centroid;
+        return (nameMatch || idMatch) && !isCentroid;
     }).slice(0, limit);
 
     return {
@@ -38,6 +39,7 @@ export async function handleSearchStops(
         stops: filtered.map((f) => ({
             stop_id: f.properties?.stop_id,
             stop_name: f.properties?.stop_name,
+            platform_code: f.properties?.platform_code || null,
             is_centroid: f.properties?.is_centroid,
             coordinates: f.geometry?.coordinates,
             lines: f.properties?.lines || []

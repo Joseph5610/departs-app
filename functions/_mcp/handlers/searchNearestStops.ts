@@ -33,7 +33,7 @@ export async function handleSearchNearestStops(
     const stopsWithDistance: Array<{ feature: AppStopCollection['features'][0]; distance: number }> = [];
 
     for (const f of stopsData?.features || []) {
-        if (f.geometry?.coordinates) {
+        if (f.geometry?.coordinates && !f.properties?.is_centroid) {
             const [stopLon, stopLat] = f.geometry.coordinates;
             const dist = calculateHaversineDistanceMeters(lat, lon, stopLat, stopLon);
             if (dist <= radiusMeters) {
@@ -52,6 +52,7 @@ export async function handleSearchNearestStops(
         stops: stopsWithDistance.slice(0, limit).map(({ feature: f, distance }) => ({
             stop_id: f.properties?.stop_id,
             stop_name: f.properties?.stop_name,
+            platform_code: f.properties?.platform_code || null,
             distance_meters: distance,
             is_centroid: f.properties?.is_centroid,
             coordinates: f.geometry?.coordinates,

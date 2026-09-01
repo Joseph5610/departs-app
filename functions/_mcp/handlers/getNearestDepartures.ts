@@ -33,7 +33,7 @@ export async function handleGetNearestDepartures(
     const stopsWithDistance: Array<{ feature: AppStopCollection['features'][0]; distance: number }> = [];
 
     for (const f of stopsData?.features || []) {
-        if (f.geometry?.coordinates) {
+        if (f.geometry?.coordinates && !f.properties?.is_centroid) {
             const [stopLon, stopLat] = f.geometry.coordinates;
             const dist = calculateHaversineDistanceMeters(lat, lon, stopLat, stopLon);
             stopsWithDistance.push({ feature: f, distance: dist });
@@ -56,7 +56,12 @@ export async function handleGetNearestDepartures(
         const sName = feature.properties?.stop_name;
         if (!sId) continue;
 
-        const searchParams: Record<string, string> = { stopId: sId, limit: String(limit) };
+        const searchParams = new URLSearchParams();
+        searchParams.set("limit", String(limit));
+        sId.split(',').forEach(id => {
+            if (id.trim()) searchParams.append("stopId", id.trim());
+        });
+        
         const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/departures`, searchParams);
 
         try {
@@ -95,6 +100,7 @@ export async function handleGetNearestDepartures(
                         delay_seconds: d.delay ?? null,
                         delay_minutes: d.delay != null ? Math.round((d.delay) / 60 * 10) / 10 : null,
                         is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
+                        platform: d.platform ?? null,
                         trip_id: d.tripId,
                         vehicle_id: d.vehicleId
                     }))

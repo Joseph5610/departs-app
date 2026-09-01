@@ -20,13 +20,17 @@ export function createMockContext(
     ctx: EventContext<Env, string, unknown>,
     citySlug: string,
     urlPath: string,
-    searchParams?: Record<string, string>
+    searchParams?: Record<string, string> | URLSearchParams
 ): EventContext<Env, string, unknown> {
     const url = new URL(`https://departs.app${urlPath}`);
     if (searchParams) {
-        Object.entries(searchParams).forEach(([k, v]) => {
-            if (v !== undefined) url.searchParams.set(k, v);
-        });
+        if (searchParams instanceof URLSearchParams) {
+            searchParams.forEach((v, k) => url.searchParams.append(k, v));
+        } else {
+            Object.entries(searchParams).forEach(([k, v]) => {
+                if (v !== undefined) url.searchParams.set(k, v);
+            });
+        }
     }
 
     const request = new Request(url.toString(), {

@@ -4,6 +4,11 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.63.3] - 2026-09-01
+### Fixed
+- Fixed MCP connector silent failures by correctly mapping comma-separated `stop_id` query arrays and explicitly omitting UI-only virtual map centroids from search results.
+- Expose `platform` and `platform_code` correctly to the MCP tools.
+
 ## [0.63.2] - 2026-09-01
 ### Fixed
 - Fixed 1px right border clipping issue across all ScrollArea components by introducing a 1px viewport padding.

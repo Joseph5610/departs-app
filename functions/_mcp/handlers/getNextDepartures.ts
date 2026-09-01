@@ -70,8 +70,14 @@ export async function handleGetNextDepartures(
         return { error: "Either 'stop_id', 'stop_name', or ('latitude' and 'longitude') must be provided." };
     }
 
-    // Note: Api query parameter schema expects 'stopId', not 'ids'
-    const searchParams: Record<string, string> = { stopId: stopId, limit: String(limit) };
+    const searchParams = new URLSearchParams();
+    searchParams.set("limit", String(limit));
+    stopId.split(',').forEach(id => {
+        if (id.trim()) {
+            searchParams.append("stopId", id.trim());
+        }
+    });
+
     const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/departures`, searchParams);
     const departuresData = await adapter.handleDepartures(mockCtx) as AppDepartureResponse;
 
@@ -108,6 +114,7 @@ export async function handleGetNextDepartures(
             delay_seconds: d.delay ?? null,
             delay_minutes: d.delay != null ? Math.round((d.delay) / 60 * 10) / 10 : null,
             is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
+            platform: d.platform ?? null,
             trip_id: d.tripId,
             vehicle_id: d.vehicleId
         }))
