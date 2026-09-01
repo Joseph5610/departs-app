@@ -5,7 +5,6 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
-import { getDpmbVehicleRanges, findDpmbRange } from '../../utils/dpmbVehicleMetadata';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 import type { GtfsData } from '../../../gtfs/core/gtfs-data';
@@ -130,9 +129,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 const tInitStart = Date.now();
                 const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
 
-                const [[feed, gtfsData], dpmbRanges] = await Promise.all([
-                    this.getCoreData(),
-                    getDpmbVehicleRanges()
+                const [[feed, gtfsData]] = await Promise.all([
+                    this.getCoreData()
                 ]);
 
                 let apiData: { mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null = null;
@@ -142,7 +140,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 }
                 const tInitEnd = Date.now();
                 if (!isColdStart && apiData) {
-                    console.log(`[PERF] Brno api.json loading: ${tInitEnd - tInitStart}ms`);
+                    console.log(`[PERF] Brno initialization (core + dpmb + api_mapping): ${tInitEnd - tInitStart}ms`);
                 }
 
                 if (!feed || !feed.entity) {
@@ -162,8 +160,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const entity = feed.entity[i];
                     if (!entity.vehicle) continue;
                     
-                    const lp = entity.vehicle.vehicle?.licensePlate;
-                    if (lp && lp.trim().toLowerCase().startsWith('dpmb')) continue;
+                    if (this.isInvalidDpmbVehicle(entity)) continue;
 
                     const vp = entity.vehicle;
                     const tripId = vp.trip?.tripId;
@@ -172,7 +169,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
                     
-                    const label = vp.vehicle?.label || lp || vp.vehicle?.id || entity.id;
+                    const label = vp.vehicle?.label || vp.vehicle?.licensePlate || vp.vehicle?.id || entity.id;
                     
                     if (!groupedEntities[label]) {
                         groupedEntities[label] = [];
@@ -236,20 +233,6 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
 
                     const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, originTimestamp, null, isBeforeTrack);
-                    
-                    if (dpmbRanges && liveMatch.properties.vehicle_id) {
-                        const num = parseInt(liveMatch.properties.vehicle_id, 10);
-                        if (!isNaN(num)) {
-                            const rangeMatch = findDpmbRange(num, dpmbRanges);
-                            if (rangeMatch) {
-                                liveMatch.properties.vehicle_descriptor = {
-                                    ...liveMatch.properties.vehicle_descriptor,
-                                    vehicle_type: rangeMatch.vehicle_type,
-                                    is_air_conditioned: rangeMatch.is_air_conditioned !== undefined ? rangeMatch.is_air_conditioned : liveMatch.properties.vehicle_descriptor?.is_air_conditioned
-                                };
-                            }
-                        }
-                    }
 
                     features.push(liveMatch);
                 }
