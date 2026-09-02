@@ -34,14 +34,6 @@ export class DeparturesService {
 
         try {
             const parentToChildMap = await this.getParentChildMap(staticDataUrl);
-            const allValidStopIds = await this.getAllValidStopIds(parentToChildMap);
-
-            const hasValidStop = stopIds.some(id => allValidStopIds.has(id));
-
-            if (!hasValidStop) {
-                throw new ApiError(ERROR_MESSAGES.INVALID_STOP_ID, 404);
-            }
-
             const { targetIds, childToRequestedMap } = this.resolveTargetStopIds(stopIds, parentToChildMap);
             const allDeps = await this.fetchDepartureTuples(targetIds, childToRequestedMap, staticDataUrl);
 
@@ -72,18 +64,7 @@ export class DeparturesService {
         );
     }
 
-    private async getAllValidStopIds(parentToChildMap: Record<string, string[]>): Promise<Set<string>> {
-        return CacheManager.getOrFetch(
-            `valid_stops_set_${this.city.slug}`,
-            CACHE_TTL.TWO_HOURS_MS,
-            async () => {
-                return new Set([
-                    ...Object.keys(parentToChildMap),
-                    ...Object.values(parentToChildMap).flat()
-                ]);
-            }
-        );
-    }
+
 
     private resolveTargetStopIds(stopIds: string[], parentToChildMap: Record<string, string[]>) {
         const targetIds: string[] = [];

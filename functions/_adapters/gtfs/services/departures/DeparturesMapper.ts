@@ -45,13 +45,34 @@ export class DeparturesMapper {
             }
         }
 
-        const mapped = filtered.map(d => {
+        const sortableDeps = filtered.map(d => {
+            const [trip_id, , , timestamp_ms] = d.tuple;
+            let delaySecs: number | null = null;
+            if (rtVehicles) {
+                const rtProps = tripIndex.get(trip_id);
+                if (rtProps && typeof rtProps.delay === 'number') {
+                    delaySecs = rtProps.delay;
+                }
+            }
+            const rtTimestampMs = timestamp_ms + ((delaySecs || 0) * 1000);
+            return { d, rtTimestampMs, delaySecs };
+        });
+
+        const topDeps = sortableDeps
+            // Send departures that were scheduled/expected up to 15 mins ago to the frontend.
+            // The backend cache for delays often misses, so it thinks the bus already left.
+            // By sending it anyway, the frontend can apply the live map delay and resurrect it.
+            .filter(item => item.rtTimestampMs >= now - GTFS_CONFIG.DEPARTURES_RESURRECT_WINDOW_MS)
+            .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
+            .slice(0, 150);
+
+        return topDeps.map(item => {
+            const { d, rtTimestampMs, delaySecs } = item;
             const { stopId, tuple } = d;
             const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible, is_request_stop_num] = tuple;
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
-            let delaySecs: number | null = null;
             let isAirConditioned: boolean | null = null;
             let isWheelchairAccessible: boolean | null = null;
 
@@ -65,9 +86,6 @@ export class DeparturesMapper {
                 const rtProps = tripIndex.get(trip_id);
                 if (rtProps) {
                     vId = rtProps.vehicle_id || undefined;
-                    if (typeof rtProps.delay === 'number') {
-                        delaySecs = rtProps.delay;
-                    }
                     if (rtProps.vehicle_descriptor?.is_air_conditioned !== undefined) {
                         isAirConditioned = rtProps.vehicle_descriptor.is_air_conditioned;
                     }
@@ -77,8 +95,6 @@ export class DeparturesMapper {
                 }
             }
 
-            const rtTimestampMs = timestamp_ms + ((delaySecs || 0) * 1000);
-
             return {
                 tripId: trip_id,
                 vehicleId: vId,
@@ -86,8 +102,8 @@ export class DeparturesMapper {
                 type: normalizeRouteType(route ? route.type : 'unknown'), 
                 directionId: '0', 
                 headsign: headsign,
-                scheduledTimestampMs: timestamp_ms,
-                rtTimestampMs,
+                scheduled: new Date(timestamp_ms).toISOString(),
+                timestamp: new Date(rtTimestampMs).toISOString(),
                 delay: delaySecs,
                 isCanceled: false,
                 route_color: route ? String(route.route_color) : undefined,
@@ -95,32 +111,7 @@ export class DeparturesMapper {
                 is_air_conditioned: isAirConditioned,
                 is_wheelchair_accessible: isWheelchairAccessible,
                 is_request_stop: is_request_stop_num === 1
-            };
+            } as AppDeparture;
         });
-
-        return mapped
-            // Send departures that were scheduled/expected up to 15 mins ago to the frontend.
-            // The backend cache for delays often misses, so it thinks the bus already left.
-            // By sending it anyway, the frontend can apply the live map delay and resurrect it.
-            .filter(d => d.rtTimestampMs >= now - GTFS_CONFIG.DEPARTURES_RESURRECT_WINDOW_MS)
-            .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
-            .slice(0, 150)
-            .map(d => ({
-                tripId: d.tripId,
-                vehicleId: d.vehicleId,
-                line: d.line,
-                type: d.type, 
-                directionId: d.directionId, 
-                headsign: d.headsign,
-                scheduled: new Date(d.scheduledTimestampMs).toISOString(),
-                timestamp: new Date(d.rtTimestampMs).toISOString(),
-                delay: d.delay,
-                isCanceled: d.isCanceled,
-                route_color: d.route_color,
-                stopId: d.stopId,
-                is_air_conditioned: d.is_air_conditioned,
-                is_wheelchair_accessible: d.is_wheelchair_accessible,
-                is_request_stop: d.is_request_stop
-            } as AppDeparture));
     }
 }

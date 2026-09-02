@@ -4,62 +4,75 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.64.0] - 2026-09-02
-### Added
-- Implemented MCP Server Card at `/.well-known/mcp/server-card.json` for standardized agent discovery (SEP-1649).
-
 ## [0.63.4] - 2026-09-01
+
 ### Fixed
+
 - Fixed vehicle tracking on ended trips by treating mismatched GTFS-RT live vehicles as a static fallback instead of interpolating them onto the old route.
 
 ## [0.63.3] - 2026-09-01
+
 ### Fixed
+
 - Fixed MCP connector silent failures by correctly mapping comma-separated `stop_id` query arrays and explicitly omitting UI-only virtual map centroids from search results.
 - Expose `platform` and `platform_code` correctly to the MCP tools.
 
 ## [0.63.2] - 2026-09-01
+
 ### Fixed
+
 - Fixed 1px right border clipping issue across all ScrollArea components by introducing a 1px viewport padding.
 
 ## [0.63.1] - 2026-09-01
+
 ### Fixed
+
 - Fixed missing backdrop-filter blur on Map overlays in production and Firefox by resolving CSS minification conflicts and native support.
 
 ## [0.63.0] - 2026-08-31
+
 ### Added
+
 - Local delay estimation fallback for GTFS-RT vehicles based on static schedules and real-time position.
 
 ### Fixed
+
 - Fixed critical "Worker exceeded CPU time limit" crashes in Brno caused by heavy API JSON parsing during cold starts.
 
 ## [0.62.9] - 2026-08-31
 
 ### Added
+
 - Added visual indicator (FILTERED) to the Live status pill on the map when transit filters are active.
 
 ## [0.62.7] - 2026-08-31
 
 ### Changed
+
 - Optimized Brno ArcGIS StreamServer connection by requesting only necessary fields (`outFields`) and adding dynamic attribute filtering support.
 
 ## [0.62.6] - 2026-08-19
 
 ### Fixed
+
 - Fixed an issue where Cloudflare Access authorization flows (paths under `/cdn-cgi/`) were being intercepted by the PWA service worker, breaking the `/admin` login redirect.
 
 ## [0.62.5] - 2026-08-18
 
 ### Fixed
+
 - Fixed an issue where the Kordis vehicle mapping logic incorrectly prioritized stale trips over active ones if they appeared earlier in the GTFS-RT feed.
 
 ## [0.62.4] - 2026-08-16
 
 ### Added
+
 - Feature parity for Brno GTFS static data to extract and display `zone_id` on the vehicle timeline.
 
 ## [0.62.3] - 2026-08-16
 
 ### Fixed
+
 - E2E tests: Correctly configure `departs-preferences` localStorage structure, preventing the Welcome Modal from blocking tests.
 
 ## [0.62.2] - 2026-08-16

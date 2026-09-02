@@ -22,8 +22,6 @@ export class AlertsService {
     constructor(private client: GolemioClient) {}
 
     private async fetchExclusionsFeed(): Promise<string> {
-        // We use the unified appClient which brings an 8.5s timeout by default.
-        // RSS Exclusions might be a bit slow, but if it takes > 8.5s we want it to timeout anyway.
         const response = await appClient.fetch(GOLEMIO_CONFIG.FEEDS.exclusions, {
             headers: {
                 'Accept': 'application/rss+xml, application/xml, text/xml'
@@ -40,19 +38,26 @@ export class AlertsService {
         return await response.text();
     }
 
+    private async fetchIncidentsFeed(env: Env) {
+        const response = await this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch PB alerts: ${response.status}`);
+        }
+        const buffer = await response.arrayBuffer();
+        return transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+    }
     /**
      * Fetches raw alerts data for debug feeds.
      */
     async getRawFeed(env: Env) {
-        const [pbRes, exclusionsRes] = await Promise.allSettled([
-            this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS }),
+        const [incidentsRes, exclusionsRes] = await Promise.allSettled([
+            this.fetchIncidentsFeed(env),
             this.fetchExclusionsFeed()
         ]);
 
         let incidents = null;
-        if (pbRes.status === 'fulfilled' && pbRes.value.ok) {
-            const buffer = await pbRes.value.arrayBuffer();
-            incidents = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+        if (incidentsRes.status === 'fulfilled') {
+            incidents = incidentsRes.value;
         }
 
         let exclusions = null;
@@ -108,18 +113,17 @@ export class AlertsService {
      */
     async getAlerts(env: Env): Promise<AppAlertsResponse> {
         try {
-            const [pbRes, routesCache, exclusionsRes] = await Promise.allSettled([
-                this.client.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS }),
+            const [incidentsRes, routesCache, exclusionsRes] = await Promise.allSettled([
+                this.fetchIncidentsFeed(env),
                 this.getCachedRoutesMap(env),
                 this.fetchExclusionsFeed()
             ]);
 
             // Handle GTFS-RT Incidents
             let incidents: AppAlert[] = [];
-            if (pbRes.status === 'fulfilled' && pbRes.value.ok && routesCache.status === 'fulfilled') {
+            if (incidentsRes.status === 'fulfilled' && routesCache.status === 'fulfilled') {
                 try {
-                    const buffer = await pbRes.value.arrayBuffer();
-                    const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+                    const feed = incidentsRes.value;
                     const rawAlerts = feed.entity.filter(e => e.alert != null);
 
                     const { routesMap, routesByName } = routesCache.value;
@@ -127,11 +131,11 @@ export class AlertsService {
                     const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
                     incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, true);
                 } catch (e) {
-                    console.error("Failed to parse GTFS-RT alerts", e);
+                    console.error("Failed to map GTFS-RT alerts", e);
                 }
             } else {
                 console.error("Failed to fetch PB alerts or Routes", 
-                    pbRes.status === 'rejected' ? pbRes.reason : 'PB response not OK',
+                    incidentsRes.status === 'rejected' ? incidentsRes.reason : null,
                     routesCache.status === 'rejected' ? routesCache.reason : 'Routes Cache failed'
                 );
             }
