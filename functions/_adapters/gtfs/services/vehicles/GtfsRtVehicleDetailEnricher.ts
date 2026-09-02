@@ -25,7 +25,15 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         const lastStopId = result.lastStopId;
 
         if (liveMatch) {
-            this.enrichVehicleDetail(detail, liveMatch, lastStopId);
+            // Check if the live vehicle is actually on the requested trip.
+            // When we fallback to matching by vehicleId, the vehicle might have started a new trip.
+            // If the trip IDs don't match, we treat it as an ended trip (static fallback).
+            const liveTripId = liveMatch.properties.gtfs_trip_id;
+            if (detail.gtfs_trip_id && liveTripId && liveTripId !== detail.gtfs_trip_id) {
+                detail.is_static_fallback = true;
+            } else {
+                this.enrichVehicleDetail(detail, liveMatch, lastStopId);
+            }
         }
 
         return detail;

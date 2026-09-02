@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.64.0] - 2026-09-02
+### Added
+- Implemented MCP Server Card at `/.well-known/mcp/server-card.json` for standardized agent discovery (SEP-1649).
+
+## [0.63.4] - 2026-09-01
+### Fixed
+- Fixed vehicle tracking on ended trips by treating mismatched GTFS-RT live vehicles as a static fallback instead of interpolating them onto the old route.
+
 ## [0.63.3] - 2026-09-01
 ### Fixed
 - Fixed MCP connector silent failures by correctly mapping comma-separated `stop_id` query arrays and explicitly omitting UI-only virtual map centroids from search results.

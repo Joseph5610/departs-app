@@ -28,7 +28,13 @@ export const useSelectedVehicle = () => {
             return null;
         }
 
-        const liveMatch = vehicleId ? vehicleIndex.get(vehicleId) : tripIndex.get(tripId);
+        let liveMatch = vehicleId ? vehicleIndex.get(vehicleId) : tripIndex.get(tripId);
+
+        // If we matched the vehicle by ID but it has moved on to a different trip,
+        // we ignore its live stream data so we cleanly fall back to the static schedule of the old trip.
+        if (liveMatch && tripId && liveMatch.properties.gtfs_trip_id && liveMatch.properties.gtfs_trip_id !== tripId) {
+            liveMatch = undefined;
+        }
 
         const isFallback = !!vehicleDetail?.is_static_fallback;
 

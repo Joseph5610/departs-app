@@ -4,7 +4,7 @@ Real-time multi-city public transport tracking PWA (Prague PID, Brno IDS JMK). V
 
 ## 1. ARCHITECTURAL INVARIANTS (MANDATORY)
 
-Non-negotiable. Any violation is system-level bug.
+Non-negotiable. Any violation is a system-level bug.
 
 ### State Model & Zustand Stores
 
@@ -69,7 +69,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
 - **NEVER** use ad-hoc utility classes for core layout; use established design system tokens.
 - **NEVER** store UI state (like drawer height) in global selection context.
-- **NEVER** use `eslint-disable`. All typescript and eslint errors MUST be solved architecturally or typing-wise. Disabling linter is strictly forbidden.
+- **NEVER** use `eslint-disable`. All TypeScript and ESLint errors MUST be solved architecturally or typing-wise. Disabling the linter is strictly forbidden.
 - **NEVER** use `Array.prototype.find()` or `.filter()` inside loops or `.map()` callbacks. O(N) nested searches (O(N^2) complexity) are strictly forbidden. Always build an O(1) index `Map` or `Record` beforehand.
 
 ### Mandatory Protocol
@@ -89,7 +89,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **Two-Phase Grouping**: Stop processing MUST follow two phases:
   1. **Structural**: Identify and create Parent Stations (e.g. location_type 1).
   2. **Logical**: Merge Regular Stops (e.g. location_type 0) into Structural Parent Stations when present.
-- **Centroid Authority**: Centroids MUST be generated for every logical stop node. Must have `is_centroid: true` and ID prefixed with `centroid-`.
+- **Centroid Authority**: Centroids MUST be generated for every logical stop node. They must have `is_centroid: true` and an ID prefixed with `centroid-`.
 - **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
 - **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppStopFeature`, `AppVehicleFeature`).
 - **Zod Validation Boundaries**: Untrusted external inputs (user form payloads, KV storage reads, external API JSON responses) MUST be validated using Zod schemas (`safeParse` or `parse`) before casting or processing.
