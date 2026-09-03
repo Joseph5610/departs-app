@@ -7,7 +7,6 @@ import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
-import type { GtfsData } from '../../../gtfs/core/gtfs-data';
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
@@ -70,7 +69,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         tripLookup: Record<string, ApiTrip>,
         todayStr: string,
         currentMins: number,
-        gtfsData: GtfsData | null
+        tripRoutesObj: { tripRoutes: Record<string, string>, tripAliases: Record<string, string | null> }
     ): transit_realtime.IFeedEntity {
         let bestMatch: transit_realtime.IFeedEntity | null = null;
         let minTimeDiff = Infinity;
@@ -80,10 +79,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             if (!rawTripId) continue;
             
             let tripId: string;
-            if (gtfsData?.tripRoutes && rawTripId in gtfsData.tripRoutes) {
+            if (tripRoutesObj.tripRoutes && rawTripId in tripRoutesObj.tripRoutes) {
                 tripId = rawTripId;
-            } else if (gtfsData?.tripAliases && rawTripId in gtfsData.tripAliases) {
-                const resolved = gtfsData.tripAliases[rawTripId];
+            } else if (tripRoutesObj.tripAliases && rawTripId in tripRoutesObj.tripAliases) {
+                const resolved = tripRoutesObj.tripAliases[rawTripId];
                 if (!resolved) continue; // dropped trip
                 tripId = resolved;
             } else {
@@ -129,7 +128,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 const tInitStart = Date.now();
                 const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
 
-                const [[feed, gtfsData]] = await Promise.all([
+                const [[feed, gtfsData, tripRoutesObj]] = await Promise.all([
                     this.getCoreData()
                 ]);
 
@@ -194,7 +193,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const entities = groupedEntities[label];
 
                     const selectedEntity = (entities.length > 1 && tripLookup)
-                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins, gtfsData)
+                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins, tripRoutesObj)
                         : entities[0];
 
                     const vp = selectedEntity.vehicle;
@@ -204,17 +203,17 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     if (!rawTripId) continue;
 
                     let tripId: string;
-                    if (gtfsData.tripRoutes && rawTripId in gtfsData.tripRoutes) {
+                    if (tripRoutesObj.tripRoutes && rawTripId in tripRoutesObj.tripRoutes) {
                         tripId = rawTripId; // Active in current GTFS, trust it
-                    } else if (gtfsData.tripAliases && rawTripId in gtfsData.tripAliases) {
-                        const resolved = gtfsData.tripAliases[rawTripId];
+                    } else if (tripRoutesObj.tripAliases && rawTripId in tripRoutesObj.tripAliases) {
+                        const resolved = tripRoutesObj.tripAliases[rawTripId];
                         if (!resolved) continue; // null = dropped old trip
                         tripId = resolved;
                     } else {
                         tripId = rawTripId;
                     }
 
-                    const routeInfo = gtfsData.tripRoutes[tripId];
+                    const routeInfo = tripRoutesObj.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
                     const route = gtfsData.routes[routeInfo];
@@ -283,7 +282,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         if (!liveMatch) return {};
 
         // 2. Scan the already-cached raw feed to extract only the lastStopId without rebuilding everything
-        const [[feed, gtfsData]] = await Promise.all([
+        const [[feed, , tripRoutesObj]] = await Promise.all([
             this.getCoreData()
         ]);
 
@@ -295,14 +294,14 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             let rawMatch: transit_realtime.IFeedEntity | undefined;
 
             if (gtfsTripId) {
-                rawMatch = validEntities.find(e => {
+                rawMatch = validEntities.find((e: transit_realtime.IFeedEntity) => {
                     const id = e.vehicle?.trip?.tripId;
-                    return id && (id === gtfsTripId || (gtfsData.tripAliases && gtfsData.tripAliases[id] === gtfsTripId));
+                    return id && (id === gtfsTripId || (tripRoutesObj.tripAliases && tripRoutesObj.tripAliases[id] === gtfsTripId));
                 });
             }
 
             if (!rawMatch && vehicleId) {
-                rawMatch = validEntities.find(e =>
+                rawMatch = validEntities.find((e: transit_realtime.IFeedEntity) =>
                     e.vehicle?.vehicle?.id === vehicleId ||
                     e.vehicle?.vehicle?.label === vehicleId ||
                     e.vehicle?.vehicle?.licensePlate === vehicleId ||

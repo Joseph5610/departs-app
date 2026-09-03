@@ -1,7 +1,7 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleDetail } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
-import { getGtfsData } from '../../core/gtfs-data';
+import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
@@ -24,7 +24,8 @@ export class VehicleDetailService {
         const vehicleId = rawVehicleId || null;
 
         const stations = await this.getTripStops(tripId);
-        const { routes, tripRoutes } = await getGtfsData(this.city.slug);
+        const { routes } = await getGtfsRoutes(this.city.slug);
+        const { tripRoutes } = await getGtfsTripRoutes(this.city.slug);
         
         const routeInfo = tripRoutes[tripId];
         const routeId = routeInfo ? routeInfo.split('|')[0] : undefined;

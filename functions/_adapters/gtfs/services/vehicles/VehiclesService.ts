@@ -2,12 +2,13 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleCollection, AppVehicleFeature, AppCityStats } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
-import { getGtfsData } from '../../core/gtfs-data';
+import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
 import { GTFS_CONFIG } from '../../core/config';
+import { transit_realtime } from 'gtfs-realtime-bindings';
 
 export class VehiclesService {
     constructor(public readonly city: CityConfig) {}
@@ -17,9 +18,10 @@ export class VehiclesService {
             console.error(`GTFS-RT feed error for ${this.city.slug}:`, err.message);
             return null; // Gracefully degrade to static-only if feed is unreachable (e.g. 404)
         });
-        const gtfsDataPromise = getGtfsData(this.city.slug);
+        const gtfsDataPromise = getGtfsRoutes(this.city.slug);
+        const gtfsTripRoutesPromise = getGtfsTripRoutes(this.city.slug);
 
-        return Promise.all([rtPromise, gtfsDataPromise]);
+        return Promise.all([rtPromise, gtfsDataPromise, gtfsTripRoutesPromise]);
     }
 
     async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
@@ -46,7 +48,7 @@ export class VehiclesService {
         let lastStopId: string | undefined;
 
         if (feed && feed.entity) {
-            const rawMatch = feed.entity.find(e =>
+            const rawMatch = feed.entity.find((e: transit_realtime.IFeedEntity) =>
                 (gtfsTripId && e.vehicle?.trip?.tripId === gtfsTripId) ||
                 (vehicleId && (
                     e.vehicle?.vehicle?.id === vehicleId ||
@@ -70,7 +72,7 @@ export class VehiclesService {
             `gtfs_vehicles_collection_${this.city.slug}`, 
             CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
-                const [feed, gtfsData] = await this.getCoreData();
+                const [feed, gtfsData, tripRoutes] = await this.getCoreData();
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -94,7 +96,7 @@ export class VehiclesService {
                         continue;
                     }
 
-                    const routeInfo = gtfsData.tripRoutes[tripId];
+                    const routeInfo = tripRoutes.tripRoutes[tripId];
                     if (!routeInfo) continue;
 
                     const route = gtfsData.routes[routeInfo];

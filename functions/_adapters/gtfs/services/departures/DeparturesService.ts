@@ -1,7 +1,7 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppDepartureResponse, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
-import { getGtfsData } from '../../core/gtfs-data';
+import { getGtfsRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
@@ -33,18 +33,28 @@ export class DeparturesService {
         if (!staticDataUrl) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
 
         try {
+            const t0 = Date.now();
             const parentToChildMap = await this.getParentChildMap(staticDataUrl);
+            const t1 = Date.now();
             const { targetIds, childToRequestedMap } = this.resolveTargetStopIds(stopIds, parentToChildMap);
+            const t2 = Date.now();
             const allDeps = await this.fetchDepartureTuples(targetIds, childToRequestedMap, staticDataUrl);
+            const t3 = Date.now();
 
             if (allDeps.length === 0) {
                 return { departures: [] };
             }
 
-            const { routes } = await getGtfsData(this.city.slug);
+            const { routes } = await getGtfsRoutes(this.city.slug);
+            const t4 = Date.now();
             const rtVehicles = await this.getRealtimeVehiclesCache();
+            const t5 = Date.now();
             
-            return { departures: DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles) };
+            const result = DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles);
+            const t6 = Date.now();
+
+            console.log(`[PERF] Departures ${stopIds.join(',')}: parentMap=${t1-t0}ms, resolve=${t2-t1}ms, fetchTuples=${t3-t2}ms, gtfsData=${t4-t3}ms, rtVehicles=${t5-t4}ms, mapDeps=${t6-t5}ms, total=${t6-t0}ms`);
+            return { departures: result };
         } catch (e) {
             if (e instanceof ApiError) throw e;
             console.error('Error loading static departures:', e);

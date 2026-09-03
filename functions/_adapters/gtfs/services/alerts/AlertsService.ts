@@ -1,7 +1,7 @@
 import type { AppAlertsResponse } from "../../../../_core/types";
 import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import type { CityConfig } from '../../../../_core/city-config';
-import { getGtfsData } from '../../core/gtfs-data';
+import { getGtfsRoutes } from '../../core/gtfs-data';
 import { BaseGtfsAlertsMapper } from './BaseGtfsAlertsMapper';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { ApiError } from '../../../../_core/errors';
@@ -26,7 +26,7 @@ export class AlertsService {
 
                     let gtfsData = null;
                     try {
-                        gtfsData = await getGtfsData(this.city.slug);
+                        gtfsData = await getGtfsRoutes(this.city.slug);
                     } catch (e) {
                         console.error("Failed to fetch routes for alerts", e);
                     }

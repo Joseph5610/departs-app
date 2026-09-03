@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.65.0] - 2026-09-04
+
+### Added
+
+- Brno vehicle detail now renders precise GTFS route shapes instead of straight stop-to-stop lines, using a new external API that provides shape geometry chunked and cached for 24h.
+
 ## [0.63.4] - 2026-09-01
 
 ### Fixed

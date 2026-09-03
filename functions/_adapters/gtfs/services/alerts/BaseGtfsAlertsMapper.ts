@@ -1,5 +1,5 @@
 import type { AppAlert, AppRouteType } from "../../../../_core/types";
-import type { GtfsData, GtfsRoute } from "../../core/gtfs-data";
+import type { GtfsRoutesData, GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
@@ -66,7 +66,7 @@ export class BaseGtfsAlertsMapper {
      * @param forceIncident If true, overrides the detour detection logic and forces the alert type to 'incident'.
      * @returns A mapped array of AppAlert objects ready for frontend consumption.
      */
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
             const rawHeader = alert.headerText?.translation?.[0]?.text || '';
@@ -175,7 +175,7 @@ export class BaseGtfsAlertsMapper {
      * Resolves a raw GTFS-RT routeId to GTFS route metadata.
      * Can be overridden by city-specific mappers to handle custom route ID formats.
      */
-    protected resolveRoute(routeId: string, gtfsData: GtfsData | null): GtfsRoute | undefined {
+    protected resolveRoute(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined {
         if (!gtfsData) return undefined;
         return gtfsData.routes[routeId] || gtfsData.routesByName[routeId.toUpperCase()];
     }

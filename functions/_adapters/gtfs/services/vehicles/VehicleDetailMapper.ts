@@ -10,14 +10,15 @@ export class VehicleDetailMapper {
         tripId: string,
         vehicleId: string | null,
         stations: Station[],
-        route: GtfsRoute | null
+        route: GtfsRoute | null,
+        tripShape: [number, number][][] | null = null
     ): AppVehicleDetail {
         const lineName = route?.name || undefined;
         const routeColor = route?.route_color || undefined;
         const rType = normalizeRouteType(route ? route.type : '3');
 
         const stopFeatures = this.buildStopFeatures(stations);
-        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR);
+        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR, tripShape);
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : '';
 
@@ -80,8 +81,18 @@ export class VehicleDetailMapper {
         });
     }
 
-    static buildRouteGeoJson(stations: Station[], routeColor: string) {
-        const coordinates: [number, number][] = stations.map((st) => st.coordinates);
+    static buildRouteGeoJson(stations: Station[], routeColor: string, tripShape: [number, number][][] | null = null) {
+        // If a real GTFS shape is available, flatten multi-line segments into a single coordinate array.
+        // The external API returns [lat, lon], but GeoJSON requires [lon, lat].
+        // We auto-detect this (Czech latitudes are > 40, longitudes are < 20).
+        let coordinates: [number, number][];
+        if (tripShape && tripShape.length > 0) {
+            const flatShape = tripShape.flat();
+            const needsFlip = flatShape.length > 0 && flatShape[0][0] > 40;
+            coordinates = flatShape.map(c => needsFlip ? [c[1], c[0]] : [c[0], c[1]]);
+        } else {
+            coordinates = stations.map((st) => st.coordinates);
+        }
         
         if (coordinates.length > 1) {
             const lineFeature = {

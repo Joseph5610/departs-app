@@ -1,10 +1,10 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { BaseGtfsAlertsMapper } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
 import type { AppAlert } from '../../../../_core/types';
-import type { GtfsData, GtfsRoute } from '../../../gtfs/core/gtfs-data';
+import type { GtfsRoutesData, GtfsRoute } from '../../../gtfs/core/gtfs-data';
 
 export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsData | null, forceIncident: boolean = false): AppAlert[] {
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident: boolean = false): AppAlert[] {
         const mapped = super.mapAlerts(rawAlerts, gtfsData, forceIncident);
         
         // Sort Kordis alerts by newest ID first (descending numeric ID)
@@ -68,9 +68,9 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
      * Overrides base implementation to handle Kordis-specific route ID formatting:
      * Real-time feeds pass numeric IDs like "120", whereas static GTFS routes keys use "L120D99".
      */
-    private kordisRouteMapCache = new WeakMap<GtfsData, Map<string, GtfsRoute>>();
+    private kordisRouteMapCache = new WeakMap<GtfsRoutesData, Map<string, GtfsRoute>>();
 
-    protected resolveRoute(routeId: string, gtfsData: GtfsData | null): GtfsRoute | undefined {
+    protected resolveRoute(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined {
         const standard = super.resolveRoute(routeId, gtfsData);
         if (standard || !gtfsData) return standard;
 
