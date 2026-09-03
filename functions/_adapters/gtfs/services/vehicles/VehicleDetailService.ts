@@ -23,9 +23,12 @@ export class VehicleDetailService {
         const { vehicleId: rawVehicleId, tripId } = parseSearchParams(url.searchParams, vehicleDetailQuerySchema);
         const vehicleId = rawVehicleId || null;
 
-        const stations = await this.getTripStops(tripId);
-        const { routes } = await getGtfsRoutes(this.city.slug);
-        const { tripRoutes } = await getGtfsTripRoutes(this.city.slug);
+        const [stations, { routes }, { tripRoutes }, tripShape] = await Promise.all([
+            this.getTripStops(tripId),
+            getGtfsRoutes(this.city.slug),
+            getGtfsTripRoutes(this.city.slug),
+            this.getTripShape(tripId),
+        ]);
         
         const routeInfo = tripRoutes[tripId];
         const routeId = routeInfo ? routeInfo.split('|')[0] : undefined;
@@ -35,7 +38,7 @@ export class VehicleDetailService {
             throw new ApiError(ERROR_MESSAGES.VEHICLE_NOT_FOUND, 404);
         }
 
-        let detail = VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route);
+        let detail = VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route, tripShape);
         
         if (this.enricher) {
             detail = await this.enricher.enrich(detail, ctx);
@@ -73,6 +76,38 @@ export class VehicleDetailService {
         } catch (e) {
             console.error('Failed to get trip stops:', e);
             return [];
+        }
+    }
+
+    /**
+     * Fetches the precise GTFS shape coordinates for a given trip.
+     * Looks up the shape_id from the cached trip_shapes.json index, then fetches the
+     * appropriate shape chunk. Both files are cached for 24h in Cloudflare's Cache API.
+     * Returns null if no shape is available (graceful degradation to station-line fallback).
+     */
+    private async getTripShape(tripId: string): Promise<[number, number][][] | null> {
+        const staticDataUrl = this.city.adapterConfig?.staticDataUrl;
+        if (!staticDataUrl) return null;
+
+        try {
+            const tripShapesUrl = `${staticDataUrl}/${this.city.slug}/trip_shapes.json`;
+            const tripShapesRes = await appClient.fetch(tripShapesUrl, { cacheTtl: 86400 });
+            if (!tripShapesRes.ok) return null;
+
+            const tripShapes = await tripShapesRes.json() as Record<string, string>;
+            const shapeId = tripShapes[tripId];
+            if (!shapeId) return null;
+
+            const chunkId = encodeURIComponent(shapeId.substring(0, 2));
+            const shapeChunkUrl = `${staticDataUrl}/${this.city.slug}/shapes/${chunkId}.json`;
+            const shapeChunkRes = await appClient.fetch(shapeChunkUrl, { cacheTtl: 86400 });
+            if (!shapeChunkRes.ok) return null;
+
+            const shapeChunk = await shapeChunkRes.json() as Record<string, [number, number][][]>;
+            return shapeChunk[shapeId] ?? null;
+        } catch (e) {
+            console.error('Failed to get trip shape:', e);
+            return null;
         }
     }
 }

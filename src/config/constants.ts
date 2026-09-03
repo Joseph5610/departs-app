@@ -66,5 +66,6 @@ export const ENRICHMENT_SILENCE_TTL_MS = 90_000; // Gate 2: Prune WS patches sil
 
 export const DATA_SOURCE_URLS = {
     prague: 'https://golemio.cz',
-    brno: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328'
+    brno: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328',
+    lissy: 'https://github.com/Jorgen98/Lissy'
 } as const;

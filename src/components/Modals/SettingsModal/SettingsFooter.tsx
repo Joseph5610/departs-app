@@ -189,6 +189,24 @@ export const SettingsFooter: React.FC = () => {
                         <Item
                             variant="settings"
                             size="none"
+                            render={<a href={DATA_SOURCE_URLS.lissy} target="_blank" rel="noopener noreferrer" />}
+                        >
+                            <ItemMedia variant="icon" className="text-muted-foreground">
+                                <Database size={18} strokeWidth={2} />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle className="text-foreground">Lissy API (Brno Shapes)</ItemTitle>
+                            </ItemContent>
+                            <ItemActions>
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                                    {t('settings.dataSource')}
+                                </Badge>
+                            </ItemActions>
+                        </Item>
+
+                        <Item
+                            variant="settings"
+                            size="none"
                             render={<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" />}
                         >
                             <ItemMedia variant="icon" className="text-muted-foreground">
