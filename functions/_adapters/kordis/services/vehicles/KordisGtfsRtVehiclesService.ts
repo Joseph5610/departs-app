@@ -4,7 +4,7 @@ import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
-import type { ApiMapping, ApiTrip } from '../types';
+import type { TripWindow, TripWindows } from '../types';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
@@ -12,45 +12,55 @@ import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
     /**
-     * Fetches the mapping of static trips from the adapter config staticDataUrl.
+     * Fetches the compact trip operating windows.
+     *
+     * Keyed by trip_id, so it needs no lookup build, and it carries only the fields actually read.
+     * This replaced api.json, which cost ~37ms of CPU per cold isolate to parse and index - far too
+     * much when the whole request budget is 10ms and the cache is per-isolate.
      */
-    private async getApiMapping(): Promise<{ mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null> {
+    private async getTripWindows(): Promise<TripWindows | null> {
         const staticUrl = this.city.adapterConfig?.staticDataUrl;
         if (!staticUrl) return null;
-        
-        const apiUrl = `${staticUrl}/${this.city.slug}/api.json`;
 
-        return CacheManager.getOrFetch<{ mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null>(
-            `api_mapping_with_lookup_${this.city.slug}`, 
+        const url = `${staticUrl}/${this.city.slug}/trip_windows.json`;
+
+        return CacheManager.getOrFetch<TripWindows | null>(
+            `trip_windows_${this.city.slug}`,
             CACHE_TTL.TWO_HOURS_MS,
             async () => {
                 try {
-                    const resApi = await appClient.fetch(apiUrl, { cf: { cacheTtl: 7200 } });
-                    if (!resApi.ok) {
-                        console.error(`Failed to fetch api.json for ${this.city.slug}: ${resApi.status}`);
+                    const res = await appClient.fetch(url, { cf: { cacheTtl: 7200 } });
+                    if (!res.ok) {
+                        console.error(`Failed to fetch trip_windows.json for ${this.city.slug}: ${res.status}`);
                         return null;
                     }
-                    const raw = await resApi.text();
+                    const raw = await res.text();
                     const tParse = Date.now();
-                    const mapping = JSON.parse(raw) as ApiMapping;
-                    const tBuild = Date.now();
-                    const lookup: Record<string, ApiTrip> = {};
-                    for (const trips of Object.values(mapping)) {
-                        for (let i = 0; i < trips.length; i++) {
-                            const trip = trips[i];
-                            lookup[trip.trip_id] = trip;
-                        }
-                    }
-                    const tDone = Date.now();
-                    console.log(`[PERF] ${this.city.slug} api.json: bytes=${raw.length}, parse=${tBuild - tParse}ms, lookup=${tDone - tBuild}ms, trips=${Object.keys(lookup).length}`);
-                    return { mapping, lookup };
+                    const windows = JSON.parse(raw) as TripWindows;
+                    console.log(`[PERF] ${this.city.slug} trip_windows.json: bytes=${raw.length}, parse=${Date.now() - tParse}ms, trips=${Object.keys(windows.trips).length}`);
+                    return windows;
                 } catch (e) {
-                    console.error("Failed to fetch api.json for KordisGtfsRtVehiclesService", e);
+                    console.error("Failed to fetch trip_windows.json", e);
                     return null;
                 }
             },
-            (data) => !data || Object.keys(data.lookup).length === 0
+            (data) => !data || Object.keys(data.trips).length === 0
         );
+    }
+
+    /**
+     * Resolves the bit representing `todayStr` within a windows file, or 0 when the file predates
+     * today - in which case no trip matches, mirroring the previous date-string comparison.
+     */
+    private static todayBit(windows: TripWindows, todayStr: string): number {
+        const idx = windows.days.indexOf(todayStr);
+        return idx < 0 ? 0 : 1 << idx;
+    }
+
+    /** Whether a trip operates on the day represented by `todayBit`. */
+    private static operatesToday(window: TripWindow, todayBit: number): boolean {
+        const flags = window[2];
+        return flags === -1 || (flags & todayBit) !== 0;
     }
 
     /**
@@ -94,8 +104,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
      */
     private selectBestEntity(
         entities: transit_realtime.IFeedEntity[],
-        tripLookup: Record<string, ApiTrip>,
-        todayStr: string,
+        windows: TripWindows,
+        todayBit: number,
         currentMins: number,
         tripRoutesObj: { tripRoutes: Record<string, string>, tripAliases: Record<string, string | null> }
     ): transit_realtime.IFeedEntity {
@@ -109,15 +119,13 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             const tripId = this.resolveTripId(rawTripId, tripRoutesObj);
             if (!tripId) continue; // dropped trip
 
-            const tripInfo = tripLookup[tripId];
-            
-            if (tripInfo) {
-                const operatesToday = tripInfo.dates ? tripInfo.dates.includes(todayStr) : true;
-                
-                if (operatesToday) {
+            const window = windows.trips[tripId];
+
+            if (window) {
+                if (KordisGtfsRtVehiclesService.operatesToday(window, todayBit)) {
                     let diff = 0;
-                    if (currentMins < tripInfo.start_mins) diff = tripInfo.start_mins - currentMins;
-                    else if (currentMins > tripInfo.end_mins) diff = currentMins - tripInfo.end_mins;
+                    if (currentMins < window[0]) diff = window[0] - currentMins;
+                    else if (currentMins > window[1]) diff = currentMins - window[1];
 
                     if (diff === 0) {
                         return entity; // Found perfect active trip
@@ -146,20 +154,12 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             async () => {
                 const tInitStart = Date.now();
 
-                // api.json is 2.6MB and building its trip lookup walks ~20k entries. On a cold
-                // isolate that lands on top of the RT feed and the static route tables in a single
-                // request, which is enough to exhaust the CPU budget. Skip it for the very first
-                // request and let the next one (5s later, warm) pick it up.
-                //
-                // The cost is that this first response has no duplicate-label de-duplication and no
-                // before_track state. Removing this deferral put /vehicles back into CPU-limit 503s,
-                // so it stays until api.json itself is made cheaper to load.
-                const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
+                const [[feed, gtfsData, tripRoutesObj], windows] = await Promise.all([
+                    this.getCoreData(),
+                    this.getTripWindows()
+                ]);
 
-                const [feed, gtfsData, tripRoutesObj] = await this.getCoreData();
-                const apiData = isColdStart ? null : await this.getApiMapping();
-
-                console.log(`[PERF] ${this.city.slug} initialization (core${isColdStart ? ', cold: api_mapping deferred' : ' + api_mapping'}): ${Date.now() - tInitStart}ms`);
+                console.log(`[PERF] ${this.city.slug} initialization (core + trip_windows): ${Date.now() - tInitStart}ms`);
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -195,14 +195,12 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     groupedEntities[label].push(entity);
                 }
 
-                let tripLookup: Record<string, ApiTrip> | null = null;
-                let todayStr = '';
+                let todayBit = 0;
                 let currentMins = 0;
 
-                if (apiData) {
-                    tripLookup = apiData.lookup;
+                if (windows) {
                     const ctx = this.getCurrentTimeContext();
-                    todayStr = ctx.todayLocalStr;
+                    todayBit = KordisGtfsRtVehiclesService.todayBit(windows, ctx.todayLocalStr);
                     currentMins = ctx.currentMinutes;
                 }
 
@@ -211,8 +209,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const label = keys[i];
                     const entities = groupedEntities[label];
 
-                    const selectedEntity = (entities.length > 1 && tripLookup)
-                        ? this.selectBestEntity(entities, tripLookup, todayStr, currentMins, tripRoutesObj)
+                    const selectedEntity = (entities.length > 1 && windows)
+                        ? this.selectBestEntity(entities, windows, todayBit, currentMins, tripRoutesObj)
                         : entities[0];
 
                     const vp = selectedEntity.vehicle;
@@ -239,8 +237,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         vp.vehicle.id = label;
                     }
 
-                    const tripInfo = this.findTripInfo(tripId, rawTripId, tripLookup);
-                    const isBeforeTrack = this.isVehicleBeforeTrack(vp, tripInfo, currentMins);
+                    const window = this.findTripWindow(tripId, rawTripId, windows);
+                    const isBeforeTrack = this.isVehicleBeforeTrack(vp, window, currentMins);
 
                     const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, originTimestamp, null, isBeforeTrack);
 
@@ -261,12 +259,12 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
      */
     private isVehicleBeforeTrack(
         vp: transit_realtime.IVehiclePosition,
-        tripInfo: ApiTrip | undefined,
+        window: TripWindow | undefined,
         currentMins: number
     ): boolean {
-        if (!tripInfo) return false;
+        if (!window) return false;
 
-        const start = tripInfo.start_mins % 1440;
+        const start = window[0] % 1440;
         const current = currentMins % 1440;
         let diffMins = start - current;
         if (diffMins < -720) diffMins += 1440;
@@ -297,10 +295,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-     * Resolves the correct trip information from the api mapping using the final or raw trip ID.
+     * Resolves a trip's operating window using the final or raw trip ID.
      */
-    private findTripInfo(tripId: string, rawTripId: string | undefined, tripLookup: Record<string, ApiTrip> | null): ApiTrip | undefined {
-        if (!tripLookup) return undefined;
-        return tripLookup[tripId] || (rawTripId ? tripLookup[rawTripId] : undefined);
+    private findTripWindow(tripId: string, rawTripId: string | undefined, windows: TripWindows | null): TripWindow | undefined {
+        if (!windows) return undefined;
+        return windows.trips[tripId] || (rawTripId ? windows.trips[rawTripId] : undefined);
     }
 }

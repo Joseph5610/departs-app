@@ -4,6 +4,21 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.66.0] - 2026-09-09
+
+### Fixed
+
+- Cut the CPU cost of the Brno vehicle feed by replacing the 2.5MB `api.json` lookup with a compact per-trip index, resolving CPU-limit 503s on cold Worker isolates.
+
+### Changed
+
+- Migrated MapLibre GL JS from v5 to v6, resolving a critical (CVSS 10.0) XSS sanitizer bypass in `DOM.sanitize()` that could execute attacker-supplied attribution markup without user interaction.
+- MapLibre v6 is ESM-only and resolves its worker relative to the bundle, so the worker is now bundled and registered explicitly via `setWorkerUrl` — without this the map fails to render in production builds.
+
+### Fixed
+
+- Patched the remaining development-toolchain advisories (sharp, hono, js-yaml, fast-uri, qs), bringing `npm audit` to zero vulnerabilities.
+
 ## [0.65.1] - 2026-09-09
 
 ### Fixed
