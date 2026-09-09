@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed vehicles waiting at their origin being reported as running early, with all upcoming stop times shifted; departure status is now evaluated against the schedule before any delay is estimated.
 - Cut the CPU cost of the Brno vehicle feed by replacing the 2.5MB `api.json` lookup with a compact per-trip index, resolving CPU-limit 503s on cold Worker isolates.
 
 ### Changed

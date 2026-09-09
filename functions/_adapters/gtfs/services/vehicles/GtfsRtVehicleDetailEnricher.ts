@@ -78,7 +78,13 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         
         detail.last_stop_sequence = resolvedSequence ?? liveMatch.properties.last_stop_sequence ?? undefined;
 
-        // 3.5. Estimate Delay if missing
+        // 3.5. Evaluate Before-Track Status.
+        // This MUST run before the delay is estimated or propagated. A vehicle still waiting at its
+        // origin has no meaningful delay, and estimateLocalDelay() below explicitly declines to
+        // invent one once this state is set - a guard that never fired while this ran last.
+        this.evaluateBeforeTrack(detail);
+
+        // 4. Estimate Delay if missing
         if (detail.delay == null) {
             const estimatedDelay = this.estimateLocalDelay(detail);
             if (estimatedDelay !== null) {
@@ -86,7 +92,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             }
         }
 
-        // 4. Propagate Delays to Subsequent Stops
+        // 5. Propagate Delays to Subsequent Stops
         const delay = detail.delay;
         if (typeof delay === 'number' && detail.stop_times?.features) {
             detail.stop_times.features.forEach(f => {
@@ -96,9 +102,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
                 }
             });
         }
-
-        // 5. Evaluate Before-Track Status directly from first stop schedule
-        this.evaluateBeforeTrack(detail);
 
         detail.is_static_fallback = false;
     }
@@ -115,7 +118,9 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             return;
         }
 
-        const depTimeStr = firstStop.properties.realtime_departure_time || firstStop.properties.departure_time;
+        // Deliberately the scheduled time: the realtime field is derived from the delay, which is
+        // exactly what must not influence whether the vehicle has departed yet.
+        const depTimeStr = firstStop.properties.departure_time;
         if (!depTimeStr) return;
 
         const diffMins = getMinutesUntil(depTimeStr, this.vehiclesService.city.timezone);
