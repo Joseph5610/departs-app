@@ -20,4 +20,17 @@ export const GTFS_CONFIG = {
 
     // Fallback route color if none is provided
     DEFAULT_ROUTE_COLOR: '#888888',
+
+    /**
+     * Number of buckets the static shape geometry is split across. Shapes are addressed by
+     * `shape_id % SHAPE_CHUNK_COUNT`, which keeps every chunk small without needing an index.
+     * MUST match SHAPE_CHUNK_COUNT in the departs-gtfs-data build script.
+     */
+    SHAPE_CHUNK_COUNT: 512,
 } as const;
+
+/** Maps a shape_id to its chunk file name. Must match the data pipeline implementation exactly. */
+export function shapeChunkId(shapeId: string): string {
+    const numeric = parseInt(shapeId, 10);
+    return String((Number.isNaN(numeric) ? 0 : Math.abs(numeric)) % GTFS_CONFIG.SHAPE_CHUNK_COUNT);
+}

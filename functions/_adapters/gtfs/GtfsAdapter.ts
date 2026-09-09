@@ -60,9 +60,8 @@ export class GtfsAdapter implements CityAdapter {
         const feed = await getGtfsRtFeed(this.city);
         
         // Return raw feed entities based on requested type
-        const entities = feed.entity as unknown[];
         if (type === 'alerts') {
-            return (entities as Array<{ alert?: unknown }>).filter(e => e.alert);
+            return feed.entity.filter(e => e.alert != null);
         }
         return feed;
     }

@@ -17,7 +17,7 @@ export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.
 
     const feed = await CacheManager.getOrFetch<transit_realtime.FeedMessage | null>(
         `gtfs_rt_feed_${city.slug}`,
-        CACHE_TTL.SHORT_DEBOUNCE_MS, // 3 seconds internal debounce
+        CACHE_TTL.SHORT_DEBOUNCE_MS, // short internal debounce, shared by alerts and vehicles
         async () => {
             const t0 = Date.now();
             const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: 3 } }).catch((err) => {

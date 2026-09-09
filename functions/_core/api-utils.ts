@@ -108,10 +108,12 @@ export function formatDate(date: Date, timezone = 'Europe/Prague'): string {
  * @returns Response object
  */
 export function createSuccessResponse(data: unknown, maxAge: number = 10): Response {
-    // For short cache durations, we also set s-maxage for Cloudflare CDN
-    const cacheControl = maxAge <= 60
-        ? `public, max-age=${maxAge}, s-maxage=${maxAge}`
-        : `public, max-age=${maxAge}`;
+    // `max-age` governs the browser, `s-maxage` the edge. `stale-while-revalidate` matters most:
+    // without it an endpoint whose TTL equals the client's poll interval expires exactly as the next
+    // poll arrives, so every poll misses and re-invokes the Function. Capped at 60s so long-lived
+    // static responses are never served stale for long.
+    const staleWhileRevalidate = Math.min(maxAge, 60);
+    const cacheControl = `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
 
     return new Response(JSON.stringify(data), {
         headers: {

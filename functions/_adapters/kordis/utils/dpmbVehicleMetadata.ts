@@ -31,7 +31,8 @@ export async function getDpmbVehicleRanges(): Promise<DpmbVehicleRange[] | null>
             if (!resApi.ok) return null;
             const data = await resApi.json() as DpmbVehicleRange[];
             return data.sort((a, b) => a.min - b.min);
-        }
+        },
+        (ranges) => !ranges || ranges.length === 0
     );
 }
 

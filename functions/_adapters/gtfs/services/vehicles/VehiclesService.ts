@@ -2,13 +2,50 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleCollection, AppVehicleFeature, AppCityStats } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
-import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
+import { getGtfsRoutes, getGtfsTripRoutes, type GtfsTripRoutesData } from '../../core/gtfs-data';
 import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
 import { GTFS_CONFIG } from '../../core/config';
 import { transit_realtime } from 'gtfs-realtime-bindings';
+
+interface VehicleIndex {
+    byTrip: Map<string, AppVehicleFeature>;
+    byVehicle: Map<string, AppVehicleFeature>;
+}
+
+/**
+ * Lookup indexes for a mapped vehicle collection.
+ *
+ * Keyed on the collection itself so an index lives exactly as long as the cached collection it
+ * describes and is collected with it. Detail polls hit the same cached collection repeatedly, so
+ * this turns a repeated O(N) scan over every vehicle into an O(1) lookup.
+ */
+const vehicleIndexes = new WeakMap<AppVehicleCollection, VehicleIndex>();
+
+function getVehicleIndex(collection: AppVehicleCollection): VehicleIndex {
+    const existing = vehicleIndexes.get(collection);
+    if (existing) return existing;
+
+    const index: VehicleIndex = { byTrip: new Map(), byVehicle: new Map() };
+    for (const feature of collection.features) {
+        const props = feature.properties;
+        if (props.gtfs_trip_id && !index.byTrip.has(props.gtfs_trip_id)) {
+            index.byTrip.set(props.gtfs_trip_id, feature);
+        }
+        if (props.vehicle_id && !index.byVehicle.has(props.vehicle_id)) {
+            index.byVehicle.set(props.vehicle_id, feature);
+        }
+        const registration = props.vehicle_descriptor?.vehicle_registration_number;
+        if (registration && !index.byVehicle.has(String(registration))) {
+            index.byVehicle.set(String(registration), feature);
+        }
+    }
+
+    vehicleIndexes.set(collection, index);
+    return index;
+}
 
 export class VehiclesService {
     constructor(public readonly city: CityConfig) {}
@@ -24,47 +61,81 @@ export class VehiclesService {
         return Promise.all([rtPromise, gtfsDataPromise, gtfsTripRoutesPromise]);
     }
 
+    /**
+     * Hook: excludes feed entities that must never be surfaced for this network.
+     * The generic GTFS feed surfaces everything.
+     */
+    protected isRelevantEntity(_entity: transit_realtime.IFeedEntity): boolean {
+        return true;
+    }
+
+    /** Hook: whether a raw feed entity belongs to the given trip. */
+    protected matchesTripId(
+        entity: transit_realtime.IFeedEntity,
+        gtfsTripId: string,
+        _tripRoutes: GtfsTripRoutesData
+    ): boolean {
+        return entity.vehicle?.trip?.tripId === gtfsTripId;
+    }
+
+    /** Hook: whether a raw feed entity refers to the given vehicle. */
+    protected matchesVehicleId(entity: transit_realtime.IFeedEntity, vehicleId: string): boolean {
+        const descriptor = entity.vehicle?.vehicle;
+        return descriptor?.id === vehicleId
+            || descriptor?.label === vehicleId
+            || entity.id === vehicleId;
+    }
+
     async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string): Promise<{ liveMatch?: AppVehicleFeature, lastStopId?: string }> {
-        // 1. O(1) Fast lookup for the mapped vehicle data
         const collection = await this.getCachedMappedVehicles();
         if (!collection.features || collection.features.length === 0) return {};
 
-        let liveMatch: AppVehicleFeature | undefined;
-        if (gtfsTripId) {
-            liveMatch = collection.features.find(f => f.properties.gtfs_trip_id === gtfsTripId);
-        }
-        if (!liveMatch && vehicleId) {
-            liveMatch = collection.features.find(f =>
-                f.properties.vehicle_id === vehicleId ||
-                f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId
-            );
-        }
+        const index = getVehicleIndex(collection);
+        const liveMatch = (gtfsTripId ? index.byTrip.get(gtfsTripId) : undefined)
+            ?? (vehicleId ? index.byVehicle.get(vehicleId) : undefined);
 
         if (!liveMatch) return {};
 
-        // 2. To get the raw stopId (which we intentionally don't bloat the public AppVehicleFeature with),
-        // we pull the already-cached raw feed and do a quick search for this specific vehicle.
-        const [feed] = await this.getCoreData();
+        // The raw stopId is deliberately kept off the public AppVehicleFeature, so pull it from the
+        // already-cached feed. Trip identity wins over vehicle identity: a vehicle may have moved on
+        // to a later trip, in which case its current entity is not the one being asked about.
+        const [feed, , tripRoutes] = await this.getCoreData();
         let lastStopId: string | undefined;
 
         if (feed && feed.entity) {
-            const rawMatch = feed.entity.find((e: transit_realtime.IFeedEntity) =>
-                (gtfsTripId && e.vehicle?.trip?.tripId === gtfsTripId) ||
-                (vehicleId && (
-                    e.vehicle?.vehicle?.id === vehicleId ||
-                    e.vehicle?.vehicle?.label === vehicleId ||
-                    e.id === vehicleId
-                ))
-            );
-            if (rawMatch && rawMatch.vehicle?.stopId) {
+            const rawMatch = this.findRawEntity(feed.entity, vehicleId, gtfsTripId, tripRoutes);
+            if (rawMatch?.vehicle?.stopId) {
                 lastStopId = rawMatch.vehicle.stopId.toString();
             }
         }
 
-        return { 
-            liveMatch, 
+        return {
+            liveMatch,
             lastStopId
         };
+    }
+
+    private findRawEntity(
+        entities: transit_realtime.IFeedEntity[],
+        vehicleId: string,
+        gtfsTripId: string | undefined,
+        tripRoutes: GtfsTripRoutesData
+    ): transit_realtime.IFeedEntity | undefined {
+        if (gtfsTripId) {
+            for (const entity of entities) {
+                if (!this.isRelevantEntity(entity)) continue;
+                if (this.matchesTripId(entity, gtfsTripId, tripRoutes)) return entity;
+            }
+        }
+
+        if (vehicleId) {
+            for (const entity of entities) {
+                if (!this.isRelevantEntity(entity)) continue;
+                if (this.matchesVehicleId(entity, vehicleId)) return entity;
+            }
+        }
+
+        return undefined;
     }
 
     async getCachedMappedVehicles(): Promise<AppVehicleCollection> {

@@ -1,11 +1,24 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { Env, AppDepartureResponse, AppDeparture, AppRouteType } from '../../../../_core/types';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { LruCache } from '../../../../_core/utils/LruCache';
+import { appClient } from '../../../../_core/ApiClient';
 import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 import type { DukDeparturesResponse } from '../../types';
 import { DUK_TRACTION_MAPPING } from '../../utils/dukConstants';
 import { getDukVehicleColor } from '../../utils/colors';
+
+/**
+ * Departure boards keyed by node/pole/id combination.
+ *
+ * The keyspace grows with every stop a user opens, so it is bounded here rather than held in
+ * CacheManager, which never evicts.
+ */
+const departuresCache = new LruCache<AppDepartureResponse>({
+    maxEntries: 256,
+    ttlMs: CACHE_TTL.SHORT_DEBOUNCE_MS
+});
 
 export class DukDeparturesService {
 
@@ -54,73 +67,72 @@ export class DukDeparturesService {
 
         // The cache key MUST include the exact IDs requested, otherwise if we filter by pole 1, 
         // it caches pole 1's departures under the generic node key, and clicking pole 2 returns pole 1's data.
-        const cacheKey = `duk_departures_${node}_${post}_${ids}`;
-        return CacheManager.getOrFetch<AppDepartureResponse>(
-            cacheKey,
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
-            async () => {
-                const baseUrl = this.city.adapterConfig?.baseUrl;
-                const response = await fetch(`${baseUrl}/GetStationDeparturesWCount/${node}/${post}/30/0`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+        const cacheKey = `${node}_${post}_${ids}`;
+        const cached = departuresCache.get(cacheKey);
+        if (cached !== undefined) return cached;
 
-                if (!response.ok) {
-                    console.error('Failed to fetch DUK departures:', response.status);
-                    throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
-                }
-
-                const data = await response.json() as DukDeparturesResponse;
-                const departures: AppDeparture[] = [];
-
-                for (const dep of data.DeparturesList || []) {
-                    // Filter by requested posts if applicable
-                    const depPost = String(dep.StationPost);
-                    
-                    // We filtered out 999 from our structural mapping.
-                    // If the upstream API still returns a departure on post 999, we should map it to post '1'
-                    // as 999 is just an alias for 1.
-                    const mappedPost = depPost === '999' ? '1' : depPost;
-                    
-                    if (requestedPosts && !requestedPosts.has(mappedPost)) {
-                        continue;
-                    }
-
-                    // Parse Delay ("0:00:00" -> seconds)
-                    let delaySeconds = 0;
-                    if (dep.Delay && typeof dep.Delay === 'string') {
-                        const parts = dep.Delay.split(':');
-                        if (parts.length === 3) {
-                            delaySeconds = parseInt(parts[0], 10) * 3600 + parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
-                        }
-                    }
-
-                    const routeType = (DUK_TRACTION_MAPPING[dep.Traction] || 'bus') as AppRouteType;
-                    const lineName = String(dep.LineName || '');
-                    const safeDateStr = (str: string) => str ? str.replace(' ', 'T') : str;
-
-                    departures.push({
-                        timestamp: safeDateStr(dep.DepartureDT),
-                        scheduled: safeDateStr(dep.TODepartureDT),
-                        delay: delaySeconds,
-                        line: lineName,
-                        type: routeType,
-                        directionId: '0',
-                        headsign: dep.Direction || '',
-                        isCanceled: false,
-                        tripId: undefined, // GTFS trip ID isn't directly exposed here unless we fetch full GTFS
-                        vehicleId: undefined,
-                        platform: mappedPost,
-                        route_color: getDukVehicleColor(routeType, lineName),
-                        is_wheelchair_accessible: null,
-                        is_air_conditioned: null,
-                        stopId: `duk-${node}-${mappedPost}`
-                    });
-                }
-
-                return { departures };
+        const baseUrl = this.city.adapterConfig?.baseUrl;
+        const response = await appClient.fetch(`${baseUrl}/GetStationDeparturesWCount/${node}/${post}/30/0`, {
+            headers: {
+                'Accept': 'application/json'
             }
-        );
+        });
+
+        if (!response.ok) {
+            console.error('Failed to fetch DUK departures:', response.status);
+            throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
+        }
+
+        const data = await response.json() as DukDeparturesResponse;
+        const departures: AppDeparture[] = [];
+
+        for (const dep of data.DeparturesList || []) {
+            // Filter by requested posts if applicable
+            const depPost = String(dep.StationPost);
+            
+            // We filtered out 999 from our structural mapping.
+            // If the upstream API still returns a departure on post 999, we should map it to post '1'
+            // as 999 is just an alias for 1.
+            const mappedPost = depPost === '999' ? '1' : depPost;
+            
+            if (requestedPosts && !requestedPosts.has(mappedPost)) {
+                continue;
+            }
+
+            // Parse Delay ("0:00:00" -> seconds)
+            let delaySeconds = 0;
+            if (dep.Delay && typeof dep.Delay === 'string') {
+                const parts = dep.Delay.split(':');
+                if (parts.length === 3) {
+                    delaySeconds = parseInt(parts[0], 10) * 3600 + parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
+                }
+            }
+
+            const routeType = (DUK_TRACTION_MAPPING[dep.Traction] || 'bus') as AppRouteType;
+            const lineName = String(dep.LineName || '');
+            const safeDateStr = (str: string) => str ? str.replace(' ', 'T') : str;
+
+            departures.push({
+                timestamp: safeDateStr(dep.DepartureDT),
+                scheduled: safeDateStr(dep.TODepartureDT),
+                delay: delaySeconds,
+                line: lineName,
+                type: routeType,
+                directionId: '0',
+                headsign: dep.Direction || '',
+                isCanceled: false,
+                tripId: undefined, // GTFS trip ID isn't directly exposed here unless we fetch full GTFS
+                vehicleId: undefined,
+                platform: mappedPost,
+                route_color: getDukVehicleColor(routeType, lineName),
+                is_wheelchair_accessible: null,
+                is_air_conditioned: null,
+                stopId: `duk-${node}-${mappedPost}`
+            });
+        }
+
+        const result: AppDepartureResponse = { departures };
+        departuresCache.set(cacheKey, result);
+        return result;
     }
 }

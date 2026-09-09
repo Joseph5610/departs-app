@@ -64,7 +64,10 @@ export async function getGtfsRoutes(citySlug: string): Promise<GtfsRoutesData> {
             console.error(`Failed to parse or fetch GTFS static data for ${citySlug}:`, e);
             return { routes: {}, routesByName: {} };
         }
-    });
+    },
+    // An empty route table is an upstream failure, not a valid result. Without this the empty
+    // object would be cached for the full TTL and every vehicle would be dropped for two hours.
+    (data) => !data || Object.keys(data.routes).length === 0);
 }
 
 /**
@@ -117,5 +120,6 @@ export async function getGtfsTripRoutes(citySlug: string): Promise<GtfsTripRoute
             console.error(`Failed to parse or fetch GTFS trip routes for ${citySlug}:`, e);
             return { tripRoutes: {}, tripAliases: {} };
         }
-    });
+    },
+    (data) => !data || Object.keys(data.tripRoutes).length === 0);
 }

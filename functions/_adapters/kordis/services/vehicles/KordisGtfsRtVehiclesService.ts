@@ -7,6 +7,7 @@ import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import type { ApiMapping, ApiTrip } from '../types';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
+import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
@@ -25,6 +26,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             async () => {
                 try {
                     const resApi = await appClient.fetch(apiUrl, { cf: { cacheTtl: 7200 } });
+                    if (!resApi.ok) {
+                        console.error(`Failed to fetch api.json for ${this.city.slug}: ${resApi.status}`);
+                        return null;
+                    }
                     const mapping = await resApi.json() as ApiMapping;
                     const lookup: Record<string, ApiTrip> = {};
                     for (const trips of Object.values(mapping)) {
@@ -38,7 +43,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     console.error("Failed to fetch api.json for KordisGtfsRtVehiclesService", e);
                     return null;
                 }
-            }
+            },
+            (data) => !data || Object.keys(data.lookup).length === 0
         );
     }
 
@@ -49,6 +55,23 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         const todayLocalStr = getZonedDateString(this.city.timezone);
         const currentSeconds = getCurrentLocalSeconds(this.city.timezone);
         return { todayLocalStr, currentMinutes: currentSeconds / 60 };
+    }
+
+    /**
+     * Resolves a raw feed trip id to the id used by the current GTFS export.
+     *
+     * KORDIS keeps emitting trip ids from a previous export for a while after a schedule change,
+     * so ids absent from `tripRoutes` are looked up in the alias table. Returns null when the alias
+     * table explicitly marks the trip as dropped.
+     */
+    private resolveTripId(rawTripId: string, tripRoutes: GtfsTripRoutesData): string | null {
+        if (tripRoutes.tripRoutes && rawTripId in tripRoutes.tripRoutes) {
+            return rawTripId; // Active in current GTFS, trust it
+        }
+        if (tripRoutes.tripAliases && rawTripId in tripRoutes.tripAliases) {
+            return tripRoutes.tripAliases[rawTripId] ?? null; // null = dropped old trip
+        }
+        return rawTripId;
     }
 
     /**
@@ -78,17 +101,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             const rawTripId = entity.vehicle?.trip?.tripId;
             if (!rawTripId) continue;
             
-            let tripId: string;
-            if (tripRoutesObj.tripRoutes && rawTripId in tripRoutesObj.tripRoutes) {
-                tripId = rawTripId;
-            } else if (tripRoutesObj.tripAliases && rawTripId in tripRoutesObj.tripAliases) {
-                const resolved = tripRoutesObj.tripAliases[rawTripId];
-                if (!resolved) continue; // dropped trip
-                tripId = resolved;
-            } else {
-                tripId = rawTripId;
-            }
-            
+            const tripId = this.resolveTripId(rawTripId, tripRoutesObj);
+            if (!tripId) continue; // dropped trip
+
             const tripInfo = tripLookup[tripId];
             
             if (tripInfo) {
@@ -115,10 +130,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-     * Overrides the base vehicle fetching logic to process the KORDIS GTFS-RT feed.
-     * In addition to mapping real-time positions, it performs bulk enrichment by fetching
-     * the static DPMB vehicle ranges (e.g., to determine if a vehicle is air-conditioned or a specific model)
-     * and merging them into the final vehicle features.
+     * Overrides the base vehicle fetching logic to process the KORDIS GTFS-RT feed, which needs
+     * de-duplication by vehicle label and alias resolution for trip ids carried over from a
+     * previous GTFS export.
      */
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
@@ -126,21 +140,13 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
                 const tInitStart = Date.now();
-                const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
 
-                const [[feed, gtfsData, tripRoutesObj]] = await Promise.all([
-                    this.getCoreData()
+                const [[feed, gtfsData, tripRoutesObj], apiData] = await Promise.all([
+                    this.getCoreData(),
+                    this.getApiMapping()
                 ]);
 
-                let apiData: { mapping: ApiMapping, lookup: Record<string, ApiTrip> } | null = null;
-                // Defer heavy API mapping fetch on cold start to avoid CPU death loop
-                if (!isColdStart) {
-                    apiData = await this.getApiMapping();
-                }
-                const tInitEnd = Date.now();
-                if (!isColdStart && apiData) {
-                    console.log(`[PERF] Brno initialization (core + dpmb + api_mapping): ${tInitEnd - tInitStart}ms`);
-                }
+                console.log(`[PERF] ${this.city.slug} initialization (core + api_mapping): ${Date.now() - tInitStart}ms`);
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -202,16 +208,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const rawTripId = vp.trip?.tripId;
                     if (!rawTripId) continue;
 
-                    let tripId: string;
-                    if (tripRoutesObj.tripRoutes && rawTripId in tripRoutesObj.tripRoutes) {
-                        tripId = rawTripId; // Active in current GTFS, trust it
-                    } else if (tripRoutesObj.tripAliases && rawTripId in tripRoutesObj.tripAliases) {
-                        const resolved = tripRoutesObj.tripAliases[rawTripId];
-                        if (!resolved) continue; // null = dropped old trip
-                        tripId = resolved;
-                    } else {
-                        tripId = rawTripId;
-                    }
+                    const tripId = this.resolveTripId(rawTripId, tripRoutesObj);
+                    if (!tripId) continue;
 
                     const routeInfo = tripRoutesObj.tripRoutes[tripId];
                     if (!routeInfo) continue;
@@ -237,7 +235,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 }
 
                 const tMapEnd = Date.now();
-                console.log(`[PERF] Brno total array mapping loop: ${tMapEnd - tMapStart}ms (entities: ${feed.entity.length})`);
+                console.log(`[PERF] ${this.city.slug} total array mapping loop: ${tMapEnd - tMapStart}ms (entities: ${feed.entity.length})`);
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
             },
@@ -263,61 +261,26 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
         return diffMins > 1 && diffMins <= 60;
     }
 
-    override async getSingleLiveVehicle(vehicleId: string, gtfsTripId?: string) {
-        // 1. O(1) Fast lookup for the mapped vehicle data
-        const collection = await this.getCachedMappedVehicles();
-        if (!collection.features || collection.features.length === 0) return {};
+    protected override isRelevantEntity(entity: transit_realtime.IFeedEntity): boolean {
+        return !this.isInvalidDpmbVehicle(entity);
+    }
 
-        let liveMatch = gtfsTripId
-            ? collection.features.find(f => f.properties.gtfs_trip_id === gtfsTripId)
-            : undefined;
+    protected override matchesTripId(
+        entity: transit_realtime.IFeedEntity,
+        gtfsTripId: string,
+        tripRoutes: GtfsTripRoutesData
+    ): boolean {
+        const id = entity.vehicle?.trip?.tripId;
+        if (!id) return false;
+        return id === gtfsTripId || tripRoutes.tripAliases?.[id] === gtfsTripId;
+    }
 
-        if (!liveMatch && vehicleId) {
-            liveMatch = collection.features.find(f =>
-                f.properties.vehicle_id === vehicleId ||
-                f.properties.vehicle_descriptor?.vehicle_registration_number === vehicleId
-            );
-        }
-
-        if (!liveMatch) return {};
-
-        // 2. Scan the already-cached raw feed to extract only the lastStopId without rebuilding everything
-        const [[feed, , tripRoutesObj]] = await Promise.all([
-            this.getCoreData()
-        ]);
-
-        let lastStopId: string | undefined;
-
-        if (feed && feed.entity) {
-            const validEntities = feed.entity.filter(e => !this.isInvalidDpmbVehicle(e));
-
-            let rawMatch: transit_realtime.IFeedEntity | undefined;
-
-            if (gtfsTripId) {
-                rawMatch = validEntities.find((e: transit_realtime.IFeedEntity) => {
-                    const id = e.vehicle?.trip?.tripId;
-                    return id && (id === gtfsTripId || (tripRoutesObj.tripAliases && tripRoutesObj.tripAliases[id] === gtfsTripId));
-                });
-            }
-
-            if (!rawMatch && vehicleId) {
-                rawMatch = validEntities.find((e: transit_realtime.IFeedEntity) =>
-                    e.vehicle?.vehicle?.id === vehicleId ||
-                    e.vehicle?.vehicle?.label === vehicleId ||
-                    e.vehicle?.vehicle?.licensePlate === vehicleId ||
-                    e.id === vehicleId
-                );
-            }
-
-            if (rawMatch && rawMatch.vehicle?.stopId) {
-                lastStopId = rawMatch.vehicle.stopId.toString();
-            }
-        }
-
-        return { 
-            liveMatch, 
-            lastStopId
-        };
+    protected override matchesVehicleId(entity: transit_realtime.IFeedEntity, vehicleId: string): boolean {
+        const descriptor = entity.vehicle?.vehicle;
+        return descriptor?.id === vehicleId
+            || descriptor?.label === vehicleId
+            || descriptor?.licensePlate === vehicleId
+            || entity.id === vehicleId;
     }
 
     /**

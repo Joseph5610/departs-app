@@ -9,7 +9,20 @@ import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/api-utils';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { LruCache } from '../../../../_core/utils/LruCache';
 import type { VehiclesService } from '../vehicles/VehiclesService';
+
+/**
+ * Static departure tuples, keyed by `${citySlug}:${stopId}`.
+ *
+ * The tuples carry absolute timestamps and are regenerated daily, so they are static within a
+ * request window; only the realtime overlay in DeparturesMapper is time-sensitive. Memoising them
+ * keeps the 10s departure poll from re-parsing a whole departures chunk (up to ~1.2MB) each time.
+ */
+const departureTuplesCache = new LruCache<GtfsDepartureTuple[]>({
+    maxEntries: 512,
+    ttlMs: CACHE_TTL.TWO_HOURS_MS
+});
 
 /**
  * Service to fetch and map GTFS static departures for a specific city.
@@ -100,27 +113,49 @@ export class DeparturesService {
         childToRequestedMap: Map<string, string>,
         staticDataUrl: string
     ): Promise<{ stopId: string; tuple: GtfsDepartureTuple }[]> {
-        const chunkMap = new Map<string, string[]>();
+        const allDeps: { stopId: string; tuple: GtfsDepartureTuple }[] = [];
+        const collect = (id: string, tuples: GtfsDepartureTuple[]) => {
+            const requestedStopId = childToRequestedMap.get(id) || id;
+            for (const tuple of tuples) {
+                allDeps.push({ stopId: requestedStopId, tuple });
+            }
+        };
+
+        // Serve what we already hold and only fetch chunks for the stops we are missing.
+        const missing: string[] = [];
         for (const id of targetIds) {
+            const cached = departureTuplesCache.get(`${this.city.slug}:${id}`);
+            if (cached !== undefined) {
+                collect(id, cached);
+            } else {
+                missing.push(id);
+            }
+        }
+
+        if (missing.length === 0) return allDeps;
+
+        const chunkMap = new Map<string, string[]>();
+        for (const id of missing) {
             const chunkId = encodeURIComponent(id.substring(0, 4).toUpperCase());
             if (!chunkMap.has(chunkId)) chunkMap.set(chunkId, []);
             chunkMap.get(chunkId)!.push(id);
         }
 
-        const allDeps: { stopId: string; tuple: GtfsDepartureTuple }[] = [];
-
         const fetchPromises = Array.from(chunkMap.entries()).map(async ([chunkId, ids]) => {
             const dataUrl = `${staticDataUrl}/${this.city.slug}/departures/${chunkId}.json`;
             try {
-                const res = await appClient.fetch(dataUrl);
-                if (res.ok) {
-                    const chunkData = await res.json() as Record<string, GtfsDepartureTuple[]>;
-                    for (const id of ids) {
-                        if (chunkData[id]) {
-                            const requestedStopId = childToRequestedMap.get(id) || id;
-                            chunkData[id].forEach(tuple => allDeps.push({ stopId: requestedStopId, tuple }));
-                        }
-                    }
+                const res = await appClient.fetch(dataUrl, { cf: { cacheTtl: 3600 } });
+                if (!res.ok) return;
+
+                const raw = await res.text();
+                const tParseStart = Date.now();
+                const chunkData = JSON.parse(raw) as Record<string, GtfsDepartureTuple[]>;
+                console.log(`[PERF] ${this.city.slug} departures chunk ${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, stops=${ids.length}`);
+
+                for (const id of ids) {
+                    const tuples = chunkData[id] ?? [];
+                    departureTuplesCache.set(`${this.city.slug}:${id}`, tuples);
+                    collect(id, tuples);
                 }
             } catch {
                 // Fail silently for missing chunk file

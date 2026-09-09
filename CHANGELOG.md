@@ -4,6 +4,15 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.65.1] - 2026-09-09
+
+### Fixed
+
+- Fixed intermittent 503 "Exceeded CPU Limit" errors on Brno endpoints, caused by the vehicle detail poll re-parsing the entire multi-megabyte GTFS shape chunk every 10 seconds; route geometry, trip stops and departure tuples are now memoised in size-bounded in-isolate caches.
+- Prevented a single CPU-killed request from stalling every subsequent request in the same Worker isolate by bounding how long `CacheManager` will wait on another request's in-flight fetch.
+- Fixed upstream fetch failures being cached as valid results for two hours, which could leave a city serving no vehicles until the cache expired.
+- Split Brno route geometry into evenly sized chunks, cutting the largest shape file the backend must parse from 9.5 MB to under 200 KB.
+
 ## [0.65.0] - 2026-09-04
 
 ### Added

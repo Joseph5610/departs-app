@@ -4,10 +4,38 @@ import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import type { DukTrafficResponse, DukVehicle } from '../../types';
 import { DUK_STATE_MAPPING, getDukRouteTypeFromLineName } from '../../utils/dukConstants';
 import { getDukVehicleColor } from '../../utils/colors';
+import { appClient } from '../../../../_core/ApiClient';
 
 export class DukVehiclesService {
     constructor(private city: CityConfig) {}
     
+    /**
+     * Fetches and caches the full DUK traffic feed under a single key.
+     *
+     * Both the map collection and the per-vehicle detail read from this, so a detail request no
+     * longer re-downloads and re-parses the entire feed, and no per-vehicle cache keys are minted.
+     */
+    private async getTrafficFeed(): Promise<DukTrafficResponse | null> {
+        return CacheManager.getOrFetch<DukTrafficResponse | null>(
+            'duk_traffic',
+            CACHE_TTL.SHORT_DEBOUNCE_MS,
+            async () => {
+                const baseUrl = this.city.adapterConfig?.baseUrl;
+                const response = await appClient.fetch(`${baseUrl}/GetTraffic/0`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch DUK traffic:', response.status);
+                    return null;
+                }
+
+                return await response.json() as DukTrafficResponse;
+            },
+            (feed) => !feed || !feed.VehicleList || feed.VehicleList.length === 0
+        );
+    }
+
     private async getStationNames(): Promise<Record<number, string>> {
         return CacheManager.getOrFetch<Record<number, string>>(
             'duk_station_names',
@@ -80,15 +108,9 @@ export class DukVehiclesService {
             'duk_vehicles',
             CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
-                const baseUrl = this.city.adapterConfig?.baseUrl;
-                const response = await fetch(`${baseUrl}/GetTraffic/0`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                const data = await this.getTrafficFeed();
 
-                if (!response.ok) {
-                    console.error('Failed to fetch DUK traffic:', response.status);
+                if (!data) {
                     return {
                         type: 'FeatureCollection',
                         features: [],
@@ -97,7 +119,6 @@ export class DukVehiclesService {
                     };
                 }
 
-                const data = await response.json() as DukTrafficResponse;
                 const features: AppVehicleFeature[] = [];
                 const nodeNames = await this.getStationNames();
 
@@ -120,99 +141,84 @@ export class DukVehiclesService {
      * Fetches a specific vehicle's real-time detail by hunting for it inside the full traffic feed.
      */
     async getSingleLiveVehicle(vehicleId: string | null, tripId: string | null): Promise<AppVehicleDetail | null> {
-        return CacheManager.getOrFetch<AppVehicleDetail | null>(
-            `duk_vehicle_detail_${vehicleId || tripId}`,
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
-            async () => {
-                const baseUrl = this.city.adapterConfig?.baseUrl;
-                const response = await fetch(`${baseUrl}/GetTraffic/0`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+        const data = await this.getTrafficFeed();
+        if (!data) return null;
 
-                if (!response.ok) {
-                    return null;
-                }
-
-                const data = await response.json() as DukTrafficResponse;
-                const vehicle = data.VehicleList?.find(v => 
-                    (vehicleId && String(v.ID) === vehicleId) || 
-                    (tripId && v.qride_tripID === tripId)
-                );
-
-                if (!vehicle) {
-                    return null;
-                }
-
-                const nodeNames = await this.getStationNames();
-                const feature = this.mapVehicle(vehicle, nodeNames);
-
-                const liveMatch: AppVehicleDetail = {
-                    ...feature.properties,
-                    geometry: feature.geometry as AppVehicleDetail['geometry'],
-                    stop_times: { features: [] },
-                    route_geojson: undefined // Not available for DUK
-                };
-
-                // Construct a minimal timeline
-                let seq = 1;
-                const extractTime = (str: string) => {
-                    if (!str) return str;
-                    const parts = str.split(/[\sT]/);
-                    return parts.length > 1 ? parts[1] : str;
-                };
-
-                if (vehicle.StationNode) {
-                    liveMatch.stop_times!.features.push({
-                        type: 'Feature',
-                        properties: {
-                            stop_id: 'incomplete-gap-start',
-                            stop_name: '...',
-                            stop_sequence: seq++,
-                            arrival_time: '',
-                            departure_time: ''
-                        }
-                    });
-
-                    liveMatch.stop_times!.features.push({
-                        type: 'Feature',
-                        properties: {
-                            stop_id: String(vehicle.StationNode),
-                            stop_name: nodeNames[vehicle.StationNode] || String(vehicle.StationNode),
-                            stop_sequence: seq++,
-                            arrival_time: extractTime(vehicle.ArrivalDT) || '',
-                            departure_time: extractTime(vehicle.TODepartureDT) || ''
-                        }
-                    });
-                }
-
-                if (vehicle.FinalNode && vehicle.FinalNode !== vehicle.StationNode) {
-                    liveMatch.stop_times!.features.push({
-                        type: 'Feature',
-                        properties: {
-                            stop_id: 'incomplete-gap',
-                            stop_name: '...',
-                            stop_sequence: seq++,
-                            arrival_time: '',
-                            departure_time: ''
-                        }
-                    });
-
-                    liveMatch.stop_times!.features.push({
-                        type: 'Feature',
-                        properties: {
-                            stop_id: String(vehicle.FinalNode),
-                            stop_name: nodeNames[vehicle.FinalNode] || String(vehicle.FinalNode),
-                            stop_sequence: seq,
-                            arrival_time: '',
-                            departure_time: ''
-                        }
-                    });
-                }
-
-                return liveMatch;
-            }
+        const vehicle = data.VehicleList?.find(v =>
+            (vehicleId && String(v.ID) === vehicleId) ||
+            (tripId && v.qride_tripID === tripId)
         );
+
+        if (!vehicle) {
+            return null;
+        }
+
+        const nodeNames = await this.getStationNames();
+        const feature = this.mapVehicle(vehicle, nodeNames);
+
+        const liveMatch: AppVehicleDetail = {
+            ...feature.properties,
+            geometry: feature.geometry as AppVehicleDetail['geometry'],
+            stop_times: { features: [] },
+            route_geojson: undefined // Not available for DUK
+        };
+
+        // Construct a minimal timeline
+        let seq = 1;
+        const extractTime = (str: string) => {
+            if (!str) return str;
+            const parts = str.split(/[\sT]/);
+            return parts.length > 1 ? parts[1] : str;
+        };
+
+        if (vehicle.StationNode) {
+            liveMatch.stop_times!.features.push({
+                type: 'Feature',
+                properties: {
+                    stop_id: 'incomplete-gap-start',
+                    stop_name: '...',
+                    stop_sequence: seq++,
+                    arrival_time: '',
+                    departure_time: ''
+                }
+            });
+
+            liveMatch.stop_times!.features.push({
+                type: 'Feature',
+                properties: {
+                    stop_id: String(vehicle.StationNode),
+                    stop_name: nodeNames[vehicle.StationNode] || String(vehicle.StationNode),
+                    stop_sequence: seq++,
+                    arrival_time: extractTime(vehicle.ArrivalDT) || '',
+                    departure_time: extractTime(vehicle.TODepartureDT) || ''
+                }
+            });
+        }
+
+        if (vehicle.FinalNode && vehicle.FinalNode !== vehicle.StationNode) {
+            liveMatch.stop_times!.features.push({
+                type: 'Feature',
+                properties: {
+                    stop_id: 'incomplete-gap',
+                    stop_name: '...',
+                    stop_sequence: seq++,
+                    arrival_time: '',
+                    departure_time: ''
+                }
+            });
+
+            liveMatch.stop_times!.features.push({
+                type: 'Feature',
+                properties: {
+                    stop_id: String(vehicle.FinalNode),
+                    stop_name: nodeNames[vehicle.FinalNode] || String(vehicle.FinalNode),
+                    stop_sequence: seq,
+                    arrival_time: '',
+                    departure_time: ''
+                }
+            });
+        }
+
+        return liveMatch;
     }
 }
