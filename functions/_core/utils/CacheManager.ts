@@ -62,12 +62,23 @@ export class CacheManager {
 
         const pending = processingPromises.get(key);
         if (pending) {
+            // Someone is already rebuilding this key. If we hold anything at all, serve it stale
+            // rather than waiting or rebuilding in parallel: for a 5s-TTL feed a slightly old answer
+            // beats both a 3s stall and N requests each repeating the same expensive work. This is
+            // the case that matters under load, when every concurrent request misses at once.
+            if (cached) {
+                return cached.data as T;
+            }
+
             if (now - pending.startedAt < PENDING_ABANDON_MS) {
+                // Nothing to serve, so we do have to wait — but only for a bounded time, because a
+                // request torn down mid-flight (CPU kill, client cancel) leaves a promise that
+                // never settles.
                 const shared = await CacheManager.waitForPending<T>(pending.promise);
                 if (shared.settled) {
                     return shared.value;
                 }
-                console.warn(`[CacheManager] Shared promise for '${key}' did not settle within ${PENDING_WAIT_MS}ms. Fetching independently rather than queueing behind it.`);
+                console.warn(`[CacheManager] Shared promise for '${key}' did not settle within ${PENDING_WAIT_MS}ms and no stale value is available. Fetching independently.`);
             } else {
                 console.warn(`[CacheManager] Shared promise for '${key}' exceeded ${PENDING_ABANDON_MS}ms. Assuming deadlocked from a canceled request. Dropping it.`);
             }
@@ -78,7 +89,7 @@ export class CacheManager {
 
             // Waiting is an await point: another request may have populated the cache meanwhile.
             cached = memoryCache.get(key);
-            if (cached && Date.now() - cached.timestamp < ttlMs) {
+            if (cached) {
                 return cached.data as T;
             }
         }

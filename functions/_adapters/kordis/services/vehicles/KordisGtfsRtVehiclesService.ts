@@ -141,12 +141,20 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             async () => {
                 const tInitStart = Date.now();
 
-                const [[feed, gtfsData, tripRoutesObj], apiData] = await Promise.all([
-                    this.getCoreData(),
-                    this.getApiMapping()
-                ]);
+                // api.json is 2.6MB and building its trip lookup walks ~20k entries. On a cold
+                // isolate that lands on top of the RT feed and the static route tables in a single
+                // request, which is enough to exhaust the CPU budget. Skip it for the very first
+                // request and let the next one (5s later, warm) pick it up.
+                //
+                // The cost is that this first response has no duplicate-label de-duplication and no
+                // before_track state. Removing this deferral put /vehicles back into CPU-limit 503s,
+                // so it stays until api.json itself is made cheaper to load.
+                const isColdStart = !CacheManager.has(`gtfs_rt_feed_${this.city.slug}`);
 
-                console.log(`[PERF] ${this.city.slug} initialization (core + api_mapping): ${Date.now() - tInitStart}ms`);
+                const [feed, gtfsData, tripRoutesObj] = await this.getCoreData();
+                const apiData = isColdStart ? null : await this.getApiMapping();
+
+                console.log(`[PERF] ${this.city.slug} initialization (core${isColdStart ? ', cold: api_mapping deferred' : ' + api_mapping'}): ${Date.now() - tInitStart}ms`);
 
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
