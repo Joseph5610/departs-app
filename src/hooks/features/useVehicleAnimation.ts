@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
+import type { GeoJSONSource } from 'maplibre-gl';
 import type { VehicleCollection, VehicleFeature } from '../../types/vehicles';
 
 const ANIMATION_DURATION = 1000; // 1 second smooth slide
@@ -178,8 +179,8 @@ export const useVehicleAnimation = (
             });
 
             // 2. Direct map mutation: update GeoJSON sources bypassing React
-            const cityVehiclesSource = map.getSource('city-vehicles') as maplibregl.GeoJSONSource | undefined;
-            const selectedVehicleSource = map.getSource('selected-vehicle') as maplibregl.GeoJSONSource | undefined;
+            const cityVehiclesSource = map.getSource('city-vehicles') as GeoJSONSource | undefined;
+            const selectedVehicleSource = map.getSource('selected-vehicle') as GeoJSONSource | undefined;
 
             if (cityVehiclesSource) {
                 // Respect the showVehicles preference even in the direct-mutation path,

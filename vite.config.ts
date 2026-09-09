@@ -106,6 +106,11 @@ export default defineConfig({
       }
     })
   ],
+  // maplibre-gl v6 spawns its worker with { type: 'module' }, so the bundled
+  // worker must be emitted as ESM rather than Vite's default IIFE.
+  worker: {
+    format: 'es',
+  },
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {

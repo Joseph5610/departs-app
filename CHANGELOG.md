@@ -6,11 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.66.0] - 2026-09-09
 
-### Fixed
-
-- Fixed vehicles waiting at their origin being reported as running early, with all upcoming stop times shifted; departure status is now evaluated against the schedule before any delay is estimated.
-- Cut the CPU cost of the Brno vehicle feed by replacing the 2.5MB `api.json` lookup with a compact per-trip index, resolving CPU-limit 503s on cold Worker isolates.
-
 ### Changed
 
 - Migrated MapLibre GL JS from v5 to v6, resolving a critical (CVSS 10.0) XSS sanitizer bypass in `DOM.sanitize()` that could execute attacker-supplied attribution markup without user interaction.
@@ -18,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed vehicles waiting at their origin being reported as running early, with all upcoming stop times shifted; departure status is now evaluated against the schedule before any delay is estimated.
+- Cut the CPU cost of the Brno vehicle feed by replacing the 2.5MB `api.json` lookup with a compact per-trip index, resolving CPU-limit 503s on cold Worker isolates.
 - Patched the remaining development-toolchain advisories (sharp, hono, js-yaml, fast-uri, qs), bringing `npm audit` to zero vulnerabilities.
 
 ## [0.65.1] - 2026-09-09

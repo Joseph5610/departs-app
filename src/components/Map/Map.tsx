@@ -5,7 +5,9 @@ import { navigate } from 'wouter/use-browser-location';
 import { useLocation } from 'wouter';
 
 import MapGL, { Marker } from 'react-map-gl/maplibre';
+import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '../../lib/maplibre-worker';
 import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
@@ -223,7 +225,7 @@ const MapInner: React.FC = () => {
                             return;
                         }
                         const sourceId = 'city-stops';
-                        const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
+                        const source = map.getSource(sourceId) as GeoJSONSource;
                         if (source && clusterId !== undefined) {
                             source.getClusterExpansionZoom(clusterId).then((zoom) => {
                                 mapRef.current?.easeTo({
