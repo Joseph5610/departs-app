@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.65.1] - 2026-09-09
+
+### Fixed
+
+- Manually bumped maplibre-gl to 6.9.0 to patch critical XSS vulnerability and fixed TypeScript compilation errors due to namespace changes.
+
 ## [0.65.0] - 2026-09-04
 
 ### Added
