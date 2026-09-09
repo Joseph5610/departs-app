@@ -159,32 +159,24 @@ export class VehicleDetailService {
      * Reads a single shape's geometry out of its chunk.
      *
      * Shapes are bucketed by `shape_id % SHAPE_CHUNK_COUNT`, which keeps each chunk small enough
-     * to parse cheaply. Falls back to the legacy prefix-keyed layout so a Worker deployed ahead of
-     * the regenerated data still resolves geometry.
+     * to parse cheaply.
      */
     private async fetchShapeGeometry(staticDataUrl: string, shapeId: string): Promise<[number, number][][] | null> {
-        const candidates = [
-            { dir: 'shape_chunks', chunkId: shapeChunkId(shapeId) },
-            { dir: 'shapes', chunkId: shapeId.substring(0, 2) }
-        ];
+        const chunkId = shapeChunkId(shapeId);
+        const url = `${staticDataUrl}/${this.city.slug}/shape_chunks/${encodeURIComponent(chunkId)}.json`;
 
-        for (const { dir, chunkId } of candidates) {
-            const url = `${staticDataUrl}/${this.city.slug}/${dir}/${encodeURIComponent(chunkId)}.json`;
-            // `cf` is only a hint here: data.departs.app sits in the same zone as the Worker, where
-            // edge caching of subrequests is unreliable. The memo above is the cache that matters.
-            const res = await appClient.fetch(url, { cf: { cacheTtl: 86400 } });
-            if (!res.ok) continue;
+        // `cf` is only a hint here: data.departs.app sits in the same zone as the Worker, where
+        // edge caching of subrequests is unreliable. The memo above is the cache that matters.
+        const res = await appClient.fetch(url, { cf: { cacheTtl: 86400 } });
+        if (!res.ok) return null;
 
-            const raw = await res.text();
-            const tParseStart = Date.now();
-            const chunk = JSON.parse(raw) as Record<string, [number, number][][]>;
-            const shape = chunk[shapeId];
-            console.log(`[PERF] ${this.city.slug} shape ${dir}/${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, shapeId=${shapeId}, hit=${shape != null}`);
+        const raw = await res.text();
+        const tParseStart = Date.now();
+        const chunk = JSON.parse(raw) as Record<string, [number, number][][]>;
+        const shape = chunk[shapeId] ?? null;
+        console.log(`[PERF] ${this.city.slug} shape chunk ${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, shapeId=${shapeId}, hit=${shape != null}`);
 
-            if (shape) return shape;
-        }
-
-        return null;
+        return shape;
     }
 
     /**
