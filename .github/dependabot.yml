@@ -9,17 +9,29 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # typescript-eslint peers on typescript ">=4.8.4 <6.1.0" (still true on 8.70.0),
+      # so a TS 7 bump makes `npm clean-install` fail with ERESOLVE.
+      # Drop this entry once typescript-eslint ships TS 7 support.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       cloudflare:
         patterns:
           - "@cloudflare/*"
           - "wrangler"
-      lint-and-type:
+      typescript:
+        # Must move in lockstep: typescript-eslint constrains the typescript range.
         patterns:
-          - "eslint*"
-          - "@eslint*"
           - "typescript"
           - "typescript-eslint"
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+      types:
+        patterns:
           - "@types/*"
       i18n:
         patterns:
