@@ -30,7 +30,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         console.error(`Failed to fetch api.json for ${this.city.slug}: ${resApi.status}`);
                         return null;
                     }
-                    const mapping = await resApi.json() as ApiMapping;
+                    const raw = await resApi.text();
+                    const tParse = Date.now();
+                    const mapping = JSON.parse(raw) as ApiMapping;
+                    const tBuild = Date.now();
                     const lookup: Record<string, ApiTrip> = {};
                     for (const trips of Object.values(mapping)) {
                         for (let i = 0; i < trips.length; i++) {
@@ -38,6 +41,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                             lookup[trip.trip_id] = trip;
                         }
                     }
+                    const tDone = Date.now();
+                    console.log(`[PERF] ${this.city.slug} api.json: bytes=${raw.length}, parse=${tBuild - tParse}ms, lookup=${tDone - tBuild}ms, trips=${Object.keys(lookup).length}`);
                     return { mapping, lookup };
                 } catch (e) {
                     console.error("Failed to fetch api.json for KordisGtfsRtVehiclesService", e);
