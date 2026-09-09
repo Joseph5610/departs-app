@@ -74,14 +74,18 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ### Mandatory Protocol
 
-1. **Tool-First**: Execute tools immediately. Explanation under 3 sentences unless complex.
-2. **Build & Quality Integrity**: Run `npm run build` and ensure `tsc` and `lint` pass for BOTH frontend and backend (`functions/`) before confirming any architectural change or concluding task. `npm run build` is ONLY authority for final type validation.
-3. **Versioning**: Increment `package.json` exactly ONCE per conversational session (or logical commit), NOT repeatedly on every prompt. Group all incremental changes made during the session under a single version bump. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
-4. **Changelog**: Maintain a single version block in `CHANGELOG.md` for the entire session. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
+1. **Tool-First**: Execute tools immediately, then report.
+2. **Response Length (HARD LIMIT)**: Final responses MUST be under 6 sentences. No exceptions for "complex" work — complexity is a reason to write less, not more.
+   - **Forbidden**: recapping what you just did step by step, restating the user's question, tables or headings unless explicitly requested, listing what you did NOT do, previewing what you are about to do, apologising or self-critiquing at length.
+   - **Required**: lead with the answer or result. State caveats in one clause, not a section. If evidence is needed, show the command output, not prose about it.
+   - Offer detail instead of dumping it: "want the breakdown?" beats three paragraphs.
+3. **Build & Quality Integrity**: Run `npm run build` and ensure `tsc` and `lint` pass for BOTH frontend and backend (`functions/`) before confirming any architectural change or concluding task. `npm run build` is ONLY authority for final type validation.
+4. **Versioning**: Increment `package.json` exactly ONCE per conversational session (or logical commit), NOT repeatedly on every prompt. Group all incremental changes made during the session under a single version bump. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
+5. **Changelog**: Maintain a single version block in `CHANGELOG.md` for the entire session. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
    - **Scope**: Record ONLY **new features** (short 1-line description), **important bug fixes**, and **important architectural changes**.
    - **Forbidden**: NEVER log internal code refactors, minor typing/lint fixes, variable renames, dev tool scripts, or transient bugs introduced and resolved within the same session.
    - **Format**: Keep descriptions concise (max 1 short sentence per entry). DO NOT use nested sub-bullet lists detailing individual files or internal functions. Group all incremental session work under a single clean version header.
-5. **Scratch & Testing**: All scratch files, testing scripts, and temporary data MUST live in the `/scratch` folder at the root of the repository. This folder is git-ignored, ensuring the repository is not cluttered.
+6. **Scratch & Testing**: All scratch files, testing scripts, and temporary data MUST live in the `/scratch` folder at the root of the repository. This folder is git-ignored, ensuring the repository is not cluttered.
 
 ## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
 
