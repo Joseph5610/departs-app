@@ -28,7 +28,7 @@ export const MapControls = React.memo(() => {
     // Routes
     const { isStatsRoute, isFavoritesRoute } = useRouteParams();
 
-    const { rss } = useGlobalAlerts();
+    const { rss, hasAlerts } = useGlobalAlerts();
     const incidentsCount = React.useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
 
     // Geolocation Store
@@ -128,19 +128,23 @@ export const MapControls = React.memo(() => {
                             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_var(--color-purple-500)] pointer-events-none" />
                         )}
                     </PillButton>
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                    <PillButton
-                        onClick={onAlerts}
-                        title={t('alerts.title')}
-                        testId="map-alerts-btn"
-                    >
-                        <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
-                        {incidentsCount > 0 && (
-                            <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[9px] font-bold px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
-                                {incidentsCount}
-                            </span>
-                        )}
-                    </PillButton>
+                    {hasAlerts && (
+                        <>
+                            <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                            <PillButton
+                                onClick={onAlerts}
+                                title={t('alerts.title')}
+                                testId="map-alerts-btn"
+                            >
+                                <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
+                                {incidentsCount > 0 && (
+                                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[9px] font-bold px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
+                                        {incidentsCount}
+                                    </span>
+                                )}
+                            </PillButton>
+                        </>
+                    )}
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
                     <PillButton
                         onClick={onToggleFavorites}

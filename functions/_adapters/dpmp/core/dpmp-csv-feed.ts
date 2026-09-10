@@ -12,6 +12,7 @@ const rowSchema = z.object({
     BUS_STOP_ORDER_NUM: z.coerce.number().int().nonnegative(),
     BUS_STOP_NAME_1: z.string().trim(),
     BUS_STOP_NAME_2: z.string().trim(),
+    PLANNED_ROAD: z.coerce.number(),
     REAL_ROAD: z.coerce.number(),
     LATITUDE: z.coerce.number().min(-90).max(90),
     LONGITUDE: z.coerce.number().min(-180).max(180),
@@ -28,10 +29,13 @@ export interface DpmpVehicleRow {
     stopOrder: number;
     stopName: string;
     nextStopName: string;
+    /** Length in metres of the segment from the current stop to the next one. */
+    plannedRoad: number;
     /** Metres travelled since the current stop; 0 while standing at it. */
     realRoad: number;
-    latitude: number;
-    longitude: number;
+    /** Null when the vehicle reports no GPS fix (`0;0`); the rest of the row is still live. */
+    latitude: number | null;
+    longitude: number | null;
     /** Schedule deviation in seconds: positive is ahead of schedule, negative is late. */
     variation: number;
     vehicleNumber: string;
@@ -55,7 +59,7 @@ function parseDpmpCsv(text: string): DpmpVehicleRow[] {
         if (!parsed.success) continue;
 
         const r = parsed.data;
-        if (r.LATITUDE === 0 || r.LONGITUDE === 0) continue;
+        const hasFix = r.LATITUDE !== 0 && r.LONGITUDE !== 0;
 
         rows.push({
             routeNumber: r.ROUTE_NUMBER.toUpperCase(),
@@ -64,9 +68,10 @@ function parseDpmpCsv(text: string): DpmpVehicleRow[] {
             stopOrder: r.BUS_STOP_ORDER_NUM,
             stopName: r.BUS_STOP_NAME_1,
             nextStopName: r.BUS_STOP_NAME_2,
+            plannedRoad: r.PLANNED_ROAD,
             realRoad: r.REAL_ROAD,
-            latitude: r.LATITUDE,
-            longitude: r.LONGITUDE,
+            latitude: hasFix ? r.LATITUDE : null,
+            longitude: hasFix ? r.LONGITUDE : null,
             variation: r.VARIATION,
             vehicleNumber: r.VEHICLE_NUMBER,
             dateTime: r.DATE_TIME,

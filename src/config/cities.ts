@@ -7,6 +7,8 @@ export interface InitialCityConfig {
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
+    /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
+    hasAlerts?: boolean;
     filters?: {
         vehicles: string[];
         stops: string[];
@@ -22,6 +24,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         hasPointsOfSale: true,
+        hasAlerts: true,
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']
@@ -33,6 +36,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         country: 'CZ',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
+        hasAlerts: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []

@@ -7,6 +7,8 @@ export interface AdapterConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
     hasTripAliases?: boolean;
+    /** Fleet metadata ranges under `${staticDataUrl}/${slug}/`, matched by vehicle number. */
+    vehicleMetadataFile?: string;
     [key: string]: string | boolean | undefined;
 }
 
@@ -21,6 +23,8 @@ export interface CityConfig {
     adapterConfig?: AdapterConfig;
     isBeta?: boolean;
     hasPointsOfSale?: boolean;
+    /** Whether the adapter has a service-alerts source; the frontend hides the alerts UI otherwise. */
+    hasAlerts?: boolean;
     virtualTableUrl?: string;
     filters?: {
         vehicles: string[];
@@ -38,6 +42,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         bounds: [14.22, 49.94, 14.71, 50.18],
         adapter: 'golemio',
         hasPointsOfSale: true,
+        hasAlerts: true,
         virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
@@ -55,8 +60,10 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapterConfig: {
             realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
             staticDataUrl: 'https://data.departs.app',
-            hasTripAliases: true
+            hasTripAliases: true,
+            vehicleMetadataFile: 'dpmb-vehicles.json?v=2'
         },
+        hasAlerts: true,
         isBeta: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
@@ -73,7 +80,8 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         adapter: 'dpmp',
         adapterConfig: {
             realtimeUrl: 'https://egov.presov.sk/geodatakatalog/dpmp.csv',
-            staticDataUrl: 'https://data.departs.app'
+            staticDataUrl: 'https://data.departs.app',
+            vehicleMetadataFile: 'dpmp-vehicles.json'
         },
         isBeta: true,
         filters: {

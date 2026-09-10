@@ -23,6 +23,9 @@ export const DPMP_CONFIG = {
     /** How long after its planned start a trip may still be running. */
     MAX_TRIP_AGE_MINS: 720,
 
+    /** Operator shown on vehicle detail; every vehicle in the CSV belongs to DPMP. */
+    OPERATOR: 'DPMP',
+
     /** Route type assumed for vehicles whose line is missing from routes.json. */
     FALLBACK_ROUTE_TYPE: '3',
 

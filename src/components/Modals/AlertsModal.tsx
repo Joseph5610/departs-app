@@ -80,7 +80,7 @@ export const AlertsModal: React.FC = () => {
     const [filterMode, setFilterMode] = useState<'all' | 'incident' | 'exclusion'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { rss } = useGlobalAlerts();
+    const { rss, hasAlerts } = useGlobalAlerts();
     const { data: rssData, isLoading: loadingRSS } = rss;
 
     // Grouping and Filtering logic
@@ -153,7 +153,7 @@ export const AlertsModal: React.FC = () => {
     }, [groupCounts]);
 
     return (
-        <Dialog open={isAlertsOpen} onOpenChange={setIsAlertsOpen}>
+        <Dialog open={isAlertsOpen && hasAlerts} onOpenChange={setIsAlertsOpen}>
             <DialogContent aria-describedby={undefined} variant="default" className="max-w-xl flex flex-col h-[calc(85dvh)] p-0 overflow-hidden gap-0" data-testid="alerts-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle>

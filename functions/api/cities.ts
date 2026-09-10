@@ -13,6 +13,7 @@ export async function onRequest() {
             bounds: city.bounds,
             isBeta: city.isBeta,
             hasPointsOfSale: city.hasPointsOfSale,
+            hasAlerts: city.hasAlerts,
             virtualTableUrl: city.virtualTableUrl,
             filters: city.filters,
         }))

@@ -2,7 +2,7 @@ import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleDetail } from "../../../../_core/types";
 import { GtfsRtVehicleDetailEnricher } from "../../../gtfs/services/vehicles/GtfsRtVehicleDetailEnricher";
 import type { VehiclesService } from "../../../gtfs/services/vehicles/VehiclesService";
-import { getDpmbVehicleRanges, findDpmbRange } from "../../utils/dpmbVehicleMetadata";
+import { getVehicleRanges, findVehicleRange } from "../../../gtfs/core/vehicle-ranges";
 
 /**
  * Brno-specific vehicle enricher.
@@ -31,9 +31,9 @@ export class KordisVehicleDetailEnricher extends GtfsRtVehicleDetailEnricher {
             // Fallback for offline vehicles where we only have the ID and no live match
             const num = parseInt(enrichedDetail.vehicle_id, 10);
             if (!isNaN(num)) {
-                const ranges = await getDpmbVehicleRanges();
+                const ranges = await getVehicleRanges(this.vehiclesService.city);
                 if (ranges) {
-                    const rangeMatch = findDpmbRange(num, ranges);
+                    const rangeMatch = findVehicleRange(num, ranges);
                     if (rangeMatch) {
                         operator = 'DPMB';
                         enrichedDetail.vehicle_descriptor = {
