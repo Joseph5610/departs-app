@@ -2,6 +2,8 @@ import type { EnrichmentChannelAdapter } from '../types/enrichment';
 
 export interface InitialCityConfig {
     slug: string;
+    /** ISO 3166-1 alpha-2 code; must match the backend `CITY_REGISTRY`. */
+    country: string;
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
@@ -16,6 +18,7 @@ export interface InitialCityConfig {
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
         slug: 'prague',
+        country: 'CZ',
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         hasPointsOfSale: true,
@@ -27,6 +30,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     },
     brno: {
         slug: 'brno',
+        country: 'CZ',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
         filters: {
@@ -65,8 +69,20 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             }
         }
     },
+    presov: {
+        slug: 'presov',
+        country: 'SK',
+        center: [21.2393, 48.9985],
+        bounds: [21.13, 48.93, 21.37, 49.08],
+        filters: {
+            vehicles: ['bus', 'trolleybus'],
+            stops: []
+        },
+        hasInfotexts: false
+    },
     // duk: {
     //     slug: 'duk',
+    //     country: 'CZ',
     //     center: [14.0322, 50.6607],
     //     bounds: [12.93, 50.11, 14.61, 51.05],
     //     filters: {
@@ -77,6 +93,21 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
 };
 
 export const DEFAULT_CITY_SLUG = 'prague';
+
+/**
+ * Device time zones that identify the viewer's country. The time zone is the only location hint
+ * available without a server round-trip, and unlike the browser language it survives an English OS.
+ */
+export const VIEWER_COUNTRY_BY_TIMEZONE: Record<string, string> = {
+    'Europe/Prague': 'CZ',
+    'Europe/Bratislava': 'SK',
+};
+
+/** Browser language prefixes that identify the viewer's country when the time zone does not. */
+export const VIEWER_COUNTRY_BY_LANGUAGE: Record<string, string> = {
+    cs: 'CZ',
+    sk: 'SK',
+};
 export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG[DEFAULT_CITY_SLUG];
 
 /**

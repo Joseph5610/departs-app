@@ -1,6 +1,6 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppInfotext } from "../_core/types";
-import { getCityConfig } from "../_core/city-config";
+import { CITY_REGISTRY, getCityConfig } from "../_core/city-config";
 import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
 
 /**
@@ -100,7 +100,7 @@ export function resolveAdapter(citySlug?: string): { adapter: CityAdapter; cityS
     const slug = (citySlug || "prague").toLowerCase();
     const cityConfig = getCityConfig(slug);
     if (!cityConfig) {
-        throw new Error(`Unsupported city '${citySlug}'. Supported cities: prague, brno.`);
+        throw new Error(`Unsupported city '${citySlug}'. Supported cities: ${Object.keys(CITY_REGISTRY).join(', ')}.`);
     }
     return { adapter: getAdapter(cityConfig), citySlug: slug };
 }

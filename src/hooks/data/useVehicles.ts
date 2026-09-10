@@ -5,7 +5,7 @@ import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { applyEnrichment } from '../../lib/enrichment';
-import { TRANSIT_REFRESH_MS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
@@ -27,7 +27,7 @@ const fetchVehicles = async (selectedCity: string, bounds: string | null, routeF
     }
 
     const queryStr = params.toString();
-    return apiFetch<VehicleCollection>(`/${selectedCity}/vehicles${queryStr ? `?${queryStr}` : ''}`);
+    return apiFetch<VehicleCollection>(`/${selectedCity}/vehicles${queryStr ? `?${queryStr}` : ''}`, LIVE_FETCH_OPTIONS);
 };
 
 /**

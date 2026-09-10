@@ -10,7 +10,7 @@ import { createMockContext } from "../utils";
  * @param args - Tool arguments containing optional `line`, `min_delay`, `limit`, and `city`.
  * @param ctx - Cloudflare Pages Function event context.
  * @param adapter - Resolved CityAdapter for the target city.
- * @param resolvedCity - Normalized city slug ('prague' or 'brno').
+ * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Real-time vehicle positions with delay status in minutes and seconds.
  */
 export async function handleGetRealtimeVehicles(

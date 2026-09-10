@@ -4,6 +4,19 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.68.0] - 2026-09-10
+
+### Added
+
+- Prešov (DPMP) as the first Slovak city, with live vehicles matched from DPMP's realtime CSV export onto the static GTFS timetable.
+- Slovak locale, selected by default for viewers in Slovakia.
+- The city switcher groups cities by country, listing the viewer's own country first; first-time viewers in Slovakia start in Prešov.
+
+### Fixed
+
+- A failed static-data fetch on a cold isolate is now retried after 5s instead of serving empty routes for two hours.
+- Live vehicles, vehicle detail, departures and stats no longer lag one poll behind, because the browser was answering each poll from its HTTP cache.
+
 ## [0.67.0] - 2026-09-10
 
 ### Security

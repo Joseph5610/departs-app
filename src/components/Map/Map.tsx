@@ -151,7 +151,7 @@ const MapInner: React.FC = () => {
         return '';
     }, [selectedVehicle, selectedStop, selectedPos, t]);
 
-    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — MHD Praha & Brno LIVE';
+    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — MHD Praha, Brno & Prešov LIVE';
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : 'https://departs.app/';
 
     const jsonLd = useMemo(() => {
@@ -173,7 +173,7 @@ const MapInner: React.FC = () => {
             "@type": "WebApplication",
             "name": "departs.app",
             "url": "https://departs.app",
-            "description": "Real-time visualization of public transport for Prague and Brno. Track buses, trams, and metro live.",
+            "description": "Real-time visualization of public transport for Prague, Brno and Prešov. Track buses, trams, and metro live.",
             "applicationCategory": "TransportApplication",
             "operatingSystem": "All",
             "image": "https://departs.app/icon.png",

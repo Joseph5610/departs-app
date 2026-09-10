@@ -15,6 +15,13 @@ import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
+import { SUPPORTED_LANGUAGES } from '../../../i18n/config';
+
+const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
+    en: '🇬🇧',
+    cs: '🇨🇿',
+    sk: '🇸🇰',
+};
 
 export const SettingsModal: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -78,9 +85,9 @@ export const SettingsModal: React.FC = () => {
                                                 i18n.changeLanguage(val[0]);
                                             }
                                         }}
-                                        className="grid grid-cols-2 gap-2 bg-transparent p-0"
+                                        className="grid grid-cols-3 gap-2 bg-transparent p-0"
                                     >
-                                        {(['en', 'cs'] as const).map((lang) => (
+                                        {SUPPORTED_LANGUAGES.map((lang) => (
                                             <ToggleGroupItem
                                                 key={lang}
                                                 value={lang}
@@ -92,7 +99,7 @@ export const SettingsModal: React.FC = () => {
                                                 )}
                                             >
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <span className="text-base">{lang === 'en' ? '🇬🇧' : '🇨🇿'}</span>
+                                                    <span className="text-base">{LANGUAGE_FLAGS[lang]}</span>
                                                     <span>{t(`settings.language.${lang}`)}</span>
                                                 </div>
                                             </ToggleGroupItem>

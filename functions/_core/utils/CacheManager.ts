@@ -26,6 +26,9 @@ const PENDING_WAIT_MS = 3000;
 /** How long a pending entry may sit in the map before it is treated as abandoned outright. */
 const PENDING_ABANDON_MS = 15000;
 
+/** How soon a key holding fallback (failed or empty) data is fetched again, instead of its full TTL. */
+const FALLBACK_RETRY_MS = 5000;
+
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 const processingPromises = new Map<string, PendingEntry>();
 
@@ -108,17 +111,19 @@ export class CacheManager {
                 if (isInvalid && hasValidCache) {
                     console.warn(`[CacheManager] Fetcher for '${key}' returned invalid/fallback data. Preserving stale cache.`);
                     // Refresh timestamp with 5s retry window to prevent hammering upstream
-                    memoryCache.set(key, { data: staleEntry.data, timestamp: Date.now() - ttlMs + 5000 });
+                    memoryCache.set(key, { data: staleEntry.data, timestamp: Date.now() - ttlMs + FALLBACK_RETRY_MS });
                     return staleEntry.data as T;
                 }
 
-                memoryCache.set(key, { data, timestamp: Date.now() });
+                // Fallback data with nothing better to serve is returned, but never held for the full TTL.
+                const timestamp = isInvalid ? Date.now() - ttlMs + Math.min(FALLBACK_RETRY_MS, ttlMs) : Date.now();
+                memoryCache.set(key, { data, timestamp });
                 return data;
             } catch (err) {
                 const hasValidCache = staleEntry && staleEntry.data != null && !(isFallbackData ? isFallbackData(staleEntry.data as T) : false);
                 if (hasValidCache) {
                     console.warn(`[CacheManager] Fetcher for '${key}' threw error. Preserving stale cache:`, err);
-                    memoryCache.set(key, { data: staleEntry.data, timestamp: Date.now() - ttlMs + 5000 });
+                    memoryCache.set(key, { data: staleEntry.data, timestamp: Date.now() - ttlMs + FALLBACK_RETRY_MS });
                     return staleEntry.data as T;
                 }
                 throw err;

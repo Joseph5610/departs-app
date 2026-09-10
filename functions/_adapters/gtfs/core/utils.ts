@@ -87,6 +87,19 @@ export const getZonedDateString = (timezone: string): string => {
 };
 
 /**
+ * Converts a zone-less local wall-clock timestamp (`YYYY-MM-DD HH:MM:SS`) to epoch milliseconds.
+ * Returns null if the timestamp cannot be parsed.
+ */
+export const zonedLocalToEpochMs = (local: string, timezone: string): number | null => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(local.trim());
+    if (!m) return null;
+
+    const asUtc = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] ?? 0));
+    // Resolving the offset at the shifted instant keeps this correct on either side of a DST change.
+    return asUtc - zoneOffsetMs(timezone, asUtc - zoneOffsetMs(timezone, asUtc));
+};
+
+/**
  * Converts an ISO timestamp string to local seconds since midnight in the given IANA timezone.
  * Returns null if the timestamp is invalid.
  */

@@ -5,6 +5,16 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    proxy: {
+      // Dev-only relay for DPMP_CONFIG.DEV_RELAY_PATH: egov.presov.sk offers only legacy TLS ciphers local workerd rejects.
+      '/__dev/dpmp.csv': {
+        target: 'https://egov.presov.sk',
+        changeOrigin: true,
+        rewrite: () => '/geodatakatalog/dpmp.csv',
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -15,7 +25,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.webp', 'cities/prague.webp', 'cities/duk.webp'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.webp', 'cities/prague.webp', 'cities/presov.webp', 'cities/duk.webp'],
       manifest: {
         name: 'Departs.app',
         short_name: 'Departs',

@@ -41,13 +41,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             const stopsData = await adapter.handleStops(context);
             if (stopsData && stopsData.features) {
                 const addedIds = new Set<string>();
+                const knownIds = new Set<string>();
+                for (const feature of stopsData.features) {
+                    if (feature.properties?.stop_id) knownIds.add(feature.properties.stop_id);
+                }
 
                 for (const feature of stopsData.features) {
                     const stopId = feature.properties?.stop_id;
                     const isCentroid = feature.properties?.is_centroid;
 
                     if (stopId && isCentroid) {
-                        const cleanId = stopId.replace('centroid-', '');
+                        // Synthetic centroids (Prešov) have no bare-id twin, so link their first platform instead.
+                        const bareId = stopId.replace('centroid-', '');
+                        const cleanId = knownIds.has(bareId) ? bareId : feature.properties?.all_ids?.[0];
+                        if (!cleanId) continue;
                         
                         if (!addedIds.has(cleanId)) {
                             addedIds.add(cleanId);

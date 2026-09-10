@@ -1,5 +1,6 @@
 import { FRONTEND_CITIES_CONFIG, FALLBACK_CITY_CONFIG } from '../config/cities';
 import { useGeolocationStore } from '../state/geolocationStore';
+import { usePreferencesStore } from '../state/preferencesStore';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -10,8 +11,8 @@ import { useGeolocationStore } from '../state/geolocationStore';
 export const getInitialViewState = () => {
     const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 
-    // Extract city from pathname (e.g. /brno) to use as default center
-    let defaultCity = FALLBACK_CITY_CONFIG;
+    // Extract city from pathname (e.g. /brno) to use as default center, else the persisted city
+    let defaultCity = FRONTEND_CITIES_CONFIG[usePreferencesStore.getState().selectedCity] ?? FALLBACK_CITY_CONFIG;
     if (typeof window !== 'undefined') {
         const pathParts = window.location.pathname.split('/');
         const possibleCitySlug = pathParts[1];

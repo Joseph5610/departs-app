@@ -1,4 +1,7 @@
-type AdapterType = 'golemio' | 'gtfs' | 'kordis' | 'duk';
+type AdapterType = 'golemio' | 'gtfs' | 'kordis' | 'duk' | 'dpmp';
+
+/** ISO 3166-1 alpha-2 code of the country a city belongs to. */
+type CountryCode = 'CZ' | 'SK';
 
 export interface AdapterConfig {
     realtimeUrl?: string;
@@ -10,6 +13,7 @@ export interface AdapterConfig {
 export interface CityConfig {
     slug: string;
     name: string;
+    country: CountryCode;
     timezone: string;
     center: [number, number];
     bounds: [number, number, number, number]; // [w, s, e, n]
@@ -28,6 +32,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
     prague: {
         slug: 'prague',
         name: 'Praha',
+        country: 'CZ',
         timezone: 'Europe/Prague',
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
@@ -42,6 +47,7 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
     brno: {
         slug: 'brno',
         name: 'Brno',
+        country: 'CZ',
         timezone: 'Europe/Prague',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
@@ -57,9 +63,28 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             stops: []
         }
     },
+    presov: {
+        slug: 'presov',
+        name: 'Prešov',
+        country: 'SK',
+        timezone: 'Europe/Bratislava',
+        center: [21.2393, 48.9985],
+        bounds: [21.13, 48.93, 21.37, 49.08],
+        adapter: 'dpmp',
+        adapterConfig: {
+            realtimeUrl: 'https://egov.presov.sk/geodatakatalog/dpmp.csv',
+            staticDataUrl: 'https://data.departs.app'
+        },
+        isBeta: true,
+        filters: {
+            vehicles: ['bus', 'trolleybus'],
+            stops: []
+        }
+    },
     // duk: {
     //     slug: 'duk',
     //     name: 'Ústecký kraj',
+    //     country: 'CZ',
     //     timezone: 'Europe/Prague',
     //     center: [14.0322, 50.6607],
     //     bounds: [12.93, 50.11, 14.61, 51.05],

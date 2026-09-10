@@ -5,6 +5,7 @@ import { GolemioAdapter } from './golemio/GolemioAdapter';
 import { GtfsAdapter } from './gtfs/GtfsAdapter';
 import { KordisAdapter } from './kordis/KordisAdapter';
 import { DukAdapter } from './duk/DukAdapter';
+import { DpmpAdapter } from './dpmp/DpmpAdapter';
 
 /** Contract all city adapters must fulfill. */
 export interface CityAdapter {
@@ -33,6 +34,7 @@ export function getAdapter(city: CityConfig): CityAdapter {
         case 'gtfs': return new GtfsAdapter(city);
         case 'kordis': return new KordisAdapter(city);
         case 'duk': return new DukAdapter(city);
+        case 'dpmp': return new DpmpAdapter(city);
         default:
             throw new Error(`Unknown adapter: ${city.adapter}`);
     }

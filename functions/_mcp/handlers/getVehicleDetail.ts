@@ -9,7 +9,7 @@ import { createMockContext } from "../utils";
  * @param args - Tool arguments containing required `trip_id` and optional `vehicle_id` and `city`.
  * @param ctx - Cloudflare Pages Function event context.
  * @param adapter - Resolved CityAdapter for the target city.
- * @param resolvedCity - Normalized city slug ('prague' or 'brno').
+ * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Detailed vehicle itinerary and stop sequence schedule.
  */
 export async function handleGetVehicleDetail(

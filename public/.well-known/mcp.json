@@ -1,7 +1,7 @@
 {
   "name": "departs-mcp",
   "displayName": "Departs.app Public Transit MCP",
-  "description": "Real-time Czech public transit departures, live vehicle locations, traffic alerts, and route details for Prague (PID) and Brno (IDS JMK).",
+  "description": "Real-time Czech and Slovak public transit departures, live vehicle locations, traffic alerts, and route details for Prague (PID), Brno (IDS JMK) and Prešov (DPMP).",
   "version": "1.0.0",
   "homepage": "https://departs.app",
   "repository": "https://github.com/joseph5610/departs-app",
@@ -16,7 +16,7 @@
     "tools": [
       {
         "name": "search_stops",
-        "description": "Search public transit stops/stations by name or ID in Prague or Brno."
+        "description": "Search public transit stops/stations by name or ID in Prague, Brno or Prešov."
       },
       {
         "name": "search_nearest_stops",

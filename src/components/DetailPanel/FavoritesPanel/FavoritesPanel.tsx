@@ -9,7 +9,7 @@ import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
 import { Star } from 'lucide-react';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '../../ui/empty';
 import { apiFetch } from '../../../lib/api-client';
-import { TRANSIT_REFRESH_MS } from '../../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../../config/constants';
 import type { StopFeature } from '../../../types/stops';
 import type { DeparturesResponse } from '../../../hooks/data/useDepartures';
 import type { AppError } from '../../../types/error';
@@ -51,7 +51,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
             if (stopIds.length === 0 || !selectedCity) return null;
             const params = new URLSearchParams();
             stopIds.forEach(id => params.append('stopId', id));
-            return apiFetch<DeparturesResponse>(`/${selectedCity}/departures?${params.toString()}`);
+            return apiFetch<DeparturesResponse>(`/${selectedCity}/departures?${params.toString()}`, LIVE_FETCH_OPTIONS);
         },
         refetchInterval: TRANSIT_REFRESH_MS,
         staleTime: TRANSIT_REFRESH_MS,

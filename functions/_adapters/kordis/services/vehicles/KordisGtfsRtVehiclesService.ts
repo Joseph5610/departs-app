@@ -2,63 +2,14 @@ import type { AppVehicleCollection, AppVehicleFeature } from "../../../../_core/
 import type { transit_realtime } from 'gtfs-realtime-bindings';
 import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
-import { appClient } from '../../../../_core/ApiClient';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
-import type { TripWindow, TripWindows } from '../types';
+import { getTripWindows, dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../gtfs/core/trip-windows';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
 import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
-    /**
-     * Fetches the compact trip operating windows.
-     *
-     * Keyed by trip_id, so it needs no lookup build, and it carries only the fields actually read.
-     * This replaced api.json, which cost ~37ms of CPU per cold isolate to parse and index - far too
-     * much when the whole request budget is 10ms and the cache is per-isolate.
-     */
-    private async getTripWindows(): Promise<TripWindows | null> {
-        const staticUrl = this.city.adapterConfig?.staticDataUrl;
-        if (!staticUrl) return null;
-
-        const url = `${staticUrl}/${this.city.slug}/trip_windows.json`;
-
-        return CacheManager.getOrFetch<TripWindows | null>(
-            `trip_windows_${this.city.slug}`,
-            CACHE_TTL.TWO_HOURS_MS,
-            async () => {
-                try {
-                    const res = await appClient.fetch(url, { cf: { cacheTtl: 7200 } });
-                    if (!res.ok) {
-                        console.error(`Failed to fetch trip_windows.json for ${this.city.slug}: ${res.status}`);
-                        return null;
-                    }
-                    return JSON.parse(await res.text()) as TripWindows;
-                } catch (e) {
-                    console.error("Failed to fetch trip_windows.json", e);
-                    return null;
-                }
-            },
-            (data) => !data || Object.keys(data.trips).length === 0
-        );
-    }
-
-    /**
-     * Resolves the bit representing `todayStr` within a windows file, or 0 when the file predates
-     * today - in which case no trip matches, mirroring the previous date-string comparison.
-     */
-    private static todayBit(windows: TripWindows, todayStr: string): number {
-        const idx = windows.days.indexOf(todayStr);
-        return idx < 0 ? 0 : 1 << idx;
-    }
-
-    /** Whether a trip operates on the day represented by `todayBit`. */
-    private static operatesToday(window: TripWindow, todayBit: number): boolean {
-        const flags = window[2];
-        return flags === -1 || (flags & todayBit) !== 0;
-    }
-
     /**
      * Retrieves the current time context (today's string and current minutes) for the configured timezone.
      */
@@ -118,7 +69,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             const window = windows.trips[tripId];
 
             if (window) {
-                if (KordisGtfsRtVehiclesService.operatesToday(window, todayBit)) {
+                if (operatesOnDay(window, todayBit)) {
                     let diff = 0;
                     if (currentMins < window[0]) diff = window[0] - currentMins;
                     else if (currentMins > window[1]) diff = currentMins - window[1];
@@ -150,7 +101,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             async () => {
                 const [[feed, gtfsData, tripRoutesObj], windows] = await Promise.all([
                     this.getCoreData(),
-                    this.getTripWindows()
+                    getTripWindows(this.city)
                 ]);
 
                 if (!feed || !feed.entity) {
@@ -189,7 +140,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
 
                 if (windows) {
                     const ctx = this.getCurrentTimeContext();
-                    todayBit = KordisGtfsRtVehiclesService.todayBit(windows, ctx.todayLocalStr);
+                    todayBit = dayBit(windows, ctx.todayLocalStr);
                     currentMins = ctx.currentMinutes;
                 }
 

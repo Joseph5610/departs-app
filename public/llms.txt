@@ -1,6 +1,6 @@
 # departs.app
 
-**departs.app** is a lightning-fast, real-time public transit tracker for Prague (PID) and Brno (IDS JMK). It provides users with live departures, vehicle locations, and dynamic route tracking on an interactive map.
+**departs.app** is a lightning-fast, real-time public transit tracker for Prague (PID), Brno (IDS JMK) and Prešov (DPMP). It provides users with live departures, vehicle locations, and dynamic route tracking on an interactive map.
 
 ## Core Features
 
@@ -15,7 +15,7 @@ This application hosts a native **Remote Model Context Protocol (MCP) Server** a
 
 Exposed MCP Tools:
 
-- **`search_stops`**: Search stops/stations by name or ID in Prague (PID) or Brno (IDS JMK).
+- **`search_stops`**: Search stops/stations by name or ID in Prague (PID), Brno (IDS JMK) or Prešov (DPMP).
 - **`search_nearest_stops`**: Find public transit stops/stations closest to geographic coordinates (latitude and longitude).
 - **`get_next_departures`**: Real-time departure board for any stop, including inline stop notice Banners/Infotexts, delays, headsigns, and accessibility info.
 - **`get_nearest_departures`**: Real-time departures for stops closest to geographic coordinates (latitude and longitude), with optional route_type filter (bus, tram, metro, train).

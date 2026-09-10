@@ -62,10 +62,17 @@ export const CATCH_BUFFER = 120;
 export const TRANSIT_REFRESH_S = 10;
 export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
 
+/**
+ * Fetch options for polled realtime endpoints. The API's `stale-while-revalidate` would otherwise
+ * let the browser answer each poll with the previous response, keeping the UI one poll behind.
+ */
+export const LIVE_FETCH_OPTIONS: RequestInit = { cache: 'no-store' };
+
 export const ENRICHMENT_SILENCE_TTL_MS = 90_000; // Gate 2: Prune WS patches silent for 90s
 
 export const DATA_SOURCE_URLS = {
     prague: 'https://golemio.cz',
     brno: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328',
+    presov: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079',
     lissy: 'https://github.com/Jorgen98/Lissy'
 } as const;

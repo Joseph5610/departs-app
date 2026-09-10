@@ -76,10 +76,11 @@
     "language": {
       "title": "Language",
       "en": "English",
-      "cs": "Čeština"
+      "cs": "Čeština",
+      "sk": "Slovenčina"
     },
     "viewSource": "View source on GitHub",
-    "license": "Data PID & KORDIS JMK (CC BY 4.0)",
+    "license": "Data PID, KORDIS JMK & DPMP (CC BY 4.0)",
     "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
@@ -116,6 +117,7 @@
       "title": "Departs currently supports these regions:",
       "prague": "Prague & Central Bohemia",
       "brno": "Brno & South Moravia",
+      "presov": "MHD Prešov",
       "duk": "Ústí nad Labem Region"
     },
     "controls": {
@@ -241,6 +243,7 @@
     "dataProviderLink": "Website",
     "providerGolemio": "Prague PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
+    "providerDpmp": "Prešov MHD (DPMP)",
     "dataFreshness": "Data freshness",
     "nextRefresh": "Next refresh in",
     "secondsAgo": "{{seconds}}s ago",

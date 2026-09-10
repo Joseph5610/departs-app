@@ -1,4 +1,7 @@
 import type { McpToolDefinition } from "./types";
+import { CITY_REGISTRY } from "../_core/city-config";
+
+const CITY_SLUGS = Object.keys(CITY_REGISTRY);
 
 /**
  * Tool definitions exposed to Model Context Protocol (MCP) clients.
@@ -6,13 +9,13 @@ import type { McpToolDefinition } from "./types";
 export const MCP_TOOLS: McpToolDefinition[] = [
     {
         name: "search_stops",
-        description: "Search public transit stops/stations by name or query string in Prague (PID) or Brno (IDS JMK).",
+        description: "Search public transit stops/stations by name or query string in Prague (PID), Brno (IDS JMK) or Prešov (DPMP).",
         inputSchema: {
             type: "object",
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 query: {
@@ -29,13 +32,13 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     },
     {
         name: "get_next_departures",
-        description: "Get real-time upcoming public transit departures from a SPECIFIC stop name or stop ID in Prague (PID) or Brno (IDS JMK). Use when the user specifies a stop name (e.g., 'Hlavní nádraží', 'Sídliště Čakovice') or stop ID. Includes inline stop notice Banners/Infotexts.",
+        description: "Get real-time upcoming public transit departures from a SPECIFIC stop name or stop ID in Prague (PID), Brno (IDS JMK) or Prešov (DPMP). Use when the user specifies a stop name (e.g., 'Hlavní nádraží', 'Sídliště Čakovice') or stop ID. Includes inline stop notice Banners/Infotexts.",
         inputSchema: {
             type: "object",
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 stop_id: {
@@ -71,13 +74,13 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     },
     {
         name: "get_nearest_departures",
-        description: "Get real-time upcoming departures for stops closest to a GEOGRAPHIC LOCATION (latitude and longitude) in Prague (PID) or Brno (IDS JMK). Use for proximity queries like: 'What departures are near me?', 'Will I catch the bus at 50.087, 14.421?', 'Any trams nearby?', 'Show closest departures to my location'. Can filter by route_type ('bus', 'tram', 'metro', 'train') or line number.",
+        description: "Get real-time upcoming departures for stops closest to a GEOGRAPHIC LOCATION (latitude and longitude) in Prague (PID), Brno (IDS JMK) or Prešov (DPMP). Use for proximity queries like: 'What departures are near me?', 'Will I catch the bus at 50.087, 14.421?', 'Any trams nearby?', 'Show closest departures to my location'. Can filter by route_type ('bus', 'tram', 'metro', 'train') or line number.",
         inputSchema: {
             type: "object",
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 latitude: {
@@ -110,13 +113,13 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     },
     {
         name: "search_nearest_stops",
-        description: "Find public transit stops/stations closest to a geographic location (latitude and longitude) in Prague (PID) or Brno (IDS JMK). Returns nearest stops with distance_meters, coordinates, and serving transit lines.",
+        description: "Find public transit stops/stations closest to a geographic location (latitude and longitude) in Prague (PID), Brno (IDS JMK) or Prešov (DPMP). Returns nearest stops with distance_meters, coordinates, and serving transit lines.",
         inputSchema: {
             type: "object",
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 latitude: {
@@ -141,13 +144,13 @@ export const MCP_TOOLS: McpToolDefinition[] = [
     },
     {
         name: "get_realtime_vehicles",
-        description: "Get live vehicle positions, current delays, vehicle numbers, and status in Prague or Brno.",
+        description: "Get live vehicle positions, current delays, vehicle numbers, and status in Prague, Brno or Prešov.",
         inputSchema: {
             type: "object",
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 line: {
@@ -173,7 +176,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 line: {
@@ -191,7 +194,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
             properties: {
                 city: {
                     type: "string",
-                    enum: ["prague", "brno"],
+                    enum: CITY_SLUGS,
                     description: "City transit system (default: 'prague')."
                 },
                 trip_id: {

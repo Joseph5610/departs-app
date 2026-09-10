@@ -10,7 +10,7 @@ import { createMockContext } from "../utils";
  * @param args - Tool arguments containing `query`, `city` (default: 'prague'), and optional `limit`.
  * @param ctx - Cloudflare Pages Function event context.
  * @param adapter - Resolved CityAdapter for the target city.
- * @param resolvedCity - Normalized city slug ('prague' or 'brno').
+ * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Filtered stop list with coordinates, line list, and centroid status.
  */
 export async function handleSearchStops(

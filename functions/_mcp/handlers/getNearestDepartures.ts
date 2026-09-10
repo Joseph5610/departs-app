@@ -10,7 +10,7 @@ import { createMockContext, calculateHaversineDistanceMeters, matchesRouteType, 
  * @param args - Tool arguments containing `latitude`, `longitude`, optional `radius_meters`, `line`, `route_type`, `limit`, `city`.
  * @param ctx - Cloudflare Pages Function event context.
  * @param adapter - Resolved CityAdapter for the target city.
- * @param resolvedCity - Normalized city slug ('prague' or 'brno').
+ * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Grouped departure boards for nearest stops with distance and active infotexts.
  */
 export async function handleGetNearestDepartures(

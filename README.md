@@ -1,6 +1,6 @@
 # 🚉 departs.app
 
-A lightweight, fast, and distraction-free web app for viewing public transport departures in real-time. Currently supports Prague (PID) and Brno (IDS JMK).
+A lightweight, fast, and distraction-free web app for viewing public transport departures in real-time. Currently supports Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
 
 [![Live App](https://img.shields.io/badge/Live-departs.app-emerald.svg?style=for-the-badge)](https://departs.app)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
@@ -18,7 +18,7 @@ A lightweight, fast, and distraction-free web app for viewing public transport d
 - **Frontend**: React 19, TypeScript, Vite
 - **Map**: MapLibre GL JS, React Map GL
 - **Backend**: Cloudflare Pages Functions (Edge Computing)
-- **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno)
+- **Data Sources**: [Golemio API](https://api.golemio.cz/) (Prague), [KORDIS JMK](https://kordis-jmk.cz/) (Brno), [DPMP / Mesto Prešov](https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079) (Prešov)
 - **Styling**: Tailwind CSS 4, Framer Motion
 
 ## 📚 Documentation

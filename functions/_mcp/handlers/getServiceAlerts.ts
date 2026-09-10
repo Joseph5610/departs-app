@@ -10,7 +10,7 @@ import { createMockContext } from "../utils";
  * @param args - Tool arguments containing optional `line` filter and `city`.
  * @param ctx - Cloudflare Pages Function event context.
  * @param adapter - Resolved CityAdapter for the target city.
- * @param resolvedCity - Normalized city slug ('prague' or 'brno').
+ * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Active service alerts and stop infotext notices.
  */
 export async function handleGetServiceAlerts(

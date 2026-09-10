@@ -4,7 +4,7 @@ import type { Departure } from '../../types/transit';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 import { applyEnrichment } from '../../lib/enrichment';
@@ -60,7 +60,7 @@ export const useDepartures = () => {
             if (!stopId || !selectedCity) {
                 return null;
             }
-            const data = await apiFetch<DeparturesResponse>(`/${selectedCity}/departures?stopId=${encodeURIComponent(stopId)}`);
+            const data = await apiFetch<DeparturesResponse>(`/${selectedCity}/departures?stopId=${encodeURIComponent(stopId)}`, LIVE_FETCH_OPTIONS);
             
             if (!data?.departures) return data;
             

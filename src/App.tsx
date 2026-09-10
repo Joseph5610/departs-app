@@ -25,13 +25,13 @@ function App() {
       <McpModal />
       {/* Visually hidden SEO content */}
       <div className="sr-only">
-        <h1>departs.app — MHD Praha & Brno LIVE</h1>
+        <h1>departs.app — MHD Praha, Brno & Prešov LIVE</h1>
         <p>
           Sledujte polohu vozidel MHD v reálném čase.
-          Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů pro Prahu (PID) a Brno (IDS JMK).
+          Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů pro Prahu (PID), Brno (IDS JMK) a Prešov (DPMP).
         </p>
         <p>
-          Real-time visualization of Prague and Brno public transport. Track live locations of vehicles,
+          Real-time visualization of Prague, Brno and Prešov public transport. Track live locations of vehicles,
           view upcoming departures, and check current delays on an interactive map.
         </p>
       </div>

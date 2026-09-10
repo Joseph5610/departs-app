@@ -1,12 +1,12 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import type { VehicleCollection } from '../../types/transit';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
 const fetchNetworkVehicles = (selectedCity: string): Promise<VehicleCollection | null> =>
-    apiFetch<VehicleCollection>(`/${selectedCity}/vehicles`);
+    apiFetch<VehicleCollection>(`/${selectedCity}/vehicles`, LIVE_FETCH_OPTIONS);
 
 /**
  * useNetworkVehicles

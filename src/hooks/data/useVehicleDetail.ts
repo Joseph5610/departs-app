@@ -3,13 +3,13 @@ import { useEffect } from 'react';
 import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useRouteParams } from '../useRouteParams';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 
 const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const params = new URLSearchParams({ tripId });
     if (vehicleId) params.set('vehicleId', vehicleId);
-    return apiFetch<VehicleDetail>(`/${city}/vehicle-detail?${params.toString()}`);
+    return apiFetch<VehicleDetail>(`/${city}/vehicle-detail?${params.toString()}`, LIVE_FETCH_OPTIONS);
 };
 
 export const useVehicleDetail = () => {

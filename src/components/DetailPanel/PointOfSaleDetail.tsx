@@ -19,21 +19,24 @@ const TYPE_ICONS: Record<PointOfSaleType, React.ElementType> = {
     chipCardDispense: CreditCard,
 };
 
-const DAY_NAMES_CS = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-const DAY_NAMES_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES: Record<string, { days: string[]; all: string; weekdays: string; weekend: string }> = {
+    cs: { days: ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'], all: 'Po–Ne', weekdays: 'Po–Pá', weekend: 'So–Ne' },
+    sk: { days: ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'], all: 'Po–Ne', weekdays: 'Po–Pi', weekend: 'So–Ne' },
+    en: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], all: 'Mon–Sun', weekdays: 'Mon–Fri', weekend: 'Sat–Sun' },
+};
 
 function formatDayRange(from: number, to: number, lang: string): string {
-    const names = lang === 'cs' ? DAY_NAMES_CS : DAY_NAMES_EN;
-    if (from === 0 && to === 6) return lang === 'cs' ? 'Po–Ne' : 'Mon–Sun';
-    if (from === 0 && to === 4) return lang === 'cs' ? 'Po–Pá' : 'Mon–Fri';
-    if (from === 5 && to === 6) return lang === 'cs' ? 'So–Ne' : 'Sat–Sun';
-    if (from === to) return names[from] || '';
-    return `${names[from]}–${names[to]}`;
+    const names = DAY_NAMES[lang] ?? DAY_NAMES.en;
+    if (from === 0 && to === 6) return names.all;
+    if (from === 0 && to === 4) return names.weekdays;
+    if (from === 5 && to === 6) return names.weekend;
+    if (from === to) return names.days[from] || '';
+    return `${names.days[from]}–${names.days[to]}`;
 }
 
 export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => {
     const { t, i18n } = useTranslation();
-    const lang = i18n.language.startsWith('cs') ? 'cs' : 'en';
+    const lang = (i18n.resolvedLanguage || i18n.language).split('-')[0];
 
     const Icon = TYPE_ICONS[pos.type] || HelpCircle;
 

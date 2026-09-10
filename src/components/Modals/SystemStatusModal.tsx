@@ -26,6 +26,12 @@ import {
     ExternalLink
 } from 'lucide-react';
 
+const DATA_PROVIDERS: Record<string, { nameKey: string; url: string }> = {
+    prague: { nameKey: 'liveStatus.providerGolemio', url: DATA_SOURCE_URLS.prague },
+    brno: { nameKey: 'liveStatus.providerKordis', url: DATA_SOURCE_URLS.brno },
+    presov: { nameKey: 'liveStatus.providerDpmp', url: DATA_SOURCE_URLS.presov },
+};
+
 interface SystemStatusModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -117,11 +123,9 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
     };
 
     const statusDetails = getStatusDetails();
-    const providerName = selectedCity === 'brno' 
-        ? t('liveStatus.providerKordis') 
-        : t('liveStatus.providerGolemio');
-    
-    const providerUrl = selectedCity === 'brno' ? DATA_SOURCE_URLS.brno : DATA_SOURCE_URLS.prague;
+    const provider = DATA_PROVIDERS[selectedCity] ?? DATA_PROVIDERS.prague;
+    const providerName = t(provider.nameKey);
+    const providerUrl = provider.url;
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

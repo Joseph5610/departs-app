@@ -8,6 +8,7 @@ export async function onRequest() {
         cities: Object.values(CITY_REGISTRY).map(city => ({
             slug: city.slug,
             name: city.name,
+            country: city.country,
             center: city.center,
             bounds: city.bounds,
             isBeta: city.isBeta,

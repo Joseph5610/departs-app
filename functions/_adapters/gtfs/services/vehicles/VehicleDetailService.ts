@@ -5,9 +5,9 @@ import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
-import { shapeChunkId, tripChunkId } from '../../core/config';
+import { shapeChunkId } from '../../core/config';
+import { getTripStops } from '../../core/trip-stops';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
-import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../../_core/config';
@@ -26,17 +26,6 @@ const shapeCache = new LruCache<[number, number][][] | null>({
 });
 
 /**
- * Static timetable stops, keyed by `${citySlug}:${tripId}`.
- *
- * Like the geometry above, this is static per trip but sits on the polled detail endpoint, so
- * without a memo every poll re-fetched and re-parsed the whole trips chunk.
- */
-const tripStopsCache = new LruCache<Station[]>({
-    maxEntries: 512,
-    ttlMs: CACHE_TTL.TWO_HOURS_MS
-});
-
-/**
  * The core orchestrator for the /vehicles/:id detail endpoint.
  * It builds the static timetable from the raw GTFS schedule data.
  * If an Enricher is provided, it delegates the live GPS/delay merging to that Enricher.
@@ -50,7 +39,7 @@ export class VehicleDetailService {
         const vehicleId = rawVehicleId || null;
 
         const [stations, { routes }, { tripRoutes }, tripShape] = await Promise.all([
-            this.getTripStops(tripId),
+            getTripStops(this.city, tripId),
             getGtfsRoutes(this.city.slug),
             getGtfsTripRoutes(this.city.slug),
             this.getTripShape(tripId),
@@ -70,51 +59,6 @@ export class VehicleDetailService {
         }
 
         return detail;
-    }
-
-    private async getTripStops(tripId: string): Promise<Station[]> {
-        const chunkId = encodeURIComponent(tripChunkId(tripId));
-        const staticDataUrl = this.city.adapterConfig?.staticDataUrl;
-        if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
-
-        const cacheKey = `${this.city.slug}:${tripId}`;
-        const cached = tripStopsCache.get(cacheKey);
-        if (cached !== undefined) return cached;
-
-        const tripUrl = `${staticDataUrl}/${this.city.slug}/trips/${chunkId}.json`;
-        try {
-            const tripRes = await appClient.fetch(tripUrl, { cf: { cacheTtl: 86400 } });
-            if (!tripRes.ok) return [];
-
-            const chunkData = JSON.parse(await tripRes.text()) as Record<string, unknown[]>;
-            const tripData = chunkData[tripId];
-
-            if (!tripData) {
-                tripStopsCache.set(cacheKey, []);
-                return [];
-            }
-
-            const stations = tripData.map((st: unknown, idx: number) => {
-                const s = st as Record<string, unknown>;
-                return {
-                    id: s.stop_id as string,
-                    name: (s.name as string) || 'Unknown',
-                    sequence: idx + 1,
-                    arrival_time: s.arrival_time as string,
-                    departure_time: s.departure_time as string,
-                    coordinates: [Number(s.lon) || 0, Number(s.lat) || 0] as [number, number],
-                    is_wheelchair_accessible: null,
-                    zone_id: s.zone_id as string | null,
-                    is_request_stop: s.is_request_stop as boolean | undefined
-                };
-            });
-
-            tripStopsCache.set(cacheKey, stations);
-            return stations;
-        } catch (e) {
-            console.error('Failed to get trip stops:', e);
-            return [];
-        }
     }
 
     /**
