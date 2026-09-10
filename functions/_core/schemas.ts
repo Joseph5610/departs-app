@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { API_LIMITS } from './config';
 
 /**
  * Zod schemas for validating incoming URL query parameters.
@@ -14,8 +15,24 @@ const arrayParam = z
     .transform(arr => arr.map(sanitizeId).filter(id => id.length > 0))
     .default([]);
 
+/** `south,west,north,east` — NOT the lon-first order `CityConfig.bounds` stores. */
+const isValidBounds = (value: string): boolean => {
+    const parts = value.split(',');
+    return parts.length === 4 && parts.every(part => part.trim() !== '' && Number.isFinite(Number(part)));
+};
+
+/** Splits an already-validated `bounds` param into `[south, west, north, east]`. */
+export function parseBoundsParam(bounds: string): [number, number, number, number] {
+    const [south, west, north, east] = bounds.split(',').map(Number);
+    return [south, west, north, east];
+}
+
 export const vehicleQuerySchema = z.object({
-    bounds: z.string().optional().nullable(),
+    bounds: z
+        .string()
+        .refine(isValidBounds, 'bounds must be four comma-separated numbers: south,west,north,east')
+        .optional()
+        .nullable(),
     routeType: arrayParam,
     routeShortName: arrayParam,
 });
@@ -26,7 +43,10 @@ export const vehicleDetailQuerySchema = z.object({
 });
 
 export const departuresQuerySchema = z.object({
-    stopId: arrayParam,
+    stopId: arrayParam.refine(
+        ids => ids.length <= API_LIMITS.DEPARTURE_STOP_IDS,
+        `A departures request may name at most ${API_LIMITS.DEPARTURE_STOP_IDS} stops.`
+    ),
 });
 
 /**

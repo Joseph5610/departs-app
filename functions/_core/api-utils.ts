@@ -1,42 +1,10 @@
 import { ApiError } from "./errors";
+import { ERROR_MESSAGES } from "./config";
 import { ZodError } from "zod";
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env } from "./types";
 import { getCityConfig } from "./city-config";
 import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
-
-/**
- * Centralized Cache TTL Configuration (in seconds).
- */
-export const CACHE_TTL = {
-    DEPARTURES: 10,
-    VEHICLES: 10,
-    VEHICLE_DETAIL: 10,
-    INFOTEXTS: 900, // 15m
-    STOPS: 43200, // 12h (allow morning enrichment updates)
-    CITIES: 43200, // 12h
-    RSS_INCIDENTS: 300, // 5m
-    RSS_EXCLUSIONS: 3600, // 1h
-    GTFS_DATA: 3600, // 1h for the static data fetch process
-};
-
-/**
- * Standardized Error Messages (Public Facing).
- * These messages are shown to the user when things go wrong.
- * Note: We avoid mentioning "Golemio" directly in public errors.
- */
-export const ERROR_MESSAGES = {
-    GENERIC_INTERNAL: "An unexpected error occurred. Please try again later.",
-    UPSTREAM_ERROR: (status: number) => `The data provider returned an error (HTTP ${status}).`,
-    MISSING_PARAMS: "Request is missing required parameters.",
-    INVALID_STOP_ID: "Provided stop ID is invalid or not found.",
-    VEHICLE_NOT_FOUND: "Vehicle information is currently unavailable.",
-    RSS_FEED_ERROR: "Could not retrieve transit alerts from the source feed.",
-    STOPS_DATA_UNAVAILABLE: "Stop data is currently unavailable.",
-    VEHICLES_DATA_UNAVAILABLE: "Live vehicle data is currently unavailable.",
-    DATA_STRUCTURE_CHANGED: "The data provider changed their data structure unexpectedly.",
-};
-
 
 /**
  * Creates a standardized JSON error response.
@@ -45,7 +13,7 @@ export const ERROR_MESSAGES = {
  * @param status HTTP status code (default: 500)
  * @returns Response object
  */
-function createErrorResponse(message: string, status: number = 500): Response {
+export function createErrorResponse(message: string, status: number = 500): Response {
     return new Response(JSON.stringify({
         error: true,
         message,
@@ -74,12 +42,14 @@ function handleError(error: unknown): Response {
 }
 
 /**
- * Formats a date into D. M. YYYY HH:mm in the given IANA timezone.
- * Defaults to Europe/Prague for backward compatibility.
+ * Formats a date as `D. M. YYYY HH:mm` in the given IANA timezone.
+ *
+ * `hourCycle: 'h23'` rather than `hour12: false`, which ECMA-402 leaves free to resolve to h24 and
+ * render midnight as "24".
  */
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
-export function formatDate(date: Date, timezone = 'Europe/Prague'): string {
+export function formatDate(date: Date, timezone: string): string {
     let formatter = formatters.get(timezone);
     if (!formatter) {
         formatter = new Intl.DateTimeFormat('cs-CZ', {
@@ -87,16 +57,13 @@ export function formatDate(date: Date, timezone = 'Europe/Prague'): string {
             day: 'numeric',
             month: 'numeric',
             year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: false
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
         });
         formatters.set(timezone, formatter);
     }
-    const d = formatter.formatToParts(date);
-
-    const get = (type: string) => d.find(p => p.type === type)?.value;
-    return `${get('day')}. ${get('month')}. ${get('year')} ${get('hour')?.padStart(2, '0')}:${get('minute')?.padStart(2, '0')}`;
+    return formatter.format(date);
 }
 
 

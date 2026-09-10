@@ -2,6 +2,7 @@ import type { AppVehicleFeature, AppVehicleProperties } from '../../../../_core/
 import type { transit_realtime } from 'gtfs-realtime-bindings';
 import type { GtfsRoute } from '../../core/gtfs-data';
 import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
+import { GTFS_CONFIG } from '../../core/config';
 
 export class VehiclesMapper {
     static mapVehicle(
@@ -18,11 +19,12 @@ export class VehiclesMapper {
         
         if (isBeforeTrack) {
             const delaySecs = delay ?? 0;
-            statePosition = delaySecs > 60 ? 'before_track_delayed' : 'before_track';
+            statePosition = delaySecs > GTFS_CONFIG.BEFORE_TRACK_DELAY_THRESHOLD_SECS ? 'before_track_delayed' : 'before_track';
         } else if (vp.currentStatus === 1) { // 1 = STOPPED_AT
             statePosition = 'at_stop';
         }
 
+        // Deliberate: 0 means "no fix" far more often than due north here, so not `?? null`.
         const bearing = vp.position?.bearing ? Number(vp.position.bearing) : undefined;
         const vehicleId = vp.vehicle?.id || '';
         const vehicleLabel = vp.vehicle?.label || vehicleId;

@@ -71,6 +71,8 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **NEVER** store UI state (like drawer height) in global selection context.
 - **NEVER** use `eslint-disable`. All TypeScript and ESLint errors MUST be solved architecturally or typing-wise. Disabling the linter is strictly forbidden.
 - **NEVER** use `Array.prototype.find()` or `.filter()` inside loops or `.map()` callbacks. O(N) nested searches (O(N^2) complexity) are strictly forbidden. Always build an O(1) index `Map` or `Record` beforehand.
+- **NEVER** write comments that restate the code, narrate why a change was made, or record findings and measurements. Comment ONLY where the next reader would otherwise make a wrong edit, and then in ONE line stating the constraint — not the evidence for it. JSDoc on exported symbols is fine; explanatory paragraphs inside function bodies are not.
+- **NEVER** introduce a loose `const` for a tunable value. Config belongs in a config object: `_core/config.ts` for cross-adapter values, `<adapter>/core/config.ts` for adapter-specific ones.
 
 ### Mandatory Protocol
 

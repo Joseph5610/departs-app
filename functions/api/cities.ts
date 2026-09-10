@@ -1,6 +1,7 @@
 import type { AppCitiesResponse } from "../_core/types";
 import { CITY_REGISTRY } from "../_core/city-config";
-import { CACHE_TTL, createSuccessResponse } from "../_core/api-utils";
+import { createSuccessResponse } from "../_core/api-utils";
+import { CACHE_TTL } from "../_core/config";
 
 export async function onRequest() {
     const response: AppCitiesResponse = { 

@@ -5,7 +5,7 @@ import { getGtfsRoutes } from '../../core/gtfs-data';
 import { BaseGtfsAlertsMapper } from './BaseGtfsAlertsMapper';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 
 export class AlertsService {
     constructor(public readonly city: CityConfig, private mapper: BaseGtfsAlertsMapper) {}
@@ -31,7 +31,7 @@ export class AlertsService {
                         console.error("Failed to fetch routes for alerts", e);
                     }
 
-                    const alerts = this.mapper.mapAlerts(rawAlerts, gtfsData);
+                    const alerts = this.mapper.mapAlerts(rawAlerts, gtfsData, this.city.timezone);
 
                     return { alerts } as AppAlertsResponse;
                 } catch (e) {

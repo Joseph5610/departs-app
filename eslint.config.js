@@ -5,10 +5,18 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
+const noUnusedVars = ['error', {
+  argsIgnorePattern: '^_',
+  varsIgnorePattern: '^_',
+  caughtErrorsIgnorePattern: '^_',
+}]
+
 export default defineConfig([
   globalIgnores(['dist', 'scratch']),
+
+  // Frontend: browser globals, React rules.
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -20,17 +28,34 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_',
-      }],
+      '@typescript-eslint/no-unused-vars': noUnusedVars,
     },
   },
   {
     files: ['src/components/ui/*.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
+    },
+  },
+
+  // Backend: Workers runtime, no React. `caches` and the Cloudflare types come from
+  // @cloudflare/workers-types, which only tsc sees, so they are declared here for no-undef.
+  {
+    files: ['functions/**/*.ts'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+    ],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: {
+        ...globals.serviceworker,
+        KVNamespace: 'readonly',
+        PagesFunction: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': noUnusedVars,
     },
   },
 ])

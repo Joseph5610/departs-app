@@ -106,7 +106,7 @@ export class DeparturesMapper {
                 timestamp: new Date(rtTimestampMs).toISOString(),
                 delay: delaySecs,
                 isCanceled: false,
-                route_color: route ? String(route.route_color) : undefined,
+                route_color: route?.route_color ?? undefined,
                 stopId: stopId,
                 is_air_conditioned: isAirConditioned,
                 is_wheelchair_accessible: isWheelchairAccessible,

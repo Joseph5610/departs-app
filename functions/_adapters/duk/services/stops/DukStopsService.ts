@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { AppStopCollection, AppStopFeature } from '../../../../_core/types';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 
 interface DukStationItem {
     Node: number;

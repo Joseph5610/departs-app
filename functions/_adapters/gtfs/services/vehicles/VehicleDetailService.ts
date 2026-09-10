@@ -5,12 +5,12 @@ import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
-import { shapeChunkId } from '../../core/config';
+import { shapeChunkId, tripChunkId } from '../../core/config';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import type { Station } from './types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 import type { VehicleDetailEnricher } from './VehicleDetailEnricher';
 
 /**
@@ -49,17 +49,14 @@ export class VehicleDetailService {
         const { vehicleId: rawVehicleId, tripId } = parseSearchParams(url.searchParams, vehicleDetailQuerySchema);
         const vehicleId = rawVehicleId || null;
 
-        const t0 = Date.now();
         const [stations, { routes }, { tripRoutes }, tripShape] = await Promise.all([
             this.getTripStops(tripId),
             getGtfsRoutes(this.city.slug),
             getGtfsTripRoutes(this.city.slug),
             this.getTripShape(tripId),
         ]);
-        const tSources = Date.now();
-        
-        const routeInfo = tripRoutes[tripId];
-        const routeId = routeInfo ? routeInfo.split('|')[0] : undefined;
+
+        const routeId = tripRoutes[tripId];
         const route = routeId ? routes[routeId] : null;
 
         if (stations.length === 0 && !route) {
@@ -67,20 +64,16 @@ export class VehicleDetailService {
         }
 
         let detail = VehicleDetailMapper.mapVehicleDetail(tripId, vehicleId, stations, route, tripShape);
-        const tMapped = Date.now();
 
         if (this.enricher) {
             detail = await this.enricher.enrich(detail, ctx);
         }
 
-        const tEnriched = Date.now();
-        console.log(`[PERF] ${this.city.slug} vehicle-detail ${tripId}: sources=${tSources - t0}ms, map=${tMapped - tSources}ms, enrich=${tEnriched - tMapped}ms, total=${tEnriched - t0}ms`);
-
         return detail;
     }
 
     private async getTripStops(tripId: string): Promise<Station[]> {
-        const chunkId = encodeURIComponent(tripId.substring(0, 3).toUpperCase());
+        const chunkId = encodeURIComponent(tripChunkId(tripId));
         const staticDataUrl = this.city.adapterConfig?.staticDataUrl;
         if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
@@ -93,11 +86,8 @@ export class VehicleDetailService {
             const tripRes = await appClient.fetch(tripUrl, { cf: { cacheTtl: 86400 } });
             if (!tripRes.ok) return [];
 
-            const raw = await tripRes.text();
-            const tParseStart = Date.now();
-            const chunkData = JSON.parse(raw) as Record<string, unknown[]>;
+            const chunkData = JSON.parse(await tripRes.text()) as Record<string, unknown[]>;
             const tripData = chunkData[tripId];
-            console.log(`[PERF] ${this.city.slug} trips chunk ${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, tripId=${tripId}, hit=${tripData != null}`);
 
             if (!tripData) {
                 tripStopsCache.set(cacheKey, []);
@@ -170,13 +160,8 @@ export class VehicleDetailService {
         const res = await appClient.fetch(url, { cf: { cacheTtl: 86400 } });
         if (!res.ok) return null;
 
-        const raw = await res.text();
-        const tParseStart = Date.now();
-        const chunk = JSON.parse(raw) as Record<string, [number, number][][]>;
-        const shape = chunk[shapeId] ?? null;
-        console.log(`[PERF] ${this.city.slug} shape chunk ${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, shapeId=${shapeId}, hit=${shape != null}`);
-
-        return shape;
+        const chunk = JSON.parse(await res.text()) as Record<string, [number, number][][]>;
+        return chunk[shapeId] ?? null;
     }
 
     /**

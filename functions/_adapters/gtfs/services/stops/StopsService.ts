@@ -1,6 +1,7 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { AppStopCollection, AppStopFeature } from '../../../../_core/types';
-import { NotImplementedError } from '../../../../_core/errors';
+import { ApiError, NotImplementedError } from '../../../../_core/errors';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 import { StopsMapper } from './StopsMapper';
 import { appClient } from '../../../../_core/ApiClient';
 
@@ -30,8 +31,19 @@ export class StopsService {
             }
             
             const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/stops.json`);
+            if (!res.ok) {
+                throw new ApiError(`${ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE} (upstream ${res.status})`, 502);
+            }
+
             const data = await res.json();
-            const rawFeatures = Array.isArray(data) ? data as AppStopFeature[] : (data as { features: AppStopFeature[] }).features;
+            // Either a bare feature array or a FeatureCollection; anything else must not reach the mapper.
+            const rawFeatures = Array.isArray(data)
+                ? data as AppStopFeature[]
+                : (data as { features?: AppStopFeature[] })?.features;
+
+            if (!Array.isArray(rawFeatures)) {
+                throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
+            }
 
             const finalFeatures = StopsMapper.mapStops(rawFeatures);
 
@@ -46,6 +58,9 @@ export class StopsService {
             await cache.put(jsonCacheKey, responseToCache);
             
             return result;
-        });
+        },
+        // An empty stop set is an upstream failure, not a valid answer. Without this the empty
+        // collection would be held for the full 2h TTL and the map would stay blank that whole time.
+        (data) => !data || !data.features || data.features.length === 0);
     }
 }

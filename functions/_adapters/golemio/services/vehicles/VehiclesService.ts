@@ -1,7 +1,7 @@
 
 import { Env, AppVehicleCollection, AppCityStats } from "../../../../_core/types";
 
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/config";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehiclesMapper } from "./VehiclesMapper";
@@ -45,30 +45,30 @@ export class VehiclesService {
         const { bounds, routeType: routeTypes, routeShortName: routeShortNames } = parseSearchParams(searchParams, vehicleQuerySchema);
 
         const params: Record<string, string | string[]> = {};
-            if (bounds) params.boundingBox = bounds;
-            if (routeTypes.length > 0) params.routeType = routeTypes;
-            if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
+        if (bounds) params.boundingBox = bounds;
+        if (routeTypes.length > 0) params.routeType = routeTypes;
+        if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
-            let rawData;
-            try {
-                rawData = await this.getRawVehicles(env, params);
-            } catch (error) {
-                console.error(`Golemio vehicles feed is down`, error);
-                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
-            }
-            const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+        let rawData;
+        try {
+            rawData = await this.getRawVehicles(env, params);
+        } catch (error) {
+            console.error(`Golemio vehicles feed is down`, error);
+            return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+        }
+        const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
 
-            if (!parsed.success) {
-                console.error("Critical Golemio vehicles structural change:", parsed.error);
-                return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
-            }
+        if (!parsed.success) {
+            console.error("Critical Golemio vehicles structural change:", parsed.error);
+            return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+        }
 
-            const data = parsed.data;
-            if (data.features) {
-                data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
-            }
+        const data = parsed.data;
+        if (data.features) {
+            data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
+        }
 
-            return VehiclesMapper.map(data as GolemioVehiclePayload);
+        return VehiclesMapper.map(data as GolemioVehiclePayload);
     }
 
     /**

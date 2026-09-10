@@ -1,5 +1,6 @@
 import type { McpContext } from "../types";
 import { resolveAdapter } from "../utils";
+import { validateToolArgs } from "../validation";
 
 import { handleSearchStops } from "./searchStops";
 import { handleSearchNearestStops } from "./searchNearestStops";
@@ -14,10 +15,13 @@ import { handleGetVehicleDetail } from "./getVehicleDetail";
  */
 export async function handleToolCall(
     name: string,
-    args: Record<string, unknown>,
+    rawArgs: Record<string, unknown>,
     ctx: McpContext
 ): Promise<unknown> {
-    const citySlug = (args?.city as string) || "prague";
+    // Validated up front, so every handler below can rely on the declared inputSchema's types and ranges.
+    const args = validateToolArgs(name, rawArgs);
+
+    const citySlug = (args.city as string | undefined) ?? "prague";
     const { adapter, citySlug: resolvedCity } = resolveAdapter(citySlug);
 
     switch (name) {

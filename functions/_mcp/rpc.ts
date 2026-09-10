@@ -2,7 +2,7 @@ import type { PagesFunction } from "@cloudflare/workers-types";
 import type { Env } from "../_core/types";
 import type { JsonRpcRequest } from "./types";
 import { MCP_TOOLS } from "./tools";
-import { CORS_HEADERS } from "./utils";
+import { MCP_HEADERS, MAX_MCP_BODY_BYTES, readBoundedText } from "./utils";
 import { handleToolCall } from "./handlers";
 
 /**
@@ -13,7 +13,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
 
     // Handle preflight CORS requests
     if (request.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: CORS_HEADERS });
+        return new Response(null, { status: 204, headers: MCP_HEADERS });
     }
 
     // Handle GET requests (SSE connection or health/info ping)
@@ -31,7 +31,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
 
             return new Response(body, {
                 headers: {
-                    ...CORS_HEADERS,
+                    ...MCP_HEADERS,
                     "Content-Type": "text/event-stream",
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive"
@@ -50,7 +50,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
             tools_count: MCP_TOOLS.length
         }, null, 2), {
             headers: {
-                ...CORS_HEADERS,
+                ...MCP_HEADERS,
                 "Content-Type": "application/json"
             }
         });
@@ -59,7 +59,16 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
     // Handle POST requests (MCP JSON-RPC 2.0 protocol)
     if (request.method === "POST") {
         try {
-            const payload = await request.json() as JsonRpcRequest;
+            const raw = await readBoundedText(request, MAX_MCP_BODY_BYTES);
+            if (raw === null) {
+                return new Response(JSON.stringify({
+                    jsonrpc: "2.0",
+                    id: null,
+                    error: { code: -32600, message: `Request body exceeds ${MAX_MCP_BODY_BYTES} bytes` }
+                }), { status: 413, headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
+            }
+
+            const payload = JSON.parse(raw) as JsonRpcRequest;
             const { jsonrpc, id, method, params } = payload || {};
 
             if (jsonrpc !== "2.0") {
@@ -67,7 +76,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                     jsonrpc: "2.0",
                     id: id ?? null,
                     error: { code: -32600, message: "Invalid Request: jsonrpc must be '2.0'" }
-                }), { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+                }), { status: 400, headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
             // Method 1: initialize
@@ -88,20 +97,20 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                             version: "1.0.0"
                         }
                     }
-                }), { headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+                }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
             // Method 2: notifications/initialized
             if (method === "notifications/initialized") {
                 return new Response(JSON.stringify({ jsonrpc: "2.0", result: {} }), {
-                    headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+                    headers: { ...MCP_HEADERS, "Content-Type": "application/json" }
                 });
             }
 
             // Method 3: ping
             if (method === "ping") {
                 return new Response(JSON.stringify({ jsonrpc: "2.0", id, result: {} }), {
-                    headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+                    headers: { ...MCP_HEADERS, "Content-Type": "application/json" }
                 });
             }
 
@@ -113,7 +122,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                     result: {
                         tools: MCP_TOOLS
                     }
-                }), { headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+                }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
             // Method 5: tools/call
@@ -133,7 +142,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                                 }
                             ]
                         }
-                    }), { headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+                    }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
                 } catch (toolErr: unknown) {
                     const errMsg = toolErr instanceof Error ? toolErr.message : String(toolErr);
                     return new Response(JSON.stringify({
@@ -148,7 +157,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                                 }
                             ]
                         }
-                    }), { headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+                    }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
                 }
             }
 
@@ -157,7 +166,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 jsonrpc: "2.0",
                 id,
                 error: { code: -32601, message: `Method not found: ${method}` }
-            }), { status: 404, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+            }), { status: 404, headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
 
         } catch (err: unknown) {
             const errMsg = err instanceof Error ? err.message : String(err);
@@ -165,9 +174,9 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 jsonrpc: "2.0",
                 id: null,
                 error: { code: -32700, message: `Parse error: ${errMsg}` }
-            }), { status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+            }), { status: 400, headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
         }
     }
 
-    return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
+    return new Response("Method not allowed", { status: 405, headers: MCP_HEADERS });
 };

@@ -1,6 +1,5 @@
 import type { AppVehicleCollection } from "../../_core/types";
 import type { CityAdapter } from "../../_adapters/CityAdapter";
-import { getCityConfig } from "../../_core/city-config";
 import type { McpContext } from "../types";
 import { createMockContext } from "../utils";
 
@@ -23,13 +22,10 @@ export async function handleGetRealtimeVehicles(
     const limit = Number(args.limit) || 25;
     const searchParams: Record<string, string> = {};
 
+    // No bounds filter — the path already scopes to the city, and CityConfig.bounds frames the map view,
+    // not the fleet; applying it dropped every regional vehicle outside the centre.
     if (args.line) {
         searchParams.routeShortName = String(args.line);
-    } else {
-        const cityConfig = getCityConfig(resolvedCity);
-        if (cityConfig?.bounds) {
-            searchParams.bounds = cityConfig.bounds.join(',');
-        }
     }
 
     const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/vehicles`, searchParams);

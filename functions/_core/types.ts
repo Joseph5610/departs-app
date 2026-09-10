@@ -1,8 +1,11 @@
-import type { Fetcher } from "@cloudflare/workers-types";
+import type { Fetcher, KVNamespace } from "@cloudflare/workers-types";
 
 export interface Env {
     ASSETS: Fetcher;
-    [key: string]: unknown;
+    FEEDBACK_STORE: KVNamespace;
+    // Secrets are typed as possibly-undefined: a missing binding is a runtime reality, not a type error.
+    GOLEMIO_API_KEY: string | undefined;
+    TURNSTILE_SECRET_KEY: string | undefined;
 }
 
 // --- Application Internal Types (Response Structures) ---

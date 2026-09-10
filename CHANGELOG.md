@@ -4,6 +4,31 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.67.0] - 2026-09-10
+
+### Security
+
+- Feedback is now rejected when `TURNSTILE_SECRET_KEY` is unset instead of falling back to Cloudflare's always-passes testing key, which silently disabled bot protection.
+- Removed the KV-based feedback rate limiter, which could not hold under concurrency; request-rate limiting is enforced at the Cloudflare edge.
+
+### Fixed
+
+- Fixed the `get_realtime_vehicles` MCP tool returning no vehicles in either city, and no longer filtering the fleet by the map-framing bounding box, which had been discarding every suburban and regional vehicle.
+- A failed or malformed stops fetch now returns a 502 instead of an opaque 500, and is no longer cached as an empty result for two hours.
+- The `bounds` parameter is now validated; a malformed value returns 400 rather than silently yielding an empty vehicle collection.
+- Fixed stop notices being attached to unrelated stops whose ID merely contained a related one.
+
+### Added
+
+- MCP tool arguments are now validated against each tool's declared input schema, rejecting out-of-range coordinates, non-positive limits and unknown tools.
+- Departures requests are now bounded, both in how many stops they may name and how many platforms those expand into.
+
+### Changed
+
+- Cut per-request CPU on departures and vehicle detail by memoising the GTFS `Intl` date formatters instead of constructing them on every call.
+- Removed the hot-path `[PERF]` timing logs, several of which did real work purely to build a message.
+- Nearest-departures now fetches every stop in one wave instead of up to ten serialised round trips, and the Golemio services overlap their enrichment fetch with the upstream call.
+
 ## [0.66.0] - 2026-09-09
 
 ### Changed

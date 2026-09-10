@@ -1,8 +1,7 @@
 import { storedFeedbackSchema, type StoredFeedback } from "../../../src/types/feedback";
-
-interface Env {
-  FEEDBACK_STORE: KVNamespace;
-}
+import { createErrorResponse } from "../../_core/api-utils";
+import { ERROR_MESSAGES } from "../../_core/config";
+import type { Env } from "../../_core/types";
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
@@ -40,10 +39,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     });
 
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: 'Internal server error', details: errorMessage }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('Failed to list feedback:', err);
+    return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL, 500);
   }
 };

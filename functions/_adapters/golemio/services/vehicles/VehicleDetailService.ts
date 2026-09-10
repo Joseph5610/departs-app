@@ -1,6 +1,6 @@
 import { AppVehicleDetail, Env } from "../../../../_core/types";
 
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/config";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { VehicleDetailMapper } from "./VehicleDetailMapper";
@@ -25,7 +25,9 @@ export class VehicleDetailService {
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
     async getVehicleDetail(env: Env, searchParams: URLSearchParams): Promise<AppVehicleDetail> {
-        const enrichmentData = await getEnrichmentData();
+        // Started, not awaited - see the note in DeparturesService: this is independent of the trip
+        // fetch below and only needs to be resolved at the mapping step.
+        const enrichmentPromise = getEnrichmentData();
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
@@ -82,6 +84,6 @@ export class VehicleDetailService {
             data.stop_times.features = data.stop_times.features.filter((f): f is NonNullable<typeof f> => f !== null);
         }
 
-        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic, enrichmentData);
+        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic, await enrichmentPromise);
     }
 }

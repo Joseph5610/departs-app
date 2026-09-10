@@ -6,8 +6,9 @@ import { appClient } from '../../../../_core/ApiClient';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
+import { GTFS_CONFIG, departuresChunkId } from '../../core/config';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import type { VehiclesService } from '../vehicles/VehiclesService';
@@ -46,28 +47,18 @@ export class DeparturesService {
         if (!staticDataUrl) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
 
         try {
-            const t0 = Date.now();
             const parentToChildMap = await this.getParentChildMap(staticDataUrl);
-            const t1 = Date.now();
             const { targetIds, childToRequestedMap } = this.resolveTargetStopIds(stopIds, parentToChildMap);
-            const t2 = Date.now();
             const allDeps = await this.fetchDepartureTuples(targetIds, childToRequestedMap, staticDataUrl);
-            const t3 = Date.now();
 
             if (allDeps.length === 0) {
                 return { departures: [] };
             }
 
             const { routes } = await getGtfsRoutes(this.city.slug);
-            const t4 = Date.now();
             const rtVehicles = await this.getRealtimeVehiclesCache();
-            const t5 = Date.now();
-            
-            const result = DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles);
-            const t6 = Date.now();
 
-            console.log(`[PERF] Departures ${stopIds.join(',')}: parentMap=${t1-t0}ms, resolve=${t2-t1}ms, fetchTuples=${t3-t2}ms, gtfsData=${t4-t3}ms, rtVehicles=${t5-t4}ms, mapDeps=${t6-t5}ms, total=${t6-t0}ms`);
-            return { departures: result };
+            return { departures: DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles) };
         } catch (e) {
             if (e instanceof ApiError) throw e;
             console.error('Error loading static departures:', e);
@@ -89,6 +80,14 @@ export class DeparturesService {
 
 
 
+    /**
+     * Expands each requested id into the platforms departures are actually attached to.
+     *
+     * The request-level cap in `departuresQuerySchema` bounds how many ids may be *named*; this bounds
+     * how many they may *expand into*, which is what actually drives subrequest count. A handful of
+     * large interchange stations can otherwise produce hundreds of targets from a request that passed
+     * the first check.
+     */
     private resolveTargetStopIds(stopIds: string[], parentToChildMap: Record<string, string[]>) {
         const targetIds: string[] = [];
         const childToRequestedMap = new Map<string, string>();
@@ -102,6 +101,13 @@ export class DeparturesService {
             } else {
                 targetIds.push(rawId);
                 childToRequestedMap.set(rawId, rawId);
+            }
+
+            if (targetIds.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) {
+                throw new ApiError(
+                    `Too many stops requested; this expands to more than ${GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS} platforms.`,
+                    400
+                );
             }
         }
 
@@ -136,7 +142,7 @@ export class DeparturesService {
 
         const chunkMap = new Map<string, string[]>();
         for (const id of missing) {
-            const chunkId = encodeURIComponent(id.substring(0, 4).toUpperCase());
+            const chunkId = encodeURIComponent(departuresChunkId(id));
             if (!chunkMap.has(chunkId)) chunkMap.set(chunkId, []);
             chunkMap.get(chunkId)!.push(id);
         }
@@ -147,18 +153,15 @@ export class DeparturesService {
                 const res = await appClient.fetch(dataUrl, { cf: { cacheTtl: 3600 } });
                 if (!res.ok) return;
 
-                const raw = await res.text();
-                const tParseStart = Date.now();
-                const chunkData = JSON.parse(raw) as Record<string, GtfsDepartureTuple[]>;
-                console.log(`[PERF] ${this.city.slug} departures chunk ${chunkId}: bytes=${raw.length}, parse=${Date.now() - tParseStart}ms, stops=${ids.length}`);
+                const chunkData = JSON.parse(await res.text()) as Record<string, GtfsDepartureTuple[]>;
 
                 for (const id of ids) {
                     const tuples = chunkData[id] ?? [];
                     departureTuplesCache.set(`${this.city.slug}:${id}`, tuples);
                     collect(id, tuples);
                 }
-            } catch {
-                // Fail silently for missing chunk file
+            } catch (e) {
+                console.error(`Failed to load departures chunk ${chunkId} for ${this.city.slug}:`, e);
             }
         });
 

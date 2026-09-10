@@ -35,12 +35,7 @@ export async function getGtfsRoutes(citySlug: string): Promise<GtfsRoutesData> {
 
     return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const fetchPromises = [
-                appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`)
-            ];
-
-            const results = await Promise.all(fetchPromises);
-            const rRes = results[0];
+            const rRes = await appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`);
 
             if (!rRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}`);

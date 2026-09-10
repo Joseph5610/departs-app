@@ -4,8 +4,8 @@ import type { AppAlert } from '../../../../_core/types';
 import type { GtfsRoutesData, GtfsRoute } from '../../../gtfs/core/gtfs-data';
 
 export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident: boolean = false): AppAlert[] {
-        const mapped = super.mapAlerts(rawAlerts, gtfsData, forceIncident);
+    public override mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, timezone: string, forceIncident: boolean = false): AppAlert[] {
+        const mapped = super.mapAlerts(rawAlerts, gtfsData, timezone, forceIncident);
         
         // Sort Kordis alerts by newest ID first (descending numeric ID)
         return mapped.sort((a, b) => this.extractNumericId(b.guid) - this.extractNumericId(a.guid));

@@ -4,7 +4,7 @@ import { CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import { appClient } from '../../../../_core/ApiClient';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../../../_core/config';
 import type { DukDeparturesResponse } from '../../types';
 import { DUK_TRACTION_MAPPING } from '../../utils/dukConstants';
 import { getDukVehicleColor } from '../../utils/colors';

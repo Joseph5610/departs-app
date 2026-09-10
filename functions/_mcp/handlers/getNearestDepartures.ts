@@ -49,23 +49,26 @@ export async function handleGetNearestDepartures(
         nearby = nearby.slice(0, 5);
     }
 
-    const nearestStopsResult = [];
-
-    for (const { feature, distance } of nearby) {
+    // Stops are independent, so fetch them in one wave; `nearby` is pre-sorted, so order is preserved.
+    const settled = await Promise.all(nearby.map(async ({ feature, distance }) => {
         const sId = feature.properties?.stop_id;
         const sName = feature.properties?.stop_name;
-        if (!sId) continue;
+        if (!sId) return null;
 
         const searchParams = new URLSearchParams();
         searchParams.set("limit", String(limit));
         sId.split(',').forEach(id => {
             if (id.trim()) searchParams.append("stopId", id.trim());
         });
-        
+
         const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/departures`, searchParams);
 
         try {
-            const departuresData = await adapter.handleDepartures(mockCtx) as AppDepartureResponse;
+            const [departuresData, stopInfotexts] = await Promise.all([
+                adapter.handleDepartures(mockCtx) as Promise<AppDepartureResponse>,
+                getMatchingInfotexts(ctx, adapter, resolvedCity, sId)
+            ]);
+
             let departures = departuresData?.departures || [];
 
             if (args.line) {
@@ -78,38 +81,39 @@ export async function handleGetNearestDepartures(
                 departures = departures.filter((d) => matchesRouteType(d.type, rType));
             }
 
-            const stopInfotexts = await getMatchingInfotexts(ctx, adapter, resolvedCity, sId);
+            if (departures.length === 0 && stopInfotexts.length === 0) return null;
 
-            if (departures.length > 0 || stopInfotexts.length > 0) {
-                nearestStopsResult.push({
-                    stop_id: sId,
-                    stop_name: sName,
-                    distance_meters: Math.round(distance),
-                    infotexts: stopInfotexts.map((i) => ({
-                        id: i.id,
-                        text: i.text,
-                        text_en: i.textEn,
-                        priority: i.priority
-                    })),
-                    departures: departures.slice(0, limit).map((d) => ({
-                        line: d.line,
-                        type: d.type,
-                        headsign: d.headsign,
-                        timestamp: d.timestamp,
-                        scheduled: d.scheduled,
-                        delay_seconds: d.delay ?? null,
-                        delay_minutes: d.delay != null ? Math.round((d.delay) / 60 * 10) / 10 : null,
-                        is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
-                        platform: d.platform ?? null,
-                        trip_id: d.tripId,
-                        vehicle_id: d.vehicleId
-                    }))
-                });
-            }
-        } catch {
-            // Skip stop if departure request fails
+            return {
+                stop_id: sId,
+                stop_name: sName,
+                distance_meters: Math.round(distance),
+                infotexts: stopInfotexts.map((i) => ({
+                    id: i.id,
+                    text: i.text,
+                    text_en: i.textEn,
+                    priority: i.priority
+                })),
+                departures: departures.slice(0, limit).map((d) => ({
+                    line: d.line,
+                    type: d.type,
+                    headsign: d.headsign,
+                    timestamp: d.timestamp,
+                    scheduled: d.scheduled,
+                    delay_seconds: d.delay ?? null,
+                    delay_minutes: d.delay != null ? Math.round((d.delay) / 60 * 10) / 10 : null,
+                    is_wheelchair_accessible: d.is_wheelchair_accessible ?? null,
+                    platform: d.platform ?? null,
+                    trip_id: d.tripId,
+                    vehicle_id: d.vehicleId
+                }))
+            };
+        } catch (e) {
+            console.error(`Failed to load departures for stop ${sId}:`, e);
+            return null;
         }
-    }
+    }));
+
+    const nearestStopsResult = settled.filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
     return {
         city: resolvedCity,

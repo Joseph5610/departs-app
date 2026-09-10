@@ -27,10 +27,9 @@ export class BaseGtfsAlertsMapper {
         const cleaned = text
             .replace(/<br\s*\/?>/gi, '\n')
             .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
-            // Simplified from /<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi to prevent regex backtracking overhead
-            .replace(/<(p|div|li|ul|ol|h[1-6])\b.*?>/gi, '\n')
-            // Simplified from /<[^>]*>/g
-            .replace(/<.*?>/g, '')
+            // `[^>]*` not `.*?` — `.` skips newlines, so tags wrapped across lines would survive.
+            .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
+            .replace(/<[^>]*>/g, '')
             .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
             .replace(/[\r\t]+/g, '\n');
 
@@ -66,7 +65,7 @@ export class BaseGtfsAlertsMapper {
      * @param forceIncident If true, overrides the detour detection logic and forces the alert type to 'incident'.
      * @returns A mapped array of AppAlert objects ready for frontend consumption.
      */
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident: boolean = false): AppAlert[] {
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, timezone: string, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
             const rawHeader = alert.headerText?.translation?.[0]?.text || '';
@@ -117,11 +116,11 @@ export class BaseGtfsAlertsMapper {
                 const period = alert.activePeriod[0];
                 if (period.start && Number(period.start) > 0) {
                     const startMs = Number(period.start) * (Number(period.start) > 1e11 ? 1 : 1000);
-                    valid_from = formatDate(new Date(startMs));
+                    valid_from = formatDate(new Date(startMs), timezone);
                 }
                 if (period.end && Number(period.end) > 0) {
                     const endMs = Number(period.end) * (Number(period.end) > 1e11 ? 1 : 1000);
-                    valid_to = formatDate(new Date(endMs));
+                    valid_to = formatDate(new Date(endMs), timezone);
                 }
             }
 

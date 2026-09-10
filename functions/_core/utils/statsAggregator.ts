@@ -28,7 +28,6 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         route_color: string;
     }> = [];
 
-    const lines = new Set<string>();
     const AT_STOP_STATES = new Set(['at_stop', 'before_track', 'before_track_delayed']);
 
     for (const feature of features) {
@@ -37,8 +36,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         const p = feature.properties;
         if (p.route_short_name) {
             const lineStr = p.route_short_name.toString();
-            lines.add(lineStr);
-            
+
             if (!lineCounts[lineStr]) {
                 lineCounts[lineStr] = { count: 0, route_color: p.route_color || '' };
             }
@@ -100,7 +98,7 @@ export function aggregateCityStats(features: AppVehicleFeature[]): AppCityStats 
         
     return {
         total_vehicles: features.length,
-        total_lines: lines.size,
+        total_lines: Object.keys(lineCounts).length,
         average_delay: delayCount > 0 ? delaySum / delayCount : null,
         total_delay_seconds: delaySum,
         low_floor_count: lowFloorCount,

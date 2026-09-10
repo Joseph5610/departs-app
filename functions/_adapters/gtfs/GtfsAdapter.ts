@@ -11,21 +11,35 @@ import { AlertsService } from './services/alerts/AlertsService';
 import { InfotextsService } from './services/infotexts/InfotextsService';
 
 import { GtfsRtVehicleDetailEnricher } from './services/vehicles/GtfsRtVehicleDetailEnricher';
+import type { VehicleDetailEnricher } from './services/vehicles/VehicleDetailEnricher';
 import { VehiclesService } from './services/vehicles/VehiclesService';
 import { BaseGtfsAlertsMapper } from './services/alerts/BaseGtfsAlertsMapper';
 import { getGtfsRtFeed } from './core/gtfs-rt-feed';
 
 export class GtfsAdapter implements CityAdapter {
-    protected stopsService: StopsService;
-    protected vehiclesService: VehiclesService;
-    protected vehicleDetailService: VehicleDetailService;
-    protected alertsService: AlertsService;
+    protected readonly stopsService: StopsService;
+    protected readonly vehiclesService: VehiclesService;
+    protected readonly vehicleDetailService: VehicleDetailService;
+    protected readonly alertsService: AlertsService;
 
     constructor(public readonly city: CityConfig) {
-        this.stopsService = new StopsService(this.city);
-        this.vehiclesService = new VehiclesService(this.city);
-        this.vehicleDetailService = new VehicleDetailService(this.city, new GtfsRtVehicleDetailEnricher(this.vehiclesService));
-        this.alertsService = new AlertsService(this.city, new BaseGtfsAlertsMapper());
+        this.stopsService = new StopsService(city);
+        this.vehiclesService = this.createVehiclesService();
+        this.vehicleDetailService = new VehicleDetailService(city, this.createDetailEnricher(this.vehiclesService));
+        this.alertsService = new AlertsService(city, this.createAlertsMapper());
+    }
+
+    /** Override points for networks that need their own behaviour. Must only read `this.city`. */
+    protected createVehiclesService(): VehiclesService {
+        return new VehiclesService(this.city);
+    }
+
+    protected createDetailEnricher(vehiclesService: VehiclesService): VehicleDetailEnricher {
+        return new GtfsRtVehicleDetailEnricher(vehiclesService);
+    }
+
+    protected createAlertsMapper(): BaseGtfsAlertsMapper {
+        return new BaseGtfsAlertsMapper();
     }
 
     async handleStops(_ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {

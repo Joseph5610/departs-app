@@ -1,5 +1,6 @@
 import { Env } from "../../_core/types";
-import { CACHE_TTL, withCityRoute } from "../../_core/api-utils";
+import { withCityRoute } from "../../_core/api-utils";
+import { CACHE_TTL } from "../../_core/config";
 
 export const onRequest: PagesFunction<Env> = withCityRoute(
     (adapter, context) => adapter.handleStops(context),

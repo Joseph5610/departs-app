@@ -11,7 +11,7 @@ export class InfotextsMapper {
      * @param data - Array of raw `GolemioInfotext` objects from the API response.
      * @returns Filtered and mapped array of `AppInfotext` objects valid at call time.
      */
-    static map(data: GolemioInfotext[]): AppInfotext[] {
+    static map(data: GolemioInfotext[], timezone: string): AppInfotext[] {
 
         const now = new Date();
         const nowMs = now.getTime();
@@ -31,8 +31,8 @@ export class InfotextsMapper {
                 priority: item.priority,
                 displayType: item.display_type,
                 relatedStopIds: item.related_stops.map(stop => stop.id),
-                valid_from: formatDate(new Date(item.valid_from)),
-                valid_to: item.valid_to ? formatDate(new Date(item.valid_to)) : null
+                valid_from: formatDate(new Date(item.valid_from), timezone),
+                valid_to: item.valid_to ? formatDate(new Date(item.valid_to), timezone) : null
             }));
     }
 }

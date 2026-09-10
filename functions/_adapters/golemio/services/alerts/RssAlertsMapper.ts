@@ -5,6 +5,18 @@ import { XMLParser } from "fast-xml-parser";
 import { z } from 'zod';
 import { pidRssItemSchema } from "./schemas";
 
+const rssParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+
+/** The only part of the RSS document this codebase navigates. */
+export interface RssDocument {
+    rss?: { channel?: { item?: unknown } };
+}
+
+/** Shared PID RSS parse — the parser options must match wherever the feed is read. */
+export function parseRssXml(xmlString: string): RssDocument {
+    return rssParser.parse(xmlString) as RssDocument;
+}
+
 export class RssAlertsMapper {
     
     private static guessType(name: string): AppRouteType {
@@ -26,23 +38,15 @@ export class RssAlertsMapper {
      * @param xmlString The raw RSS XML string
      * @returns Array of parsed AppAlert objects (exclusions only)
      */
-    static mapRSS(xmlString: string): AppAlert[] {
+    static mapRSS(xmlString: string, timezone: string): AppAlert[] {
         const itemType = 'exclusion';
         
-        const parser = new XMLParser({
-            ignoreAttributes: false,
-            attributeNamePrefix: "@_"
-        });
-        
-        const jObj = parser.parse(xmlString);
+        const jObj = parseRssXml(xmlString);
         let rawItems: unknown[] = [];
         
-        if (jObj && jObj.rss && jObj.rss.channel && jObj.rss.channel.item) {
-            if (Array.isArray(jObj.rss.channel.item)) {
-                rawItems = jObj.rss.channel.item;
-            } else {
-                rawItems = [jObj.rss.channel.item];
-            }
+        const item = jObj?.rss?.channel?.item;
+        if (item) {
+            rawItems = Array.isArray(item) ? item : [item];
         }
 
         // Validate structure with Zod and drop malformed items silently
@@ -96,14 +100,14 @@ export class RssAlertsMapper {
             const end = item.dateTo ? new Date(Number(item.dateTo) * 1000) : null;
 
             if (start) {
-                valid_from = formatDate(start);
+                valid_from = formatDate(start, timezone);
                 if (start > now) {
                     isActive = false;
                     isFuture = true;
                 }
             }
             if (end) {
-                valid_to = formatDate(end);
+                valid_to = formatDate(end, timezone);
                 if (end < now) {
                     isActive = false;
                 }

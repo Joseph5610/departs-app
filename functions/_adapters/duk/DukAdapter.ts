@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../_core/city-config';
 import type { Env, AppVehicleDetail, AppCityStats } from '../../_core/types';
 import { ApiError } from '../../_core/errors';
-import { ERROR_MESSAGES } from '../../_core/api-utils';
+import { ERROR_MESSAGES } from '../../_core/config';
 import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
 import { DukVehiclesService } from './services/vehicles/DukVehiclesService';

@@ -34,11 +34,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         console.error(`Failed to fetch trip_windows.json for ${this.city.slug}: ${res.status}`);
                         return null;
                     }
-                    const raw = await res.text();
-                    const tParse = Date.now();
-                    const windows = JSON.parse(raw) as TripWindows;
-                    console.log(`[PERF] ${this.city.slug} trip_windows.json: bytes=${raw.length}, parse=${Date.now() - tParse}ms, trips=${Object.keys(windows.trips).length}`);
-                    return windows;
+                    return JSON.parse(await res.text()) as TripWindows;
                 } catch (e) {
                     console.error("Failed to fetch trip_windows.json", e);
                     return null;
@@ -152,22 +148,15 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
             CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
-                const tInitStart = Date.now();
-
                 const [[feed, gtfsData, tripRoutesObj], windows] = await Promise.all([
                     this.getCoreData(),
                     this.getTripWindows()
                 ]);
 
-                console.log(`[PERF] ${this.city.slug} initialization (core + trip_windows): ${Date.now() - tInitStart}ms`);
-
                 if (!feed || !feed.entity) {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
                 }
 
-
-
-                const tMapStart = Date.now();
                 const features: AppVehicleFeature[] = [];
                 const nowMs = Date.now();
 
@@ -231,22 +220,19 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
                     const originTimestamp = new Date(lastUpdate).toISOString();
                     
-                    // Rewrite the vehicle ID to the label so it matches the group correctly.
-                    // This prevents multiple markers from rendering if deduplication fails.
-                    if (vp.vehicle) {
-                        vp.vehicle.id = label;
-                    }
+                    // Copy, never write through: `vp` belongs to the FeedMessage CacheManager shares
+                    // with the alerts and detail paths.
+                    const mappable: transit_realtime.IVehiclePosition = vp.vehicle
+                        ? { ...vp, vehicle: { ...vp.vehicle, id: label } }
+                        : vp;
 
                     const window = this.findTripWindow(tripId, rawTripId, windows);
-                    const isBeforeTrack = this.isVehicleBeforeTrack(vp, window, currentMins);
+                    const isBeforeTrack = this.isVehicleBeforeTrack(window, currentMins);
 
-                    const liveMatch = VehiclesMapper.mapVehicle(vp, tripId, route, originTimestamp, null, isBeforeTrack);
+                    const liveMatch = VehiclesMapper.mapVehicle(mappable, tripId, route, originTimestamp, null, isBeforeTrack);
 
                     features.push(liveMatch);
                 }
-
-                const tMapEnd = Date.now();
-                console.log(`[PERF] ${this.city.slug} total array mapping loop: ${tMapEnd - tMapStart}ms (entities: ${feed.entity.length})`);
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
             },
@@ -257,11 +243,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     /**
      * Checks if vehicle is at origin before departure.
      */
-    private isVehicleBeforeTrack(
-        vp: transit_realtime.IVehiclePosition,
-        window: TripWindow | undefined,
-        currentMins: number
-    ): boolean {
+    private isVehicleBeforeTrack(window: TripWindow | undefined, currentMins: number): boolean {
         if (!window) return false;
 
         const start = window[0] % 1440;

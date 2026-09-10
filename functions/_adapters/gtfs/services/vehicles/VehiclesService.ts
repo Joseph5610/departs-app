@@ -4,7 +4,7 @@ import type { CityConfig } from '../../../../_core/city-config';
 import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { getGtfsRoutes, getGtfsTripRoutes, type GtfsTripRoutesData } from '../../core/gtfs-data';
 import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
-import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
+import { parseSearchParams, parseBoundsParam, vehicleQuerySchema } from '../../../../_core/schemas';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
 import { GTFS_CONFIG } from '../../core/config';
@@ -201,7 +201,7 @@ export class VehiclesService {
         }
 
         if (bounds) {
-            const [minLat, minLng, maxLat, maxLng] = bounds.split(',').map(Number);
+            const [minLat, minLng, maxLat, maxLng] = parseBoundsParam(bounds);
             filtered = filtered.filter(f => {
                 if (!f.geometry || !f.geometry.coordinates) return false;
                 const [lng, lat] = f.geometry.coordinates;

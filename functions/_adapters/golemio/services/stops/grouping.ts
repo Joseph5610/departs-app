@@ -2,22 +2,6 @@ import { AppStopFeature, AppStopProperties, AppRouteType } from "../../../../_co
 import { getVehicleColor } from "../../services/vehicles/colors";
 import { fixCommaSpacing } from "../../../../_core/api-utils";
 
-/**
- * Processes and groups raw GTFS stop features into structural parent stations and logical centroids.
- * 
- * GTFS Location Types:
- * - 0: Stop/Platform
- * - 1: Station
- * - 2: Entrance/Exit
- *
- * Algorithm:
- * 1. Two-phase structural grouping (identifying Type 1 parents and Type 2 entrances).
- * 2. Logical enrichment (computing aggregated lines, colors, train presence).
- * 3. Centroid generation (creating virtual `is_centroid` nodes for UI map labels).
- *
- * @param allStops Raw GTFS stop features
- * @returns Grouped, enriched, and centroid-injected features
- */
 interface HierarchyContext {
     stationAnchors: Map<string, AppStopFeature>;
     stationChildren: Map<string, string[]>;

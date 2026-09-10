@@ -1,11 +1,8 @@
 import { Env } from "../../../_core/types";
-import { CACHE_TTL } from "../../../_core/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../_core/config";
+import { ApiError } from "../../../_core/errors";
 import { GOLEMIO_CONFIG } from "./config";
 import { ApiClient, ApiFetchOptions } from "../../../_core/ApiClient";
-
-export interface GolemioEnv extends Env {
-    GOLEMIO_API_KEY: string;
-}
 
 export class GolemioClient {
     private client: ApiClient;
@@ -22,17 +19,18 @@ export class GolemioClient {
         env?: Env,
         options: ApiFetchOptions = {}
     ): Promise<Response> {
-        if (!env) {
-            throw new Error("GolemioClient requires env to be passed to fetch for API key.");
+        const apiKey = env?.GOLEMIO_API_KEY;
+        if (!apiKey) {
+            console.error('GOLEMIO_API_KEY is not configured; cannot reach the upstream API.');
+            throw new ApiError(ERROR_MESSAGES.GENERIC_INTERNAL, 500);
         }
-        const golemioEnv = env as GolemioEnv;
-        
+
         return this.client.fetch(path, {
             ...options,
             cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
             headers: {
                 ...options.headers,
-                "X-Access-Token": golemioEnv.GOLEMIO_API_KEY,
+                "X-Access-Token": apiKey,
                 "Content-Type": "application/json",
             }
         });

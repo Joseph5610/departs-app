@@ -1,9 +1,9 @@
 import { AppAlertsResponse, AppAlert, Env } from "../../../../_core/types";
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/config";
 import { CacheManager } from "../../../../_core/utils/CacheManager";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
-import { RssAlertsMapper } from "./RssAlertsMapper";
+import { RssAlertsMapper, parseRssXml } from "./RssAlertsMapper";
 import { GtfsAlertsMapper } from './GtfsAlertsMapper';
 import { GtfsRoute } from '../../../gtfs/core/gtfs-data';
 import { GOLEMIO_CONFIG } from "../../core/config";
@@ -62,9 +62,7 @@ export class AlertsService {
 
         let exclusions = null;
         if (exclusionsRes.status === 'fulfilled') {
-            const { XMLParser } = await import("fast-xml-parser");
-            const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
-            exclusions = parser.parse(exclusionsRes.value);
+            exclusions = parseRssXml(exclusionsRes.value);
         }
 
         return {
@@ -112,52 +110,53 @@ export class AlertsService {
      * @returns {Promise<AppAlertsResponse>} Combined alerts response
      */
     async getAlerts(env: Env): Promise<AppAlertsResponse> {
-        try {
-            const [incidentsRes, routesCache, exclusionsRes] = await Promise.allSettled([
-                this.fetchIncidentsFeed(env),
-                this.getCachedRoutesMap(env),
-                this.fetchExclusionsFeed()
-            ]);
+        const [incidentsRes, routesCache, exclusionsRes] = await Promise.allSettled([
+            this.fetchIncidentsFeed(env),
+            this.getCachedRoutesMap(env),
+            this.fetchExclusionsFeed()
+        ]);
 
-            // Handle GTFS-RT Incidents
-            let incidents: AppAlert[] = [];
-            if (incidentsRes.status === 'fulfilled' && routesCache.status === 'fulfilled') {
-                try {
-                    const feed = incidentsRes.value;
-                    const rawAlerts = feed.entity.filter(e => e.alert != null);
+        // Handle GTFS-RT Incidents
+        let incidents: AppAlert[] = [];
+        if (incidentsRes.status === 'fulfilled' && routesCache.status === 'fulfilled') {
+            try {
+                const feed = incidentsRes.value;
+                const rawAlerts = feed.entity.filter(e => e.alert != null);
 
-                    const { routesMap, routesByName } = routesCache.value;
-                    
-                    const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
-                    incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, true);
-                } catch (e) {
-                    console.error("Failed to map GTFS-RT alerts", e);
-                }
-            } else {
-                console.error("Failed to fetch PB alerts or Routes", 
-                    incidentsRes.status === 'rejected' ? incidentsRes.reason : null,
-                    routesCache.status === 'rejected' ? routesCache.reason : 'Routes Cache failed'
-                );
+                const { routesMap, routesByName } = routesCache.value;
+
+                const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
+                incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, GOLEMIO_CONFIG.TIMEZONE, true);
+            } catch (e) {
+                console.error("Failed to map GTFS-RT alerts", e);
             }
-
-            // Handle RSS Exclusions
-            let exclusions: AppAlert[] = [];
-            if (exclusionsRes.status === 'fulfilled') {
-                exclusions = RssAlertsMapper.mapRSS(exclusionsRes.value);
-            } else {
-                console.error("Failed to fetch Exclusions RSS", exclusionsRes.reason);
-            }
-
-            if (incidents.length === 0 && exclusions.length === 0 && exclusionsRes.status === 'rejected') {
-                throw new ApiError("Failed to fetch alerts from all sources", 502);
-            }
-
-            return {
-                alerts: [...incidents, ...exclusions]
-            };
-        } catch (error) {
-            console.error('PID Alerts error:', error);
-            throw new ApiError(ERROR_MESSAGES.RSS_FEED_ERROR, 500, { cause: error });
+        } else {
+            console.error("Failed to fetch PB alerts or Routes",
+                incidentsRes.status === 'rejected' ? incidentsRes.reason : null,
+                routesCache.status === 'rejected' ? routesCache.reason : 'Routes Cache failed'
+            );
         }
+
+        // Handle RSS Exclusions
+        let exclusions: AppAlert[] = [];
+        let exclusionsFailed = exclusionsRes.status === 'rejected';
+        if (exclusionsRes.status === 'fulfilled') {
+            try {
+                exclusions = RssAlertsMapper.mapRSS(exclusionsRes.value, GOLEMIO_CONFIG.TIMEZONE);
+            } catch (e) {
+                console.error("Failed to map Exclusions RSS", e);
+                exclusionsFailed = true;
+            }
+        } else {
+            console.error("Failed to fetch Exclusions RSS", exclusionsRes.reason);
+        }
+
+        if (incidents.length === 0 && exclusionsFailed) {
+            throw new ApiError(ERROR_MESSAGES.RSS_FEED_ERROR, 502);
+        }
+
+        return {
+            alerts: [...incidents, ...exclusions]
+        };
     }
 }

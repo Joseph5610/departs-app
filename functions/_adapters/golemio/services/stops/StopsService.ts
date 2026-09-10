@@ -1,7 +1,7 @@
 
 import { Env, AppStopCollection } from "../../../../_core/types";
 import { GolemioStopFeature } from "./schemas";
-import { ERROR_MESSAGES } from "../../../../_core/api-utils";
+import { ERROR_MESSAGES } from "../../../../_core/config";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
 import { GolemioClient } from "../../core/GolemioClient";

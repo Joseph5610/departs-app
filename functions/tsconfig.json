@@ -11,6 +11,8 @@
             "@cloudflare/workers-types"
         ],
         "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
         "skipLibCheck": true,
         "noEmit": true
     },

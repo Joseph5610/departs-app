@@ -1,6 +1,7 @@
 /** Golemio-specific constants. Kept out of shared api-utils intentionally. */
 export const GOLEMIO_CONFIG = {
     BASE_URL: 'https://api.golemio.cz',
+    TIMEZONE: 'Europe/Prague',
     DEPARTURE_LIMIT: 20,
     DEPARTURE_MINUTES_AFTER: 120,
     STOPS_FETCH_LIMIT: 10000,
