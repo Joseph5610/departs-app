@@ -15,6 +15,12 @@ export const DPMP_CONFIG = {
     DEV_RELAY_PATH: '/__dev/dpmp.csv',
     DEV_HOSTNAMES: ['localhost', '127.0.0.1'] as readonly string[],
 
+    /**
+     * How long a vehicle missing from the CSV keeps its last report. The export routinely drops
+     * vehicles for one to six 15s snapshots; without this the map and detail flicker to fallback.
+     */
+    DROPOUT_GRACE_MS: 120_000,
+
     /** CSV `DIRECTION` to GTFS `direction_id`. D/Z/R (depot and positioning runs) have no GTFS trip. */
     DIRECTION_IDS: { T: 0, P: 1 } as Record<string, number>,
 

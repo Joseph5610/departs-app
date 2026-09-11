@@ -28,6 +28,16 @@ interface LastFix {
     bearing: number | null;
 }
 
+interface SeenRow {
+    row: DpmpVehicleRow;
+    timestampMs: number;
+    /** When the row was last present in the CSV; remembered copies do not refresh it. */
+    seenAtMs: number;
+}
+
+/** Last CSV row per vehicle and city, to bridge the export's short per-vehicle dropouts. */
+const lastSeenRows = new Map<string, Map<string, SeenRow>>();
+
 /** Last position per vehicle, so a heading can be derived from movement - the CSV has none. */
 const lastFixes = new LruCache<LastFix>({ maxEntries: DPMP_CONFIG.BEARING_CACHE_MAX_ENTRIES });
 
@@ -124,15 +134,16 @@ export class DpmpVehiclesService extends VehiclesService {
                 const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes) : null;
                 const nowMs = Date.now();
 
-                const latestByVehicle = new Map<string, { row: DpmpVehicleRow; timestampMs: number }>();
+                const latestByVehicle = new Map<string, SeenRow>();
                 for (const row of rows) {
                     const timestampMs = reportTimeMs(row.dateTime, nowMs, this.city.timezone) ?? nowMs;
                     if (nowMs - timestampMs > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
                     const existing = latestByVehicle.get(row.vehicleNumber);
                     if (!existing || existing.timestampMs < timestampMs) {
-                        latestByVehicle.set(row.vehicleNumber, { row, timestampMs });
+                        latestByVehicle.set(row.vehicleNumber, { row, timestampMs, seenAtMs: nowMs });
                     }
                 }
+                this.bridgeDropouts(latestByVehicle, nowMs);
 
                 const mapped = await Promise.all(
                     Array.from(latestByVehicle.values(), ({ row, timestampMs }) =>
@@ -192,6 +203,32 @@ export class DpmpVehiclesService extends VehiclesService {
         const isBeforeTrack = row.stopOrder <= 1 && minsToStart > 1 && minsToStart <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
 
         return VehiclesMapper.mapVehicle(vp, match.tripId, route, originTimestamp, -row.variation, isBeforeTrack);
+    }
+
+    /**
+     * Re-adds vehicles that dropped out of this CSV snapshot but were present within
+     * DROPOUT_GRACE_MS, then records the merged set for the next build.
+     */
+    private bridgeDropouts(latestByVehicle: Map<string, SeenRow>, nowMs: number): void {
+        let remembered = lastSeenRows.get(this.city.slug);
+        if (!remembered) {
+            remembered = new Map();
+            lastSeenRows.set(this.city.slug, remembered);
+        }
+
+        for (const [vehicleNumber, seen] of remembered) {
+            const expired = nowMs - seen.seenAtMs > DPMP_CONFIG.DROPOUT_GRACE_MS
+                || nowMs - seen.timestampMs > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS;
+            if (expired) {
+                remembered.delete(vehicleNumber);
+            } else if (!latestByVehicle.has(vehicleNumber)) {
+                latestByVehicle.set(vehicleNumber, seen);
+            }
+        }
+
+        for (const [vehicleNumber, seen] of latestByVehicle) {
+            remembered.set(vehicleNumber, seen);
+        }
     }
 
     /** Adds the operator and, when the side number is in the fleet register, model and equipment. */
