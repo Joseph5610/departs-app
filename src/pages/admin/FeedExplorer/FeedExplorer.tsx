@@ -14,6 +14,12 @@ import 'react-json-view-lite/dist/index.css';
 import { toast } from 'sonner';
 import { AdminLayout } from '../AdminLayout';
 
+const FEED_SOURCE_LABELS: Record<string, Record<'vehicles' | 'alerts', string>> = {
+    prague: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
+    brno: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
+    presov: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
+};
+
 export const FeedExplorer: React.FC = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
@@ -115,9 +121,10 @@ export const FeedExplorer: React.FC = () => {
         <AdminLayout title={titleNode} headerActions={headerActions} contentClassName="p-2 sm:p-4 flex flex-col min-h-0 h-full">
             <div className="flex items-center gap-2 sm:hidden shrink-0">
                 <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="w-full">
-                    <TabsList variant="default" className="grid grid-cols-2 w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
+                    <TabsList variant="default" className="grid grid-cols-3 w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
                         <TabsTrigger value="prague" className="h-7 text-xs font-semibold rounded-lg">PRG</TabsTrigger>
                         <TabsTrigger value="brno" className="h-7 text-xs font-semibold rounded-lg">BRQ</TabsTrigger>
+                        <TabsTrigger value="presov" className="h-7 text-xs font-semibold rounded-lg">POV</TabsTrigger>
                     </TabsList>
                 </Tabs>
             </div>
@@ -148,7 +155,7 @@ export const FeedExplorer: React.FC = () => {
                 <div className="bg-card/80 backdrop-blur-md rounded-2xl shadow-xs overflow-hidden flex-1 min-h-0 flex flex-col border border-border/40 relative mt-2 sm:mt-0">
                     <div className="bg-foreground/2 px-4 py-2.5 flex items-center justify-between border-b border-border/40 select-none overflow-x-auto">
                         <div className="text-xs text-muted-foreground/80 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                            <span className="font-semibold">{selectedCity === 'brno' ? (feedType === 'alerts' ? 'GTFS-RT Alerts -> JSON' : 'GTFS-RT -> JSON') : (feedType === 'alerts' ? 'PID (GTFS-RT PB + RSS XML)' : 'Golemio (/v2/public/vehiclepositions)')}</span>
+                            <span className="font-semibold">{(FEED_SOURCE_LABELS[selectedCity] ?? FEED_SOURCE_LABELS[DEFAULT_CITY_SLUG])[feedType]}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-auto">
                             <Badge variant="outline" className="text-[10px] font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">

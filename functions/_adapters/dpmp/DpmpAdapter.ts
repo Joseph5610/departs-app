@@ -54,7 +54,8 @@ export class DpmpAdapter extends GtfsAdapter {
         return { alerts: [] };
     }
 
-    override async handleRawFeed(ctx: EventContext<Env, string, unknown>): Promise<unknown> {
+    override async handleRawFeed(ctx: EventContext<Env, string, unknown>, type: string = 'vehicles'): Promise<unknown> {
+        if (type === 'alerts') return [];
         return getDpmpCsvFeed(this.city, devRelayUrl(ctx));
     }
 }
