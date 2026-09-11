@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Prešov (DPMP) as the first Slovak city, with live vehicles matched from DPMP's realtime CSV export onto the static GTFS timetable.
-- Slovak locale, selected by default for viewers in Slovakia.
+- Slovak locale, picked automatically for Slovak-language browsers.
 - The city switcher groups cities by country, listing the viewer's own country first; first-time viewers in Slovakia start in Prešov.
 
 ### Fixed

@@ -157,7 +157,8 @@ export class DpmpVehiclesService extends VehiclesService {
 
                 return { type: 'FeatureCollection', features, status: 'ok' };
             },
-            (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
+            // An empty fleet is valid (overnight); only an unreachable upstream keeps the previous one.
+            (col) => !col || col.status === 'upstream_offline'
         );
     }
 

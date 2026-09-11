@@ -98,20 +98,18 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
 
 export const DEFAULT_CITY_SLUG = 'prague';
 
-/**
- * Device time zones that identify the viewer's country. The time zone is the only location hint
- * available without a server round-trip, and unlike the browser language it survives an English OS.
- */
+/** Device time zones that identify the viewer's country when the browser language does not. */
 export const VIEWER_COUNTRY_BY_TIMEZONE: Record<string, string> = {
     'Europe/Prague': 'CZ',
     'Europe/Bratislava': 'SK',
 };
 
-/** Browser language prefixes that identify the viewer's country when the time zone does not. */
+/** Primary browser language prefixes that identify the viewer's country. */
 export const VIEWER_COUNTRY_BY_LANGUAGE: Record<string, string> = {
     cs: 'CZ',
     sk: 'SK',
 };
+
 export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG[DEFAULT_CITY_SLUG];
 
 /**

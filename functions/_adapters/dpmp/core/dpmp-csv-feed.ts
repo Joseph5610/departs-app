@@ -109,7 +109,7 @@ export async function getDpmpCsvFeed(city: CityConfig, urlOverride?: string): Pr
             const text = new TextDecoder(DPMP_CONFIG.CSV_ENCODING).decode(await res.arrayBuffer());
             return parseDpmpCsv(text);
         },
-        (data) => !data || data.length === 0
+        (data) => !data
     );
 
     if (!rows) {

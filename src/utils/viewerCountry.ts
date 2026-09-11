@@ -8,27 +8,21 @@ import {
 let cachedCountry: string | null | undefined;
 
 /**
- * Best-effort country of the viewer, from the device time zone and then the browser language.
- * Returns null when neither identifies a supported country.
+ * Best-effort country of the viewer: the primary browser language first, then the device time
+ * zone. The language goes first because some browsers report Europe/Bratislava as its canonical
+ * Europe/Prague. Returns null when neither identifies a supported country.
  */
-export function getViewerCountry(): string | null {
+function getViewerCountry(): string | null {
     if (cachedCountry !== undefined) return cachedCountry;
 
-    let country: string | null;
-    try {
-        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        country = VIEWER_COUNTRY_BY_TIMEZONE[timeZone] ?? null;
-    } catch {
-        country = null;
-    }
+    const language = typeof navigator !== 'undefined' ? navigator.language : '';
+    let country: string | null = VIEWER_COUNTRY_BY_LANGUAGE[language.toLowerCase().split('-')[0]] ?? null;
 
-    if (!country && typeof navigator !== 'undefined') {
-        for (const lang of navigator.languages ?? [navigator.language]) {
-            const match = VIEWER_COUNTRY_BY_LANGUAGE[lang.toLowerCase().split('-')[0]];
-            if (match) {
-                country = match;
-                break;
-            }
+    if (!country) {
+        try {
+            country = VIEWER_COUNTRY_BY_TIMEZONE[Intl.DateTimeFormat().resolvedOptions().timeZone] ?? null;
+        } catch {
+            country = null;
         }
     }
 
