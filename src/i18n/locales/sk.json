@@ -288,6 +288,9 @@
     "active": "Práve prebieha",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolania",
+    "showMore": "Zobraziť ďalšie (+{{count}})",
+    "showLess": "Zobraziť menej",
+    "showFull": "Zobraziť celé",
     "causes": {
       "1": "Neznáma príčina",
       "2": "Iná príčina",

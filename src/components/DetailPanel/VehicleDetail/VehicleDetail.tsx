@@ -6,13 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { parseISO } from 'date-fns';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { getCityConfig } from '../../../config/cities';
-import { GenericAlertCard } from '../../Alerts/GenericAlertCard';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { CondensedAlertItem } from '../../Alerts/CondensedAlertItem';
+import { Card } from '@/components/ui/card';
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  useCarousel,
-} from '@/components/ui/carousel';
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { VEHICLE_ALERTS_PREVIEW_COUNT } from '../../../config/constants';
+import { isHighPriorityAlert } from '../../../utils/transitUtils';
+import type { RSSItem } from '../../../types/alerts';
 
 import { VehicleDetailSkeleton, StopTimelineSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
@@ -109,11 +113,13 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const routeName = displayVehicle?.routeName;
         if (!routeName) return [];
         const upperRouteName = routeName.toUpperCase();
-        return allItems.filter(item => {
-            const matchesLine = item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName);
-            const matchesMetadata = item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName);
-            return (matchesLine || matchesMetadata) && item.isActive;
-        });
+        return allItems
+            .filter(item => {
+                const matchesLine = item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName);
+                const matchesMetadata = item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName);
+                return (matchesLine || matchesMetadata) && item.isActive;
+            })
+            .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
     }, [rssData, displayVehicle?.routeName]);
 
     if (!displayVehicle) return null;
@@ -148,35 +154,12 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
                     {/* Alerts */}
                     {relevantAlerts.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex flex-col gap-3 mt-2">
                             <span className="micro-label-widest text-muted-foreground px-1">
                                 {t('alerts.title')}
                                 {relevantAlerts.length > 1 && ` (${relevantAlerts.length})`}
                             </span>
-                            <Carousel opts={{ loop: true }} className="w-full">
-                                <CarouselContent className="-ml-3">
-                                    {relevantAlerts.map((alert, idx) => (
-                                        <CarouselItem key={alert.guid || idx} className="pl-3 basis-full">
-                                            <GenericAlertCard
-                                                title={alert.title}
-                                                description={alert.description}
-                                                link={alert.link}
-                                                priority={alert.priority || 'normal'}
-                                                validFrom={alert.valid_from}
-                                                validTo={alert.valid_to}
-                                                isActive={alert.isActive}
-                                                isFuture={alert.isFuture}
-                                                cause={alert.cause}
-                                                causeDetail={alert.causeDetail}
-                                                type={alert.type}
-                                                effect={alert.effect}
-                                                hideCauseText={true}
-                                            />
-                                        </CarouselItem>
-                                    ))}
-                                </CarouselContent>
-                                <CarouselDots count={relevantAlerts.length} />
-                            </Carousel>
+                            <LineAlertList alerts={relevantAlerts} />
                         </div>
                     )}
 
@@ -198,36 +181,45 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
 VehicleDetail.displayName = 'VehicleDetail';
 
-const CarouselDots = ({ count }: { count: number }) => {
-    const { api } = useCarousel();
-    const [current, setCurrent] = React.useState(0);
+const alertKey = (alert: RSSItem, idx: number) => alert.guid || `${alert.title}-${idx}`;
 
-    React.useEffect(() => {
-        if (!api) return;
-        const onSelect = () => setCurrent(api.selectedScrollSnap());
-        api.on("select", onSelect);
-        api.on("reInit", onSelect);
-        const tId = setTimeout(onSelect, 0);
-        return () => {
-            api.off("select", onSelect);
-            api.off("reInit", onSelect);
-            clearTimeout(tId);
-        };
-    }, [api]);
+const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
+    const { t } = useTranslation();
+    const [showAll, setShowAll] = useState(false);
+    const { openAlert } = usePreferencesStore(s => s.actions);
 
-    if (count <= 1) return null;
+    const preview = alerts.slice(0, VEHICLE_ALERTS_PREVIEW_COUNT);
+    const overflow = alerts.slice(VEHICLE_ALERTS_PREVIEW_COUNT);
+
+    const renderItem = (alert: RSSItem, idx: number) => {
+        const guid = alert.guid;
+        return (
+            <CondensedAlertItem
+                key={alertKey(alert, idx)}
+                item={alert}
+                compact
+                onOpenFull={guid ? () => openAlert(guid) : undefined}
+                className={cn(idx > 0 && "border-t border-border/50", isHighPriorityAlert(alert.priority) && "bg-destructive/10")}
+            />
+        );
+    };
 
     return (
-        <div className="flex justify-center items-center gap-1.5 mt-2 mb-1">
-            {Array.from({ length: count }).map((_, idx) => (
-                <div
-                    key={idx}
-                    className={cn(
-                        "h-1.5 rounded-full transition-all duration-300",
-                        current === idx ? "w-4 bg-primary" : "w-1.5 bg-foreground/20"
-                    )}
-                />
-            ))}
-        </div>
+        <Card size="none" className="overflow-hidden">
+            <Collapsible open={showAll} onOpenChange={setShowAll}>
+                {preview.map(renderItem)}
+                {overflow.length > 0 && (
+                    <>
+                        <CollapsibleContent>
+                            {overflow.map((alert, idx) => renderItem(alert, idx + VEHICLE_ALERTS_PREVIEW_COUNT))}
+                        </CollapsibleContent>
+                        <CollapsibleTrigger className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-border/50 micro-label text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors outline-none cursor-pointer">
+                            {showAll ? t('alerts.showLess') : t('alerts.showMore', { count: overflow.length })}
+                            {showAll ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
+                        </CollapsibleTrigger>
+                    </>
+                )}
+            </Collapsible>
+        </Card>
     );
 };

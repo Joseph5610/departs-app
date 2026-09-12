@@ -30,7 +30,7 @@ export class VehicleDetailMapper {
             trip_headsign: headsign,
             bearing: null,
             delay: null,
-            route_color: routeColor || '',
+            route_color: routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR,
             is_static_fallback: true,
             state_position: 'before_track',
             origin_timestamp: undefined,

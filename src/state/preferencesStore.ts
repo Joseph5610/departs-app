@@ -12,6 +12,8 @@ export interface PreferencesState {
     isSettingsOpen: boolean;
     isFeedbackOpen: boolean;
     isAlertsOpen: boolean;
+    /** Alert to scroll to and expand when the alerts modal opens. */
+    focusedAlertGuid: string | null;
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
     favoriteStops: string[];
@@ -37,6 +39,7 @@ export interface PreferencesActions {
     setIsSettingsOpen: (open: boolean) => void;
     setIsFeedbackOpen: (open: boolean) => void;
     setIsAlertsOpen: (open: boolean) => void;
+    openAlert: (guid: string) => void;
     setIsMcpModalOpen: (open: boolean) => void;
     setIsMcpBannerDismissed: (dismissed: boolean) => void;
     setHasSeenWelcome: (seen: boolean) => void;
@@ -70,6 +73,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             isSettingsOpen: false,
             isFeedbackOpen: false,
             isAlertsOpen: false,
+            focusedAlertGuid: null,
             departureSort: 'departure',
             routeTypeFilter: [],
             favoriteStops: [],
@@ -94,7 +98,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
                 setIsFeedbackOpen: (open) => set({ isFeedbackOpen: open }),
-                setIsAlertsOpen: (open) => set({ isAlertsOpen: open }),
+                setIsAlertsOpen: (open) => set(open ? { isAlertsOpen: true } : { isAlertsOpen: false, focusedAlertGuid: null }),
+                openAlert: (guid) => set({ isAlertsOpen: true, focusedAlertGuid: guid }),
                 setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
                 setIsMcpBannerDismissed: (dismissed) => set({ isMcpBannerDismissed: dismissed }),
                 setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),

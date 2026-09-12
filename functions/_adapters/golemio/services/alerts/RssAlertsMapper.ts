@@ -4,6 +4,7 @@ import { getVehicleColor } from "../vehicles/colors";
 import { XMLParser } from "fast-xml-parser";
 import { z } from 'zod';
 import { pidRssItemSchema } from "./schemas";
+import { AlertTextFormatter } from "../../../../_core/utils/AlertTextFormatter";
 
 const rssParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
 
@@ -114,13 +115,9 @@ export class RssAlertsMapper {
             }
 
             // Clean description
-            let cleanedDescription = description
-                .replace(dateRangeRegex, '')
-                .replace(linesRegex, '')
-                .replace(/<[^>]*>/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            cleanedDescription = cleanedDescription.replace(/^[;\s.]+|[;\s.]+$/g, '');
+            const cleanedDescription = (AlertTextFormatter.fromHtml(
+                description.replace(dateRangeRegex, '').replace(linesRegex, '')
+            ) || '').replace(/^[;\s.]+|[;\s]+$/g, '');
 
             items.push({
                 type: itemType,

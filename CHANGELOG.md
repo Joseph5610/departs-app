@@ -4,6 +4,21 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.69.0] - 2026-09-11
+
+### Changed
+
+- Line alerts in vehicle detail are a compact expandable list instead of a swipeable carousel, showing two alerts with the rest behind "Show more".
+- "Show full alert" in vehicle detail opens the alerts modal scrolled to that alert and expanded.
+
+### Fixed
+
+- Alert descriptions in vehicle detail no longer show a partly cut-off line under the ellipsis.
+- Brno alert descriptions show their paragraphs and bullet lists instead of one run-on block with stray `. .` separators.
+- PID exclusion descriptions keep their headings, bullet lists and paragraphs instead of being flattened into one line, and `&amp;` is decoded.
+- Alerts no longer show an uninformative "Unknown cause" / "Other cause" label.
+- GTFS-based cities send a fallback grey for vehicles on lines without a route color (e.g. Prešov depot runs) instead of an empty color that rendered black.
+
 ## [0.68.0] - 2026-09-10
 
 ### Added

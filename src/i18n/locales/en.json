@@ -285,6 +285,9 @@
     "active": "Active now",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice",
+    "showMore": "Show more (+{{count}})",
+    "showLess": "Show less",
+    "showFull": "Show full alert",
     "causes": {
       "1": "Unknown Cause",
       "2": "Other Cause",

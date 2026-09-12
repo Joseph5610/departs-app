@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ChevronDown } from 'lucide-react';
+import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { RSSItem } from '../../types/transit';
 import { LineBadge } from '../LineBadge';
 import { AlertIcon } from './AlertIcon';
 import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
+import { isHighPriorityAlert } from '../../utils/transitUtils';
 import {
     Collapsible,
     CollapsibleContent,
@@ -15,21 +16,29 @@ import {
 
 interface CondensedAlertItemProps {
     item: RSSItem;
+    /** For line-scoped contexts: hides line badges and clamps the expanded description. */
+    compact?: boolean;
+    defaultExpanded?: boolean;
+    /** Replaces the external link with an in-app action showing the full alert. */
+    onOpenFull?: () => void;
+    className?: string;
 }
 
 /**
  * CondensedAlertItem
- * 
+ *
  * An accordion-style list item for alerts, using Shadcn Collapsible.
  */
-export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) => {
+export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, compact = false, defaultExpanded = false, onOpenFull, className }) => {
     const { t, i18n } = useTranslation();
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
-    const isHigh = item.priority === 'high' || item.priority === '1';
+    const isHigh = isHighPriorityAlert(item.priority);
     const isNormal = item.priority === 'normal' || item.priority === '2';
     const isFuture = item.isFuture;
-    const lines = item.line_metadata;
+    const lines = compact ? undefined : item.line_metadata;
+    // GTFS-RT UNKNOWN_CAUSE (1) and OTHER_CAUSE (2) carry no information worth a label.
+    const cause = item.cause === '1' || item.cause === '2' ? undefined : item.cause;
 
     const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
 
@@ -42,7 +51,8 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             className={cn(
                 "group relative transition-colors block",
                 isExpanded ? "bg-primary/5" : "hover:bg-foreground/5",
-                isFuture && "opacity-75 grayscale-[0.3]"
+                isFuture && "opacity-75 grayscale-[0.3]",
+                className
             )}
         >
             <CollapsibleTrigger
@@ -55,30 +65,31 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
 
                 {/* Content Column */}
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <div className="flex gap-2 flex-wrap items-center">
-                        {/* Lines Badges */}
-                        {lines && lines.length > 0 && (
-                            <div className="flex gap-1 flex-wrap">
-                                {lines.map((line, idx) => (
-                                    <LineBadge
-                                        key={`${line.name}-${idx}`}
-                                        name={line.name}
-                                        routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
-                                        size="md"
-                                    />
-                                ))}
-                            </div>
-                        )}
+                    {((lines && lines.length > 0) || isFuture) && (
+                        <div className="flex gap-2 flex-wrap items-center">
+                            {/* Lines Badges */}
+                            {lines && lines.length > 0 && (
+                                <div className="flex gap-1 flex-wrap">
+                                    {lines.map((line, idx) => (
+                                        <LineBadge
+                                            key={`${line.name}-${idx}`}
+                                            name={line.name}
+                                            routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
+                                            size="md"
+                                        />
+                                    ))}
+                                </div>
+                            )}
 
-                        {/* Status Badge */}
-                        {isFuture ? (
-                            <Badge variant="outline" className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                                <span>{t('alerts.planned')}</span>
-                            </Badge>
-                        ) : null}
-
-                    </div>
+                            {/* Status Badge */}
+                            {isFuture ? (
+                                <Badge variant="outline" className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+                                    <span>{t('alerts.planned')}</span>
+                                </Badge>
+                            ) : null}
+                        </div>
+                    )}
 
                     {/* Title */}
                     <div className={cn(
@@ -99,24 +110,39 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item }) 
             <CollapsibleContent>
                 <div className="px-4 pb-4 pt-1 ml-7">
                     <div className="flex flex-col gap-3">
-                        {item.cause && (
+                        {(cause || item.causeDetail) && (
                             <div className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
-                                <span>{t(`alerts.causes.${item.cause}`, item.cause)}</span>
+                                {cause && <span>{t(`alerts.causes.${cause}`, cause)}</span>}
                                 {item.causeDetail && (
-                                    <span className="text-foreground/50 ml-1.5 normal-case font-medium border-l border-border/50 pl-1.5">
+                                    <span className={cn(
+                                        "normal-case font-medium",
+                                        cause ? "text-foreground/50 ml-1.5 border-l border-border/50 pl-1.5" : "text-foreground/80"
+                                    )}>
                                         {i18n.language.startsWith('en') && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
                                     </span>
                                 )}
                             </div>
                         )}
                         {item.description && (
-                            <div className="text-xs leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap">
+                            <div className={cn(
+                                "text-xs leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap",
+                                compact && "line-clamp-5"
+                            )}>
                                 {item.description}
                             </div>
                         )}
 
-                        {item.link && (
-                            <a 
+                        {onOpenFull ? (
+                            <button
+                                type="button"
+                                onClick={onOpenFull}
+                                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1 cursor-pointer outline-none"
+                            >
+                                <Maximize2 size={12} strokeWidth={2} />
+                                {t('alerts.showFull')}
+                            </button>
+                        ) : item.link && (
+                            <a
                                 href={item.link} 
                                 target="_blank" 
                                 rel="noopener noreferrer"

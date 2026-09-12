@@ -178,7 +178,7 @@ export class DpmpVehiclesService extends VehiclesService {
         if (!position) return null;
 
         const route: GtfsRoute = routesByName[row.routeNumber]
-            ?? { name: row.routeNumber, type: DPMP_CONFIG.FALLBACK_ROUTE_TYPE, route_color: '' };
+            ?? { name: row.routeNumber, type: DPMP_CONFIG.FALLBACK_ROUTE_TYPE };
 
         const vp: transit_realtime.IVehiclePosition = {
             position: {

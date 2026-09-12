@@ -41,7 +41,7 @@ export class VehiclesMapper {
                 vehicle_id: vehicleLabel.toString(),
                 
                 route_short_name: route.short_name || route.name || '',
-                route_color: route.route_color || '',
+                route_color: route.route_color || GTFS_CONFIG.DEFAULT_ROUTE_COLOR,
                 route_type: normalizeRouteType(route.type),
                 
                 delay: delay ?? null,

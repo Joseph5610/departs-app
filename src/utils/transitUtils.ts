@@ -59,3 +59,9 @@ export const calculateDistance = (pos1: [number, number], pos2: [number, number]
 export const getRouteTypeI18nKey = (type: string | undefined | null): string => {
     return type ? `settings.vehicleTypes.${type}` : '';
 };
+
+/**
+ * Whether an alert priority (RSS string or GTFS-RT numeric code) is high.
+ */
+export const isHighPriorityAlert = (priority: string | undefined | null): boolean =>
+    priority === 'high' || priority === '1';

@@ -23,8 +23,6 @@ export class AlertsPage extends BasePage {
     }
 
     getAlertCardCount() {
-        // We can look for cards within the scroll area
-        // GenericAlertCard contains h3 titles inside an 'article' or specific structure.
         return this.container.locator('[role="article"]').count();
     }
 

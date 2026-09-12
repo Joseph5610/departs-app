@@ -75,10 +75,20 @@ export const AlertsModal: React.FC = () => {
 
     // Preferences
     const isAlertsOpen = usePreferencesStore(s => s.isAlertsOpen);
+    const focusedAlertGuid = usePreferencesStore(s => s.focusedAlertGuid);
     const { setIsAlertsOpen } = usePreferencesStore(s => s.actions);
-    
+
     const [filterMode, setFilterMode] = useState<'all' | 'incident' | 'exclusion'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [prevFocusedGuid, setPrevFocusedGuid] = useState(focusedAlertGuid);
+    if (focusedAlertGuid !== prevFocusedGuid) {
+        setPrevFocusedGuid(focusedAlertGuid);
+        if (focusedAlertGuid) {
+            setFilterMode('all');
+            setSearchQuery('');
+        }
+    }
 
     const { rss, hasAlerts } = useGlobalAlerts();
     const { data: rssData, isLoading: loadingRSS } = rss;
@@ -138,6 +148,10 @@ export const AlertsModal: React.FC = () => {
     const groupCounts = useMemo(() => sections.map(s => s.items.length), [sections]);
     const groupModes = useMemo(() => sections.map(s => s.mode), [sections]);
     const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
+    const focusedIndex = useMemo(
+        () => focusedAlertGuid ? flatItems.findIndex(item => item.guid === focusedAlertGuid) : -1,
+        [flatItems, focusedAlertGuid]
+    );
 
     const itemGroupMeta = useMemo(() => {
         const meta: { itemIndexInGroup: number; countInGroup: number }[] = [];
@@ -224,6 +238,7 @@ export const AlertsModal: React.FC = () => {
                             <GroupedVirtuoso
                                 style={{ height: '100%' }}
                                 groupCounts={groupCounts}
+                                initialTopMostItemIndex={focusedIndex >= 0 ? { index: focusedIndex, align: 'start' } : 0}
                                 groupContent={(index) => {
                                     const mode = groupModes[index];
                                     const count = groupCounts[index];
@@ -256,7 +271,7 @@ export const AlertsModal: React.FC = () => {
                                                 !isLast && "border-b border-border/40"
                                             )}
                                         >
-                                            <CondensedAlertItem item={item} />
+                                            <CondensedAlertItem key={item.guid ?? `${item.title}-${index}`} item={item} defaultExpanded={index === focusedIndex} />
                                         </div>
                                     );
                                 }}

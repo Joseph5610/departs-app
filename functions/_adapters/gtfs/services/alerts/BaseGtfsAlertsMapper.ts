@@ -3,56 +3,9 @@ import type { GtfsRoutesData, GtfsRoute } from "../../core/gtfs-data";
 import { formatDate } from "../../../../_core/api-utils";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
-
-const HTML_ENTITY_MAP: Record<string, string> = {
-    '&nbsp;': ' ',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'"
-};
+import { AlertTextFormatter } from "../../../../_core/utils/AlertTextFormatter";
 
 export class BaseGtfsAlertsMapper {
-    
-    /**
-     * Cleans GTFS alert text by stripping HTML tags while preserving line breaks.
-     * Converts <br>, block elements (<p>, <div>, <li>, etc.), \t, and existing newlines
-     * into formatted line breaks, strips all remaining HTML tags, and decodes HTML entities.
-     */
-    protected static cleanAlertText(text: string | null | undefined): string | null {
-        if (!text) return null;
-
-        const cleaned = text
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
-            // `[^>]*` not `.*?` — `.` skips newlines, so tags wrapped across lines would survive.
-            .replace(/<(p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, '\n')
-            .replace(/<[^>]*>/g, '')
-            .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
-            .replace(/[\r\t]+/g, '\n');
-
-        const lines = cleaned.split('\n').map(l => l.trim());
-        const resultLines: string[] = [];
-        let previousWasEmpty = false;
-
-        for (const line of lines) {
-            if (line === '') {
-                if (!previousWasEmpty) {
-                    resultLines.push('');
-                    previousWasEmpty = true;
-                }
-            } else {
-                resultLines.push(line);
-                previousWasEmpty = false;
-            }
-        }
-
-        const result = resultLines.join('\n').trim();
-        return result || null;
-    }
-    
     /**
      * Maps raw GTFS-RT feed entities into application-specific AppAlert structures.
      * 
@@ -162,12 +115,12 @@ export class BaseGtfsAlertsMapper {
 
     protected parseTitle(rawTitle?: string | null): string {
         if (!rawTitle) return '';
-        return BaseGtfsAlertsMapper.cleanAlertText(rawTitle) || '';
+        return AlertTextFormatter.fromHtml(rawTitle) || '';
     }
 
     protected parseDescription(rawDesc?: string | null): string | null {
         if (!rawDesc) return null;
-        return BaseGtfsAlertsMapper.cleanAlertText(rawDesc);
+        return AlertTextFormatter.fromHtml(rawDesc);
     }
 
     /**

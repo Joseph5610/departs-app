@@ -1,5 +1,6 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { BaseGtfsAlertsMapper } from '../../../gtfs/services/alerts/BaseGtfsAlertsMapper';
+import { AlertTextFormatter } from '../../../../_core/utils/AlertTextFormatter';
 import type { AppAlert } from '../../../../_core/types';
 import type { GtfsRoutesData, GtfsRoute } from '../../../gtfs/core/gtfs-data';
 
@@ -22,6 +23,24 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
         return text.startsWith('TWEET:') ? text.slice(6).trim() : text.trim();
     }
 
+    /**
+     * KORDIS flattens HTML into one line: paragraph ends become runs of periods (`. .`, `..`, `:.`),
+     * headings end with a spaced ` . ` and list items are an inline `•`. Restores them as line breaks.
+     */
+    private static restoreStructure(text: string): string {
+        return text
+            .replace(/:\s*\.(?:\s*\.)*\s*/g, ':\n\n')
+            .replace(/\.(?:\s*\.)+\s*/g, '.\n\n')
+            .replace(/[ \u00a0]+\.[ \u00a0]+/g, '\n')
+            .replace(/\s*•\s*/g, '\n• ')
+            .replace(/[ \u00a0]{2,}/g, ' ')
+            .split('\n')
+            .map(line => line.trim())
+            .join('\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
+
     protected parseIsDetour(alert: transit_realtime.IAlert, headerStr: string, rawHeader?: string, rawDesc?: string | null): boolean {
         const isTweet = Boolean(
             (rawHeader && rawHeader.toUpperCase().includes('TWEET')) || 
@@ -40,8 +59,8 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
     }
 
     protected parseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
-        const cleanedDesc = BaseGtfsAlertsMapper.cleanAlertText(this.stripTweetPrefix(rawDesc));
-        const cleanedHeader = BaseGtfsAlertsMapper.cleanAlertText(this.stripTweetPrefix(rawHeader)) || '';
+        const cleanedDesc = AlertTextFormatter.fromHtml(this.stripTweetPrefix(rawDesc));
+        const cleanedHeader = AlertTextFormatter.fromHtml(this.stripTweetPrefix(rawHeader)) || '';
 
         if (!cleanedDesc) {
             return { title: cleanedHeader, description: null };
@@ -50,7 +69,7 @@ export class KordisAlertsMapper extends BaseGtfsAlertsMapper {
         const newlineIndex = cleanedDesc.indexOf('\n');
         if (newlineIndex !== -1) {
             const title = cleanedDesc.slice(0, newlineIndex).trim();
-            const description = cleanedDesc.slice(newlineIndex + 1).trim();
+            const description = KordisAlertsMapper.restoreStructure(cleanedDesc.slice(newlineIndex + 1));
             return {
                 title: title || cleanedHeader,
                 description: description || null
