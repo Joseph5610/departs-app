@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.69.1] - 2026-09-12
+
+### Fixed
+
+- Vehicles no longer jump back to an older position while panning the map, since each viewport could be served a differently aged cached snapshot.
+
 ## [0.69.0] - 2026-09-11
 
 ### Changed

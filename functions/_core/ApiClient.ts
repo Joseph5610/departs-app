@@ -116,5 +116,16 @@ export class ApiClient {
     }
 }
 
+/**
+ * When the upstream generated this response (`Date` minus `Age`), as ISO. Survives cache hits, so two
+ * cached responses for different URLs can be ordered by the snapshot they carry.
+ */
+export function getResponseGeneratedAt(response: Response): string | undefined {
+    const date = Date.parse(response.headers.get('Date') ?? '');
+    if (Number.isNaN(date)) return undefined;
+    const ageSecs = Number(response.headers.get('Age')) || 0;
+    return new Date(date - ageSecs * 1000).toISOString();
+}
+
 // Export a singleton for generic use cases (GTFS, Kordis)
 export const appClient = new ApiClient();

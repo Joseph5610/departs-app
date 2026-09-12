@@ -30,6 +30,12 @@ const interpolateBearing = (start: number, end: number, t: number): number => {
     return (start + diff * t + 360) % 360;
 };
 
+const parseTime = (iso: string | undefined): number | undefined => {
+    if (!iso) return undefined;
+    const ms = Date.parse(iso);
+    return Number.isNaN(ms) ? undefined : ms;
+};
+
 /**
  * Hook to smoothly animate vehicle movements on the map.
  * Intercepts new vehicle data and runs a requestAnimationFrame loop to slide
@@ -50,6 +56,9 @@ export const useVehicleAnimation = (
     const animationFrameRef = useRef<number | null>(null);
     const lastPositionsRef = useRef<Map<string, TrackedPosition>>(new Map());
     const targetsRef = useRef<Map<string, AnimationTarget>>(new Map());
+    // Per source: stream and detail timestamps come from different clocks and must not be compared.
+    const displayTimesRef = useRef<Map<string, number>>(new Map());
+    const selectedTimesRef = useRef<Map<string, number>>(new Map());
 
     // Stable references for react-map-gl to initialize sources.
     // Since the object references never change, React Map GL never automatically calls setData,
@@ -76,6 +85,8 @@ export const useVehicleAnimation = (
         const now = performance.now();
         const nextTargets = new Map<string, AnimationTarget>();
         const nextPositions = new Map<string, TrackedPosition>();
+        const nextDisplayTimes = new Map<string, number>();
+        const nextSelectedTimes = new Map<string, number>();
 
         // Process main stream vehicles
         const displayFeatures = displayVehicles?.features || [];
@@ -85,9 +96,12 @@ export const useVehicleAnimation = (
         const selectedFeatures = selectedVehicleFeature?.features || [];
         selectedVehiclesRawRef.current = selectedFeatures;
 
-        const allFeatures = [...displayFeatures, ...selectedFeatures];
-
-        allFeatures.forEach((f) => {
+        const processFeature = (
+            f: VehicleFeature,
+            collectionTime: number | undefined,
+            prevTimes: Map<string, number>,
+            nextTimes: Map<string, number>
+        ) => {
             const id = f.properties.vehicle_id || f.properties.gtfs_trip_id;
             if (!id) return;
 
@@ -95,6 +109,20 @@ export const useVehicleAnimation = (
             const endBearing = f.properties.bearing ?? 0;
 
             const prevPos = lastPositionsRef.current.get(id);
+            const prevTime = prevTimes.get(id);
+            const dataTime = parseTime(f.properties.origin_timestamp) ?? collectionTime;
+
+            // Each map bounds is cached separately upstream, so a response can carry an older snapshot than what is already shown.
+            if (prevPos && prevTime !== undefined && dataTime !== undefined && dataTime < prevTime) {
+                const target = targetsRef.current.get(id);
+                if (target) nextTargets.set(id, target);
+                nextPositions.set(id, prevPos);
+                nextTimes.set(id, prevTime);
+                return;
+            }
+
+            const knownTime = dataTime ?? prevTime;
+            if (knownTime !== undefined) nextTimes.set(id, knownTime);
 
             if (prevPos) {
                 const dx = endCoords[0] - prevPos.coords[0];
@@ -119,11 +147,18 @@ export const useVehicleAnimation = (
                 // New vehicle, starts at end coordinate
                 nextPositions.set(id, { coords: endCoords, bearing: endBearing });
             }
-        });
+        };
+
+        const displayTime = parseTime(displayVehicles?.last_updated);
+        const selectedTime = parseTime(selectedVehicleFeature?.last_updated);
+        displayFeatures.forEach((f) => processFeature(f, displayTime, displayTimesRef.current, nextDisplayTimes));
+        selectedFeatures.forEach((f) => processFeature(f, selectedTime, selectedTimesRef.current, nextSelectedTimes));
 
         // Update refs
         targetsRef.current = nextTargets;
         lastPositionsRef.current = nextPositions;
+        displayTimesRef.current = nextDisplayTimes;
+        selectedTimesRef.current = nextSelectedTimes;
 
         // Animation frame loop function
         const animate = (time: number) => {

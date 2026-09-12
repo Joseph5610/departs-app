@@ -5,7 +5,8 @@ import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 export class VehiclesMapper {
-    static map(data: GolemioVehiclePayload): AppVehicleCollection {
+    /** `generatedAt` stands in for `last_updated` when the feed carries no per-vehicle timestamps. */
+    static map(data: GolemioVehiclePayload, generatedAt?: string): AppVehicleCollection {
         let maxTimeUpdatedStr = '';
         const features: AppVehicleFeature[] = [];
 
@@ -68,7 +69,7 @@ export class VehiclesMapper {
             type: 'FeatureCollection', 
             features,
             status,
-            last_updated: maxTimeUpdated > 0 ? new Date(maxTimeUpdated).toISOString() : undefined
+            last_updated: maxTimeUpdated > 0 ? new Date(maxTimeUpdated).toISOString() : generatedAt
         };
     }
 }

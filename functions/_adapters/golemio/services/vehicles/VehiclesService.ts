@@ -4,6 +4,7 @@ import { Env, AppVehicleCollection, AppCityStats } from "../../../../_core/types
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/config";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
+import { getResponseGeneratedAt } from "../../../../_core/ApiClient";
 import { VehiclesMapper } from "./VehiclesMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleQuerySchema, parseSearchParams } from "../../../../_core/schemas";
@@ -20,6 +21,10 @@ export class VehiclesService {
      * Used for debug feeds and as base data for getVehicles.
      */
     async getRawVehicles(env: Env, params: Record<string, string | string[]> = {}) {
+        return (await this.fetchRawVehicles(env, params)).payload;
+    }
+
+    private async fetchRawVehicles(env: Env, params: Record<string, string | string[]>) {
         const response = await this.client.fetch("/v2/public/vehiclepositions", env, {
             searchParams: params,
             cacheTtl: CACHE_TTL.VEHICLES
@@ -30,7 +35,7 @@ export class VehiclesService {
             throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(response.status), response.status);
         }
 
-        return await response.json();
+        return { payload: await response.json(), generatedAt: getResponseGeneratedAt(response) };
     }
 
     /**
@@ -49,14 +54,14 @@ export class VehiclesService {
         if (routeTypes.length > 0) params.routeType = routeTypes;
         if (routeShortNames.length > 0) params.routeShortName = routeShortNames;
 
-        let rawData;
+        let raw;
         try {
-            rawData = await this.getRawVehicles(env, params);
+            raw = await this.fetchRawVehicles(env, params);
         } catch (error) {
             console.error(`Golemio vehicles feed is down`, error);
             return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
         }
-        const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+        const parsed = golemioVehiclePayloadSchema.safeParse(raw.payload);
 
         if (!parsed.success) {
             console.error("Critical Golemio vehicles structural change:", parsed.error);
@@ -68,7 +73,7 @@ export class VehiclesService {
             data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
         }
 
-        return VehiclesMapper.map(data as GolemioVehiclePayload);
+        return VehiclesMapper.map(data as GolemioVehiclePayload, raw.generatedAt);
     }
 
     /**
