@@ -1,11 +1,11 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { AppStopCollection, AppStopFeature } from '../../../../_core/types';
 import { ApiError, NotImplementedError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/config';
+import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../../../_core/config';
 import { StopsMapper } from './StopsMapper';
 import { appClient } from '../../../../_core/ApiClient';
 
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 
 export class StopsService {
     constructor(public readonly city: CityConfig) {}
@@ -21,7 +21,7 @@ export class StopsService {
         // 1. CacheManager: In-memory cache for fast, concurrent access (2h TTL).
         // 2. caches.default: Cloudflare's edge cache for persistence across worker isolations (24h TTL).
         // If the in-memory cache expires, we fetch from the CF cache before hitting the upstream API.
-        return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
+        return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
             const cache = caches.default;
             const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v4`, { method: 'GET' });
             const cached = await cache.match(jsonCacheKey);
@@ -53,7 +53,7 @@ export class StopsService {
             };
 
             const responseToCache = new Response(JSON.stringify(result), {
-                headers: { 'Content-Type': 'application/json', 'Cache-Control': 's-maxage=86400' }
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': `s-maxage=${UPSTREAM_TTL_S.STATIC_DATA}` }
             });
             await cache.put(jsonCacheKey, responseToCache);
             

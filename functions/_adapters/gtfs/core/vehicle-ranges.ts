@@ -1,6 +1,7 @@
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { appClient } from '../../../_core/ApiClient';
 import type { CityConfig } from '../../../_core/city-config';
+import { UPSTREAM_TTL_S } from '../../../_core/config';
 
 /** Static fleet metadata for a contiguous block of vehicle numbers. */
 export interface VehicleRange {
@@ -22,9 +23,9 @@ export async function getVehicleRanges(city: CityConfig): Promise<VehicleRange[]
 
     return CacheManager.getOrFetch<VehicleRange[] | null>(
         `vehicle_ranges_${city.slug}_${fileName}`,
-        CACHE_TTL.TWO_HOURS_MS,
+        MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${fileName}`, { cf: { cacheTtl: 7200 } });
+            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${fileName}`, { cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
             if (!res.ok) return null;
             const data = await res.json() as VehicleRange[];
             return data.sort((a, b) => a.min - b.min);

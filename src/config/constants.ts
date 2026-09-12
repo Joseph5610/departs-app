@@ -12,6 +12,16 @@ export const MAP_BOUNDS_DEBOUNCE = 800;
 export const MAP_MIN_ZOOM_FOR_DATA = 9;
 
 /**
+ * Snaps the vehicles request to XYZ map tiles so nearby viewports share edge-cached responses.
+ * Tiles are taken at `floor(zoom) - TILE_ZOOM_OFFSET`: a larger offset means a coarser grid,
+ * more cache sharing and more vehicles fetched beyond the screen edge.
+ */
+export const VEHICLE_BOUNDS_GRID = {
+    ENABLED: true,
+    TILE_ZOOM_OFFSET: 0,
+};
+
+/**
  * Animation and interaction constants
  */
 export const MAP_ANIMATION_DURATION = 1500;
@@ -62,6 +72,34 @@ export const CATCH_BUFFER = 120;
  */
 export const TRANSIT_REFRESH_S = 10;
 export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
+
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+
+/** React Query timings for the data hooks (in milliseconds). Live polling itself runs on TRANSIT_REFRESH_MS. */
+export const QUERY_TIMING_MS = {
+    /** A live query older than this is refetched on mount or window focus. */
+    LIVE_STALE: 5 * 1000,
+    /** How long an unused live query stays in memory, e.g. a vehicle detail that was just closed. */
+    LIVE_GC: MINUTE_MS,
+    ALERTS_REFRESH: 3 * MINUTE_MS,
+    /** Alerts and stop notices older than this are refetched on mount or window focus. */
+    NOTICES_STALE: MINUTE_MS,
+    /** Stop notices change rarely and the API caches them for 15 min, so polling faster only returns the same copy. */
+    INFOTEXTS_REFRESH: 5 * MINUTE_MS,
+    CITIES_STALE: HOUR_MS,
+    CITIES_GC: DAY_MS,
+    /** How long stops kept on the device (IndexedDB) are used before being downloaded again. */
+    STOPS_DEVICE_CACHE: DAY_MS,
+    /** Points of sale change roughly monthly. */
+    POINTS_OF_SALE_STALE: DAY_MS,
+    POINTS_OF_SALE_GC: 7 * DAY_MS,
+    GEOCODING_STALE: 5 * MINUTE_MS,
+};
+
+/** Only departures expected within this window count towards the board's delay statistics. */
+export const DELAY_STATS_WINDOW_MS = 30 * MINUTE_MS;
 
 /**
  * Fetch options for polled realtime endpoints. The API's `stale-while-revalidate` would otherwise

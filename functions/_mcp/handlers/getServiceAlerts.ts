@@ -1,7 +1,7 @@
-import type { AppAlertsResponse, AppInfotext } from "../../_core/types";
+import type { AppAlertsResponse } from "../../_core/types";
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
-import { createMockContext } from "../utils";
+import { createMockContext, getMcpTimeContext, loadInfotexts } from "../utils";
 
 /**
  * Handles the 'get_service_alerts' MCP tool invocation.
@@ -20,12 +20,11 @@ export async function handleGetServiceAlerts(
     resolvedCity: string
 ): Promise<unknown> {
     const mockAlertsCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/alerts`);
-    const mockInfoCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/infotexts`);
 
     const [alertsData, infotextsData] = await Promise.all([
-        adapter.handleAlerts(mockAlertsCtx).catch(() => ({ alerts: [] })),
-        adapter.handleInfotexts(mockInfoCtx).catch(() => [])
-    ]) as [AppAlertsResponse, AppInfotext[]];
+        adapter.handleAlerts(mockAlertsCtx).catch((): AppAlertsResponse => ({ alerts: [] })),
+        loadInfotexts(ctx, adapter, resolvedCity)
+    ]);
 
     let alerts = (alertsData?.alerts || []);
     if (args.line) {
@@ -38,6 +37,7 @@ export async function handleGetServiceAlerts(
 
     return {
         city: resolvedCity,
+        ...getMcpTimeContext(resolvedCity, Date.now()),
         alerts_count: alerts.length,
         alerts: alerts.map((a) => ({
             title: a.title,

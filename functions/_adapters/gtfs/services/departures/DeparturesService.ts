@@ -6,10 +6,10 @@ import { appClient } from '../../../../_core/ApiClient';
 import { DeparturesMapper } from './DeparturesMapper';
 import type { GtfsDepartureTuple } from './types';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/config';
+import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { GTFS_CONFIG, departuresChunkId } from '../../core/config';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import type { VehiclesService } from '../vehicles/VehiclesService';
 
@@ -22,7 +22,7 @@ import type { VehiclesService } from '../vehicles/VehiclesService';
  */
 const departureTuplesCache = new LruCache<GtfsDepartureTuple[]>({
     maxEntries: 512,
-    ttlMs: CACHE_TTL.TWO_HOURS_MS
+    ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
 
 /**
@@ -69,7 +69,7 @@ export class DeparturesService {
     private async getParentChildMap(staticDataUrl: string): Promise<Record<string, string[]>> {
         return CacheManager.getOrFetch(
             `parent_child_map_${this.city.slug}`,
-            CACHE_TTL.TWO_HOURS_MS,
+            MEMORY_CACHE_TTL.TWO_HOURS_MS,
             async () => {
                 const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/parent_child_map.json`);
                 if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
@@ -150,7 +150,7 @@ export class DeparturesService {
         const fetchPromises = Array.from(chunkMap.entries()).map(async ([chunkId, ids]) => {
             const dataUrl = `${staticDataUrl}/${this.city.slug}/departures/${chunkId}.json`;
             try {
-                const res = await appClient.fetch(dataUrl, { cf: { cacheTtl: 3600 } });
+                const res = await appClient.fetch(dataUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_CHUNKS } });
                 if (!res.ok) return;
 
                 const chunkData = JSON.parse(await res.text()) as Record<string, GtfsDepartureTuple[]>;

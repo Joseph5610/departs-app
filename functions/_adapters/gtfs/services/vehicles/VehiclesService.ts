@@ -1,7 +1,7 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env, AppVehicleCollection, AppVehicleFeature, AppCityStats } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { getGtfsRoutes, getGtfsTripRoutes, type GtfsTripRoutesData } from '../../core/gtfs-data';
 import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
 import { parseSearchParams, parseBoundsParam, vehicleQuerySchema } from '../../../../_core/schemas';
@@ -141,7 +141,7 @@ export class VehiclesService {
     async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `gtfs_vehicles_collection_${this.city.slug}`, 
-            CACHE_TTL.SHORT_DEBOUNCE_MS, 
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
                 const [feed, gtfsData, tripRoutes] = await this.getCoreData();
 

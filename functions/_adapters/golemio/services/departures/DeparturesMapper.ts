@@ -2,7 +2,6 @@ import { AppDeparture, AppDepartureResponse } from "../../../../_core/types";
 import { GolemioDepartureItem } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
 import { ProcessedEnrichmentData } from "../stops/enrichment";
-import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 /**
@@ -34,7 +33,8 @@ export class DeparturesMapper {
             });
         }
 
-        departures.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+        // By instant, not string: Golemio's local offsets change across DST, so strings mis-order that night.
+        departures.sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
 
         return { departures };
     }
@@ -55,7 +55,7 @@ export class DeparturesMapper {
             directionId = item.trip?.direction_id ?? item.stop?.platform_code ?? item.trip?.headsign ?? '0';
         }
 
-        const headsign = fixCommaSpacing(item.trip?.headsign) || 'Unknown';
+        const headsign = item.trip?.headsign || 'Unknown';
 
         return {
             timestamp: item.departure.timestamp_predicted || item.departure.timestamp_scheduled,

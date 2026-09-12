@@ -1,7 +1,7 @@
-import type { AppStopCollection } from "../../_core/types";
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
-import { createMockContext } from "../utils";
+import { MCP_DEFAULTS } from "../../_core/config";
+import { loadStops } from "../utils";
 
 /**
  * Handles the 'search_stops' MCP tool invocation.
@@ -20,11 +20,8 @@ export async function handleSearchStops(
     resolvedCity: string
 ): Promise<unknown> {
     const query = String(args.query || "").trim().toLowerCase();
-    const limit = Number(args.limit) || 10;
-    const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/stops`);
-    const stopsData = await adapter.handleStops(mockCtx) as AppStopCollection;
-
-    const features = stopsData?.features || [];
+    const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
+    const features = await loadStops(ctx, adapter, resolvedCity);
     const filtered = features.filter((f) => {
         const nameMatch = f.properties?.stop_name?.toLowerCase().includes(query);
         const idMatch = String(f.properties?.stop_id || "").toLowerCase().includes(query);

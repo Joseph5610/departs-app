@@ -1,6 +1,5 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature, AppVehicleDescriptor } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
-import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor } from "./colors";
 import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
@@ -32,7 +31,7 @@ export class VehicleDetailMapper {
         const gtfs_trip_id = p.gtfs_trip_id || tripId;
         const route_short_name = p.route_short_name || '';
         const route_type = normalizeRouteType(p.route_type || '');
-        const trip_headsign = fixCommaSpacing(p.trip_headsign) || '';
+        const trip_headsign = p.trip_headsign || '';
         const bearing = p.bearing ?? null;
         const delay = p.delay ?? 0;
         const state_position = (p.state_position ?? 'unknown') as AppVehicleDetail['state_position'];

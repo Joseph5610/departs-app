@@ -5,7 +5,7 @@ import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { applyEnrichment } from '../../lib/enrichment';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
@@ -51,8 +51,8 @@ export const useVehicles = () => {
         queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
         enabled: !!selectedCity && !!bounds,
         refetchInterval: (query) => (bounds && query.state.dataUpdatedAt ? TRANSIT_REFRESH_MS : false),
-        staleTime: 5000,
-        gcTime: 60000,
+        staleTime: QUERY_TIMING_MS.LIVE_STALE,
+        gcTime: QUERY_TIMING_MS.LIVE_GC,
         placeholderData: keepPreviousData,
         retry: 1,
     });

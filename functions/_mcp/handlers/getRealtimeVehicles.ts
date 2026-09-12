@@ -1,6 +1,7 @@
 import type { AppVehicleCollection } from "../../_core/types";
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
+import { MCP_DEFAULTS } from "../../_core/config";
 import { createMockContext } from "../utils";
 
 /**
@@ -19,7 +20,7 @@ export async function handleGetRealtimeVehicles(
     adapter: CityAdapter,
     resolvedCity: string
 ): Promise<unknown> {
-    const limit = Number(args.limit) || 25;
+    const limit = Number(args.limit) || MCP_DEFAULTS.VEHICLES_LIMIT;
     const searchParams: Record<string, string> = {};
 
     // No bounds filter — the path already scopes to the city, and CityConfig.bounds frames the map view,

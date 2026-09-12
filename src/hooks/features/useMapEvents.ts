@@ -4,9 +4,11 @@ import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { addAllIcons } from '../../utils/mapIcons';
+import { snapBoundsToTiles } from '../../utils/mapUtils';
 import {
     MAP_MIN_ZOOM_FOR_DATA,
     MAP_BOUNDS_DEBOUNCE,
+    VEHICLE_BOUNDS_GRID,
 } from '../../config/constants';
 
 /**
@@ -26,10 +28,17 @@ export const useMapEvents = () => {
     const getRoundedBounds = useCallback((map: Map) => {
         const b = map.getBounds();
         const zoom = map.getZoom();
+        if (!b || zoom < MAP_MIN_ZOOM_FOR_DATA) return null;
+
+        if (VEHICLE_BOUNDS_GRID.ENABLED) {
+            const tileZoom = Math.max(0, Math.floor(zoom) - VEHICLE_BOUNDS_GRID.TILE_ZOOM_OFFSET);
+            return snapBoundsToTiles(b.getSouth(), b.getWest(), b.getNorth(), b.getEast(), tileZoom)
+                .map((v) => v.toFixed(5))
+                .join(',');
+        }
+
         const round = (num: number) => Math.round(num * 1000) / 1000;
-        return b && zoom >= MAP_MIN_ZOOM_FOR_DATA
-            ? `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`
-            : null;
+        return `${round(b.getSouth())},${round(b.getWest())},${round(b.getNorth())},${round(b.getEast())}`;
     }, []);
 
     const onMove = useCallback((evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => {

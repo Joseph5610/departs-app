@@ -1,7 +1,8 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { appClient } from '../../../_core/ApiClient';
 import type { CityConfig } from '../../../_core/city-config';
+import { UPSTREAM_TTL_S } from '../../../_core/config';
 import { ApiError } from '../../../_core/errors';
 
 /**
@@ -17,9 +18,9 @@ export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.
 
     const feed = await CacheManager.getOrFetch<transit_realtime.FeedMessage | null>(
         `gtfs_rt_feed_${city.slug}`,
-        CACHE_TTL.SHORT_DEBOUNCE_MS, // short internal debounce, shared by alerts and vehicles
+        MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS, // short internal debounce, shared by alerts and vehicles
         async () => {
-            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: 3 } }).catch((err) => {
+            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
             });

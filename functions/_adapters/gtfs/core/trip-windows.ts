@@ -1,6 +1,7 @@
 import type { CityConfig } from '../../../_core/city-config';
+import { UPSTREAM_TTL_S } from '../../../_core/config';
 import { appClient } from '../../../_core/ApiClient';
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 
 /**
  * A trip's operating window: `[start_mins, end_mins, dayFlags, direction_id?]`.
@@ -29,10 +30,10 @@ export async function getTripWindows(city: CityConfig): Promise<TripWindows | nu
 
     return CacheManager.getOrFetch<TripWindows | null>(
         `trip_windows_${city.slug}`,
-        CACHE_TTL.TWO_HOURS_MS,
+        MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
             try {
-                const res = await appClient.fetch(url, { cf: { cacheTtl: 7200 } });
+                const res = await appClient.fetch(url, { cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
                 if (!res.ok) {
                     console.error(`Failed to fetch trip_windows.json for ${city.slug}: ${res.status}`);
                     return null;

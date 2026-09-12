@@ -1,6 +1,6 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { AppVehicleCollection, AppVehicleFeature, AppVehicleDetail } from '../../../../_core/types';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import type { DukTrafficResponse, DukVehicle } from '../../types';
 import { DUK_STATE_MAPPING, getDukRouteTypeFromLineName } from '../../utils/dukConstants';
 import { getDukVehicleColor } from '../../utils/colors';
@@ -18,7 +18,7 @@ export class DukVehiclesService {
     private async getTrafficFeed(): Promise<DukTrafficResponse | null> {
         return CacheManager.getOrFetch<DukTrafficResponse | null>(
             'duk_traffic',
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const baseUrl = this.city.adapterConfig?.baseUrl;
                 const response = await appClient.fetch(`${baseUrl}/GetTraffic/0`, {
@@ -106,7 +106,7 @@ export class DukVehiclesService {
     async getVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             'duk_vehicles',
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const data = await this.getTrafficFeed();
 

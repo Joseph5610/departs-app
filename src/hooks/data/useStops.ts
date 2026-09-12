@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { QUERY_TIMING_MS } from '../../config/constants';
 
 // Configure localforage for IndexedDB
 localforage.config({
@@ -14,7 +15,6 @@ localforage.config({
 
 const STORAGE_VERSION = 'v46';
 const STOP_STORAGE_KEY = `city_stops_storage_${STORAGE_VERSION}`;
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 interface CachedStops {
     data: StopCollection;
@@ -38,7 +38,7 @@ export const useStops = () => {
             const now = Date.now();
             const cached = await localforage.getItem<CachedStops>(`${STOP_STORAGE_KEY}_${selectedCity}`);
 
-            if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < TWENTY_FOUR_HOURS)) {
+            if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < QUERY_TIMING_MS.STOPS_DEVICE_CACHE)) {
                 return cached;
             }
 

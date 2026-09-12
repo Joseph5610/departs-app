@@ -1,6 +1,6 @@
 import { getCityConfig } from '../../../_core/city-config';
 import { appClient } from '../../../_core/ApiClient';
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 
 export interface GtfsRoute {
     name: string;
@@ -33,7 +33,7 @@ export async function getGtfsRoutes(citySlug: string): Promise<GtfsRoutesData> {
 
     const cacheKey = `gtfs_data_${citySlug}`;
 
-    return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
             const rRes = await appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`);
 
@@ -88,7 +88,7 @@ export async function getGtfsTripRoutes(citySlug: string): Promise<GtfsTripRoute
 
     const cacheKey = `gtfs_trip_routes_${citySlug}`;
 
-    return CacheManager.getOrFetch(cacheKey, CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
             const fetchPromises = [
                 appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)

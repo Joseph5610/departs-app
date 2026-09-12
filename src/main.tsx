@@ -12,6 +12,7 @@ import './i18n/config'
 import { toast } from 'sonner'
 import { QueryCache } from '@tanstack/react-query'
 import type { AppError } from './types/error'
+import { TRANSIT_REFRESH_MS } from './config/constants'
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -26,7 +27,7 @@ const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      staleTime: 10000,
+      staleTime: TRANSIT_REFRESH_MS,
       retry: 1,
       refetchOnWindowFocus: true,
     },

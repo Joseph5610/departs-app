@@ -4,6 +4,18 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.69.2] - 2026-09-12
+
+### Added
+
+- MCP tools return the city timezone and current local time, and departures add local times and minutes until departure.
+
+### Changed
+
+- Map vehicle requests snap to map tiles, so nearby viewports share cached responses and small pans no longer refetch.
+- Alerts and stop notices are polled less often to save mobile data.
+- Prague stop names and headsigns are shown exactly as PID publishes them.
+
 ## [0.69.1] - 2026-09-12
 
 ### Fixed

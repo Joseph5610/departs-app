@@ -1,6 +1,7 @@
 import type { CityConfig } from '../../../_core/city-config';
+import { UPSTREAM_TTL_S } from '../../../_core/config';
 import { appClient } from '../../../_core/ApiClient';
-import { CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { LruCache } from '../../../_core/utils/LruCache';
 import { tripChunkId } from './config';
 import type { Station } from '../services/vehicles/types';
@@ -13,7 +14,7 @@ import type { Station } from '../services/vehicles/types';
  */
 const tripStopsCache = new LruCache<Station[]>({
     maxEntries: 512,
-    ttlMs: CACHE_TTL.TWO_HOURS_MS
+    ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
 
 /** Loads a trip's ordered stops from its `trips/<prefix>.json` chunk. Empty when unknown. */
@@ -28,7 +29,7 @@ export async function getTripStops(city: CityConfig, tripId: string): Promise<St
     const chunkId = encodeURIComponent(tripChunkId(tripId));
     const tripUrl = `${staticDataUrl}/${city.slug}/trips/${chunkId}.json`;
     try {
-        const tripRes = await appClient.fetch(tripUrl, { cf: { cacheTtl: 86400 } });
+        const tripRes = await appClient.fetch(tripUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
         if (!tripRes.ok) return [];
 
         const chunkData = JSON.parse(await tripRes.text()) as Record<string, unknown[]>;

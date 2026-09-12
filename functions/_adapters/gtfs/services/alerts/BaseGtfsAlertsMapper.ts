@@ -1,6 +1,6 @@
 import type { AppAlert, AppRouteType } from "../../../../_core/types";
 import type { GtfsRoutesData, GtfsRoute } from "../../core/gtfs-data";
-import { formatDate } from "../../../../_core/api-utils";
+import { formatDate } from "../../../../_core/utils/time";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 import { AlertTextFormatter } from "../../../../_core/utils/AlertTextFormatter";

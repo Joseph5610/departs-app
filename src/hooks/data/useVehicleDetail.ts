@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useRouteParams } from '../useRouteParams';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 
 const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
@@ -23,7 +23,7 @@ export const useVehicleDetail = () => {
         enabled: !!tripId && !!selectedCity,
         staleTime: TRANSIT_REFRESH_MS,
         refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
-        gcTime: 60000,
+        gcTime: QUERY_TIMING_MS.LIVE_GC,
     });
 
     // Sync newer geometry and location data from vehicle detail back to the global stream

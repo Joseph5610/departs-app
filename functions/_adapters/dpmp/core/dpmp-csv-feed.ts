@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CacheManager, CACHE_TTL } from '../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { appClient } from '../../../_core/ApiClient';
 import type { CityConfig } from '../../../_core/city-config';
 import { ApiError } from '../../../_core/errors';
@@ -95,7 +95,7 @@ export async function getDpmpCsvFeed(city: CityConfig, urlOverride?: string): Pr
 
     const rows = await CacheManager.getOrFetch<DpmpVehicleRow[] | null>(
         `dpmp_csv_feed_${city.slug}`,
-        CACHE_TTL.SHORT_DEBOUNCE_MS,
+        MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS,
         async () => {
             const res = await appClient.fetch(url, { cf: { cacheTtl: DPMP_CONFIG.CSV_CACHE_TTL_S } }).catch((err) => {
                 console.warn(`[DPMP] Fetch error for ${city.slug}:`, err?.message || err);

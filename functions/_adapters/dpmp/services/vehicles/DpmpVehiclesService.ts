@@ -1,6 +1,6 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../../_core/types';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
@@ -9,7 +9,8 @@ import { getTripWindows } from '../../../gtfs/core/trip-windows';
 import { getTripStops } from '../../../gtfs/core/trip-stops';
 import { getVehicleRanges, findVehicleRange, type VehicleRange } from '../../../gtfs/core/vehicle-ranges';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
-import { getCurrentLocalSeconds, getZonedDateString, zonedLocalToEpochMs } from '../../../gtfs/core/utils';
+import { getCurrentLocalSeconds, getPreviousDateString, getZonedDateString, zonedLocalToEpochMs } from '../../../../_core/utils/time';
+import { bearingDeg, distanceMeters } from '../../../../_core/utils/geo';
 import { DPMP_CONFIG } from '../../core/config';
 import { getDpmpCsvFeed, type DpmpVehicleRow } from '../../core/dpmp-csv-feed';
 import { DpmpTripMatcher, type MatchContext } from './DpmpTripMatcher';
@@ -41,21 +42,6 @@ const lastSeenRows = new Map<string, Map<string, SeenRow>>();
 /** Last position per vehicle, so a heading can be derived from movement - the CSV has none. */
 const lastFixes = new LruCache<LastFix>({ maxEntries: DPMP_CONFIG.BEARING_CACHE_MAX_ENTRIES });
 
-function distanceM(aLat: number, aLon: number, bLat: number, bLon: number): number {
-    const toRad = (x: number) => x * Math.PI / 180;
-    const dLat = toRad(bLat - aLat);
-    const dLon = toRad(bLon - aLon);
-    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon / 2) ** 2;
-    return 6_371_000 * 2 * Math.asin(Math.sqrt(h));
-}
-
-function bearingDeg(aLat: number, aLon: number, bLat: number, bLon: number): number {
-    const toRad = (x: number) => x * Math.PI / 180;
-    const y = Math.sin(toRad(bLon - aLon)) * Math.cos(toRad(bLat));
-    const x = Math.cos(toRad(aLat)) * Math.sin(toRad(bLat)) - Math.sin(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.cos(toRad(bLon - aLon));
-    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-
 const DAY_MS = 86_400_000;
 
 /**
@@ -73,12 +59,6 @@ function reportTimeMs(dateTime: string, nowMs: number, timezone: string): number
     if (atMs - nowMs > DAY_MS / 2) return atMs - DAY_MS;
     if (nowMs - atMs > DAY_MS / 2) return atMs + DAY_MS;
     return atMs;
-}
-
-/** YYYYMMDD of the day before `dayStr`. */
-function previousDayStr(dayStr: string): string {
-    const d = new Date(Date.UTC(Number(dayStr.slice(0, 4)), Number(dayStr.slice(4, 6)) - 1, Number(dayStr.slice(6, 8)) - 1));
-    return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 /**
@@ -108,7 +88,7 @@ export class DpmpVehiclesService extends VehiclesService {
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `dpmp_vehicles_collection_${this.city.slug}`,
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 const [rows, routes, tripRoutes, windows, fleet] = await Promise.all([
                     getDpmpCsvFeed(this.city, this.realtimeUrlOverride).catch((err) => {
@@ -128,7 +108,7 @@ export class DpmpVehiclesService extends VehiclesService {
                 const todayStr = getZonedDateString(this.city.timezone);
                 const ctx: MatchContext = {
                     todayStr,
-                    yesterdayStr: previousDayStr(todayStr),
+                    yesterdayStr: getPreviousDateString(todayStr),
                     nowMins: getCurrentLocalSeconds(this.city.timezone) / 60,
                 };
                 const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes) : null;
@@ -277,7 +257,7 @@ export class DpmpVehiclesService extends VehiclesService {
             lastFixes.set(key, { lat, lon, bearing: null });
             return null;
         }
-        if (distanceM(prev.lat, prev.lon, lat, lon) < DPMP_CONFIG.BEARING_MIN_MOVE_M) {
+        if (distanceMeters(prev.lat, prev.lon, lat, lon) < DPMP_CONFIG.BEARING_MIN_MOVE_M) {
             return prev.bearing;
         }
         const bearing = bearingDeg(prev.lat, prev.lon, lat, lon);

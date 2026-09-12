@@ -19,7 +19,35 @@ export const CACHE_TTL = {
     CITIES: 43200, // 12h
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h
-    GTFS_DATA: 3600, // 1h for the static data fetch process
+    SITEMAP: 86400, // 24h
+};
+
+/**
+ * Cloudflare edge TTLs for upstream fetches of static and schedule data (in seconds).
+ * Live upstream feeds reuse the matching `CACHE_TTL` entry instead.
+ */
+export const UPSTREAM_TTL_S = {
+    /** GTFS-RT protobuf; the in-memory debounce in CacheManager sits on top of it. */
+    GTFS_RT_FEED: 3,
+    /** Per-stop GTFS departure chunks. */
+    DEPARTURE_CHUNKS: 3600,
+    /** Golemio stop pages, trip windows and the fleet register. */
+    SCHEDULE_DATA: 7200,
+    /** Routes, stop enrichment, trip stops, shapes and the shape index. */
+    STATIC_DATA: 86400,
+};
+
+/** Values the MCP tools fall back to when the client leaves an argument out. */
+export const MCP_DEFAULTS = {
+    CITY: 'prague',
+    RESULT_LIMIT: 10,
+    VEHICLES_LIMIT: 25,
+    NEAREST_STOPS_RADIUS_M: 1000,
+    NEAREST_DEPARTURES_RADIUS_M: 500,
+    /** How many stops inside the radius get a departure board. */
+    NEAREST_DEPARTURES_MAX_STOPS: 5,
+    /** How many of the closest stops are used when none lies inside the radius. */
+    NEAREST_DEPARTURES_FALLBACK_STOPS: 3,
 };
 
 /**

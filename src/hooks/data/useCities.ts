@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import type { AppCitiesResponse } from '../../../functions/_core/types';
 import { apiFetch } from '@/lib/api-client';
+import { QUERY_TIMING_MS } from '../../config/constants';
 
 export function useCities() {
     return useQuery<AppCitiesResponse, Error>({
         queryKey: ['cities', 'v2'],
         queryFn: () => apiFetch<AppCitiesResponse>('/cities'),
-        staleTime: 1000 * 60 * 60, // 1 hour
-        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        staleTime: QUERY_TIMING_MS.CITIES_STALE,
+        gcTime: QUERY_TIMING_MS.CITIES_GC,
         refetchOnWindowFocus: false,
     });
 }

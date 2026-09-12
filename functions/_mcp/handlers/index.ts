@@ -1,4 +1,5 @@
 import type { McpContext } from "../types";
+import { MCP_DEFAULTS } from "../../_core/config";
 import { resolveAdapter } from "../utils";
 import { validateToolArgs } from "../validation";
 
@@ -21,7 +22,7 @@ export async function handleToolCall(
     // Validated up front, so every handler below can rely on the declared inputSchema's types and ranges.
     const args = validateToolArgs(name, rawArgs);
 
-    const citySlug = (args.city as string | undefined) ?? "prague";
+    const citySlug = (args.city as string | undefined) ?? MCP_DEFAULTS.CITY;
     const { adapter, citySlug: resolvedCity } = resolveAdapter(citySlug);
 
     switch (name) {

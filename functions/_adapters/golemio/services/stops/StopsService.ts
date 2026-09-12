@@ -1,14 +1,14 @@
 
 import { Env, AppStopCollection } from "../../../../_core/types";
 import { GolemioStopFeature } from "./schemas";
-import { ERROR_MESSAGES } from "../../../../_core/config";
+import { ERROR_MESSAGES, UPSTREAM_TTL_S } from "../../../../_core/config";
 import { ApiError } from "../../../../_core/errors";
 import { GOLEMIO_CONFIG } from "../../core/config";
 import { GolemioClient } from "../../core/GolemioClient";
 import { processStops } from "./grouping";
 import { StopsMapper } from "./StopsMapper";
 import { getEnrichmentData } from "./enrichment";
-import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
+import { CacheManager, MEMORY_CACHE_TTL } from "../../../../_core/utils/CacheManager";
 
 /**
  * Service for fetching and processing physical transit stops.
@@ -25,7 +25,7 @@ export class StopsService {
      * @returns {Promise<AppStopCollection>} Object containing a FeatureCollection of grouped and enriched stop features
      */
     async getStops(env: Env): Promise<AppStopCollection> {
-        return CacheManager.getOrFetch('golemio_stops_prague', CACHE_TTL.TWO_HOURS_MS, async () => {
+        return CacheManager.getOrFetch('golemio_stops_prague', MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
             const enrichmentData = await getEnrichmentData();
 
             const fetchAllGolemioStops = async (): Promise<GolemioStopFeature[]> => {
@@ -36,7 +36,7 @@ export class StopsService {
                 
                 const results = await Promise.all(offsets.map(async (offset) => {
                     const res = await this.client.fetch("/v2/gtfs/stops", env, {
-                        cacheTtl: 7200,
+                        cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA,
                         searchParams: { limit: limit.toString(), offset: offset.toString() }
                     });
                     if (!res.ok) return [];

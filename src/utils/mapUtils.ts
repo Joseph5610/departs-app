@@ -53,4 +53,38 @@ export const getInitialViewState = () => {
     };
 };
 
+const MAX_MERCATOR_LAT = 85.0511;
+
+const lonToTileX = (lon: number, n: number) => Math.min(n - 1, Math.max(0, Math.floor(((lon + 180) / 360) * n)));
+
+const latToTileY = (lat: number, n: number) => {
+    const rad = Math.max(-MAX_MERCATOR_LAT, Math.min(MAX_MERCATOR_LAT, lat)) * Math.PI / 180;
+    const y = Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n);
+    return Math.min(n - 1, Math.max(0, y));
+};
+
+const tileXToLon = (x: number, n: number) => (x / n) * 360 - 180;
+
+const tileYToLat = (y: number, n: number) => Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180 / Math.PI;
+
+/**
+ * Expands `south,west,north,east` bounds outward to the edges of the XYZ map tiles at `tileZoom`.
+ * Nearby viewports then produce the same bounds, so they share cached API responses and small pans
+ * inside a tile do not change the request.
+ */
+export const snapBoundsToTiles = (
+    south: number,
+    west: number,
+    north: number,
+    east: number,
+    tileZoom: number
+): [number, number, number, number] => {
+    const n = 2 ** tileZoom;
+    // Tile y grows southward, so the north edge maps to the smaller index.
+    const minX = lonToTileX(west, n);
+    const maxX = lonToTileX(east, n) + 1;
+    const minY = latToTileY(north, n);
+    const maxY = latToTileY(south, n) + 1;
+    return [tileYToLat(maxY, n), tileXToLon(minX, n), tileYToLat(minY, n), tileXToLon(maxX, n)];
+};
 

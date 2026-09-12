@@ -1,6 +1,6 @@
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
-import { createMockContext } from "../utils";
+import { createMockContext, getMcpTimeContext } from "../utils";
 
 /**
  * Handles the 'get_vehicle_detail' MCP tool invocation.
@@ -31,6 +31,7 @@ export async function handleGetVehicleDetail(
 
     return {
         city: resolvedCity,
+        ...getMcpTimeContext(resolvedCity, Date.now()),
         trip_id: tripId,
         detail: detailData
     };

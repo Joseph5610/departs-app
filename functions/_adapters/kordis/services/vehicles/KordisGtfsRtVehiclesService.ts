@@ -1,11 +1,11 @@
 import type { AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
 import type { transit_realtime } from 'gtfs-realtime-bindings';
 import { VehiclesService } from '../../../gtfs/services/vehicles/VehiclesService';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import { getTripWindows, dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../gtfs/core/trip-windows';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
-import { getCurrentLocalSeconds, getZonedDateString } from '../../../gtfs/core/utils';
+import { getCurrentLocalSeconds, getZonedDateString, wrapDaySeconds } from '../../../../_core/utils/time';
 import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
@@ -97,7 +97,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     override async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
         return CacheManager.getOrFetch<AppVehicleCollection>(
             `kordis_gtfsrt_vehicles_${this.city.slug}`, 
-            CACHE_TTL.SHORT_DEBOUNCE_MS, 
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS, 
             async () => {
                 const [[feed, gtfsData, tripRoutesObj], windows] = await Promise.all([
                     this.getCoreData(),
@@ -197,12 +197,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     private isVehicleBeforeTrack(window: TripWindow | undefined, currentMins: number): boolean {
         if (!window) return false;
 
-        const start = window[0] % 1440;
-        const current = currentMins % 1440;
-        let diffMins = start - current;
-        if (diffMins < -720) diffMins += 1440;
+        const diffMins = wrapDaySeconds(((window[0] % 1440) - (currentMins % 1440)) * 60) / 60;
 
-        return diffMins > 1 && diffMins <= 60;
+        return diffMins > 1 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
     }
 
     protected override isRelevantEntity(entity: transit_realtime.IFeedEntity): boolean {

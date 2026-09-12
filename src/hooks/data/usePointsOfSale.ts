@@ -3,6 +3,7 @@ import type { PointOfSale } from '../../types/pointsOfSale';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCities } from './useCities';
 import { FRONTEND_CITIES_CONFIG } from '../../config/cities';
+import { QUERY_TIMING_MS } from '../../config/constants';
 import { useRouteParams } from '../useRouteParams';
 
 export function usePointsOfSale() {
@@ -33,7 +34,7 @@ export function usePointsOfSale() {
             return res.json();
         },
         enabled: isEnabled,
-        staleTime: 1000 * 60 * 60 * 24, // 24 hours (data updates ~monthly/weekly)
-        gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days cache retention
+        staleTime: QUERY_TIMING_MS.POINTS_OF_SALE_STALE,
+        gcTime: QUERY_TIMING_MS.POINTS_OF_SALE_GC,
     });
 }

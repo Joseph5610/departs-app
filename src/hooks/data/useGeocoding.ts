@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCities } from './useCities';
 import { FALLBACK_CITY_CONFIG } from '../../config/cities';
+import { QUERY_TIMING_MS } from '../../config/constants';
 
 export interface GeocodingResult {
     id: string;
@@ -132,7 +133,7 @@ export const useGeocoding = (
             return results;
         },
         enabled: !!url,
-        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+        staleTime: QUERY_TIMING_MS.GEOCODING_STALE,
         retry: false, // Don't retry on geocoding errors to avoid spamming the API
     });
 

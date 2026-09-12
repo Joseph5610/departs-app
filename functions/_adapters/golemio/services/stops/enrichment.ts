@@ -1,6 +1,7 @@
 import { getVehicleColor } from "../vehicles/colors";
 import { GOLEMIO_CONFIG } from "../../core/config";
-import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
+import { UPSTREAM_TTL_S } from "../../../../_core/config";
+import { CacheManager, MEMORY_CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import { appClient } from '../../../../_core/ApiClient';
 
 export interface EnrichmentData {
@@ -31,10 +32,10 @@ const METRO_DEFS: Record<string, EnrichedLine> = {
  * Uses CacheManager to prevent concurrent fetch stampedes and keep data in memory.
  */
 export async function getEnrichmentData(): Promise<ProcessedEnrichmentData> {
-    return CacheManager.getOrFetch('prague_enrichment', CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch('prague_enrichment', MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
             const res = await appClient.fetch(GOLEMIO_CONFIG.ENRICHMENT_DATA_URL, {
-                cf: { cacheTtl: 86400 } // Cache at Cloudflare edge for 24h
+                cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA }
             });
             
             if (!res.ok) {

@@ -3,7 +3,7 @@ import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "./VehiclesService";
 
-import { addSecondsToTime, getMinutesUntil, getLocalSecondsFromISO, toSecs } from '../../core/utils';
+import { addSecondsToTime, getMinutesUntil, getLocalSecondsFromISO, toSecs, wrapDaySeconds } from '../../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../core/config';
 
 /**
@@ -219,11 +219,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
      * Handles 24h/12h wrap-around boundaries and caps negative delays for vehicles already at a stop.
      */
     protected calculateDelaySeconds(realSecs: number, targetSecs: number, statePosition?: string): number {
-        let delaySecs = realSecs - targetSecs;
-        
-        // Handle midnight boundaries (e.g. 23:59 vs 00:01)
-        if (delaySecs < -43200) delaySecs += 86400; // -12h wrap
-        if (delaySecs > 43200) delaySecs -= 86400;  // +12h wrap
+        const delaySecs = wrapDaySeconds(realSecs - targetSecs);
 
         // Cap negative delay if stopped early, because the vehicle will wait for its scheduled departure
         if (statePosition === 'at_stop' && delaySecs < 0) {

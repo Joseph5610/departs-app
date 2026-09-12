@@ -1,7 +1,7 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import type { VehicleCollection } from '../../types/transit';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 
@@ -21,8 +21,8 @@ export const useNetworkVehicles = () => {
         queryFn: () => fetchNetworkVehicles(selectedCity),
         enabled: !!selectedCity,
         refetchInterval: TRANSIT_REFRESH_MS,
-        staleTime: 5000,
-        gcTime: 60000,
+        staleTime: QUERY_TIMING_MS.LIVE_STALE,
+        gcTime: QUERY_TIMING_MS.LIVE_GC,
         placeholderData: keepPreviousData,
         retry: 1,
     });

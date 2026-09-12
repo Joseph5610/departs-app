@@ -1,5 +1,5 @@
 import { AppInfotext } from "../../../../_core/types";
-import { formatDate } from "../../../../_core/api-utils";
+import { formatDate } from "../../../../_core/utils/time";
 import { GolemioInfotext } from "./schemas";
 
 export class InfotextsMapper {

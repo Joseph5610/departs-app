@@ -3,14 +3,14 @@ import type { Env, AppVehicleDetail } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
-import { CacheManager, CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import { shapeChunkId } from '../../core/config';
 import { getTripStops } from '../../core/trip-stops';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { ApiError } from '../../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../../_core/config';
+import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../../../_core/config';
 import type { VehicleDetailEnricher } from './VehicleDetailEnricher';
 
 /**
@@ -22,7 +22,7 @@ import type { VehicleDetailEnricher } from './VehicleDetailEnricher';
  */
 const shapeCache = new LruCache<[number, number][][] | null>({
     maxEntries: 256,
-    ttlMs: CACHE_TTL.TWO_HOURS_MS
+    ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
 
 /**
@@ -101,7 +101,7 @@ export class VehicleDetailService {
 
         // `cf` is only a hint here: data.departs.app sits in the same zone as the Worker, where
         // edge caching of subrequests is unreliable. The memo above is the cache that matters.
-        const res = await appClient.fetch(url, { cf: { cacheTtl: 86400 } });
+        const res = await appClient.fetch(url, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
         if (!res.ok) return null;
 
         const chunk = JSON.parse(await res.text()) as Record<string, [number, number][][]>;
@@ -115,9 +115,9 @@ export class VehicleDetailService {
     private async getTripShapeIndex(staticDataUrl: string): Promise<Record<string, string>> {
         return CacheManager.getOrFetch(
             `trip_shapes_${this.city.slug}`,
-            CACHE_TTL.TWO_HOURS_MS,
+            MEMORY_CACHE_TTL.TWO_HOURS_MS,
             async () => {
-                const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/trip_shapes.json`, { cf: { cacheTtl: 86400 } });
+                const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/trip_shapes.json`, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
                 if (!res.ok) return {};
                 return await res.json() as Record<string, string>;
             },

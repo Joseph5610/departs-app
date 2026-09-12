@@ -1,6 +1,5 @@
 import { AppStopFeature, AppStopProperties, AppRouteType } from "../../../../_core/types";
 import { getVehicleColor } from "../../services/vehicles/colors";
-import { fixCommaSpacing } from "../../../../_core/api-utils";
 
 interface HierarchyContext {
     stationAnchors: Map<string, AppStopFeature>;
@@ -75,7 +74,7 @@ function enrichPublicStops(ctx: HierarchyContext): EnrichmentContext {
         }
         
         const metroLines = Array.from(metroSet).sort();
-        const stopName = fixCommaSpacing(p.stop_name) || p.stop_name;
+        const stopName = p.stop_name;
 
         const enrichedProperties: AppStopProperties = {
             stop_id: stopId,

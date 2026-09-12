@@ -3,7 +3,8 @@ interface CacheEntry<T> {
     timestamp: number;
 }
 
-export const CACHE_TTL = {
+export const MEMORY_CACHE_TTL = {
+    ONE_DAY_MS: 24 * 60 * 60 * 1000,
     TWO_HOURS_MS: 2 * 60 * 60 * 1000,
     SHORT_DEBOUNCE_MS: 5000, // safety debounce for internal worker caching
 } as const;
@@ -160,25 +161,5 @@ export class CacheManager {
         } finally {
             if (timeoutId !== undefined) clearTimeout(timeoutId);
         }
-    }
-
-    /**
-     * Checks if a valid, unexpired entry exists in the memory cache
-     * @param key Unique key for the cache entry
-     * @param ttlMs Optional TTL to check against. If omitted, checks if it exists at all.
-     */
-    static has(key: string, ttlMs?: number): boolean {
-        const cached = memoryCache.get(key);
-        if (!cached) return false;
-        if (ttlMs === undefined) return true;
-        return Date.now() - cached.timestamp < ttlMs;
-    }
-
-    /**
-     * Manually invalidates a cache entry
-     */
-    static invalidate(key: string) {
-        memoryCache.delete(key);
-        processingPromises.delete(key);
     }
 }

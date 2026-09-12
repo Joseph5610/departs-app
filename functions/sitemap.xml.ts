@@ -1,5 +1,6 @@
 import { Env } from "./_core/types";
 import { getCityConfig, CITY_REGISTRY } from "./_core/city-config";
+import { CACHE_TTL } from "./_core/config";
 import { getAdapter } from "./_adapters/CityAdapter";
 import type { CityAdapter } from "./_adapters/CityAdapter";
 
@@ -79,7 +80,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         headers: {
             'Content-Type': 'application/xml',
             // Cache sitemap heavily for 24 hours
-            'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+            'Cache-Control': `public, max-age=${CACHE_TTL.SITEMAP}, s-maxage=${CACHE_TTL.SITEMAP}`
         }
     });
 };

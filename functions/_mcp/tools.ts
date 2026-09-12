@@ -1,5 +1,6 @@
 import type { McpToolDefinition } from "./types";
 import { CITY_REGISTRY } from "../_core/city-config";
+import { MCP_DEFAULTS } from "../_core/config";
 
 const CITY_SLUGS = Object.keys(CITY_REGISTRY);
 
@@ -16,7 +17,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 query: {
                     type: "string",
@@ -24,7 +25,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 limit: {
                     type: "number",
-                    description: "Maximum number of search results to return (default: 10)."
+                    description: `Maximum number of search results to return (default: ${MCP_DEFAULTS.RESULT_LIMIT}).`
                 }
             },
             required: ["query"]
@@ -39,7 +40,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 stop_id: {
                     type: "string",
@@ -67,7 +68,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 limit: {
                     type: "number",
-                    description: "Max number of departures to retrieve (default: 10)."
+                    description: `Max number of departures to retrieve (default: ${MCP_DEFAULTS.RESULT_LIMIT}).`
                 }
             }
         }
@@ -81,7 +82,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 latitude: {
                     type: "number",
@@ -93,7 +94,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 radius_meters: {
                     type: "number",
-                    description: "Search radius in meters around coordinates (default: 500)."
+                    description: `Search radius in meters around coordinates (default: ${MCP_DEFAULTS.NEAREST_DEPARTURES_RADIUS_M}).`
                 },
                 route_type: {
                     type: "string",
@@ -105,7 +106,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 limit: {
                     type: "number",
-                    description: "Max number of departures per stop (default: 10)."
+                    description: `Max number of departures per stop (default: ${MCP_DEFAULTS.RESULT_LIMIT}).`
                 }
             },
             required: ["latitude", "longitude"]
@@ -120,7 +121,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 latitude: {
                     type: "number",
@@ -132,11 +133,11 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 radius_meters: {
                     type: "number",
-                    description: "Search radius in meters around coordinates (default: 1000)."
+                    description: `Search radius in meters around coordinates (default: ${MCP_DEFAULTS.NEAREST_STOPS_RADIUS_M}).`
                 },
                 limit: {
                     type: "number",
-                    description: "Max number of nearest stops to return (default: 10)."
+                    description: `Max number of nearest stops to return (default: ${MCP_DEFAULTS.RESULT_LIMIT}).`
                 }
             },
             required: ["latitude", "longitude"]
@@ -151,7 +152,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 line: {
                     type: "string",
@@ -163,7 +164,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 },
                 limit: {
                     type: "number",
-                    description: "Maximum number of live vehicles to return (default: 25)."
+                    description: `Maximum number of live vehicles to return (default: ${MCP_DEFAULTS.VEHICLES_LIMIT}).`
                 }
             }
         }
@@ -177,7 +178,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 line: {
                     type: "string",
@@ -195,7 +196,7 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 city: {
                     type: "string",
                     enum: CITY_SLUGS,
-                    description: "City transit system (default: 'prague')."
+                    description: `City transit system (default: '${MCP_DEFAULTS.CITY}').`
                 },
                 trip_id: {
                     type: "string",

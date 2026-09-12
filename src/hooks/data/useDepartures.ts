@@ -4,7 +4,7 @@ import type { Departure } from '../../types/transit';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, DELAY_STATS_WINDOW_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 import { applyEnrichment } from '../../lib/enrichment';
@@ -263,13 +263,13 @@ export const useDepartures = () => {
         if (!filteredDepartures || filteredDepartures.length === 0) return null;
 
         const now = query.dataUpdatedAt;
-        const thirtyMinsFromNow = now + 30 * 60 * 1000;
+        const statsWindowEnd = now + DELAY_STATS_WINDOW_MS;
 
         // Only count vehicles that have real-time data and are expected in the next 30 minutes
         const realTimeDeps = filteredDepartures.filter((d: Departure) => {
             if (typeof d.delay !== 'number') return false;
             const expectedTime = new Date(d.timestamp).getTime();
-            return expectedTime <= thirtyMinsFromNow;
+            return expectedTime <= statsWindowEnd;
         });
 
         if (realTimeDeps.length === 0) return null;

@@ -1,6 +1,6 @@
 import type { CityConfig } from '../../../../_core/city-config';
 import type { Env, AppDepartureResponse, AppDeparture, AppRouteType } from '../../../../_core/types';
-import { CACHE_TTL } from '../../../../_core/utils/CacheManager';
+import { MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { LruCache } from '../../../../_core/utils/LruCache';
 import { appClient } from '../../../../_core/ApiClient';
 import { ApiError } from '../../../../_core/errors';
@@ -17,7 +17,7 @@ import { getDukVehicleColor } from '../../utils/colors';
  */
 const departuresCache = new LruCache<AppDepartureResponse>({
     maxEntries: 256,
-    ttlMs: CACHE_TTL.SHORT_DEBOUNCE_MS
+    ttlMs: MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS
 });
 
 export class DukDeparturesService {

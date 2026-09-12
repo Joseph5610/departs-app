@@ -1,6 +1,5 @@
 import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../../_core/types";
 import { GolemioVehiclePayload } from "./schemas";
-import { fixCommaSpacing } from "../../../../_core/api-utils";
 import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
@@ -39,6 +38,8 @@ export class VehiclesMapper {
                 if (vd.vehicle_registration_number != null) vehicle_descriptor.vehicle_registration_number = String(vd.vehicle_registration_number);
             }
 
+            const trip_headsign = p.gtfs_trip_headsign || p.trip_headsign;
+
             features.push({
                 type: 'Feature',
                 geometry: f.geometry || null,
@@ -47,7 +48,7 @@ export class VehiclesMapper {
                     gtfs_trip_id: p.gtfs_trip_id || '',
                     route_short_name,
                     route_type,
-                    ...(p.gtfs_trip_headsign || p.trip_headsign ? { trip_headsign: fixCommaSpacing(p.gtfs_trip_headsign || p.trip_headsign) } : {}),
+                    ...(trip_headsign ? { trip_headsign } : {}),
                     bearing: p.bearing ?? null,
                     delay: p.delay ?? null,
                     state_position: (p.state_position || 'unknown') as AppVehicleFeature['properties']['state_position'],

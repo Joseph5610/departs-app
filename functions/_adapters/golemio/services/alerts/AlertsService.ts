@@ -1,6 +1,6 @@
 import { AppAlertsResponse, AppAlert, Env } from "../../../../_core/types";
-import { CACHE_TTL, ERROR_MESSAGES } from "../../../../_core/config";
-import { CacheManager } from "../../../../_core/utils/CacheManager";
+import { CACHE_TTL, ERROR_MESSAGES, UPSTREAM_TTL_S } from "../../../../_core/config";
+import { CacheManager, MEMORY_CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { RssAlertsMapper, parseRssXml } from "./RssAlertsMapper";
@@ -74,9 +74,9 @@ export class AlertsService {
     private async getCachedRoutesMap(env: Env): Promise<{ routesMap: Record<string, GtfsRoute>, routesByName: Record<string, GtfsRoute> }> {
         return CacheManager.getOrFetch(
             'prague_routes_map',
-            86400 * 1000, // 1 day
+            MEMORY_CACHE_TTL.ONE_DAY_MS,
             async () => {
-                const routesRes = await this.client.fetch("/v2/gtfs/routes", env, { cacheTtl: 86400 });
+                const routesRes = await this.client.fetch("/v2/gtfs/routes", env, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
                 if (!routesRes.ok) throw new Error("Failed to fetch routes");
                 
                 const routesJson = await routesRes.json();

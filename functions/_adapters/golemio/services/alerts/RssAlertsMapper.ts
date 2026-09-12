@@ -1,5 +1,5 @@
 import { AppAlert, AppRouteType } from "../../../../_core/types";
-import { formatDate } from "../../../../_core/api-utils";
+import { formatDate } from "../../../../_core/utils/time";
 import { getVehicleColor } from "../vehicles/colors";
 import { XMLParser } from "fast-xml-parser";
 import { z } from 'zod';

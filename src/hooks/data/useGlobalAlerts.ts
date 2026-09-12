@@ -4,6 +4,7 @@ import { apiFetch } from '../../lib/api-client';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { getCityConfig } from '../../config/cities';
 import { useCities } from './useCities';
+import { QUERY_TIMING_MS } from '../../config/constants';
 
 export const useGlobalAlerts = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -18,8 +19,8 @@ export const useGlobalAlerts = () => {
             return await apiFetch<{ alerts: RSSItem[] }>(`/${selectedCity}/alerts`);
         },
         enabled: !!selectedCity && hasAlerts,
-        refetchInterval: 2 * 60 * 1000,
-        staleTime: 60 * 1000,
+        refetchInterval: QUERY_TIMING_MS.ALERTS_REFRESH,
+        staleTime: QUERY_TIMING_MS.NOTICES_STALE,
     });
 
     const infotextsQuery = useQuery<Infotext[]>({
@@ -28,8 +29,8 @@ export const useGlobalAlerts = () => {
             return await apiFetch<Infotext[]>(`/${selectedCity}/infotexts`);
         },
         enabled: !!selectedCity && !!cityConfig?.hasInfotexts,
-        refetchInterval: 2 * 60 * 1000,
-        staleTime: 60 * 1000,
+        refetchInterval: QUERY_TIMING_MS.INFOTEXTS_REFRESH,
+        staleTime: QUERY_TIMING_MS.NOTICES_STALE,
     });
 
     return {

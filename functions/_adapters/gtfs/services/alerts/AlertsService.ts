@@ -1,5 +1,5 @@
 import type { AppAlertsResponse } from "../../../../_core/types";
-import { CacheManager, CACHE_TTL } from "../../../../_core/utils/CacheManager";
+import { CacheManager, MEMORY_CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsRoutes } from '../../core/gtfs-data';
 import { BaseGtfsAlertsMapper } from './BaseGtfsAlertsMapper';
@@ -13,7 +13,7 @@ export class AlertsService {
     async getAlerts(): Promise<AppAlertsResponse> {
         return CacheManager.getOrFetch<AppAlertsResponse>(
             `gtfs_alerts_${this.city.slug}`,
-            CACHE_TTL.SHORT_DEBOUNCE_MS,
+            MEMORY_CACHE_TTL.SHORT_DEBOUNCE_MS,
             async () => {
                 try {
                     const feed = await getGtfsRtFeed(this.city).catch((e) => {

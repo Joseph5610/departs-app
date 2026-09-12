@@ -42,32 +42,6 @@ function handleError(error: unknown): Response {
 }
 
 /**
- * Formats a date as `D. M. YYYY HH:mm` in the given IANA timezone.
- *
- * `hourCycle: 'h23'` rather than `hour12: false`, which ECMA-402 leaves free to resolve to h24 and
- * render midnight as "24".
- */
-const formatters = new Map<string, Intl.DateTimeFormat>();
-
-export function formatDate(date: Date, timezone: string): string {
-    let formatter = formatters.get(timezone);
-    if (!formatter) {
-        formatter = new Intl.DateTimeFormat('cs-CZ', {
-            timeZone: timezone,
-            day: 'numeric',
-            month: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hourCycle: 'h23'
-        });
-        formatters.set(timezone, formatter);
-    }
-    return formatter.format(date);
-}
-
-
-/**
  * Creates a standardized JSON success response with appropriate Cache-Control headers.
  *
  * @param data Data to return in the response body
@@ -88,15 +62,6 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
             "Cache-Control": cacheControl,
         }
     });
-}
-
-/**
- * Fixes missing spaces after commas (common in Golemio data).
- * TODO: Consider migrating this to a shared text-processing utility.
- */
-export function fixCommaSpacing(text: string | undefined | null): string | undefined {
-    if (!text) return undefined;
-    return text.replace(/,([^\s])/g, ', $1');
 }
 
 const ALLOWED_PATTERNS = [
