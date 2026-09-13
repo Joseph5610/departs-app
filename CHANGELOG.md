@@ -4,6 +4,15 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.69.4] - 2026-09-13
+
+### Fixed
+
+- Red error, delay and high-priority alert text is readable in dark mode.
+- Monospace text uses Fira Code instead of falling back to the system font.
+- Separators are visible again and toggle groups get their intended spacing.
+- Selected filter and feedback-type tiles are highlighted in green, and invalid text fields show a red border.
+
 ## [0.69.3] - 2026-09-12
 
 ### Security

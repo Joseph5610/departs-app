@@ -128,7 +128,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                     size="icon-xs"
                     onClick={handleUnpin}
                     title={t('map.departures.removeFromFavorites')}
-                    className="hover:bg-rose-500/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-rose-400 active:bg-rose-500/25 transition-[colors,opacity,transform] duration-150 shrink-0 group"
+                    className="hover:bg-destructive/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-destructive active:bg-destructive/25 transition-[colors,opacity,transform] duration-150 shrink-0 group"
                     aria-label={t('map.departures.removeFromFavorites')}
                 >
                     <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110" />
@@ -193,7 +193,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                         {typeof dep.delay === 'number' && dep.delay !== 0 && (
                                             <span className={cn(
                                                 "text-[9px] font-bold tabular-nums",
-                                                dep.delay > 0 ? "text-rose-400" : "text-sky-400"
+                                                dep.delay > 0 ? "text-destructive" : "text-sky-400"
                                             )}>
                                                 {formatDelay(dep.delay)}
                                             </span>

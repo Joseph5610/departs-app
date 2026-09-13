@@ -131,7 +131,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                     variant="outline"
                                     className={cn(
                                         "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
-                                        isLate ? "text-rose-500" : isEarly ? "text-sky-500" : "text-emerald-500"
+                                        isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
                                     )}
                                 >
                                     {(!isEnriched && hasEnrichment) && `${t('map.vehicleDetails.estimatedPrefix')} `}
@@ -171,8 +171,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     if (isCanceled) {
                         title = t('map.vehicleDetails.canceled');
                         description = t('map.vehicleDetails.canceledDescription');
-                        iconColor = 'text-rose-500';
-                        textColor = 'text-rose-500/80';
+                        iconColor = 'text-destructive';
+                        textColor = 'text-destructive/80';
                     } else if (displayVehicle.isStaticFallback) {
                         title = t('map.vehicleDetails.staticFallback');
                         description = t('map.vehicleDetails.staticFallbackDescription');

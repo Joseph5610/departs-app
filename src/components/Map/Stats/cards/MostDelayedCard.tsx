@@ -58,7 +58,7 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats }) => {
         <Card variant="subtle" size="none">
             <CardHeader className="p-3.5 pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
-                    <AlertTriangle size={16} className="text-rose-400" />
+                    <AlertTriangle size={16} className="text-destructive" />
                     <span>{t('stats.biggestDelays')}</span>
                 </CardTitle>
             </CardHeader>

@@ -42,7 +42,7 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
                 >
                     <div className={cn(
                         "flex items-center gap-1 font-bold tabular-nums text-[8px] opacity-60",
-                        delta > 0 ? "text-rose-400" : "text-emerald-400"
+                        delta > 0 ? "text-destructive" : "text-emerald-400"
                     )}>
                         <span>{delta > 0 ? '▲' : '▼'}</span>
                     </div>

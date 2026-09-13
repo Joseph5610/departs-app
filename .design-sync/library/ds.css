@@ -1,0 +1,51 @@
+@import "../../src/index.css";
+
+@source "../../src";
+@source "../previews";
+
+/* Utility vocabulary for Claude Design: compiled CSS only contains scanned classes, so designs need this layout/token set available. */
+@source inline("{,sm:,md:,lg:}{flex,inline-flex,grid,block,inline-block,hidden,contents}");
+@source inline("{,sm:,md:,lg:}{flex-row,flex-col,flex-wrap,flex-1,flex-none,flex-auto,grow,shrink,shrink-0}");
+@source inline("{,sm:,md:,lg:}items-{start,center,end,stretch,baseline}");
+@source inline("{,sm:,md:,lg:}justify-{start,center,end,between,around,evenly}");
+@source inline("self-{start,center,end,stretch} place-items-center place-content-center");
+@source inline("{,md:,lg:}grid-cols-{1..6} grid-cols-12 col-span-{1..6} col-span-full grid-rows-{1..4}");
+@source inline("{,md:}{gap,gap-x,gap-y,p,px,py,pt,pr,pb,pl,m,mx,my,mt,mr,mb,ml,space-y}-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24}");
+@source inline("{mx,my,mt,mr,mb,ml,m}-auto");
+@source inline("{w,h,size}-{0,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10,11,12,14,16,20,24,32,40,48,64,80,96} {min-w,min-h,max-h}-{0,8,10,12,16,20,24,32,40,48,64,80,96}");
+@source inline("{w,h,size,min-w,min-h,max-w,max-h}-{full,auto,fit,min,max,px}");
+@source inline("{,sm:,md:,lg:}w-{1/2,1/3,2/3,1/4,3/4} h-screen min-h-screen w-screen h-dvh min-h-dvh");
+@source inline("{,sm:,md:,lg:}max-w-{3xs,2xs,xs,sm,md,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl,prose,none}");
+@source inline("{relative,absolute,fixed,sticky,static,isolate}");
+@source inline("{inset,top,right,bottom,left,inset-x,inset-y}-{0,1,2,3,4,6,8,auto,full}");
+@source inline("z-{0,10,20,30,40,50}");
+@source inline("overflow-{hidden,auto,scroll,visible,clip} overflow-x-{auto,hidden} overflow-y-{auto,hidden}");
+@source inline("truncate line-clamp-{1..4} whitespace-{nowrap,normal,pre-line,pre-wrap} break-words text-balance text-pretty");
+@source inline("{,sm:,md:,lg:}text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl,6xl}");
+@source inline("font-{sans,mono,light,normal,medium,semibold,bold,extrabold,black}");
+@source inline("tracking-{tighter,tight,normal,wide,wider,widest} leading-{none,tight,snug,normal,relaxed,loose,4,5,6,7,8}");
+@source inline("text-{left,center,right} uppercase lowercase capitalize normal-case italic underline tabular-nums");
+@source inline("{bg,text,border}-{background,foreground,card,card-foreground,popover,popover-foreground,primary,primary-foreground,secondary,secondary-foreground,muted,muted-foreground,accent,accent-foreground,destructive,destructive-foreground,border,input}{,/10,/20,/30,/50,/80}");
+@source inline("hover:bg-{primary,secondary,muted,accent,destructive,foreground}{,/10,/20,/80} hover:text-{foreground,primary,accent-foreground} ring-{ring,primary,destructive}{,/50}");
+@source inline("{bg,text,border}-{white,black,transparent,current}");
+@source inline("{border,border-t,border-b,border-l,border-r,border-x,border-y}{,-0,-2} border-dashed divide-x divide-y");
+@source inline("rounded{,-none,-sm,-md,-lg,-xl,-2xl,-3xl,-4xl,-full} rounded-{t,b,l,r}-{md,lg,xl,2xl}");
+@source inline("shadow-{none,2xs,xs,sm,md,lg,xl,2xl} ring-{0,1,2} outline-none");
+@source inline("opacity-{0,40,50,60,70,80,100} cursor-{pointer,default} select-none pointer-events-none");
+@source inline("transition{,-colors,-all,-transform,-opacity} duration-{150,200,300} backdrop-blur{,-sm,-md,-lg}");
+@source inline("aspect-{square,video} object-{cover,contain} sr-only animate-{spin,pulse}");
+@source inline("safe-{top,bottom,left,right} glassy micro-label micro-label-widest custom-scrollbar");
+
+/* index.css pins html/body/#root to the viewport for the full-screen map; designs and preview cards need normal document flow. */
+html,
+body,
+#root {
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* Let body's background propagate to the canvas so hosts that set their own body background aren't banded by the html fill. */
+html {
+  background: none;
+}

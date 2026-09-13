@@ -12,7 +12,7 @@ const noUnusedVars = ['error', {
 }]
 
 export default defineConfig([
-  globalIgnores(['dist', 'scratch']),
+  globalIgnores(['dist', 'scratch', 'ds-bundle', '.ds-sync']),
 
   // Frontend: browser globals, React rules.
   {

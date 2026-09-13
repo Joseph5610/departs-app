@@ -71,7 +71,7 @@ export const VehicleMonitorRow: React.FC<VehicleMonitorRowProps> = React.memo(({
                         variant="outline"
                         className={cn(
                             "text-[10px] font-bold tabular-nums px-2 py-0.5 border-transparent shadow-2xs",
-                            isLate ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
+                            isLate ? "bg-destructive/10 text-destructive border-destructive/20" :
                             isEarly ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
                             "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                         )}

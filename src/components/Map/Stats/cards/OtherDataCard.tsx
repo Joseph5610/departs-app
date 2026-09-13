@@ -45,7 +45,7 @@ export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, netwo
             <CardContent className="p-3.5 pt-0">
                 <div className="flex flex-col">
                     {activeStats.total_delay_seconds > 0 &&
-                        renderStatRow(t('stats.totalDelay'), <span className="text-rose-400 font-bold tabular-nums">{t('stats.hoursValue', { value: Math.round(activeStats.total_delay_seconds / 3600) })}</span>)
+                        renderStatRow(t('stats.totalDelay'), <span className="text-destructive font-bold tabular-nums">{t('stats.hoursValue', { value: Math.round(activeStats.total_delay_seconds / 3600) })}</span>)
                     }
                     
                     {showLowFloor && 

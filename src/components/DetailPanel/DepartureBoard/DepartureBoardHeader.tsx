@@ -133,7 +133,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                 <Popover>
                                     <PopoverTrigger render={<Button variant="ghost" className="h-7 px-3 gap-1 rounded-md transition-colors hover:bg-muted active:scale-95" />}>
                                         <Activity size={12} className={cn(
-                                            delayStats.trend === 'worsening' ? "text-red-400" :
+                                            delayStats.trend === 'worsening' ? "text-destructive" :
                                             delayStats.trend === 'improving' ? "text-emerald-400" :
                                             "text-amber-400"
                                         )} strokeWidth={1.5} />

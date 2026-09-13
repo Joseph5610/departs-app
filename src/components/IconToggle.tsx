@@ -22,8 +22,8 @@ export const IconToggle: React.FC<IconToggleProps> = ({ icon: Icon, label, isAct
             "h-auto flex flex-col items-center justify-center gap-1.5 px-3 transition-[transform,colors] font-semibold active:scale-95 group",
             "border-border/80 hover:bg-foreground/10 hover:text-foreground",
             // `!` overrides the Toggle's own pressed background.
-            "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
-            "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70",
+            "aria-pressed:bg-primary/20! aria-pressed:text-primary! aria-pressed:border-primary/50! aria-pressed:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
+            "aria-[pressed=false]:bg-transparent aria-[pressed=false]:text-foreground/70",
             className
         )}
     >

@@ -39,7 +39,7 @@ export const PunctualityCard: React.FC<PunctualityCardProps> = ({ stats }) => {
                         <div className="text-[11px] font-medium text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
                     </div>
                     <div className="text-right">
-                        <div className="text-xl font-bold text-red-400 tabular-nums leading-none">
+                        <div className="text-xl font-bold text-destructive tabular-nums leading-none">
                             {stats.delayed_over_5_min_count}
                         </div>
                         <div className="text-[11px] font-medium text-foreground/60 mt-1">{t('stats.delayedOver5')}</div>

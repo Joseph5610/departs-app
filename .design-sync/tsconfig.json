@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": null,
+    "noEmit": true,
+    "paths": {
+      "@/*": [
+        "../src/*"
+      ],
+      "departs-ui": [
+        "./library/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "previews",
+    "library/index.ts"
+  ]
+}

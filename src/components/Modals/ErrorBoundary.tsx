@@ -98,7 +98,7 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                     <EmptyHeader>
                         <EmptyMedia
                             variant="icon"
-                            className="size-14 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive shadow-[0_0_20px_rgba(220,38,38,0.1)] [&_svg:not([class*='size-'])]:size-7"
+                            className="size-14 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive shadow-[0_0_20px_color-mix(in_oklch,var(--color-destructive)_10%,transparent)] [&_svg:not([class*='size-'])]:size-7"
                         >
                             <AlertCircle strokeWidth={1.5} />
                         </EmptyMedia>
