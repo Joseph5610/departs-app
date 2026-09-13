@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 
-export interface PWAState {
+interface PWAState {
     offlineReady: boolean;
     needRefresh: boolean;
 }
 
-export interface PWAActions {
+interface PWAActions {
     setOfflineReady: (ready: boolean) => void;
     setNeedRefresh: (refresh: boolean) => void;
 }

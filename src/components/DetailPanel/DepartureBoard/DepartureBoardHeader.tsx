@@ -1,15 +1,18 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart, Snowflake, ArrowUpDown } from 'lucide-react';
-import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
+import { FALLBACK_ROUTE_COLOR, PREFERENCES_LIMITS } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useUiStore } from '../../../state/uiStore';
 import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
-import { useCities } from '../../../hooks/data/useCities';
+import { useCityConfig, useLineRules } from '../../../hooks/data/useCities';
+import { ROUTE_TYPE_ORDER, routeTypeRank } from '../../../config/transit';
 import { useNavigate } from '../../../hooks/features/useNavigate';
+import { formatStopDistance } from '../../../hooks/derived/useStopDistance';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -33,9 +36,9 @@ export const DepartureBoardHeader = React.memo(() => {
     // Preferences
     const departureSort = usePreferencesStore(s => s.departureSort);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
-    const { setDepartureSort, toggleFavorite, setIsFeedbackOpen, toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
+    const { setDepartureSort, toggleFavorite, toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
+    const { setIsFeedbackOpen } = useUiStore(s => s.actions);
 
     const { share } = useShare();
     const selectedLine = useSelectionStore(s => s.selectedLine);
@@ -49,12 +52,11 @@ export const DepartureBoardHeader = React.memo(() => {
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
-    const { handleNavigate, distanceLabel, stopDistanceInfo } = useNavigate();
+    const { handleNavigate, stopDistanceInfo } = useNavigate();
     const { delayStats, isError, hasAirConditioningData } = useDepartures();
 
-    const { data: citiesData } = useCities();
-    const currentCityConfig = citiesData?.cities.find(c => c.slug === selectedCity);
-    const virtualTableUrl = currentCityConfig?.virtualTableUrl;
+    const { virtualTableUrl } = useCityConfig();
+    const lineRules = useLineRules();
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
@@ -70,21 +72,10 @@ export const DepartureBoardHeader = React.memo(() => {
 
         const getLineGroup = (line: { name: string, type: string }) => {
             const name = line.name.toUpperCase();
-            const typeStr = line.type;
-            
-            if (typeStr === 'metro' || ['A', 'B', 'C'].includes(name)) return 0; // Metro
-            if (typeStr === 'train' || name.startsWith('S') || name.startsWith('R')) return 1; // Train
-            
-            const num = parseInt(name.replace(/\D/g, ''), 10);
-            const isNightTram = typeStr === 'tram' && !isNaN(num) && num >= 90 && num < 100;
-            const isNightBus = typeStr === 'bus' && !isNaN(num) && num >= 900;
-
-            if (typeStr === 'tram') return isNightTram ? 6 : 2; // Tram / Night Tram
-            if (typeStr === 'bus') return isNightBus ? 7 : 3; // Bus / Night Bus
-            if (typeStr === 'trolleybus') return 4; // Trolleybus
-            if (typeStr === 'ferry' || typeStr === 'funicular') return 5; // Other
-            
-            return 8; // Unknown
+            if (line.type === 'metro' || lineRules.metroLineNames.includes(name)) return routeTypeRank('metro');
+            if (line.type === 'train' || lineRules.trainLinePrefixes.some(prefix => name.startsWith(prefix))) return routeTypeRank('train');
+            const rank = routeTypeRank(line.type);
+            return lineRules.isNightLine(line.type, name) ? rank + ROUTE_TYPE_ORDER.length + 1 : rank;
         };
 
         return lines.sort((a, b) => {
@@ -93,7 +84,7 @@ export const DepartureBoardHeader = React.memo(() => {
             if (groupA !== groupB) return groupA - groupB;
             return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
-    }, [selectedStop]);
+    }, [selectedStop, lineRules]);
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
@@ -124,13 +115,13 @@ export const DepartureBoardHeader = React.memo(() => {
                              <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap flex items-center">
                                 {stopDistanceInfo?.isReasonableWalkingDistance ? (
                                     <>
-                                        <span>{stopDistanceInfo.distance}m</span>
+                                        <span>{t('map.departures.meters', { distance: stopDistanceInfo.distance })}</span>
                                         <span className="mx-1.5 opacity-30 font-normal">•</span>
                                         <Footprints size={14} className="mr-1 text-muted-foreground/60"  strokeWidth={1.5} />
-                                        <span>{stopDistanceInfo.time} min</span>
+                                        <span>{t('map.departures.minutes', { count: stopDistanceInfo.time })}</span>
                                     </>
                                 ) : (
-                                    distanceLabel.split(' • ')[0]
+                                    stopDistanceInfo ? formatStopDistance(stopDistanceInfo, t) : t('map.departures.openInMaps')
                                 )}
                              </span>
                         </div>
@@ -149,7 +140,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                         <span className="font-bold text-foreground text-[11px] tracking-tight opacity-90 whitespace-nowrap">
                                             {delayStats.averageDelayMin === 0 
                                                 ? t('map.departures.onTime') 
-                                                : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${delayStats.averageDelayMin} min`}
+                                                : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${t('map.departures.minutes', { count: delayStats.averageDelayMin })}`}
                                         </span>
                                     </PopoverTrigger>
                                     <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/95 backdrop-blur-xl shadow-2xl">
@@ -205,7 +196,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                 data-testid="favorite-btn"
                                 onClick={() => {
                                     if (selectedStop) {
-                                        if (!isFavorite && favoriteStops.length >= 20) {
+                                        if (!isFavorite && favoriteStops.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
                                             toast.error(t('toasts.favoritesLimitReached'));
                                             return;
                                         }
@@ -233,7 +224,7 @@ export const DepartureBoardHeader = React.memo(() => {
                                     variant="ghost"
                                     size="icon-xs"
                                     data-testid="more-options-btn"
-                                    aria-label="More options"
+                                    aria-label={t('common.moreOptions')}
                                     className="text-muted-foreground"
                                 >
                                     <MoreHorizontal size={16} strokeWidth={1.5} />

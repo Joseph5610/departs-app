@@ -10,14 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
+import { getDelayStatus } from '../../../config/transit';
+import { safeHexColor } from '@/lib/color';
 import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
 import { LineBadge } from '../../LineBadge';
+import { useNow } from '../../../hooks/useNow';
 
 export const VehicleHero: React.FC<VehicleHeroProps> = ({
     displayVehicle,
     isFollowing,
     onToggleFollow,
-    liveDataAgeSeconds,
     isDetailLoading,
     hasEnrichment
 }) => {
@@ -28,14 +30,14 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
     const isEnriched = !!displayVehicle.is_enriched;
 
-    const bgColor = displayVehicle.route_color || FALLBACK_ROUTE_COLOR;
+    const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
 
     return (
         <Card 
             size="none"
             className="border border-border/50 ring-0 shadow-xl relative flex flex-col transition-colors"
             style={{
-                backgroundColor: bgColor ? `color-mix(in srgb, ${bgColor} 12%, var(--hero-base))` : 'var(--card)'
+                backgroundColor: `color-mix(in srgb, ${bgColor} 12%, var(--hero-base))`
             }}
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
@@ -63,7 +65,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                     ? "bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30" 
                                     : "text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40"
                             )}
-                            aria-label={t('map.vehicleDetail.track')}
+                            aria-label={t('map.vehicleDetails.track')}
                         >
                             {isFollowing ? (
                                 <MapPin size={16} strokeWidth={2.5} />
@@ -84,7 +86,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                     vehicleId: displayVehicle.vehicle_id || undefined
                                 });
                             }}
-                            aria-label={t('map.vehicleDetail.share')}
+                            aria-label={t('common.share')}
                         >
                             <Share2 size={16} strokeWidth={1.5} />
                         </Button>
@@ -121,8 +123,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
                             const delayVal = Number(displayVehicle.delay || 0);
                             const delayMinutes = Math.round(Math.abs(delayVal) / 60);
-                            const isLate = delayVal > 30;
-                            const isEarly = delayVal < -30;
+                            const delayStatus = getDelayStatus(delayVal);
+                            const isLate = delayStatus === 'late';
+                            const isEarly = delayStatus === 'early';
                             return (
                                 <Badge
                                     variant="outline"
@@ -141,34 +144,12 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                             );
                         })()}
 
-                        {displayVehicle.origin_timestamp && liveDataAgeSeconds !== null && (
-                            <Popover>
-                                <PopoverTrigger render={<button type="button" className="outline-none" />}>
-                                    <Badge variant="muted" className={cn(
-                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
-                                        isEnriched ? "text-emerald-500" : 
-                                        (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
-                                    )}>
-                                        <div className={cn(
-                                            "w-1.5 h-1.5 rounded-full shrink-0",
-                                            isEnriched ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
-                                            (hasEnrichment && !isEnriched) ? "bg-amber-500 animate-pulse shadow-[0_0_8px_var(--color-amber-500)]" :
-                                            liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
-                                        )} />
-                                        <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
-                                    </Badge>
-                                </PopoverTrigger>
-                                <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-62.5">
-                                    <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
-                                        {isEnriched 
-                                            ? t('map.vehicleDetails.enrichedTooltip') 
-                                            : hasEnrichment 
-                                                ? t('map.vehicleDetails.connectingTooltip')
-                                                : t('map.vehicleDetails.standardTooltip')
-                                        }
-                                    </span>
-                                </PopoverContent>
-                            </Popover>
+                        {displayVehicle.origin_timestamp && (
+                            <LiveDataAgeBadge
+                                originTimestamp={displayVehicle.origin_timestamp}
+                                isEnriched={isEnriched}
+                                hasEnrichment={hasEnrichment}
+                            />
                         )}
                     </div>
                 )}
@@ -286,3 +267,42 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
 VehicleHero.displayName = 'VehicleHero';
 
+
+/** Age of the vehicle's position fix; ticks on its own so the rest of the panel doesn't re-render every second. */
+const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { originTimestamp: string; isEnriched: boolean; hasEnrichment: boolean }) => {
+    const { t } = useTranslation();
+    const now = useNow();
+    const originMs = Date.parse(originTimestamp);
+    if (Number.isNaN(originMs)) return null;
+    const liveDataAgeSeconds = Math.max(0, Math.floor((now - originMs) / 1000));
+
+    return (
+        <Popover>
+            <PopoverTrigger render={<button type="button" className="outline-none" />}>
+                <Badge variant="muted" className={cn(
+                    "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
+                    isEnriched ? "text-emerald-500" :
+                    (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
+                )}>
+                    <div className={cn(
+                        "w-1.5 h-1.5 rounded-full shrink-0",
+                        isEnriched ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
+                        (hasEnrichment && !isEnriched) ? "bg-amber-500 animate-pulse shadow-[0_0_8px_var(--color-amber-500)]" :
+                        liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
+                    )} />
+                    <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
+                </Badge>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-62.5">
+                <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
+                    {isEnriched
+                        ? t('map.vehicleDetails.enrichedTooltip')
+                        : hasEnrichment
+                            ? t('map.vehicleDetails.connectingTooltip')
+                            : t('map.vehicleDetails.standardTooltip')
+                    }
+                </span>
+            </PopoverContent>
+        </Popover>
+    );
+};

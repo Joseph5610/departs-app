@@ -1,28 +1,16 @@
 import React, { useMemo } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useStops } from '../../../hooks/data/useStops';
+import { useFavoriteDepartures } from '../../../hooks/data/useFavoriteDepartures';
 import { FavoritesStopCard } from './FavoritesStopCard';
 import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
 import { Star } from 'lucide-react';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '../../ui/empty';
-import { apiFetch } from '../../../lib/api-client';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../../config/constants';
 import type { StopFeature } from '../../../types/stops';
-import type { DeparturesResponse } from '../../../hooks/data/useDepartures';
-import type { AppError } from '../../../types/error';
-import type { Departure } from '../../../types/transit';
-import { applyEnrichment } from '../../../lib/enrichment';
-import { useEnrichmentStore } from '../../../state/enrichmentStore';
-import { useVehicles } from '../../../hooks/data/useVehicles';
 
-interface FavoritesPanelProps {
-    onClose?: () => void;
-}
-
-export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
+export const FavoritesPanel: React.FC = () => {
     const { t } = useTranslation();
 
     // Preferences
@@ -43,70 +31,7 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
         return favoriteStopFeatures.map(f => f.properties.stop_id);
     }, [favoriteStopFeatures]);
 
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-
-    const dataQuery = useQuery<DeparturesResponse | null, AppError>({
-        queryKey: ['departures', 'bulk', selectedCity, stopIds.join(',')],
-        queryFn: async () => {
-            if (stopIds.length === 0 || !selectedCity) return null;
-            const params = new URLSearchParams();
-            stopIds.forEach(id => params.append('stopId', id));
-            return apiFetch<DeparturesResponse>(`/${selectedCity}/departures?${params.toString()}`, LIVE_FETCH_OPTIONS);
-        },
-        refetchInterval: TRANSIT_REFRESH_MS,
-        staleTime: TRANSIT_REFRESH_MS,
-        placeholderData: keepPreviousData,
-        enabled: stopIds.length > 0
-    });
-
-    const dataUpdatedAt = dataQuery.dataUpdatedAt;
-    const { data, isLoading: departuresLoading, isError } = dataQuery;
-
-    const byTripId = useEnrichmentStore(s => s.byTripId);
-    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
-    const { vehicles: rawVehicles } = useVehicles();
-
-    // Group departures by stopId for fast O(1) lookup, apply enrichment, and filter past departures
-    const departuresByStop = useMemo(() => {
-        const map = new Map<string, Departure[]>();
-        if (!data?.departures) return map;
-
-        const baseTs = dataUpdatedAt || 0;
-        const now = baseTs;
-
-        // Build a fresh tripId -> vehicleId map from the frontend's live vehicles
-        const liveTripToVehicle = new Map<string, string>();
-        if (rawVehicles?.features) {
-            for (const f of rawVehicles.features) {
-                const tId = f.properties.gtfs_trip_id;
-                const vId = f.properties.vehicle_id;
-                if (tId && vId) {
-                    liveTripToVehicle.set(tId, vId);
-                }
-            }
-        }
-
-        data.departures.forEach(dep => {
-            const stopId = dep.stopId;
-            if (stopId) {
-                const vId = dep.vehicleId || (dep.tripId ? liveTripToVehicle.get(dep.tripId) : undefined);
-                const enriched = applyEnrichment(dep, dep.tripId, vId, byTripId, byVehicleId, baseTs);
-                if (vId && !enriched.vehicleId) {
-                    enriched.vehicleId = vId;
-                }
-
-                // Filter out departures older than 60 seconds
-                const rtTime = new Date(enriched.timestamp).getTime();
-                if (rtTime >= now - 60000) {
-                    if (!map.has(stopId)) {
-                        map.set(stopId, []);
-                    }
-                    map.get(stopId)!.push(enriched);
-                }
-            }
-        });
-        return map;
-    }, [data, dataUpdatedAt, byTripId, byVehicleId, rawVehicles]);
+    const { departuresByStop, isLoading: departuresLoading, isError } = useFavoriteDepartures(stopIds);
 
     const isLoading = stopsLoading || (departuresLoading && favoriteStops.length > 0);
 
@@ -156,7 +81,6 @@ export const FavoritesPanel: React.FC<FavoritesPanelProps> = ({ onClose }) => {
                             departures={stopDepartures}
                             isLoading={departuresLoading}
                             isError={isError}
-                            onClosePanel={onClose} 
                         />
                     </div>
                 );

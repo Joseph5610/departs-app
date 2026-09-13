@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { LOCATION_PRIVACY } from '../config/constants';
 
 export interface GeolocationState {
     userLocation: [number, number] | null;
@@ -10,7 +11,7 @@ export interface GeolocationState {
     lastLocation: { lat: number; lng: number } | null;
 }
 
-export interface GeolocationActions {
+interface GeolocationActions {
     setUserLocation: (location: [number, number] | null) => void;
     setUserSpeed: (speed: number | null) => void;
     setIsGeoPending: (pending: boolean) => void;
@@ -22,6 +23,19 @@ export interface GeolocationActions {
 export interface GeolocationStore extends GeolocationState {
     actions: GeolocationActions;
 }
+
+type SavedLocation = GeolocationState['lastLocation'];
+
+const LOCATION_FACTOR = 10 ** LOCATION_PRIVACY.SAVED_LOCATION_DECIMALS;
+
+/** Coarsens a position before it is stored on the device; it only serves to reopen the map nearby. */
+const coarsenLocation = (location: SavedLocation): SavedLocation => {
+    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return null;
+    return {
+        lat: Math.round(location.lat * LOCATION_FACTOR) / LOCATION_FACTOR,
+        lng: Math.round(location.lng * LOCATION_FACTOR) / LOCATION_FACTOR,
+    };
+};
 
 export const useGeolocationStore = create<GeolocationStore>()(
     persist(
@@ -41,12 +55,17 @@ export const useGeolocationStore = create<GeolocationStore>()(
                 setIsGeoPending: (isGeoPending) => set({ isGeoPending }),
                 setWatchId: (watchId) => set({ watchId }),
                 setLastUpdatedAt: (lastUpdatedAt) => set({ lastUpdatedAt }),
-                setLastLocation: (lastLocation) => set({ lastLocation }),
+                setLastLocation: (lastLocation) => set({ lastLocation: coarsenLocation(lastLocation) }),
             },
         }),
         {
             name: 'departs-last-location',
             storage: createJSONStorage(() => localStorage),
+            // Version 0 stored the full GPS precision.
+            version: 1,
+            migrate: (persisted) => ({
+                lastLocation: coarsenLocation((persisted as Partial<GeolocationState> | null)?.lastLocation ?? null),
+            }),
             partialize: (state) => ({
                 lastLocation: state.lastLocation,
             }),

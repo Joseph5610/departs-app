@@ -4,6 +4,66 @@ import type {
     LineLayerSpecification,
     ExpressionSpecification
 } from 'maplibre-gl';
+import { DELAY_TIERS } from './transit';
+
+/** GeoJSON source IDs, shared by the layers below, the <Source> elements and direct map updates. */
+export const MAP_SOURCES = {
+    STOPS: 'city-stops',
+    STOP_LABELS: 'stop-labels-centroids',
+    VEHICLES: 'city-vehicles',
+    SELECTED_VEHICLE: 'selected-vehicle',
+    ROUTE_SHAPE: 'route-shape',
+    USER_LOCATION: 'user-location',
+    POINTS_OF_SALE: 'points-of-sale-source',
+} as const;
+
+/** Canvas-drawn images registered by utils/mapIcons.ts. */
+export const MAP_ICONS = {
+    VEHICLE_ARROW: 'v-arrow-centered',
+    TRAIN_STATION: 'train-icon',
+    BUS_STOP: 'bus-icon',
+    FAVORITE_STAR: 'favorite-star',
+    POS_MACHINE: 'pos-machine-icon',
+    POS_INFO: 'pos-info-icon',
+    POS_OFFICE: 'pos-office-icon',
+} as const;
+
+export const MAP_LAYERS = {
+    STOP_CLUSTERS: 'clusters',
+    STOP_POINTS_GLOW: 'unclustered-point-glow',
+    STOP_POINTS: 'unclustered-point',
+    TRANSFER_OUTER: 'transfer-outer',
+    TRANSFER_INNER: 'transfer-inner',
+    STOP_LABELS: 'stop-labels',
+    STOP_ICONS: 'stop-icons',
+    STOP_ENTRANCES: 'entrance-layer',
+    STOP_FAVORITES: 'favorite-star-layer',
+    VEHICLE_POINTS: 'vehicles-point',
+    VEHICLE_DIRECTIONS: 'vehicles-direction',
+    VEHICLE_LABELS: 'vehicles-label',
+    SELECTED_VEHICLE_PULSE: 'vehicle-selected-pulse',
+    SELECTED_VEHICLE_POINT: 'vehicle-selected-point',
+    SELECTED_VEHICLE_DIRECTION: 'vehicle-selected-direction',
+    SELECTED_VEHICLE_LABEL: 'vehicle-selected-label',
+    ROUTE_LINE_CASING: 'route-line-casing',
+    ROUTE_LINE: 'route-line',
+    ROUTE_STOPS: 'route-stops',
+    ROUTE_TERMINALS: 'route-terminals',
+    USER_LOCATION_PULSE: 'user-location-pulse',
+    USER_LOCATION_POINT: 'user-location-point',
+    POINTS_OF_SALE: 'pos-point',
+} as const;
+
+/** Layers whose click opens a stop's departures. */
+export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STOP_POINTS, MAP_LAYERS.STOP_ICONS, MAP_LAYERS.TRANSFER_OUTER, MAP_LAYERS.TRANSFER_INNER];
+/** Layers whose click opens a vehicle's detail. */
+export const VEHICLE_CLICK_LAYERS: string[] = [MAP_LAYERS.VEHICLE_POINTS, MAP_LAYERS.VEHICLE_DIRECTIONS, MAP_LAYERS.VEHICLE_LABELS];
+export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE];
+
+const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
+const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
+const METRO_LINE_COUNT: ExpressionSpecification = ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]];
+const IS_RAIL_STATION: ExpressionSpecification = ['any', ['==', ['get', 'is_train'], 1], ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]];
 
 const MAP_TOKENS = {
     zoom: {
@@ -29,9 +89,9 @@ const MAP_TOKENS = {
 // -----------------------------------------------------------------------------
 
 export const stopClusters: CircleLayerSpecification = {
-    id: 'clusters',
+    id: MAP_LAYERS.STOP_CLUSTERS,
     type: 'circle',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['has', 'point_count'],
     paint: {
         'circle-color': MAP_TOKENS.colors.blueCluster,
@@ -51,12 +111,12 @@ export const stopClusters: CircleLayerSpecification = {
 };
 
 export const stopPointsGlow: CircleLayerSpecification = {
-    id: 'unclustered-point-glow',
+    id: MAP_LAYERS.STOP_POINTS_GLOW,
     type: 'circle',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', LOCATION_TYPE, 2]
     ],
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
@@ -73,15 +133,15 @@ export const stopPointsGlow: CircleLayerSpecification = {
 };
 
 export const stopPoints: CircleLayerSpecification = {
-    id: 'unclustered-point',
+    id: MAP_LAYERS.STOP_POINTS,
     type: 'circle',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2],
+        ['!=', LOCATION_TYPE, 2],
         ['!', ['all',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-            ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
+            ['==', LOCATION_TYPE, 1],
+            ['>=', METRO_LINE_COUNT, 2]
         ]]
     ],
     paint: {
@@ -98,7 +158,7 @@ export const stopPoints: CircleLayerSpecification = {
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
         'circle-opacity': [
             'case',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
+            ['==', LOCATION_TYPE, 1],
             0.75, // More transparent for vibrant metro stations
             0.85  // Standard for others
         ],
@@ -107,12 +167,12 @@ export const stopPoints: CircleLayerSpecification = {
 };
 
 export const transferOuterPoints: CircleLayerSpecification = {
-    id: 'transfer-outer',
+    id: MAP_LAYERS.TRANSFER_OUTER,
     type: 'circle',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
-        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
+        ['==', LOCATION_TYPE, 1],
+        ['>=', METRO_LINE_COUNT, 2]
     ],
     minzoom: 10,
     paint: {
@@ -128,12 +188,12 @@ export const transferOuterPoints: CircleLayerSpecification = {
 };
 
 export const transferInnerPoints: CircleLayerSpecification = {
-    id: 'transfer-inner',
+    id: MAP_LAYERS.TRANSFER_INNER,
     type: 'circle',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
-        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1],
-        ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2]
+        ['==', LOCATION_TYPE, 1],
+        ['>=', METRO_LINE_COUNT, 2]
     ],
     minzoom: 10,
     paint: {
@@ -147,19 +207,19 @@ export const transferInnerPoints: CircleLayerSpecification = {
 };
 
 export const stopLabels: SymbolLayerSpecification = {
-    id: 'stop-labels',
+    id: MAP_LAYERS.STOP_LABELS,
     type: 'symbol',
-    source: 'stop-labels-centroids',
+    source: MAP_SOURCES.STOP_LABELS,
     filter: ['all',
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', LOCATION_TYPE, 2]
     ],
     minzoom: MAP_TOKENS.zoom.labels,
     layout: {
         'text-field': ['get', 'stop_name'],
-        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-font': MAP_FONT_STACK,
         'text-size': ['interpolate', ['linear'], ['zoom'],
-            10, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 10, 8],
-            16, ['match', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1, 14, 11]
+            10, ['match', LOCATION_TYPE, 1, 10, 8],
+            16, ['match', LOCATION_TYPE, 1, 14, 11]
         ],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
         'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 2.2, MAP_TOKENS.zoom.stops.max, 4.2],
@@ -170,7 +230,7 @@ export const stopLabels: SymbolLayerSpecification = {
         'text-allow-overlap': false,
         'text-ignore-placement': false,
         'symbol-sort-key': ['case',
-            ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 1], 1,
+            ['==', LOCATION_TYPE, 1], 1,
             ['==', ['get', 'is_train'], 1], 2,
             3
         ]
@@ -185,30 +245,30 @@ export const stopLabels: SymbolLayerSpecification = {
 
 // Merged layer for platform codes, bus icons, and train/metro icons
 export const stopIcons: SymbolLayerSpecification = {
-    id: 'stop-icons',
+    id: MAP_LAYERS.STOP_ICONS,
     type: 'symbol',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['!=', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['!=', LOCATION_TYPE, 2]
     ],
     minzoom: MAP_TOKENS.zoom.icons,
     layout: {
         'text-field': ['case', 
-            ['any', ['==', ['get', 'is_train'], 1], ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]], '',
+            IS_RAIL_STATION, '',
             ['has', 'platform_code'], ['get', 'platform_code'], 
             ''
         ],
-        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-font': MAP_FONT_STACK,
         'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 9, 18, 17],
         'text-anchor': 'center',
         'text-padding': 0,
         'text-allow-overlap': true,
         'text-ignore-placement': true,
         'icon-image': ['case',
-            ['any', ['==', ['get', 'is_train'], 1], ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]], 'train-icon',
+            IS_RAIL_STATION, MAP_ICONS.TRAIN_STATION,
             ['>', ['length', ['to-string', ['coalesce', ['get', 'platform_code'], '']]], 0], '',
-            'bus-icon'
+            MAP_ICONS.BUS_STOP
         ],
         'icon-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 0.09, MAP_TOKENS.zoom.stops.max, 0.28],
         'icon-allow-overlap': true,
@@ -226,17 +286,17 @@ export const stopIcons: SymbolLayerSpecification = {
 };
 
 export const stopEntrances: SymbolLayerSpecification = {
-    id: 'entrance-layer',
+    id: MAP_LAYERS.STOP_ENTRANCES,
     type: 'symbol',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     filter: ['all',
         ['!', ['has', 'point_count']],
-        ['==', ['to-number', ['coalesce', ['get', 'location_type'], 0]], 2]
+        ['==', LOCATION_TYPE, 2]
     ],
     minzoom: 15.5,
     layout: {
         'text-field': ['get', 'stop_name'],
-        'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+        'text-font': MAP_FONT_STACK,
         'text-size': ['interpolate', ['linear'], ['zoom'], 15.5, 8, 18, 10],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
         'text-radial-offset': 1.2,
@@ -257,17 +317,17 @@ export const stopEntrances: SymbolLayerSpecification = {
 };
 
 export const stopFavorites: SymbolLayerSpecification = {
-    id: 'favorite-star-layer',
+    id: MAP_LAYERS.STOP_FAVORITES,
     type: 'symbol',
-    source: 'city-stops',
+    source: MAP_SOURCES.STOPS,
     layout: {
-        'icon-image': 'favorite-star',
+        'icon-image': MAP_ICONS.FAVORITE_STAR,
         'icon-size': ['interpolate', ['linear'], ['zoom'],
             MAP_TOKENS.zoom.stops.min, 0.18,
             MAP_TOKENS.zoom.stops.max, 0.36
         ],
         'icon-offset': ['case',
-            ['>=', ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]], 2], ['literal', [45, -55]],
+            ['>=', METRO_LINE_COUNT, 2], ['literal', [45, -55]],
             ['literal', [35, -35]]
         ],
         'icon-allow-overlap': true,
@@ -289,51 +349,37 @@ export const getVehicleColorExpression = (colorVehiclesByDelay: boolean): Expres
     if (!colorVehiclesByDelay) {
         return ['get', 'route_color'] as ExpressionSpecification;
     }
-    return [
-        'case',
-        ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], '#4ade80', // Sage Green (null / default)
-        ['<=', ['to-number', ['get', 'delay']], -60], '#38bdf8', // Light Blue / Sky Blue (Ahead of time: >= 1 min early)
-        ['<=', ['to-number', ['get', 'delay']], 120], '#4ade80', // Sage Green (On time: -1 to +2 min)
-        ['<=', ['to-number', ['get', 'delay']], 300], '#fbbf24', // Warm Gold (2 to 5 min)
-        ['<=', ['to-number', ['get', 'delay']], 600], '#f87171', // Terracotta Coral (5 to 10 min)
-        '#6b21a8' // Deep Dark Radar Purple (> 10 min)
-    ] as ExpressionSpecification;
+    const unknownColor = DELAY_TIERS.filter(tier => tier.includesUnknown)[0].color;
+    const expression: unknown[] = ['case', ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], unknownColor];
+    for (const tier of DELAY_TIERS.slice(0, -1)) {
+        expression.push(['<=', ['to-number', ['get', 'delay']], tier.maxDelayS], tier.color);
+    }
+    expression.push(DELAY_TIERS[DELAY_TIERS.length - 1].color);
+    return expression as ExpressionSpecification;
 };
 
 export const getDelayFilterExpression = (delayFilter: string[]) => {
     if (!delayFilter || delayFilter.length === 0) {
         return null;
     }
-    const conditions = [];
-    if (delayFilter.includes('aheadOfTime')) {
-        conditions.push(['all', ['!=', ['get', 'delay'], null], ['<=', ['to-number', ['get', 'delay']], -60]]);
-    }
-    if (delayFilter.includes('onTime')) {
-        conditions.push([
-            'any',
-            ['!', ['has', 'delay']],
-            ['==', ['get', 'delay'], null],
-            ['all', ['>', ['to-number', ['coalesce', ['get', 'delay'], 0]], -60], ['<=', ['to-number', ['coalesce', ['get', 'delay'], 0]], 120]]
-        ]);
-    }
-    if (delayFilter.includes('moderate')) {
-        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 120], ['<=', ['to-number', ['get', 'delay']], 300]]);
-    }
-    if (delayFilter.includes('high')) {
-        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 300], ['<=', ['to-number', ['get', 'delay']], 600]]);
-    }
-    if (delayFilter.includes('severe')) {
-        conditions.push(['all', ['!=', ['get', 'delay'], null], ['>', ['to-number', ['get', 'delay']], 600]]);
-    }
+    const delay = ['to-number', ['get', 'delay']];
+    const conditions = DELAY_TIERS.flatMap((tier, i) => {
+        if (!delayFilter.includes(tier.key)) return [];
+        const bounds: unknown[] = [];
+        if (i > 0) bounds.push(['>', delay, DELAY_TIERS[i - 1].maxDelayS]);
+        if (Number.isFinite(tier.maxDelayS)) bounds.push(['<=', delay, tier.maxDelayS]);
+        const inBand = ['all', ['!=', ['get', 'delay'], null], ...bounds];
+        return [tier.includesUnknown ? ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null], inBand] : inBand];
+    });
     if (conditions.length === 0) {
         return null;
     }
     return ['any', ...conditions];
 };
 
-const createVehicleLayers = (sourceId: string, idPrefix: string, minzoom?: number) => {
+const createVehicleLayers = (sourceId: string, ids: { point: string; direction: string; label: string }, minzoom?: number) => {
     const point: CircleLayerSpecification = {
-        id: `${idPrefix}-point`,
+        id: ids.point,
         type: 'circle',
         source: sourceId,
         ...(minzoom !== undefined && { minzoom }),
@@ -347,12 +393,12 @@ const createVehicleLayers = (sourceId: string, idPrefix: string, minzoom?: numbe
     };
 
     const direction: SymbolLayerSpecification = {
-        id: `${idPrefix}-direction`,
+        id: ids.direction,
         type: 'symbol',
         source: sourceId,
         ...(minzoom !== undefined && { minzoom }),
         layout: {
-            'icon-image': 'v-arrow-centered',
+            'icon-image': MAP_ICONS.VEHICLE_ARROW,
             'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.2, 16, 0.4],
             'icon-rotate': ['to-number', ['coalesce', ['get', 'bearing'], 0]],
             'icon-rotation-alignment': 'map',
@@ -378,13 +424,13 @@ const createVehicleLayers = (sourceId: string, idPrefix: string, minzoom?: numbe
     };
 
     const label: SymbolLayerSpecification = {
-        id: `${idPrefix}-label`,
+        id: ids.label,
         type: 'symbol',
         source: sourceId,
         ...(minzoom !== undefined && { minzoom }),
         layout: {
             'text-field': ['to-string', ['coalesce', ['get', 'route_short_name'], '']],
-            'text-font': ['Montserrat Medium', 'Arial Unicode MS Regular'],
+            'text-font': MAP_FONT_STACK,
             'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 9, 16, 13],
             'text-allow-overlap': true,
             'text-ignore-placement': true,
@@ -402,14 +448,14 @@ const createVehicleLayers = (sourceId: string, idPrefix: string, minzoom?: numbe
     return { point, direction, label };
 };
 
-export const { point: vehicleSelectedPoint, direction: vehicleSelectedDirection, label: vehicleSelectedLabel } = createVehicleLayers('selected-vehicle', 'vehicle-selected');
-export const { point: vehiclePoints, direction: vehicleDirections, label: vehicleLabels } = createVehicleLayers('city-vehicles', 'vehicles', 10);
+export const { point: vehicleSelectedPoint, direction: vehicleSelectedDirection, label: vehicleSelectedLabel } = createVehicleLayers(MAP_SOURCES.SELECTED_VEHICLE, { point: MAP_LAYERS.SELECTED_VEHICLE_POINT, direction: MAP_LAYERS.SELECTED_VEHICLE_DIRECTION, label: MAP_LAYERS.SELECTED_VEHICLE_LABEL });
+export const { point: vehiclePoints, direction: vehicleDirections, label: vehicleLabels } = createVehicleLayers(MAP_SOURCES.VEHICLES, { point: MAP_LAYERS.VEHICLE_POINTS, direction: MAP_LAYERS.VEHICLE_DIRECTIONS, label: MAP_LAYERS.VEHICLE_LABELS }, 10);
 
 // Specific to selected vehicle
 export const vehicleSelectedPulse: CircleLayerSpecification = {
-    id: 'vehicle-selected-pulse',
+    id: MAP_LAYERS.SELECTED_VEHICLE_PULSE,
     type: 'circle',
-    source: 'selected-vehicle',
+    source: MAP_SOURCES.SELECTED_VEHICLE,
     paint: {
         'circle-radius': 0,
         'circle-opacity': 0,
@@ -422,9 +468,9 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 // -----------------------------------------------------------------------------
 
 export const routeLineCasing: LineLayerSpecification = {
-    id: 'route-line-casing',
+    id: MAP_LAYERS.ROUTE_LINE_CASING,
     type: 'line',
-    source: 'route-shape',
+    source: MAP_SOURCES.ROUTE_SHAPE,
     filter: ['==', ['geometry-type'], 'LineString'],
     layout: {
         'line-join': 'round',
@@ -438,9 +484,9 @@ export const routeLineCasing: LineLayerSpecification = {
 };
 
 export const routeLine: LineLayerSpecification = {
-    id: 'route-line',
+    id: MAP_LAYERS.ROUTE_LINE,
     type: 'line',
-    source: 'route-shape',
+    source: MAP_SOURCES.ROUTE_SHAPE,
     filter: ['==', ['geometry-type'], 'LineString'],
     layout: {
         'line-join': 'round',
@@ -461,7 +507,7 @@ const createRouteNodeLayer = (id: string, isTerminal: boolean): CircleLayerSpeci
     return {
         id,
         type: 'circle',
-        source: 'route-shape',
+        source: MAP_SOURCES.ROUTE_SHAPE,
         filter: ['all', 
             ['==', ['geometry-type'], 'Point'],
             ['==', ['get', 'is_terminal'], isTerminal]
@@ -479,17 +525,17 @@ const createRouteNodeLayer = (id: string, isTerminal: boolean): CircleLayerSpeci
     };
 };
 
-export const routeStops = createRouteNodeLayer('route-stops', false);
-export const routeTerminals = createRouteNodeLayer('route-terminals', true);
+export const routeStops = createRouteNodeLayer(MAP_LAYERS.ROUTE_STOPS, false);
+export const routeTerminals = createRouteNodeLayer(MAP_LAYERS.ROUTE_TERMINALS, true);
 
 // -----------------------------------------------------------------------------
 // USER LOCATION
 // -----------------------------------------------------------------------------
 
 export const userLocationPulse: CircleLayerSpecification = {
-    id: 'user-location-pulse',
+    id: MAP_LAYERS.USER_LOCATION_PULSE,
     type: 'circle',
-    source: 'user-location',
+    source: MAP_SOURCES.USER_LOCATION,
     paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 15, 15, 30],
         'circle-color': '#3b82f6',
@@ -498,13 +544,59 @@ export const userLocationPulse: CircleLayerSpecification = {
 };
 
 export const userLocationPoint: CircleLayerSpecification = {
-    id: 'user-location-point',
+    id: MAP_LAYERS.USER_LOCATION_POINT,
     type: 'circle',
-    source: 'user-location',
+    source: MAP_SOURCES.USER_LOCATION,
     paint: {
         'circle-radius': 7,
         'circle-color': '#3b82f6',
         'circle-stroke-width': 2,
         'circle-stroke-color': '#FFFFFF'
+    }
+};
+
+// -----------------------------------------------------------------------------
+// POINTS OF SALE
+// -----------------------------------------------------------------------------
+
+export const pointsOfSaleIcons: SymbolLayerSpecification = {
+    id: MAP_LAYERS.POINTS_OF_SALE,
+    type: 'symbol',
+    source: MAP_SOURCES.POINTS_OF_SALE,
+    minzoom: 16,
+    layout: {
+        'icon-image': [
+            'match',
+            ['get', 'type'],
+            'ticketMachine', MAP_ICONS.POS_MACHINE,
+            'informationCenter', MAP_ICONS.POS_INFO,
+            'ticketOfficeMetro', MAP_ICONS.POS_OFFICE,
+            'trainStation', MAP_ICONS.POS_OFFICE,
+            'carrierOffice', MAP_ICONS.POS_OFFICE,
+            MAP_ICONS.POS_MACHINE
+        ],
+        'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            16, 0.35,
+            18, 0.52
+        ],
+        'icon-allow-overlap': false,
+        'text-field': ['step', ['zoom'], '', 17.5, ['get', 'name']],
+        'text-font': MAP_FONT_STACK,
+        'text-size': ['interpolate', ['linear'], ['zoom'], 17.5, 9.5, 19, 11],
+        'text-offset': [0, 2.2],
+        'text-anchor': 'top',
+        'text-max-width': 7,
+        'text-letter-spacing': 0.1,
+        'text-optional': true,
+        'symbol-sort-key': 100
+    },
+    paint: {
+        'icon-opacity': 0.9,
+        'text-color': '#94a3b8',
+        'text-halo-color': '#0f172a',
+        'text-halo-width': 1.5
     }
 };

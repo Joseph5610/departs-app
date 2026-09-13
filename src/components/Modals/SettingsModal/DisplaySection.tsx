@@ -5,12 +5,6 @@ import {
     Eye,
     EyeOff,
     MapPin,
-    TrainFront as Subway,
-    Bus,
-    TramFront as Tram,
-    Train,
-    Ship,
-    CableCar,
     CircleSlash,
     Type,
     Map as MapIcon,
@@ -22,55 +16,52 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { Toggle } from '@/components/ui/toggle';
+import { IconToggle, type IconToggleProps } from '../../IconToggle';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
 import { cn } from '@/lib/utils';
 import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useCities } from '../../../hooks/data/useCities';
-import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { useCityConfig } from '../../../hooks/data/useCities';
+import { DELAY_TIERS, ROUTE_TYPE_ORDER, type DelayTierKey } from '../../../config/transit';
+import { ROUTE_TYPE_ICONS } from '../../routeTypeIcons';
 
-const vehicleTypes = [
-    { id: 'metro', icon: Subway },
-    { id: 'tram', icon: Tram },
-    { id: 'bus', icon: Bus },
-    { id: 'trolleybus', icon: Bus },
-    { id: 'train', icon: Train },
-    { id: 'ferry', icon: Ship },
-    { id: 'funicular', icon: CableCar }
-];
+const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));
 
-interface FilterButtonProps {
-    id?: string;
-    icon: React.ElementType;
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
-    variant?: 'primary' | 'amber';
-    testId?: string;
-}
+const DELAY_TIER_STYLES: Record<DelayTierKey, Pick<DelayFilterCardProps, 'accentClass' | 'activeBg' | 'activeBorder' | 'activeText'>> = {
+    aheadOfTime: {
+        accentClass: 'bg-sky-500 dark:bg-sky-400',
+        activeBg: 'bg-sky-500/10 dark:bg-sky-500/20',
+        activeBorder: 'border-sky-500/40 dark:border-sky-500/50',
+        activeText: 'text-sky-950 dark:text-sky-300',
+    },
+    onTime: {
+        accentClass: 'bg-emerald-600 dark:bg-emerald-400',
+        activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
+        activeBorder: 'border-emerald-500/40 dark:border-emerald-500/50',
+        activeText: 'text-emerald-950 dark:text-emerald-300',
+    },
+    moderate: {
+        accentClass: 'bg-amber-600 dark:bg-amber-400',
+        activeBg: 'bg-amber-500/10 dark:bg-amber-500/20',
+        activeBorder: 'border-amber-500/40 dark:border-amber-500/50',
+        activeText: 'text-amber-950 dark:text-amber-300',
+    },
+    high: {
+        accentClass: 'bg-rose-600 dark:bg-rose-400',
+        activeBg: 'bg-rose-500/10 dark:bg-rose-500/20',
+        activeBorder: 'border-rose-500/40 dark:border-rose-500/50',
+        activeText: 'text-rose-950 dark:text-rose-300',
+    },
+    severe: {
+        accentClass: 'bg-purple-700 dark:bg-purple-400',
+        activeBg: 'bg-purple-500/10 dark:bg-purple-950/40',
+        activeBorder: 'border-purple-500/40 dark:border-purple-500/50',
+        activeText: 'text-purple-950 dark:text-purple-200',
+    },
+};
 
-const FilterButton: React.FC<FilterButtonProps> = ({ icon: Icon, label, isActive, onClick, testId }) => (
-    <Toggle
-        pressed={isActive}
-        onPressedChange={onClick}
-        variant="outline"
-        data-testid={testId}
-        className={cn(
-            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl transition-[transform,colors] text-sm font-semibold active:scale-95 group",
-            // The border is border-border/80 so it's subtle but visible
-            "border-border/80 hover:bg-foreground/10 hover:text-foreground",
-            // Use highly specific overrides for the ON state to defeat shadcn's default bg-muted
-            "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
-            // Ensure OFF state doesn't look completely transparent if we don't want it to, or just leave it
-            "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70"
-        )}
-    >
-        <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
-        <span className="text-[10px] font-bold uppercase tracking-wider">
-            {label}
-        </span>
-    </Toggle>
+const FilterButton: React.FC<Omit<IconToggleProps, 'className' | 'labelClassName'>> = (props) => (
+    <IconToggle {...props} className="py-2.5 rounded-2xl text-sm" labelClassName="text-[10px] font-bold uppercase tracking-wider" />
 );
 
 interface DelayFilterCardProps {
@@ -200,12 +191,10 @@ export const DisplaySection: React.FC = () => {
         setDelayFilter,
     } = usePreferencesStore(s => s.actions);
 
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const { data: citiesData } = useCities();
-    const cityConfig = citiesData?.cities.find(c => c.slug === selectedCity) || FRONTEND_CITIES_CONFIG[selectedCity];
+    const cityConfig = useCityConfig();
 
-    const allowedVehicles = cityConfig?.filters?.vehicles || vehicleTypes.map(v => v.id);
-    const allowedStops = cityConfig?.filters?.stops || [];
+    const allowedVehicles = cityConfig.filters?.vehicles || vehicleTypes.map(v => v.id);
+    const allowedStops = cityConfig.filters?.stops || [];
     const isStopsFilterEnabled = allowedStops.length > 0;
 
     const toggleFilter = (filter: string[], setFilter: (val: string[]) => void, type: string) => {
@@ -304,7 +293,6 @@ export const DisplaySection: React.FC = () => {
                                 label={t('common.all')}
                                 isActive={routeTypeFilter.length === 0}
                                 onClick={() => setRouteTypeFilter([])}
-                                variant="amber"
                             />
                         </div>
                     </div>
@@ -329,55 +317,15 @@ export const DisplaySection: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
-                            <DelayFilterCard
-                                label={t('settings.colorVehiclesByDelay.aheadOfTime')}
-                                isActive={isDelayTierActive('aheadOfTime')}
-                                onClick={() => toggleDelayTier('aheadOfTime')}
-                                accentClass="bg-sky-500 dark:bg-sky-400"
-                                activeBg="bg-sky-500/10 dark:bg-sky-500/20"
-                                activeBorder="border-sky-500/40 dark:border-sky-500/50"
-                                activeText="text-sky-950 dark:text-sky-300"
-                            />
-
-                            <DelayFilterCard
-                                label={t('settings.colorVehiclesByDelay.onTime')}
-                                isActive={isDelayTierActive('onTime')}
-                                onClick={() => toggleDelayTier('onTime')}
-                                accentClass="bg-emerald-600 dark:bg-emerald-400"
-                                activeBg="bg-emerald-500/10 dark:bg-emerald-500/20"
-                                activeBorder="border-emerald-500/40 dark:border-emerald-500/50"
-                                activeText="text-emerald-950 dark:text-emerald-300"
-                            />
-
-                            <DelayFilterCard
-                                label={t('settings.colorVehiclesByDelay.moderate')}
-                                isActive={isDelayTierActive('moderate')}
-                                onClick={() => toggleDelayTier('moderate')}
-                                accentClass="bg-amber-600 dark:bg-amber-400"
-                                activeBg="bg-amber-500/10 dark:bg-amber-500/20"
-                                activeBorder="border-amber-500/40 dark:border-amber-500/50"
-                                activeText="text-amber-950 dark:text-amber-300"
-                            />
-
-                            <DelayFilterCard
-                                label={t('settings.colorVehiclesByDelay.high')}
-                                isActive={isDelayTierActive('high')}
-                                onClick={() => toggleDelayTier('high')}
-                                accentClass="bg-rose-600 dark:bg-rose-400"
-                                activeBg="bg-rose-500/10 dark:bg-rose-500/20"
-                                activeBorder="border-rose-500/40 dark:border-rose-500/50"
-                                activeText="text-rose-950 dark:text-rose-300"
-                            />
-
-                            <DelayFilterCard
-                                label={t('settings.colorVehiclesByDelay.severe')}
-                                isActive={isDelayTierActive('severe')}
-                                onClick={() => toggleDelayTier('severe')}
-                                accentClass="bg-purple-700 dark:bg-purple-400"
-                                activeBg="bg-purple-500/10 dark:bg-purple-950/40"
-                                activeBorder="border-purple-500/40 dark:border-purple-500/50"
-                                activeText="text-purple-950 dark:text-purple-200"
-                            />
+                            {DELAY_TIERS.map(({ key }) => (
+                                <DelayFilterCard
+                                    key={key}
+                                    label={t(`settings.colorVehiclesByDelay.${key}`)}
+                                    isActive={isDelayTierActive(key)}
+                                    onClick={() => toggleDelayTier(key)}
+                                    {...DELAY_TIER_STYLES[key]}
+                                />
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -447,7 +395,7 @@ export const DisplaySection: React.FC = () => {
                         <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
                             {allowedStops.includes('metro') && (
                                 <FilterButton
-                                    icon={Subway}
+                                    icon={ROUTE_TYPE_ICONS.metro}
                                     label={t('settings.vehicleTypes.metro')}
                                     isActive={stopTypeFilter.includes('metro')}
                                     onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'metro')}
@@ -456,7 +404,7 @@ export const DisplaySection: React.FC = () => {
 
                             {allowedStops.includes('train') && (
                                 <FilterButton
-                                    icon={Train}
+                                    icon={ROUTE_TYPE_ICONS.train}
                                     label={t('settings.vehicleTypes.train')}
                                     isActive={stopTypeFilter.includes('train')}
                                     onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'train')}
@@ -468,7 +416,6 @@ export const DisplaySection: React.FC = () => {
                                 label={t('common.all')}
                                 isActive={stopTypeFilter.length === 0}
                                 onClick={() => setStopTypeFilter([])}
-                                variant="amber"
                             />
                             <div className="hidden sm:block" />
                         </div>
@@ -476,7 +423,7 @@ export const DisplaySection: React.FC = () => {
                 )}
             </ToggleSection>
 
-            {cityConfig?.hasPointsOfSale && (
+            {cityConfig.hasPointsOfSale && (
                 <Card variant="subtle" size="none" className="mt-3">
                     <Item
                         variant="settings"

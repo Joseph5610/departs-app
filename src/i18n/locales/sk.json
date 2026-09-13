@@ -3,10 +3,15 @@
     "all": "Všetko",
     "linkCopied": "Odkaz bol skopírovaný do schránky",
     "copyError": "Odkaz sa nepodarilo skopírovať",
+    "copyFailed": "Nepodarilo sa skopírovať do schránky",
     "retry": "Skúsiť znova",
     "loading": "Načítava sa...",
     "share": "Zdieľať",
-    "cancel": "Zrušiť"
+    "cancel": "Zrušiť",
+    "close": "Zavrieť",
+    "moreOptions": "Ďalšie možnosti",
+    "beta": "Beta",
+    "back": "Späť"
   },
   "search": {
     "placeholder": "Hľadať zastávky, adresy, linky...",
@@ -32,7 +37,6 @@
     "dataSource": "Zdroj dát",
     "theme": {
       "title": "Vzhľad",
-      "description": "Svetlý alebo tmavý režim",
       "system": "Systém",
       "light": "Svetlý",
       "dark": "Tmavý"
@@ -82,36 +86,24 @@
     },
     "viewSource": "Zdrojový kód na GitHube",
     "license": "Dáta PID, KORDIS JMK a DPMP (CC BY 4.0)",
-    "version": "Verzia {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
       "check": "Skontrolovať aktualizácie",
       "checking": "Kontrola aktualizácií...",
-      "upToDate": "Máte aktuálnu verziu!",
-      "available": "Nová verzia je k dispozícii!"
+      "upToDate": "Máte aktuálnu verziu!"
     },
     "clearHistory": {
       "button": "Vymazať históriu hľadania",
       "success": "História vymazaná"
     },
-    "lastStopUpdate": "Databáza zastávok aktualizovaná: {{date}}"
+    "lastStopUpdate": "Databáza zastávok aktualizovaná: {{date}}",
+    "sourceBadge": "Zdroj"
   },
   "welcome": {
     "title": "Vitajte v departs.app",
     "description": "Najrýchlejší spôsob, ako sledovať odchody a polohu vašich spojov v reálnom čase.",
     "chooseCity": "Vyberte región",
-    "steps": {
-      "clickStop": {
-        "title": "Kliknite na zastávku",
-        "description": "Zobrazte si najbližšie odchody s informáciami o meškaní."
-      },
-      "trackVehicles": {
-        "title": "Sledujte vozidlá",
-        "description": "Na mape vidíte vozidlá pohybujúce sa v reálnom čase."
-      }
-    },
-    "cta": "Začíname",
-    "beta": "Beta"
+    "cta": "Začíname"
   },
   "map": {
     "regions": {
@@ -131,7 +123,6 @@
       "switchedCity": "Prepnuté na {{city}}"
     },
     "vehicleDetails": {
-      "fetching": "Načítavajú sa podrobnosti...",
       "previousTrip": "Spoj zatiaľ nevyšiel",
       "previousTripDescription": "Vozidlo ešte nezačalo tento spoj. Sledovanie polohy bude aktívne po výjazde.",
       "beforeTrackDelayed": "Očakávané meškanie pri výjazde",
@@ -150,31 +141,23 @@
       "earlyLabel": "Vpred {{minutes}} min",
       "routeSchedule": "Trasa spoja",
       "viewStopDepartures": "Zobraziť odchody pre {{stopName}}",
-      "vehicleId": "ID vozidla",
-      "status": "Stav",
-      "inTransit": "Na ceste",
       "notAvailable": "N/A",
       "lineLabel": "Linka {{line}}",
-      "operator": "{{operator}} • ",
-      "vehicle": "Vozidlo",
       "ac": "Klíma",
       "runNumber": "Obeh",
       "enrichedTooltip": "Tieto dáta sa aktualizujú v reálnom čase priamo z vozidla (Live Stream).",
       "connectingTooltip": "Čakáme na spojenie s vozidlom (Live Stream). Zatiaľ zobrazujeme štandardné dáta z dispečingu.",
       "standardTooltip": "Tieto dáta sa aktualizujú v reálnom čase (Standard).",
       "liveDataAge": "pred {{seconds}}s",
-      "currentStop": "Aktuálna / Posledná prejdená",
-      "nextStop": "Nasledujúca zastávka",
       "showPastStops": "Zobraziť prejdené",
       "hidePastStops": "Skryť prejdené",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
       "shareText": "Sledujte polohu spoja linky {{line}} naživo na departs.app",
-      "zone": "Pásmo",
-      "requestStop": "Zastávka na znamenie"
+      "requestStop": "Zastávka na znamenie",
+      "track": "Sledovať vozidlo"
     },
     "departures": {
-      "upcoming": "Najbližšie odchody",
       "noUpcoming": "Nenašli sa žiadne najbližšie odchody.",
       "noUpcomingDescription": "Skúste to neskôr alebo si pozrite oficiálny cestovný poriadok.",
       "noUpcomingForLine": "Pre linku {{line}} sa nenašli žiadne odchody.",
@@ -184,13 +167,10 @@
         "title": "Metro v noci nepremáva",
         "description": "Využite nočné električky a autobusy, ktoré zabezpečujú dopravu až do ranných hodín."
       },
-      "delay": "+{{minutes}}min meškanie",
       "moreConnections_one": "{{count}} ďalší spoj",
       "moreConnections_few": "{{count}} ďalšie spoje",
       "moreConnections_other": "{{count}} ďalších spojov",
       "showLess": "Zobraziť menej",
-      "showAirConditioned": "Len vozidlá s klímou",
-      "showAll": "Všetky vozidlá",
       "now": "Teraz",
       "minutes": "{{count}} min",
       "platform": "Nástupište / Koľaj",
@@ -208,25 +188,13 @@
       "openInMaps": "Otvoriť Mapy",
       "officialBoard": "Virtuálna tabuľa",
       "atStop": "Ste na zastávke",
-      "catchStatus": {
-        "success": "Stihneš to",
-        "warning": "Možno stihneš",
-        "error": "Nestihneš"
-      },
-      "catchStatusCompact": {
-        "success": "Stihneš",
-        "warning": "Možno",
-        "error": "Nestihneš"
-      },
       "addToFavorites": "Pridať do obľúbených",
       "removeFromFavorites": "Odobrať z obľúbených"
     }
   },
   "update": {
     "newVersion": "Nová verzia je k dispozícii!",
-    "pwaPrompt": "Získajte aplikáciu",
     "updateNow": "Aktualizujte pre najnovšie funkcie.",
-    "addToHome": "Pridajte si aplikáciu na plochu pre rýchly prístup.",
     "updateButton": "Aktualizovať"
   },
   "liveStatus": {
@@ -254,38 +222,30 @@
     "justNow": "práve teraz",
     "status": "Stav",
     "statusOk": "V poriadku",
-    "statusStale": "Neaktuálne",
-    "statusError": "Chyba",
     "statusOkDesc": "Všetky integrácie sú v poriadku. Živé súradnice sa aktualizujú normálne.",
     "statusStaleDesc": "API server je online, ale v poslednom čase neprišli žiadne nové súradnice.",
     "statusErrorDesc": "Pri sťahovaní alebo spracovaní dát o doprave nastala chyba.",
     "upstreamErrorDesc": "API dopravného podniku je momentálne nedostupné alebo vracia chyby.",
     "offlineDesc": "Skontrolujte, prosím, svoje pripojenie k sieti. Nie je možné sa pripojiť k serverom dopravy.",
-    "refreshingDesc": "Sťahovanie najnovších polôh vozidiel..."
+    "refreshingDesc": "Sťahovanie najnovších polôh vozidiel...",
+    "filtered": "Filtrované"
   },
   "toasts": {
     "geoNotSupported": "Váš prehliadač nepodporuje geolokáciu.",
     "geoError": "Polohu sa nepodarilo získať. Skontrolujte, prosím, oprávnenia prehliadača.",
-    "geoSearching": "Hľadám vašu polohu...",
     "vehicleNotFound": "Vozidlo sa nenašlo. Pravdepodobne ešte nevyšlo.",
     "favoritesLimitReached": "Dosiahnutý maximálny limit 20 obľúbených zastávok."
   },
   "alerts": {
     "title": "Mimoriadnosti a výluky",
-    "incident": "Mimoriadnosť",
-    "exclusionPlanned": "Plánovaná výluka",
-    "exclusionActive": "Aktívna výluka",
     "incidents": "Mimoriadnosti",
     "exclusions": "Výluky",
     "noAlerts": "Žiadne aktuálne upozornenia",
     "noAlertsDescription": "Všetky spoje premávajú podľa plánu a bez hlásených obmedzení.",
     "noAlertsSearchDescription": "Žiadne hlásené upozornenia nezodpovedajú zadanému vyhľadávaniu.",
-    "error": "Chyba pri načítaní upozornení",
     "moreInfo": "Viac informácií",
     "all": "Všetko",
-    "live": "Naživo",
     "planned": "Plánované",
-    "active": "Práve prebieha",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolania",
     "showMore": "Zobraziť ďalšie (+{{count}})",
@@ -322,7 +282,16 @@
     "timeout": "Požiadavka vypršala",
     "upstream": "Zdroj dát je momentálne nedostupný",
     "notFoundTitle": "Zastávka sa nenašla",
-    "notFound": "Táto zastávka neexistuje alebo už neobsluhuje žiadne spoje."
+    "notFound": "Táto zastávka neexistuje alebo už neobsluhuje žiadne spoje.",
+    "crash": {
+      "title": "Ups, niečo sa pokazilo",
+      "description": "Aplikácia narazila na neočakávanú chybu. Skúste ju obnoviť.",
+      "refresh": "Obnoviť aplikáciu",
+      "send": "Odoslať hlásenie o chybe",
+      "sending": "Odosielanie hlásenia…",
+      "sent": "Hlásenie odoslané. Ďakujeme.",
+      "sendFailed": "Hlásenie sa nepodarilo odoslať. Skúste to o chvíľu znova."
+    }
   },
   "favorites": {
     "title": "Obľúbené zastávky",
@@ -344,55 +313,14 @@
     "diagnosticsDesc": "Pomôže mi to rýchlejšie nájsť chybu (verzia prehliadača, otvorená zastávka atď.)",
     "submit": "Odoslať",
     "success": "Ďakujeme za spätnú väzbu!",
-    "errorTurnstile": "Prosím, overte, že ste človek."
-  },
-  "journey": {
-    "tabs": {
-      "stops": "Zastávky",
-      "journey": "Spojenie"
+    "errorTurnstile": "Prosím, overte, že ste človek.",
+    "error": "Spätnú väzbu sa nepodarilo odoslať. Skúste to prosím znova.",
+    "validation": {
+      "messageTooShort": "Napíšte aspoň {{count}} znakov.",
+      "messageTooLong": "Skráťte správu pod {{count}} znakov.",
+      "invalidEmail": "Zadajte platnú e-mailovú adresu."
     },
-    "search": {
-      "from": "Odkiaľ",
-      "to": "Kam",
-      "fromPlaceholder": "Zastávka, adresa alebo miesto odchodu",
-      "toPlaceholder": "Zastávka, adresa alebo miesto príchodu",
-      "swap": "Vymeniť odkiaľ a kam",
-      "departAt": "Odchod o",
-      "arriveBy": "Príchod o",
-      "now": "Teraz",
-      "search": "Hľadať spojenie",
-      "noOrigin": "Zadajte východiskové miesto",
-      "noDestination": "Zadajte cieľ cesty"
-    },
-    "result": {
-      "noResults": "Pre zadaný čas a trasu sa nenašlo žiadne spojenie.",
-      "error": "Výsledky hľadania sa nepodarilo načítať.",
-      "duration": "{{minutes}} min",
-      "transfers_zero": "Priame",
-      "transfers_one": "1 prestup",
-      "transfers_few": "{{count}} prestupy",
-      "transfers_other": "{{count}} prestupov",
-      "transfer": "Čakanie / Prestup",
-      "walk": "{{minutes}} min pešo",
-      "departure": "Odchod",
-      "arrival": "Príchod",
-      "platform": "Nástupište {{code}}"
-    },
-    "leg": {
-      "transit": "Ísť linkou {{line}} smer {{headsign}}",
-      "walk": "Ísť pešo {{minutes}} min ({{distance}} m)",
-      "rideStops_one": "Ísť 1 zastávku",
-      "rideStops_other": "Ísť {{count}} zastávky",
-      "boardAt": "Nastúpiť na {{stop}}",
-      "alightAt": "Vystúpiť na {{stop}}",
-      "openDepartureBoard": "Otvoriť odchodovú tabuľu"
-    },
-    "header": {
-      "results": "Výsledky hľadania spojenia",
-      "detail": "Detail spojenia",
-      "earlier": "Skôr",
-      "later": "Neskôr"
-    }
+    "unavailable": "Spätnú väzbu teraz nie je možné odoslať. Skúste to prosím neskôr."
   },
   "stats": {
     "movementState": "Stav pohybu",
@@ -400,7 +328,6 @@
     "atStop": "Na zastávke",
     "offTrack": "Mimo trasy",
     "unknownState": "Neznámy stav",
-    "unknownDelay": "Neznáme",
     "vehicles": "vozidiel",
     "vehicleMix": "Zloženie dopravy",
     "otherData": "Ďalšie údaje",
@@ -428,19 +355,15 @@
     "monitor": {
       "overview": "Prehľad",
       "vehicles": "Zoznam vozidiel",
-      "searchPlaceholder": "Hľadať podľa linky (58), ev. č. (6978), modelu...",
-      "allModes": "Všetko",
-      "sortLine": "Číslo linky",
-      "sortReg": "Evidenčné číslo",
-      "sortDelay": "Meškanie",
-      "sortTime": "Čas aktualizácie",
       "showingCount": "Zobrazených {{count}} z {{total}} vozidiel",
       "noVehiclesFound": "Žiadne vozidlá nezodpovedajú zadaným filtrom.",
       "fieldLine": "Linka",
       "fieldVehicle": "Ev. č.",
       "searchByLine": "Číslo linky...",
       "searchByVehicle": "Ev. číslo..."
-    }
+    },
+    "minutesValue": "{{value}} min",
+    "hoursValue": "+{{value}} h"
   },
   "mcp": {
     "title": "AI Integrácie",
@@ -451,9 +374,6 @@
     "copy": "Kopírovať",
     "copied": "Skopírované!",
     "copyUrl": "Kopírovať URL MCP",
-    "copySuccess": "URL adresa MCP servera skopírovaná do schránky!",
-    "copyCommandSuccess": "Príkaz skopírovaný do schránky!",
-    "copyConfigSuccess": "Konfigurácia JSON skopírovaná do schránky!",
     "learnMore": "Návod na nastavenie",
     "endpointLabel": "URL adresa Remote MCP endpointu:",
     "claudeCodeTitle": "Claude Code CLI",
@@ -461,7 +381,8 @@
     "claudeDesktopStep1": "Otvorte Nastavenia → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Zadajte Názov: departs",
     "claudeDesktopStep3": "Zadajte Remote URL: https://departs.app/mcp",
-    "cursorTitle": "AI IDE a editory"
+    "cursorTitle": "AI IDE a editory",
+    "dismissBanner": "Skryť banner"
   },
   "pos": {
     "title": "Predajné miesto",

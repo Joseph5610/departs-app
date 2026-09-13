@@ -9,14 +9,15 @@ import { apiFetch } from '@/lib/api-client';
 
 import { Badge } from '@/components/ui/badge';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon, Copy, Terminal, ArrowLeft } from 'lucide-react';
+import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon, Check, Copy, Terminal, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AdminLayout } from '../AdminLayout';
-import { toast } from 'sonner';
+import { buildAgentPrompt } from './agentPrompt';
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 
 export const AdminFeedback: React.FC = () => {
     const [filterText, setFilterText] = useState('');
@@ -62,6 +63,7 @@ export const AdminFeedback: React.FC = () => {
     const activeItemId = selectedItem?.id || null;
 
     const isDark = document.documentElement.classList.contains('dark');
+    const { copiedKey, copy } = useCopyToClipboard();
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -73,59 +75,11 @@ export const AdminFeedback: React.FC = () => {
     };
 
     const handleCopyRawJson = () => {
-        if (!selectedItem) return;
-        navigator.clipboard.writeText(JSON.stringify(selectedItem, null, 2))
-            .then(() => toast.success('Raw JSON copied to clipboard'))
-            .catch(() => toast.error('Failed to copy to clipboard'));
+        if (selectedItem) copy(JSON.stringify(selectedItem, null, 2), 'json');
     };
 
     const handleCopyAgentPrompt = () => {
-        if (!selectedItem) return;
-        
-        let crashBlock = '';
-        if (selectedItem.type === 'crash' && selectedItem.diagnostics?.crashInfo) {
-            crashBlock = `
-## Crash Trace & Diagnostics
-**Error Message:** \`${selectedItem.diagnostics.crashInfo.errorMessage || selectedItem.message}\`
-**Error Name:** \`${selectedItem.diagnostics.crashInfo.errorName || 'Error'}\`
-
-### Error Stack
-\`\`\`
-${selectedItem.diagnostics.crashInfo.errorStack || 'N/A'}
-\`\`\`
-
-### Component Stack
-\`\`\`
-${selectedItem.diagnostics.crashInfo.componentStack || 'N/A'}
-\`\`\`
-`;
-        }
-
-        const promptText = `I encountered a bug/crash in the application. Please investigate and fix this issue:
-
-### Description / Feedback Message
-> ${selectedItem.message}
-
-${crashBlock}
-### App Context
-- **URL / Path:** \`${selectedItem.diagnostics?.url || 'N/A'}\`
-- **Selected City:** \`${selectedItem.diagnostics?.selectedCity || 'N/A'}\`
-- **Locale:** \`${selectedItem.diagnostics?.locale || 'N/A'}\`
-- **PWA Mode:** \`${selectedItem.diagnostics?.isPwa ? 'Yes' : 'No'}\`
-- **User Agent:** \`${selectedItem.diagnostics?.userAgent || 'N/A'}\`
-- **Feedback ID:** \`${selectedItem.id}\`
-- **Time of Occurrence:** ${new Date(selectedItem.timestamp).toLocaleString()}
-
-### Full Diagnostic Payload
-\`\`\`json
-${JSON.stringify(selectedItem.diagnostics || {}, null, 2)}
-\`\`\`
-
-Please locate the source code files mentioned in the stack traces above, diagnose the root cause (e.g. unexpected null/undefined values or unhandled exceptions), and implement a robust fix.`;
-
-        navigator.clipboard.writeText(promptText)
-            .then(() => toast.success('Agent prompt template copied to clipboard!'))
-            .catch(() => toast.error('Failed to copy prompt'));
+        if (selectedItem) copy(buildAgentPrompt(selectedItem), 'prompt');
     };
 
     const headerActions = (
@@ -281,8 +235,8 @@ Please locate the source code files mentioned in the stack traces above, diagnos
                                             onClick={handleCopyRawJson} 
                                             className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer flex-1 sm:flex-none"
                                         >
-                                            <Copy className="w-3.5 h-3.5" />
-                                            Copy Raw JSON
+                                            {copiedKey === 'json' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                            {copiedKey === 'json' ? 'Copied' : 'Copy Raw JSON'}
                                         </Button>
                                         <Button 
                                             variant="default" 
@@ -290,8 +244,8 @@ Please locate the source code files mentioned in the stack traces above, diagnos
                                             onClick={handleCopyAgentPrompt} 
                                             className="h-8 px-3 rounded-lg text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all cursor-pointer flex-1 sm:flex-none"
                                         >
-                                            <Terminal className="w-3.5 h-3.5" />
-                                            Copy Agent Prompt
+                                            {copiedKey === 'prompt' ? <Check className="w-3.5 h-3.5" /> : <Terminal className="w-3.5 h-3.5" />}
+                                            {copiedKey === 'prompt' ? 'Copied' : 'Copy Agent Prompt'}
                                         </Button>
                                     </div>
                                 </div>

@@ -118,7 +118,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
                                         "normal-case font-medium",
                                         cause ? "text-foreground/50 ml-1.5 border-l border-border/50 pl-1.5" : "text-foreground/80"
                                     )}>
-                                        {i18n.language.startsWith('en') && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
+                                        {i18n.resolvedLanguage === 'en' && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
                                     </span>
                                 )}
                             </div>

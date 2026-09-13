@@ -1,6 +1,7 @@
 import { FRONTEND_CITIES_CONFIG, FALLBACK_CITY_CONFIG } from '../config/cities';
 import { useGeolocationStore } from '../state/geolocationStore';
 import { usePreferencesStore } from '../state/preferencesStore';
+import { MAP_CAMERA } from '../config/constants';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -25,8 +26,7 @@ export const getInitialViewState = () => {
     // Default values
     let lat = defaultCity.center[1];
     let lng = defaultCity.center[0];
-    let z = 12; // default overview zoom
-    const userZoom = 16; // default zoom for user locations
+    let z = MAP_CAMERA.CITY_OVERVIEW_ZOOM;
 
     // Try to get from persisted geolocation store if no URL params are present
     if (typeof window !== 'undefined' && !p.has('lat') && !p.has('lng')) {
@@ -41,7 +41,7 @@ export const getInitialViewState = () => {
             if (isInsideCity) {
                 lat = sLat;
                 lng = sLng;
-                z = userZoom;
+                z = MAP_CAMERA.USER_LOCATION_ZOOM;
             }
         }
     }
@@ -88,3 +88,10 @@ export const snapBoundsToTiles = (
     return [tileYToLat(maxY, n), tileXToLon(minX, n), tileYToLat(minY, n), tileXToLon(maxX, n)];
 };
 
+
+/** Camera move to a city's overview, for opening or switching a city. */
+export const cityOverviewCamera = (center: [number, number]) => ({
+    center,
+    zoom: MAP_CAMERA.CITY_OVERVIEW_ZOOM,
+    duration: MAP_CAMERA.ANIMATION_MS,
+});

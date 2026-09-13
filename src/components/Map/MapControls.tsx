@@ -1,25 +1,27 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3 } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../lib/routes';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useUiStore } from '../../state/uiStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { cn } from '@/lib/utils';
-import { useGeolocation } from '../../hooks/features/useGeolocation';
+import { useLocate } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 import { useRouteParams } from '../../hooks/useRouteParams';
+import { MAP_CAMERA } from '../../config/constants';
 
 export const MapControls = React.memo(() => {
     const { t } = useTranslation();
 
     // Preferences Actions
-    const { setIsSettingsOpen, setIsAlertsOpen } = usePreferencesStore(s => s.actions);
+    const { setIsSettingsOpen, setIsAlertsOpen } = useUiStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const isFiltered = usePreferencesStore(
         s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
@@ -33,7 +35,7 @@ export const MapControls = React.memo(() => {
 
     // Geolocation Store
     const isGeoPending = useGeolocationStore(s => s.isGeoPending);
-    const { handleLocate: onLocate } = useGeolocation();
+    const onLocate = useLocate();
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
@@ -49,11 +51,11 @@ export const MapControls = React.memo(() => {
     }, [setIsAlertsOpen]);
 
     const onStats = React.useCallback(() => {
-        navigate(isStatsRoute ? `/${selectedCity}` : `/${selectedCity}/stats`);
+        navigate(isStatsRoute ? paths.city(selectedCity) : paths.stats(selectedCity));
     }, [isStatsRoute, selectedCity]);
 
     const onToggleFavorites = React.useCallback(() => {
-        navigate(isFavoritesRoute ? `/${selectedCity}` : `/${selectedCity}/favorites`);
+        navigate(isFavoritesRoute ? paths.city(selectedCity) : paths.favorites(selectedCity));
     }, [isFavoritesRoute, selectedCity]);
 
 
@@ -69,7 +71,7 @@ export const MapControls = React.memo(() => {
     const onResetBearing = React.useCallback(() => {
         easeTo({
             bearing: 0,
-            duration: 1000,
+            duration: MAP_CAMERA.EASE_MS,
             pitch: 0
         });
     }, [easeTo]);
@@ -104,7 +106,6 @@ export const MapControls = React.memo(() => {
                     onClick={(e) => onLocate(e)}
                     title={t('map.controls.myLocation')}
                     testId="map-locate-btn"
-                    className="shadow-sm"
                 >
                     <LocateFixed
                         size={20}
@@ -118,7 +119,8 @@ export const MapControls = React.memo(() => {
 
                 {/* Settings / Favorites Pill */}
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
-                    <PillButton
+                    <ControlButton
+                        inPill
                         onClick={onSettings}
                         title={t('map.controls.settings')}
                         testId="map-settings-btn"
@@ -127,11 +129,12 @@ export const MapControls = React.memo(() => {
                         {isFiltered && (
                             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_var(--color-purple-500)] pointer-events-none" />
                         )}
-                    </PillButton>
+                    </ControlButton>
                     {hasAlerts && (
                         <>
                             <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                            <PillButton
+                            <ControlButton
+                                inPill
                                 onClick={onAlerts}
                                 title={t('alerts.title')}
                                 testId="map-alerts-btn"
@@ -142,11 +145,12 @@ export const MapControls = React.memo(() => {
                                         {incidentsCount}
                                     </span>
                                 )}
-                            </PillButton>
+                            </ControlButton>
                         </>
                     )}
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                    <PillButton
+                    <ControlButton
+                        inPill
                         onClick={onToggleFavorites}
                         title={t('favorites.title')}
                         testId="map-favorites-btn"
@@ -158,9 +162,10 @@ export const MapControls = React.memo(() => {
                                 isFavoritesRoute ? "fill-primary text-primary" : "transition-transform hover:scale-110"
                             )}
                          />
-                    </PillButton>
+                    </ControlButton>
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                    <PillButton
+                    <ControlButton
+                        inPill
                         onClick={onStats}
                         title={t('stats.title')}
                         testId="map-stats-btn"
@@ -172,24 +177,26 @@ export const MapControls = React.memo(() => {
                                 isStatsRoute ? "text-primary" : "transition-transform hover:scale-110"
                             )}
                         />
-                    </PillButton>
+                    </ControlButton>
                 </ButtonGroup>
 
                 {/* Zoom Pill */}
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
-                    <PillButton
+                    <ControlButton
+                        inPill
                         onClick={onZoomIn}
                         title={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} strokeWidth={1.5} />
-                    </PillButton>
+                    </ControlButton>
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
-                    <PillButton
+                    <ControlButton
+                        inPill
                         onClick={onZoomOut}
                         title={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} strokeWidth={1.5} />
-                    </PillButton>
+                    </ControlButton>
                 </ButtonGroup>
 
                 {/* Compass Button */}
@@ -197,7 +204,6 @@ export const MapControls = React.memo(() => {
                     <ControlButton
                         onClick={onResetBearing}
                         title={t('map.controls.resetBearing')}
-                        className="shadow-sm"
                     >
                         <Compass size={20} strokeWidth={1.5} className="transition-transform" />
                     </ControlButton>
@@ -207,18 +213,24 @@ export const MapControls = React.memo(() => {
     );
 });
 
-const ControlButton = ({ children, onClick, title, testId, className }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string, className?: string }) => (
+interface ControlButtonProps {
+    children: React.ReactNode;
+    onClick: (e: React.MouseEvent) => void;
+    title: string;
+    testId?: string;
+    /** Borderless segment inside a ButtonGroup pill instead of a standalone round button. */
+    inPill?: boolean;
+}
+
+const ControlButton = ({ children, onClick, title, testId, inPill = false }: ControlButtonProps) => (
     <Tooltip>
         <TooltipTrigger render={
             <Button
-                variant="tinted"
+                variant={inPill ? 'ghost' : 'tinted'}
                 size="icon"
                 onClick={onClick}
                 aria-label={title}
-                className={cn(
-                    "shrink-0",
-                    className
-                )}
+                className={inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0 shadow-sm"}
                 data-testid={testId}
             >
                 {children}
@@ -231,28 +243,6 @@ const ControlButton = ({ children, onClick, title, testId, className }: { childr
 );
 
 ControlButton.displayName = 'ControlButton';
-
-const PillButton = ({ children, onClick, title, testId, className }: { children: React.ReactNode, onClick: (e: React.MouseEvent) => void, title: string, testId?: string, className?: string }) => (
-    <Tooltip>
-        <TooltipTrigger render={
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClick}
-                aria-label={title}
-                className={cn("relative rounded-none shrink-0 h-11 w-11", className)}
-                data-testid={testId}
-            >
-                {children}
-            </Button>
-        } />
-        <TooltipContent side="left" sideOffset={8}>
-            <p className="font-medium text-xs">{title}</p>
-        </TooltipContent>
-    </Tooltip>
-);
-
-PillButton.displayName = 'PillButton';
 
 
 MapControls.displayName = 'MapControls';

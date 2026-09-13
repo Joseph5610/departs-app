@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { TFunction } from 'i18next';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { useSelectedStop } from './useSelectedStop';
 import { calculateDistance } from '../../utils/transitUtils';
@@ -32,6 +33,14 @@ export const getStopDistanceInfo = (
         isAtStop,
         isReasonableWalkingDistance: distance < MAX_REASONABLE_WALKING_DISTANCE
     };
+};
+
+/** "At the stop", walking distance with minutes when nearby, otherwise the plain distance. */
+export const formatStopDistance = (info: StopDistanceInfo, t: TFunction): string => {
+    if (info.isAtStop) return t('map.departures.atStop');
+    if (info.isReasonableWalkingDistance) return t('map.departures.distance', { distance: info.distance, count: info.time });
+    if (info.distance >= 1000) return t('map.departures.kilometers', { distance: (info.distance / 1000).toFixed(1) });
+    return t('map.departures.meters', { distance: info.distance });
 };
 
 /**

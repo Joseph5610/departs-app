@@ -1,4 +1,4 @@
-import { feedbackPayloadSchema } from "../../src/types/feedback";
+import { feedbackPayloadSchema } from "../_core/feedback-schemas";
 import { createErrorResponse } from "../_core/api-utils";
 import { ERROR_MESSAGES } from "../_core/config";
 import type { Env } from "../_core/types";

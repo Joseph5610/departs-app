@@ -4,6 +4,35 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.69.3] - 2026-09-12
+
+### Security
+
+- The site sends a Content-Security-Policy in report-only mode.
+- The last known location is kept on the device rounded to about 100 m, and feedback reports no longer include the map position.
+- Line colours, place search results, points of sale and the Brno live-delay stream are validated before use.
+
+### Fixed
+
+- Links to a stop or trip whose ID contains `%` no longer crash the app.
+- Stats show "No data" for an empty view instead of `NaN%`, and punctuality shares add up to 100% when some vehicles report no delay.
+- Feedback and crash reports record the open stop or vehicle instead of the line filter.
+- The feedback form now shows why a message can't be sent yet, in the user's language.
+- The error screen, button labels and remaining hardcoded texts are translated, and numbers and weekday names follow the selected language.
+- Clicking a vehicle's direction arrow or a station icon on the map now opens it.
+- A vehicle at the end of its route shows its line as travelled instead of entirely upcoming.
+- Line search no longer treats stop names such as "Anděl, Budějovická" as line numbers.
+- A damaged saved-settings entry on the device falls back to defaults instead of breaking the app.
+- Picking the same place twice no longer duplicates it in recent searches.
+- Copy buttons in the AI integration panel report when copying fails instead of always showing success.
+
+### Changed
+
+- Faster startup and smoother map: dialogs and the stats panel load on first use, and the map redraws vehicles only when they actually move.
+- Place search waits for a pause in typing, the Brno live-delay stream pauses in background tabs, and outdated cached stop data is removed from the device.
+- Transport modes are listed in one order everywhere (metro, train, tram, trolleybus, bus), and the map centres the selected vehicle exactly in the area beside the sidebar.
+- Frontend and backend no longer import from each other: the frontend has its own city and stats types and stats aggregator, and the backend has its own feedback schemas.
+
 ## [0.69.2] - 2026-09-12
 
 ### Added

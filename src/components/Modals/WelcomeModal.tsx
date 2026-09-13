@@ -2,24 +2,26 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight } from 'lucide-react';
-import { useGeolocation } from '../../hooks/features/useGeolocation';
+import { useLocate } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCities } from '../../hooks/data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { useLocation } from 'wouter';
+import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../lib/routes';
 import { DEFAULT_CITY_SLUG } from '../../config/cities';
 import { CitySelectionList } from '../Map/CitySelectionList';
+import { cityOverviewCamera } from '../../utils/mapUtils';
 
 /**
  * WelcomeModal
  *
  * Re-architected with semantic layout components.
  */
-export const WelcomeModal: React.FC = () => {
+export const WelcomeModal: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const { handleLocate } = useGeolocation();
+    const handleLocate = useLocate();
     
     const { data } = useCities();
     const cities = useMemo(() => data?.cities || [], [data?.cities]);
@@ -27,7 +29,6 @@ export const WelcomeModal: React.FC = () => {
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
     const { setSelectedCity, setHasSeenWelcome } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
-    const [, navigate] = useLocation();
 
     const [userChosenSlug, setUserChosenSlug] = useState<string | null>(null);
 
@@ -73,15 +74,11 @@ export const WelcomeModal: React.FC = () => {
             if (city) {
                 if (city.slug !== globalSelectedCity) {
                     setSelectedCity(city.slug);
-                    navigate(`/${city.slug}`);
+                    navigate(paths.city(city.slug));
                     
                     const map = mapRef.current?.getMap();
                     if (map && city.center) {
-                        map.flyTo({
-                            center: city.center as [number, number],
-                            zoom: 12,
-                            duration: 1500
-                        });
+                        map.flyTo(cityOverviewCamera(city.center as [number, number]));
                     }
                 }
             }
@@ -95,14 +92,14 @@ export const WelcomeModal: React.FC = () => {
                     <div className="flex justify-center">
                         <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-border/50 shadow-2xl overflow-hidden relative">
                             <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
-                            <img src="/pwa-192x192.png" alt="App Logo" className="w-full h-full object-cover rounded-2xl relative z-10" />
+                            <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-2xl relative z-10" />
                         </div>
                     </div>
                     <DialogTitle className="text-center flex flex-col items-center justify-center gap-1.5 text-2xl">
                         <div className="flex items-center gap-2">
                             {t('welcome.title')}
                             <Badge variant="soft" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider mt-0.5">
-                                {t('welcome.beta')}
+                                {t('common.beta')}
                             </Badge>
                         </div>
                     </DialogTitle>
@@ -116,7 +113,7 @@ export const WelcomeModal: React.FC = () => {
                         <div className="flex items-center gap-4 px-2">
                             <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                {t('welcome.chooseCity', { defaultValue: 'Select Region' })}
+                                {t('welcome.chooseCity')}
                             </span>
                             <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
                         </div>
@@ -140,6 +137,6 @@ export const WelcomeModal: React.FC = () => {
             </DialogContent>
         </Dialog>
     );
-};
+});
 
 WelcomeModal.displayName = 'WelcomeModal';

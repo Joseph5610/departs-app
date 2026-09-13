@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { CATCH_BUFFER } from '@/config/constants';
+import { useNow } from '@/hooks/useNow';
 
 interface CountdownProps {
     timestamp: string;
@@ -11,8 +12,7 @@ interface CountdownProps {
 /**
  * Countdown
  *
- * Optimized component for real-time time display.
- * Memoizes timestamp parsing and uses global constants for state logic.
+ * Time left until a departure, ticking on the app-wide clock so every row updates together.
  */
 export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     const { t } = useTranslation();
@@ -20,18 +20,8 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
     // Memoize the target date so we don't re-parse the ISO string every second
     const targetDate = useMemo(() => parseISO(timestamp), [timestamp]);
 
-    const [secondsLeft, setSecondsLeft] = useState(() =>
-        differenceInSeconds(targetDate, new Date())
-    );
-
-    useEffect(() => {
-        const calculateRemaining = () => {
-            setSecondsLeft(differenceInSeconds(targetDate, new Date()));
-        };
-
-        const interval = setInterval(calculateRemaining, 1000);
-        return () => clearInterval(interval);
-    }, [targetDate]);
+    const now = useNow();
+    const secondsLeft = differenceInSeconds(targetDate, now);
 
     if (secondsLeft <= 0) {
         return <span className="text-emerald-400 animate-pulse">{t('map.departures.now')}</span>;

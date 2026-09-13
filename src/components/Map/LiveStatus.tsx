@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useViewportStore } from '../../state/viewportStore';
 import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { TRANSIT_REFRESH_S } from '../../config/constants';
+import { useNow } from '../../hooks/useNow';
 import { cn } from '@/lib/utils';
 import { SystemStatusModal } from '../Modals/SystemStatusModal';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -24,21 +25,10 @@ export const LiveStatus: React.FC = () => {
     const isFiltered = usePreferencesStore(
         s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
     );
-    const [nextRefreshIn, setNextRefreshIn] = useState(TRANSIT_REFRESH_S);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-    useEffect(() => {
-        const calculateRemaining = () => {
-            const now = Date.now();
-            const elapsed = Math.floor((now - status.dataUpdatedAt) / 1000);
-            const remaining = Math.max(0, TRANSIT_REFRESH_S - elapsed);
-            setNextRefreshIn(remaining);
-        };
-
-        calculateRemaining();
-        const timer = setInterval(calculateRemaining, 1000);
-        return () => clearInterval(timer);
-    }, [status.dataUpdatedAt]);
+    const closeModal = useCallback(() => setIsModalOpen(false), []);
+    const now = useNow();
+    const nextRefreshIn = Math.max(0, TRANSIT_REFRESH_S - Math.floor((now - status.dataUpdatedAt) / 1000));
 
     if (!bounds) return null;
 
@@ -49,7 +39,7 @@ export const LiveStatus: React.FC = () => {
         if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]' };
         if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-amber-500', dot: 'bg-amber-500 animate-pulse' };
         if (isFiltered) return {
-            text: t('liveStatus.filtered', 'FILTERED'),
+            text: t('liveStatus.filtered'),
             color: 'text-purple-400',
             dot: 'bg-purple-500 shadow-[0_0_8px_var(--color-purple-500)]',
             icon: <Filter className="w-3 h-3 text-purple-400 shrink-0" />,
@@ -98,11 +88,7 @@ export const LiveStatus: React.FC = () => {
                 </button>
             </div>
 
-            <SystemStatusModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                nextRefreshIn={nextRefreshIn}
-            />
+            <SystemStatusModal isOpen={isModalOpen} onClose={closeModal} />
         </div>
     );
 };

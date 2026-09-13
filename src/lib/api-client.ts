@@ -1,6 +1,5 @@
 import { type AppError, AppErrorCode, parseFetchError } from '../types/error';
-import { API_BASE_URL } from '../config/constants';
-const DEFAULT_TIMEOUT = 10000; // 10s
+import { API_BASE_URL, QUERY_TIMING_MS } from '../config/constants';
 
 /**
  * Enhanced fetch wrapper with timeout and automatic error normalization.
@@ -9,7 +8,7 @@ export async function apiFetch<T>(
     url: string | URL,
     options: RequestInit & { timeout?: number } = {}
 ): Promise<T> {
-    const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options;
+    const { timeout = QUERY_TIMING_MS.API_REQUEST_TIMEOUT, ...fetchOptions } = options;
 
     let finalUrl = url.toString();
     if (finalUrl.startsWith('/')) {

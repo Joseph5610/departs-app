@@ -8,7 +8,7 @@ Non-negotiable. Any violation is a system-level bug.
 
 ### State Model & Zustand Stores
 
-- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`, `geolocationStore`, `mapMetadataStore`, `pwaStore`) manage global state.
+- **Single Source of Truth**: Zustand stores (`selectionStore`, `viewportStore`, `preferencesStore`, `geolocationStore`, `mapMetadataStore`, `pwaStore`, `uiStore`) manage global state.
 - **Minimal State**: Stores MUST ONLY store minimal IDs or primitive settings. Full objects/computed data MUST NEVER be stored in state; derive in hooks or use selectors.
 - **Zero-Context Architecture**: React Context providers are avoided. Components access global state and actions directly from modular stores using granular selectors (e.g., `s => s.value`).
 - **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure.
@@ -21,6 +21,7 @@ Non-negotiable. Any violation is a system-level bug.
 | `GeolocationStore` | `geolocationStore.ts` | User location, speed, geo-pending status                              |
 | `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer IDs, MapRef                             |
 | `PWAStore`         | `pwaStore.ts`         | PWA installation and update status                                    |
+| `UiStore`          | `uiStore.ts`          | Which app-level modals are open (not persisted)                       |
 
 ### Hook Data Flow (Strict Hierarchy)
 

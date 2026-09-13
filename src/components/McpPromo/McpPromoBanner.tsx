@@ -1,27 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Copy, Check, X, Info } from 'lucide-react';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useUiStore } from '../../state/uiStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { MCP_ENDPOINT_URL } from '../Modals/McpModal/McpModal';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
+import { MCP_ENDPOINT_URL } from '../../config/constants';
 
 export const McpPromoBanner: React.FC = () => {
     const { t } = useTranslation();
     const isDismissed = usePreferencesStore(s => s.isMcpBannerDismissed);
-    const { setIsMcpBannerDismissed, setIsMcpModalOpen } = usePreferencesStore(s => s.actions);
+    const { setIsMcpBannerDismissed } = usePreferencesStore(s => s.actions);
+    const { setIsMcpModalOpen } = useUiStore(s => s.actions);
 
-    const [isCopied, setIsCopied] = useState(false);
+    const { copiedKey, copy } = useCopyToClipboard();
+    const isCopied = copiedKey === 'endpoint';
 
     if (isDismissed) return null;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(MCP_ENDPOINT_URL);
-        setIsCopied(true);
-        toast.success(t('mcp.copySuccess'));
-        setTimeout(() => setIsCopied(false), 2000);
-    };
+    const handleCopy = () => copy(MCP_ENDPOINT_URL, 'endpoint');
 
     return (
         <div className="hidden md:block fixed bottom-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-2rem)] px-4 py-3 rounded-2xl bg-background/90 backdrop-blur-xl border border-primary/30 shadow-2xl shadow-primary/10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
@@ -51,7 +49,7 @@ export const McpPromoBanner: React.FC = () => {
                             onClick={handleCopy}
                         >
                             {isCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                            <span>{isCopied ? t('mcp.copied', 'Copied!') : t('mcp.copyUrl')}</span>
+                            <span>{isCopied ? t('mcp.copied') : t('mcp.copyUrl')}</span>
                         </Button>
 
                         <Button
@@ -71,7 +69,7 @@ export const McpPromoBanner: React.FC = () => {
                     size="icon-sm"
                     onClick={() => setIsMcpBannerDismissed(true)}
                     className="shrink-0 text-muted-foreground hover:text-foreground"
-                    aria-label="Dismiss banner"
+                    aria-label={t('mcp.dismissBanner')}
                 >
                     <X className="size-4" />
                 </Button>

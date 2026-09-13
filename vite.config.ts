@@ -25,7 +25,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/brno.webp', 'cities/prague.webp', 'cities/presov.webp', 'cities/duk.webp'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/*.webp'],
       manifest: {
         name: 'Departs.app',
         short_name: 'Departs',
@@ -53,6 +53,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Admin pages load on demand; precaching them would ship them to every installed PWA.
+        globIgnores: ['**/AdminRoutes-*'],
         navigateFallback: '/',
         navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/],
         manifestTransforms: [

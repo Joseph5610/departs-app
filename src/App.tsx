@@ -1,31 +1,34 @@
+import { lazy, Suspense } from 'react';
 import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
 import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
-import { FeedExplorer } from './pages/admin/FeedExplorer/FeedExplorer';
-import { AdminFeedback } from './pages/admin/AdminFeedback/AdminFeedback';
-import { AdminIndex } from './pages/admin/AdminIndex/AdminIndex';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
-import { usePreferencesStore } from './state/preferencesStore';
-import { FRONTEND_CITIES_CONFIG } from './config/cities';
+import { useCityConfig } from './hooks/data/useCities';
+import { useUiStore } from './state/uiStore';
+import { MountWhenOpened } from './components/MountWhenOpened';
 import { McpPromoBanner } from './components/McpPromo/McpPromoBanner';
-import { McpModal } from './components/Modals/McpModal/McpModal';
+import { SITE_TITLE } from './config/constants';
 
+
+const AdminRoutes = lazy(() => import('./pages/admin/AdminRoutes'));
+const McpModal = lazy(() => import('./components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 
 function App() {
   usePWALifecycle();
 
-  const selectedCity = usePreferencesStore(s => s.selectedCity);
-  const cityConfig = FRONTEND_CITIES_CONFIG[selectedCity];
-  useEnrichmentChannel(cityConfig?.enrichmentChannel ?? null);
+  useEnrichmentChannel(useCityConfig().enrichmentChannel ?? null);
+  const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
 
   return (
     <>
       <McpPromoBanner />
-      <McpModal />
+      <MountWhenOpened when={isMcpModalOpen}>
+        <McpModal />
+      </MountWhenOpened>
       {/* Visually hidden SEO content */}
       <div className="sr-only">
-        <h1>departs.app — MHD Praha, Brno & Prešov LIVE</h1>
+        <h1>{SITE_TITLE}</h1>
         <p>
           Sledujte polohu vozidel MHD v reálném čase.
           Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů pro Prahu (PID), Brno (IDS JMK) a Prešov (DPMP).
@@ -37,14 +40,10 @@ function App() {
       </div>
 
       <Switch>
-        <Route path="/admin/explorer">
-          <FeedExplorer />
-        </Route>
-        <Route path="/admin/feedback">
-          <AdminFeedback />
-        </Route>
-        <Route path="/admin">
-          <AdminIndex />
+        <Route path="/admin/*?">
+          <Suspense fallback={null}>
+            <AdminRoutes />
+          </Suspense>
         </Route>
         <Route>
           <Map />

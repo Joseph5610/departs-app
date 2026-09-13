@@ -11,7 +11,6 @@ export interface DisplayVehicle extends VehicleDetail {
     routeName: string;
     isStaticFallback: boolean;
     effectiveSequence: number | null;
-    routeType: string | number;
 }
 
 export type StopFeature = Required<Required<DisplayVehicle>['stop_times']>['features'][number];
@@ -26,7 +25,6 @@ export interface VehicleHeroProps {
     displayVehicle: DisplayVehicle;
     isFollowing: boolean;
     onToggleFollow: () => void;
-    liveDataAgeSeconds: number | null;
     isDetailLoading?: boolean;
     hasEnrichment: boolean;
 }

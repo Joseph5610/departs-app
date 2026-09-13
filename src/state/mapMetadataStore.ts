@@ -3,13 +3,13 @@ import { create } from 'zustand';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { FlyToOptions, EaseToOptions } from 'maplibre-gl';
 
-export interface MapMetadataState {
+interface MapMetadataState {
     mapLoaded: boolean;
     labelLayerId: string | undefined;
     mapRef: React.RefObject<MapRef | null>;
 }
 
-export interface MapMetadataActions {
+interface MapMetadataActions {
     setMapLoaded: (loaded: boolean) => void;
     setLabelLayerId: (id: string | undefined) => void;
     flyTo: (options: FlyToOptions) => void;

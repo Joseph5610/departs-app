@@ -1,9 +1,11 @@
 import { Component, useState, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api-client';
 import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { Button } from '@/components/ui/button';
+import { TURNSTILE_SITE_KEY } from '@/config/constants';
 
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 
@@ -47,6 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorInfo }) {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -82,7 +85,7 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
             setIsSubmitted(true);
         } catch (e) {
             console.error('Failed to send crash report:', e);
-            setSubmitError(e instanceof Error ? e.message : 'Failed to send report. Please check console.');
+            setSubmitError(t('errors.crash.sendFailed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -100,10 +103,10 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             <AlertCircle strokeWidth={1.5} />
                         </EmptyMedia>
                         <EmptyTitle className="text-xl font-bold text-foreground">
-                            Oops, something went wrong
+                            {t('errors.crash.title')}
                         </EmptyTitle>
                         <EmptyDescription className="text-sm">
-                            The application encountered an unexpected error. Please try refreshing.
+                            {t('errors.crash.description')}
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent className="w-full flex flex-col gap-4 pt-4 px-6">
@@ -114,51 +117,55 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             className="w-full font-bold flex items-center justify-center gap-2 rounded-xl shadow-sm"
                         >
                             <RefreshCcw size={18} strokeWidth={2} />
-                            Refresh Application
+                            {t('errors.crash.refresh')}
                         </Button>
 
-                        {!isSubmitted ? (
-                            <div className="flex flex-col gap-2 w-full">
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    onClick={handleReportCrash}
-                                    disabled={!turnstileToken || isSubmitting}
-                                    className="w-full font-bold flex items-center justify-center gap-2 rounded-xl border-border bg-muted/30 hover:bg-muted/50 transition-colors"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="animate-spin" size={18} strokeWidth={2} />
-                                            Sending Report...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send size={18} strokeWidth={2} />
-                                            Send Crash Report
-                                        </>
+                        {TURNSTILE_SITE_KEY && (
+                            <>
+                            {!isSubmitted ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        onClick={handleReportCrash}
+                                        disabled={!turnstileToken || isSubmitting}
+                                        className="w-full font-bold flex items-center justify-center gap-2 rounded-xl border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="animate-spin" size={18} strokeWidth={2} />
+                                                {t('errors.crash.sending')}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={18} strokeWidth={2} />
+                                                {t('errors.crash.send')}
+                                            </>
+                                        )}
+                                    </Button>
+                                    {submitError && (
+                                        <div className="text-destructive text-sm text-center font-medium mt-1 bg-destructive/10 py-2 rounded-lg">
+                                            {submitError}
+                                        </div>
                                     )}
-                                </Button>
-                                {submitError && (
-                                    <div className="text-destructive text-sm text-center font-medium mt-1 bg-destructive/10 py-2 rounded-lg">
-                                        {submitError}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center gap-2 text-sm text-foreground font-bold h-11 bg-muted/40 rounded-xl w-full border border-border animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
-                                <CheckCircle2 size={18} strokeWidth={2} className="text-primary" />
-                                Report successfully sent.
-                            </div>
-                        )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center gap-2 text-sm text-foreground font-bold h-11 bg-muted/40 rounded-xl w-full border border-border animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
+                                    <CheckCircle2 size={18} strokeWidth={2} className="text-primary" />
+                                    {t('errors.crash.sent')}
+                                </div>
+                            )}
 
-                        <div className="flex justify-center w-full mt-2">
-                            <Turnstile
-                                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                                onSuccess={setTurnstileToken}
-                                onError={() => setTurnstileToken(null)}
-                                onExpire={() => setTurnstileToken(null)}
-                            />
-                        </div>
+                            <div className="flex justify-center w-full mt-2">
+                                <Turnstile
+                                    siteKey={TURNSTILE_SITE_KEY}
+                                    onSuccess={setTurnstileToken}
+                                    onError={() => setTurnstileToken(null)}
+                                    onExpire={() => setTurnstileToken(null)}
+                                />
+                            </div>
+                            </>
+                        )}
 
                         {/* Enhanced debug info */}
                         <div className="mt-4 pt-4 border-t border-border/50 text-left w-full flex flex-col gap-2">

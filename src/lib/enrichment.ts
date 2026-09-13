@@ -1,5 +1,8 @@
 import type { StoredEnrichmentPatch } from '../types/enrichment';
-import { ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
+import type { Departure, VehicleCollection, VehicleFeature, VehicleProperties } from '../types/transit';
+import { DEPARTURES_CONFIG, ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
+
+type PatchIndex = Map<string, StoredEnrichmentPatch>;
 
 const META_KEYS = new Set<keyof StoredEnrichmentPatch>([
     'tripId',
@@ -78,4 +81,60 @@ export function applyEnrichment<T extends object>(
     }
 
     return applied ? enriched : base;
+}
+
+/** The ID a push patch is keyed by; feeds without vehicle IDs are matched by fleet number. */
+const patchVehicleId = (p: VehicleProperties): string | undefined =>
+    p.vehicle_id || p.vehicle_descriptor?.vehicle_registration_number?.toString() || undefined;
+
+/**
+ * Applies push patches to every vehicle. Returns the input collection itself when no patch applies,
+ * so consumers keyed on its identity don't recompute.
+ */
+export function enrichVehicleCollection(
+    collection: VehicleCollection | null | undefined,
+    byTripId: PatchIndex,
+    byVehicleId: PatchIndex,
+    baseTimestamp: number,
+): VehicleCollection | null {
+    if (!collection) return null;
+    if (!collection.features?.length) return collection;
+
+    let changed = false;
+    const features = collection.features.map((f): VehicleFeature => {
+        const properties = applyEnrichment(f.properties, f.properties.gtfs_trip_id, patchVehicleId(f.properties), byTripId, byVehicleId, baseTimestamp);
+        if (properties === f.properties) return f;
+        changed = true;
+        return { ...f, properties };
+    });
+
+    return changed ? { ...collection, features } : collection;
+}
+
+/**
+ * Applies push patches to departures and drops those whose expected time is past the grace period.
+ * `tripIndex` supplies the vehicle ID from the live stream when the departures response lacks it.
+ */
+export function enrichDepartures(
+    departures: Departure[],
+    tripIndex: Map<string, VehicleFeature>,
+    byTripId: PatchIndex,
+    byVehicleId: PatchIndex,
+    baseTimestamp: number,
+): Departure[] {
+    const cutoff = baseTimestamp - DEPARTURES_CONFIG.PAST_GRACE_MS;
+    const result: Departure[] = [];
+
+    for (const dep of departures) {
+        const vehicleId = dep.vehicleId || (dep.tripId ? tripIndex.get(dep.tripId)?.properties.vehicle_id : undefined) || undefined;
+        let enriched = applyEnrichment(dep, dep.tripId, vehicleId, byTripId, byVehicleId, baseTimestamp);
+        if (vehicleId && !enriched.vehicleId) {
+            enriched = { ...enriched, vehicleId };
+        }
+        if (new Date(enriched.timestamp).getTime() >= cutoff) {
+            result.push(enriched);
+        }
+    }
+
+    return result;
 }

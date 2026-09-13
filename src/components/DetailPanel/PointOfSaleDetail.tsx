@@ -19,24 +19,28 @@ const TYPE_ICONS: Record<PointOfSaleType, React.ElementType> = {
     chipCardDispense: CreditCard,
 };
 
-const DAY_NAMES: Record<string, { days: string[]; all: string; weekdays: string; weekend: string }> = {
-    cs: { days: ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'], all: 'Po–Ne', weekdays: 'Po–Pá', weekend: 'So–Ne' },
-    sk: { days: ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'], all: 'Po–Ne', weekdays: 'Po–Pi', weekend: 'So–Ne' },
-    en: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], all: 'Mon–Sun', weekdays: 'Mon–Fri', weekend: 'Sat–Sun' },
-};
+/** 1 January 2024 was a Monday, so adding 0–6 days yields Monday–Sunday. */
+const REFERENCE_MONDAY_MS = Date.UTC(2024, 0, 1);
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-function formatDayRange(from: number, to: number, lang: string): string {
-    const names = DAY_NAMES[lang] ?? DAY_NAMES.en;
-    if (from === 0 && to === 6) return names.all;
-    if (from === 0 && to === 4) return names.weekdays;
-    if (from === 5 && to === 6) return names.weekend;
-    if (from === to) return names.days[from] || '';
-    return `${names.days[from]}–${names.days[to]}`;
+/** Short weekday names, Monday first, capitalized as on printed timetables. */
+function getWeekdayNames(lang: string): string[] {
+    const format = new Intl.DateTimeFormat(lang, { weekday: 'short', timeZone: 'UTC' });
+    return Array.from({ length: 7 }, (_, i) => {
+        const name = format.format(REFERENCE_MONDAY_MS + i * DAY_MS);
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    });
+}
+
+function formatDayRange(from: number, to: number, days: string[]): string {
+    if (from === to) return days[from] || '';
+    return `${days[from]}–${days[to]}`;
 }
 
 export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => {
     const { t, i18n } = useTranslation();
     const lang = (i18n.resolvedLanguage || i18n.language).split('-')[0];
+    const weekdayNames = React.useMemo(() => getWeekdayNames(lang), [lang]);
 
     const Icon = TYPE_ICONS[pos.type] || HelpCircle;
 
@@ -79,7 +83,7 @@ export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => 
                     <CardContent className="p-0 flex flex-col gap-1.5">
                         {pos.openingHours.map((oh) => (
                             <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-b-0 last:py-0">
-                                <span className="font-semibold text-foreground">{formatDayRange(oh.from, oh.to, lang)}</span>
+                                <span className="font-semibold text-foreground">{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
                                 <span className="font-mono text-[12px] text-muted-foreground">{oh.hours}</span>
                             </div>
                         ))}

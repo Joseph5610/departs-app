@@ -18,11 +18,6 @@ export interface RSSItem {
     effect?: string;
 }
 
-export interface AlertsResponse {
-    alerts: RSSItem[];
-    infotexts: Infotext[];
-}
-
 export interface Infotext {
     id: string;
     text: string;

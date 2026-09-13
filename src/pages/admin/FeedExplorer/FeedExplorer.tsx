@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useCities } from '../../../hooks/data/useCities';
+import { useCities, useCityConfig } from '../../../hooks/data/useCities';
 import { DEFAULT_CITY_SLUG } from '../../../config/cities';
 import { apiFetch } from '../../../lib/api-client';
 import { RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
@@ -11,23 +11,18 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { JsonView, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import { toast } from 'sonner';
 import { AdminLayout } from '../AdminLayout';
-
-const FEED_SOURCE_LABELS: Record<string, Record<'vehicles' | 'alerts', string>> = {
-    prague: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
-    brno: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
-    presov: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
-};
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 
 export const FeedExplorer: React.FC = () => {
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const { setSelectedCity } = usePreferencesStore(s => s.actions);
+    // Local, so browsing feeds here doesn't switch the city the map opens with.
+    const [selectedCity, setSelectedCity] = useState(() => usePreferencesStore.getState().selectedCity);
     const { data: citiesData } = useCities();
+    const { debugFeedLabels } = useCityConfig(selectedCity);
     const [feedType, setFeedType] = useState<'vehicles' | 'alerts'>('vehicles');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isExpandedAll, setIsExpandedAll] = useState(false);
-    const [isCopied, setIsCopied] = useState(false);
+    const { copiedKey, copy } = useCopyToClipboard();
     const isDark = document.documentElement.classList.contains('dark');
 
     const { data, isLoading, isError, error, refetch } = useQuery({
@@ -43,16 +38,9 @@ export const FeedExplorer: React.FC = () => {
         setIsRefreshing(false);
     };
 
-    const handleCopy = async () => {
-        if (!data) return;
-        try {
-            await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-            setIsCopied(true);
-            toast.success("JSON copied to clipboard");
-            setTimeout(() => setIsCopied(false), 2000);
-        } catch {
-            toast.error("Failed to copy");
-        }
+    const isCopied = copiedKey === 'feed';
+    const handleCopy = () => {
+        if (data) copy(JSON.stringify(data, null, 2), 'feed');
     };
 
     const getItemsCount = () => {
@@ -121,10 +109,10 @@ export const FeedExplorer: React.FC = () => {
         <AdminLayout title={titleNode} headerActions={headerActions} contentClassName="p-2 sm:p-4 flex flex-col min-h-0 h-full">
             <div className="flex items-center gap-2 sm:hidden shrink-0">
                 <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="w-full">
-                    <TabsList variant="default" className="grid grid-cols-3 w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
-                        <TabsTrigger value="prague" className="h-7 text-xs font-semibold rounded-lg">PRG</TabsTrigger>
-                        <TabsTrigger value="brno" className="h-7 text-xs font-semibold rounded-lg">BRQ</TabsTrigger>
-                        <TabsTrigger value="presov" className="h-7 text-xs font-semibold rounded-lg">POV</TabsTrigger>
+                    <TabsList variant="default" className="flex w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
+                        {citiesData?.cities.map(city => (
+                            <TabsTrigger key={city.slug} value={city.slug} className="flex-1 h-7 text-xs font-semibold rounded-lg">{city.name}</TabsTrigger>
+                        ))}
                     </TabsList>
                 </Tabs>
             </div>
@@ -155,7 +143,7 @@ export const FeedExplorer: React.FC = () => {
                 <div className="bg-card/80 backdrop-blur-md rounded-2xl shadow-xs overflow-hidden flex-1 min-h-0 flex flex-col border border-border/40 relative mt-2 sm:mt-0">
                     <div className="bg-foreground/2 px-4 py-2.5 flex items-center justify-between border-b border-border/40 select-none overflow-x-auto">
                         <div className="text-xs text-muted-foreground/80 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                            <span className="font-semibold">{(FEED_SOURCE_LABELS[selectedCity] ?? FEED_SOURCE_LABELS[DEFAULT_CITY_SLUG])[feedType]}</span>
+                            <span className="font-semibold">{debugFeedLabels[feedType]}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-auto">
                             <Badge variant="outline" className="text-[10px] font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">

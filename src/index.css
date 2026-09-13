@@ -6,7 +6,9 @@
 
 :root {
   --sidebar-width: 420px;
-  --sidebar-offset: calc(var(--sidebar-width) / 2);
+  /* Gap between the desktop sidebar and the viewport edges; the map camera reads both values. */
+  --sidebar-inset: 20px;
+  --sidebar-offset: calc((var(--sidebar-width) + var(--sidebar-inset)) / 2);
   --visible-center-x: calc(50% + var(--sidebar-offset));
   --background: oklch(0.96 0 0);
   --foreground: oklch(0.22 0.01 260);
@@ -103,7 +105,6 @@
 }
 
 @theme inline {
-  --breakpoint-mobile: 768px;
   --font-sans: 'Geist Variable', ui-sans-serif, sans-serif, system-ui;
   --font-mono: Fira Code, ui-monospace, monospace;
   --tracking-normal: -0.015em;
@@ -331,7 +332,7 @@
   margin: 0 0.5rem 0.5rem 0 !important;
 }
 
-@media (width < theme(--breakpoint-mobile)) {
+@media (width < theme(--breakpoint-md)) {
   .maplibregl-ctrl-bottom-right {
     margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }

@@ -4,4 +4,6 @@ export * from './departures';
 export * from './alerts';
 export * from './search';
 export * from './pointsOfSale';
+export * from './cities';
+export * from './stats';
 

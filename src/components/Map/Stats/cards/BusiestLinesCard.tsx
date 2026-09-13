@@ -3,10 +3,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LineBadge } from '../../../LineBadge';
-import type { AppCityStats } from '../../../../../functions/_core/types';
+import type { CityStats } from '../../../../types/transit';
+import { FALLBACK_ROUTE_COLOR } from '../../../../config/constants';
 
 interface BusiestLinesCardProps {
-    stats: AppCityStats;
+    stats: CityStats;
 }
 
 export const BusiestLinesCard: React.FC<BusiestLinesCardProps> = ({ stats }) => {
@@ -30,7 +31,7 @@ export const BusiestLinesCard: React.FC<BusiestLinesCardProps> = ({ stats }) => 
                         <div key={idx} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2 py-1 rounded-md">
                             <LineBadge 
                                 name={item.line} 
-                                routeColor={item.route_color || '#5A5A5A'} 
+                                routeColor={item.route_color || FALLBACK_ROUTE_COLOR}
                                 size="sm"
                             />
                             <span className="text-xs font-bold text-foreground tabular-nums">{item.count} {t('stats.cars')}</span>

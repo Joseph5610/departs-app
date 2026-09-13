@@ -15,11 +15,11 @@ export const StatsTabs: React.FC = () => {
                 <TabsList variant="pill" className="w-full grid grid-cols-2">
                     <TabsTrigger value="overview" className="cursor-pointer gap-1.5 text-xs font-semibold">
                         <BarChart3 size={14} />
-                        <span>{t('stats.monitor.overview', 'Přehled')}</span>
+                        <span>{t('stats.monitor.overview')}</span>
                     </TabsTrigger>
                     <TabsTrigger value="vehicles" className="cursor-pointer gap-1.5 text-xs font-semibold">
                         <Bus size={14} />
-                        <span>{t('stats.monitor.vehicles', 'Seznam vozidel')}</span>
+                        <span>{t('stats.monitor.vehicles')}</span>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>

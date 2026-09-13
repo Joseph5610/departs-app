@@ -1,21 +1,25 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { AppCityStats } from '../../../../../functions/_core/types';
+import type { CityStats } from '../../../../types/transit';
+import { DistributionBar } from '../DistributionBar';
 
 interface PunctualityCardProps {
-    stats: AppCityStats;
+    stats: CityStats;
 }
 
 export const PunctualityCard: React.FC<PunctualityCardProps> = ({ stats }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+
+    const { on_time, delayed_1_to_5, delayed_5_plus } = stats.delay_distribution;
+    // Only vehicles reporting a delay are bucketed, so shares are of those, not of all vehicles.
+    const withDelay = on_time + delayed_1_to_5 + delayed_5_plus;
 
     const formatDelay = (delaySec: number | null) => {
         if (delaySec === null) return '-';
-        const mins = delaySec / 60;
-        return `${mins.toFixed(1)} min.`;
+        const value = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(delaySec / 60);
+        return t('stats.minutesValue', { value });
     };
 
     return (
@@ -42,41 +46,18 @@ export const PunctualityCard: React.FC<PunctualityCardProps> = ({ stats }) => {
                     </div>
                 </div>
                 
-                <div className="flex flex-col gap-2 mt-4">
-                    <div className="h-3.5 w-full flex rounded-full overflow-hidden opacity-90 border border-border/50 shadow-inner">
-                        <Popover>
-                            <PopoverTrigger className="h-full block p-0 border-none w-full" style={{ width: `${(stats.delay_distribution.on_time / stats.total_vehicles) * 100}%` }}>
-                                <div className="bg-emerald-500 h-full cursor-pointer hover:opacity-80 transition-opacity w-full" />
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto px-3 py-1.5 text-sm" side="top">
-                                {t('stats.onTime')}: {stats.delay_distribution.on_time} {t('stats.vehicles')}
-                            </PopoverContent>
-                        </Popover>
-                        
-                        <Popover>
-                            <PopoverTrigger className="h-full block p-0 border-none w-full" style={{ width: `${(stats.delay_distribution.delayed_1_to_5 / stats.total_vehicles) * 100}%` }}>
-                                <div className="bg-amber-400 h-full cursor-pointer hover:opacity-80 transition-opacity w-full" />
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto px-3 py-1.5 text-sm" side="top">
-                                {t('stats.delayed1to5')}: {stats.delay_distribution.delayed_1_to_5} {t('stats.vehicles')}
-                            </PopoverContent>
-                        </Popover>
-
-                        <Popover>
-                            <PopoverTrigger className="h-full block p-0 border-none w-full" style={{ width: `${(stats.delay_distribution.delayed_5_plus / stats.total_vehicles) * 100}%` }}>
-                                <div className="bg-rose-400 h-full cursor-pointer hover:opacity-80 transition-opacity w-full" />
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto px-3 py-1.5 text-sm" side="top">
-                                {t('stats.delayedOver5Plus')}: {stats.delay_distribution.delayed_5_plus} {t('stats.vehicles')}
-                            </PopoverContent>
-                        </Popover>
+                {withDelay > 0 && (
+                    <div className="mt-4">
+                        <DistributionBar
+                            total={withDelay}
+                            segments={[
+                                { key: 'onTime', label: t('stats.onTime'), count: on_time, barClass: 'bg-emerald-500', textClass: 'text-emerald-400' },
+                                { key: 'delayed1to5', label: t('stats.delayed1to5'), count: delayed_1_to_5, barClass: 'bg-amber-400', textClass: 'text-amber-400' },
+                                { key: 'delayed5plus', label: t('stats.delayedOver5Plus'), count: delayed_5_plus, barClass: 'bg-rose-400', textClass: 'text-rose-400' },
+                            ]}
+                        />
                     </div>
-                    <div className="flex flex-wrap justify-between text-[10px] font-bold text-foreground/60 uppercase tracking-wider gap-x-3 gap-y-1 mt-1">
-                        <span className="text-emerald-400">{t('stats.onTime')} ({Math.round((stats.delay_distribution.on_time / stats.total_vehicles) * 100)}%)</span>
-                        <span className="text-amber-400">{t('stats.delayed1to5')} ({Math.round((stats.delay_distribution.delayed_1_to_5 / stats.total_vehicles) * 100)}%)</span>
-                        <span className="text-rose-400">{t('stats.delayedOver5Plus')} ({Math.round((stats.delay_distribution.delayed_5_plus / stats.total_vehicles) * 100)}%)</span>
-                    </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );

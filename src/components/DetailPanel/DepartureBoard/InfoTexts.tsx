@@ -26,8 +26,8 @@ export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
             return [];
         }
 
-        const stopIds = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
-        return allInfotexts.filter(info => info.relatedStopIds.some((id: string) => stopIds.includes(id)));
+        const stopIds = new Set([selectedStop.stop_id, ...(selectedStop.all_ids || [])]);
+        return allInfotexts.filter(info => info.relatedStopIds.some((id: string) => stopIds.has(id)));
     }, [selectedStop, allInfotexts]);
 
     if (relevantInfotexts.length === 0) return null;

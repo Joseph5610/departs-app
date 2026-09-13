@@ -1,8 +1,8 @@
+import '../lib/zod-config';
 import { z } from 'zod';
+import { FEEDBACK_LIMITS } from '../config/constants';
 
 const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other', 'crash']);
-
-export type FeedbackType = z.infer<typeof feedbackTypeEnum>;
 
 // Represents the diagnostic data sent from the client
 const diagnosticDataSchema = z.object({
@@ -50,20 +50,18 @@ export type DiagnosticData = z.infer<typeof diagnosticDataSchema>;
 // Represents the payload sent to the API
 export const feedbackPayloadSchema = z.object({
   type: feedbackTypeEnum,
-  message: z.string().min(5, 'Message must be at least 5 characters long').max(2000, 'Message is too long'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  message: z.string().min(FEEDBACK_LIMITS.MESSAGE_MIN_CHARS).max(FEEDBACK_LIMITS.MESSAGE_MAX_CHARS),
+  email: z.string().email().optional().or(z.literal('')),
   includeDiagnostics: z.boolean(),
   diagnostics: diagnosticDataSchema.optional(),
-  turnstileToken: z.string().min(1, 'Please verify you are human'),
+  turnstileToken: z.string().min(1),
 });
 
 export type FeedbackPayload = z.infer<typeof feedbackPayloadSchema>;
 
-// Represents the full stored entity in KV
-export const storedFeedbackSchema = feedbackPayloadSchema.omit({ turnstileToken: true }).extend({
-  id: z.string(),
-  timestamp: z.string(),
-  ipAddress: z.string().optional(),
-});
-
-export type StoredFeedback = z.infer<typeof storedFeedbackSchema>;
+/** A feedback entry as the admin API returns it; the backend validates it on read. */
+export type StoredFeedback = Omit<FeedbackPayload, 'turnstileToken'> & {
+  id: string;
+  timestamp: string;
+  ipAddress?: string;
+};

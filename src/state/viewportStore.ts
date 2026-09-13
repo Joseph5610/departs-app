@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 
-export interface ViewportState {
+interface ViewportState {
     bounds: string | null;
     debouncedBounds: string | null;
     routeFilter: string[] | null;
     selectedPlaceId: string | null;
 }
 
-export interface ViewportActions {
+interface ViewportActions {
     setBounds: (bounds: string | null) => void;
     setDebouncedBounds: (bounds: string | null) => void;
     setRouteFilter: (filter: string[] | null) => void;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -8,9 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { usePreferencesStore } from '../../state/preferencesStore';
 import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
-import { DATA_SOURCE_URLS } from '../../config/constants';
+import { useCityConfig } from '../../hooks/data/useCities';
+import { useNow } from '../../hooks/useNow';
+import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
 import { 
     Wifi, 
@@ -26,31 +27,18 @@ import {
     ExternalLink
 } from 'lucide-react';
 
-const DATA_PROVIDERS: Record<string, { nameKey: string; url: string }> = {
-    prague: { nameKey: 'liveStatus.providerGolemio', url: DATA_SOURCE_URLS.prague },
-    brno: { nameKey: 'liveStatus.providerKordis', url: DATA_SOURCE_URLS.brno },
-    presov: { nameKey: 'liveStatus.providerDpmp', url: DATA_SOURCE_URLS.presov },
-};
-
 interface SystemStatusModalProps {
     isOpen: boolean;
     onClose: () => void;
-    nextRefreshIn: number;
 }
 
-export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, onClose, nextRefreshIn }) => {
+/** The modal's body; mounted only while the dialog is open, so its clock and subscriptions stop when closed. */
+const SystemStatusDetails: React.FC = () => {
     const { t } = useTranslation();
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const cityConfig = useCityConfig();
     const status = useSystemStatus();
-
-    const [now, setNow] = useState(() => Date.now());
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(Date.now());
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
+    const now = useNow();
+    const nextRefreshIn = Math.max(0, TRANSIT_REFRESH_S - Math.floor((now - status.dataUpdatedAt) / 1000));
 
     // Format data freshness
     const freshnessText = (() => {
@@ -123,119 +111,124 @@ export const SystemStatusModal: React.FC<SystemStatusModalProps> = ({ isOpen, on
     };
 
     const statusDetails = getStatusDetails();
-    const provider = DATA_PROVIDERS[selectedCity] ?? DATA_PROVIDERS.prague;
-    const providerName = t(provider.nameKey);
-    const providerUrl = provider.url;
+    const providerName = t(cityConfig.dataProvider.nameKey);
+    const providerUrl = cityConfig.dataProvider.url;
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-105 p-6 gap-6!">
-                <DialogHeader className="pt-2">
-                    <DialogTitle className="flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                        {t('liveStatus.modalTitle')}
-                    </DialogTitle>
-                </DialogHeader>
+        <>
+            <DialogHeader className="pt-2">
+                <DialogTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                    {t('liveStatus.modalTitle')}
+                </DialogTitle>
+            </DialogHeader>
 
-                <div className="flex flex-col gap-5">
-                    {/* Status Overview Card */}
-                    <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border/50 bg-card shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {statusDetails.icon}
-                                <div className="flex flex-col">
-                                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('liveStatus.status')}</span>
-                                    <span className="text-sm font-bold tracking-tight">{statusDetails.label}</span>
-                                </div>
-                            </div>
-                            <div className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5", statusDetails.color)}>
-                                <div className={cn("w-1.5 h-1.5 rounded-full", statusDetails.dotColor)} />
-                                {status.isOnline ? 'Online' : 'Offline'}
+            <div className="flex flex-col gap-5">
+                {/* Status Overview Card */}
+                <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border/50 bg-card shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {statusDetails.icon}
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('liveStatus.status')}</span>
+                                <span className="text-sm font-bold tracking-tight">{statusDetails.label}</span>
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">
-                            {statusDetails.description}
-                        </p>
-                    </div>
-
-                    {/* Technical Info Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                <Wifi className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.connection')}</span>
-                            </div>
-                            <span className={cn("text-sm font-semibold", status.isOnline ? "text-green-500" : "text-destructive")}>
-                                {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                <MapPin className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.region')}</span>
-                            </div>
-                            <span className="text-sm font-semibold capitalize">
-                                {selectedCity}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center justify-between p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm col-span-2">
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                    <Database className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.dataProvider')}</span>
-                                </div>
-                                <span className="text-sm font-semibold">
-                                    {providerName}
-                                </span>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[10px] text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 px-2.5 rounded-lg border border-border/40 font-bold gap-1.5 transition-colors"
-                                render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}
-                            >
-                                {t('liveStatus.dataProviderLink')}
-                                <ExternalLink className="w-3 h-3" />
-                            </Button>
-                        </div>
-
-                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.dataFreshness')}</span>
-                            </div>
-                            <span className="text-sm font-semibold tabular-nums">
-                                {freshnessText}
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                <Activity className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.nextRefresh')}</span>
-                            </div>
-                            <span className="text-sm font-semibold tabular-nums">
-                                {status.isFetching ? '-' : `${nextRefreshIn}s`}
-                            </span>
+                        <div className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5", statusDetails.color)}>
+                            <div className={cn("w-1.5 h-1.5 rounded-full", statusDetails.dotColor)} />
+                            {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
                         </div>
                     </div>
-
-                    {/* How It Works Info Card */}
-                    <Alert variant="subtle" className="border-primary/30 bg-primary/10">
-                        <Info className="w-4 h-4 text-primary" strokeWidth={1.5} />
-                        <AlertTitle className="text-xs font-bold text-foreground">
-                            {t('liveStatus.explanationTitle')}
-                        </AlertTitle>
-                        <AlertDescription className="text-xs leading-relaxed text-muted-foreground">
-                            {t('liveStatus.explanationText')}
-                        </AlertDescription>
-                    </Alert>
+                    <p className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">
+                        {statusDetails.description}
+                    </p>
                 </div>
-            </DialogContent>
-        </Dialog>
+
+                {/* Technical Info Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <Wifi className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.connection')}</span>
+                        </div>
+                        <span className={cn("text-sm font-semibold", status.isOnline ? "text-green-500" : "text-destructive")}>
+                            {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
+                        </span>
+                    </div>
+
+                    <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <MapPin className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.region')}</span>
+                        </div>
+                        <span className="text-sm font-semibold">
+                            {cityConfig.name ?? cityConfig.slug}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm col-span-2">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                                <Database className="w-3.5 h-3.5" strokeWidth={1.5} />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.dataProvider')}</span>
+                            </div>
+                            <span className="text-sm font-semibold">
+                                {providerName}
+                            </span>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-[10px] text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 px-2.5 rounded-lg border border-border/40 font-bold gap-1.5 transition-colors"
+                            render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}
+                        >
+                            {t('liveStatus.dataProviderLink')}
+                            <ExternalLink className="w-3 h-3" />
+                        </Button>
+                    </div>
+
+                    <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.dataFreshness')}</span>
+                        </div>
+                        <span className="text-sm font-semibold tabular-nums">
+                            {freshnessText}
+                        </span>
+                    </div>
+
+                    <div className="flex flex-col gap-1 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                            <Activity className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.nextRefresh')}</span>
+                        </div>
+                        <span className="text-sm font-semibold tabular-nums">
+                            {status.isFetching ? '-' : `${nextRefreshIn}s`}
+                        </span>
+                    </div>
+                </div>
+
+                {/* How It Works Info Card */}
+                <Alert variant="subtle" className="border-primary/30 bg-primary/10">
+                    <Info className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                    <AlertTitle className="text-xs font-bold text-foreground">
+                        {t('liveStatus.explanationTitle')}
+                    </AlertTitle>
+                    <AlertDescription className="text-xs leading-relaxed text-muted-foreground">
+                        {t('liveStatus.explanationText')}
+                    </AlertDescription>
+                </Alert>
+            </div>
+        </>
     );
 };
+
+export const SystemStatusModal: React.FC<SystemStatusModalProps> = React.memo(({ isOpen, onClose }) => (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-105 p-6 gap-6!">
+            <SystemStatusDetails />
+        </DialogContent>
+    </Dialog>
+));
 
 SystemStatusModal.displayName = 'SystemStatusModal';

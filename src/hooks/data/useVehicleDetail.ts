@@ -29,7 +29,8 @@ export const useVehicleDetail = () => {
     // Sync newer geometry and location data from vehicle detail back to the global stream
     // This prevents the vehicle jumping back to an old position when deselecting it
     useEffect(() => {
-        if (query.data && query.data.geometry && selectedCity) {
+        // A static-fallback detail is timetable data: it must never overwrite the live stream.
+        if (query.data && query.data.geometry && !query.data.is_static_fallback && selectedCity) {
             queryClient.setQueriesData({ queryKey: ['vehicles', selectedCity] }, (oldData: unknown) => {
                 const old = oldData as VehicleCollection | undefined;
                 if (!old || !old.features) return oldData;

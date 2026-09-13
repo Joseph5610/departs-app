@@ -4,21 +4,26 @@ import { RefreshCw, Clock, Database, Scale, MessageSquareHeart, GitBranch } from
 import { version } from '../../../../package.json';
 import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useUiStore } from '../../../state/uiStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
-import { DATA_SOURCE_URLS } from '../../../config/constants';
+import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { EXTERNAL_URLS, UI_TIMING_MS } from '../../../config/constants';
 import { formatDateTime } from '../../../utils/dateUtils';
+
+const DATA_ATTRIBUTIONS = Object.values(FRONTEND_CITIES_CONFIG).flatMap(city => city.attributions);
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
 
     // Preferences
     const searchHistory = usePreferencesStore(s => s.searchHistory);
-    const { clearHistory, setIsFeedbackOpen, setIsSettingsOpen } = usePreferencesStore(s => s.actions);
+    const { clearHistory } = usePreferencesStore(s => s.actions);
+    const { setIsFeedbackOpen, setIsSettingsOpen } = useUiStore(s => s.actions);
 
     const { updatedAt } = useStops();
     const [isChecking, setIsChecking] = useState(false);
@@ -50,8 +55,7 @@ export const SettingsFooter: React.FC = () => {
                 if (registration) {
                     await registration.update();
                     
-                    // Wait to see if needRefresh becomes true (meaning update was found)
-                    // If not after 2.5 seconds, we assume we are up to date
+                    // No update prompt within the wait means this version is current.
                     setTimeout(() => {
                         setIsChecking((currentChecking) => {
                             if (currentChecking) {
@@ -60,7 +64,7 @@ export const SettingsFooter: React.FC = () => {
                             }
                             return false;
                         });
-                    }, 2500);
+                    }, UI_TIMING_MS.UPDATE_CHECK_WAIT);
                     return;
                 }
             }
@@ -93,7 +97,7 @@ export const SettingsFooter: React.FC = () => {
                     <Item
                         variant="settings"
                         size="none"
-                        render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), 150); }} />}
+                        render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                     >
                         <ItemMedia variant="icon" className="text-primary">
                             <MessageSquareHeart size={18} strokeWidth={2} />
@@ -127,17 +131,17 @@ export const SettingsFooter: React.FC = () => {
                     <Item
                         variant="settings"
                         size="none"
-                        render={<a href="https://github.com/joseph5610/departs-app" target="_blank" rel="noopener noreferrer" />}
+                        render={<a href={EXTERNAL_URLS.SOURCE_REPO} target="_blank" rel="noopener noreferrer" />}
                     >
                         <ItemMedia variant="icon" className="text-muted-foreground">
                             <GitBranch size={18} strokeWidth={2} />
                         </ItemMedia>
                         <ItemContent>
-                            <ItemTitle className="text-foreground">Open Source on GitHub</ItemTitle>
+                            <ItemTitle className="text-foreground">{t('settings.viewSource')}</ItemTitle>
                         </ItemContent>
                         <ItemActions>
                             <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                Source
+                                {t('settings.sourceBadge')}
                             </Badge>
                         </ItemActions>
                     </Item>
@@ -150,82 +154,31 @@ export const SettingsFooter: React.FC = () => {
                 </div>
                 <Card variant="subtle" size="none" className="overflow-hidden gap-0">
                     <ItemGroup className="gap-0">
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<a href={DATA_SOURCE_URLS.prague} target="_blank" rel="noopener noreferrer" />}
-                        >
-                            <ItemMedia variant="icon" className="text-muted-foreground">
-                                <Database size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">Golemio (Prague)</ItemTitle>
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                    {t('settings.dataSource')}
-                                </Badge>
-                            </ItemActions>
-                        </Item>
+                        {DATA_ATTRIBUTIONS.map((source) => (
+                            <Item
+                                key={source.url}
+                                variant="settings"
+                                size="none"
+                                render={<a href={source.url} target="_blank" rel="noopener noreferrer" />}
+                            >
+                                <ItemMedia variant="icon" className="text-muted-foreground">
+                                    <Database size={18} strokeWidth={2} />
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle className="text-foreground">{source.label}</ItemTitle>
+                                </ItemContent>
+                                <ItemActions>
+                                    <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                                        {t('settings.dataSource')}
+                                    </Badge>
+                                </ItemActions>
+                            </Item>
+                        ))}
 
                         <Item
                             variant="settings"
                             size="none"
-                            render={<a href={DATA_SOURCE_URLS.brno} target="_blank" rel="noopener noreferrer" />}
-                        >
-                            <ItemMedia variant="icon" className="text-muted-foreground">
-                                <Database size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">IDS JMK (Brno)</ItemTitle>
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                    {t('settings.dataSource')}
-                                </Badge>
-                            </ItemActions>
-                        </Item>
-
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<a href={DATA_SOURCE_URLS.presov} target="_blank" rel="noopener noreferrer" />}
-                        >
-                            <ItemMedia variant="icon" className="text-muted-foreground">
-                                <Database size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">DPMP (Prešov)</ItemTitle>
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                    {t('settings.dataSource')}
-                                </Badge>
-                            </ItemActions>
-                        </Item>
-
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<a href={DATA_SOURCE_URLS.lissy} target="_blank" rel="noopener noreferrer" />}
-                        >
-                            <ItemMedia variant="icon" className="text-muted-foreground">
-                                <Database size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">Lissy API (Brno Shapes)</ItemTitle>
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                    {t('settings.dataSource')}
-                                </Badge>
-                            </ItemActions>
-                        </Item>
-
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" />}
+                            render={<a href={EXTERNAL_URLS.DATA_LICENSE} target="_blank" rel="noopener noreferrer" />}
                         >
                             <ItemMedia variant="icon" className="text-muted-foreground">
                                 <Scale size={18} strokeWidth={2} />

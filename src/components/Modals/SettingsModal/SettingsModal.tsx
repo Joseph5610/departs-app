@@ -10,12 +10,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useUiStore } from '../../../state/uiStore';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '../../../i18n/config';
+import { UI_TIMING_MS } from '../../../config/constants';
 
 const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
     en: '🇬🇧',
@@ -23,12 +24,12 @@ const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
     sk: '🇸🇰',
 };
 
-export const SettingsModal: React.FC = () => {
+export const SettingsModal: React.FC = React.memo(() => {
     const { t, i18n } = useTranslation();
 
     // Preferences
-    const isOpen = usePreferencesStore(s => s.isSettingsOpen);
-    const { setIsSettingsOpen, setIsMcpModalOpen } = usePreferencesStore(s => s.actions);
+    const isOpen = useUiStore(s => s.isSettingsOpen);
+    const { setIsSettingsOpen, setIsMcpModalOpen } = useUiStore(s => s.actions);
 
     const onClose = React.useCallback(() => {
         setIsSettingsOpen(false);
@@ -51,7 +52,7 @@ export const SettingsModal: React.FC = () => {
                             </h3>
                             <Button
                                 variant="ghost"
-                                onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), 150); }}
+                                onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }}
                                 className="w-full text-left p-4 h-auto rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-start gap-3.5 group whitespace-normal font-normal"
                             >
                                 <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
@@ -117,4 +118,6 @@ export const SettingsModal: React.FC = () => {
             </DialogContent>
         </Dialog>
     );
-};
+});
+
+SettingsModal.displayName = 'SettingsModal';

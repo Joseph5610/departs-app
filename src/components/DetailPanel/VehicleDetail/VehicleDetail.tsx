@@ -3,9 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import { useTranslation } from 'react-i18next';
-import { parseISO } from 'date-fns';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { getCityConfig } from '../../../config/cities';
+import { useUiStore } from '../../../state/uiStore';
+import { useCityConfig } from '../../../hooks/data/useCities';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { CondensedAlertItem } from '../../Alerts/CondensedAlertItem';
 import { Card } from '@/components/ui/card';
@@ -59,8 +58,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     const { t } = useTranslation();
     const { rss } = useGlobalAlerts();
     const rssData = rss.data;
-    const [liveDataAgeSeconds, setLiveDataAgeSeconds] = useState<number | null>(null);
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const cityConfig = useCityConfig();
 
     const displayVehicle = useMemo<DisplayVehicle | null>(() => {
         if (!selectedVehicle) return null;
@@ -79,34 +77,9 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
             ...merged,
             routeName,
             isStaticFallback,
-            effectiveSequence,
-            routeType: merged.route_type ?? 0
+            effectiveSequence
         };
     }, [selectedVehicle]);
-
-    React.useEffect(() => {
-        const originTs = displayVehicle?.origin_timestamp;
-        if (!originTs) {
-            const tId = setTimeout(() => setLiveDataAgeSeconds(null), 0);
-            return () => clearTimeout(tId);
-        }
-
-        const updateAge = () => {
-            try {
-                const tsString = String(originTs);
-                const timestamp = parseISO(tsString);
-                const now = new Date();
-                const ageInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
-                setLiveDataAgeSeconds(ageInSeconds);
-            } catch {
-                setLiveDataAgeSeconds(null);
-            }
-        };
-
-        updateAge();
-        const interval = setInterval(updateAge, 1000);
-        return () => clearInterval(interval);
-    }, [displayVehicle?.origin_timestamp]);
 
     const relevantAlerts = useMemo(() => {
         const allItems = rssData?.alerts || [];
@@ -147,9 +120,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         displayVehicle={displayVehicle}
                         isFollowing={isFollowing}
                         onToggleFollow={onToggleFollow}
-                        liveDataAgeSeconds={liveDataAgeSeconds}
                         isDetailLoading={loadingDetail && !vehicleDetail}
-                        hasEnrichment={!!getCityConfig(selectedCity).enrichmentChannel}
+                        hasEnrichment={!!cityConfig.enrichmentChannel}
                     />
 
                     {/* Alerts */}
@@ -186,7 +158,7 @@ const alertKey = (alert: RSSItem, idx: number) => alert.guid || `${alert.title}-
 const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
     const { t } = useTranslation();
     const [showAll, setShowAll] = useState(false);
-    const { openAlert } = usePreferencesStore(s => s.actions);
+    const { openAlert } = useUiStore(s => s.actions);
 
     const preview = alerts.slice(0, VEHICLE_ALERTS_PREVIEW_COUNT);
     const overflow = alerts.slice(VEHICLE_ALERTS_PREVIEW_COUNT);

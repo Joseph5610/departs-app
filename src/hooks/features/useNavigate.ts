@@ -1,16 +1,15 @@
-import { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useStopDistance } from '../derived/useStopDistance';
+import { EXTERNAL_URLS } from '../../config/constants';
 
 /**
  * useNavigate
  *
- * Provides navigation functionality and formatted distance labels
- * for the selected stop. Handles platform-specific deep links.
+ * Walking directions to the selected stop via platform-specific map deep links,
+ * plus the user's distance to it.
  */
 export const useNavigate = () => {
-    const { t } = useTranslation();
     const selectedStop = useSelectedStop();
     const stopDistanceInfo = useStopDistance();
 
@@ -22,45 +21,15 @@ export const useNavigate = () => {
         const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
 
         if (isAppleDevice) {
-            // Apple Maps - Directions to address with walking mode
-            window.location.href = `maps://?daddr=${lat},${lon}&dirflg=w`;
+            window.location.href = EXTERNAL_URLS.WALKING_DIRECTIONS.apple(lat, lon);
         } else {
-            // Google Maps - Directions to destination with walking mode
-            // Use location.href for deep links to avoid unnecessary blank tabs
-            window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
+            // location.href, not window.open, so the deep link doesn't leave a blank tab behind.
+            window.location.href = EXTERNAL_URLS.WALKING_DIRECTIONS.google(lat, lon);
         }
     }, [selectedStop]);
 
-    const distanceLabel = useMemo(() => {
-        const suffix = t('map.departures.openInMaps');
-        if (!stopDistanceInfo) return suffix;
-        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
-
-        const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
-
-        if (isReasonableWalkingDistance) {
-            // Keep it compact for nearby stops to leave room for other metrics
-            return t('map.departures.distance', {
-                distance,
-                count: time
-            });
-        }
-
-        // For longer distances where we don't show walking time, add the suffix back
-        if (distance >= 1000) {
-            return `${t('map.departures.kilometers', {
-                distance: (distance / 1000).toFixed(1)
-            })} • ${suffix}`;
-        }
-
-        return `${t('map.departures.meters', {
-            distance
-        })} • ${suffix}`;
-    }, [stopDistanceInfo, t]);
-
     return {
         handleNavigate,
-        distanceLabel,
         stopDistanceInfo
     };
 };

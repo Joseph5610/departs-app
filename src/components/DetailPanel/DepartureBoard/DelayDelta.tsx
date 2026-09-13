@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { DEPARTURES_CONFIG } from '@/config/constants';
 
 /**
  * Displays the real-time delay trend (up/down arrow and value in seconds).
- * Animates in when a new update is received and fades out after 5 seconds.
+ * Animates in when a new update is received and fades out after DEPARTURES_CONFIG.DELAY_DELTA_VISIBLE_MS.
  */
 export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: number; lastUpdate?: number; isInline?: boolean }) => {
     const [visible, setVisible] = useState(false);
@@ -20,7 +21,7 @@ export const DelayDelta = ({ delta, lastUpdate, isInline = false }: { delta: num
     useEffect(() => {
         if (visible && lastUpdate) {
             const age = Date.now() - lastUpdate;
-            const remaining = Math.max(0, 5000 - age);
+            const remaining = Math.max(0, DEPARTURES_CONFIG.DELAY_DELTA_VISIBLE_MS - age);
 
             const timer = setTimeout(() => {
                 setVisible(false);

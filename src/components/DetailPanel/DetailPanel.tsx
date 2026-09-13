@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
     Drawer,
     DrawerContent,
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DRAWER_SNAP } from '@/config/constants';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -35,12 +37,14 @@ interface DetailPanelProps {
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, children }) => {
     const isMobile = useIsMobile();
+    const { t } = useTranslation();
 
     const backButton = onBack && (
         <Button
             variant="ghost"
             size="icon-sm"
             onClick={onBack}
+            aria-label={t('common.back')}
             className="shrink-0 -ml-2 text-muted-foreground"
         >
             <ArrowLeft size={20}  strokeWidth={1.5} />
@@ -72,7 +76,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 variant="ghost"
                 size="icon-sm"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t('common.close')}
                 data-testid="detail-panel-close"
                 className="shrink-0 text-muted-foreground"
             >
@@ -81,13 +85,13 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         </div>
     );
 
-    const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.60);
+    const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(DRAWER_SNAP.DEFAULT);
 
     // Reset snap point when selection changes (id change) during render
     const [prevId, setPrevId] = useState(id);
     if (id !== prevId) {
         setPrevId(id);
-        setActiveSnapPoint(0.60);
+        setActiveSnapPoint(DRAWER_SNAP.DEFAULT);
     }
 
     if (isMobile) {
@@ -99,7 +103,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                         onClose();
                     }
                 }}
-                snapPoints={[0.18, 0.60, 0.80]}
+                snapPoints={DRAWER_SNAP.SNAP_POINTS}
                 activeSnapPoint={activeSnapPoint}
                 setActiveSnapPoint={setActiveSnapPoint}
                 modal={false}
@@ -172,7 +176,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-5! left-5! bottom-5! h-[calc(100dvh-2.5rem)]! p-0 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
+                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

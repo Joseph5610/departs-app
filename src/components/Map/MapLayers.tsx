@@ -2,10 +2,17 @@
 import React from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FilterSpecification, SymbolLayerSpecification } from 'maplibre-gl';
-import type { FeatureCollection } from 'geojson';
 import { useTheme } from 'next-themes';
-import type { VehicleCollection, StopCollection, StopProperties } from '../../types/transit';
+import type { StopCollection, StopProperties } from '../../types/transit';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useGeolocationStore } from '../../state/geolocationStore';
+import { useRouteParams } from '../../hooks/useRouteParams';
+import { useVehicles } from '../../hooks/data/useVehicles';
+import { useStops } from '../../hooks/data/useStops';
+import { useRouteShape } from '../../hooks/derived/useRouteShape';
+import { useMapFilters } from '../../hooks/derived/useMapFilters';
+import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { useVehicleAnimation } from '../../hooks/features/useVehicleAnimation';
 import {
     stopClusters,
@@ -30,46 +37,15 @@ import {
     routeTerminals,
     userLocationPulse,
     userLocationPoint,
-    getVehicleColorExpression
+    getVehicleColorExpression,
+    MAP_SOURCES
 } from '../../config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */
     mapLoaded: boolean;
-    /** Global visibility toggle for vehicles */
-    showVehicles: boolean;
-    /** Global visibility toggle for stops */
-    showStops: boolean;
-    /** Whether to show stop name labels */
-    showStopLabels: boolean;
-    /** Stop type filter: empty = show all, ['metro'] = metro only, ['train'] = trains only */
-    stopTypeFilter: string[];
-    /** Collection of all vehicles to be displayed */
-    displayVehicles: VehicleCollection | null;
-    /** Collection of physical stop locations (points) */
-    stopsData: StopCollection | null;
-    /** Collection of stop label centroids (text) */
-    labelData: StopCollection | null;
-    /** GeoJSON LineString for the currently selected route */
-    routeShapeData: FeatureCollection | null;
-    /** User's current [lng, lat] coordinates */
-    userLocation: [number, number] | null;
-    /** GeoJSON FeatureCollection containing only the currently selected vehicle */
-    selectedVehicleFeature: VehicleCollection;
-    /** List of favorite stop IDs */
-    favoriteStops: string[];
-    /** Filter expression to exclude selected vehicle from the main vehicle layer */
-    vehiclesFilter: FilterSpecification;
-    /** Whether to color vehicles by delay */
-    colorVehiclesByDelay?: boolean;
-    /** ID of the first label layer in the style, used for correct layering (Z-index) */
-    labelLayerId?: string;
 }
-
-const EMPTY_GEOJSON: FeatureCollection = {
-    type: 'FeatureCollection',
-    features: []
-};
 
 /**
  * MapLayers Component
@@ -78,25 +54,26 @@ const EMPTY_GEOJSON: FeatureCollection = {
  * It is isolated from the main Map UI to ensure that map style updates are decoupled
  * from UI state changes (like opening sidebars or settings).
  *
- * PERFORMANCE: This component is wrapped in React.memo to prevent expensive re-renders
- * unless the underlying GeoJSON data or styling properties actually change.
+ * PERFORMANCE: It subscribes to the map data itself, so live data updates re-render only this subtree,
+ * and React.memo keeps parent re-renders out.
  */
-export const MapLayers: React.FC<MapLayersProps> = React.memo(({
-    mapLoaded,
-    showVehicles,
-    showStops,
-    showStopLabels,
-    stopTypeFilter,
-    displayVehicles,
-    stopsData,
-    labelData,
-    routeShapeData,
-    userLocation,
-    selectedVehicleFeature,
-    favoriteStops,
-    vehiclesFilter,
-    colorVehiclesByDelay = false
-}) => {
+export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) => {
+    const showVehicles = usePreferencesStore(s => s.showVehicles);
+    const showStops = usePreferencesStore(s => s.showStops);
+    const showStopLabels = usePreferencesStore(s => s.showStopLabels);
+    const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
+    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
+    const delayFilter = usePreferencesStore(s => s.delayFilter);
+    const userLocation = useGeolocationStore(s => s.userLocation);
+
+    const { tripId, vehicleId } = useRouteParams();
+    const { vehicles: displayVehicles } = useVehicles();
+    const { stops: stopsData, centroids: labelData } = useStops();
+    const routeShapeData = useRouteShape();
+    const selectedVehicle = useSelectedVehicle();
+    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
+
     // Helper: does this feature pass the stop type filter?
     // Empty filter = show all. Otherwise include only matching types.
     const passesStopFilter = React.useCallback((props: StopProperties | null) => {
@@ -117,7 +94,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
         mapRef,
         mapLoaded,
-        displayVehicles,
+        displayVehicles ?? null,
         selectedVehicleFeature,
         showVehicles
     );
@@ -130,7 +107,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
 
     // Filter GeoJSON based on stop type filters
     const filterGeoJSON = React.useCallback((data: StopCollection | null, isEnabled: boolean) => {
-        if (!isEnabled || !data) return EMPTY_GEOJSON;
+        if (!isEnabled || !data) return EMPTY_FEATURE_COLLECTION;
         if (stopTypeFilter.length === 0) return data;
         return {
             ...data,
@@ -152,7 +129,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
 
     return (
         <>
-            <Source id="route-shape" type="geojson" data={routeShapeData || EMPTY_GEOJSON}>
+            <Source id={MAP_SOURCES.ROUTE_SHAPE} type="geojson" data={routeShapeData || EMPTY_FEATURE_COLLECTION}>
                 <Layer
                     {...routeLineCasing}
                 />
@@ -167,37 +144,37 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                 />
             </Source>
 
-            <Source id="user-location" type="geojson" data={userLocation ? {
+            <Source id={MAP_SOURCES.USER_LOCATION} type="geojson" data={userLocation ? {
                 type: 'FeatureCollection',
                 features: [{
                     type: 'Feature',
                     geometry: { type: 'Point', coordinates: userLocation },
                     properties: {}
                 }]
-            } : EMPTY_GEOJSON}>
+            } : EMPTY_FEATURE_COLLECTION}>
                 <Layer {...userLocationPulse} />
                 <Layer {...userLocationPoint} />
             </Source>
 
-            <Source id="selected-vehicle" type="geojson" data={selectedGeoJSON}>
+            <Source id={MAP_SOURCES.SELECTED_VEHICLE} type="geojson" data={selectedGeoJSON}>
                 <Layer {...vehicleSelectedPulse} paint={{ ...vehicleSelectedPulse.paint, 'circle-color': vehicleColorExpr }} />
                 <Layer {...vehicleSelectedPoint} paint={{ ...vehicleSelectedPoint.paint, 'circle-color': vehicleColorExpr }} />
                 <Layer {...vehicleSelectedDirection} paint={{ ...vehicleSelectedDirection.paint, 'icon-color': vehicleColorExpr }} />
                 <Layer {...vehicleSelectedLabel} paint={{ ...vehicleSelectedLabel.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
-            <Source id="city-vehicles" type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_GEOJSON}>
+            <Source id={MAP_SOURCES.VEHICLES} type="geojson" data={showVehicles ? displayGeoJSON : EMPTY_FEATURE_COLLECTION}>
                 <Layer {...vehiclePoints} filter={vehiclesFilter} paint={{ ...vehiclePoints.paint, 'circle-color': vehicleColorExpr }} />
                 <Layer {...vehicleDirections} filter={vehiclesFilter} paint={{ ...vehicleDirections.paint, 'icon-color': vehicleColorExpr }} />
                 <Layer {...vehicleLabels} filter={vehiclesFilter} paint={{ ...(vehicleLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
-            <Source id="stop-labels-centroids" type="geojson" data={filteredLabelData}>
+            <Source id={MAP_SOURCES.STOP_LABELS} type="geojson" data={filteredLabelData}>
                 <Layer {...stopLabels} paint={{ ...(stopLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
             <Source
-                id="city-stops"
+                id={MAP_SOURCES.STOPS}
                 type="geojson"
                 data={filteredStopsData}
                 cluster={true}
@@ -216,7 +193,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({
                     <Layer
                         {...stopFavorites}
                         paint={{ ...(stopFavorites.paint as SymbolLayerSpecification['paint']), 'icon-halo-color': haloColor }}
-                        filter={['any', ...favoriteStops.map(id => ['==', ['get', 'stop_id'], id])] as FilterSpecification}
+                        filter={['in', ['get', 'stop_id'], ['literal', favoriteStops]] as FilterSpecification}
                     />
                 )}
             </Source>

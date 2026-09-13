@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Copy, Check, Terminal, Laptop, Code2 } from 'lucide-react';
 import {
@@ -10,24 +10,17 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { toast } from 'sonner';
+import { useUiStore } from '../../../state/uiStore';
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { MCP_ENDPOINT_URL } from '../../../config/constants';
 
-export const MCP_ENDPOINT_URL = "https://departs.app/mcp";
 
 export const McpModal: React.FC = () => {
     const { t } = useTranslation();
-    const isOpen = usePreferencesStore(s => s.isMcpModalOpen);
-    const { setIsMcpModalOpen } = usePreferencesStore(s => s.actions);
+    const isOpen = useUiStore(s => s.isMcpModalOpen);
+    const { setIsMcpModalOpen } = useUiStore(s => s.actions);
 
-    const [copiedKey, setCopiedKey] = useState<string | null>(null);
-
-    const handleCopy = (text: string, key: string, toastMsgKey: string = 'mcp.copySuccess') => {
-        navigator.clipboard.writeText(text);
-        setCopiedKey(key);
-        toast.success(t(toastMsgKey));
-        setTimeout(() => setCopiedKey(null), 2000);
-    };
+    const { copiedKey, copy } = useCopyToClipboard();
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && setIsMcpModalOpen(false)}>
@@ -58,17 +51,17 @@ export const McpModal: React.FC = () => {
                                         size="sm"
                                         variant="outline"
                                         className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                        onClick={() => handleCopy(MCP_ENDPOINT_URL, 'endpoint')}
+                                        onClick={() => copy(MCP_ENDPOINT_URL, 'endpoint')}
                                     >
                                         {copiedKey === 'endpoint' ? (
                                             <>
                                                 <Check className="size-3.5 text-emerald-500" />
-                                                <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                                <span className="text-emerald-500">{t('mcp.copied')}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Copy className="size-3.5 text-muted-foreground" />
-                                                <span>{t('mcp.copyUrl', 'Copy Endpoint URL')}</span>
+                                                <span>{t('mcp.copyUrl')}</span>
                                             </>
                                         )}
                                     </Button>
@@ -109,17 +102,17 @@ export const McpModal: React.FC = () => {
                                             size="sm"
                                             variant="outline"
                                             className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => handleCopy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode', 'mcp.copyCommandSuccess')}
+                                            onClick={() => copy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode')}
                                         >
                                             {copiedKey === 'claudeCode' ? (
                                                 <>
                                                     <Check className="size-3.5 text-emerald-500" />
-                                                    <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                                    <span className="text-emerald-500">{t('mcp.copied')}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Copy className="size-3.5 text-muted-foreground" />
-                                                    <span>{t('mcp.copy', 'Copy')}</span>
+                                                    <span>{t('mcp.copy')}</span>
                                                 </>
                                             )}
                                         </Button>
@@ -144,17 +137,17 @@ export const McpModal: React.FC = () => {
                                             size="sm"
                                             variant="outline"
                                             className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => handleCopy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor', 'mcp.copyConfigSuccess')}
+                                            onClick={() => copy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor')}
                                         >
                                             {copiedKey === 'cursor' ? (
                                                 <>
                                                     <Check className="size-3.5 text-emerald-500" />
-                                                    <span className="text-emerald-500">{t('mcp.copied', 'Copied!')}</span>
+                                                    <span className="text-emerald-500">{t('mcp.copied')}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <Copy className="size-3.5 text-muted-foreground" />
-                                                    <span>{t('mcp.copy', 'Copy')}</span>
+                                                    <span>{t('mcp.copy')}</span>
                                                 </>
                                             )}
                                         </Button>

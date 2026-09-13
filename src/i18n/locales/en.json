@@ -3,15 +3,20 @@
     "all": "All",
     "linkCopied": "Link copied to clipboard",
     "copyError": "Could not copy link",
+    "copyFailed": "Couldn't copy to the clipboard",
     "retry": "Retry",
     "loading": "Loading...",
     "share": "Share",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close",
+    "moreOptions": "More options",
+    "beta": "Beta",
+    "back": "Back"
   },
   "search": {
     "placeholder": "Search stops, addresses, lines...",
     "platform": "Platform {{code}}",
-    "lineFilter": "Filter line {{line}}",
+    "lineFilter_one": "Filter line {{line}}",
     "lineFilter_other": "Filter lines {{line}}",
     "filterByLine": "Filter by line:",
     "clearFilter": "Clear filter",
@@ -31,7 +36,6 @@
     "dataSource": "Data Source",
     "theme": {
       "title": "Appearance",
-      "description": "Light or dark mode",
       "system": "System",
       "light": "Light",
       "dark": "Dark"
@@ -81,36 +85,24 @@
     },
     "viewSource": "View source on GitHub",
     "license": "Data PID, KORDIS JMK & DPMP (CC BY 4.0)",
-    "version": "Version {{version}}",
     "versionBadge": "v{{version}}",
     "updates": {
       "check": "Check for updates",
       "checking": "Checking for updates...",
-      "upToDate": "You are up to date!",
-      "available": "New version available!"
+      "upToDate": "You are up to date!"
     },
     "clearHistory": {
       "button": "Clear search history",
       "success": "History cleared"
     },
-    "lastStopUpdate": "Stop database updated: {{date}}"
+    "lastStopUpdate": "Stop database updated: {{date}}",
+    "sourceBadge": "Source"
   },
   "welcome": {
     "title": "Welcome to departs.app",
     "description": "The fastest way to track departures and real-time locations of your transport.",
     "chooseCity": "Select Region",
-    "steps": {
-      "clickStop": {
-        "title": "Click on a stop",
-        "description": "See upcoming departures with real-time delay info."
-      },
-      "trackVehicles": {
-        "title": "Track vehicles",
-        "description": "See vehicles moving in real-time on the map."
-      }
-    },
-    "cta": "Get Started",
-    "beta": "Beta"
+    "cta": "Get Started"
   },
   "map": {
     "regions": {
@@ -130,7 +122,6 @@
       "switchedCity": "Switched to {{city}}"
     },
     "vehicleDetails": {
-      "fetching": "Fetching live details...",
       "previousTrip": "Trip has not started yet",
       "previousTripDescription": "The vehicle has not started this trip yet. Live tracking will begin once it departs.",
       "beforeTrackDelayed": "Expected delay at departure",
@@ -149,31 +140,23 @@
       "earlyLabel": "Ahead {{minutes}} min",
       "routeSchedule": "Route Schedule",
       "viewStopDepartures": "View departures for {{stopName}}",
-      "vehicleId": "Vehicle ID",
-      "status": "Status",
-      "inTransit": "In transit",
       "notAvailable": "N/A",
       "lineLabel": "Line {{line}}",
-      "operator": "{{operator}} • ",
-      "vehicle": "Vehicle",
       "ac": "AC",
       "runNumber": "Run",
       "enrichedTooltip": "This data is updated in real-time directly from the vehicle (Live Stream).",
       "connectingTooltip": "Waiting for connection with the vehicle (Live Stream). Showing standard dispatch data in the meantime.",
       "standardTooltip": "This data is updated in real-time (Standard).",
       "liveDataAge": "{{seconds}}s ago",
-      "currentStop": "Current / Just passed",
-      "nextStop": "Next stop",
       "showPastStops": "Show past stops",
       "hidePastStops": "Hide past stops",
       "scheduledTime": "sched.",
       "shareTitle": "Line {{line}}",
       "shareText": "Track line {{line}} live on departs.app",
-      "zone": "Zone",
-      "requestStop": "Request Stop"
+      "requestStop": "Request Stop",
+      "track": "Follow vehicle"
     },
     "departures": {
-      "upcoming": "Upcoming Departures",
       "noUpcoming": "No upcoming departures found.",
       "noUpcomingDescription": "Check back later or view the official schedule.",
       "noUpcomingForLine": "No upcoming departures for line {{line}}.",
@@ -183,12 +166,9 @@
         "title": "The metro does not run at night",
         "description": "Please use night trams and buses which provide transportation until the early morning hours."
       },
-      "delay": "+{{minutes}}min delay",
       "moreConnections_one": "{{count}} more connection",
       "moreConnections_other": "{{count}} more connections",
       "showLess": "Show less",
-      "showAirConditioned": "AC vehicles only",
-      "showAll": "All vehicles",
       "now": "Now",
       "minutes": "{{count}} min",
       "platform": "Platform / Track",
@@ -205,25 +185,13 @@
       "openInMaps": "Open in Maps",
       "officialBoard": "Virtual Board",
       "atStop": "You are at the stop",
-      "catchStatus": {
-        "success": "You'll catch it",
-        "warning": "Maybe you'll catch it",
-        "error": "You'll miss it"
-      },
-      "catchStatusCompact": {
-        "success": "Catchable",
-        "warning": "Maybe",
-        "error": "Too late"
-      },
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites"
     }
   },
   "update": {
     "newVersion": "New version available!",
-    "pwaPrompt": "Get the app experience",
     "updateNow": "Update now to get latest features.",
-    "addToHome": "Add it to your home screen for quick access.",
     "updateButton": "Update"
   },
   "liveStatus": {
@@ -251,38 +219,30 @@
     "justNow": "Just now",
     "status": "Status",
     "statusOk": "Healthy",
-    "statusStale": "Stale",
-    "statusError": "Error",
     "statusOkDesc": "All integrations are healthy. Live coordinates are updating normally.",
     "statusStaleDesc": "The API server is online, but no new coordinates have been received recently.",
     "statusErrorDesc": "An error occurred while fetching or processing transit data.",
     "upstreamErrorDesc": "The transit agency API is currently unavailable or returning errors.",
     "offlineDesc": "Please check your network connection. Unable to connect to the transit servers.",
-    "refreshingDesc": "Fetching the latest transit vehicle positions..."
+    "refreshingDesc": "Fetching the latest transit vehicle positions...",
+    "filtered": "Filtered"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",
     "geoError": "Could not retrieve location. Please check browser permissions.",
-    "geoSearching": "Searching for your location...",
     "vehicleNotFound": "Vehicle not found. It probably has not started yet.",
     "favoritesLimitReached": "Maximum limit of 20 favorite stops reached."
   },
   "alerts": {
     "title": "Incidents and Exclusions",
-    "incident": "Incident",
-    "exclusionPlanned": "Planned Exclusion",
-    "exclusionActive": "Active Exclusion",
     "incidents": "Incidents",
     "exclusions": "Exclusions",
     "noAlerts": "No active alerts",
     "noAlertsDescription": "All routes are running smoothly without reported disruptions.",
     "noAlertsSearchDescription": "No reported alerts match your search query.",
-    "error": "Error loading alerts",
     "moreInfo": "More info",
     "all": "All",
-    "live": "Live",
     "planned": "Planned",
-    "active": "Active now",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice",
     "showMore": "Show more (+{{count}})",
@@ -319,7 +279,16 @@
     "timeout": "The request timed out",
     "upstream": "The data source is currently unavailable",
     "notFoundTitle": "Stop not found",
-    "notFound": "This stop does not exist or is no longer in service."
+    "notFound": "This stop does not exist or is no longer in service.",
+    "crash": {
+      "title": "Oops, something went wrong",
+      "description": "The app ran into an unexpected error. Try refreshing.",
+      "refresh": "Refresh app",
+      "send": "Send crash report",
+      "sending": "Sending report…",
+      "sent": "Report sent. Thank you.",
+      "sendFailed": "Couldn't send the report. Try again in a moment."
+    }
   },
   "favorites": {
     "title": "Favorite Stops",
@@ -341,54 +310,14 @@
     "diagnosticsDesc": "This helps me find the bug faster (browser version, active stop, etc.)",
     "submit": "Submit",
     "success": "Thank you for your feedback!",
-    "errorTurnstile": "Please verify that you are human."
-  },
-  "journey": {
-    "tabs": {
-      "stops": "Stops",
-      "journey": "Journey"
+    "errorTurnstile": "Please verify that you are human.",
+    "error": "Couldn't send your feedback. Please try again.",
+    "validation": {
+      "messageTooShort": "Write at least {{count}} characters.",
+      "messageTooLong": "Keep it under {{count}} characters.",
+      "invalidEmail": "Enter a valid email address."
     },
-    "search": {
-      "from": "From",
-      "to": "To",
-      "fromPlaceholder": "Origin stop, address or place",
-      "toPlaceholder": "Destination stop, address or place",
-      "swap": "Swap origin and destination",
-      "departAt": "Depart at",
-      "arriveBy": "Arrive by",
-      "now": "Now",
-      "search": "Search",
-      "noOrigin": "Enter an origin",
-      "noDestination": "Enter a destination"
-    },
-    "result": {
-      "noResults": "No journeys found for this time and route.",
-      "error": "Failed to load journey results.",
-      "duration": "{{minutes}} min",
-      "transfers_zero": "Direct",
-      "transfers_one": "1 transfer",
-      "transfers_other": "{{count}} transfers",
-      "transfer": "Wait / Transfer",
-      "walk": "{{minutes}} min walk",
-      "departure": "Departure",
-      "arrival": "Arrival",
-      "platform": "Platform {{code}}"
-    },
-    "leg": {
-      "transit": "Take {{line}} towards {{headsign}}",
-      "walk": "Walk {{minutes}} min ({{distance}} m)",
-      "rideStops_one": "Ride 1 stop",
-      "rideStops_other": "Ride {{count}} stops",
-      "boardAt": "Board at {{stop}}",
-      "alightAt": "Alight at {{stop}}",
-      "openDepartureBoard": "Open departure board"
-    },
-    "header": {
-      "results": "Journey results",
-      "detail": "Journey detail",
-      "earlier": "Earlier",
-      "later": "Later"
-    }
+    "unavailable": "Feedback is temporarily unavailable. Please try again later."
   },
   "stats": {
     "movementState": "Movement State",
@@ -420,23 +349,18 @@
     "onTime": "On Time",
     "delayed1to5": "Delayed 1-5 min",
     "delayedOver5Plus": "Delayed > 5 min",
-    "unknownDelay": "Unknown",
     "monitor": {
       "overview": "Overview",
       "vehicles": "Vehicle List",
-      "searchPlaceholder": "Search by line (58), veh. no. (6978), model...",
-      "allModes": "All",
-      "sortLine": "Line number",
-      "sortReg": "Registration number",
-      "sortDelay": "Delay",
-      "sortTime": "Update time",
       "fieldLine": "Line",
       "fieldVehicle": "Veh. No.",
       "searchByLine": "Line number...",
       "searchByVehicle": "Vehicle number...",
       "showingCount": "Showing {{count}} of {{total}} vehicles",
       "noVehiclesFound": "No vehicles match the current filters."
-    }
+    },
+    "minutesValue": "{{value}} min",
+    "hoursValue": "+{{value}} h"
   },
   "mcp": {
     "title": "AI Integration",
@@ -447,9 +371,6 @@
     "copy": "Copy",
     "copied": "Copied!",
     "copyUrl": "Copy Endpoint URL",
-    "copySuccess": "MCP Endpoint URL copied to clipboard!",
-    "copyCommandSuccess": "Command copied to clipboard!",
-    "copyConfigSuccess": "Configuration JSON copied to clipboard!",
     "learnMore": "Setup Instructions",
     "endpointLabel": "Remote MCP Endpoint URL:",
     "claudeCodeTitle": "Claude Code CLI",
@@ -457,7 +378,8 @@
     "claudeDesktopStep1": "Open Settings → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Set Name to departs",
     "claudeDesktopStep3": "Set Remote URL to https://departs.app/mcp",
-    "cursorTitle": "AI IDEs & Editors"
+    "cursorTitle": "AI IDEs & Editors",
+    "dismissBanner": "Dismiss banner"
   },
   "pos": {
     "title": "Point of Sale",

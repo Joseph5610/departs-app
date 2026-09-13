@@ -7,6 +7,11 @@ import sk from './locales/sk.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'cs', 'sk'] as const;
 
+// Screen readers and the browser's hyphenation pick the language from <html lang>.
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = i18n.resolvedLanguage ?? lng;
+});
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

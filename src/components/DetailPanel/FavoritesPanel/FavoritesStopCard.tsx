@@ -2,10 +2,11 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Loader2, Train, ArrowRight } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../../lib/routes';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
-import { getStopDistanceInfo } from '../../../hooks/derived/useStopDistance';
+import { getStopDistanceInfo, formatStopDistance } from '../../../hooks/derived/useStopDistance';
 import { formatDelay } from '../../../utils/dateUtils';
 import { cn } from '../../../lib/utils';
 import { Countdown } from '../DepartureBoard/Countdown';
@@ -14,9 +15,9 @@ import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card';
 import {
-    MAP_STOP_SELECT_ZOOM,
-    MAP_FLY_DURATION,
-    FALLBACK_ROUTE_COLOR
+    MAP_CAMERA,
+    FALLBACK_ROUTE_COLOR,
+    DEPARTURES_CONFIG
 } from '../../../config/constants';
 import type { StopFeature } from '../../../types/stops';
 import type { Departure } from '../../../types/transit';
@@ -26,15 +27,13 @@ interface FavoritesStopCardProps {
     departures: Departure[];
     isLoading: boolean;
     isError: boolean;
-    onClosePanel?: () => void;
 }
 
 export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({ 
     stopFeature, 
     departures, 
     isLoading, 
-    isError, 
-    onClosePanel 
+    isError
 }) => {
     const { t } = useTranslation();
 
@@ -56,29 +55,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
         [userLocation, coordinates]
     );
 
-    // Format distance & walking label
-    const distanceLabel = useMemo(() => {
-        if (!stopDistanceInfo) return '';
-        if (stopDistanceInfo.isAtStop) return t('map.departures.atStop');
-
-        const { distance, time, isReasonableWalkingDistance } = stopDistanceInfo;
-        if (isReasonableWalkingDistance) {
-            return t('map.departures.distance', {
-                distance,
-                count: time
-            });
-        }
-
-        if (distance >= 1000) {
-            return t('map.departures.kilometers', {
-                distance: (distance / 1000).toFixed(1)
-            });
-        }
-
-        return t('map.departures.meters', {
-            distance
-        });
-    }, [stopDistanceInfo, t]);
+    const distanceLabel = stopDistanceInfo ? formatStopDistance(stopDistanceInfo, t) : '';
 
     // Limit to next 2 upcoming departures
     const next2Departures = useMemo(() => {
@@ -89,22 +66,18 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             new Date(a.timestamp || a.scheduled).getTime() - new Date(b.timestamp || b.scheduled).getTime()
         );
         
-        return sorted.slice(0, 2);
+        return sorted.slice(0, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT);
     }, [departures]);
 
     // Handle flying to stop and opening its departure board
     const handleCardClick = () => {
         flyTo({
             center: coordinates,
-            zoom: MAP_STOP_SELECT_ZOOM,
-            duration: MAP_FLY_DURATION
+            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+            duration: MAP_CAMERA.FLY_MS
         });
         
-        navigate(`/${selectedCity}/stop/${encodeURIComponent(stop_id)}`);
-        
-        if (onClosePanel) {
-            onClosePanel();
-        }
+        navigate(paths.stop(selectedCity, stop_id));
     };
 
     // Toggle favorite unpin

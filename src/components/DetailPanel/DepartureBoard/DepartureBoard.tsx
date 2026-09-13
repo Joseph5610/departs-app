@@ -16,10 +16,9 @@ import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { LineBadge } from '../../LineBadge';
 import type { AppError } from '@/types/error';
-import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
-
-/** How many departures to show per group before requiring expand */
-const DEFAULT_VISIBLE = 3;
+import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { useLineRules } from '@/hooks/data/useCities';
+import { safeHexColor } from '@/lib/color';
 
 interface DepartureBoardProps {
     selectedStop: SelectedStop;
@@ -35,18 +34,23 @@ interface DepartureBoardProps {
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
     const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine, data } = useDepartures();
+    const lineRules = useLineRules();
 
-    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+    const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
     
     const onToggleGroup = useCallback((group: string) => {
-        setExpandedGroups(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]);
+        setExpandedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(group)) next.delete(group);
+            else next.add(group);
+            return next;
+        });
     }, []);
 
     const jsonLd = useMemo(() => {
         if (!data?.departures || data.departures.length === 0) return null;
         
-        // Take up to 15 upcoming departures to avoid bloating the DOM
-        const upcoming = data.departures.slice(0, 15).map(dep => ({
+        const upcoming = data.departures.slice(0, DEPARTURES_CONFIG.STRUCTURED_DATA_LIMIT).map(dep => ({
             "@type": "TrainTrip",
             "trainNumber": String(dep.line),
             "trainName": dep.headsign,
@@ -65,13 +69,13 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
-        if (isFiltered) return false;
+        if (isFiltered || !lineRules.metroClosedHours) return false;
         const isMetroStation = (selectedStop.metro_lines?.length ?? 0) > 0;
 
+        const [closedFrom, closedUntil] = lineRules.metroClosedHours;
         const hour = new Date().getHours();
-        const isNightTime = hour >= 0 && hour < 5;
-        return isMetroStation && isNightTime;
-    }, [selectedStop, groupedDepartures.length, isFiltered]);
+        return isMetroStation && hour >= closedFrom && hour < closedUntil;
+    }, [selectedStop, groupedDepartures.length, isFiltered, lineRules]);
 
     if (isLoading && groupedDepartures.length === 0) {
         return <DepartureBoardSkeleton />;
@@ -110,7 +114,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                     : t('map.departures.noUpcoming')}
                             </EmptyTitle>
                             <EmptyDescription className="text-sm">
-                                {t('map.departures.noUpcomingDescription', { defaultValue: 'Check back later or view the official schedule.' })}
+                                {t('map.departures.noUpcomingDescription')}
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
@@ -119,7 +123,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 groupedDepartures.map((lineGroup) => {
                     const firstSub = lineGroup.subGroups[0];
                     const firstDep = firstSub.departures[0];
-                    const isMetro = firstDep.type === 'metro' || ['A', 'B', 'C'].includes(String(firstDep.line).toUpperCase());
+                    const isMetro = firstDep.type === 'metro' || lineRules.metroLineNames.includes(String(firstDep.line).toUpperCase());
                     return (
                         <Card 
                             key={lineGroup.lineGroupId} 
@@ -130,19 +134,20 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                 const isFirstSub = subIdx === 0;
                                 
                                 const subFirstDep = subGroup.departures[0];
-                                const isExpanded = isFiltered || expandedGroups.includes(subGroup.groupId);
+                                const routeColor = safeHexColor(subFirstDep.route_color);
+                                const isExpanded = isFiltered || expandedGroups.has(subGroup.groupId);
                                 
                                 // Logic: If only ONE connection would be hidden, show it immediately.
                                 // Otherwise, show only the default amount and provide an expand button.
-                                const hiddenCountIfDefault = subGroup.departures.length - DEFAULT_VISIBLE;
+                                const hiddenCountIfDefault = subGroup.departures.length - DEPARTURES_CONFIG.VISIBLE_PER_GROUP;
                                 const showAllByDefault = hiddenCountIfDefault === 1;
                                 
                                 const visibleDepartures = (isExpanded || showAllByDefault)
                                     ? subGroup.departures 
-                                    : subGroup.departures.slice(0, DEFAULT_VISIBLE);
+                                    : subGroup.departures.slice(0, DEPARTURES_CONFIG.VISIBLE_PER_GROUP);
                                     
                                 const hiddenCount = subGroup.departures.length - visibleDepartures.length;
-                                const hasMore = !showAllByDefault && subGroup.departures.length > DEFAULT_VISIBLE && !isFiltered;
+                                const hasMore = !showAllByDefault && subGroup.departures.length > DEPARTURES_CONFIG.VISIBLE_PER_GROUP && !isFiltered;
 
                                 return (
                                     <div key={subGroup.groupId} className="flex flex-col">
@@ -155,29 +160,29 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                 <div 
                                                     className="absolute inset-0 pointer-events-none dark:hidden opacity-[0.15] rounded-t-2xl"
                                                     style={{
-                                                        background: subFirstDep.route_color 
-                                                            ? `linear-gradient(90deg, ${subFirstDep.route_color} 0%, transparent 100%)` 
+                                                        background: routeColor
+                                                            ? `linear-gradient(90deg, ${routeColor} 0%, transparent 100%)`
                                                             : 'none'
                                                     }}
                                                 />
                                                 <div 
                                                     className="absolute inset-0 pointer-events-none hidden dark:block rounded-t-2xl"
                                                     style={{
-                                                        background: subFirstDep.route_color 
-                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 70%) 100%)` 
+                                                        background: routeColor
+                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 70%) 100%)`
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
                                                 <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full border-b-2"
                                                      style={{
-                                                         borderBottomColor: subFirstDep.route_color 
-                                                             ? `color-mix(in srgb, ${subFirstDep.route_color} 60%, transparent)` 
+                                                         borderBottomColor: routeColor
+                                                             ? `color-mix(in srgb, ${routeColor} 60%, transparent)`
                                                              : 'rgba(255,255,255,0.15)'
                                                      }}
                                                 >
                                                 <LineBadge 
                                                     name={String(lineGroup.line)} 
-                                                    routeColor={subFirstDep.route_color || FALLBACK_ROUTE_COLOR} 
+                                                    routeColor={routeColor || FALLBACK_ROUTE_COLOR}
                                                     size="lg" 
                                                     className="shadow-sm" 
                                                 />
@@ -224,23 +229,23 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                 <div 
                                                     className="absolute inset-0 pointer-events-none dark:hidden opacity-[0.10]"
                                                     style={{
-                                                        background: subFirstDep.route_color 
-                                                            ? `linear-gradient(90deg, ${subFirstDep.route_color} 0%, transparent 100%)` 
+                                                        background: routeColor
+                                                            ? `linear-gradient(90deg, ${routeColor} 0%, transparent 100%)`
                                                             : 'none'
                                                     }}
                                                 />
                                                 <div 
                                                     className="absolute inset-0 pointer-events-none hidden dark:block"
                                                     style={{
-                                                        background: subFirstDep.route_color 
-                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${subFirstDep.route_color}, white 15%), black 70%) 100%)` 
+                                                        background: routeColor
+                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 70%) 100%)`
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
                                                 <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full">
                                                     <div 
                                                         className="w-1 h-4 rounded-r-sm shrink-0" 
-                                                        style={{ backgroundColor: subFirstDep.route_color || FALLBACK_ROUTE_COLOR }}
+                                                        style={{ backgroundColor: routeColor || FALLBACK_ROUTE_COLOR }}
                                                     />
                                                     <div className="flex items-center gap-2 flex-1 min-w-0 pr-3">
                                                         <ArrowRight size={12} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />

@@ -4,6 +4,7 @@ import { useSelectionStore } from '../../state/selectionStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { version } from '../../../package.json';
+import { matchRoutePath } from '../../lib/routes';
 
 const START_TIME = Date.now();
 
@@ -20,9 +21,11 @@ export function getDiagnosticSnapshot(): DiagnosticData {
             : undefined;
             
     const isPwa = window.matchMedia('(display-mode: standalone)').matches;
+    const route = matchRoutePath(window.location.pathname);
 
     return {
-        url: window.location.href,
+        // Origin and path only: the query holds the map centre, which is often the user's position.
+        url: `${window.location.origin}${window.location.pathname}`,
         userAgent: navigator.userAgent,
         appVersion: version,
         windowSize: {
@@ -41,8 +44,8 @@ export function getDiagnosticSnapshot(): DiagnosticData {
         // mapCenter/Zoom not easily available from ViewportStore since it uses bounds
         activeLayers: viewport.routeFilter || undefined,
         
-        selectedVehicleId: selection.selectedLine || undefined,
-        selectedStopId: undefined,
+        selectedVehicleId: route.vehicleId,
+        selectedStopId: route.stopId,
         isFollowing: selection.isFollowing,
 
         selectedCity: preferences.selectedCity,

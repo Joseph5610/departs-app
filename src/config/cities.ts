@@ -1,4 +1,21 @@
+import '../lib/zod-config';
+import { z } from 'zod/mini';
 import type { EnrichmentChannelAdapter } from '../types/enrichment';
+import type { City } from '../types/cities';
+
+/** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
+const kordisMessageSchema = z.object({
+    attributes: z.object({
+        ID: z.union([z.number(), z.string().check(z.minLength(1))]),
+        /** Minutes */
+        Delay: z.optional(z.nullable(z.number())),
+        /** Low floor, sent as "true" / "false" */
+        LF: z.optional(z.nullable(z.union([z.string(), z.boolean()]))),
+        Course: z.optional(z.nullable(z.union([z.string(), z.number()]))),
+        /** Unix ms */
+        TimeUpdated: z.optional(z.nullable(z.number())),
+    }),
+});
 
 export interface InitialCityConfig {
     slug: string;
@@ -15,7 +32,36 @@ export interface InitialCityConfig {
     };
     enrichmentChannel?: EnrichmentChannelAdapter;
     hasInfotexts?: boolean;
+    /** Realtime data provider shown in the system status modal. */
+    dataProvider: { nameKey: string; url: string };
+    /** Data sources credited in Settings, in display order. */
+    attributions: Array<{ label: string; url: string }>;
+    /** Upstream feed descriptions shown in the admin Feed Explorer. */
+    debugFeedLabels: { vehicles: string; alerts: string };
+    /** Local line conventions; cities without them get DEFAULT_LINE_RULES. */
+    lineRules?: Partial<LineRules>;
 }
+
+export interface LineRules {
+    /** Metro line names, recognised even when a departure's type isn't marked as metro. */
+    metroLineNames: string[];
+    /** Line-name prefixes treated as trains when the type is missing. */
+    trainLinePrefixes: string[];
+    /** Local hours [from, to) with no metro service, to explain an empty metro board. */
+    metroClosedHours: [number, number] | null;
+    /** Night lines are listed after the day lines of their mode. */
+    isNightLine: (routeType: string, lineName: string) => boolean;
+    /** Line-name shape accepted as a line filter even before the stop data has loaded. */
+    linePattern: RegExp;
+}
+
+export const DEFAULT_LINE_RULES: LineRules = {
+    metroLineNames: [],
+    trainLinePrefixes: ['S', 'R'],
+    metroClosedHours: null,
+    isNightLine: () => false,
+    linePattern: /^([0-9]{1,3}[A-Z]?|[SR]\d{1,2})$/i,
+};
 
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
@@ -29,7 +75,22 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']
         },
-        hasInfotexts: true
+        hasInfotexts: true,
+        dataProvider: { nameKey: 'liveStatus.providerGolemio', url: 'https://golemio.cz' },
+        attributions: [
+            { label: 'Golemio (Prague)', url: 'https://golemio.cz' },
+        ],
+        debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
+        lineRules: {
+            metroLineNames: ['A', 'B', 'C'],
+            metroClosedHours: [0, 5],
+            isNightLine: (routeType, lineName) => {
+                const num = parseInt(lineName.replace(/\D/g, ''), 10);
+                if (Number.isNaN(num)) return false;
+                return (routeType === 'tram' && num >= 90 && num < 100) || (routeType === 'bus' && num >= 900);
+            },
+            linePattern: /^([A-C]|S\d{1,2}|R\d{1,2}|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d|MHD\s?\d{1,2})$/i,
+        },
     },
     brno: {
         slug: 'brno',
@@ -42,9 +103,14 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             stops: []
         },
         hasInfotexts: false,
+        dataProvider: { nameKey: 'liveStatus.providerKordis', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
+        attributions: [
+            { label: 'IDS JMK (Brno)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
+            { label: 'Lissy API (Brno Shapes)', url: 'https://github.com/Jorgen98/Lissy' },
+        ],
+        debugFeedLabels: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
         enrichmentChannel: {
             url: 'wss://gis.brno.cz/geoevent/ws/services/Kordis_stream/StreamServer/subscribe',
-            transport: 'websocket',
             // Send filtering instructions right after the websocket connects
             wsFilterPayload: { 
                 filter: { 
@@ -52,9 +118,9 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
                 }
             },
             normalize: (rawMsg: unknown) => {
-                const msg = rawMsg as { attributes?: Record<string, unknown> };
-                if (!msg || !msg.attributes) return null;
-                const attr = msg.attributes;
+                const msg = kordisMessageSchema.safeParse(rawMsg);
+                if (!msg.success) return null;
+                const attr = msg.data.attributes;
 
                 // Delay is in minutes from WS, our app uses seconds
                 const delaySeconds = typeof attr.Delay === 'number' ? Math.round(attr.Delay * 60) : null;
@@ -82,7 +148,12 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             vehicles: ['bus', 'trolleybus'],
             stops: []
         },
-        hasInfotexts: false
+        hasInfotexts: false,
+        dataProvider: { nameKey: 'liveStatus.providerDpmp', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
+        attributions: [
+            { label: 'DPMP (Prešov)', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
+        ],
+        debugFeedLabels: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
     },
     // duk: {
     //     slug: 'duk',
@@ -112,10 +183,5 @@ export const VIEWER_COUNTRY_BY_LANGUAGE: Record<string, string> = {
 
 export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG[DEFAULT_CITY_SLUG];
 
-/**
- * Resolves a city configuration by slug, safely falling back to the default city config.
- */
-export function getCityConfig(citySlug?: string | null): InitialCityConfig {
-    if (!citySlug) return FALLBACK_CITY_CONFIG;
-    return FRONTEND_CITIES_CONFIG[citySlug] || FALLBACK_CITY_CONFIG;
-}
+/** A bundled city config with its `/api/cities` entry laid over it. */
+export type CityConfig = InitialCityConfig & Partial<City>;

@@ -8,9 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { useLocation } from 'wouter';
+import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../lib/routes';
 import { CitySelectionList } from './CitySelectionList';
 import { cn } from '@/lib/utils';
+import { cityOverviewCamera } from '../../utils/mapUtils';
+import { UI_TIMING_MS } from '../../config/constants';
 
 interface CitySwitcherProps {
     className?: string;
@@ -24,7 +27,6 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [open, setOpen] = useState(false);
-    const [, navigate] = useLocation();
     
     // Animation state for when city changes
     const [isHighlighting, setIsHighlighting] = useState(false);
@@ -33,7 +35,7 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
     useEffect(() => {
         if (prevCityRef.current !== selectedCity) {
             setIsHighlighting(true);
-            const timer = setTimeout(() => setIsHighlighting(false), 2000);
+            const timer = setTimeout(() => setIsHighlighting(false), UI_TIMING_MS.CITY_SWITCH_HIGHLIGHT);
             prevCityRef.current = selectedCity;
             return () => clearTimeout(timer);
         }
@@ -56,16 +58,12 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
         setSelectedCity(city.slug);
         
         // 2. Clear current selection and navigate to the new city map
-        navigate(`/${city.slug}`);
+        navigate(paths.city(city.slug));
 
         // 3. Move map camera
         const map = mapRef.current?.getMap();
         if (map && city.center) {
-            map.flyTo({
-                center: city.center as [number, number],
-                zoom: 12, // default overview zoom
-                duration: 1500
-            });
+            map.flyTo(cityOverviewCamera(city.center as [number, number]));
         }
 
         setOpen(false);

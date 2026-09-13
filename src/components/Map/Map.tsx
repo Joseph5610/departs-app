@@ -1,7 +1,8 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { lazy, Suspense, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../lib/routes';
 import { useLocation } from 'wouter';
 
 import MapGL, { Marker } from 'react-map-gl/maplibre';
@@ -16,46 +17,35 @@ import { PointOfSaleHeader } from '../DetailPanel/PointOfSaleHeader';
 import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
+import { EXTERNAL_URLS, MAP_CAMERA, SITE_TITLE, SITE_URL } from '../../config/constants';
 import { MapLayers } from './MapLayers';
+import { MAP_LAYERS, MAP_SOURCES, STOP_CLICK_LAYERS, VEHICLE_CLICK_LAYERS, INTERACTIVE_LAYER_IDS } from '../../config/mapLayers';
 import { MapController } from './MapController';
 import { useMapEvents } from '../../hooks/features/useMapEvents';
 import { useViewportStore } from '../../state/viewportStore';
 import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useUiStore } from '../../state/uiStore';
 import { useRouteParams } from '../../hooks/useRouteParams';
-import { geocodingCache } from '../../hooks/data/useGeocoding';
+import { useRememberedPlace } from '../../hooks/data/useGeocoding';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { useGeolocationStore } from '../../state/geolocationStore';
 import { MapControls } from './MapControls';
 import { PointsOfSaleLayer } from './PointsOfSaleLayer';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
 import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
-import { useVehicles } from '../../hooks/data/useVehicles';
-import { useStops } from '../../hooks/data/useStops';
 import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
 import type { PointOfSale } from '../../types/pointsOfSale';
-import { useRouteShape } from '../../hooks/derived/useRouteShape';
-import { useMapFilters } from '../../hooks/derived/useMapFilters';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
-import { SettingsModal } from '../Modals/SettingsModal/SettingsModal';
-import { WelcomeModal } from '../Modals/WelcomeModal';
-import { AlertsModal } from '../Modals/AlertsModal';
-import { FeedbackModal } from '../Modals/FeedbackModal/FeedbackModal';
-import { StatsPanel } from './Stats/StatsPanel';
-import { StatsTabs } from './Stats/StatsTabs';
+import { MountWhenOpened } from '../MountWhenOpened';
 
-const MAP_STYLES = {
-    dark: {
-        nolabels: 'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json',
-        labels: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-    },
-    light: {
-        nolabels: 'https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json',
-        labels: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
-    }
-};
+const SettingsModal = lazy(() => import('../Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const WelcomeModal = lazy(() => import('../Modals/WelcomeModal').then(m => ({ default: m.WelcomeModal })));
+const AlertsModal = lazy(() => import('../Modals/AlertsModal').then(m => ({ default: m.AlertsModal })));
+const FeedbackModal = lazy(() => import('../Modals/FeedbackModal/FeedbackModal').then(m => ({ default: m.FeedbackModal })));
+const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default: m.StatsPanel })));
+import { StatsTabs } from './Stats/StatsTabs';
 
 /**
  * MapInner Component
@@ -67,35 +57,27 @@ const MapInner: React.FC = () => {
     const mapEvents = useMapEvents();
 
     // Store Actions
-    const { stopId: selectedStopId, tripId, vehicleId } = useRouteParams();
+    const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedId = tripId || vehicleId;
 
     // Viewport Store
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
-    const selectedPlace = selectedPlaceId ? geocodingCache.get(selectedPlaceId) : null;
+    const selectedPlace = useRememberedPlace(selectedPlaceId);
 
     // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
-    const labelLayerId = useMapMetadataStore(s => s.labelLayerId);
-
-    // Geolocation Store
-    const userLocation = useGeolocationStore(s => s.userLocation);
 
     // Preferences Store
-    const showVehicles = usePreferencesStore(s => s.showVehicles);
-    const showStops = usePreferencesStore(s => s.showStops);
-    const showStopLabels = usePreferencesStore(s => s.showStopLabels);
-    const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
-    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
-    const delayFilter = usePreferencesStore(s => s.delayFilter);
+    const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
+    const isSettingsOpen = useUiStore(s => s.isSettingsOpen);
+    const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
+    const isFeedbackOpen = useUiStore(s => s.isFeedbackOpen);
     const { resolvedTheme } = useTheme();
 
     // Derived State
-    const { isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
@@ -103,14 +85,8 @@ const MapInner: React.FC = () => {
     const { data: posList } = usePointsOfSale();
     const selectedPos = useMemo(() => posId ? posList?.find((p: PointOfSale) => p.id === posId) : null, [posId, posList]);
 
-    // Data Hooks
-    const { vehicles: displayVehicles } = useVehicles();
-    const { stops: stopsData, centroids: labelData } = useStops();
-    const routeShapeData = useRouteShape();
-
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
-    const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, selectedId, delayFilter);
 
     const [location] = useLocation();
     const returnPath = useSelectionStore(s => s.returnPath);
@@ -130,11 +106,13 @@ const MapInner: React.FC = () => {
         if (returnPath && returnPath !== location) {
             navigate(returnPath);
         } else {
-            navigate(`/${selectedCity}`);
+            navigate(paths.city(selectedCity));
         }
     }, [returnPath, location, selectedCity]);
 
-    const isRootPath = !returnPath || returnPath === `/${selectedCity}` || returnPath === `/${selectedCity}/` || returnPath === '/';
+    const closePanel = useCallback(() => navigate(paths.city(selectedCity)), [selectedCity]);
+
+    const isRootPath = !returnPath || returnPath === paths.city(selectedCity) || returnPath === `${paths.city(selectedCity)}/` || returnPath === '/';
     const hasActiveDetailPanel = Boolean(selectedVehicle || selectedStop || selectedPos);
     const shouldShowBackButton = hasActiveDetailPanel && returnPath !== null && returnPath !== location && !isRootPath;
 
@@ -151,8 +129,25 @@ const MapInner: React.FC = () => {
         return '';
     }, [selectedVehicle, selectedStop, selectedPos, t]);
 
-    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : 'departs.app — MHD Praha, Brno & Prešov LIVE';
-    const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : 'https://departs.app/';
+    // Stable elements, so the memoized DetailPanel skips re-rendering on every vehicle poll.
+    const detailTitle = useMemo(() => (
+        isStatsRoute ? t('stats.title') :
+        isFavoritesRoute ? t('favorites.title') :
+        (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
+    ), [isStatsRoute, isFavoritesRoute, selectedStop, panelTitle, t]);
+
+    const detailSubHeader = useMemo(() => (
+        isStatsRoute ? <StatsTabs /> :
+        selectedPos ? <PointOfSaleHeader pos={selectedPos} /> :
+        (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
+    ), [isStatsRoute, isFavoritesRoute, selectedPos]);
+
+    const detailContent = useMemo(() => (
+        isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
+    ), [isStatsRoute, isFavoritesRoute]);
+
+    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : SITE_TITLE;
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE_URL}/`;
 
     const jsonLd = useMemo(() => {
         if (selectedStop) {
@@ -172,11 +167,11 @@ const MapInner: React.FC = () => {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "departs.app",
-            "url": "https://departs.app",
+            "url": SITE_URL,
             "description": "Real-time visualization of public transport for Prague, Brno and Prešov. Track buses, trams, and metro live.",
             "applicationCategory": "TransportApplication",
             "operatingSystem": "All",
-            "image": "https://departs.app/icon.png",
+            "image": `${SITE_URL}/icon.png`,
             "author": {
                 "@type": "Organization",
                 "name": "departs.app"
@@ -196,7 +191,7 @@ const MapInner: React.FC = () => {
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
-                mapStyle={MAP_STYLES[(resolvedTheme as 'dark' | 'light') ?? 'dark'][mapBaseStyle]}
+                mapStyle={EXTERNAL_URLS.MAP_STYLES[(resolvedTheme as 'dark' | 'light') ?? 'dark'][mapBaseStyle]}
                 onMove={mapEvents?.onMove}
                 onMoveEnd={mapEvents?.onMoveEnd}
                 onLoad={mapEvents?.onLoad}
@@ -204,7 +199,7 @@ const MapInner: React.FC = () => {
                 onDragStart={mapEvents?.onDragStart}
                 onMouseEnter={(evt) => {
                     const features = evt.features;
-                    if (features?.length && features[0].layer.id !== 'entrance-layer') {
+                    if (features?.length && features[0].layer.id !== MAP_LAYERS.STOP_ENTRANCES) {
                         evt.target.getCanvas().style.cursor = 'pointer';
                     }
                 }}
@@ -213,83 +208,60 @@ const MapInner: React.FC = () => {
                 }}
                 onClick={(evt) => {
                     const f = evt.features?.[0];
-                    if (!f || f.layer.id === 'entrance-layer') {
-                        navigate(`/${selectedCity}`); // Close panel on background click
+                    if (!f || f.layer.id === MAP_LAYERS.STOP_ENTRANCES) {
+                        navigate(paths.city(selectedCity)); // Close panel on background click
                         return;
                     }
 
-                    if (f.layer.id === 'clusters') {
+                    if (f.layer.id === MAP_LAYERS.STOP_CLUSTERS) {
                         const clusterId = f.properties?.cluster_id;
                         const map = mapRef.current?.getMap();
                         if (!map) {
                             return;
                         }
-                        const sourceId = 'city-stops';
-                        const source = map.getSource(sourceId) as GeoJSONSource;
+                        const source = map.getSource(MAP_SOURCES.STOPS) as GeoJSONSource;
                         if (source && clusterId !== undefined) {
                             source.getClusterExpansionZoom(clusterId).then((zoom) => {
                                 mapRef.current?.easeTo({
                                     center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
                                     zoom,
-                                    duration: 500
+                                    duration: MAP_CAMERA.CLUSTER_EXPAND_MS
                                 });
-                            }).catch((e) => { console.error('Failed to load map icon:', e); });
+                            }).catch((e) => { console.error('Failed to expand stop cluster:', e); });
                         }
                         return;
                     }
 
-                    if (f.layer.id === 'vehicles-point' || f.layer.id === 'vehicles-direction-all' || f.layer.id === 'vehicles-label-all') {
+                    if (VEHICLE_CLICK_LAYERS.includes(f.layer.id)) {
                         const props = f.properties;
                         if (!props?.vehicle_id || !props?.gtfs_trip_id) {
                             return;
                         }
                         setIsFollowing(true);
-                        const tId = props.gtfs_trip_id;
-                        const vId = props.vehicle_id;
-                        if (vId && vId !== tId) {
-                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tId)}/${encodeURIComponent(vId)}`);
-                        } else {
-                            navigate(`/${selectedCity}/trip/${encodeURIComponent(tId)}`);
-                        }
+                        navigate(paths.trip(selectedCity, props.gtfs_trip_id, props.vehicle_id));
                         return;
                     }
 
-                    if (f.layer.id === 'unclustered-point' || f.layer.id === 'station-icons' || f.layer.id === 'transfer-outer' || f.layer.id === 'transfer-inner') {
+                    if (STOP_CLICK_LAYERS.includes(f.layer.id)) {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
-                            navigate(`/${selectedCity}/stop/${encodeURIComponent(stopId)}`);
+                            navigate(paths.stop(selectedCity, stopId));
                         }
                         return;
                     }
 
-                    if (f.layer.id === 'pos-point') {
+                    if (f.layer.id === MAP_LAYERS.POINTS_OF_SALE) {
                         const id = f.properties?.id;
                         if (id) {
-                            navigate(`/${selectedCity}/pos/${encodeURIComponent(id)}`);
+                            navigate(paths.pos(selectedCity, id));
                         }
                         return;
                     }
                 }}
-                interactiveLayerIds={['unclustered-point', 'station-icons', 'transfer-outer', 'transfer-inner', 'clusters', 'vehicles-point', 'vehicles-direction-all', 'vehicles-label-all', 'pos-point']}
+                interactiveLayerIds={INTERACTIVE_LAYER_IDS}
             >
                 <PointsOfSaleLayer mapLoaded={mapLoaded} />
-                <MapLayers
-                    mapLoaded={mapLoaded}
-                    showVehicles={showVehicles}
-                    showStops={showStops}
-                    showStopLabels={showStopLabels}
-                    stopTypeFilter={stopTypeFilter}
-                    displayVehicles={displayVehicles || null}
-                    stopsData={stopsData}
-                    labelData={labelData}
-                    routeShapeData={routeShapeData}
-                    userLocation={userLocation}
-                    selectedVehicleFeature={selectedVehicleFeature}
-                    favoriteStops={favoriteStops}
-                    vehiclesFilter={vehiclesFilter}
-                    colorVehiclesByDelay={colorVehiclesByDelay}
-                    labelLayerId={labelLayerId}
-                />
+                <MapLayers mapLoaded={mapLoaded} />
                 
                 {selectedPlace && (
                     <Marker
@@ -313,36 +285,28 @@ const MapInner: React.FC = () => {
             <Search />
             <MapControls />
 
-            <WelcomeModal />
-            <SettingsModal />
-            <AlertsModal />
-            <FeedbackModal />
+            <MountWhenOpened when={!hasSeenWelcome}>
+                <WelcomeModal />
+            </MountWhenOpened>
+            <MountWhenOpened when={isSettingsOpen}>
+                <SettingsModal />
+            </MountWhenOpened>
+            <MountWhenOpened when={isAlertsOpen}>
+                <AlertsModal />
+            </MountWhenOpened>
+            <MountWhenOpened when={isFeedbackOpen}>
+                <FeedbackModal />
+            </MountWhenOpened>
             <DetailPanel
                 isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
                 id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined)}
-                onClose={() => {
-                    navigate(`/${selectedCity}`);
-                }}
+                onClose={closePanel}
                 onBack={shouldShowBackButton ? handleBack : undefined}
-                title={
-                    isStatsRoute ? t('stats.title') :
-                    isFavoritesRoute ? t('favorites.title') :
-                    (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
-                }
+                title={detailTitle}
                 platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
-                subHeader={
-                    isStatsRoute ? <StatsTabs /> :
-                    selectedPos ? <PointOfSaleHeader pos={selectedPos} /> :
-                    (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
-                }
+                subHeader={detailSubHeader}
             >
-                {isStatsRoute ? (
-                    <StatsPanel />
-                ) : isFavoritesRoute ? (
-                    <FavoritesPanel />
-                ) : (
-                    <DetailPanelContent />
-                )}
+                {detailContent}
             </DetailPanel>
         </>
     );

@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { LineBadge } from '../../LineBadge';
 import { CommandItem } from '@/components/ui/command';
+import { STOP_SEARCH } from '@/config/constants';
 
 interface SearchItemProps {
     icon: React.ReactNode;
@@ -37,7 +38,7 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
 
     return (
         <>
-            {uniqueLines.slice(0, 5).map((line, idx) => {
+            {uniqueLines.slice(0, STOP_SEARCH.LINE_BADGE_LIMIT).map((line, idx) => {
                 const name = String(line.name || '');
                 if (!name) return null;
 

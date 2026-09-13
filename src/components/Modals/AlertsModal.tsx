@@ -4,16 +4,10 @@ import { useTranslation } from 'react-i18next';
 import {
     Search as SearchIcon,
     X,
-    TrainFront as SubwayIcon,
-    Bus as BusIcon,
-    TramFront as TramIcon,
-    Train as TrainIcon,
-    Ship as ShipIcon,
-    CableCar as CableCarIcon,
     AlertTriangle as AlertIcon,
     CheckCircle2,
 } from 'lucide-react';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { useUiStore } from '../../state/uiStore';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import type { RSSItem } from '../../types/transit';
 import {
@@ -26,6 +20,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupedVirtuoso } from 'react-virtuoso';
 import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
 import { cn } from '@/lib/utils';
+import { routeTypeRank } from '../../config/transit';
+import { ROUTE_TYPE_ICONS } from '../routeTypeIcons';
+import { normalizeString } from '../../utils/stringUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -53,30 +50,21 @@ const getTransportMode = (item: RSSItem): string => {
     return 'other';
 };
 
-const MODE_ORDER = ['metro', 'tram', 'bus', 'train', 'ferry', 'funicular', 'other'];
-
 const ModeIcon: React.FC<{ mode: string; className?: string }> = ({ mode, className }) => {
-    switch (mode) {
-        case 'metro': return <SubwayIcon className={className} size={16} strokeWidth={2} />;
-        case 'tram': return <TramIcon className={className} size={16} strokeWidth={2} />;
-        case 'bus': case 'trolleybus': return <BusIcon className={className} size={16} strokeWidth={2} />;
-        case 'train': return <TrainIcon className={className} size={16} strokeWidth={2} />;
-        case 'ferry': return <ShipIcon className={className} size={16} strokeWidth={2} />;
-        case 'funicular': return <CableCarIcon className={className} size={16} strokeWidth={2} />;
-        default: return <AlertIcon className={className} size={16} strokeWidth={2} />;
-    }
+    const Icon = ROUTE_TYPE_ICONS[mode as keyof typeof ROUTE_TYPE_ICONS] ?? AlertIcon;
+    return <Icon className={className} size={16} strokeWidth={2} />;
 };
 
 /**
  * AlertsModal Component
  */
-export const AlertsModal: React.FC = () => {
+export const AlertsModal: React.FC = React.memo(() => {
     const { t } = useTranslation();
 
     // Preferences
-    const isAlertsOpen = usePreferencesStore(s => s.isAlertsOpen);
-    const focusedAlertGuid = usePreferencesStore(s => s.focusedAlertGuid);
-    const { setIsAlertsOpen } = usePreferencesStore(s => s.actions);
+    const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
+    const focusedAlertGuid = useUiStore(s => s.focusedAlertGuid);
+    const { setIsAlertsOpen } = useUiStore(s => s.actions);
 
     const [filterMode, setFilterMode] = useState<'all' | 'incident' | 'exclusion'>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -103,10 +91,10 @@ export const AlertsModal: React.FC = () => {
             if (filterMode === 'exclusion' && item.type !== 'exclusion') return false;
 
             if (searchQuery.trim()) {
-                const q = searchQuery.toLowerCase();
-                const matchesTitle = item.title.toLowerCase().includes(q);
-                const matchesDesc = item.description?.toLowerCase().includes(q);
-                const matchesLine = item.lines?.some((l: string) => l.toLowerCase().includes(q));
+                const q = normalizeString(searchQuery.trim());
+                const matchesTitle = normalizeString(item.title).includes(q);
+                const matchesDesc = item.description ? normalizeString(item.description).includes(q) : false;
+                const matchesLine = item.lines?.some((l: string) => normalizeString(l).includes(q));
                 if (!matchesTitle && !matchesDesc && !matchesLine) return false;
             }
             return true;
@@ -121,11 +109,7 @@ export const AlertsModal: React.FC = () => {
         });
 
         // 3. Sort groups and items
-        const sortedModes = Array.from(groupedMap.keys()).sort((a, b) => {
-            const indexA = MODE_ORDER.indexOf(a);
-            const indexB = MODE_ORDER.indexOf(b);
-            return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
-        });
+        const sortedModes = Array.from(groupedMap.keys()).sort((a, b) => routeTypeRank(a) - routeTypeRank(b));
 
         // 4. Create mode sections
         return sortedModes.map(mode => {
@@ -181,9 +165,9 @@ export const AlertsModal: React.FC = () => {
                         <div className="flex flex-col gap-3">
                             <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as 'all' | 'incident' | 'exclusion')}>
                                 <TabsList variant="pill" className="w-full grid grid-cols-3">
-                                    <TabsTrigger value="all" className="cursor-pointer">{t('alerts.all') || 'All'}</TabsTrigger>
-                                    <TabsTrigger value="incident" className="cursor-pointer">{t('alerts.incidents') || 'Incidents'}</TabsTrigger>
-                                    <TabsTrigger value="exclusion" className="cursor-pointer">{t('alerts.exclusions') || 'Exclusions'}</TabsTrigger>
+                                    <TabsTrigger value="all" className="cursor-pointer">{t('alerts.all')}</TabsTrigger>
+                                    <TabsTrigger value="incident" className="cursor-pointer">{t('alerts.incidents')}</TabsTrigger>
+                                    <TabsTrigger value="exclusion" className="cursor-pointer">{t('alerts.exclusions')}</TabsTrigger>
                                 </TabsList>
                             </Tabs>
 
@@ -247,7 +231,7 @@ export const AlertsModal: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <ModeIcon mode={mode} className="text-primary" />
                                                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                                    {t(`transportModes.${mode}`, { defaultValue: mode.charAt(0).toUpperCase() + mode.slice(1) })}
+                                                    {t(`transportModes.${mode}`)}
                                                 </h3>
                                             </div>
                                             <Badge variant="outline" className="text-[10px] font-mono font-bold bg-foreground/5 border-border/40 text-muted-foreground px-2 py-0.5 rounded-full">
@@ -282,7 +266,7 @@ export const AlertsModal: React.FC = () => {
             </DialogContent>
         </Dialog>
     );
-};
+});
 
 AlertsModal.displayName = 'AlertsModal';
 

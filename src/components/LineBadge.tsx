@@ -1,4 +1,6 @@
 import { cn, getContrastColor } from '@/lib/utils';
+import { safeHexColor } from '@/lib/color';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 
 interface LineBadgeProps {
     name: string;
@@ -20,7 +22,8 @@ const SIZE_CONFIGS = {
  *
  * Coloured pill showing a transit line name (Metro, Tram, Bus, etc).
  */
-export const LineBadge = ({ name, routeColor, size = 'md', className }: LineBadgeProps) => {
+export const LineBadge = ({ name, routeColor: rawColor, size = 'md', className }: LineBadgeProps) => {
+    const routeColor = safeHexColor(rawColor) ?? FALLBACK_ROUTE_COLOR;
     const len = name.length;
     const config = SIZE_CONFIGS[size] || SIZE_CONFIGS.md;
     const calculatedMinWidth = config.baseWidth + Math.max(0, len - 1) * config.charWidth;

@@ -9,6 +9,7 @@ import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../lib/routes';
 import type { AppError } from '@/types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
 
@@ -54,7 +55,7 @@ export const DetailPanelContent: React.FC = memo(() => {
     useEffect(() => {
         if (selectedVehicle && isVehicleError && !loadingDetail && !vehicleDetail) {
             toast.error(t('toasts.vehicleNotFound'));
-            navigate(`/${selectedCity}`);
+            navigate(paths.city(selectedCity));
         }
     }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t, selectedCity]);
 
@@ -92,12 +93,8 @@ export const DetailPanelContent: React.FC = memo(() => {
                     {showDepartureBoard && (
                         <DepartureBoard 
                             selectedStop={selectedStop}
-                            onDepartureClick={async (tripId, vehicleId) => {
-                                if (vehicleId && vehicleId !== tripId) {
-                                    navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}/${encodeURIComponent(vehicleId)}`);
-                                } else {
-                                    navigate(`/${selectedCity}/trip/${encodeURIComponent(tripId)}`);
-                                }
+                            onDepartureClick={(tripId, vehicleId) => {
+                                navigate(paths.trip(selectedCity, tripId, vehicleId));
                             }}
                         />
                     )}

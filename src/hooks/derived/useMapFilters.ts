@@ -2,11 +2,7 @@ import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
 import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
 import { getDelayFilterExpression } from '../../config/mapLayers';
-
-const EMPTY_GEOJSON: VehicleCollection = {
-    type: 'FeatureCollection',
-    features: []
-};
+import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
 
 /**
  * Provides memoized GeoJSON and filter expressions for map layers.
@@ -22,7 +18,7 @@ export const useMapFilters = (
     // 1. Create a standalone GeoJSON for the selected vehicle
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
         if (!selectedVehicle || !selectedVehicle.geometry) {
-            return EMPTY_GEOJSON;
+            return EMPTY_FEATURE_COLLECTION;
         }
 
         const coords = selectedVehicle.geometry.coordinates;
@@ -38,8 +34,17 @@ export const useMapFilters = (
                         type: 'Point',
                         coordinates: hasValidLocation ? coords : [0, 0]
                     },
+                    // Only fields the layers and animation read: this feature is re-sent to the map worker every frame.
                     properties: {
-                        ...selectedVehicle
+                        vehicle_id: selectedVehicle.vehicle_id,
+                        gtfs_trip_id: selectedVehicle.gtfs_trip_id,
+                        route_short_name: selectedVehicle.route_short_name,
+                        route_type: selectedVehicle.route_type,
+                        route_color: selectedVehicle.route_color,
+                        bearing: selectedVehicle.bearing,
+                        delay: selectedVehicle.delay,
+                        state_position: selectedVehicle.state_position ?? 'unknown',
+                        origin_timestamp: selectedVehicle.origin_timestamp,
                     }
                 } as VehicleFeature
             ]

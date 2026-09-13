@@ -23,7 +23,7 @@ export const PointOfSaleHeader: React.FC<PointOfSaleHeaderProps> = ({ pos }) => 
                     >
                         <MapPin size={12} className="text-muted-foreground/80 mr-1.5" strokeWidth={1.5} />
                         <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap">
-                            {t('map.departures.openInMaps', 'Open in Maps')}
+                            {t('map.departures.openInMaps')}
                         </span>
                     </button>
                 </div>

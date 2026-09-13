@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import type { AppCity } from '../../../functions/_core/types';
+import type { City } from '../../types/transit';
 import { groupCitiesByCountry } from '../../utils/viewerCountry';
 
 interface CitySelectionListProps {
-    cities: AppCity[];
+    cities: City[];
     selectedCitySlug: string;
-    onSelect: (city: AppCity) => void;
+    onSelect: (city: City) => void;
 }
 
 export const CitySelectionList: React.FC<CitySelectionListProps> = ({
@@ -31,7 +31,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
         return null;
     }
 
-    const renderCity = (city: AppCity) => {
+    const renderCity = (city: City) => {
         const isSelected = selectedCitySlug === city.slug;
         const subtitle = t(`map.regions.${city.slug}`, { defaultValue: '' });
 
@@ -86,7 +86,7 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                         </span>
                         {city.isBeta && (
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 uppercase font-bold tracking-wider bg-amber-500/20 text-amber-500 border-amber-500/30">
-                                Beta
+                                {t('common.beta')}
                             </Badge>
                         )}
                     </div>

@@ -80,4 +80,6 @@ export const API_LIMITS = {
      * it only ever rejects abuse rather than a heavy user.
      */
     DEPARTURE_STOP_IDS: 50,
+    FEEDBACK_MESSAGE_MIN_CHARS: 5,
+    FEEDBACK_MESSAGE_MAX_CHARS: 2000,
 };

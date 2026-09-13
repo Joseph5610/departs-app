@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
 import type { VehicleCollection, VehicleFeature } from '../../types/vehicles';
-
-const ANIMATION_DURATION = 1000; // 1 second smooth slide
-const MAX_ANIMATE_DISTANCE_SQ = 0.0002; // ~1.5km threshold to snap immediately
+import { VEHICLE_ANIMATION } from '../../config/constants';
+import { MAP_SOURCES } from '../../config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
 
 interface TrackedPosition {
     coords: [number, number];
@@ -30,6 +30,23 @@ const interpolateBearing = (start: number, end: number, t: number): number => {
     return (start + diff * t + 360) % 360;
 };
 
+const featureId = (f: VehicleFeature): string | null => f.properties.vehicle_id || f.properties.gtfs_trip_id || null;
+
+/** The features with their on-screen positions; features already where their data says are reused as-is. */
+const withDisplayedPositions = (features: VehicleFeature[], positions: Map<string, TrackedPosition>): VehicleFeature[] =>
+    features.map((f) => {
+        const id = featureId(f);
+        const pos = id ? positions.get(id) : undefined;
+        if (!pos) return f;
+        const [lng, lat] = f.geometry.coordinates;
+        if (pos.coords[0] === lng && pos.coords[1] === lat && pos.bearing === (f.properties.bearing ?? 0)) return f;
+        return {
+            ...f,
+            geometry: { ...f.geometry, coordinates: pos.coords },
+            properties: { ...f.properties, bearing: pos.bearing }
+        };
+    });
+
 const parseTime = (iso: string | undefined): number | undefined => {
     if (!iso) return undefined;
     const ms = Date.parse(iso);
@@ -44,8 +61,6 @@ const parseTime = (iso: string | undefined): number | undefined => {
  * Performance: Bypasses React state completely during animation frames
  * by calling setData directly on MapLibre GeoJSON sources.
  */
-const EMPTY_FC: VehicleCollection = { type: 'FeatureCollection', features: [] };
-
 export const useVehicleAnimation = (
     mapRef: React.RefObject<MapRef | null>,
     mapLoaded: boolean,
@@ -102,7 +117,7 @@ export const useVehicleAnimation = (
             prevTimes: Map<string, number>,
             nextTimes: Map<string, number>
         ) => {
-            const id = f.properties.vehicle_id || f.properties.gtfs_trip_id;
+            const id = featureId(f);
             if (!id) return;
 
             const endCoords = f.geometry.coordinates;
@@ -129,7 +144,9 @@ export const useVehicleAnimation = (
                 const dy = endCoords[1] - prevPos.coords[1];
                 const distSq = dx * dx + dy * dy;
 
-                if (distSq > MAX_ANIMATE_DISTANCE_SQ) {
+                if (distSq === 0 && prevPos.bearing === endBearing) {
+                    nextPositions.set(id, prevPos);
+                } else if (distSq > VEHICLE_ANIMATION.MAX_SLIDE_DISTANCE_SQ) {
                     // Snap immediately if it jumped a long distance
                     nextPositions.set(id, { coords: endCoords, bearing: endBearing });
                 } else {
@@ -160,74 +177,54 @@ export const useVehicleAnimation = (
         displayTimesRef.current = nextDisplayTimes;
         selectedTimesRef.current = nextSelectedTimes;
 
-        // Animation frame loop function
+        let lastUpdateTime = -Infinity;
+        let isFirstFrame = true;
+
         const animate = (time: number) => {
-            let isAnyAnimating = false;
-            const currentPositions = new Map<string, TrackedPosition>(lastPositionsRef.current);
+            const targets = targetsRef.current;
+            if (!isFirstFrame && time - lastUpdateTime < VEHICLE_ANIMATION.MIN_FRAME_INTERVAL_MS) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
+            lastUpdateTime = time;
 
-            // 1. Calculate interpolated positions
-            targetsRef.current.forEach((target, id) => {
-                const elapsed = time - target.startTime;
-                const t = Math.min(elapsed / ANIMATION_DURATION, 1);
-
-                const coords: [number, number] = [
-                    lerp(target.startCoords[0], target.endCoords[0], t),
-                    lerp(target.startCoords[1], target.endCoords[1], t)
-                ];
-                const bearing = interpolateBearing(target.startBearing, target.endBearing, t);
-
-                currentPositions.set(id, { coords, bearing });
-
-                if (t < 1) {
-                    isAnyAnimating = true;
-                }
+            const positions = lastPositionsRef.current;
+            const moved = new Set<string>();
+            targets.forEach((target, id) => {
+                const t = Math.min((time - target.startTime) / VEHICLE_ANIMATION.DURATION_MS, 1);
+                positions.set(id, {
+                    coords: [
+                        lerp(target.startCoords[0], target.endCoords[0], t),
+                        lerp(target.startCoords[1], target.endCoords[1], t)
+                    ],
+                    bearing: interpolateBearing(target.startBearing, target.endBearing, t)
+                });
+                moved.add(id);
+                if (t >= 1) targets.delete(id);
             });
 
-            // Save positions so the next update can interpolate from where they currently are
-            lastPositionsRef.current = currentPositions;
-
-            // Reconstruct the GeoJSON features in our stable refs
-            displayGeoJSON.features = displayVehiclesRawRef.current.map((f) => {
-                const id = f.properties.vehicle_id || f.properties.gtfs_trip_id;
-                const pos = id ? currentPositions.get(id) : null;
-                if (pos) {
-                    return {
-                        ...f,
-                        geometry: { ...f.geometry, coordinates: pos.coords },
-                        properties: { ...f.properties, bearing: pos.bearing }
-                    };
-                }
-                return f;
+            const hasMoved = (features: VehicleFeature[]) => features.some((f) => {
+                const id = featureId(f);
+                return id !== null && moved.has(id);
             });
 
-            selectedGeoJSON.features = selectedVehiclesRawRef.current.map((f) => {
-                const id = f.properties.vehicle_id || f.properties.gtfs_trip_id;
-                const pos = id ? currentPositions.get(id) : null;
-                if (pos) {
-                    return {
-                        ...f,
-                        geometry: { ...f.geometry, coordinates: pos.coords },
-                        properties: { ...f.properties, bearing: pos.bearing }
-                    };
-                }
-                return f;
-            });
+            // Direct map mutation bypassing React; a source is only re-sent when one of its vehicles moved.
+            const cityVehiclesSource = map.getSource(MAP_SOURCES.VEHICLES) as GeoJSONSource | undefined;
+            const selectedVehicleSource = map.getSource(MAP_SOURCES.SELECTED_VEHICLE) as GeoJSONSource | undefined;
 
-            // 2. Direct map mutation: update GeoJSON sources bypassing React
-            const cityVehiclesSource = map.getSource('city-vehicles') as GeoJSONSource | undefined;
-            const selectedVehicleSource = map.getSource('selected-vehicle') as GeoJSONSource | undefined;
-
-            if (cityVehiclesSource) {
-                // Respect the showVehicles preference even in the direct-mutation path,
-                // since this bypasses the React prop guard on the <Source> element.
-                cityVehiclesSource.setData(showVehicles ? displayGeoJSON : EMPTY_FC);
+            if (cityVehiclesSource && (isFirstFrame || hasMoved(displayVehiclesRawRef.current))) {
+                displayGeoJSON.features = withDisplayedPositions(displayVehiclesRawRef.current, positions);
+                // Respect showVehicles here too: this path bypasses the React prop guard on <Source>.
+                cityVehiclesSource.setData(showVehicles ? displayGeoJSON : EMPTY_FEATURE_COLLECTION);
             }
 
-            if (selectedVehicleSource) {
+            if (selectedVehicleSource && (isFirstFrame || hasMoved(selectedVehiclesRawRef.current))) {
+                selectedGeoJSON.features = withDisplayedPositions(selectedVehiclesRawRef.current, positions);
                 selectedVehicleSource.setData(selectedGeoJSON);
             }
 
-            if (isAnyAnimating) {
+            isFirstFrame = false;
+            if (targets.size > 0) {
                 animationFrameRef.current = requestAnimationFrame(animate);
             }
         };

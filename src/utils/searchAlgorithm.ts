@@ -1,5 +1,6 @@
 import { normalizeString } from './stringUtils';
 import type { StopFeature } from '../types/transit';
+import { STOP_SEARCH } from '../config/constants';
 
 export interface SearchIndexItem {
     stop: StopFeature;
@@ -24,7 +25,7 @@ export const createSearchIndex = (features: StopFeature[]): SearchIndexItem[] =>
 };
 
 export const searchStops = (searchIndex: SearchIndexItem[], query: string): StopFeature[] => {
-    if (query.length < 2) return [];
+    if (query.length < STOP_SEARCH.MIN_QUERY_LENGTH) return [];
 
     const normalizedQuery = normalizeString(query).trim();
     const upperQuery = query.trim().toUpperCase();
@@ -43,20 +44,17 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
         .map(item => {
             let score = 0;
 
-            // Stop ID match (highest priority)
             if (item.stopId === upperQuery) {
-                score += 2000;
+                score += STOP_SEARCH.SCORES.STOP_ID_EXACT;
             } else if (item.stopId.startsWith(upperQuery)) {
-                score += 1500;
+                score += STOP_SEARCH.SCORES.STOP_ID_PREFIX;
             }
 
-            // Exact match (highest priority)
             if (item.normalizedName === normalizedQuery) {
-                score += 1000;
+                score += STOP_SEARCH.SCORES.NAME_EXACT;
             }
-            // Starts with the full query string
             else if (item.normalizedName.startsWith(normalizedQuery)) {
-                score += 500;
+                score += STOP_SEARCH.SCORES.NAME_PREFIX;
             }
             // Sequential token prefix match
             else {
@@ -67,12 +65,11 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
                         break;
                     }
                 }
-                if (matchesSequentially) score += 250;
+                if (matchesSequentially) score += STOP_SEARCH.SCORES.TOKENS_IN_ORDER;
             }
 
-            // First token match bonus
             if (item.nameTokens[0] && item.nameTokens[0].startsWith(queryTokens[0])) {
-                score += 100;
+                score += STOP_SEARCH.SCORES.FIRST_TOKEN;
             }
 
             return { stop: item.stop, score };
@@ -94,7 +91,7 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
             seen.add(match.stop.properties.stop_name);
             uniqueMatches.push(match.stop);
         }
-        if (uniqueMatches.length >= 10) {
+        if (uniqueMatches.length >= STOP_SEARCH.RESULT_LIMIT) {
             break;
         }
     }

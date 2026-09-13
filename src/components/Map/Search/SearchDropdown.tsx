@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2 } from 'lucide-react';
 import { SearchItem } from './SearchItem';
 import { getLineMetadataFromMap } from '@/utils/transitUtils';
+import { searchHistoryKey } from '@/utils/searchHistory';
 import {
     Command,
     CommandList,
@@ -28,6 +29,18 @@ interface SearchDropdownProps {
     lineMetadataMap: Map<string, { route_color: string; type: string }>;
 }
 
+const GroupHeading: React.FC<{ icon: React.ReactNode; label: string; count: number }> = ({ icon, label, count }) => (
+    <div className="flex items-center justify-between w-full">
+        <div className="flex gap-2 items-center">
+            {icon}
+            <span>{label}</span>
+        </div>
+        <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+            {count}
+        </span>
+    </div>
+);
+
 /**
  * SearchDropdown
  *
@@ -50,8 +63,26 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     lineMetadataMap
 }) => {
     const { t } = useTranslation();
+    const favoriteStopIds = React.useMemo(() => new Set(favoriteStops), [favoriteStops]);
 
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
+
+    const renderStopResults = (testIdPrefix: 'fav' | 'res') => results.map((stop) => {
+        const isFavorite = favoriteStopIds.has(stop.properties.stop_id);
+        return (
+            <SearchItem
+                key={stop.properties.stop_id}
+                icon={isFavorite ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
+                title={stop.properties.stop_name}
+                subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+                metroLines={stop.properties.metro_lines}
+                lines={stop.properties.lines}
+                highlight={isFavorite}
+                testId={`search-item-${testIdPrefix}-stop-${stop.properties.stop_id}`}
+                onClick={() => onStopSelect(stop)}
+            />
+        );
+    });
 
     return (
         <div className="mt-2 overflow-hidden max-h-[60vh] rounded-2xl glassy p-1.5 shadow-xl">
@@ -62,26 +93,12 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 <CommandList className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
                 {showHistory && (
                     <CommandGroup
-                        heading={
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex gap-2 items-center">
-                                    <Clock size={14} className="text-primary" strokeWidth={2} />
-                                    <span>{t('search.recent')}</span>
-                                </div>
-                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
-                                    {searchHistory.length}
-                                </span>
-                            </div>
-                        }
+                        heading={<GroupHeading icon={<Clock size={14} className="text-primary" strokeWidth={2} />} label={t('search.recent')} count={searchHistory.length} />}
                         variant="search"
                     >
                         {searchHistory.map((item) => (
                             <SearchItem
-                                key={
-                                    item.type === 'stop' ? `hist-stop-${item.stop_id}` :
-                                    item.type === 'place' ? `hist-place-${item.place_id}` :
-                                    `hist-line-${item.lines.join('-')}`
-                                }
+                                key={searchHistoryKey(item)}
                                 icon={
                                     item.type === 'stop' ? <MapPin size={16} strokeWidth={1.5} /> :
                                     item.type === 'place' ? <Building2 size={16} strokeWidth={1.5} /> :
@@ -99,11 +116,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 }
                                 metroLines={item.type === 'stop' ? item.metro_lines : undefined}
                                 lines={item.type === 'stop' ? item.lines : undefined}
-                                testId={
-                                    item.type === 'stop' ? `search-item-hist-stop-${item.stop_id}` :
-                                    item.type === 'place' ? `search-item-hist-place-${item.place_id}` :
-                                    `search-item-hist-line-${item.lines.join('-')}`
-                                }
+                                testId={`search-item-hist-${searchHistoryKey(item)}`}
                                 onClick={() => onHistorySelect(item)}
                             />
                         ))}
@@ -113,32 +126,10 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {/* Favorites heading */}
                 {query === '' && results.length > 0 && (
                     <CommandGroup
-                        heading={
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex gap-2 items-center">
-                                    <Star size={14} className="text-amber-500 fill-amber-500/20" strokeWidth={2} />
-                                    <span>{t('search.favorites')}</span>
-                                </div>
-                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
-                                    {results.length}
-                                </span>
-                            </div>
-                        }
+                        heading={<GroupHeading icon={<Star size={14} className="text-amber-500 fill-amber-500/20" strokeWidth={2} />} label={t('search.favorites')} count={results.length} />}
                         variant="search"
                     >
-                        {results.map((stop) => (
-                            <SearchItem
-                                key={stop.properties.stop_id}
-                                icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
-                                title={stop.properties.stop_name}
-                                subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
-                                metroLines={stop.properties.metro_lines}
-                                lines={stop.properties.lines}
-                                highlight={favoriteStops.includes(stop.properties.stop_id)}
-                                testId={`search-item-fav-stop-${stop.properties.stop_id}`}
-                                onClick={() => onStopSelect(stop)}
-                            />
-                        ))}
+                        {renderStopResults('fav')}
                     </CommandGroup>
                 )}
 
@@ -166,36 +157,14 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {/* Search results */}
                 {query !== '' && results.length > 0 && (
                     <CommandGroup className="p-0">
-                        {results.map((stop) => (
-                            <SearchItem
-                                key={stop.properties.stop_id}
-                                icon={favoriteStops.includes(stop.properties.stop_id) ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
-                                title={stop.properties.stop_name}
-                                subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
-                                metroLines={stop.properties.metro_lines}
-                                lines={stop.properties.lines}
-                                highlight={favoriteStops.includes(stop.properties.stop_id)}
-                                testId={`search-item-res-stop-${stop.properties.stop_id}`}
-                                onClick={() => onStopSelect(stop)}
-                            />
-                        ))}
+                        {renderStopResults('res')}
                     </CommandGroup>
                 )}
 
                 {/* Geocoding / places */}
                 {geocodingResults.length > 0 && (
                     <CommandGroup
-                        heading={
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex gap-2 items-center">
-                                    <Building2 size={14} className="text-primary" strokeWidth={2} />
-                                    <span>{t('search.places')}</span>
-                                </div>
-                                <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
-                                    {geocodingResults.length}
-                                </span>
-                            </div>
-                        }
+                        heading={<GroupHeading icon={<Building2 size={14} className="text-primary" strokeWidth={2} />} label={t('search.places')} count={geocodingResults.length} />}
                         variant="search"
                     >
                         {geocodingResults.map((place) => (

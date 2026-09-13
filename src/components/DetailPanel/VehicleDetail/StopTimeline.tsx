@@ -2,8 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, Hand } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../../lib/routes';
 import { cn } from '@/lib/utils';
 import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
+import { getDelayStatus } from '../../../config/transit';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '../../LineBadge';
@@ -131,7 +133,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
 
     const handleStopClick = () => {
         if (hasValidStopId) {
-            navigate(`/${selectedCity}/stop/${encodeURIComponent(rawStopId)}`);
+            navigate(paths.stop(selectedCity, rawStopId));
         }
     };
 
@@ -171,7 +173,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                         <button
                             type="button"
                             onClick={handleStopClick}
-                            aria-label={t('map.vehicleDetails.viewStopDepartures', { stopName: stop.properties.stop_name, defaultValue: `View departures for ${stop.properties.stop_name}` })}
+                            aria-label={t('map.vehicleDetails.viewStopDepartures', { stopName: stop.properties.stop_name })}
                             className={cn(
                                 "text-sm truncate min-w-0 text-left cursor-pointer transition-colors duration-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-xs hover:underline hover:text-primary active:opacity-80",
                                 isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium"
@@ -193,7 +195,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                                 <Hand size={14} strokeWidth={1.5} />
                             </PopoverTrigger>
                             <PopoverContent side="top" className="w-auto px-3 py-1.5 min-w-30 text-center">
-                                <span className="text-sm font-medium">{t('map.vehicleDetails.requestStop', 'Request Stop')}</span>
+                                <span className="text-sm font-medium">{t('map.vehicleDetails.requestStop')}</span>
                             </PopoverContent>
                         </Popover>
                     )}
@@ -231,7 +233,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                     
                     if (hasRealtime && schTime && realtimeTime) {
                         const diff = calculateTimeDifferenceSecs(realtimeTime as string, schTime as string);
-                        isLate = diff > 30;
+                        isLate = getDelayStatus(diff) === 'late';
                     }
                     return (
                         <>

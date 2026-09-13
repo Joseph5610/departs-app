@@ -2,16 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import type { RSSItem, Infotext } from '../../types/alerts';
 import { apiFetch } from '../../lib/api-client';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { getCityConfig } from '../../config/cities';
-import { useCities } from './useCities';
+import { useCityConfig } from './useCities';
 import { QUERY_TIMING_MS } from '../../config/constants';
 
 export const useGlobalAlerts = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const cityConfig = getCityConfig(selectedCity);
-    const { data: citiesData } = useCities();
-    // A cached /api/cities response may predate the flag, so fall back to the bundled config.
-    const hasAlerts = Boolean(citiesData?.cities.find(c => c.slug === selectedCity)?.hasAlerts ?? cityConfig?.hasAlerts);
+    const cityConfig = useCityConfig();
+    const hasAlerts = Boolean(cityConfig.hasAlerts);
 
     const alertsQuery = useQuery<{ alerts: RSSItem[] }>({
         queryKey: ['alerts', selectedCity],
@@ -28,7 +25,7 @@ export const useGlobalAlerts = () => {
         queryFn: async () => {
             return await apiFetch<Infotext[]>(`/${selectedCity}/infotexts`);
         },
-        enabled: !!selectedCity && !!cityConfig?.hasInfotexts,
+        enabled: !!selectedCity && !!cityConfig.hasInfotexts,
         refetchInterval: QUERY_TIMING_MS.INFOTEXTS_REFRESH,
         staleTime: QUERY_TIMING_MS.NOTICES_STALE,
     });

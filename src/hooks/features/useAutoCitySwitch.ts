@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 import React from 'react';
-import { useCities } from '../data/useCities';
+import { useCities, useCityConfig } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { navigate } from 'wouter/use-browser-location';
+import { cityOverviewCamera } from '../../utils/mapUtils';
 
 /**
  * useAutoCitySwitch
@@ -18,6 +20,7 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
 export const useAutoCitySwitch = () => {
     const { t } = useTranslation();
     const { data } = useCities();
+    const cityConfig = useCityConfig();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
     
@@ -37,16 +40,15 @@ export const useAutoCitySwitch = () => {
             
             // Skip toast if this is the very first city change for a new user
             if (!(initiallyNotSeen && wasFirstChange)) {
-                const cityData = data?.cities.find(c => c.slug === selectedCity);
-                if (cityData) {
-                    toast(t('map.controls.switchedCity', { city: cityData.name }), {
+                if (cityConfig.name) {
+                    toast(t('map.controls.switchedCity', { city: cityConfig.name }), {
                         icon: React.createElement(Building2, { className: "w-4 h-4 text-primary" })
                     });
                 }
             }
             prevCity.current = selectedCity;
         }
-    }, [selectedCity, data, t]);
+    }, [selectedCity, cityConfig.name, t]);
 
     useEffect(() => {
         if (!mapLoaded || !mapRef.current || !data?.cities) {
@@ -114,12 +116,9 @@ export const useAutoCitySwitch = () => {
                     pathParts.push(newCity.slug);
                 }
                 const newUrl = `/${pathParts.join('/')}${window.location.search}`;
-                
-                // Use history.replaceState to avoid adding navigation history for panning
-                window.history.replaceState({}, '', newUrl);
-                
-                // Dispatch a popstate event so wouter knows the URL changed
-                window.dispatchEvent(new Event('popstate'));
+
+                // Replace rather than push, so panning doesn't add history entries
+                navigate(newUrl, { replace: true });
             }
         };
 
@@ -132,19 +131,13 @@ export const useAutoCitySwitch = () => {
 
     // 2. State -> Map sync (fly to new city if selectedCity changes via URL)
     useEffect(() => {
-        if (!mapLoaded || !mapRef.current || !data?.cities) {
+        if (!mapLoaded || !mapRef.current) {
             return;
         }
 
         const map = mapRef.current.getMap();
-        const cityData = data.cities.find(c => c.slug === selectedCity);
-        
-        if (!cityData || !cityData.center) {
-            return;
-        }
-
         const center = map.getCenter();
-        const [minLng, minLat, maxLng, maxLat] = cityData.bounds;
+        const [minLng, minLat, maxLng, maxLat] = cityConfig.bounds;
         
         const isInsideStrict = (
             center.lng >= minLng &&
@@ -153,17 +146,13 @@ export const useAutoCitySwitch = () => {
             center.lat <= maxLat
         );
 
-        const isCenterVisible = map.getBounds().contains(cityData.center as [number, number]);
+        const isCenterVisible = map.getBounds().contains(cityConfig.center);
 
         // If selectedCity changed but we are outside its bounds and its center is not visible, fly there.
         // This handles cases where user clicks a link to /brno while map is in Prague.
         // If the center is already visible, the user probably just panned there, so don't aggressively fly.
         if (!isInsideStrict && !isCenterVisible) {
-            map.flyTo({
-                center: cityData.center as [number, number],
-                zoom: 12,
-                duration: 1500
-            });
+            map.flyTo(cityOverviewCamera(cityConfig.center));
         }
-    }, [selectedCity, mapLoaded, mapRef, data]);
+    }, [cityConfig.center, cityConfig.bounds, mapLoaded, mapRef]);
 };

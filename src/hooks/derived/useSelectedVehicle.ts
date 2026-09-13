@@ -1,10 +1,77 @@
-import { useMemo } from 'react';
 import { useRouteParams } from '../useRouteParams';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
-import type { VehicleDetail } from '../../types/transit';
+import type { VehicleDetail, VehicleFeature } from '../../types/transit';
+import type { StoredEnrichmentPatch } from '../../types/enrichment';
+import { memoizeLast } from '../../lib/memoize';
 import { applyEnrichment } from '../../lib/enrichment';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
+
+const mergeSelectedVehicle = memoizeLast((
+    tripId: string | null,
+    vehicleId: string | null,
+    vehicleIndex: Map<string, VehicleFeature>,
+    tripIndex: Map<string, VehicleFeature>,
+    vehicleDetail: VehicleDetail | undefined,
+    byTripId: Map<string, StoredEnrichmentPatch>,
+    byVehicleId: Map<string, StoredEnrichmentPatch>,
+    vehiclesUpdatedAt: number,
+    detailUpdatedAt: number,
+): VehicleDetail | null => {
+    if (!tripId) {
+        return null;
+    }
+
+    let liveMatch = vehicleId ? vehicleIndex.get(vehicleId) : tripIndex.get(tripId);
+
+    // If we matched the vehicle by ID but it has moved on to a different trip,
+    // we ignore its live stream data so we cleanly fall back to the static schedule of the old trip.
+    if (liveMatch && tripId && liveMatch.properties.gtfs_trip_id && liveMatch.properties.gtfs_trip_id !== tripId) {
+        liveMatch = undefined;
+    }
+
+    const isFallback = !!vehicleDetail?.is_static_fallback;
+
+    const merged: VehicleDetail = {
+        ...liveMatch?.properties,
+        ...vehicleDetail,
+        state_position: vehicleDetail?.state_position ?? liveMatch?.properties.state_position ?? 'on_track',
+        vehicle_id: vehicleId || liveMatch?.properties.vehicle_id || vehicleDetail?.vehicle_id || null,
+        gtfs_trip_id: tripId,
+        route_short_name: vehicleDetail?.route_short_name || liveMatch?.properties.route_short_name || '',
+        route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? 'unknown',
+        trip_headsign: vehicleDetail?.trip_headsign || liveMatch?.properties.trip_headsign || '',
+        route_color: vehicleDetail?.route_color || liveMatch?.properties.route_color || '',
+        bearing: vehicleDetail?.bearing ?? liveMatch?.properties.bearing ?? null,
+        delay: vehicleDetail?.delay ?? liveMatch?.properties.delay ?? null,
+    };
+
+    // If vehicleDetail returned delay: null, it clobbered our delay: 0 fallback.
+    // But we want to ensure we don't have undefined delay before enrichment.
+    if (merged.delay === undefined) {
+        merged.delay = null;
+    }
+
+    if (isFallback && liveMatch) {
+        merged.delay = liveMatch.properties.delay;
+        merged.bearing = liveMatch.properties.bearing;
+        merged.state_position = liveMatch.properties.state_position;
+        if (liveMatch.properties.last_stop_sequence !== undefined) {
+            merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
+        }
+    }
+
+    const isValid = (g: VehicleDetail['geometry'] | undefined) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
+
+    if (isValid(vehicleDetail?.geometry)) {
+        merged.geometry = vehicleDetail!.geometry;
+    } else if (isValid(liveMatch?.geometry)) {
+        merged.geometry = liveMatch!.geometry;
+    }
+
+    const baseTs = Math.max(vehiclesUpdatedAt || 0, detailUpdatedAt || 0);
+    return applyEnrichment(merged, merged.gtfs_trip_id, merged.vehicle_id, byTripId, byVehicleId, baseTs);
+});
 
 /**
  * useSelectedVehicle
@@ -23,59 +90,5 @@ export const useSelectedVehicle = () => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
 
-    return useMemo((): VehicleDetail | null => {
-        if (!tripId) {
-            return null;
-        }
-
-        let liveMatch = vehicleId ? vehicleIndex.get(vehicleId) : tripIndex.get(tripId);
-
-        // If we matched the vehicle by ID but it has moved on to a different trip,
-        // we ignore its live stream data so we cleanly fall back to the static schedule of the old trip.
-        if (liveMatch && tripId && liveMatch.properties.gtfs_trip_id && liveMatch.properties.gtfs_trip_id !== tripId) {
-            liveMatch = undefined;
-        }
-
-        const isFallback = !!vehicleDetail?.is_static_fallback;
-
-        const merged: VehicleDetail = {
-            ...liveMatch?.properties,
-            ...vehicleDetail,
-            state_position: vehicleDetail?.state_position ?? liveMatch?.properties.state_position ?? 'on_track',
-            vehicle_id: vehicleId || liveMatch?.properties.vehicle_id || vehicleDetail?.vehicle_id || null,
-            gtfs_trip_id: tripId,
-            route_short_name: vehicleDetail?.route_short_name || liveMatch?.properties.route_short_name || '',
-            route_type: vehicleDetail?.route_type ?? liveMatch?.properties.route_type ?? 'unknown',
-            trip_headsign: vehicleDetail?.trip_headsign || liveMatch?.properties.trip_headsign || '',
-            route_color: vehicleDetail?.route_color || liveMatch?.properties.route_color || '',
-            bearing: vehicleDetail?.bearing ?? liveMatch?.properties.bearing ?? null,
-            delay: vehicleDetail?.delay ?? liveMatch?.properties.delay ?? null,
-        };
-
-        // If vehicleDetail returned delay: null, it clobbered our delay: 0 fallback.
-        // But we want to ensure we don't have undefined delay before enrichment.
-        if (merged.delay === undefined) {
-            merged.delay = null;
-        }
-
-        if (isFallback && liveMatch) {
-            merged.delay = liveMatch.properties.delay;
-            merged.bearing = liveMatch.properties.bearing;
-            merged.state_position = liveMatch.properties.state_position;
-            if (liveMatch.properties.last_stop_sequence !== undefined) {
-                merged.last_stop_sequence = liveMatch.properties.last_stop_sequence;
-            }
-        }
-
-        const isValid = (g: VehicleDetail['geometry'] | undefined) => g?.coordinates && (g.coordinates[0] !== 0 || g.coordinates[1] !== 0);
-
-        if (isValid(vehicleDetail?.geometry)) {
-            merged.geometry = vehicleDetail!.geometry;
-        } else if (isValid(liveMatch?.geometry)) {
-            merged.geometry = liveMatch!.geometry;
-        }
-
-        const baseTs = Math.max(vehiclesUpdatedAt || 0, detailUpdatedAt || 0);
-        return applyEnrichment(merged, merged.gtfs_trip_id, merged.vehicle_id, byTripId, byVehicleId, baseTs);
-    }, [tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, vehiclesUpdatedAt, detailUpdatedAt]);
+    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, vehiclesUpdatedAt, detailUpdatedAt);
 };

@@ -3,7 +3,7 @@ import { useNetworkStatus } from '../features/useNetworkStatus';
 import { useVehicles } from '../data/useVehicles';
 import type { AppError } from '../../types/error';
 
-export type SystemStatusType = 'offline' | 'app_error' | 'upstream_offline' | 'stale' | 'refreshing' | 'healthy';
+type SystemStatusType = 'offline' | 'app_error' | 'upstream_offline' | 'stale' | 'refreshing' | 'healthy';
 
 export interface SystemStatus {
     type: SystemStatusType;

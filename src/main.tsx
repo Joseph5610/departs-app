@@ -7,11 +7,11 @@ import App from './App'
 import { ErrorBoundary } from './components/Modals/ErrorBoundary'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import './index.css'
-import './i18n/config'
 
 import { toast } from 'sonner'
 import { QueryCache } from '@tanstack/react-query'
-import type { AppError } from './types/error'
+import { AppErrorCode, type AppError } from './types/error'
+import i18n from './i18n/config'
 import { TRANSIT_REFRESH_MS } from './config/constants'
 
 const queryClient = new QueryClient({
@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
       // Do not show toast for 404 (Not Found) or upstream errors to avoid double notifications (UI component renders inline error state)
       if (appError.status === 404) return;
       if (appError.isUpstream === false || appError.code === 'NETWORK_ERROR') {
-        toast.error(appError.message || 'Something went wrong');
+        toast.error(i18n.t(appError.code === AppErrorCode.NETWORK_ERROR ? 'errors.network' : 'errors.generic'));
       }
     },
   }),

@@ -1,12 +1,14 @@
-import { useGeolocation } from '../../hooks/features/useGeolocation';
+import { useGeolocationWatcher } from '../../hooks/features/useGeolocation';
 import { useMapInterface } from '../../hooks/features/useMapInterface';
 import { useAutoCitySwitch } from '../../hooks/features/useAutoCitySwitch';
+import { useRouteCitySync } from '../../hooks/features/useRouteCitySync';
 
 // --- ENGINE ---
 
 const MapEngine: React.FC = () => {
+    useRouteCitySync();
     useMapInterface();
-    useGeolocation();
+    useGeolocationWatcher();
     useAutoCitySwitch();
     return null;
 };

@@ -3,99 +3,117 @@ import localforage from 'localforage';
 import type { StopCollection, StopFeature } from '../../types/transit';
 import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
+import { memoizeLast } from '../../lib/memoize';
 import type { AppError } from '../../types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { QUERY_TIMING_MS } from '../../config/constants';
+import { QUERY_TIMING_MS, STOPS_DEVICE_CACHE } from '../../config/constants';
 
-// Configure localforage for IndexedDB
 localforage.config({
     name: 'departs',
     storeName: 'stops_cache'
 });
 
-const STORAGE_VERSION = 'v46';
-const STOP_STORAGE_KEY = `city_stops_storage_${STORAGE_VERSION}`;
+const VERSIONED_KEY_PREFIX = `${STOPS_DEVICE_CACHE.KEY_PREFIX}${STOPS_DEVICE_CACHE.VERSION}`;
 
 interface CachedStops {
     data: StopCollection;
     updatedAt: number;
 }
 
+const readCachedStops = async (key: string): Promise<CachedStops | null> => {
+    try {
+        return await localforage.getItem<CachedStops>(key);
+    } catch (error) {
+        console.warn('Stops device cache unavailable, downloading instead', error);
+        return null;
+    }
+};
+
+/** Saves the stops and drops copies left by earlier cache versions. Storage failures never fail the query. */
+const writeCachedStops = async (key: string, value: CachedStops): Promise<void> => {
+    try {
+        await localforage.setItem(key, value);
+        const keys = await localforage.keys();
+        const stale = keys.filter(k => k.startsWith(STOPS_DEVICE_CACHE.KEY_PREFIX) && !k.startsWith(VERSIONED_KEY_PREFIX));
+        await Promise.all(stale.map(k => localforage.removeItem(k)));
+    } catch (error) {
+        console.warn('Could not save stops to the device cache', error);
+    }
+};
+
+const splitStops = memoizeLast((collection: StopCollection | undefined) => {
+    if (!collection || !Array.isArray(collection.features)) {
+        return { stops: null, centroids: null };
+    }
+
+    const features = collection.features;
+    const hasCentroids = features.some(f => f.properties.is_centroid);
+
+    const stops: StopCollection = {
+        type: 'FeatureCollection',
+        features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? !f.properties.is_centroid : true))
+    };
+
+    const centroids: StopCollection = {
+        type: 'FeatureCollection',
+        features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1))
+    };
+
+    return { stops, centroids };
+});
+
+const buildStopIndex = memoizeLast((collection: StopCollection | undefined) => {
+    const idx = new Map<string, StopFeature>();
+    for (const f of collection?.features ?? []) {
+        idx.set(f.properties.stop_id, f);
+        for (const subId of f.properties.all_ids ?? []) {
+            idx.set(subId, f);
+        }
+    }
+    return idx;
+});
+
 /**
  * useStops
- * 
- * Fetches and caches Prague transit stop data from the backend.
- * Provides GeoJSON features for map rendering and indexing for stop searching.
- * Utilizes localForage for IndexedDB caching to improve startup time.
- * Merges data and timestamp into a single storage entry for efficiency.
+ *
+ * Fetches the selected city's stops, kept on the device (IndexedDB) for a day to speed up startup.
+ * Provides GeoJSON for the map layers and an index resolving any stop or platform ID.
  */
 export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    const query = useQuery<{ data: StopCollection; updatedAt: number }, AppError>({
+    const query = useQuery<CachedStops, AppError>({
         queryKey: ['stops', selectedCity],
         queryFn: async () => {
             const now = Date.now();
-            const cached = await localforage.getItem<CachedStops>(`${STOP_STORAGE_KEY}_${selectedCity}`);
+            const key = `${VERSIONED_KEY_PREFIX}_${selectedCity}`;
+            const cached = await readCachedStops(key);
 
             if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < QUERY_TIMING_MS.STOPS_DEVICE_CACHE)) {
                 return cached;
             }
 
-            // Cache busting via query parameter linked to the storage version
-            const data = await apiFetch<StopCollection>(`/${selectedCity}/stops?v=${STORAGE_VERSION}`);
+            const data = await apiFetch<StopCollection>(`/${selectedCity}/stops?v=${STOPS_DEVICE_CACHE.VERSION}`);
             const result = { data, updatedAt: now };
-
-            await localforage.setItem(`${STOP_STORAGE_KEY}_${selectedCity}`, result);
-
+            await writeCachedStops(key, result);
             return result;
         },
-        staleTime: Infinity,
+        staleTime: QUERY_TIMING_MS.STOPS_DEVICE_CACHE,
         gcTime: Infinity,
     });
 
-    const { stops, centroids } = useMemo(() => {
-        if (!query.data?.data || !Array.isArray(query.data.data.features)) {
-            return { stops: null, centroids: null };
-        }
-        
-        const features = query.data.data.features;
-        const hasCentroids = features.some(f => f.properties.is_centroid);
+    const collection = query.data?.data;
+    const { stops, centroids } = splitStops(collection);
+    const stopIndex = buildStopIndex(collection);
+    const updatedAt = query.data?.updatedAt ?? null;
+    const isLoading = query.isLoading;
 
-        const stops = {
-            type: 'FeatureCollection',
-            features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? !f.properties.is_centroid : true))
-        } as StopCollection;
-
-        const centroids = {
-            type: 'FeatureCollection',
-            features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1))
-        } as StopCollection;
-
-        return { stops, centroids };
-    }, [query.data]);
-
-    const stopIndex = useMemo(() => {
-        const idx = new Map<string, StopFeature>();
-        if (query.data?.data?.features) {
-            for (const f of query.data.data.features) {
-                idx.set(f.properties.stop_id, f);
-                if (f.properties.all_ids) {
-                    for (const subId of f.properties.all_ids) {
-                        idx.set(subId, f);
-                    }
-                }
-            }
-        }
-        return idx;
-    }, [query.data]);
-
-    return {
-        ...query,
+    return useMemo(() => ({
         stops,
         centroids,
         stopIndex,
-        allFeatures: query.data?.data || null,
-        updatedAt: query.data?.updatedAt || null
-    };
+        allFeatures: collection ?? null,
+        updatedAt,
+        isLoading,
+    }), [stops, centroids, stopIndex, collection, updatedAt, isLoading]);
 };

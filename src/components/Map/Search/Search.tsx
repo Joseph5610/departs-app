@@ -2,15 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
+import { paths } from '../../../lib/routes';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
-import { useGeocoding, geocodingCache } from '../../../hooks/data/useGeocoding';
+import { useGeocoding, useRememberedPlace, rememberPlace } from '../../../hooks/data/useGeocoding';
 import { useRouteParams } from '../../../hooks/useRouteParams';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useViewportStore } from '../../../state/viewportStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
-import { MAP_STOP_SELECT_ZOOM, MAP_FLY_DURATION } from '../../../config/constants';
+import { MAP_CAMERA } from '../../../config/constants';
 import { useStops } from '../../../hooks/data/useStops';
+import { useLineRules } from '../../../hooks/data/useCities';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import { cn } from '@/lib/utils';
@@ -42,7 +44,7 @@ export const Search: React.FC = React.memo(() => {
     const activeFilter = useViewportStore(s => s.routeFilter);
     const setSelectedPlaceId = useViewportStore(s => s.actions.setSelectedPlaceId);
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
-    const selectedPlace = selectedPlaceId ? geocodingCache.get(selectedPlaceId) : null;
+    const selectedPlace = useRememberedPlace(selectedPlaceId);
     const { setRouteFilter: onLineSelect } = useViewportStore(s => s.actions);
 
     // Metadata & Geolocation
@@ -92,20 +94,17 @@ export const Search: React.FC = React.memo(() => {
         getLineMetadataMap(stops.allFeatures?.features || []), 
     [stops.allFeatures]);
 
+    const { linePattern } = useLineRules();
     const isLineLike = React.useMemo(() => {
         const trimmed = query.trim().toUpperCase();
         if (trimmed.length === 0) return false;
-        
+        const looksLikeLine = (name: string) => lineMetadataMap.has(name) || linePattern.test(name);
+
         if (trimmed.includes(',')) {
-            return linesFromQuery.length > 0 && linesFromQuery.every(l => 
-                lineMetadataMap.has(l) || /^[A-C]|S\d+|R\d+|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d$/i.test(l)
-            );
+            return linesFromQuery.length > 0 && linesFromQuery.every(looksLikeLine);
         }
-        
-        // Match against map OR check if it looks like a PID line (safety net for cache/sync issues)
-        return lineMetadataMap.has(trimmed) || 
-               /^([A-C]|S\d{1,2}|R\d{1,2}|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d|MHD\s?\d{1,2})$/i.test(trimmed);
-    }, [query, linesFromQuery, lineMetadataMap]);
+        return looksLikeLine(trimmed);
+    }, [query, linesFromQuery, lineMetadataMap, linePattern]);
 
     const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
 
@@ -131,8 +130,8 @@ export const Search: React.FC = React.memo(() => {
         const [lng, lat] = stop.geometry.coordinates;
         flyTo({
             center: [lng, lat],
-            zoom: MAP_STOP_SELECT_ZOOM,
-            duration: MAP_FLY_DURATION
+            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+            duration: MAP_CAMERA.FLY_MS
         });
         const selectedStop = {
             stop_id: stop.properties.stop_id,
@@ -144,7 +143,7 @@ export const Search: React.FC = React.memo(() => {
             coordinates: stop.geometry.coordinates as [number, number]
         };
 
-        navigate(`/${selectedCity}/stop/${encodeURIComponent(selectedStop.stop_id)}`);
+        navigate(paths.stop(selectedCity, selectedStop.stop_id));
         addToHistory({
             type: 'stop',
             city_slug: selectedCity,
@@ -159,19 +158,19 @@ export const Search: React.FC = React.memo(() => {
         if (item.type === 'stop') {
             flyTo({
                 center: item.coordinates,
-                zoom: MAP_STOP_SELECT_ZOOM,
-                duration: MAP_FLY_DURATION
+                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+                duration: MAP_CAMERA.FLY_MS
             });
-            navigate(`/${targetCity}/stop/${encodeURIComponent(item.stop_id)}`);
+            navigate(paths.stop(targetCity, item.stop_id));
             addToHistory(item);
         } else if (item.type === 'place') {
-            navigate(`/${targetCity}`);
+            navigate(paths.city(targetCity));
             flyTo({
                 center: item.coordinates,
-                zoom: MAP_STOP_SELECT_ZOOM,
-                duration: MAP_FLY_DURATION
+                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+                duration: MAP_CAMERA.FLY_MS
             });
-            geocodingCache.set(item.place_id, {
+            rememberPlace({
                 id: item.place_id,
                 name: item.name,
                 subtitle: item.subtitle || '',
@@ -196,11 +195,11 @@ export const Search: React.FC = React.memo(() => {
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
-        navigate(`/${selectedCity}`);
+        navigate(paths.city(selectedCity));
         flyTo({
             center: result.coordinates,
-            zoom: MAP_STOP_SELECT_ZOOM,
-            duration: MAP_FLY_DURATION
+            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+            duration: MAP_CAMERA.FLY_MS
         });
         setSelectedPlaceId(result.id);
         addToHistory({

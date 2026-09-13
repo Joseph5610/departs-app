@@ -1,276 +1,167 @@
 import type { Map } from 'maplibre-gl';
+import { MAP_ICONS } from '../config/mapLayers';
 
-const addArrowIcon = (map: Map) => {
-    const size = 64;
+const ICON_SIZE_PX = 64;
+
+/** Draws an icon on a fresh canvas and (re)adds it to the map; `sdf` icons are single-colour masks tinted by their layer. */
+const registerIcon = (map: Map, name: string, sdf: boolean, draw: (ctx: CanvasRenderingContext2D) => void) => {
     const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = ICON_SIZE_PX;
+    canvas.height = ICON_SIZE_PX;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, size, size);
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.moveTo(32, 12);
-        ctx.lineTo(18, 46);
-        ctx.lineTo(32, 38);
-        ctx.lineTo(46, 46);
-        ctx.closePath();
-        ctx.fill();
-
-        if (map.hasImage('v-arrow-centered')) map.removeImage('v-arrow-centered');
-        const imageData = ctx.getImageData(0, 0, size, size);
-        map.addImage('v-arrow-centered', imageData, { sdf: true });
-    }
+    if (!ctx) return;
+    draw(ctx);
+    if (map.hasImage(name)) map.removeImage(name);
+    map.addImage(name, ctx.getImageData(0, 0, ICON_SIZE_PX, ICON_SIZE_PX), { sdf });
 };
 
-const addTrainIcon = (map: Map) => {
-    const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, size, size);
-        ctx.strokeStyle = 'black'; // for SDF mask
-        ctx.fillStyle = 'black';
-        ctx.lineWidth = 2 * (64 / 24);
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-
-        const s = 64 / 24;
-
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(4 * s, 3 * s, 16 * s, 16 * s, 2 * s);
-        } else {
-            ctx.rect(4 * s, 3 * s, 16 * s, 16 * s);
-        }
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(4 * s, 11 * s);
-        ctx.lineTo(20 * s, 11 * s);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(12 * s, 3 * s);
-        ctx.lineTo(12 * s, 11 * s);
-        ctx.stroke();
-
-        // Left leg
-        ctx.beginPath();
-        ctx.moveTo(8 * s, 19 * s);
-        ctx.lineTo(6 * s, 22 * s);
-        ctx.stroke();
-
-        // Right leg
-        ctx.beginPath();
-        ctx.moveTo(16 * s, 19 * s);
-        ctx.lineTo(18 * s, 22 * s);
-        ctx.stroke();
-
-        // Lights
-        ctx.beginPath();
-        ctx.arc(8 * s, 15 * s, 1 * s, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(16 * s, 15 * s, 1 * s, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (map.hasImage('train-icon')) map.removeImage('train-icon');
-        const imageData = ctx.getImageData(0, 0, size, size);
-        map.addImage('train-icon', imageData, { sdf: true });
-    }
+const roundRectPath = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, radius: number) => {
+    if (typeof ctx.roundRect === 'function') ctx.roundRect(x, y, w, h, radius);
+    else ctx.rect(x, y, w, h);
 };
 
-const addStarIcon = (map: Map) => {
-    const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, size, size);
-        ctx.fillStyle = 'black'; // for SDF mask
-        
-        const cx = 32;
-        const cy = 32;
-        const spikes = 5;
-        const outerRadius = 24;
-        const innerRadius = 12;
-
-        ctx.beginPath();
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        let rot = Math.PI / 2 * 3;
-        let x: number;
-        let y: number;
-        const step = Math.PI / spikes;
-
-        ctx.moveTo(cx, cy - outerRadius);
-        for (let i = 0; i < spikes; i++) {
-            x = cx + Math.cos(rot) * outerRadius;
-            y = cy + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += step;
-
-            x = cx + Math.cos(rot) * innerRadius;
-            y = cy + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += step;
-        }
-        ctx.lineTo(cx, cy - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-
-        if (map.hasImage('favorite-star')) map.removeImage('favorite-star');
-        const imageData = ctx.getImageData(0, 0, size, size);
-        map.addImage('favorite-star', imageData, { sdf: true });
-    }
+const drawArrow = (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.moveTo(32, 12);
+    ctx.lineTo(18, 46);
+    ctx.lineTo(32, 38);
+    ctx.lineTo(46, 46);
+    ctx.closePath();
+    ctx.fill();
 };
 
-const addBusIcon = (map: Map) => {
-    const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, size, size);
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'black';
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
+const drawTrain = (ctx: CanvasRenderingContext2D) => {
+    const s = ICON_SIZE_PX / 24;
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = 'black';
+    ctx.lineWidth = 2 * s;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
 
-        // Pole
-        ctx.lineWidth = 5;
+    ctx.beginPath();
+    roundRectPath(ctx, 4 * s, 3 * s, 16 * s, 16 * s, 2 * s);
+    ctx.stroke();
+
+    const strokeLine = (x1: number, y1: number, x2: number, y2: number) => {
         ctx.beginPath();
-        ctx.moveTo(32, 34);
-        ctx.lineTo(32, 58);
+        ctx.moveTo(x1 * s, y1 * s);
+        ctx.lineTo(x2 * s, y2 * s);
         ctx.stroke();
-
-        // Big sign board
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(10, 8, 44, 28, 4);
-        } else {
-            ctx.rect(10, 8, 44, 28);
-        }
-        ctx.fill();
-
-        if (map.hasImage('bus-icon')) map.removeImage('bus-icon');
-        const imageData = ctx.getImageData(0, 0, size, size);
-        map.addImage('bus-icon', imageData, { sdf: true });
-    }
-};
-
-const addPosIcons = (map: Map) => {
-    const size = 64;
-
-    // Helper to add canvas as image
-    const registerIcon = (name: string, draw: (ctx: CanvasRenderingContext2D) => void) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.clearRect(0, 0, size, size);
-            draw(ctx);
-            if (map.hasImage(name)) map.removeImage(name);
-            map.addImage(name, ctx.getImageData(0, 0, size, size), { sdf: false });
-        }
     };
+    strokeLine(4, 11, 20, 11);
+    strokeLine(12, 3, 12, 11);
+    strokeLine(8, 19, 6, 22);
+    strokeLine(16, 19, 18, 22);
 
-    // 1. Ticket Machine (Ticket Icon: Emerald circle badge + ticket outline with notch)
-    registerIcon('pos-machine-icon', (ctx) => {
-        ctx.fillStyle = '#10b981'; // Emerald
+    for (const lightX of [8, 16]) {
         ctx.beginPath();
-        ctx.arc(32, 32, 24, 0, Math.PI * 2);
+        ctx.arc(lightX * s, 15 * s, 1 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
+    }
+};
 
-        // White Ticket symbol inside
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(19, 23, 26, 18, 3);
-        } else {
-            ctx.rect(19, 23, 26, 18);
-        }
-        ctx.fill();
+const drawStar = (ctx: CanvasRenderingContext2D) => {
+    const cx = 32;
+    const cy = 32;
+    const spikes = 5;
+    const outerRadius = 24;
+    const innerRadius = 12;
+    const step = Math.PI / spikes;
+    let rot = Math.PI / 2 * 3;
 
-        // Ticket notch line
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(28, 23);
-        ctx.lineTo(28, 41);
-        ctx.stroke();
-    });
+    ctx.fillStyle = 'black';
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+        rot += step;
+        ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+        rot += step;
+    }
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fill();
+};
 
-    // 2. Info Center (Cyan Circle + clean "i" symbol inside)
-    registerIcon('pos-info-icon', (ctx) => {
-        ctx.fillStyle = '#06b6d4'; // Cyan
-        ctx.beginPath();
-        ctx.arc(32, 32, 24, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
+const drawBusStop = (ctx: CanvasRenderingContext2D) => {
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = 'black';
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
 
-        // White 'i' dot
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(32, 22, 3, 0, Math.PI * 2);
-        ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(32, 34);
+    ctx.lineTo(32, 58);
+    ctx.stroke();
 
-        // White 'i' stem
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-            ctx.roundRect(29, 28, 6, 14, 1.5);
-        } else {
-            ctx.rect(29, 28, 6, 14);
-        }
-        ctx.fill();
-    });
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    roundRectPath(ctx, 10, 8, 44, 28, 4);
+    ctx.fill();
+};
 
-    // 3. Office / Counter (Purple Circle + Classic counter / bank columns design)
-    registerIcon('pos-office-icon', (ctx) => {
-        ctx.fillStyle = '#8b5cf6'; // Purple
-        ctx.beginPath();
-        ctx.arc(32, 32, 24, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
+/** Coloured disc with a white outline, the background of every point-of-sale icon. */
+const drawPosBadge = (ctx: CanvasRenderingContext2D, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(32, 32, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+};
 
-        ctx.fillStyle = '#ffffff';
+const drawPosMachine = (ctx: CanvasRenderingContext2D) => {
+    drawPosBadge(ctx, '#10b981');
+    ctx.beginPath();
+    roundRectPath(ctx, 19, 23, 26, 18, 3);
+    ctx.fill();
 
-        // Roof / Pediment
-        ctx.beginPath();
-        ctx.moveTo(32, 19);
-        ctx.lineTo(19, 26);
-        ctx.lineTo(45, 26);
-        ctx.closePath();
-        ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(28, 23);
+    ctx.lineTo(28, 41);
+    ctx.stroke();
+};
 
-        // Base
-        ctx.fillRect(19, 41, 26, 3);
+const drawPosInfo = (ctx: CanvasRenderingContext2D) => {
+    drawPosBadge(ctx, '#06b6d4');
+    ctx.beginPath();
+    ctx.arc(32, 22, 3, 0, Math.PI * 2);
+    ctx.fill();
 
-        // Columns
-        ctx.fillRect(21, 28, 4, 11);
-        ctx.fillRect(30, 28, 4, 11);
-        ctx.fillRect(39, 28, 4, 11);
-    });
+    ctx.beginPath();
+    roundRectPath(ctx, 29, 28, 6, 14, 1.5);
+    ctx.fill();
+};
+
+const drawPosOffice = (ctx: CanvasRenderingContext2D) => {
+    drawPosBadge(ctx, '#8b5cf6');
+    ctx.beginPath();
+    ctx.moveTo(32, 19);
+    ctx.lineTo(19, 26);
+    ctx.lineTo(45, 26);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillRect(19, 41, 26, 3);
+    ctx.fillRect(21, 28, 4, 11);
+    ctx.fillRect(30, 28, 4, 11);
+    ctx.fillRect(39, 28, 4, 11);
 };
 
 export const addAllIcons = (map: Map) => {
-    addArrowIcon(map);
-    addTrainIcon(map);
-    addBusIcon(map);
-    addStarIcon(map);
-    addPosIcons(map);
+    registerIcon(map, MAP_ICONS.VEHICLE_ARROW, true, drawArrow);
+    registerIcon(map, MAP_ICONS.TRAIN_STATION, true, drawTrain);
+    registerIcon(map, MAP_ICONS.BUS_STOP, true, drawBusStop);
+    registerIcon(map, MAP_ICONS.FAVORITE_STAR, true, drawStar);
+    registerIcon(map, MAP_ICONS.POS_MACHINE, false, drawPosMachine);
+    registerIcon(map, MAP_ICONS.POS_INFO, false, drawPosInfo);
+    registerIcon(map, MAP_ICONS.POS_OFFICE, false, drawPosOffice);
 };

@@ -3,10 +3,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getRouteTypeI18nKey } from '../../../../utils/transitUtils';
-import type { AppCityStats } from '../../../../../functions/_core/types';
+import type { CityStats } from '../../../../types/transit';
 
 interface VehicleMixCardProps {
-    stats: AppCityStats;
+    stats: CityStats;
 }
 
 export const VehicleMixCard: React.FC<VehicleMixCardProps> = ({ stats }) => {

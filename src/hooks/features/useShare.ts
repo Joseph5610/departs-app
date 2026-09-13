@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { paths } from '../../lib/routes';
 
 interface ShareOptions {
     title?: string;
@@ -20,16 +21,13 @@ export const useShare = () => {
 
     const getConstructedUrl = useCallback((options: ShareOptions) => {
         // Build from scratch ONLY if we have entity IDs
-        const base = `${window.location.origin}/${selectedCity}`;
+        const origin = window.location.origin;
 
         if (options.stopId) {
-            return `${base}/stop/${encodeURIComponent(options.stopId)}`;
+            return origin + paths.stop(selectedCity, options.stopId);
         }
         if (options.tripId) {
-            if (options.vehicleId && options.vehicleId !== options.tripId) {
-                return `${base}/trip/${encodeURIComponent(options.tripId)}/${encodeURIComponent(options.vehicleId)}`;
-            }
-            return `${base}/trip/${encodeURIComponent(options.tripId)}`;
+            return origin + paths.trip(selectedCity, options.tripId, options.vehicleId);
         }
 
         // No valid entity IDs provided - strictly forbidden to fallback for privacy

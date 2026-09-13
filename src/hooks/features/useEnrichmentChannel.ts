@@ -1,90 +1,109 @@
 import { useEffect } from 'react';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
+import { ENRICHMENT_CONFIG } from '../../config/constants';
 import type { EnrichmentChannelAdapter, EnrichmentPatch } from '../../types/enrichment';
 
+/**
+ * Subscribes to a city's push channel (e.g. the Brno KORDIS stream) and applies its patches in batches.
+ * The socket is closed while the tab is hidden and reopened when it becomes visible again.
+ */
 export const useEnrichmentChannel = (adapter: EnrichmentChannelAdapter | null) => {
     const applyBatchedPatches = useEnrichmentStore(s => s.applyBatchedPatches);
     const clearAll = useEnrichmentStore(s => s.clearAll);
+    const pruneExpired = useEnrichmentStore(s => s.pruneExpired);
 
     useEffect(() => {
-        if (!adapter) {
-            clearAll();
-            return;
-        }
-
-        if (adapter.transport !== 'websocket') return;
-
         clearAll();
+        if (!adapter) return;
 
-        let isUnmounted = false;
+        let isActive = true;
         let ws: WebSocket | null = null;
+        let flushInterval: number | undefined;
         let reconnectTimeout: number | undefined;
         let attempt = 0;
+        let pending: EnrichmentPatch[] = [];
+
+        const flush = () => {
+            if (pending.length === 0) return;
+            applyBatchedPatches(pending);
+            pending = [];
+        };
+
+        const disconnect = () => {
+            window.clearTimeout(reconnectTimeout);
+            window.clearInterval(flushInterval);
+            reconnectTimeout = undefined;
+            flushInterval = undefined;
+            pending = [];
+
+            const socket = ws;
+            ws = null;
+            if (!socket) return;
+            socket.onmessage = null;
+            socket.onclose = null;
+            socket.onerror = null;
+            // Closing a socket that is still connecting logs a browser error, so close it once it opens.
+            if (socket.readyState === WebSocket.CONNECTING) {
+                socket.onopen = () => socket.close();
+            } else {
+                socket.onopen = null;
+                socket.close();
+            }
+        };
 
         const connect = () => {
-            if (isUnmounted) return;
+            if (!isActive || document.hidden) return;
 
-            ws = new WebSocket(adapter.url);
+            const socket = new WebSocket(adapter.url);
+            ws = socket;
 
-            let pendingPatches: EnrichmentPatch[] = [];
-            let flushInterval: number | undefined;
-
-            ws.onopen = () => {
-                console.info(`[Enrichment] Connected to ${adapter.url}`);
+            socket.onopen = () => {
                 attempt = 0;
-
-                if (adapter.wsFilterPayload && ws) {
-                    ws.send(JSON.stringify(adapter.wsFilterPayload));
-                }
-
-                flushInterval = window.setInterval(() => {
-                    if (pendingPatches.length > 0) {
-                        applyBatchedPatches(pendingPatches);
-                        pendingPatches = [];
-                    }
-                }, 500);
+                if (adapter.wsFilterPayload) socket.send(JSON.stringify(adapter.wsFilterPayload));
+                flushInterval = window.setInterval(flush, ENRICHMENT_CONFIG.FLUSH_INTERVAL_MS);
             };
 
-            ws.onmessage = (event) => {
-                if (isUnmounted) return;
+            socket.onmessage = (event) => {
                 try {
-                    const data = JSON.parse(event.data);
-                    const patch = adapter.normalize(data);
-                    if (patch) pendingPatches.push(patch);
+                    const patch = adapter.normalize(JSON.parse(event.data));
+                    if (patch) pending.push(patch);
                 } catch {
-                    // Ignore parse errors
+                    // Ignore malformed messages
                 }
             };
 
-            ws.onclose = () => {
-                if (isUnmounted) return;
-                if (flushInterval) clearInterval(flushInterval);
-                const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+            socket.onclose = () => {
+                window.clearInterval(flushInterval);
+                flushInterval = undefined;
+                ws = null;
+                if (!isActive || document.hidden) return;
+                const delay = Math.min(ENRICHMENT_CONFIG.RECONNECT_BASE_MS * 2 ** attempt, ENRICHMENT_CONFIG.RECONNECT_MAX_MS);
                 attempt++;
                 reconnectTimeout = window.setTimeout(connect, delay);
             };
 
-            ws.onerror = () => {
-                // Errors handled by onclose reconnect loop
-            };
+            // Reconnects are driven by onclose, which always follows an error.
+            socket.onerror = () => {};
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                disconnect();
+            } else if (!ws) {
+                attempt = 0;
+                connect();
+            }
         };
 
         connect();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        const pruneInterval = window.setInterval(pruneExpired, ENRICHMENT_CONFIG.PRUNE_INTERVAL_MS);
 
         return () => {
-            isUnmounted = true;
-            if (reconnectTimeout) clearTimeout(reconnectTimeout);
-            
-            if (ws) {
-                // In React Strict Mode, unmounting happens immediately. 
-                // Calling close() on a CONNECTING socket throws a native browser console error.
-                if (ws.readyState === WebSocket.CONNECTING) {
-                    ws.onopen = () => { ws?.close(); };
-                    ws.onerror = () => {};
-                } else {
-                    ws.close();
-                }
-            }
+            isActive = false;
+            window.clearInterval(pruneInterval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            disconnect();
         };
-    }, [adapter, applyBatchedPatches, clearAll]);
+    }, [adapter, applyBatchedPatches, clearAll, pruneExpired]);
 };

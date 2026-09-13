@@ -21,51 +21,37 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { Toggle } from '@/components/ui/toggle';
+import { IconToggle, type IconToggleProps } from '../../IconToggle';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { cn } from '@/lib/utils';
 
-import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useUiStore } from '../../../state/uiStore';
 import { feedbackPayloadSchema, type FeedbackPayload } from '../../../types/feedback';
 import { getDiagnosticSnapshot } from '../../../hooks/features/useDiagnosticData';
+import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '../../../config/constants';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const formSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
-type FormValues = z.infer<typeof formSchema>;
+const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
+type FormValues = z.infer<typeof baseFormSchema>;
 
-interface TypeButtonProps {
-    icon: React.ElementType;
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
-}
-
-const TypeButton: React.FC<TypeButtonProps> = ({ icon: Icon, label, isActive, onClick }) => (
-    <Toggle
-        pressed={isActive}
-        onPressedChange={onClick}
-        variant="outline"
-        className={cn(
-            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl transition-[transform,colors] text-xs font-semibold active:scale-95 group cursor-pointer",
-            "border-border/80 hover:bg-foreground/10 hover:text-foreground",
-            "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
-            "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70"
-        )}
-    >
-        <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
-        <span className="text-xs font-bold">
-            {label}
-        </span>
-    </Toggle>
+const TypeButton: React.FC<Omit<IconToggleProps, 'className' | 'labelClassName'>> = (props) => (
+    <IconToggle {...props} className="py-3 rounded-xl text-xs cursor-pointer" labelClassName="text-xs font-bold" />
 );
 
-export const FeedbackModal: React.FC = () => {
+export const FeedbackModal: React.FC = React.memo(() => {
     const { t } = useTranslation();
-    const isOpen = usePreferencesStore(s => s.isFeedbackOpen);
-    const { setIsFeedbackOpen } = usePreferencesStore(s => s.actions);
+    const isOpen = useUiStore(s => s.isFeedbackOpen);
+    const { setIsFeedbackOpen } = useUiStore(s => s.actions);
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
     const turnstileRef = useRef<TurnstileInstance>(null);
+
+    const formSchema = React.useMemo(() => baseFormSchema.extend({
+        message: z.string()
+            .min(FEEDBACK_LIMITS.MESSAGE_MIN_CHARS, t('feedback.validation.messageTooShort', { count: FEEDBACK_LIMITS.MESSAGE_MIN_CHARS }))
+            .max(FEEDBACK_LIMITS.MESSAGE_MAX_CHARS, t('feedback.validation.messageTooLong', { count: FEEDBACK_LIMITS.MESSAGE_MAX_CHARS })),
+        email: z.string().email(t('feedback.validation.invalidEmail')).optional().or(z.literal('')),
+    }), [t]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -100,8 +86,8 @@ export const FeedbackModal: React.FC = () => {
             }
             setIsFeedbackOpen(false);
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
+        onError: () => {
+            toast.error(t('feedback.error'));
             if (turnstileRef.current) {
                 turnstileRef.current.reset();
             }
@@ -111,7 +97,7 @@ export const FeedbackModal: React.FC = () => {
 
     const onSubmit = (data: FormValues) => {
         if (!turnstileToken) {
-            toast.error(t('feedback.errorTurnstile', 'Please verify you are human.'));
+            toast.error(t('feedback.errorTurnstile'));
             return;
         }
 
@@ -127,8 +113,6 @@ export const FeedbackModal: React.FC = () => {
     const onClose = React.useCallback(() => {
         setIsFeedbackOpen(false);
     }, [setIsFeedbackOpen]);
-
-    const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -269,19 +253,24 @@ export const FeedbackModal: React.FC = () => {
                                 )}
                             />
 
-                            {/* Turnstile */}
-                            <div className="flex justify-center mt-1">
-                                <Turnstile 
-                                    ref={turnstileRef}
-                                    siteKey={siteKey}
-                                    onSuccess={(token) => setTurnstileToken(token)}
-                                    onExpire={() => setTurnstileToken(null)}
-                                    onError={() => setTurnstileToken(null)}
-                                    options={{
-                                        theme: 'auto'
-                                    }}
-                                />
-                            </div>
+                            {TURNSTILE_SITE_KEY ? (
+                                <div className="flex justify-center mt-1">
+                                    <Turnstile
+                                        ref={turnstileRef}
+                                        siteKey={TURNSTILE_SITE_KEY}
+                                        onSuccess={(token) => setTurnstileToken(token)}
+                                        onExpire={() => setTurnstileToken(null)}
+                                        onError={() => setTurnstileToken(null)}
+                                        options={{
+                                            theme: 'auto'
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <Alert variant="warning">
+                                    <AlertDescription className="text-xs">{t('feedback.unavailable')}</AlertDescription>
+                                </Alert>
+                            )}
 
                         </form>
                     </Form>
@@ -308,6 +297,6 @@ export const FeedbackModal: React.FC = () => {
             </DialogContent>
         </Dialog>
     );
-};
+});
 
 FeedbackModal.displayName = 'FeedbackModal';

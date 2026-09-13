@@ -3,21 +3,22 @@ import { useRouteParams } from '../useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useIsMobile } from '../useIsMobile';
+import { MAP_LAYERS } from '../../config/mapLayers';
 import { useSelectedStop } from '../derived/useSelectedStop';
 import { useSelectedVehicle } from '../derived/useSelectedVehicle';
 import {
-    MAP_VEHICLE_SELECT_ZOOM,
-    MAP_ANIMATION_DURATION,
-    MAP_EASE_DURATION,
-    MAP_MIN_STOP_ZOOM,
+    MAP_CAMERA,
     MOBILE_BOTTOM_SHEET_RATIO,
-    SIDEBAR_WIDTH,
     PULSE_SPEED_DIVISOR,
     PULSE_BASE_RADIUS,
     PULSE_RADIUS_AMPLITUDE,
     PULSE_BASE_OPACITY,
     PULSE_OPACITY_DIVISOR
 } from '../../config/constants';
+
+/** Sidebar geometry lives in index.css; the camera padding must match it. */
+const readRootCssPx = (name: string): number =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 
 /**
  * useMapInterface
@@ -51,7 +52,7 @@ export const useMapInterface = () => {
 
         const padding = isMobile
             ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-            : { bottom: 0, top: 0, left: SIDEBAR_WIDTH, right: 0 };
+            : { bottom: 0, top: 0, left: readRootCssPx('--sidebar-width') + readRootCssPx('--sidebar-inset'), right: 0 };
 
         const currentMap = mapRef.current;
         const currentId = selectedVehicleId || selectedTripId;
@@ -68,8 +69,8 @@ export const useMapInterface = () => {
             lastFlownId.current = currentId || null;
             flyTo({
                 center: coords as [number, number],
-                zoom: MAP_VEHICLE_SELECT_ZOOM,
-                duration: MAP_ANIMATION_DURATION,
+                zoom: MAP_CAMERA.VEHICLE_SELECT_ZOOM,
+                duration: MAP_CAMERA.ANIMATION_MS,
                 essential: true,
                 padding
             });
@@ -79,7 +80,7 @@ export const useMapInterface = () => {
         if (isFollowing && hasCoords) {
             easeTo({
                 center: coords as [number, number],
-                duration: MAP_EASE_DURATION,
+                duration: MAP_CAMERA.EASE_MS,
                 essential: true,
                 padding
             });
@@ -90,21 +91,27 @@ export const useMapInterface = () => {
             lastFlownStopId.current = selectedStopId || null;
             easeTo({
                 center: selectedStop.coordinates,
-                zoom: Math.max(currentMap.getZoom(), MAP_MIN_STOP_ZOOM),
-                duration: MAP_EASE_DURATION,
+                zoom: Math.max(currentMap.getZoom(), MAP_CAMERA.MIN_STOP_ZOOM),
+                duration: MAP_CAMERA.EASE_MS,
                 padding
             });
         }
     }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
 
     // --- 4. PERFORMANCE VISUALS ---
+    const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);
+    useEffect(() => {
+        selectedCoordsRef.current = selectedVehicle?.geometry?.coordinates;
+    }, [selectedVehicle?.geometry?.coordinates]);
+    const hasSelectedVehicle = !!selectedVehicle;
+
     useEffect(() => {
         let frame: number;
         const currentMapRef = mapRef.current;
 
         const animate = () => {
             const map = mapRef.current?.getMap();
-            const coords = selectedVehicle?.geometry?.coordinates;
+            const coords = selectedCoordsRef.current;
             const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
 
             if (map && hasCoords) {
@@ -113,9 +120,9 @@ export const useMapInterface = () => {
                 const opacity = PULSE_BASE_OPACITY - ((radius - 5) / PULSE_OPACITY_DIVISOR);
 
                 try {
-                    if (map.getLayer('vehicle-selected-pulse')) {
-                        map.setPaintProperty('vehicle-selected-pulse', 'circle-radius', radius);
-                        map.setPaintProperty('vehicle-selected-pulse', 'circle-opacity', Math.max(0.1, opacity));
+                    if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
+                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
+                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0.1, opacity));
                     }
                 } catch {
                     /* Silent fail */
@@ -124,7 +131,7 @@ export const useMapInterface = () => {
             frame = requestAnimationFrame(animate);
         };
 
-        if (selectedVehicle) {
+        if (hasSelectedVehicle) {
             frame = requestAnimationFrame(animate);
         }
 
@@ -133,14 +140,14 @@ export const useMapInterface = () => {
                 cancelAnimationFrame(frame);
             }
             const map = currentMapRef?.getMap();
-            if (map && map.getLayer('vehicle-selected-pulse')) {
+            if (map && map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
                 try {
-                    map.setPaintProperty('vehicle-selected-pulse', 'circle-radius', 0);
-                    map.setPaintProperty('vehicle-selected-pulse', 'circle-opacity', 0);
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', 0);
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', 0);
                 } catch {
                     /* Silent fail */
                 }
             }
         };
-    }, [selectedVehicle, mapRef]);
+    }, [hasSelectedVehicle, mapRef]);
 };

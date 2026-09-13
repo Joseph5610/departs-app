@@ -2,7 +2,7 @@ import type { FeatureCollection, LineString } from 'geojson';
 
 export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
 
-export interface VehicleDescriptor {
+interface VehicleDescriptor {
     operator?: string;
     vehicle_type?: string;
     is_wheelchair_accessible?: boolean | null;
@@ -11,7 +11,7 @@ export interface VehicleDescriptor {
     vehicle_registration_number?: string | number;
 }
 
-export type VehicleState = 
+type VehicleState =
     | 'at_stop' 
     | 'before_track' 
     | 'before_track_delayed' 
@@ -20,7 +20,7 @@ export type VehicleState =
     | 'on_track'
     | 'unknown';
 
-export interface BaseVehicleProperties {
+interface BaseVehicleProperties {
     vehicle_id: string | null;
     gtfs_trip_id: string;
     route_short_name: string;

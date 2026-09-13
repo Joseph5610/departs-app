@@ -21,16 +21,12 @@ export interface StoredEnrichmentPatch extends EnrichmentPatch {
     receivedAt: number; // Date.now() when the client received the message
 }
 
-export type EnrichmentNormalizer<T = unknown> = (rawMsg: T) => EnrichmentPatch | null;
+type EnrichmentNormalizer<T = unknown> = (rawMsg: T) => EnrichmentPatch | null;
 
 export interface EnrichmentChannelAdapter<T = unknown> {
-    /** URL to connect to (WS ws://, SSE https://, or arbitrary) */
+    /** WebSocket URL (`wss://`) to subscribe to */
     url: string;
-    /** Transport type — determines how useEnrichmentChannel connects */
-    transport: 'websocket' | 'sse' | 'polling';
-    /** Polling interval in ms (only for transport: 'polling') */
-    pollIntervalMs?: number;
-    /** Parses a raw message from the transport into our internal patch shape */
+    /** Parses a raw WebSocket message into our internal patch shape */
     normalize: EnrichmentNormalizer<T>;
     /** Optional JSON payload to send upon WebSocket connection (e.g. for ArcGIS StreamServer filtering) */
     wsFilterPayload?: Record<string, unknown>;
