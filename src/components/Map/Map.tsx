@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useCallback, useEffect } from 'react';
+import React, { lazy, Suspense, useMemo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { navigate } from 'wouter/use-browser-location';
@@ -39,12 +39,14 @@ import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
 import { MountWhenOpened } from '../MountWhenOpened';
+import { McpPromoBanner } from '../McpPromo/McpPromoBanner';
 
 const SettingsModal = lazy(() => import('../Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
 const WelcomeModal = lazy(() => import('../Modals/WelcomeModal').then(m => ({ default: m.WelcomeModal })));
 const AlertsModal = lazy(() => import('../Modals/AlertsModal').then(m => ({ default: m.AlertsModal })));
 const FeedbackModal = lazy(() => import('../Modals/FeedbackModal/FeedbackModal').then(m => ({ default: m.FeedbackModal })));
 const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default: m.StatsPanel })));
+const McpModal = lazy(() => import('../Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
 
 /**
@@ -72,9 +74,12 @@ const MapInner: React.FC = () => {
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
+    // Read once: a first-time visitor gets the welcome modal, and the MCP promo only from the next visit.
+    const [isReturningVisitor] = useState(() => usePreferencesStore.getState().hasSeenWelcome);
     const isSettingsOpen = useUiStore(s => s.isSettingsOpen);
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const isFeedbackOpen = useUiStore(s => s.isFeedbackOpen);
+    const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
     const { resolvedTheme } = useTheme();
 
     // Derived State
@@ -297,6 +302,10 @@ const MapInner: React.FC = () => {
             <MountWhenOpened when={isFeedbackOpen}>
                 <FeedbackModal />
             </MountWhenOpened>
+            <MountWhenOpened when={isMcpModalOpen}>
+                <McpModal />
+            </MountWhenOpened>
+            {isReturningVisitor && <McpPromoBanner />}
             <DetailPanel
                 isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
                 id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined)}

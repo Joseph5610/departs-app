@@ -10,8 +10,7 @@
   ],
   "ignore": [
     "src/components/ui/**/*.{ts,tsx}",
-    "src/pwa.d.ts",
-    "src/types/react-map-gl.d.ts"
+    "src/pwa.d.ts"
   ],
   "ignoreDependencies": [
     "@fontsource-variable/geist",

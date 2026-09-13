@@ -7,19 +7,25 @@ let now = 0;
 
 const currentSecond = () => Math.floor(Date.now() / TICK_MS) * TICK_MS;
 
+// Re-aligned to the wall-clock second on every tick, so `now` never trails real time by a full second.
+const scheduleTick = () => {
+    timer = window.setTimeout(() => {
+        now = currentSecond();
+        scheduleTick();
+        listeners.forEach(l => l());
+    }, TICK_MS - (Date.now() % TICK_MS));
+};
+
 const subscribe = (listener: () => void) => {
     listeners.add(listener);
     if (timer === undefined) {
         now = currentSecond();
-        timer = window.setInterval(() => {
-            now = currentSecond();
-            listeners.forEach(l => l());
-        }, TICK_MS);
+        scheduleTick();
     }
     return () => {
         listeners.delete(listener);
         if (listeners.size === 0) {
-            window.clearInterval(timer);
+            window.clearTimeout(timer);
             timer = undefined;
         }
     };
@@ -29,7 +35,7 @@ const subscribe = (listener: () => void) => {
 const getSnapshot = () => (timer === undefined ? currentSecond() : now);
 
 /**
- * The current time in milliseconds, advancing once a second. Every subscriber shares a single
- * interval, which runs only while at least one component is mounted.
+ * The current time in milliseconds, floored to the second and advancing on each wall-clock second.
+ * Every subscriber shares a single timer, which runs only while at least one component is mounted.
  */
 export const useNow = (): number => useSyncExternalStore(subscribe, getSnapshot, getSnapshot);

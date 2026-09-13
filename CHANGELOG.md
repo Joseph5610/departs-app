@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Faster startup and smoother map: dialogs and the stats panel load on first use, and the map redraws vehicles only when they actually move.
 - Place search waits for a pause in typing, the Brno live-delay stream pauses in background tabs, and outdated cached stop data is removed from the device.
+- The AI integration banner appears from the second visit instead of alongside the welcome screen, and no longer on admin pages.
 - Transport modes are listed in one order everywhere (metro, train, tram, trolleybus, bus), and the map centres the selected vehicle exactly in the area beside the sidebar.
 - Frontend and backend no longer import from each other: the frontend has its own city and stats types and stats aggregator, and the backend has its own feedback schemas.
 

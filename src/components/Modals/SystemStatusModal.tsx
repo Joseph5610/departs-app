@@ -8,10 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
+import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { useCityConfig } from '../../hooks/data/useCities';
 import { useNow } from '../../hooks/useNow';
-import { TRANSIT_REFRESH_S } from '../../config/constants';
 import { cn } from '@/lib/utils';
 import { 
     Wifi, 
@@ -38,7 +37,7 @@ const SystemStatusDetails: React.FC = () => {
     const cityConfig = useCityConfig();
     const status = useSystemStatus();
     const now = useNow();
-    const nextRefreshIn = Math.max(0, TRANSIT_REFRESH_S - Math.floor((now - status.dataUpdatedAt) / 1000));
+    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now);
 
     // Format data freshness
     const freshnessText = (() => {

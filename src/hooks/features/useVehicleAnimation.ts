@@ -177,17 +177,10 @@ export const useVehicleAnimation = (
         displayTimesRef.current = nextDisplayTimes;
         selectedTimesRef.current = nextSelectedTimes;
 
-        let lastUpdateTime = -Infinity;
         let isFirstFrame = true;
 
         const animate = (time: number) => {
             const targets = targetsRef.current;
-            if (!isFirstFrame && time - lastUpdateTime < VEHICLE_ANIMATION.MIN_FRAME_INTERVAL_MS) {
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-            lastUpdateTime = time;
-
             const positions = lastPositionsRef.current;
             const moved = new Set<string>();
             targets.forEach((target, id) => {

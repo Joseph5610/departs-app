@@ -2,8 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useViewportStore } from '../../state/viewportStore';
-import { useSystemStatus } from '../../hooks/derived/useSystemStatus';
-import { TRANSIT_REFRESH_S } from '../../config/constants';
+import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { useNow } from '../../hooks/useNow';
 import { cn } from '@/lib/utils';
 import { SystemStatusModal } from '../Modals/SystemStatusModal';
@@ -28,7 +27,7 @@ export const LiveStatus: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const closeModal = useCallback(() => setIsModalOpen(false), []);
     const now = useNow();
-    const nextRefreshIn = Math.max(0, TRANSIT_REFRESH_S - Math.floor((now - status.dataUpdatedAt) / 1000));
+    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now);
 
     if (!bounds) return null;
 

@@ -87,8 +87,6 @@ export const VEHICLE_ANIMATION = {
     DURATION_MS: 1000,
     /** Squared degree distance (~1.5 km) beyond which a vehicle snaps instead of sliding. */
     MAX_SLIDE_DISTANCE_SQ: 0.0002,
-    /** Minimum time between map source updates while sliding; each update re-sends the collection to the map worker. */
-    MIN_FRAME_INTERVAL_MS: 33,
 };
 
 /**
