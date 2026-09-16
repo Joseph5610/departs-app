@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 import { getDefaultCitySlug } from '../utils/viewerCountry';
+import { matchRoutePath } from '../lib/routes';
+import { FRONTEND_CITIES_CONFIG } from '../config/cities';
 import { PREFERENCES_LIMITS } from '../config/constants';
 import { searchHistoryKey } from '../utils/searchHistory';
 
@@ -24,6 +26,8 @@ interface PreferencesState {
     statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
     hasSeenWelcome: boolean;
+    /** Hidden regions this device may pick from the city list, unlocked by opening `?beta=<slug>`. */
+    unlockedCities: string[];
 }
 
 interface PreferencesActions {
@@ -38,6 +42,7 @@ interface PreferencesActions {
     setRouteTypeFilter: (filter: string[]) => void;
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
     setSelectedCity: (city: string) => void;
+    unlockCity: (city: string) => void;
     toggleFavorite: (stopId: string) => void;
     addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
@@ -69,6 +74,7 @@ const PERSISTED_KEYS = [
     'delayFilter',
     'isMcpBannerDismissed',
     'hasSeenWelcome',
+    'unlockedCities',
 ] as const satisfies ReadonlyArray<keyof PreferencesState>;
 
 type PersistedPreferences = Pick<PreferencesState, typeof PERSISTED_KEYS[number]>;
@@ -106,6 +112,20 @@ const uniqueHistory = (items: SearchHistoryItem[]): SearchHistoryItem[] => {
     });
 };
 
+/** The hidden region `?beta=<slug>` in the page URL unlocks, so testers can switch to it from the city list. */
+export const getUrlUnlockedCity = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const slug = new URLSearchParams(window.location.search).get('beta');
+    return slug && FRONTEND_CITIES_CONFIG[slug]?.isHidden ? slug : null;
+};
+
+/** The city in the page URL; it wins over the stored one so the first render already fetches that city. */
+const getUrlCitySlug = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    const { city } = matchRoutePath(window.location.pathname);
+    return city && FRONTEND_CITIES_CONFIG[city] ? city : null;
+};
+
 /** Takes each stored value only if it has the default's shape, so a corrupt or outdated entry falls back instead of crashing. */
 const mergePersisted = (persisted: unknown, current: PreferencesStore): PreferencesStore => {
     if (!persisted || typeof persisted !== 'object') return current;
@@ -124,6 +144,7 @@ const mergePersisted = (persisted: unknown, current: PreferencesStore): Preferen
             merged[key] = value;
         }
     }
+    merged.selectedCity = getUrlCitySlug() ?? merged.selectedCity;
     return merged as unknown as PreferencesStore;
 };
 
@@ -141,13 +162,14 @@ export const usePreferencesStore = create<PreferencesStore>()(
             favoriteStops: [],
             searchHistory: [],
             mapBaseStyle: 'labels',
-            selectedCity: getDefaultCitySlug(),
+            selectedCity: getUrlCitySlug() ?? getDefaultCitySlug(),
             requireAirConditioned: false,
             colorVehiclesByDelay: false,
             delayFilter: [],
             statsTab: 'screen',
             statsViewMode: 'overview',
             isMcpBannerDismissed: false,
+            unlockedCities: [getUrlUnlockedCity()].filter((slug): slug is string => slug !== null),
             hasSeenWelcome: false,
 
             // Actions
@@ -163,6 +185,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),
                 setSelectedCity: (city) => set({ selectedCity: city }),
+                unlockCity: (city) => set((state) => (state.unlockedCities.includes(city) ? state : { unlockedCities: [...state.unlockedCities, city] })),
                 toggleFavorite: (stopId) =>
                     set((state) => {
                         const exists = state.favoriteStops.includes(stopId);

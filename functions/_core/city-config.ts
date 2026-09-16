@@ -22,6 +22,8 @@ export interface CityConfig {
     adapter: AdapterType;
     adapterConfig?: AdapterConfig;
     isBeta?: boolean;
+    /** Kept out of the city lists; reachable by its URL and unlocked for a device with `?beta=<slug>`. */
+    isHidden?: boolean;
     hasPointsOfSale?: boolean;
     /** Whether the adapter has a service-alerts source; the frontend hides the alerts UI otherwise. */
     hasAlerts?: boolean;
@@ -89,23 +91,25 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
             stops: []
         }
     },
-    // duk: {
-    //     slug: 'duk',
-    //     name: 'Ústecký kraj',
-    //     country: 'CZ',
-    //     timezone: 'Europe/Prague',
-    //     center: [14.0322, 50.6607],
-    //     bounds: [12.93, 50.11, 14.61, 51.05],
-    //     adapter: 'duk',
-    //     adapterConfig: {
-    //         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis'
-    //     },
-    //     isBeta: true,
-    //     filters: {
-    //         vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
-    //         stops: []
-    //     }
-    // },
+    duk: {
+        slug: 'duk',
+        name: 'Ústecký kraj',
+        country: 'CZ',
+        timezone: 'Europe/Prague',
+        center: [14.0322, 50.6607],
+        bounds: [12.93, 50.11, 14.61, 51.05],
+        adapter: 'duk',
+        adapterConfig: {
+            baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis',
+            staticDataUrl: 'https://data.departs.app'
+        },
+        isBeta: true,
+        isHidden: true,
+        filters: {
+            vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
+            stops: []
+        }
+    },
 };
 
 export function getCityConfig(slug: string): CityConfig | null {

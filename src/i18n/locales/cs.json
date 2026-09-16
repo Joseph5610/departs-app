@@ -32,9 +32,8 @@
       "language": "Jazyk",
       "filters": "Filtry",
       "ai": "AI integrace",
-      "attributions": "Zdroje a autorství"
+      "attributions": "Zdroje dat a licence"
     },
-    "dataSource": "Zdroj dat",
     "theme": {
       "title": "Vzhled",
       "system": "Systém",
@@ -85,7 +84,6 @@
       "sk": "Slovenčina"
     },
     "viewSource": "Zdrojový kód na GitHubu",
-    "license": "Data PID, KORDIS JMK & DPMP (CC BY 4.0)",
     "versionBadge": "v{{version}}",
     "updates": {
       "check": "Zkontrolovat aktualizace",
@@ -97,7 +95,19 @@
       "success": "Historie smazána"
     },
     "lastStopUpdate": "Databáze zastávek aktualizována: {{date}}",
-    "sourceBadge": "Zdroj"
+    "sourceBadge": "Zdroj",
+    "attributions": {
+      "shared": "Mapa a vyhledávání míst",
+      "processedTitle": "Jak departs.app data upravuje",
+      "notice": "Data jsou zobrazena upravená: převedená, filtrovaná, spárovaná se zastávkami a nástupišti a spojená s živými daty. Poskytovatelé departs.app nepodporují ani neschvalují. Zpracovaná data, jejich zdroje a změny jsou zveřejněny pod licencí CC BY 4.0.",
+      "licenses": {
+        "ccBy4": "CC BY 4.0",
+        "odbl1": "ODbL 1.0",
+        "czOpenData": "Otevřená data",
+        "permission": "Použito se svolením",
+        "notStated": "Licence neuvedena"
+      }
+    }
   },
   "welcome": {
     "title": "Vítejte v departs.app",
@@ -215,6 +225,7 @@
     "providerGolemio": "Praha PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
     "providerDpmp": "Prešov MHD (DPMP)",
+    "providerDuk": "Doprava Ústeckého kraje (Portabo)",
     "dataFreshness": "Stáří dat",
     "nextRefresh": "Další stažení za",
     "secondsAgo": "před {{seconds}}s",

@@ -20,7 +20,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     // Generate sitemap for each city
     for (const citySlug of Object.keys(CITY_REGISTRY)) {
         const city = getCityConfig(citySlug);
-        if (!city) continue;
+        // Hidden regions stay out of search engines until they launch.
+        if (!city || city.isHidden) continue;
 
         // Add city home
         xml += `

@@ -53,18 +53,21 @@ export const DepartureBoardHeader = React.memo(() => {
     const selectedVehicle = useSelectedVehicle();
 
     const { handleNavigate, stopDistanceInfo } = useNavigate();
-    const { delayStats, isError, hasAirConditioningData } = useDepartures();
+    const { data: departuresData, delayStats, isError, hasAirConditioningData } = useDepartures();
 
-    const { virtualTableUrl } = useCityConfig();
+    const { virtualTableUrl, lineChipsFromDepartures } = useCityConfig();
     const lineRules = useLineRules();
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
     const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const uniqueLines = React.useMemo(() => {
-        if (!selectedStop?.lines) return [];
+        const source = lineChipsFromDepartures
+            ? departuresData?.departures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
+            : selectedStop?.lines;
+        if (!source) return [];
         const seen = new Set<string>();
-        const lines = selectedStop.lines.filter(line => {
+        const lines = source.filter(line => {
             if (seen.has(line.name)) return false;
             seen.add(line.name);
             return true;
@@ -84,7 +87,7 @@ export const DepartureBoardHeader = React.memo(() => {
             if (groupA !== groupB) return groupA - groupB;
             return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
-    }, [selectedStop, lineRules]);
+    }, [selectedStop, lineRules, lineChipsFromDepartures, departuresData]);
 
     const handleShare = useCallback(() => {
         if (selectedStop) {
@@ -270,7 +273,7 @@ export const DepartureBoardHeader = React.memo(() => {
             </div>
 
             {/* Row 2: Line badges and AC filter */}
-            {((selectedStop?.lines && selectedStop.lines.length > 0) || hasAirConditioningData) && (
+            {(uniqueLines.length > 0 || hasAirConditioningData) && (
                 <div 
                     className="w-full overflow-x-auto no-scrollbar py-2 px-2"
                     style={{ 

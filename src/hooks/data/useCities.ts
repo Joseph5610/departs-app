@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CitiesResponse } from '../../types/transit';
+import type { City } from '../../types/cities';
 import { apiFetch } from '@/lib/api-client';
 import { QUERY_TIMING_MS } from '../../config/constants';
 import { DEFAULT_LINE_RULES, FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '../../config/cities';
@@ -37,4 +38,14 @@ export function useCityConfig(slug?: string): CityConfig {
 export function useLineRules(): LineRules {
     const lineRules = useCityConfig().lineRules;
     return useMemo(() => ({ ...DEFAULT_LINE_RULES, ...lineRules }), [lineRules]);
+}
+
+/** The cities a user may pick: the hidden ones only on a device that unlocked them with `?beta=<slug>`. */
+export function useVisibleCities(): City[] {
+    const { data } = useCities();
+    const unlockedCities = usePreferencesStore(s => s.unlockedCities);
+    return useMemo(
+        () => (data?.cities ?? []).filter(city => !city.isHidden || unlockedCities.includes(city.slug)),
+        [data, unlockedCities]
+    );
 }

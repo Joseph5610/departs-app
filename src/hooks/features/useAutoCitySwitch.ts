@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 import React from 'react';
-import { useCities, useCityConfig } from '../data/useCities';
+import { useCityConfig, useVisibleCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { navigate } from 'wouter/use-browser-location';
@@ -19,7 +19,7 @@ import { cityOverviewCamera } from '../../utils/mapUtils';
  */
 export const useAutoCitySwitch = () => {
     const { t } = useTranslation();
-    const { data } = useCities();
+    const cities = useVisibleCities();
     const cityConfig = useCityConfig();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
@@ -51,7 +51,7 @@ export const useAutoCitySwitch = () => {
     }, [selectedCity, cityConfig.name, t]);
 
     useEffect(() => {
-        if (!mapLoaded || !mapRef.current || !data?.cities) {
+        if (!mapLoaded || !mapRef.current || cities.length === 0) {
             return;
         }
 
@@ -64,7 +64,7 @@ export const useAutoCitySwitch = () => {
             
             const center = map.getCenter();
             
-            let newCity = data.cities.find(city => {
+            let newCity = cities.find(city => {
                 const [minLng, minLat, maxLng, maxLat] = city.bounds;
                 return (
                     center.lng >= minLng &&
@@ -78,7 +78,7 @@ export const useAutoCitySwitch = () => {
             // try to find a city whose center point is visible on the screen
             if (!newCity) {
                 const bounds = map.getBounds();
-                const visibleCities = data.cities.filter(city => {
+                const visibleCities = cities.filter(city => {
                     if (!city.center) return false;
                     const [lng, lat] = city.center as [number, number];
                     // check if the city center is within the viewport
@@ -127,7 +127,7 @@ export const useAutoCitySwitch = () => {
         return () => {
             map.off('moveend', handleMoveEnd);
         };
-    }, [mapLoaded, mapRef, data, t]);
+    }, [mapLoaded, mapRef, cities, t]);
 
     // 2. State -> Map sync (fly to new city if selectedCity changes via URL)
     useEffect(() => {

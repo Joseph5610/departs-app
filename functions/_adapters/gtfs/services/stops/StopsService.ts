@@ -21,16 +21,19 @@ export class StopsService {
         // 1. CacheManager: In-memory cache for fast, concurrent access (2h TTL).
         // 2. caches.default: Cloudflare's edge cache for persistence across worker isolations (24h TTL).
         // If the in-memory cache expires, we fetch from the CF cache before hitting the upstream API.
+        // The edge key carries the file's version, so a new data build is picked up at the next memory miss.
         return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
+            const stopsUrl = `${staticDataUrl}/${this.city.slug}/stops.json`;
             const cache = caches.default;
-            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v4`, { method: 'GET' });
+            const version = await this.getDataVersion(stopsUrl);
+            const jsonCacheKey = new Request(`https://departs.app/cache/${this.city.slug}/stops_v6/${encodeURIComponent(version)}`, { method: 'GET' });
             const cached = await cache.match(jsonCacheKey);
             
             if (cached) {
                 return await cached.json();
             }
             
-            const res = await appClient.fetch(`${staticDataUrl}/${this.city.slug}/stops.json`);
+            const res = await appClient.fetch(stopsUrl);
             if (!res.ok) {
                 throw new ApiError(`${ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE} (upstream ${res.status})`, 502);
             }
@@ -62,5 +65,11 @@ export class StopsService {
         // An empty stop set is an upstream failure, not a valid answer. Without this the empty
         // collection would be held for the full 2h TTL and the map would stay blank that whole time.
         (data) => !data || !data.features || data.features.length === 0);
+    }
+
+    /** The data file's ETag or Last-Modified; empty when the host sends neither or cannot be reached. */
+    private async getDataVersion(url: string): Promise<string> {
+        const res = await appClient.fetch(url, { method: 'HEAD' }).catch(() => null);
+        return res?.headers.get('etag') ?? res?.headers.get('last-modified') ?? '';
     }
 }

@@ -31,9 +31,8 @@
       "language": "Language",
       "filters": "Filters",
       "ai": "AI Integrations",
-      "attributions": "Attributions"
+      "attributions": "Data sources & licences"
     },
-    "dataSource": "Data Source",
     "theme": {
       "title": "Appearance",
       "system": "System",
@@ -84,7 +83,6 @@
       "sk": "Slovenčina"
     },
     "viewSource": "View source on GitHub",
-    "license": "Data PID, KORDIS JMK & DPMP (CC BY 4.0)",
     "versionBadge": "v{{version}}",
     "updates": {
       "check": "Check for updates",
@@ -96,7 +94,19 @@
       "success": "History cleared"
     },
     "lastStopUpdate": "Stop database updated: {{date}}",
-    "sourceBadge": "Source"
+    "sourceBadge": "Source",
+    "attributions": {
+      "shared": "Map & place search",
+      "processedTitle": "How departs.app changes the data",
+      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse departs.app. The processed data, their sources and changes are published under CC BY 4.0.",
+      "licenses": {
+        "ccBy4": "CC BY 4.0",
+        "odbl1": "ODbL 1.0",
+        "czOpenData": "Open data",
+        "permission": "Used with permission",
+        "notStated": "No licence stated"
+      }
+    }
   },
   "welcome": {
     "title": "Welcome to departs.app",
@@ -212,6 +222,7 @@
     "providerGolemio": "Prague PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
     "providerDpmp": "Prešov MHD (DPMP)",
+    "providerDuk": "Doprava Ústeckého kraje (Portabo)",
     "dataFreshness": "Data freshness",
     "nextRefresh": "Next refresh in",
     "secondsAgo": "{{seconds}}s ago",

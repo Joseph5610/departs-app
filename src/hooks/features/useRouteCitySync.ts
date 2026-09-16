@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { navigate } from 'wouter/use-browser-location';
 import { useRouteParams } from '../useRouteParams';
 import { useCities } from '../data/useCities';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { getUrlUnlockedCity, usePreferencesStore } from '../../state/preferencesStore';
 import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG } from '../../config/cities';
 import { paths } from '../../lib/routes';
 
@@ -13,12 +13,20 @@ import { paths } from '../../lib/routes';
  *    (e.g. `useAutoCitySwitch`) see it without waiting for `/api/cities`.
  * 2. Once `/api/cities` loads, invalid persisted or URL cities are corrected and the default city's
  *    base path is redirected to `/`.
+ * 3. `?beta=<slug>` unlocks a hidden region for this device.
  */
 export const useRouteCitySync = () => {
     const { city, isCityBase } = useRouteParams();
     const { data: citiesData } = useCities();
     const setSelectedCity = usePreferencesStore(s => s.actions.setSelectedCity);
+    const unlockCity = usePreferencesStore(s => s.actions.unlockCity);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+
+    // `?beta=<slug>` in the URL keeps a hidden region in this device's city list from now on.
+    useEffect(() => {
+        const unlocked = getUrlUnlockedCity();
+        if (unlocked) unlockCity(unlocked);
+    }, [unlockCity]);
 
     // Sync static city configuration to store immediately on mount to prevent map fly-to race conditions
     useEffect(() => {

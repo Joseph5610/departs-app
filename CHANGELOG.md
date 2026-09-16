@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.70.0] - 2026-09-13
+
+### Added
+
+- Ústecký kraj (DÚK) as a beta region, with departures, platforms and live vehicles from Portabo and timetables from the national CIS JŘ export.
+- Settings credits every data source with its creator, dataset and licence, and states how departs.app changes the data.
+
+### Fixed
+
+- Opening a link to another city's stop or trip no longer first requests it from the previously selected city.
+
 ## [0.69.4] - 2026-09-13
 
 ### Fixed

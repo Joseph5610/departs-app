@@ -218,6 +218,7 @@ export interface AppCity {
     center: [number, number];
     bounds: [number, number, number, number];
     isBeta?: boolean;
+    isHidden?: boolean;
     hasPointsOfSale?: boolean;
     hasAlerts?: boolean;
     virtualTableUrl?: string;

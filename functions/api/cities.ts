@@ -12,6 +12,7 @@ export async function onRequest() {
             center: city.center,
             bounds: city.bounds,
             isBeta: city.isBeta,
+            isHidden: city.isHidden,
             hasPointsOfSale: city.hasPointsOfSale,
             hasAlerts: city.hasAlerts,
             virtualTableUrl: city.virtualTableUrl,

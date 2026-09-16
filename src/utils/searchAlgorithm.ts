@@ -18,7 +18,7 @@ export const createSearchIndex = (features: StopFeature[]): SearchIndexItem[] =>
             return {
                 stop,
                 normalizedName,
-                nameTokens: normalizedName.split(/[-\s/]+/),
+                nameTokens: normalizedName.split(STOP_SEARCH.TOKEN_SEPARATORS),
                 stopId
             };
         });
@@ -29,7 +29,7 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
 
     const normalizedQuery = normalizeString(query).trim();
     const upperQuery = query.trim().toUpperCase();
-    const queryTokens = normalizedQuery.split(/[-\s/]+/);
+    const queryTokens = normalizedQuery.split(STOP_SEARCH.TOKEN_SEPARATORS).filter(Boolean);
 
     const matches = searchIndex
         .filter((item) => {

@@ -40,3 +40,5 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

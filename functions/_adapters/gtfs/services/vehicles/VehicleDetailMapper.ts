@@ -3,6 +3,7 @@ import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
 import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
 import { GTFS_CONFIG } from '../../core/config';
+import { isLocated } from '../../core/trip-stops';
 
 export class VehicleDetailMapper {
 
@@ -62,10 +63,7 @@ export class VehicleDetailMapper {
         return stations.map((s) => {
             return {
                 type: 'Feature' as const,
-                geometry: {
-                    type: 'Point',
-                    coordinates: s.coordinates
-                },
+                ...(isLocated(s) ? { geometry: { type: 'Point', coordinates: s.coordinates } } : {}),
                 properties: {
                     stop_id: String(s.id),
                     stop_name: s.name,
@@ -81,7 +79,8 @@ export class VehicleDetailMapper {
         });
     }
 
-    static buildRouteGeoJson(stations: Station[], routeColor: string, tripShape: [number, number][][] | null = null) {
+    static buildRouteGeoJson(allStations: Station[], routeColor: string, tripShape: [number, number][][] | null = null) {
+        const stations = allStations.filter(isLocated);
         // If a real GTFS shape is available, flatten multi-line segments into a single coordinate array.
         // Otherwise, fall back to straight station-to-station lines.
         const coordinates: [number, number][] = tripShape

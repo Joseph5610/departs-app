@@ -10,6 +10,17 @@ export function distanceMeters(aLat: number, aLon: number, bLat: number, bLon: n
     return EARTH_RADIUS_M * 2 * Math.asin(Math.sqrt(h));
 }
 
+/** Approximate distance in meters from a point to the segment A–B, on a local flat projection. */
+export function distanceToSegmentMeters(lat: number, lon: number, aLat: number, aLon: number, bLat: number, bLon: number): number {
+    const kx = Math.cos(toRad(lat)) * EARTH_RADIUS_M * Math.PI / 180;
+    const ky = EARTH_RADIUS_M * Math.PI / 180;
+    const [px, py] = [(lon - aLon) * kx, (lat - aLat) * ky];
+    const [dx, dy] = [(bLon - aLon) * kx, (bLat - aLat) * ky];
+    const lengthSq = dx * dx + dy * dy;
+    const t = lengthSq > 0 ? Math.max(0, Math.min(1, (px * dx + py * dy) / lengthSq)) : 0;
+    return Math.hypot(px - t * dx, py - t * dy);
+}
+
 /** Initial compass bearing in degrees (0-360, clockwise from north) from point A to point B. */
 export function bearingDeg(aLat: number, aLon: number, bLat: number, bLon: number): number {
     const y = Math.sin(toRad(bLon - aLon)) * Math.cos(toRad(bLat));

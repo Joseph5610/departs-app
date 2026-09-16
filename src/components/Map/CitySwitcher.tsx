@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Earth } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCities } from '../../hooks/data/useCities';
+import { useVisibleCities } from '../../hooks/data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ interface CitySwitcherProps {
 
 export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant = "tinted" }) => {
     const { t } = useTranslation();
-    const { data } = useCities();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
@@ -41,7 +40,7 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
         }
     }, [selectedCity]);
 
-    const cities = data?.cities || [];
+    const cities = useVisibleCities();
 
     // Only render if we have more than 1 city
     if (cities.length <= 1) {

@@ -10,18 +10,56 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
+import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { DATA_LICENSE_URLS, PROCESSED_DATA, SHARED_DATA_ATTRIBUTIONS, type DataAttribution } from '../../../config/attributions';
 import { EXTERNAL_URLS, UI_TIMING_MS } from '../../../config/constants';
 import { formatDateTime } from '../../../utils/dateUtils';
 
-const DATA_ATTRIBUTIONS = Object.values(FRONTEND_CITIES_CONFIG).flatMap(city => city.attributions);
+const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[] }> => [
+    ...Object.values(FRONTEND_CITIES_CONFIG)
+        .filter(city => !city.isHidden || unlockedCities.includes(city.slug))
+        .map(city => ({ labelKey: `map.regions.${city.slug}`, sources: city.attributions })),
+    { labelKey: 'settings.attributions.shared', sources: SHARED_DATA_ATTRIBUTIONS },
+];
+
+const badgeClassName = 'text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider';
+
+/** A source credited as its licence asks: creator, the linked dataset and the linked licence. */
+const AttributionItem: React.FC<{ source: DataAttribution }> = ({ source }) => {
+    const { t } = useTranslation();
+    const licenseUrl = DATA_LICENSE_URLS[source.license];
+    const licenseLabel = t(`settings.attributions.licenses.${source.license}`);
+    return (
+        <Item variant="settings" size="none">
+            <ItemMedia variant="icon" className="text-muted-foreground">
+                <Database size={18} strokeWidth={2} />
+            </ItemMedia>
+            <ItemContent>
+                <ItemTitle className="text-foreground">{source.creator}</ItemTitle>
+                <ItemDescription className="text-xs">
+                    <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
+                </ItemDescription>
+            </ItemContent>
+            <ItemActions>
+                {licenseUrl ? (
+                    <Badge variant="outline" className={badgeClassName} render={<a href={licenseUrl} target="_blank" rel="noopener noreferrer" />}>
+                        {licenseLabel}
+                    </Badge>
+                ) : (
+                    <Badge variant="outline" className={badgeClassName}>{licenseLabel}</Badge>
+                )}
+            </ItemActions>
+        </Item>
+    );
+};
 
 export const SettingsFooter: React.FC = () => {
     const { t, i18n } = useTranslation();
 
     // Preferences
     const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const unlockedCities = usePreferencesStore(s => s.unlockedCities);
     const { clearHistory } = usePreferencesStore(s => s.actions);
     const { setIsFeedbackOpen, setIsSettingsOpen } = useUiStore(s => s.actions);
 
@@ -152,43 +190,33 @@ export const SettingsFooter: React.FC = () => {
                 <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
                     {t('settings.sections.attributions')}
                 </div>
+                {attributionGroups(unlockedCities).map(group => (
+                    <div key={group.labelKey} className="flex flex-col gap-1.5">
+                        <div className="text-[11px] text-muted-foreground font-semibold px-1">{t(group.labelKey)}</div>
+                        <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                            <ItemGroup className="gap-0">
+                                {group.sources.map(source => <AttributionItem key={`${source.url}|${source.title}`} source={source} />)}
+                            </ItemGroup>
+                        </Card>
+                    </div>
+                ))}
                 <Card variant="subtle" size="none" className="overflow-hidden gap-0">
                     <ItemGroup className="gap-0">
-                        {DATA_ATTRIBUTIONS.map((source) => (
-                            <Item
-                                key={source.url}
-                                variant="settings"
-                                size="none"
-                                render={<a href={source.url} target="_blank" rel="noopener noreferrer" />}
-                            >
-                                <ItemMedia variant="icon" className="text-muted-foreground">
-                                    <Database size={18} strokeWidth={2} />
-                                </ItemMedia>
-                                <ItemContent>
-                                    <ItemTitle className="text-foreground">{source.label}</ItemTitle>
-                                </ItemContent>
-                                <ItemActions>
-                                    <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                        {t('settings.dataSource')}
-                                    </Badge>
-                                </ItemActions>
-                            </Item>
-                        ))}
-
                         <Item
                             variant="settings"
                             size="none"
-                            render={<a href={EXTERNAL_URLS.DATA_LICENSE} target="_blank" rel="noopener noreferrer" />}
+                            render={<a href={PROCESSED_DATA.url} target="_blank" rel="noopener noreferrer" />}
                         >
                             <ItemMedia variant="icon" className="text-muted-foreground">
                                 <Scale size={18} strokeWidth={2} />
                             </ItemMedia>
                             <ItemContent>
-                                <ItemTitle className="text-foreground">{t('settings.license')}</ItemTitle>
+                                <ItemTitle className="text-foreground">{t('settings.attributions.processedTitle')}</ItemTitle>
+                                <ItemDescription className="text-xs line-clamp-none">{t('settings.attributions.notice')}</ItemDescription>
                             </ItemContent>
                             <ItemActions>
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                    CC BY 4.0
+                                <Badge variant="outline" className={badgeClassName}>
+                                    {t(`settings.attributions.licenses.${PROCESSED_DATA.license}`)}
                                 </Badge>
                             </ItemActions>
                         </Item>

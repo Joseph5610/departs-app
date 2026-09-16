@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { useLocate } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCities } from '../../hooks/data/useCities';
+import { useVisibleCities } from '../../hooks/data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { navigate } from 'wouter/use-browser-location';
@@ -22,9 +22,7 @@ import { cityOverviewCamera } from '../../utils/mapUtils';
 export const WelcomeModal: React.FC = React.memo(() => {
     const { t } = useTranslation();
     const handleLocate = useLocate();
-    
-    const { data } = useCities();
-    const cities = useMemo(() => data?.cities || [], [data?.cities]);
+    const cities = useVisibleCities();
     const globalSelectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
     const { setSelectedCity, setHasSeenWelcome } = usePreferencesStore(s => s.actions);

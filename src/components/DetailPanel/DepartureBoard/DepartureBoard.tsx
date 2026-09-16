@@ -173,7 +173,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
-                                                <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full border-b-2"
+                                                <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full min-w-0 border-b-2"
                                                      style={{
                                                          borderBottomColor: routeColor
                                                              ? `color-mix(in srgb, ${routeColor} 60%, transparent)`
@@ -242,7 +242,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                             : 'rgba(255,255,255,0.1)'
                                                     }}
                                                 />
-                                                <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full">
+                                                <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full min-w-0">
                                                     <div 
                                                         className="w-1 h-4 rounded-r-sm shrink-0" 
                                                         style={{ backgroundColor: routeColor || FALLBACK_ROUTE_COLOR }}

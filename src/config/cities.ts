@@ -2,6 +2,7 @@ import '../lib/zod-config';
 import { z } from 'zod/mini';
 import type { EnrichmentChannelAdapter } from '../types/enrichment';
 import type { City } from '../types/cities';
+import type { DataAttribution } from './attributions';
 
 /** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
 const kordisMessageSchema = z.object({
@@ -24,6 +25,8 @@ export interface InitialCityConfig {
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
+    /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
+    isHidden?: boolean;
     /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
     hasAlerts?: boolean;
     filters?: {
@@ -35,7 +38,9 @@ export interface InitialCityConfig {
     /** Realtime data provider shown in the system status modal. */
     dataProvider: { nameKey: string; url: string };
     /** Data sources credited in Settings, in display order. */
-    attributions: Array<{ label: string; url: string }>;
+    attributions: DataAttribution[];
+    /** Line chips list the lines of the loaded departures, not the stop's timetable lines (DÚK: the platform comes from the live board). */
+    lineChipsFromDepartures?: boolean;
     /** Upstream feed descriptions shown in the admin Feed Explorer. */
     debugFeedLabels: { vehicles: string; alerts: string };
     /** Local line conventions; cities without them get DEFAULT_LINE_RULES. */
@@ -78,7 +83,8 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasInfotexts: true,
         dataProvider: { nameKey: 'liveStatus.providerGolemio', url: 'https://golemio.cz' },
         attributions: [
-            { label: 'Golemio (Prague)', url: 'https://golemio.cz' },
+            { creator: 'ROPID', title: 'PID open data: stops, timetables, disruptions', url: 'https://pid.cz/o-systemu/opendata/', license: 'ccBy4' },
+            { creator: 'ROPID, via Operátor ICT (Golemio)', title: 'PID vehicle positions and departures (Golemio API)', url: 'https://golemio.cz', license: 'ccBy4' },
         ],
         debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
         lineRules: {
@@ -105,8 +111,9 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasInfotexts: false,
         dataProvider: { nameKey: 'liveStatus.providerKordis', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
         attributions: [
-            { label: 'IDS JMK (Brno)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
-            { label: 'Lissy API (Brno Shapes)', url: 'https://github.com/Jorgen98/Lissy' },
+            { creator: 'Statutární město Brno, KORDIS JMK', title: 'IDS JMK timetables (GTFS, GTFS-RT)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328', license: 'ccBy4' },
+            { creator: 'Statutární město Brno, KORDIS JMK', title: 'Public transit vehicle positions', url: 'https://data.brno.cz/datasets/e8aa121910df41bb9a28e4ca34a263c7', license: 'ccBy4' },
+            { creator: 'Lissy, FIT VUT Brno', title: 'Route shapes (Lissy API)', url: 'https://github.com/Jorgen98/Lissy', license: 'permission' },
         ],
         debugFeedLabels: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
         enrichmentChannel: {
@@ -151,20 +158,30 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasInfotexts: false,
         dataProvider: { nameKey: 'liveStatus.providerDpmp', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
         attributions: [
-            { label: 'DPMP (Prešov)', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
+            { creator: 'Dopravný podnik mesta Prešov, a.s.', title: 'GTFS – MHD Prešov', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079', license: 'ccBy4' },
+            { creator: 'Dopravný podnik mesta Prešov, a.s.', title: 'On-line poloha vozidiel MHD mesta Prešov', url: 'https://egov.presov.sk/geodatakatalog/', license: 'ccBy4' },
         ],
         debugFeedLabels: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
     },
-    // duk: {
-    //     slug: 'duk',
-    //     country: 'CZ',
-    //     center: [14.0322, 50.6607],
-    //     bounds: [12.93, 50.11, 14.61, 51.05],
-    //     filters: {
-    //         vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
-    //         stops: []
-    //     }
-    // }
+    duk: {
+        slug: 'duk',
+        country: 'CZ',
+        center: [14.0322, 50.6607],
+        bounds: [12.93, 50.11, 14.61, 51.05],
+        isHidden: true,
+        filters: {
+            vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
+            stops: []
+        },
+        hasInfotexts: false,
+        dataProvider: { nameKey: 'liveStatus.providerDuk', url: 'https://tabule.portabo.cz' },
+        attributions: [
+            { creator: 'Ústecký kraj (Portabo)', title: 'DÚK stops, departure boards and vehicle positions', url: 'https://lkod.portabo.cz/datasets', license: 'czOpenData' },
+            { creator: 'Ministerstvo dopravy ČR (CIS JŘ)', title: 'Jízdní řády veřejné linkové dopravy (JDF)', url: 'https://data.gov.cz/datová-sada?iri=https%3A%2F%2Fdata.gov.cz%2Fzdroj%2Fdatové-sady%2F66003008%2F1463646434', license: 'czOpenData' },
+        ],
+        lineChipsFromDepartures: true,
+        debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
+    },
 };
 
 export const DEFAULT_CITY_SLUG = 'prague';

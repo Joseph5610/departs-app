@@ -43,7 +43,7 @@ export const GTFS_CONFIG = {
 
 /*
  * Chunk addressing for the three static data sets. Each of these is a contract with the
- * departs-gtfs-data build script: change one side and the Worker requests files that do not exist.
+ * departs-data build script: change one side and the Worker requests files that do not exist.
  * They are deliberately different — shapes bucket numerically, the other two by id prefix.
  */
 

@@ -35,7 +35,7 @@ export function getDefaultCitySlug(): string {
     const country = getViewerCountry();
     if (country) {
         for (const city of Object.values(FRONTEND_CITIES_CONFIG)) {
-            if (city.country === country) return city.slug;
+            if (city.country === country && !city.isHidden) return city.slug;
         }
     }
     return DEFAULT_CITY_SLUG;

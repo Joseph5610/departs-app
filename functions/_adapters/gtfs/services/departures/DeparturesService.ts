@@ -66,7 +66,7 @@ export class DeparturesService {
         }
     }
 
-    private async getParentChildMap(staticDataUrl: string): Promise<Record<string, string[]>> {
+    protected async getParentChildMap(staticDataUrl: string): Promise<Record<string, string[]>> {
         return CacheManager.getOrFetch(
             `parent_child_map_${this.city.slug}`,
             MEMORY_CACHE_TTL.TWO_HOURS_MS,
@@ -88,7 +88,7 @@ export class DeparturesService {
      * large interchange stations can otherwise produce hundreds of targets from a request that passed
      * the first check.
      */
-    private resolveTargetStopIds(stopIds: string[], parentToChildMap: Record<string, string[]>) {
+    protected resolveTargetStopIds(stopIds: string[], parentToChildMap: Record<string, string[]>) {
         const targetIds: string[] = [];
         const childToRequestedMap = new Map<string, string>();
 
@@ -114,7 +114,7 @@ export class DeparturesService {
         return { targetIds, childToRequestedMap };
     }
 
-    private async fetchDepartureTuples(
+    protected async fetchDepartureTuples(
         targetIds: string[],
         childToRequestedMap: Map<string, string>,
         staticDataUrl: string
@@ -169,7 +169,7 @@ export class DeparturesService {
         return allDeps;
     }
 
-    private async getRealtimeVehiclesCache(): Promise<AppVehicleCollection | null> {
+    protected async getRealtimeVehiclesCache(): Promise<AppVehicleCollection | null> {
         try {
             if (this.vehiclesService) {
                 return await this.vehiclesService.getCachedMappedVehicles();

@@ -38,6 +38,8 @@ export const DRAWER_SNAP = {
 export const STOP_SEARCH = {
     MIN_QUERY_LENGTH: 2,
     RESULT_LIMIT: 10,
+    /** Word boundaries in stop names; the comma splits CIS-style "Town,Stop" names. */
+    TOKEN_SEPARATORS: /[-\s/,]+/,
     /** Line badges shown per search result before the rest are cut. */
     LINE_BADGE_LIMIT: 5,
     /** Relevance points; a stop's score is the sum of the rules it matches. */
@@ -122,7 +124,6 @@ export const EXTERNAL_URLS = {
     GEOCODER_API: 'https://photon.komoot.io/api/',
     STATIC_DATA: 'https://data.departs.app',
     SOURCE_REPO: 'https://github.com/joseph5610/departs-app',
-    DATA_LICENSE: 'https://creativecommons.org/licenses/by/4.0/',
     WALKING_DIRECTIONS: {
         apple: (lat: number, lon: number) => `maps://?daddr=${lat},${lon}&dirflg=w`,
         google: (lat: number, lon: number) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`,
@@ -194,7 +195,7 @@ export const GEOCODING_CONFIG = {
 
 export const STOPS_DEVICE_CACHE = {
     /** Bump to invalidate every device's cached stops; it is also sent as `?v=` to bust the CDN cache. */
-    VERSION: 'v46',
+    VERSION: 'v49',
     KEY_PREFIX: 'city_stops_storage_',
 };
 

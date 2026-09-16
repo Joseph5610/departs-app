@@ -2,7 +2,8 @@ import type { McpToolDefinition } from "./types";
 import { CITY_REGISTRY } from "../_core/city-config";
 import { MCP_DEFAULTS } from "../_core/config";
 
-const CITY_SLUGS = Object.keys(CITY_REGISTRY);
+/** Hidden regions are not offered to MCP clients until they launch. */
+const CITY_SLUGS = Object.values(CITY_REGISTRY).filter(city => !city.isHidden).map(city => city.slug);
 
 /**
  * Tool definitions exposed to Model Context Protocol (MCP) clients.

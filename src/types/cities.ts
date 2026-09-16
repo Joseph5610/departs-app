@@ -6,6 +6,8 @@ export interface City {
     center: [number, number];
     bounds: [number, number, number, number];
     isBeta?: boolean;
+    /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
+    isHidden?: boolean;
     hasPointsOfSale?: boolean;
     hasAlerts?: boolean;
     virtualTableUrl?: string;
