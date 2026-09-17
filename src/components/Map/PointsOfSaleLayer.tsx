@@ -4,6 +4,8 @@ import type { FeatureCollection } from 'geojson';
 import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
 import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { useRouteParams } from '../../hooks/useRouteParams';
 import { pointsOfSaleIcons, MAP_SOURCES } from '../../config/mapLayers';
 import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
 
@@ -14,12 +16,16 @@ interface PointsOfSaleLayerProps {
 
 export const PointsOfSaleLayer: React.FC<PointsOfSaleLayerProps> = React.memo(({ mapLoaded }) => {
     const { data: posList } = usePointsOfSale();
+    const showPointsOfSale = usePreferencesStore((s) => s.showPointsOfSale);
+    const { posId } = useRouteParams();
+    /** The search preloads the list with the layer off, so visibility can't follow the data alone. */
+    const isVisible = showPointsOfSale || Boolean(posId);
     const { resolvedTheme } = useTheme();
     const textColor = resolvedTheme === 'dark' ? '#94a3b8' : '#64748b';
     const haloColor = resolvedTheme === 'dark' ? '#0f172a' : '#ffffff';
 
     const geoJsonData = useMemo<FeatureCollection>(() => {
-        if (!posList || posList.length === 0) return EMPTY_FEATURE_COLLECTION;
+        if (!isVisible || !posList || posList.length === 0) return EMPTY_FEATURE_COLLECTION;
 
         return {
             type: 'FeatureCollection',
@@ -40,7 +46,7 @@ export const PointsOfSaleLayer: React.FC<PointsOfSaleLayerProps> = React.memo(({
                 }
             }))
         };
-    }, [posList]);
+    }, [posList, isVisible]);
 
     const iconLayerWithTheme = useMemo(() => ({
         ...pointsOfSaleIcons,

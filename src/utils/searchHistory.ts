@@ -5,6 +5,7 @@ export const searchHistoryKey = (item: SearchHistoryBase): string => {
     switch (item.type) {
         case 'stop': return `stop-${item.stop_id}`;
         case 'place': return `place-${item.place_id}`;
+        case 'pos': return `pos-${item.pos_id}`;
         case 'line': return `line-${item.lines.join('-')}`;
     }
 };

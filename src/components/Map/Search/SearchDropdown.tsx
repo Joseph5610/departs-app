@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, MapPin, Star, Clock, Building2 } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket } from 'lucide-react';
 import { SearchItem } from './SearchItem';
 import { getLineMetadataFromMap } from '@/utils/transitUtils';
 import { searchHistoryKey } from '@/utils/searchHistory';
@@ -12,6 +12,7 @@ import {
 
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
+import type { PosSearchResult } from '../../../utils/posSearch';
 
 interface SearchDropdownProps {
     results: StopFeature[];
@@ -22,10 +23,12 @@ interface SearchDropdownProps {
     isLineLike: boolean;
     linesFromQuery: string[];
     geocodingResults: GeocodingResult[];
+    posResults: PosSearchResult[];
     onStopSelect: (stop: StopFeature) => void;
     onHistorySelect: (item: SearchHistoryItem) => void;
     onLineSelect: (lines: string[]) => void;
     onPlaceSelect: (result: GeocodingResult) => void;
+    onPosSelect: (result: PosSearchResult) => void;
     lineMetadataMap: Map<string, { route_color: string; type: string }>;
 }
 
@@ -56,10 +59,12 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     isLineLike,
     linesFromQuery,
     geocodingResults,
+    posResults,
     onStopSelect,
     onHistorySelect,
     onLineSelect,
     onPlaceSelect,
+    onPosSelect,
     lineMetadataMap
 }) => {
     const { t } = useTranslation();
@@ -102,16 +107,17 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 icon={
                                     item.type === 'stop' ? <MapPin size={16} strokeWidth={1.5} /> :
                                     item.type === 'place' ? <Building2 size={16} strokeWidth={1.5} /> :
+                                    item.type === 'pos' ? <Ticket size={16} strokeWidth={1.5} /> :
                                     <SearchIcon size={16} strokeWidth={1.5} />
                                 }
                                 title={
                                     item.type === 'stop' ? item.stop_name :
-                                    item.type === 'place' ? item.name :
+                                    item.type === 'place' || item.type === 'pos' ? item.name :
                                     t('search.lineFilter', { line: item.lines.join(', '), count: item.lines.length })
                                 }
                                 subtitle={
                                     item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) :
-                                    item.type === 'place' ? item.subtitle :
+                                    item.type === 'place' || item.type === 'pos' ? item.subtitle :
                                     undefined
                                 }
                                 metroLines={item.type === 'stop' ? item.metro_lines : undefined}
@@ -158,6 +164,25 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 {query !== '' && results.length > 0 && (
                     <CommandGroup className="p-0">
                         {renderStopResults('res')}
+                    </CommandGroup>
+                )}
+
+                {/* Points of sale */}
+                {posResults.length > 0 && (
+                    <CommandGroup
+                        heading={<GroupHeading icon={<Ticket size={14} className="text-emerald-500" strokeWidth={2} />} label={t('search.pointsOfSale')} count={posResults.length} />}
+                        variant="search"
+                    >
+                        {posResults.map((result) => (
+                            <SearchItem
+                                key={result.pos.id}
+                                icon={<Ticket size={16} strokeWidth={1.5} />}
+                                title={result.pos.name}
+                                subtitle={[t(`pos.types.${result.pos.type}`, result.pos.type), result.pos.address].filter(Boolean).join(' · ')}
+                                testId={`search-item-pos-${result.pos.id}`}
+                                onClick={() => onPosSelect(result)}
+                            />
+                        ))}
                     </CommandGroup>
                 )}
 

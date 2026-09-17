@@ -1,7 +1,7 @@
 import '../lib/zod-config';
 import { z } from 'zod/mini';
 
-const POINT_OF_SALE_TYPES = ['ticketMachine', 'ticketOfficeMetro', 'informationCenter', 'trainStation', 'carrierOffice', 'chipCardDispense'] as const;
+export const POINT_OF_SALE_TYPES = ['ticketMachine', 'ticketOfficeMetro', 'informationCenter', 'trainStation', 'carrierOffice', 'chipCardDispense'] as const;
 const POINT_OF_SALE_SERVICES = ['card_application', 'card_issuance', 'coupons', 'paper_tickets', 'penalties', 'information', 'tkt_prep'] as const;
 const POINT_OF_SALE_PAY_METHODS = ['cash', 'card', 'contactless'] as const;
 

@@ -53,6 +53,30 @@ export const STOP_SEARCH = {
     },
 };
 
+export const POS_SEARCH = {
+    MIN_QUERY_LENGTH: 3,
+    /** Points of sale are a side answer next to stops, so the dropdown keeps the group short. */
+    RESULT_LIMIT: 3,
+    TOKEN_SEPARATORS: /[-\s/,.()]+/,
+    /** Diacritics are stripped before matching, so these are written without them. */
+    INTENT_KEYWORDS: ['jizdenka', 'jizdenky', 'listek', 'listky', 'ticket', 'tickets', 'kupon', 'kupony', 'predplatne', 'litacka', 'prodej', 'koupit', 'buy'],
+    TYPE_KEYWORDS: {
+        ticketMachine: ['automat', 'automaty', 'machine'],
+        ticketOfficeMetro: ['pokladna', 'predprodej', 'office', 'metro'],
+        informationCenter: ['info', 'infocentrum', 'informace', 'information'],
+        trainStation: ['pokladna', 'nadrazi', 'vlak', 'train', 'station', 'railway'],
+        carrierOffice: ['dopravce', 'kancelar', 'carrier', 'office'],
+        chipCardDispense: ['karta', 'karty', 'cipova', 'card'],
+    } as Record<string, string[]>,
+    SCORES: {
+        NAME_EXACT: 500,
+        NAME_PREFIX: 400,
+        NAME_TOKENS: 300,
+        ADDRESS: 200,
+        INTENT: 100,
+    },
+};
+
 export const MAP_BOUNDS_DEBOUNCE = 800;
 export const MAP_MIN_ZOOM_FOR_DATA = 9;
 

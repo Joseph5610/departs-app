@@ -98,6 +98,7 @@ const isSearchHistoryItem = (value: unknown): value is SearchHistoryItem => {
         case 'stop': return typeof item.stop_id === 'string' && typeof item.stop_name === 'string' && isCoordinates(item.coordinates);
         case 'line': return isStringArray(item.lines);
         case 'place': return typeof item.place_id === 'string' && typeof item.name === 'string' && isCoordinates(item.coordinates);
+        case 'pos': return typeof item.pos_id === 'string' && typeof item.name === 'string' && isCoordinates(item.coordinates);
         default: return false;
     }
 };

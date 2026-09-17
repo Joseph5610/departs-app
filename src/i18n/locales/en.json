@@ -22,7 +22,8 @@
     "clearFilter": "Clear filter",
     "favorites": "Favorite Stops",
     "recent": "Recent",
-    "places": "Places & Addresses"
+    "places": "Places & Addresses",
+    "pointsOfSale": "Points of Sale"
   },
   "settings": {
     "title": "Settings",

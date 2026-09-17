@@ -83,7 +83,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasInfotexts: true,
         dataProvider: { nameKey: 'liveStatus.providerGolemio', url: 'https://golemio.cz' },
         attributions: [
-            { creator: 'ROPID', title: 'PID open data: stops, timetables, disruptions', url: 'https://pid.cz/o-systemu/opendata/', license: 'ccBy4' },
+            { creator: 'ROPID', title: 'PID open data: stops, points of sale, timetables, disruptions', url: 'https://pid.cz/o-systemu/opendata/', license: 'ccBy4' },
             { creator: 'ROPID, via Operátor ICT (Golemio)', title: 'PID vehicle positions and departures (Golemio API)', url: 'https://golemio.cz', license: 'ccBy4' },
         ],
         debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },

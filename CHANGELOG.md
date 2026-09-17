@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.71.0] - 2026-09-17
+
+### Added
+
+- Search finds points of sale in cities that have them, by name, address or words like "jízdenka" and "automat", with the nearest listed first.
+
 ## [0.70.0] - 2026-09-13
 
 ### Added

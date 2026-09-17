@@ -16,13 +16,14 @@ const parsePointsOfSale = (json: unknown): PointOfSale[] => {
     return valid;
 };
 
-export function usePointsOfSale() {
+/** `preload` lets the search load the list while the map layer is still hidden. */
+export function usePointsOfSale(preload = false) {
     const showPointsOfSale = usePreferencesStore((s) => s.showPointsOfSale);
     const selectedCity = usePreferencesStore((s) => s.selectedCity);
     const { posId } = useRouteParams();
 
     const hasPointsOfSale = Boolean(useCityConfig().hasPointsOfSale);
-    const isEnabled = (showPointsOfSale || Boolean(posId)) && hasPointsOfSale;
+    const isEnabled = (showPointsOfSale || preload || Boolean(posId)) && hasPointsOfSale;
 
     const dataUrl = `${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/points-of-sale.json`;
 

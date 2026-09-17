@@ -4,6 +4,7 @@ import { Search as SearchIcon, X } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
 import { paths } from '../../../lib/routes';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
+import { usePosSearch } from '../../../hooks/features/usePosSearch';
 import { useGeocoding, useRememberedPlace, rememberPlace } from '../../../hooks/data/useGeocoding';
 import { useRouteParams } from '../../../hooks/useRouteParams';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -15,6 +16,7 @@ import { useStops } from '../../../hooks/data/useStops';
 import { useLineRules } from '../../../hooks/data/useCities';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
+import type { PosSearchResult } from '../../../utils/posSearch';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -60,6 +62,7 @@ export const Search: React.FC = React.memo(() => {
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
     const { results: geocodingResults } = useGeocoding(query, userLocation);
+    const posResults = usePosSearch(query, isOpen);
 
 
     useEffect(() => {
@@ -106,7 +109,7 @@ export const Search: React.FC = React.memo(() => {
         return looksLikeLine(trimmed);
     }, [query, linesFromQuery, lineMetadataMap, linePattern]);
 
-    const showDropdown = (results.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
+    const showDropdown = (results.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -163,6 +166,14 @@ export const Search: React.FC = React.memo(() => {
             });
             navigate(paths.stop(targetCity, item.stop_id));
             addToHistory(item);
+        } else if (item.type === 'pos') {
+            flyTo({
+                center: item.coordinates,
+                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+                duration: MAP_CAMERA.FLY_MS
+            });
+            navigate(paths.pos(targetCity, item.pos_id));
+            addToHistory(item);
         } else if (item.type === 'place') {
             navigate(paths.city(targetCity));
             flyTo({
@@ -190,6 +201,26 @@ export const Search: React.FC = React.memo(() => {
     const handleLineSelect = (lines: string[]) => {
         onLineSelect(lines);
         addToHistory({ type: 'line', city_slug: selectedCity, lines });
+        setQuery('');
+        setIsOpen(false);
+    };
+
+    const handlePosSelect = (result: PosSearchResult) => {
+        const { pos } = result;
+        flyTo({
+            center: [pos.lon, pos.lat],
+            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
+            duration: MAP_CAMERA.FLY_MS
+        });
+        navigate(paths.pos(selectedCity, pos.id));
+        addToHistory({
+            type: 'pos',
+            city_slug: selectedCity,
+            pos_id: pos.id,
+            name: pos.name,
+            subtitle: t(`pos.types.${pos.type}`, pos.type),
+            coordinates: [pos.lon, pos.lat]
+        });
         setQuery('');
         setIsOpen(false);
     };
@@ -293,10 +324,12 @@ export const Search: React.FC = React.memo(() => {
                         isLineLike={isLineLike}
                         linesFromQuery={linesFromQuery}
                         geocodingResults={geocodingResults}
+                        posResults={posResults}
                         onStopSelect={handleStopSelect}
                         onHistorySelect={handleHistorySelect}
                         onLineSelect={handleLineSelect}
                         onPlaceSelect={handlePlaceSelect}
+                        onPosSelect={handlePosSelect}
                         lineMetadataMap={lineMetadataMap}
                     />
                 )}
