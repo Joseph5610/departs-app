@@ -1,5 +1,5 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../_core/types";
+import type { Env, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../_core/types";
 import type { CityConfig } from '../_core/city-config';
 import { GolemioAdapter } from './golemio/GolemioAdapter';
 import { GtfsAdapter } from './gtfs/GtfsAdapter';
@@ -9,10 +9,6 @@ import { DpmpAdapter } from './dpmp/DpmpAdapter';
 
 /** Contract all city adapters must fulfill. */
 export interface CityAdapter {
-    /** The city's stops as objects, for MCP tools and the sitemap. */
-    handleStops(ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection>;
-    /** Handle /api/[city]/stops: the prebuilt stop file, streamed through unparsed. */
-    handleStopsBody(ctx: EventContext<Env, string, unknown>): Promise<ReadableStream>;
     /** Handle /api/[city]/vehicles */
     handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection>;
     /** Handle /api/[city]/departures */

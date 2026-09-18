@@ -3,7 +3,7 @@ import { ERROR_MESSAGES } from "./config";
 import { ZodError } from "zod";
 import type { EventContext } from "@cloudflare/workers-types";
 import type { Env } from "./types";
-import { getCityConfig } from "./city-config";
+import { getCityConfig, type CityConfig } from "./city-config";
 import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
 
 /**
@@ -95,21 +95,21 @@ export function withCityRoute(
     handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<unknown>,
     cacheTtl: number
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return withCity(async (adapter, context) => createSuccessResponse(await handler(adapter, context), cacheTtl));
+    return withCity(async (city, context) => createSuccessResponse(await handler(getAdapter(city), context), cacheTtl));
 }
 
 /**
- * `withCityRoute` for handlers that return an already-serialized JSON body.
+ * `withCityRoute` for handlers that need only the city's config and return an already-serialized JSON body.
  */
 export function withCityJsonBodyRoute(
-    handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<BodyInit>,
+    handler: (city: CityConfig, context: EventContext<Env, string, unknown>) => Promise<BodyInit>,
     cacheTtl: number
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return withCity(async (adapter, context) => createJsonBodyResponse(await handler(adapter, context), cacheTtl));
+    return withCity(async (city, context) => createJsonBodyResponse(await handler(city, context), cacheTtl));
 }
 
 function withCity(
-    respond: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<Response>
+    respond: (city: CityConfig, context: EventContext<Env, string, unknown>) => Promise<Response>
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
     return async (context) => {
         const slug = context.params.city as string;
@@ -125,7 +125,7 @@ function withCity(
         }
 
         try {
-            return await respond(getAdapter(city), context);
+            return await respond(city, context);
         } catch (error) {
             return handleError(error);
         }

@@ -4,7 +4,6 @@ import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
 
 import { GolemioClient } from './core/GolemioClient';
-import { MapStopsService } from '../../_core/MapStopsService';
 import { VehiclesService } from './services/vehicles/VehiclesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { DeparturesService } from './services/departures/DeparturesService';
@@ -18,35 +17,19 @@ import { InfotextsService } from './services/infotexts/InfotextsService';
  */
 export class GolemioAdapter implements CityAdapter {
     private client: GolemioClient;
-    private stopsService: MapStopsService;
     private vehiclesService: VehiclesService;
     private vehicleDetailService: VehicleDetailService;
     private departuresService: DeparturesService;
     private alertsService: AlertsService;
     private infotextsService: InfotextsService;
 
-    constructor(city: CityConfig) {
+    constructor(_city: CityConfig) {
         this.client = new GolemioClient();
-        this.stopsService = new MapStopsService(city);
         this.vehiclesService = new VehiclesService(this.client);
         this.vehicleDetailService = new VehicleDetailService(this.client);
         this.departuresService = new DeparturesService(this.client);
         this.alertsService = new AlertsService(this.client);
         this.infotextsService = new InfotextsService(this.client);
-    }
-
-    /**
-     * Routes stop-related requests to the prebuilt stop list.
-     */
-    handleStops(_ctx: EventContext<Env, string, unknown>) { 
-        return this.stopsService.getStops(); 
-    }
-
-    /**
-     * Streams the prebuilt stop list for /api/[city]/stops.
-     */
-    handleStopsBody(_ctx: EventContext<Env, string, unknown>) {
-        return this.stopsService.getStopsBody();
     }
 
     /**

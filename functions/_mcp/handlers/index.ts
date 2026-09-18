@@ -27,9 +27,9 @@ export async function handleToolCall(
 
     switch (name) {
         case "search_stops":
-            return handleSearchStops(args, ctx, adapter, resolvedCity);
+            return handleSearchStops(args, resolvedCity);
         case "search_nearest_stops":
-            return handleSearchNearestStops(args, ctx, adapter, resolvedCity);
+            return handleSearchNearestStops(args, resolvedCity);
         case "get_next_departures":
             return handleGetNextDepartures(args, ctx, adapter, resolvedCity);
         case "get_nearest_departures":

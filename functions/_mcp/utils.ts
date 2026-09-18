@@ -1,4 +1,5 @@
 import type { EventContext } from "@cloudflare/workers-types";
+import { MapStopsService } from "../_core/MapStopsService";
 import type { Env, AppInfotext, AppDeparture, AppStopCollection } from "../_core/types";
 import type { McpContext } from "./types";
 import { CITY_REGISTRY, getCityConfig } from "../_core/city-config";
@@ -112,10 +113,12 @@ export function resolveAdapter(citySlug?: string): { adapter: CityAdapter; cityS
 type StopFeature = AppStopCollection['features'][number];
 type RankedStop = { feature: StopFeature; distance: number };
 
-/** All stops of the city, through the adapter's cached stops pipeline. */
-export async function loadStops(ctx: McpContext, adapter: CityAdapter, citySlug: string): Promise<StopFeature[]> {
-    const stopsData = await adapter.handleStops(createMockContext(ctx, citySlug, `/api/${citySlug}/stops`));
-    return stopsData?.features || [];
+/** All stops of the city, from its prebuilt stop list. */
+export async function loadStops(citySlug: string): Promise<StopFeature[]> {
+    const city = getCityConfig(citySlug);
+    if (!city) return [];
+    const stopsData = await new MapStopsService(city).getStops();
+    return stopsData.features;
 }
 
 /** Stops with coordinates, nearest first, paired with their distance in meters from the given point. */

@@ -8,6 +8,8 @@ import { enrichVehicleCollection } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
+import { boundsOverlapCity } from '../../utils/mapUtils';
+import { useCityConfig } from './useCities';
 import type { AppError } from '../../types/error';
 
 const fetchVehicles = async (selectedCity: string, bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
@@ -55,6 +57,9 @@ export const useVehicles = () => {
     const routeFilter = useViewportStore(s => s.routeFilter);
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const cityBounds = useCityConfig().bounds;
+    // After a city switch the viewport still shows the previous city until the camera arrives.
+    const isViewportInCity = !!bounds && boundsOverlapCity(bounds, cityBounds);
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
@@ -62,7 +67,7 @@ export const useVehicles = () => {
     const query = useQuery<VehicleCollection | null, AppError>({
         queryKey: ['vehicles', selectedCity, bounds, routeFilter, routeTypeFilter],
         queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
-        enabled: !!selectedCity && !!bounds,
+        enabled: !!selectedCity && isViewportInCity,
         refetchInterval: (query) => (bounds && query.state.dataUpdatedAt ? TRANSIT_REFRESH_MS : false),
         staleTime: QUERY_TIMING_MS.LIVE_STALE,
         gcTime: QUERY_TIMING_MS.LIVE_GC,

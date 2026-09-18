@@ -2,9 +2,8 @@ import type { CityConfig } from '../../_core/city-config';
 import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
 
-import type { Env, AppStopCollection, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../../_core/types";
+import type { Env, AppVehicleCollection, AppDepartureResponse, AppVehicleDetail, AppAlertsResponse, AppInfotext, AppCityStats } from "../../_core/types";
 
-import { MapStopsService } from '../../_core/MapStopsService';
 import { DeparturesService } from './services/departures/DeparturesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { AlertsService } from './services/alerts/AlertsService';
@@ -17,13 +16,11 @@ import { BaseGtfsAlertsMapper } from './services/alerts/BaseGtfsAlertsMapper';
 import { getGtfsRtFeed } from './core/gtfs-rt-feed';
 
 export class GtfsAdapter implements CityAdapter {
-    protected readonly stopsService: MapStopsService;
     protected readonly vehiclesService: VehiclesService;
     protected readonly vehicleDetailService: VehicleDetailService;
     protected readonly alertsService: AlertsService;
 
     constructor(public readonly city: CityConfig) {
-        this.stopsService = new MapStopsService(city);
         this.vehiclesService = this.createVehiclesService();
         this.vehicleDetailService = new VehicleDetailService(city, this.createDetailEnricher(this.vehiclesService));
         this.alertsService = new AlertsService(city, this.createAlertsMapper());
@@ -42,14 +39,6 @@ export class GtfsAdapter implements CityAdapter {
         return new BaseGtfsAlertsMapper();
     }
 
-    async handleStops(_ctx: EventContext<Env, string, unknown>): Promise<AppStopCollection> {
-        return this.stopsService.getStops();
-    }
-
-    async handleStopsBody(_ctx: EventContext<Env, string, unknown>): Promise<ReadableStream> {
-        return this.stopsService.getStopsBody();
-    }
-    
     async handleVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
         return this.vehiclesService.getFilteredVehicles(ctx);
     }

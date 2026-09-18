@@ -28,7 +28,7 @@ export async function handleGetNearestDepartures(
     const radiusMeters = Number(args.radius_meters) || MCP_DEFAULTS.NEAREST_DEPARTURES_RADIUS_M;
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
     const [stops, infotexts] = await Promise.all([
-        loadStops(ctx, adapter, resolvedCity),
+        loadStops(resolvedCity),
         loadInfotexts(ctx, adapter, resolvedCity)
     ]);
 

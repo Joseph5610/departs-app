@@ -27,7 +27,7 @@ export async function handleGetNextDepartures(
     // 1. If stop_id is missing but stop_name is provided, search stops
     if (!stopId && args.stop_name) {
         const nameQuery = String(args.stop_name).toLowerCase();
-        const match = (await loadStops(ctx, adapter, resolvedCity)).find((f) =>
+        const match = (await loadStops(resolvedCity)).find((f) =>
             f.properties?.stop_name?.toLowerCase().includes(nameQuery)
         );
         if (match) {
@@ -43,7 +43,7 @@ export async function handleGetNextDepartures(
         const lat = Number(args.latitude);
         const lon = Number(args.longitude);
         if (!isNaN(lat) && !isNaN(lon)) {
-            const closest = rankStopsByDistance(await loadStops(ctx, adapter, resolvedCity), lat, lon, { includeCentroids: true })[0]?.feature;
+            const closest = rankStopsByDistance(await loadStops(resolvedCity), lat, lon, { includeCentroids: true })[0]?.feature;
             if (closest) {
                 stopId = closest.properties?.stop_id;
                 stopNameResolved = closest.properties?.stop_name;

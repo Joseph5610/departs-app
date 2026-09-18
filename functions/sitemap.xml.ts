@@ -1,8 +1,7 @@
 import { Env } from "./_core/types";
 import { getCityConfig, CITY_REGISTRY } from "./_core/city-config";
 import { CACHE_TTL } from "./_core/config";
-import { getAdapter } from "./_adapters/CityAdapter";
-import type { CityAdapter } from "./_adapters/CityAdapter";
+import { MapStopsService } from "./_core/MapStopsService";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
     const domain = new URL(context.request.url).origin;
@@ -31,16 +30,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         <priority>0.9</priority>
     </url>`;
 
-        let adapter: CityAdapter;
         try {
-            adapter = getAdapter(city);
-        } catch (e) {
-            console.error(`Failed to get adapter for ${citySlug}:`, e);
-            continue;
-        }
-
-        try {
-            const stopsData = await adapter.handleStops(context);
+            const stopsData = await new MapStopsService(city).getStops();
             if (stopsData && stopsData.features) {
                 const addedIds = new Set<string>();
                 const knownIds = new Set<string>();
