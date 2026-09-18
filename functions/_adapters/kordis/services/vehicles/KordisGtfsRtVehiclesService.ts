@@ -22,18 +22,41 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     /**
      * Resolves a raw feed trip id to the id used by the current GTFS export.
      *
-     * KORDIS keeps emitting trip ids from a previous export for a while after a schedule change,
-     * so ids absent from `tripRoutes` are looked up in the alias table. Returns null when the alias
-     * table explicitly marks the trip as dropped.
+     * KORDIS renumbers nearly every trip on each export while the feed keeps emitting the previous
+     * numbering, so a raw id being present in `tripRoutes` does NOT mean it is the same trip - it is
+     * usually a different one that inherited the number. The alias table, built from the operator's
+     * own run id, carries the intended trip.
+     *
+     * Both readings are plausible because ids get recycled, and which one is right depends on
+     * whether the feed has caught up with the export. Rather than assume, prefer whichever one is
+     * actually running: that keeps working when the feed still lags AND once it catches up.
+     * Returns null only when the alias table explicitly marks the trip as dropped.
      */
-    private resolveTripId(rawTripId: string, tripRoutes: GtfsTripRoutesData): string | null {
-        if (tripRoutes.tripRoutes && rawTripId in tripRoutes.tripRoutes) {
-            return rawTripId; // Active in current GTFS, trust it
-        }
-        if (tripRoutes.tripAliases && rawTripId in tripRoutes.tripAliases) {
-            return tripRoutes.tripAliases[rawTripId] ?? null; // null = dropped old trip
-        }
-        return rawTripId;
+    private resolveTripId(
+        rawTripId: string,
+        tripRoutes: GtfsTripRoutesData,
+        windows: TripWindows | null,
+        todayBit: number,
+        currentMins: number,
+    ): string | null {
+        const alias = tripRoutes.tripAliases?.[rawTripId];
+        if (alias === undefined) return rawTripId;
+        if (alias === null) return null;
+
+        const rawIsCurrentTrip = Boolean(tripRoutes.tripRoutes && rawTripId in tripRoutes.tripRoutes);
+        if (!rawIsCurrentTrip || !windows) return alias;
+
+        // Recycled id: only the raw reading wins, and only while it is the one in service.
+        const rawRunning = this.isRunning(windows.trips[rawTripId], todayBit, currentMins);
+        const aliasRunning = this.isRunning(windows.trips[alias], todayBit, currentMins);
+        return rawRunning && !aliasRunning ? rawTripId : alias;
+    }
+
+    /** Whether a trip operates today and the current time falls inside its window. */
+    private isRunning(window: TripWindow | undefined, todayBit: number, currentMins: number): boolean {
+        if (!window) return false;
+        if (todayBit && !operatesOnDay(window, todayBit)) return false;
+        return currentMins >= window[0] && currentMins <= window[1];
     }
 
     /**
@@ -63,7 +86,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             const rawTripId = entity.vehicle?.trip?.tripId;
             if (!rawTripId) continue;
             
-            const tripId = this.resolveTripId(rawTripId, tripRoutesObj);
+            const tripId = this.resolveTripId(rawTripId, tripRoutesObj, windows, todayBit, currentMins);
             if (!tripId) continue; // dropped trip
 
             const window = windows.trips[tripId];
@@ -159,7 +182,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     const rawTripId = vp.trip?.tripId;
                     if (!rawTripId) continue;
 
-                    const tripId = this.resolveTripId(rawTripId, tripRoutesObj);
+                    const tripId = this.resolveTripId(rawTripId, tripRoutesObj, windows, todayBit, currentMins);
                     if (!tripId) continue;
 
                     const routeInfo = tripRoutesObj.tripRoutes[tripId];
@@ -177,7 +200,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                         ? { ...vp, vehicle: { ...vp.vehicle, id: label } }
                         : vp;
 
-                    const window = this.findTripWindow(tripId, rawTripId, windows);
+                    const window = this.findTripWindow(tripId, windows);
                     const isBeforeTrack = this.isVehicleBeforeTrack(window, currentMins);
 
                     const liveMatch = VehiclesMapper.mapVehicle(mappable, tripId, route, originTimestamp, null, isBeforeTrack);
@@ -227,8 +250,8 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     /**
      * Resolves a trip's operating window using the final or raw trip ID.
      */
-    private findTripWindow(tripId: string, rawTripId: string | undefined, windows: TripWindows | null): TripWindow | undefined {
-        if (!windows) return undefined;
-        return windows.trips[tripId] || (rawTripId ? windows.trips[rawTripId] : undefined);
+    /** The raw id is not a fallback: after a renumbering its window belongs to an unrelated trip. */
+    private findTripWindow(tripId: string, windows: TripWindows | null): TripWindow | undefined {
+        return windows ? windows.trips[tripId] : undefined;
     }
 }

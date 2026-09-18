@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.71.1] - 2026-09-18
+
+### Fixed
+
+- Brno vehicles are matched to the right trip again. KORDIS renumbers nearly every trip on each GTFS export while its realtime feed keeps sending the previous numbering, so the feed's trip id was trusted whenever it happened to exist in the current export - which after a renumbering is a different trip. Vehicles now resolve through the run-id alias table, falling back to the raw id only while that is the one in service, so it keeps working once the feed catches up.
+
 ## [0.71.0] - 2026-09-17
 
 ### Added
