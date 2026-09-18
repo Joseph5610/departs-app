@@ -9,8 +9,8 @@ test.describe('Share functionality', () => {
         const mapPage = new MapPage(page);
 
         // Mock stops and departures
-        await page.route('**/api/*/stops*', async route => {
-            await route.fulfill({
+        await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, async route => {
+            await route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' },
                 status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({

@@ -49,6 +49,17 @@ function handleError(error: unknown): Response {
  * @returns Response object
  */
 export function createSuccessResponse(data: unknown, maxAge: number = 10): Response {
+    return createJsonBodyResponse(JSON.stringify(data), maxAge);
+}
+
+/**
+ * `createSuccessResponse` for a body that is already serialized JSON, such as a streamed static file.
+ *
+ * @param body Serialized JSON body
+ * @param maxAge Cache max-age in seconds (default: 10)
+ * @returns Response object
+ */
+export function createJsonBodyResponse(body: BodyInit, maxAge: number = 10): Response {
     // `max-age` governs the browser, `s-maxage` the edge. `stale-while-revalidate` matters most:
     // without it an endpoint whose TTL equals the client's poll interval expires exactly as the next
     // poll arrives, so every poll misses and re-invokes the Function. Capped at 60s so long-lived
@@ -56,7 +67,7 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
     const staleWhileRevalidate = Math.min(maxAge, 60);
     const cacheControl = `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
 
-    return new Response(JSON.stringify(data), {
+    return new Response(body, {
         headers: {
             "Content-Type": "application/json",
             "Cache-Control": cacheControl,
@@ -84,6 +95,22 @@ export function withCityRoute(
     handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<unknown>,
     cacheTtl: number
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
+    return withCity(async (adapter, context) => createSuccessResponse(await handler(adapter, context), cacheTtl));
+}
+
+/**
+ * `withCityRoute` for handlers that return an already-serialized JSON body.
+ */
+export function withCityJsonBodyRoute(
+    handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<BodyInit>,
+    cacheTtl: number
+): (context: EventContext<Env, string, unknown>) => Promise<Response> {
+    return withCity(async (adapter, context) => createJsonBodyResponse(await handler(adapter, context), cacheTtl));
+}
+
+function withCity(
+    respond: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<Response>
+): (context: EventContext<Env, string, unknown>) => Promise<Response> {
     return async (context) => {
         const slug = context.params.city as string;
         
@@ -98,9 +125,7 @@ export function withCityRoute(
         }
 
         try {
-            const adapter = getAdapter(city);
-            const data = await handler(adapter, context);
-            return createSuccessResponse(data, cacheTtl);
+            return await respond(getAdapter(city), context);
         } catch (error) {
             return handleError(error);
         }

@@ -219,7 +219,7 @@ export const GEOCODING_CONFIG = {
 
 export const STOPS_DEVICE_CACHE = {
     /** Bump to invalidate every device's cached stops; it is also sent as `?v=` to bust the CDN cache. */
-    VERSION: 'v49',
+    VERSION: 'v50',
     KEY_PREFIX: 'city_stops_storage_',
 };
 

@@ -4,7 +4,7 @@ import type { CityAdapter } from '../CityAdapter';
 import type { EventContext } from "@cloudflare/workers-types";
 
 import { GolemioClient } from './core/GolemioClient';
-import { StopsService } from './services/stops/StopsService';
+import { MapStopsService } from '../../_core/MapStopsService';
 import { VehiclesService } from './services/vehicles/VehiclesService';
 import { VehicleDetailService } from './services/vehicles/VehicleDetailService';
 import { DeparturesService } from './services/departures/DeparturesService';
@@ -18,16 +18,16 @@ import { InfotextsService } from './services/infotexts/InfotextsService';
  */
 export class GolemioAdapter implements CityAdapter {
     private client: GolemioClient;
-    private stopsService: StopsService;
+    private stopsService: MapStopsService;
     private vehiclesService: VehiclesService;
     private vehicleDetailService: VehicleDetailService;
     private departuresService: DeparturesService;
     private alertsService: AlertsService;
     private infotextsService: InfotextsService;
 
-    constructor(_city: CityConfig) {
+    constructor(city: CityConfig) {
         this.client = new GolemioClient();
-        this.stopsService = new StopsService(this.client);
+        this.stopsService = new MapStopsService(city);
         this.vehiclesService = new VehiclesService(this.client);
         this.vehicleDetailService = new VehicleDetailService(this.client);
         this.departuresService = new DeparturesService(this.client);
@@ -36,10 +36,17 @@ export class GolemioAdapter implements CityAdapter {
     }
 
     /**
-     * Routes stop-related requests to StopsService.
+     * Routes stop-related requests to the prebuilt stop list.
      */
-    handleStops(ctx: EventContext<Env, string, unknown>) { 
-        return this.stopsService.getStops(ctx.env); 
+    handleStops(_ctx: EventContext<Env, string, unknown>) { 
+        return this.stopsService.getStops(); 
+    }
+
+    /**
+     * Streams the prebuilt stop list for /api/[city]/stops.
+     */
+    handleStopsBody(_ctx: EventContext<Env, string, unknown>) {
+        return this.stopsService.getStopsBody();
     }
 
     /**

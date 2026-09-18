@@ -43,6 +43,9 @@ export const CITY_REGISTRY: Record<string, CityConfig> = {
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         adapter: 'golemio',
+        adapterConfig: {
+            staticDataUrl: 'https://data.departs.app'
+        },
         hasPointsOfSale: true,
         hasAlerts: true,
         virtualTableUrl: 'https://data.pid.cz/departures/?ids=',

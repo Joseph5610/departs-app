@@ -7,8 +7,8 @@ test.describe('Departure Board Tests', () => {
         const mapPage = new MapPage(page);
         const searchPage = new SearchPage(page);
 
-        await page.route('**/api/*/stops*', async route => {
-            await route.fulfill({
+        await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, async route => {
+            await route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' },
                 status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({

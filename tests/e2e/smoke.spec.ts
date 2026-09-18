@@ -8,8 +8,8 @@ test.describe('Smoke tests', () => {
         const searchPage = new SearchPage(page);
 
         // Mock the massive /api/stops endpoint with a lightweight mock payload to prevent overloading the dev server in parallel CI test runs
-        await page.route('**/api/*/stops*', async route => {
-            await route.fulfill({
+        await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, async route => {
+            await route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' },
                 status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({

@@ -6,7 +6,7 @@ import { apiFetch } from '../../lib/api-client';
 import { memoizeLast } from '../../lib/memoize';
 import type { AppError } from '../../types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { QUERY_TIMING_MS, STOPS_DEVICE_CACHE } from '../../config/constants';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, STOPS_DEVICE_CACHE } from '../../config/constants';
 
 localforage.config({
     name: 'departs',
@@ -76,7 +76,7 @@ const buildStopIndex = memoizeLast((collection: StopCollection | undefined) => {
 /**
  * useStops
  *
- * Fetches the selected city's stops, kept on the device (IndexedDB) for a day to speed up startup.
+ * Fetches the selected city's prebuilt stop list from the static data host, kept on the device (IndexedDB) for a day to speed up startup.
  * Provides GeoJSON for the map layers and an index resolving any stop or platform ID.
  */
 export const useStops = () => {
@@ -93,7 +93,7 @@ export const useStops = () => {
                 return cached;
             }
 
-            const data = await apiFetch<StopCollection>(`/${selectedCity}/stops?v=${STOPS_DEVICE_CACHE.VERSION}`);
+            const data = await apiFetch<StopCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/map-stops.json?v=${STOPS_DEVICE_CACHE.VERSION}`);
             const result = { data, updatedAt: now };
             await writeCachedStops(key, result);
             return result;

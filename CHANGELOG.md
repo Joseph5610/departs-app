@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.72.0] - 2026-09-18
+
+### Changed
+
+- Stops are prebuilt by departs-data as `map-stops.json` and loaded straight from `data.departs.app`; `/api/<city>/stops` now streams that file unchanged instead of rebuilding it, which ends the intermittent CPU-limit 503s.
+
 ## [0.71.1] - 2026-09-18
 
 ### Fixed
