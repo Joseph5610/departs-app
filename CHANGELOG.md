@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - MCP: departures that already left are no longer returned as upcoming (Brno, Prešov).
-- MCP: stop search ranks exact name matches first and ignores diacritics.
+- MCP: stop search ranks exact name matches first and ignores diacritics; departures by stop name cover every platform of the station.
 - MCP: responses are compact, vehicle detail omits the route geometry, and service alerts are limited (default 20).
 - MCP: stop lines report the vehicle type as a word in every city, and an empty nearby-departures result explains why.
 - MCP: identical tool calls are answered from a short per-tool cache instead of being recomputed.

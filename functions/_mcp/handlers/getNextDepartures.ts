@@ -1,7 +1,7 @@
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { findStopsByName, loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
+import { resolveStationByName, loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
 
 /**
  * Handles the 'get_next_departures' MCP tool invocation.
@@ -26,10 +26,10 @@ export async function handleGetNextDepartures(
 
     // 1. If stop_id is missing but stop_name is provided, search stops
     if (!stopId && args.stop_name) {
-        const match = findStopsByName(await loadStops(resolvedCity), String(args.stop_name))[0];
-        if (match) {
-            stopId = match.properties?.stop_id;
-            stopNameResolved = match.properties?.stop_name;
+        const station = resolveStationByName(await loadStops(resolvedCity), String(args.stop_name));
+        if (station) {
+            stopId = station.stopIds;
+            stopNameResolved = station.stopName;
         } else {
             return { error: `No stop found matching '${args.stop_name}' in ${resolvedCity}.` };
         }

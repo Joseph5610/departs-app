@@ -143,6 +143,29 @@ export function findStopsByName(stops: StopFeature[], query: string): StopFeatur
     return scored.sort((a, b) => a.rank - b.rank || a.length - b.length).map(s => s.feature);
 }
 
+/** PID-style node shared by every platform of a station (`U1146Z11` -> `U1146`); undefined for other id schemes. */
+const stationNode = (stopId: string): string | undefined => /^(?:centroid-)?(U\d+)/i.exec(stopId)?.[1];
+
+/**
+ * The station a name query means, as every platform id serving it: all stops with the best match's
+ * exact name in the same node, so both directions and every mode (tram, bus, metro, train) are included.
+ */
+export function resolveStationByName(stops: StopFeature[], query: string): { stopIds: string; stopName: string } | null {
+    const best = findStopsByName(stops, query)[0];
+    const stopName = best?.properties?.stop_name;
+    if (!best || !stopName) return null;
+
+    const node = stationNode(best.properties.stop_id);
+    const ids = new Set<string>();
+    for (const feature of stops) {
+        const p = feature.properties;
+        if (!p || p.is_centroid || p.stop_name !== stopName || Number(p.location_type) === 2) continue;
+        if (stationNode(p.stop_id) !== node) continue;
+        for (const id of p.stop_id.split(',')) if (id) ids.add(id);
+    }
+    return { stopIds: [...ids].join(','), stopName };
+}
+
 /** A stop's lines with the vehicle type as a word (`tram`), whatever form the city's stop data uses. */
 export function toMcpStopLines(feature: StopFeature) {
     return (feature.properties?.lines ?? []).map(line => ({ ...line, type: normalizeRouteType(line.type) }));
