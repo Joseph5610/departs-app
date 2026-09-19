@@ -16,27 +16,12 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
         return new Response(null, { status: 204, headers: MCP_HEADERS });
     }
 
-    // Handle GET requests (SSE connection or health/info ping)
     if (request.method === "GET") {
         const accept = request.headers.get("accept") || "";
 
-        // Server-Sent Events (SSE) Stream
+        // Streamable HTTP: a server that never pushes answers the client's SSE GET with 405, so the client stops reopening it.
         if (accept.includes("text/event-stream")) {
-            const body = new ReadableStream({
-                start(controller) {
-                    const encoder = new TextEncoder();
-                    controller.enqueue(encoder.encode("event: endpoint\ndata: /mcp\n\n"));
-                }
-            });
-
-            return new Response(body, {
-                headers: {
-                    ...MCP_HEADERS,
-                    "Content-Type": "text/event-stream",
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive"
-                }
-            });
+            return new Response("SSE stream not offered", { status: 405, headers: { ...MCP_HEADERS, Allow: "POST, OPTIONS" } });
         }
 
         // Standard GET health & server metadata

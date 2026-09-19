@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.5] - 2026-09-19
+
+### Fixed
+
+- MCP: the endpoint declines the unused SSE stream (405) instead of leaving it hanging, which stopped clients reconnecting every few seconds.
+
 ## [0.73.4] - 2026-09-19
 
 ### Fixed
