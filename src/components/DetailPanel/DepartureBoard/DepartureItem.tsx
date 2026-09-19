@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Accessibility, CornerDownRight, Hourglass, Snowflake, Train } from 'lucide-react';
 import { LineBadge } from '../../LineBadge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
+import { useMetroLines } from '@/hooks/derived/useMetroLines';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -32,6 +33,7 @@ export const DepartureItem = memo(({
     hideHeadsign
 }: DepartureItemProps) => {
     const { t } = useTranslation();
+    const { forHeadsign } = useMetroLines();
     const clickStartPos = useRef<{ x: number, y: number } | null>(null);
 
     const handlePointerDown = (e: React.PointerEvent) => {
@@ -112,7 +114,7 @@ export const DepartureItem = memo(({
                     <span className="text-foreground text-sm font-medium leading-tight truncate min-w-0">
                         {dep.headsign}
                     </span>
-                    {dep.headsign_metro_lines?.map((line) => (
+                    {forHeadsign(dep.headsign, dep.line).map((line) => (
                         <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                     ))}
                 </span>

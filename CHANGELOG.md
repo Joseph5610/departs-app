@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.2] - 2026-09-19
+
+### Fixed
+
+- Prague departures and vehicle detail no longer fail with 503 (Worker CPU limit): metro badges now come from the stop list already on the device instead of a 2.8 MB file parsed on the server.
+
 ## [0.73.1] - 2026-09-19
 
 ### Fixed

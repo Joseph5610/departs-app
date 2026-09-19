@@ -1,7 +1,6 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature, AppVehicleDescriptor } from "../../../../_core/types";
 import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "./schemas";
 import { getVehicleColor } from "./colors";
-import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 
 /**
@@ -21,7 +20,7 @@ export class VehicleDetailMapper {
      *                 The frontend must preserve any existing live position data when merging this.
      * @returns Normalized vehicle detail object
      */
-    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean, enrichmentData: ProcessedEnrichmentData): AppVehicleDetail {
+    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean): AppVehicleDetail {
         // Golemio returns either a FeatureCollection or a bare Feature.
         // Extract properties from whichever shape we received.
         const feature = data.features?.[0];
@@ -73,12 +72,6 @@ export class VehicleDetailMapper {
                     .map((st) => {
                         const stProps = st.properties;
                     const stopId = stProps.stop_id || '';
-                    const stopName = stProps.stop_name;
-                    let metroLines = enrichmentData.stopIdToMetroLines.get(stopId) || [];
-                    
-                    if (metroLines.length === 0 && stopName) {
-                        metroLines = enrichmentData.headsignLookup.get(stopName.trim().toUpperCase()) || [];
-                    }
 
                     return {
                         type: 'Feature' as const,
@@ -86,7 +79,6 @@ export class VehicleDetailMapper {
                         properties: {
                             ...Object.fromEntries(Object.entries(stProps).filter(([_, v]) => v != null)),
                             stop_id: stopId,
-                            ...(metroLines.length > 0 ? { metro_lines: metroLines } : {})
                         } as AppStopTimeProperties
                     };
                 })

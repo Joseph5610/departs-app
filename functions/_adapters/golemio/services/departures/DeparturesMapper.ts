@@ -1,7 +1,6 @@
 import { AppDeparture, AppDepartureResponse } from "../../../../_core/types";
 import { GolemioDepartureItem } from "./schemas";
 import { getVehicleColor } from "../vehicles/colors";
-import { ProcessedEnrichmentData } from "../stops/enrichment";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 import { departureConnections, type LiveConnections } from "../connections/connections";
 
@@ -18,7 +17,7 @@ export class DeparturesMapper {
      * @param stopIds Array of requested stop IDs for reference
      * @returns Normalized departure response
      */
-    static map(data: GolemioDepartureItem[][], stopIds: string[], enrichmentData: ProcessedEnrichmentData, connections: LiveConnections | null): AppDepartureResponse {
+    static map(data: GolemioDepartureItem[][], stopIds: string[], connections: LiveConnections | null): AppDepartureResponse {
         const departures: AppDeparture[] = [];
 
         if (Array.isArray(data)) {
@@ -26,7 +25,7 @@ export class DeparturesMapper {
                 if (Array.isArray(groupData)) {
                     const originalStopId = stopIds[idx];
                     groupData.forEach(item => {
-                        const normalized = this.normalizeDeparture(item, enrichmentData, connections);
+                        const normalized = this.normalizeDeparture(item, connections);
                         normalized.stopId = originalStopId;
                         departures.push(normalized);
                     });
@@ -40,7 +39,7 @@ export class DeparturesMapper {
         return { departures };
     }
 
-    private static normalizeDeparture(item: GolemioDepartureItem, enrichmentData: ProcessedEnrichmentData, connections: LiveConnections | null): AppDeparture {
+    private static normalizeDeparture(item: GolemioDepartureItem, connections: LiveConnections | null): AppDeparture {
         const line = String(item.route?.short_name || '?').toUpperCase();
         const type = normalizeRouteType(item.route?.type || (['A', 'B', 'C'].includes(line) ? '1' : '0'));
         const isMetro = type === 'metro';
@@ -73,7 +72,6 @@ export class DeparturesMapper {
             route_color: getVehicleColor(type, line),
             is_wheelchair_accessible: item.vehicle?.is_wheelchair_accessible,
             is_air_conditioned: item.vehicle?.is_air_conditioned,
-            headsign_metro_lines: (enrichmentData.headsignLookup.get(headsign.trim().toUpperCase()) || []).filter(l => l.name !== line),
             ...departureConnections(connections, item.trip?.id, item.stop?.id, item.departure.timestamp_scheduled)
         };
     }

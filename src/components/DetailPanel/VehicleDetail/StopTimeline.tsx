@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { LineBadge } from '../../LineBadge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useMetroLines } from '../../../hooks/derived/useMetroLines';
 
 import type { StopFeature, StopTimelineProps } from './types';
 import type { Continuation, StopConnection } from '../../../types/vehicles';
@@ -124,6 +125,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
 }) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { forStop } = useMetroLines();
     const stopSeq = Number(stop.properties.stop_sequence);
     const isCurrent = stopSeq === effectiveSequence;
     const isNext = stopSeq === nextStopSequence;
@@ -213,7 +215,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                             </Popover>
                         )}
                         <div className="flex gap-1 shrink-0 translate-y-px">
-                            {stop.properties.metro_lines?.map((line) => (
+                            {forStop(rawStopId, stop.properties.stop_name).map((line) => (
                                 <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                             ))}
                         </div>

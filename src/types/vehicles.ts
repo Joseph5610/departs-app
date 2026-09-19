@@ -83,7 +83,6 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 realtime_arrival_time?: string;
                 realtime_departure_time?: string;
                 stop_id: string;
-                metro_lines?: Array<{ name: string; route_color: string }>;
                 is_request_stop?: boolean;
                 connections?: StopConnection[];
                 continues_as?: Continuation;

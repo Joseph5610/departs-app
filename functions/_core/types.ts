@@ -40,7 +40,6 @@ export interface AppStopTimeProperties {
     zone_id?: string;
     is_wheelchair_accessible?: boolean | null;
     shape_dist_traveled?: number;
-    metro_lines?: Array<{ name: string; route_color: string }>;
     is_request_stop?: boolean;
     connections?: AppStopConnection[];
     continues_as?: AppContinuation;
@@ -209,7 +208,6 @@ export interface AppDeparture {
     route_color?: string;
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
-    headsign_metro_lines?: Array<{ name: string; route_color: string }>;
     stopId?: string;
     is_request_stop?: boolean;
     connections?: AppDepartureFeeder[];

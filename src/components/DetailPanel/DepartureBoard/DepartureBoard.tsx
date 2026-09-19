@@ -18,6 +18,7 @@ import { LineBadge } from '../../LineBadge';
 import type { AppError } from '@/types/error';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { useLineRules } from '@/hooks/data/useCities';
+import { useMetroLines } from '@/hooks/derived/useMetroLines';
 import { safeHexColor } from '@/lib/color';
 
 interface DepartureBoardProps {
@@ -35,6 +36,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const { t } = useTranslation();
     const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine, data } = useDepartures();
     const lineRules = useLineRules();
+    const { forHeadsign } = useMetroLines();
 
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
     
@@ -192,9 +194,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                                             <CardTitle className="text-[15px] font-semibold truncate min-w-0 text-foreground">
                                                                 {subGroup.headsign}
                                                             </CardTitle>
-                                                            {subFirstDep.headsign_metro_lines && subFirstDep.headsign_metro_lines.length > 0 && (
+                                                            {forHeadsign(subFirstDep.headsign, subFirstDep.line).length > 0 && (
                                                                 <div className="flex gap-1 shrink-0">
-                                                                    {subFirstDep.headsign_metro_lines.map((line) => (
+                                                                    {forHeadsign(subFirstDep.headsign, subFirstDep.line).map((line) => (
                                                                         <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
                                                                     ))}
                                                                 </div>

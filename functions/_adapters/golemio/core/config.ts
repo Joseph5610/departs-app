@@ -6,7 +6,6 @@ export const GOLEMIO_CONFIG = {
     DEPARTURE_MINUTES_AFTER: 120,
     STOPS_FETCH_LIMIT: 10000,
     STOPS_MAX_OFFSET: 40000,
-    ENRICHMENT_DATA_URL: 'https://data.departs.app/prague/stops-enrichment.json',
     /** Held connections and through-running built from the PID GTFS, merged by trip id. */
     CONNECTIONS_DATA_URL: 'https://data.departs.app/prague/connections.json',
     FEEDS: {
