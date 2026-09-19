@@ -19,6 +19,8 @@ export interface StopTimelineProps {
     stopTimes: StopFeature[];
     effectiveSequence: DisplayVehicle['effectiveSequence'];
     delay?: number | null;
+    /** Line colour, used to mark the metro cars nearest to each exit. */
+    routeColor?: string;
 }
 
 export interface VehicleHeroProps {

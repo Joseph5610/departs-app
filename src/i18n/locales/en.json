@@ -171,7 +171,12 @@
         "waitsUpTo": "waits up to {{minutes}} min",
         "mayNotWait": "May not wait"
       },
-      "continuesAs": "Continues as line"
+      "continuesAs": "Continues as line",
+      "metroExits": {
+        "nextStation": "Exits at {{station}}",
+        "direction": "direction",
+        "stepFree": "Step-free exit"
+      }
     },
     "departures": {
       "noUpcoming": "No upcoming departures found.",

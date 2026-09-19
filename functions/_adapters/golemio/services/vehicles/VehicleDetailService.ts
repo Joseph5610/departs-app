@@ -7,6 +7,7 @@ import { VehicleDetailMapper } from "./VehicleDetailMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleDetailQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 import { attachTripConnections, getLiveConnections } from "../connections/connections";
+import { attachMetroExits, getMetroExits } from "../metro/metroExits";
 import { getCurrentLocalSeconds, getZonedDateString } from "../../../../_core/utils/time";
 import { GOLEMIO_CONFIG } from "../../core/config";
 
@@ -30,6 +31,7 @@ export class VehicleDetailService {
         // Started, not awaited - see the note in DeparturesService: this is independent of the trip
         // fetch below and only needs to be resolved at the mapping step.
         const connectionsPromise = getLiveConnections();
+        const metroExitsPromise = getMetroExits();
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
@@ -93,6 +95,7 @@ export class VehicleDetailService {
             getZonedDateString(GOLEMIO_CONFIG.TIMEZONE),
             getCurrentLocalSeconds(GOLEMIO_CONFIG.TIMEZONE)
         );
+        attachMetroExits(detail, await metroExitsPromise);
         return detail;
     }
 }

@@ -86,6 +86,7 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 is_request_stop?: boolean;
                 connections?: StopConnection[];
                 continues_as?: Continuation;
+                metro_exits?: MetroExits;
             };
         }>;
     };
@@ -116,4 +117,10 @@ export interface Continuation {
     type: RouteType;
     headsign: string;
     departure_time?: string;
+}
+
+/** Which metro car to ride for the nearest way out; car 1 is the front in the direction of travel. */
+export interface MetroExits {
+    exits: Array<{ name: string; hint?: string; cars: number[] }>;
+    step_free?: { name: string; cars: number[] };
 }

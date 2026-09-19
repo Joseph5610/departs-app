@@ -43,6 +43,14 @@ export interface AppStopTimeProperties {
     is_request_stop?: boolean;
     connections?: AppStopConnection[];
     continues_as?: AppContinuation;
+    metro_exits?: AppMetroExits;
+}
+
+/** Which metro car to ride for the nearest way out; car 1 is the front in the direction of travel. */
+export interface AppMetroExits {
+    exits: Array<{ name: string; hint?: string; cars: number[] }>;
+    /** The shortest way out avoiding stairs and escalators. */
+    step_free?: { name: string; cars: number[] };
 }
 
 /** The trip the same vehicle continues as; ids are absent when only the line is known. */

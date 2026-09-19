@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, Hand, type LucideIcon } from 'lucide-react';
+import { Accessibility, ArrowRight, ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, Hand, type LucideIcon } from 'lucide-react';
 import { navigate } from 'wouter/use-browser-location';
 import { paths } from '../../../lib/routes';
-import { cn } from '@/lib/utils';
+import { cn, getContrastColor } from '@/lib/utils';
+import { safeHexColor } from '@/lib/color';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { calculateTimeDifferenceSecs, addSecondsToTime, formatDelay } from '../../../utils/dateUtils';
 import { getDelayStatus } from '../../../config/transit';
 import { Button } from '@/components/ui/button';
@@ -14,7 +16,7 @@ import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMetroLines } from '../../../hooks/derived/useMetroLines';
 
 import type { StopFeature, StopTimelineProps } from './types';
-import type { Continuation, StopConnection } from '../../../types/vehicles';
+import type { Continuation, MetroExits, StopConnection } from '../../../types/vehicles';
 
 /**
  * StopTimeline
@@ -23,7 +25,7 @@ import type { Continuation, StopConnection } from '../../../types/vehicles';
  * Extracted from VehicleDetail to reduce monolith size.
  * The timeline visually shows a vertical line with dots for each stop.
  */
-export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effectiveSequence, delay }) => {
+export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effectiveSequence, delay, routeColor }) => {
     const { t } = useTranslation();
     const [showPastStops, setShowPastStops] = useState(false);
 
@@ -42,6 +44,13 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
         );
         return first ? Number(first.properties.stop_sequence) : null;
     }, [stopTimes, effectiveSequence]);
+
+    /** The next station's exits, shown once above the list rather than at every station. */
+    const nextStationExits = useMemo(() => {
+        const next = stopTimes.find((s) => Number(s.properties.stop_sequence) === nextStopSequence)
+            ?? (effectiveSequence === null ? stopTimes[1] : undefined);
+        return next?.properties.metro_exits ? { station: next.properties.stop_name, exits: next.properties.metro_exits } : null;
+    }, [stopTimes, nextStopSequence, effectiveSequence]);
 
     const pastStopsCount = useMemo(() => {
         if (effectiveSequence === null) return 0;
@@ -68,6 +77,9 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                         </CollapsibleTrigger>
                     )}
                 </div>
+                {nextStationExits && (
+                    <MetroExitCard station={nextStationExits.station} exits={nextStationExits.exits} routeColor={routeColor} />
+                )}
                 <div className="relative pl-6 overflow-hidden!">
                     <div className={cn(
                         "absolute left-2.75 bottom-6 w-0.5 bg-border",
@@ -453,3 +465,108 @@ const StopContinuation = React.memo(({ continuation, isPast }: {
 });
 
 StopContinuation.displayName = 'StopContinuation';
+
+const METRO_CAR_COUNT = 5;
+
+/** Grid columns covered by these cars; the front car (1) is drawn rightmost, in the direction of travel. */
+function carSpan(cars: number[]): [number, number] {
+    const columns = cars.map((car) => METRO_CAR_COUNT + 1 - car);
+    return [Math.min(...columns), Math.max(...columns) + 1];
+}
+
+interface ExitTag { key: string; name: string; span: [number, number]; stepFree: boolean }
+
+/** Stacks tags into as few rows as possible without two tags sharing a car. */
+function packTags(tags: ExitTag[]): Array<ExitTag & { row: number }> {
+    /** Cars already tagged in each row, as a bitmask over the five columns. */
+    const rowMasks: number[] = [];
+    const packed: Array<ExitTag & { row: number }> = [];
+    for (const tag of tags) {
+        let mask = 0;
+        for (let col = tag.span[0]; col < tag.span[1]; col++) mask |= 1 << col;
+        let row = 0;
+        while (row < rowMasks.length && (rowMasks[row]! & mask) !== 0) row++;
+        rowMasks[row] = (rowMasks[row] ?? 0) | mask;
+        packed.push({ ...tag, row: row + 1 });
+    }
+    return packed;
+}
+
+/** The next station as a platform diagram: exit tags above the cars nearest to them. */
+const MetroExitCard = React.memo(({ station, exits, routeColor }: { station: string, exits: MetroExits, routeColor?: string }) => {
+    const { t } = useTranslation();
+    const color = safeHexColor(routeColor) ?? FALLBACK_ROUTE_COLOR;
+    const textColor = getContrastColor(color);
+
+    const { tags, rowCount } = useMemo(() => {
+        const all: ExitTag[] = exits.exits.map((exit) => ({ key: exit.name, name: exit.name, span: carSpan(exit.cars), stepFree: false }));
+        if (exits.step_free) all.push({ key: `step-free-${exits.step_free.name}`, name: exits.step_free.name, span: carSpan(exits.step_free.cars), stepFree: true });
+        const packed = packTags(all);
+        return { tags: packed, rowCount: Math.max(0, ...packed.map((tag) => tag.row)) };
+    }, [exits]);
+
+    return (
+        <div className="rounded-xl border border-border/50 bg-muted/40 px-3 pt-2.5 pb-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5">
+                <span className="micro-label text-muted-foreground truncate">
+                    {t('map.vehicleDetails.metroExits.nextStation', { station })}
+                </span>
+                <span className="flex items-center gap-1 micro-label text-muted-foreground shrink-0">
+                    {t('map.vehicleDetails.metroExits.direction')}
+                    <ArrowRight size={12} strokeWidth={2} />
+                </span>
+            </div>
+
+            <div className="grid grid-cols-5 gap-x-1 gap-y-1">
+                {tags.map((tag) => (
+                    <div key={tag.key} style={{ gridColumn: `${tag.span[0]} / ${tag.span[1]}`, gridRow: tag.row }} className="flex flex-col items-center">
+                        {tag.stepFree ? (
+                            <span className="inline-flex items-center gap-0.5 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                                <Accessibility size={11} strokeWidth={2.5} aria-label={t('map.vehicleDetails.metroExits.stepFree')} />
+                                {tag.name}
+                            </span>
+                        ) : (
+                            <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold" style={{ backgroundColor: color, color: textColor }}>
+                                {tag.name}
+                            </span>
+                        )}
+                        <span
+                            className={cn("mt-0.5 h-1.5 w-full rounded-t-sm border-x-2 border-t-2", tag.stepFree && "border-primary/70")}
+                            style={tag.stepFree ? undefined : { borderColor: color }}
+                        />
+                    </div>
+                ))}
+                {Array.from({ length: METRO_CAR_COUNT }, (_, i) => {
+                    const car = METRO_CAR_COUNT - i;
+                    return (
+                        <div
+                            key={car}
+                            style={{ gridRow: rowCount + 1 }}
+                            className={cn("h-4 rounded-[3px] border border-foreground/20 bg-foreground/10", car === 1 && "rounded-r-full")}
+                        />
+                    );
+                })}
+            </div>
+
+            <ul className="flex flex-col gap-1 pt-2.5 text-xs">
+                {exits.exits.filter((exit) => exit.hint).map((exit) => (
+                    <li key={exit.name} className="flex items-baseline gap-2 min-w-0">
+                        <span className="font-bold text-foreground shrink-0">{exit.name}</span>
+                        <span className="text-muted-foreground truncate">{exit.hint}</span>
+                    </li>
+                ))}
+                {exits.step_free && (
+                    <li className="flex items-baseline gap-2 min-w-0 text-primary">
+                        <span className="inline-flex items-center gap-1 font-bold shrink-0">
+                            <Accessibility size={12} strokeWidth={2} aria-hidden="true" />
+                            {exits.step_free.name}
+                        </span>
+                        <span className="truncate">{t('map.vehicleDetails.metroExits.stepFree')}</span>
+                    </li>
+                )}
+            </ul>
+        </div>
+    );
+});
+
+MetroExitCard.displayName = 'MetroExitCard';

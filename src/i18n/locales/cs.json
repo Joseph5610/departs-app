@@ -172,7 +172,12 @@
         "waitsUpTo": "počká až {{minutes}} min",
         "mayNotWait": "Nemusí počkat"
       },
-      "continuesAs": "Pokračuje jako linka"
+      "continuesAs": "Pokračuje jako linka",
+      "metroExits": {
+        "nextStation": "Výstupy · {{station}}",
+        "direction": "směr jízdy",
+        "stepFree": "Bezbariérový východ"
+      }
     },
     "departures": {
       "noUpcoming": "Nebyly nalezeny žádné nejbližší odjezdy.",

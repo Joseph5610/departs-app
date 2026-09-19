@@ -141,6 +141,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                             stopTimes={displayVehicle.stop_times.features}
                             effectiveSequence={displayVehicle.effectiveSequence}
                             delay={displayVehicle.delay}
+                            routeColor={displayVehicle.route_color}
                         />
                     ) : (
                         loadingDetail && <StopTimelineSkeleton />
