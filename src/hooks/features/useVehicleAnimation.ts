@@ -53,6 +53,95 @@ const parseTime = (iso: string | undefined): number | undefined => {
     return Number.isNaN(ms) ? undefined : ms;
 };
 
+/** Animation state of one map source, keyed by vehicle. */
+interface Track {
+    positions: Map<string, TrackedPosition>;
+    targets: Map<string, AnimationTarget>;
+    /** Data time of the position last shown, to reject older snapshots. */
+    times: Map<string, number>;
+    lastSeen: Map<string, number>;
+}
+
+const emptyTrack = (): Track => ({ positions: new Map(), targets: new Map(), times: new Map(), lastSeen: new Map() });
+
+/** Folds a new batch of features into a track, starting slides from where each vehicle is currently shown. */
+const advanceTrack = (prev: Track, features: VehicleFeature[], collectionTime: number | undefined, now: number): Track => {
+    const next = emptyTrack();
+
+    for (const f of features) {
+        const id = featureId(f);
+        if (!id) continue;
+
+        const endCoords = f.geometry.coordinates;
+        const endBearing = f.properties.bearing ?? 0;
+        const prevPos = prev.positions.get(id);
+        const prevTime = prev.times.get(id);
+        const dataTime = parseTime(f.properties.origin_timestamp) ?? collectionTime;
+        next.lastSeen.set(id, now);
+
+        // Each map bounds is cached separately upstream, so a response can carry an older snapshot than what is already shown.
+        if (prevPos && prevTime !== undefined && dataTime !== undefined && dataTime < prevTime) {
+            const target = prev.targets.get(id);
+            if (target) next.targets.set(id, target);
+            next.positions.set(id, prevPos);
+            next.times.set(id, prevTime);
+            continue;
+        }
+
+        const knownTime = dataTime ?? prevTime;
+        if (knownTime !== undefined) next.times.set(id, knownTime);
+
+        if (!prevPos) {
+            next.positions.set(id, { coords: endCoords, bearing: endBearing });
+            continue;
+        }
+
+        const dx = endCoords[0] - prevPos.coords[0];
+        const dy = endCoords[1] - prevPos.coords[1];
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq === 0 && prevPos.bearing === endBearing) {
+            next.positions.set(id, prevPos);
+        } else if (distSq > VEHICLE_ANIMATION.MAX_SLIDE_DISTANCE_SQ) {
+            next.positions.set(id, { coords: endCoords, bearing: endBearing });
+        } else {
+            next.targets.set(id, { startCoords: prevPos.coords, endCoords, startBearing: prevPos.bearing, endBearing, startTime: now });
+            next.positions.set(id, prevPos);
+        }
+    }
+
+    // A vehicle that left the viewport comes back from an older cached bounds response, so its last shown state must outlive its absence.
+    prev.lastSeen.forEach((seenAt, id) => {
+        if (next.lastSeen.has(id) || now - seenAt > VEHICLE_ANIMATION.ABSENT_MEMORY_MS) return;
+        const pos = prev.positions.get(id);
+        if (!pos) return;
+        next.positions.set(id, pos);
+        next.lastSeen.set(id, seenAt);
+        const time = prev.times.get(id);
+        if (time !== undefined) next.times.set(id, time);
+    });
+
+    return next;
+};
+
+/** Advances a track's slides to `time`; returns whether any vehicle moved. */
+const stepTrack = (track: Track, time: number): boolean => {
+    let moved = false;
+    track.targets.forEach((target, id) => {
+        const t = Math.min((time - target.startTime) / VEHICLE_ANIMATION.DURATION_MS, 1);
+        track.positions.set(id, {
+            coords: [
+                lerp(target.startCoords[0], target.endCoords[0], t),
+                lerp(target.startCoords[1], target.endCoords[1], t)
+            ],
+            bearing: interpolateBearing(target.startBearing, target.endBearing, t)
+        });
+        moved = true;
+        if (t >= 1) track.targets.delete(id);
+    });
+    return moved;
+};
+
 /**
  * Hook to smoothly animate vehicle movements on the map.
  * Intercepts new vehicle data and runs a requestAnimationFrame loop to slide
@@ -69,12 +158,9 @@ export const useVehicleAnimation = (
     showVehicles: boolean
 ) => {
     const animationFrameRef = useRef<number | null>(null);
-    const lastPositionsRef = useRef<Map<string, TrackedPosition>>(new Map());
-    const targetsRef = useRef<Map<string, AnimationTarget>>(new Map());
-    // Per source: stream and detail timestamps come from different clocks and must not be compared.
-    const displayTimesRef = useRef<Map<string, number>>(new Map());
-    const selectedTimesRef = useRef<Map<string, number>>(new Map());
-    const lastSeenRef = useRef<Map<string, number>>(new Map());
+    // One track per source: the stream and the detail arrive at different moments, and sharing positions let one drag the other back and forth.
+    const displayTrackRef = useRef<Track>(emptyTrack());
+    const selectedTrackRef = useRef<Track>(emptyTrack());
 
     // Stable references for react-map-gl to initialize sources.
     // Since the object references never change, React Map GL never automatically calls setData,
@@ -99,10 +185,6 @@ export const useVehicleAnimation = (
         if (!map) return;
 
         const now = performance.now();
-        const nextTargets = new Map<string, AnimationTarget>();
-        const nextPositions = new Map<string, TrackedPosition>();
-        const nextDisplayTimes = new Map<string, number>();
-        const nextSelectedTimes = new Map<string, number>();
 
         // Process main stream vehicles
         const displayFeatures = displayVehicles?.features || [];
@@ -112,129 +194,34 @@ export const useVehicleAnimation = (
         const selectedFeatures = selectedVehicleFeature?.features || [];
         selectedVehiclesRawRef.current = selectedFeatures;
 
-        const processFeature = (
-            f: VehicleFeature,
-            collectionTime: number | undefined,
-            prevTimes: Map<string, number>,
-            nextTimes: Map<string, number>
-        ) => {
-            const id = featureId(f);
-            if (!id) return;
-
-            const endCoords = f.geometry.coordinates;
-            const endBearing = f.properties.bearing ?? 0;
-
-            const prevPos = lastPositionsRef.current.get(id);
-            const prevTime = prevTimes.get(id);
-            const dataTime = parseTime(f.properties.origin_timestamp) ?? collectionTime;
-
-            // Each map bounds is cached separately upstream, so a response can carry an older snapshot than what is already shown.
-            if (prevPos && prevTime !== undefined && dataTime !== undefined && dataTime < prevTime) {
-                const target = targetsRef.current.get(id);
-                if (target) nextTargets.set(id, target);
-                nextPositions.set(id, prevPos);
-                nextTimes.set(id, prevTime);
-                return;
-            }
-
-            const knownTime = dataTime ?? prevTime;
-            if (knownTime !== undefined) nextTimes.set(id, knownTime);
-
-            if (prevPos) {
-                const dx = endCoords[0] - prevPos.coords[0];
-                const dy = endCoords[1] - prevPos.coords[1];
-                const distSq = dx * dx + dy * dy;
-
-                if (distSq === 0 && prevPos.bearing === endBearing) {
-                    nextPositions.set(id, prevPos);
-                } else if (distSq > VEHICLE_ANIMATION.MAX_SLIDE_DISTANCE_SQ) {
-                    // Snap immediately if it jumped a long distance
-                    nextPositions.set(id, { coords: endCoords, bearing: endBearing });
-                } else {
-                    nextTargets.set(id, {
-                        startCoords: prevPos.coords,
-                        endCoords,
-                        startBearing: prevPos.bearing,
-                        endBearing,
-                        startTime: now
-                    });
-                    // Start position is current position
-                    nextPositions.set(id, prevPos);
-                }
-            } else {
-                // New vehicle, starts at end coordinate
-                nextPositions.set(id, { coords: endCoords, bearing: endBearing });
-            }
-        };
-
-        const displayTime = parseTime(displayVehicles?.last_updated);
-        const selectedTime = parseTime(selectedVehicleFeature?.last_updated);
-        displayFeatures.forEach((f) => processFeature(f, displayTime, displayTimesRef.current, nextDisplayTimes));
-        selectedFeatures.forEach((f) => processFeature(f, selectedTime, selectedTimesRef.current, nextSelectedTimes));
-
-        // A vehicle that left the viewport comes back from an older cached bounds response, so its last shown state must outlive its absence.
-        const nextLastSeen = new Map<string, number>();
-        nextPositions.forEach((_, id) => nextLastSeen.set(id, now));
-        lastSeenRef.current.forEach((seenAt, id) => {
-            if (nextLastSeen.has(id) || now - seenAt > VEHICLE_ANIMATION.ABSENT_MEMORY_MS) return;
-            const pos = lastPositionsRef.current.get(id);
-            if (!pos) return;
-            nextPositions.set(id, pos);
-            nextLastSeen.set(id, seenAt);
-            const shownDisplayTime = displayTimesRef.current.get(id);
-            if (shownDisplayTime !== undefined) nextDisplayTimes.set(id, shownDisplayTime);
-            const shownSelectedTime = selectedTimesRef.current.get(id);
-            if (shownSelectedTime !== undefined) nextSelectedTimes.set(id, shownSelectedTime);
-        });
-
-        // Update refs
-        lastSeenRef.current = nextLastSeen;
-        targetsRef.current = nextTargets;
-        lastPositionsRef.current = nextPositions;
-        displayTimesRef.current = nextDisplayTimes;
-        selectedTimesRef.current = nextSelectedTimes;
+        displayTrackRef.current = advanceTrack(displayTrackRef.current, displayFeatures, parseTime(displayVehicles?.last_updated), now);
+        selectedTrackRef.current = advanceTrack(selectedTrackRef.current, selectedFeatures, parseTime(selectedVehicleFeature?.last_updated), now);
 
         let isFirstFrame = true;
 
         const animate = (time: number) => {
-            const targets = targetsRef.current;
-            const positions = lastPositionsRef.current;
-            const moved = new Set<string>();
-            targets.forEach((target, id) => {
-                const t = Math.min((time - target.startTime) / VEHICLE_ANIMATION.DURATION_MS, 1);
-                positions.set(id, {
-                    coords: [
-                        lerp(target.startCoords[0], target.endCoords[0], t),
-                        lerp(target.startCoords[1], target.endCoords[1], t)
-                    ],
-                    bearing: interpolateBearing(target.startBearing, target.endBearing, t)
-                });
-                moved.add(id);
-                if (t >= 1) targets.delete(id);
-            });
-
-            const hasMoved = (features: VehicleFeature[]) => features.some((f) => {
-                const id = featureId(f);
-                return id !== null && moved.has(id);
-            });
+            const displayTrack = displayTrackRef.current;
+            const selectedTrack = selectedTrackRef.current;
+            const displayMoved = stepTrack(displayTrack, time);
+            const selectedMoved = stepTrack(selectedTrack, time);
 
             // Direct map mutation bypassing React; a source is only re-sent when one of its vehicles moved.
             const cityVehiclesSource = map.getSource(MAP_SOURCES.VEHICLES) as GeoJSONSource | undefined;
             const selectedVehicleSource = map.getSource(MAP_SOURCES.SELECTED_VEHICLE) as GeoJSONSource | undefined;
 
-            if (cityVehiclesSource && (isFirstFrame || hasMoved(displayVehiclesRawRef.current))) {
-                displayGeoJSON.features = withDisplayedPositions(displayVehiclesRawRef.current, positions);
+            if (cityVehiclesSource && (isFirstFrame || displayMoved)) {
+                displayGeoJSON.features = withDisplayedPositions(displayVehiclesRawRef.current, displayTrack.positions);
                 // Respect showVehicles here too: this path bypasses the React prop guard on <Source>.
                 cityVehiclesSource.setData(showVehicles ? displayGeoJSON : EMPTY_FEATURE_COLLECTION);
             }
 
-            if (selectedVehicleSource && (isFirstFrame || hasMoved(selectedVehiclesRawRef.current))) {
-                selectedGeoJSON.features = withDisplayedPositions(selectedVehiclesRawRef.current, positions);
+            if (selectedVehicleSource && (isFirstFrame || selectedMoved)) {
+                selectedGeoJSON.features = withDisplayedPositions(selectedVehiclesRawRef.current, selectedTrack.positions);
                 selectedVehicleSource.setData(selectedGeoJSON);
             }
 
             isFirstFrame = false;
-            if (targets.size > 0) {
+            if (displayTrack.targets.size > 0 || selectedTrack.targets.size > 0) {
                 animationFrameRef.current = requestAnimationFrame(animate);
             }
         };
