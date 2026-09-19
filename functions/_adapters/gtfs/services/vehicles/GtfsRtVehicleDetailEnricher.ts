@@ -3,7 +3,7 @@ import type { Env, AppVehicleDetail, AppVehicleFeature } from "../../../../_core
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "./VehiclesService";
 
-import { addSecondsToTime, getMinutesUntil, getLocalSecondsFromISO, toSecs, wrapDaySeconds } from '../../../../_core/utils/time';
+import { addSecondsToTime, getLocalClock, toSecs, wrapDaySeconds } from '../../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../core/config';
 
 /**
@@ -123,7 +123,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         const depTimeStr = firstStop.properties.departure_time;
         if (!depTimeStr) return;
 
-        const diffMins = getMinutesUntil(depTimeStr, this.vehiclesService.city.timezone);
+        const diffMins = wrapDaySeconds(toSecs(depTimeStr) - getLocalClock(this.vehiclesService.city.timezone).secs) / 60;
 
         // If departure is in the future (within window) and vehicle is at origin terminal
         if (diffMins > 0 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS) {
@@ -176,8 +176,9 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         
         const targetStop = detail.stop_times.features[currentTargetStopIndex];
 
-        const realSecs = getLocalSecondsFromISO(detail.origin_timestamp, this.vehiclesService.city.timezone);
-        if (realSecs === null) return null;
+        const realMs = Date.parse(detail.origin_timestamp);
+        if (Number.isNaN(realMs)) return null;
+        const realSecs = getLocalClock(this.vehiclesService.city.timezone, realMs).secs;
 
         if (detail.state_position === 'at_stop') {
             const targetTimeStr = targetStop.properties.arrival_time;

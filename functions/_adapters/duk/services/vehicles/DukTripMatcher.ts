@@ -1,7 +1,7 @@
 import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../gtfs/core/trip-windows';
 import { DUK_CONFIG } from '../../core/config';
+import { DAY_MINS, type LocalClock } from '../../../../_core/utils/time';
 
-const DAY_MINS = 1440;
 const ANY_DAY = -1;
 
 interface Candidate {
@@ -20,12 +20,6 @@ export interface TripMatch {
     tripId: string;
     /** Added to the trip's own times to place them on today's clock: -1440 for yesterday's trips. */
     offsetMins: number;
-}
-
-export interface MatchContext {
-    todayStr: string;
-    yesterdayStr: string;
-    nowMins: number;
 }
 
 /** Built once per loaded windows file and collected with it. */
@@ -65,7 +59,7 @@ export class DukTripMatcher {
         return index;
     }
 
-    match(lineNumber: string, tripNumber: number, ctx: MatchContext): TripMatch | null {
+    match(lineNumber: string, tripNumber: number, ctx: LocalClock): TripMatch | null {
         const candidates = this.getIndex().byNumber.get(matchKey(lineNumber, tripNumber));
         if (!candidates) return null;
 
@@ -73,8 +67,8 @@ export class DukTripMatcher {
         // The last option trusts the feed over the timetable calendar: operators do run trips on days
         // their JDF codes exclude, and line, number and time together still identify the trip.
         const options = [
-            { bit: dayBit(this.windows, ctx.todayStr), offsetMins: 0 },
-            { bit: dayBit(this.windows, ctx.yesterdayStr), offsetMins: -DAY_MINS },
+            { bit: dayBit(this.windows, ctx.date), offsetMins: 0 },
+            { bit: dayBit(this.windows, ctx.previousDate), offsetMins: -DAY_MINS },
             { bit: ANY_DAY, offsetMins: 0 },
             { bit: ANY_DAY, offsetMins: -DAY_MINS },
         ];
@@ -85,7 +79,7 @@ export class DukTripMatcher {
                 if (option.bit !== ANY_DAY && !operatesOnDay(c.window, option.bit)) continue;
                 const start = c.window[0] + option.offsetMins;
                 const end = c.window[1] + option.offsetMins;
-                if (ctx.nowMins >= start - DUK_CONFIG.MAX_EARLY_START_MINS && ctx.nowMins <= end + DUK_CONFIG.MAX_LATE_END_MINS) {
+                if (ctx.mins >= start - DUK_CONFIG.MAX_EARLY_START_MINS && ctx.mins <= end + DUK_CONFIG.MAX_LATE_END_MINS) {
                     return { tripId: c.tripId, offsetMins: option.offsetMins };
                 }
             }
@@ -95,16 +89,16 @@ export class DukTripMatcher {
     }
 
     /** The line's trips the timetable runs today (or yesterday past midnight) within `marginMins` of now. */
-    runningNow(lineNumber: string, ctx: MatchContext, marginMins: number): TripMatch[] {
+    runningNow(lineNumber: string, ctx: LocalClock, marginMins: number): TripMatch[] {
         const out: TripMatch[] = [];
         const days = [
-            { bit: dayBit(this.windows, ctx.todayStr), offsetMins: 0 },
-            { bit: dayBit(this.windows, ctx.yesterdayStr), offsetMins: -DAY_MINS },
+            { bit: dayBit(this.windows, ctx.date), offsetMins: 0 },
+            { bit: dayBit(this.windows, ctx.previousDate), offsetMins: -DAY_MINS },
         ];
         for (const c of this.getIndex().byLine.get(lineNumber) ?? []) {
             for (const day of days) {
                 if (!day.bit || !operatesOnDay(c.window, day.bit)) continue;
-                if (ctx.nowMins >= c.window[0] + day.offsetMins - marginMins && ctx.nowMins <= c.window[1] + day.offsetMins + marginMins) {
+                if (ctx.mins >= c.window[0] + day.offsetMins - marginMins && ctx.mins <= c.window[1] + day.offsetMins + marginMins) {
                     out.push({ tripId: c.tripId, offsetMins: day.offsetMins });
                 }
             }

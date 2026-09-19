@@ -223,7 +223,9 @@ export interface AppAlert {
     title: string;
     description: string | null;
     link: string;
+    /** ISO 8601 instant. */
     valid_from: string | null;
+    /** ISO 8601 instant. */
     valid_to: string | null;
     guid?: string;
     priority?: string;
@@ -243,7 +245,9 @@ export interface AppInfotext {
     priority: 'low' | 'normal' | 'high';
     displayType: 'inline' | 'general';
     relatedStopIds: string[];
+    /** ISO 8601 instant. */
     valid_from: string;
+    /** ISO 8601 instant. */
     valid_to: string | null;
 }
 

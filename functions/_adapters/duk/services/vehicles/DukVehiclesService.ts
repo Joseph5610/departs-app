@@ -10,11 +10,11 @@ import { LruCache } from '../../../../_core/utils/LruCache';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../../_core/utils/geo';
 import type { Station as TripStation } from '../../../gtfs/services/vehicles/types';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
-import { formatTime, getCurrentLocalSeconds, getPreviousDateString, getZonedDateString, toSecs, wrapDaySeconds } from '../../../../_core/utils/time';
+import { formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../../_core/utils/time';
 import { getDukStationNames, getDukTrafficFeed, type DukVehicleReport } from '../../core/duk-traffic-feed';
 import { DUK_STATE_MAPPING } from '../../utils/dukConstants';
 import { getDukVehicleColor } from '../../utils/colors';
-import { DukTripMatcher, type MatchContext, type TripMatch } from './DukTripMatcher';
+import { DukTripMatcher, type TripMatch } from './DukTripMatcher';
 import { DUK_CONFIG } from '../../core/config';
 
 const { VehicleStopStatus } = transit_realtime.VehiclePosition;
@@ -77,12 +77,7 @@ export class DukVehiclesService extends VehiclesService {
                     return { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
                 }
 
-                const todayStr = getZonedDateString(this.city.timezone);
-                const ctx: MatchContext = {
-                    todayStr,
-                    yesterdayStr: getPreviousDateString(todayStr),
-                    nowMins: getCurrentLocalSeconds(this.city.timezone) / 60,
-                };
+                const ctx = getLocalClock(this.city.timezone);
                 const matcher = windows ? new DukTripMatcher(windows) : null;
                 const nowMs = Date.now();
 
@@ -113,7 +108,7 @@ export class DukVehiclesService extends VehiclesService {
      * on other days (weekend numbers on a weekday evening) or later that day; then the line's trip
      * running now towards the vehicle's final stop, closest to where the vehicle is, wins.
      */
-    private async runningTrip(report: DukVehicleReport, match: TripMatch | null, matcher: DukTripMatcher, ctx: MatchContext): Promise<string | null> {
+    private async runningTrip(report: DukVehicleReport, match: TripMatch | null, matcher: DukTripMatcher, ctx: LocalClock): Promise<string | null> {
         const isMoving = report.state !== null && DUK_STATE_MAPPING[report.state] === 'on_track';
         if (!isMoving || !report.lineNumber) return match?.tripId ?? null;
         const reported = match ? await this.distanceFromSchedule(report, match, ctx) : null;
@@ -131,10 +126,10 @@ export class DukVehiclesService extends VehiclesService {
     }
 
     /** How far the vehicle is from where the trip's timetable, shifted by its delay, puts it now; null when it is not running now. */
-    private async distanceFromSchedule(report: DukVehicleReport, match: TripMatch, ctx: MatchContext): Promise<number | null> {
+    private async distanceFromSchedule(report: DukVehicleReport, match: TripMatch, ctx: LocalClock): Promise<number | null> {
         const stops = (await getTripStops(this.city, match.tripId)).filter(isLocated);
         if (stops.length === 0) return null;
-        const tripSecs = (ctx.nowMins - match.offsetMins) * 60 - (report.delay ?? 0);
+        const tripSecs = (ctx.mins - match.offsetMins) * 60 - (report.delay ?? 0);
         const margin = DUK_CONFIG.SCHEDULE_FIT_MARGIN_S;
         if (tripSecs < toSecs(stops[0].departure_time) - margin || tripSecs > toSecs(stops[stops.length - 1].arrival_time) + margin) return null;
 
@@ -211,7 +206,7 @@ export class DukVehiclesService extends VehiclesService {
     private lastPassedIndex(report: DukVehicleReport, stops: TripStation[]): number | null {
         if (report.stationNode === null) return null;
         const prefix = `${report.stationNode}-`;
-        const dueSecs = getCurrentLocalSeconds(this.city.timezone) - (report.delay ?? 0);
+        const dueSecs = getLocalClock(this.city.timezone).secs - (report.delay ?? 0);
         let reported = -1;
         let closestGap = Infinity;
         stops.forEach((stop, i) => {

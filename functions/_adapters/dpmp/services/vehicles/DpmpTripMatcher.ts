@@ -4,8 +4,8 @@ import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../
 import { getTripStops } from '../../../gtfs/core/trip-stops';
 import { DPMP_CONFIG } from '../../core/config';
 import type { DpmpVehicleRow } from '../../core/dpmp-csv-feed';
+import { DAY_MINS, toSecs, type LocalClock } from '../../../../_core/utils/time';
 
-const DAY_MINS = 1440;
 
 interface Candidate {
     tripId: string;
@@ -19,12 +19,6 @@ export interface TripMatch {
     tripId: string;
     /** Planned start in minutes relative to today's local midnight (negative for yesterday's). */
     startRelMins: number;
-}
-
-export interface MatchContext {
-    todayStr: string;
-    yesterdayStr: string;
-    nowMins: number;
 }
 
 /** Built once per loaded windows file and collected with it. */
@@ -72,15 +66,14 @@ export class DpmpTripMatcher {
         return index;
     }
 
-    async match(row: DpmpVehicleRow, ctx: MatchContext): Promise<TripMatch | null> {
+    async match(row: DpmpVehicleRow, ctx: LocalClock): Promise<TripMatch | null> {
         const directionId = DPMP_CONFIG.DIRECTION_IDS[row.direction];
         if (directionId === undefined) return null;
 
-        const [h, m] = row.plannedStart.split(':').map(Number);
-        const start = h * 60 + m;
+        const start = toSecs(row.plannedStart) / 60;
         const index = this.getIndex();
-        const todayBit = dayBit(this.windows, ctx.todayStr);
-        const yesterdayBit = dayBit(this.windows, ctx.yesterdayStr);
+        const todayBit = dayBit(this.windows, ctx.date);
+        const yesterdayBit = dayBit(this.windows, ctx.previousDate);
 
         // A clock time can belong to today's service, to yesterday's service past 24:00, or to a
         // trip yesterday's service started before midnight that is still running.
@@ -92,7 +85,7 @@ export class DpmpTripMatcher {
 
         for (const option of options) {
             if (!option.bit) continue;
-            const ageMins = ctx.nowMins - option.relMins;
+            const ageMins = ctx.mins - option.relMins;
             if (ageMins < -DPMP_CONFIG.MAX_EARLY_START_MINS || ageMins > DPMP_CONFIG.MAX_TRIP_AGE_MINS) continue;
 
             const candidates: Candidate[] = [];

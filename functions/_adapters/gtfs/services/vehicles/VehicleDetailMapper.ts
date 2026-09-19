@@ -4,6 +4,7 @@ import type { Station } from './types';
 import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
 import { GTFS_CONFIG } from '../../core/config';
 import { isLocated } from '../../core/trip-stops';
+import { toClockTime } from '../../../../_core/utils/time';
 
 export class VehicleDetailMapper {
 
@@ -47,21 +48,7 @@ export class VehicleDetailMapper {
         };
     }
 
-    /** Wraps GTFS times past midnight (`25:10:00`) onto the clock (`01:10:00`). */
-    static formatClockTime(timeStr: string | undefined | null): string {
-        if (!timeStr) return '';
-        const parts = String(timeStr).split(':');
-        if (parts.length >= 2) {
-            let h = parseInt(parts[0], 10);
-            if (h >= 24) h = h % 24;
-            parts[0] = String(h).padStart(2, '0');
-            return parts.join(':');
-        }
-        return String(timeStr);
-    }
-
     static buildStopFeatures(stations: Station[]) {
-        const formatTime = VehicleDetailMapper.formatClockTime;
 
         return stations.map((s) => {
             return {
@@ -71,10 +58,10 @@ export class VehicleDetailMapper {
                     stop_id: String(s.id),
                     stop_name: s.name,
                     stop_sequence: s.sequence,
-                    arrival_time: formatTime(s.arrival_time),
-                    departure_time: formatTime(s.departure_time),
-                    realtime_arrival_time: formatTime(s.arrival_time),
-                    realtime_departure_time: formatTime(s.departure_time),
+                    arrival_time: toClockTime(s.arrival_time),
+                    departure_time: toClockTime(s.departure_time),
+                    realtime_arrival_time: toClockTime(s.arrival_time),
+                    realtime_departure_time: toClockTime(s.departure_time),
                     is_request_stop: s.is_request_stop,
                     zone_id: s.zone_id ?? undefined
                 }

@@ -59,14 +59,17 @@ export const addSecondsToTime = (timeStr: string, seconds: number): string => {
 
 /**
  * Formats a timestamp (ISO string or ms number) into a locale-aware date+time string.
- * Example (cs): "12. 7. 2026, 00:30"
+ * Example (cs): "12. 7. 2026, 00:30". A value that is not a timestamp is returned as given.
  */
 export const formatDateTime = (value: string | number, locale: string): string => {
-    return new Date(value).toLocaleString(locale, {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString(locale, {
         day: 'numeric',
         month: 'numeric',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        hourCycle: 'h23',
     });
 };

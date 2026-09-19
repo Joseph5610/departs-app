@@ -126,7 +126,7 @@ export class AlertsService {
                 const { routesMap, routesByName } = routesCache.value;
 
                 const gtfsData = { routes: routesMap, routesByName, tripRoutes: {} };
-                incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, GOLEMIO_CONFIG.TIMEZONE, true);
+                incidents = this.gtfsMapper.mapAlerts(rawAlerts, gtfsData, true);
             } catch (e) {
                 console.error("Failed to map GTFS-RT alerts", e);
             }
@@ -142,7 +142,7 @@ export class AlertsService {
         let exclusionsFailed = exclusionsRes.status === 'rejected';
         if (exclusionsRes.status === 'fulfilled') {
             try {
-                exclusions = RssAlertsMapper.mapRSS(exclusionsRes.value, GOLEMIO_CONFIG.TIMEZONE);
+                exclusions = RssAlertsMapper.mapRSS(exclusionsRes.value);
             } catch (e) {
                 console.error("Failed to map Exclusions RSS", e);
                 exclusionsFailed = true;

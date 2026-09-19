@@ -8,7 +8,7 @@ import { LruCache } from '../../../../_core/utils/LruCache';
 import { shapeChunkId } from '../../core/config';
 import { getTripStops } from '../../core/trip-stops';
 import { getTripWindows } from '../../core/trip-windows';
-import { getCurrentLocalSeconds, getZonedDateString } from '../../../../_core/utils/time';
+import { getLocalClock } from '../../../../_core/utils/time';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import { TripConnectionsMapper } from './TripConnectionsMapper';
 import type { GtfsRoute } from '../../core/gtfs-data';
@@ -83,8 +83,7 @@ export class VehicleDetailService {
         ]);
         TripConnectionsMapper.attach(
             detail, stations, routes, windows, live,
-            getZonedDateString(this.city.timezone),
-            getCurrentLocalSeconds(this.city.timezone) / 60
+            getLocalClock(this.city.timezone)
         );
     }
 

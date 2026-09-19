@@ -4,7 +4,6 @@ import { ApiError } from "../../../../_core/errors";
 import { GolemioClient } from "../../core/GolemioClient";
 import { golemioInfotextSchema } from "./schemas";
 import { InfotextsMapper } from "./InfotextsMapper";
-import { GOLEMIO_CONFIG } from "../../core/config";
 import { z } from "zod";
 
 /**
@@ -46,6 +45,6 @@ export class InfotextsService {
         }
 
         const data = parsed.data.filter((i): i is NonNullable<typeof i> => i !== null);
-        return InfotextsMapper.map(data, GOLEMIO_CONFIG.TIMEZONE);
+        return InfotextsMapper.map(data);
     }
 }

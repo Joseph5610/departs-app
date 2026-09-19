@@ -1,5 +1,4 @@
 import { AppAlert, AppRouteType } from "../../../../_core/types";
-import { formatDate } from "../../../../_core/utils/time";
 import { getVehicleColor } from "../vehicles/colors";
 import { XMLParser } from "fast-xml-parser";
 import { z } from 'zod';
@@ -39,7 +38,7 @@ export class RssAlertsMapper {
      * @param xmlString The raw RSS XML string
      * @returns Array of parsed AppAlert objects (exclusions only)
      */
-    static mapRSS(xmlString: string, timezone: string): AppAlert[] {
+    static mapRSS(xmlString: string): AppAlert[] {
         const itemType = 'exclusion';
         
         const jObj = parseRssXml(xmlString);
@@ -101,14 +100,14 @@ export class RssAlertsMapper {
             const end = item.dateTo ? new Date(Number(item.dateTo) * 1000) : null;
 
             if (start) {
-                valid_from = formatDate(start, timezone);
+                valid_from = start.toISOString();
                 if (start > now) {
                     isActive = false;
                     isFuture = true;
                 }
             }
             if (end) {
-                valid_to = formatDate(end, timezone);
+                valid_to = end.toISOString();
                 if (end < now) {
                     isActive = false;
                 }

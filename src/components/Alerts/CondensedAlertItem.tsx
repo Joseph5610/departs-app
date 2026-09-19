@@ -8,6 +8,7 @@ import { LineBadge } from '../LineBadge';
 import { AlertIcon } from './AlertIcon';
 import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
 import { isHighPriorityAlert } from '../../utils/transitUtils';
+import { formatDateTime } from '../../utils/dateUtils';
 import {
     Collapsible,
     CollapsibleContent,
@@ -42,7 +43,8 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
 
     const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
 
-    const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to;
+    const validFromText = item.valid_from ? formatDateTime(item.valid_from, i18n.language) : null;
+    const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to && formatDateTime(item.valid_to, i18n.language);
 
     return (
         <Collapsible
@@ -155,7 +157,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
 
                         {item.valid_from && (
                             <div className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50 inline-flex w-fit">
-                                {validToText ? `${item.valid_from} – ${validToText}` : t('alerts.validFrom', { date: item.valid_from })}
+                                {validToText ? `${validFromText} – ${validToText}` : t('alerts.validFrom', { date: validFromText })}
                             </div>
                         )}
                     </div>

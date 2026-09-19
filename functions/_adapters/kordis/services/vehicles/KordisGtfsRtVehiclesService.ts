@@ -5,7 +5,7 @@ import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheMan
 import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import { getTripWindows, dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../gtfs/core/trip-windows';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
-import { getCurrentLocalSeconds, getZonedDateString, wrapDaySeconds } from '../../../../_core/utils/time';
+import { DAY_MINS, getLocalClock, wrapDaySeconds } from '../../../../_core/utils/time';
 import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
 interface TripClaim {
@@ -17,16 +17,6 @@ interface TripClaim {
 }
 
 export class KordisGtfsRtVehiclesService extends VehiclesService {
-    
-    /**
-     * Retrieves the current time context (today's string and current minutes) for the configured timezone.
-     */
-    private getCurrentTimeContext() {
-        const todayLocalStr = getZonedDateString(this.city.timezone);
-        const currentSeconds = getCurrentLocalSeconds(this.city.timezone);
-        return { todayLocalStr, currentMinutes: currentSeconds / 60 };
-    }
-
     /**
      * Trip ids a raw feed id may stand for in the current export: itself, and the trip its run maps
      * to when the id comes from an older numbering. Ids are recycled across exports, so both can be
@@ -157,9 +147,9 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                 let currentMins = 0;
 
                 if (windows) {
-                    const ctx = this.getCurrentTimeContext();
-                    todayBit = dayBit(windows, ctx.todayLocalStr);
-                    currentMins = ctx.currentMinutes;
+                    const clock = getLocalClock(this.city.timezone);
+                    todayBit = dayBit(windows, clock.date);
+                    currentMins = clock.mins;
                 }
 
                 const assignments = this.assignTrips(groupedEntities, tripRoutesObj, windows, todayBit, currentMins);
@@ -202,7 +192,7 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     private isVehicleBeforeTrack(window: TripWindow | undefined, currentMins: number): boolean {
         if (!window) return false;
 
-        const diffMins = wrapDaySeconds(((window[0] % 1440) - (currentMins % 1440)) * 60) / 60;
+        const diffMins = wrapDaySeconds(((window[0] % DAY_MINS) - (currentMins % DAY_MINS)) * 60) / 60;
 
         return diffMins > 1 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
     }

@@ -3,7 +3,7 @@ import { GOLEMIO_CONFIG } from "../../core/config";
 import { UPSTREAM_TTL_S } from "../../../../_core/config";
 import { CacheManager, MEMORY_CACHE_TTL } from "../../../../_core/utils/CacheManager";
 import { appClient } from '../../../../_core/ApiClient';
-import { getPreviousDateString, toSecs } from "../../../../_core/utils/time";
+import { DAY_SECS, getPreviousDateString, toSecs, type LocalClock } from "../../../../_core/utils/time";
 import { isConnectionAtRisk } from "../../../../_core/utils/connections";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 import { getVehicleColor } from "../vehicles/colors";
@@ -28,8 +28,6 @@ export interface LiveConnections {
     days: string[];
     trips: Record<string, TripConnections>;
 }
-
-const DAY_SECS = 86_400;
 
 /**
  * Fetches the Prague connections file once per isolate. Null when unavailable, which leaves
@@ -108,14 +106,14 @@ export function departureConnections(
 }
 
 /** Sets onward connections on each stop of the trip and the continuation on its last stop. */
-export function attachTripConnections(detail: AppVehicleDetail, file: LiveConnections | null, localDate: string, nowSecs: number): void {
+export function attachTripConnections(detail: AppVehicleDetail, file: LiveConnections | null, clock: LocalClock): void {
     const trip = file?.trips[detail.gtfs_trip_id];
     const features = detail.stop_times?.features;
     if (!file || !trip || !features || features.length === 0) return;
 
     const lastTime = features[features.length - 1]!.properties.arrival_time;
-    const runsPastMidnight = isPastMidnight(lastTime) && nowSecs < toSecs(lastTime) - DAY_SECS;
-    const bit = serviceDayBit(file, trip, localDate, runsPastMidnight);
+    const runsPastMidnight = isPastMidnight(lastTime) && clock.secs < toSecs(lastTime) - DAY_SECS;
+    const bit = serviceDayBit(file, trip, clock.date, runsPastMidnight);
     const delay = typeof detail.delay === 'number' ? detail.delay : null;
 
     for (const feature of features) {

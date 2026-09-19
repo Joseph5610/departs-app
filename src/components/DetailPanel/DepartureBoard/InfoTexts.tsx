@@ -6,6 +6,7 @@ import { AlertIcon } from '../../Alerts/AlertIcon';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import type { SelectedStop } from '../../../types/transit';
 import type { Infotext } from '../../../types/alerts';
+import { formatDateTime } from '../../../utils/dateUtils';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
@@ -67,7 +68,9 @@ const InfoTextCard: React.FC<{ info: Infotext }> = ({ info }) => {
 
             <AlertDescription className="grid gap-2">
                 <div className="text-[10px] font-semibold text-foreground/60 mt-0.5">
-                    {info.valid_to ? `${info.valid_from} – ${info.valid_to}` : t('alerts.validFrom', { date: info.valid_from })}
+                    {info.valid_to
+                        ? `${formatDateTime(info.valid_from, i18n.language)} – ${formatDateTime(info.valid_to, i18n.language)}`
+                        : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.language) })}
                 </div>
             </AlertDescription>
         </Alert>

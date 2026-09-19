@@ -7,7 +7,7 @@ import { VehicleDetailMapper } from "./VehicleDetailMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleDetailQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 import { attachTripConnections, getLiveConnections } from "../connections/connections";
-import { getCurrentLocalSeconds, getZonedDateString } from "../../../../_core/utils/time";
+import { getLocalClock } from "../../../../_core/utils/time";
 import { GOLEMIO_CONFIG } from "../../core/config";
 
 /**
@@ -90,8 +90,7 @@ export class VehicleDetailService {
         attachTripConnections(
             detail,
             await connectionsPromise,
-            getZonedDateString(GOLEMIO_CONFIG.TIMEZONE),
-            getCurrentLocalSeconds(GOLEMIO_CONFIG.TIMEZONE)
+            getLocalClock(GOLEMIO_CONFIG.TIMEZONE)
         );
         return detail;
     }

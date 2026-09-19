@@ -3,12 +3,9 @@ import type { GtfsRoute } from '../../core/gtfs-data';
 import type { Station } from './types';
 import { dayBit, operatesOnDay, type TripWindows } from '../../core/trip-windows';
 import { normalizeRouteType } from '../../../../_core/utils/routeTypes';
-import { getPreviousDateString } from '../../../../_core/utils/time';
+import { DAY_MINS, toClockTime, type LocalClock } from '../../../../_core/utils/time';
 import { isConnectionAtRisk } from '../../../../_core/utils/connections';
-import { VehicleDetailMapper } from './VehicleDetailMapper';
 import { mapContinuation } from '../../core/continuations';
-
-const DAY_MINS = 1440;
 
 /** Turns the onward connections listed on a trip's stops into display rows with live data. */
 export class TripConnectionsMapper {
@@ -18,15 +15,15 @@ export class TripConnectionsMapper {
      * way, else today when it runs today, otherwise the next covered day it runs on. 0 when the
      * windows cannot place it, which selects no connection.
      */
-    static serviceDayBit(windows: TripWindows, tripId: string, todayStr: string, nowMins: number): number {
+    static serviceDayBit(windows: TripWindows, tripId: string, clock: LocalClock): number {
         const window = windows.trips[tripId];
         if (!window) return 0;
-        if (nowMins < window[1] - DAY_MINS) {
-            const bit = dayBit(windows, getPreviousDateString(todayStr));
+        if (clock.mins < window[1] - DAY_MINS) {
+            const bit = dayBit(windows, clock.previousDate);
             if (bit && operatesOnDay(window, bit)) return bit;
         }
         for (const day of windows.days) {
-            if (day < todayStr) continue;
+            if (day < clock.date) continue;
             const bit = dayBit(windows, day);
             if (operatesOnDay(window, bit)) return bit;
         }
@@ -44,13 +41,12 @@ export class TripConnectionsMapper {
         routes: Record<string, GtfsRoute>,
         windows: TripWindows | null,
         live: AppVehicleCollection | null,
-        todayStr: string,
-        nowMins: number
+        clock: LocalClock
     ): void {
         const features = detail.stop_times?.features;
         if (!features) return;
 
-        const bit = windows ? this.serviceDayBit(windows, detail.gtfs_trip_id, todayStr, nowMins) : 0;
+        const bit = windows ? this.serviceDayBit(windows, detail.gtfs_trip_id, clock) : 0;
 
         const stationBySequence = new Map<number, Station>();
         for (const s of stations) stationBySequence.set(s.sequence, s);
@@ -68,7 +64,7 @@ export class TripConnectionsMapper {
                 const continuation = mapContinuation(station.continues_as, routes, liveByTrip);
                 feature.properties.continues_as = {
                     ...continuation,
-                    departure_time: continuation.departure_time && VehicleDetailMapper.formatClockTime(continuation.departure_time),
+                    departure_time: continuation.departure_time && toClockTime(continuation.departure_time),
                 };
             }
             if (!station?.connections || !windows || !bit) continue;
@@ -88,7 +84,7 @@ export class TripConnectionsMapper {
                     route_color: route?.route_color,
                     type: normalizeRouteType(route ? route.type : 'unknown'),
                     headsign,
-                    departure_time: VehicleDetailMapper.formatClockTime(departureTime),
+                    departure_time: toClockTime(departureTime),
                     delay: typeof onward?.delay === 'number' ? onward.delay : null,
                     max_wait_s: maxWaitS,
                     at_risk: isConnectionAtRisk(arrivalTime, delay, minTransferS, departureTime, maxWaitS),

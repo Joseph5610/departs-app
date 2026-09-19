@@ -4,7 +4,9 @@ export interface RSSItem {
     type: 'incident' | 'exclusion';
     title: string;
     description: string | null;
+    /** ISO 8601 instant. */
     valid_from: string | null;
+    /** ISO 8601 instant. */
     valid_to: string | null;
     link: string;
     guid?: string;
@@ -25,6 +27,8 @@ export interface Infotext {
     priority: 'low' | 'normal' | 'high';
     displayType: 'inline' | 'general';
     relatedStopIds: string[];
+    /** ISO 8601 instant. */
     valid_from: string;
+    /** ISO 8601 instant. */
     valid_to: string | null;
 }

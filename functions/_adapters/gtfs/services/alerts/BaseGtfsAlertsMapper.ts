@@ -1,6 +1,5 @@
 import type { AppAlert, AppRouteType } from "../../../../_core/types";
 import type { GtfsRoutesData, GtfsRoute } from "../../core/gtfs-data";
-import { formatDate } from "../../../../_core/utils/time";
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 import { AlertTextFormatter } from "../../../../_core/utils/AlertTextFormatter";
@@ -18,7 +17,7 @@ export class BaseGtfsAlertsMapper {
      * @param forceIncident If true, overrides the detour detection logic and forces the alert type to 'incident'.
      * @returns A mapped array of AppAlert objects ready for frontend consumption.
      */
-    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, timezone: string, forceIncident: boolean = false): AppAlert[] {
+    public mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident: boolean = false): AppAlert[] {
         return rawAlerts.map((entity) => {
             const alert = entity.alert!;
             const rawHeader = alert.headerText?.translation?.[0]?.text || '';
@@ -69,11 +68,11 @@ export class BaseGtfsAlertsMapper {
                 const period = alert.activePeriod[0];
                 if (period.start && Number(period.start) > 0) {
                     const startMs = Number(period.start) * (Number(period.start) > 1e11 ? 1 : 1000);
-                    valid_from = formatDate(new Date(startMs), timezone);
+                    valid_from = new Date(startMs).toISOString();
                 }
                 if (period.end && Number(period.end) > 0) {
                     const endMs = Number(period.end) * (Number(period.end) > 1e11 ? 1 : 1000);
-                    valid_to = formatDate(new Date(endMs), timezone);
+                    valid_to = new Date(endMs).toISOString();
                 }
             }
 

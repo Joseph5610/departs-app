@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.3] - 2026-09-19
+
+### Fixed
+
+- Brno vehicles and vehicle detail no longer re-decode an unchanged realtime feed, cutting refresh CPU about fourfold.
+
+### Changed
+
+- The API sends alert and infotext dates as ISO timestamps; the app formats them in the user's language with 24-hour time.
+
 ## [0.73.2] - 2026-09-19
 
 ### Fixed

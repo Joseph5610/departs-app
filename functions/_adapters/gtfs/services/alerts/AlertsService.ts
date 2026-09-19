@@ -31,7 +31,7 @@ export class AlertsService {
                         console.error("Failed to fetch routes for alerts", e);
                     }
 
-                    const alerts = this.mapper.mapAlerts(rawAlerts, gtfsData, this.city.timezone);
+                    const alerts = this.mapper.mapAlerts(rawAlerts, gtfsData);
 
                     return { alerts } as AppAlertsResponse;
                 } catch (e) {
