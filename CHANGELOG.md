@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.0] - 2026-09-18
+
+### Added
+
+- Brno: the trip timeline lists the connections that wait at each stop for the viewed trip, and departures show which arriving line they wait for.
+- Prešov: departures show the stop-specific destination on loop routes, and boards and trips show which line the vehicle continues as.
+- Prague: guaranteed connections and 'continues as line X' from the PID GTFS on departure boards and trip timelines.
+
 ## [0.72.0] - 2026-09-18
 
 ### Changed

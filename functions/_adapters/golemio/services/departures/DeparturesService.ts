@@ -8,6 +8,7 @@ import { GolemioClient } from "../../core/GolemioClient";
 import { DeparturesMapper } from "./DeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 import { getEnrichmentData } from "../stops/enrichment";
+import { getLiveConnections } from "../connections/connections";
 
 /**
  * Service for fetching and processing real-time departure boards for a specific stop.
@@ -54,6 +55,7 @@ export class DeparturesService {
         // Started, not awaited: enrichment is independent of the board fetch below, and on a cold
         // isolate awaiting it here put a full CDN round trip in front of the upstream call.
         const enrichmentPromise = getEnrichmentData();
+        const connectionsPromise = getLiveConnections();
         const { stopId: rawStopIds } = parseSearchParams(searchParams, departuresQuerySchema);
         const stopIds = rawStopIds.filter((id): id is string => !!id);
 
@@ -102,6 +104,6 @@ export class DeparturesService {
         // Filter out the nulls
         const data = parsed.data.map(group => group.filter((item): item is GolemioDepartureItem => item !== null));
 
-        return DeparturesMapper.map(data, stopIds, await enrichmentPromise);
+        return DeparturesMapper.map(data, stopIds, await enrichmentPromise, await connectionsPromise);
     }
 }

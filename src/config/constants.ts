@@ -224,6 +224,8 @@ export const STOPS_DEVICE_CACHE = {
 };
 
 export const DEPARTURES_CONFIG = {
+    /** Distinct feeder lines shown as badges on a departure row; beyond this a short label replaces them. */
+    MAX_FEEDER_BADGES: 2,
     /** Departures stay listed this long after their expected time, while the vehicle may still be at the stop. */
     PAST_GRACE_MS: MINUTE_MS,
     /** Net delay change across the board, in seconds, beyond which the trend reads as worsening or improving. */

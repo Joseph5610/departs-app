@@ -1,4 +1,4 @@
-import type { RouteType } from './vehicles';
+import type { Continuation, RouteType } from './vehicles';
 
 export interface Departure {
     timestamp: string;
@@ -20,4 +20,16 @@ export interface Departure {
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
     stopId?: string;
     is_request_stop?: boolean;
+    connections?: DepartureFeeder[];
+    continues_as?: Continuation;
+}
+
+/** An arriving trip that a departure is scheduled to wait for. */
+export interface DepartureFeeder {
+    line: string;
+    route_color?: string;
+    type: RouteType;
+    max_wait_s: number;
+    hold_s: number | null;
+    will_miss: boolean;
 }

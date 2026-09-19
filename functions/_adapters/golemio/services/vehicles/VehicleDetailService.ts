@@ -7,6 +7,9 @@ import { VehicleDetailMapper } from "./VehicleDetailMapper";
 import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from "./schemas";
 import { vehicleDetailQuerySchema, parseSearchParams } from "../../../../_core/schemas";
 import { getEnrichmentData } from "../stops/enrichment";
+import { attachTripConnections, getLiveConnections } from "../connections/connections";
+import { getCurrentLocalSeconds, getZonedDateString } from "../../../../_core/utils/time";
+import { GOLEMIO_CONFIG } from "../../core/config";
 
 /**
  * Service for fetching detailed information about a specific transit vehicle or trip.
@@ -28,6 +31,7 @@ export class VehicleDetailService {
         // Started, not awaited - see the note in DeparturesService: this is independent of the trip
         // fetch below and only needs to be resolved at the mapping step.
         const enrichmentPromise = getEnrichmentData();
+        const connectionsPromise = getLiveConnections();
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
@@ -84,6 +88,13 @@ export class VehicleDetailService {
             data.stop_times.features = data.stop_times.features.filter((f): f is NonNullable<typeof f> => f !== null);
         }
 
-        return VehicleDetailMapper.map(data, tripId, vehicleId, isStatic, await enrichmentPromise);
+        const detail = VehicleDetailMapper.map(data, tripId, vehicleId, isStatic, await enrichmentPromise);
+        attachTripConnections(
+            detail,
+            await connectionsPromise,
+            getZonedDateString(GOLEMIO_CONFIG.TIMEZONE),
+            getCurrentLocalSeconds(GOLEMIO_CONFIG.TIMEZONE)
+        );
+        return detail;
     }
 }

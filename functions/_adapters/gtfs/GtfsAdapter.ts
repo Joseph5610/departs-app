@@ -22,7 +22,7 @@ export class GtfsAdapter implements CityAdapter {
 
     constructor(public readonly city: CityConfig) {
         this.vehiclesService = this.createVehiclesService();
-        this.vehicleDetailService = new VehicleDetailService(city, this.createDetailEnricher(this.vehiclesService));
+        this.vehicleDetailService = new VehicleDetailService(city, this.createDetailEnricher(this.vehiclesService), this.vehiclesService);
         this.alertsService = new AlertsService(city, this.createAlertsMapper());
     }
 

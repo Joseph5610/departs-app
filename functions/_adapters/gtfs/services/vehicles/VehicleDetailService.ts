@@ -1,5 +1,5 @@
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env, AppVehicleDetail } from "../../../../_core/types";
+import type { Env, AppVehicleDetail, AppVehicleCollection } from "../../../../_core/types";
 import type { CityConfig } from '../../../../_core/city-config';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../core/gtfs-data';
 import { appClient } from '../../../../_core/ApiClient';
@@ -7,7 +7,13 @@ import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheMan
 import { LruCache } from '../../../../_core/utils/LruCache';
 import { shapeChunkId } from '../../core/config';
 import { getTripStops } from '../../core/trip-stops';
+import { getTripWindows } from '../../core/trip-windows';
+import { getCurrentLocalSeconds, getZonedDateString } from '../../../../_core/utils/time';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
+import { TripConnectionsMapper } from './TripConnectionsMapper';
+import type { GtfsRoute } from '../../core/gtfs-data';
+import type { Station } from './types';
+import type { VehiclesService } from './VehiclesService';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../../_core/schemas';
 import { ApiError } from '../../../../_core/errors';
 import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../../../_core/config';
@@ -31,7 +37,11 @@ const shapeCache = new LruCache<[number, number][][] | null>({
  * If an Enricher is provided, it delegates the live GPS/delay merging to that Enricher.
  */
 export class VehicleDetailService {
-    constructor(public readonly city: CityConfig, private enricher?: VehicleDetailEnricher) {}
+    constructor(
+        public readonly city: CityConfig,
+        private enricher?: VehicleDetailEnricher,
+        private vehiclesService?: VehiclesService
+    ) {}
 
     async getVehicleDetail(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleDetail> {
         const url = new URL(ctx.request.url);
@@ -58,7 +68,34 @@ export class VehicleDetailService {
             detail = await this.enricher.enrich(detail, ctx);
         }
 
+        // Runs after enrichment, which supplies the delay that decides whether a connection is at risk.
+        if (stations.some(s => s.connections || s.continues_as)) {
+            await this.attachConnections(detail, stations, routes);
+        }
+
         return detail;
+    }
+
+    private async attachConnections(detail: AppVehicleDetail, stations: Station[], routes: Record<string, GtfsRoute>): Promise<void> {
+        const [windows, live] = await Promise.all([
+            getTripWindows(this.city),
+            this.getLiveVehicles(),
+        ]);
+        TripConnectionsMapper.attach(
+            detail, stations, routes, windows, live,
+            getZonedDateString(this.city.timezone),
+            getCurrentLocalSeconds(this.city.timezone) / 60
+        );
+    }
+
+    private async getLiveVehicles(): Promise<AppVehicleCollection | null> {
+        if (!this.vehiclesService) return null;
+        try {
+            return await this.vehiclesService.getCachedMappedVehicles();
+        } catch (e) {
+            console.error('Failed to load RT vehicles for trip connections:', e);
+            return null;
+        }
     }
 
     /**

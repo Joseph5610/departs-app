@@ -85,9 +85,36 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 stop_id: string;
                 metro_lines?: Array<{ name: string; route_color: string }>;
                 is_request_stop?: boolean;
+                connections?: StopConnection[];
+                continues_as?: Continuation;
             };
         }>;
     };
     route_geojson?: FeatureCollection<LineString>;
     is_static_fallback?: boolean;
+}
+
+/** An onward trip scheduled to wait at a stop for the trip being viewed. */
+export interface StopConnection {
+    trip_id: string;
+    vehicle_id?: string;
+    line: string;
+    route_color?: string;
+    type: RouteType;
+    headsign: string;
+    departure_time: string;
+    delay: number | null;
+    max_wait_s: number;
+    at_risk: boolean;
+}
+
+/** The trip the same vehicle continues as; ids are absent when only the line is known. */
+export interface Continuation {
+    trip_id?: string;
+    vehicle_id?: string;
+    line: string;
+    route_color?: string;
+    type: RouteType;
+    headsign: string;
+    departure_time?: string;
 }

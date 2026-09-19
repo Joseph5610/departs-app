@@ -42,6 +42,47 @@ export interface AppStopTimeProperties {
     shape_dist_traveled?: number;
     metro_lines?: Array<{ name: string; route_color: string }>;
     is_request_stop?: boolean;
+    connections?: AppStopConnection[];
+    continues_as?: AppContinuation;
+}
+
+/** The trip the same vehicle continues as; ids are absent when only the line is known. */
+export interface AppContinuation {
+    trip_id?: string;
+    vehicle_id?: string;
+    line: string;
+    route_color?: string;
+    type: AppRouteType;
+    headsign: string;
+    departure_time?: string;
+}
+
+/** An onward trip scheduled to wait at this stop for the trip being viewed. */
+export interface AppStopConnection {
+    trip_id: string;
+    vehicle_id?: string;
+    line: string;
+    route_color?: string;
+    type: AppRouteType;
+    headsign: string;
+    /** Scheduled departure, `HH:MM:SS` like the stop times. */
+    departure_time: string;
+    delay: number | null;
+    max_wait_s: number;
+    /** The viewed trip's current delay exceeds what the connection waits for. */
+    at_risk: boolean;
+}
+
+/** An arriving trip that a departure is scheduled to wait for. */
+export interface AppDepartureFeeder {
+    line: string;
+    route_color?: string;
+    type: AppRouteType;
+    max_wait_s: number;
+    /** Expected hold beyond the scheduled departure; null without live data for the feeder. */
+    hold_s: number | null;
+    /** The feeder is late enough that the departure will not wait for it. */
+    will_miss: boolean;
 }
 
 export interface AppStopProperties {
@@ -171,6 +212,8 @@ export interface AppDeparture {
     headsign_metro_lines?: Array<{ name: string; route_color: string }>;
     stopId?: string;
     is_request_stop?: boolean;
+    connections?: AppDepartureFeeder[];
+    continues_as?: AppContinuation;
 }
 
 export interface AppDepartureResponse {

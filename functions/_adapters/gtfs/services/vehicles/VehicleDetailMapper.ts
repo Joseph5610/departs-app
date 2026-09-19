@@ -47,18 +47,21 @@ export class VehicleDetailMapper {
         };
     }
 
+    /** Wraps GTFS times past midnight (`25:10:00`) onto the clock (`01:10:00`). */
+    static formatClockTime(timeStr: string | undefined | null): string {
+        if (!timeStr) return '';
+        const parts = String(timeStr).split(':');
+        if (parts.length >= 2) {
+            let h = parseInt(parts[0], 10);
+            if (h >= 24) h = h % 24;
+            parts[0] = String(h).padStart(2, '0');
+            return parts.join(':');
+        }
+        return String(timeStr);
+    }
+
     static buildStopFeatures(stations: Station[]) {
-        const formatTime = (timeStr: string | undefined | null): string => {
-            if (!timeStr) return '';
-            const parts = String(timeStr).split(':');
-            if (parts.length >= 2) {
-                let h = parseInt(parts[0], 10);
-                if (h >= 24) h = h % 24;
-                parts[0] = String(h).padStart(2, '0');
-                return parts.join(':');
-            }
-            return String(timeStr);
-        };
+        const formatTime = VehicleDetailMapper.formatClockTime;
 
         return stations.map((s) => {
             return {

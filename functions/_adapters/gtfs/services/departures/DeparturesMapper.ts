@@ -1,5 +1,6 @@
-import type { AppDeparture, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
-import type { GtfsDepartureTuple } from "./types";
+import type { AppDeparture, AppDepartureFeeder, AppVehicleCollection, AppVehicleFeature } from "../../../../_core/types";
+import type { GtfsDepartureTuple, GtfsFeederTuple } from "./types";
+import { mapContinuation } from "../../core/continuations";
 import type { GtfsRoute } from "../../core/gtfs-data";
 import { normalizeRouteType } from "../../../../_core/utils/routeTypes";
 import { GTFS_CONFIG } from "../../core/config";
@@ -69,7 +70,7 @@ export class DeparturesMapper {
         return topDeps.map(item => {
             const { d, rtTimestampMs, delaySecs } = item;
             const { stopId, tuple } = d;
-            const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible, is_request_stop_num] = tuple;
+            const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible, is_request_stop_num, extras] = tuple;
             const route = routes[route_id];
             
             let vId: string | undefined = undefined;
@@ -110,8 +111,37 @@ export class DeparturesMapper {
                 stopId: stopId,
                 is_air_conditioned: isAirConditioned,
                 is_wheelchair_accessible: isWheelchairAccessible,
-                is_request_stop: is_request_stop_num === 1
+                is_request_stop: is_request_stop_num === 1,
+                ...(extras?.feeders ? { connections: this.mapFeeders(extras.feeders, timestamp_ms, routes, tripIndex) } : {}),
+                ...(extras?.continues ? { continues_as: mapContinuation(extras.continues, routes, tripIndex) } : {})
             } as AppDeparture;
+        });
+    }
+
+    /**
+     * Resolves the trips a departure waits for. The hold is informational: the departure's own
+     * timestamp is never shifted by it.
+     */
+    private static mapFeeders(
+        feeders: GtfsFeederTuple[],
+        scheduledMs: number,
+        routes: Record<string, GtfsRoute>,
+        tripIndex: Map<string, NonNullable<AppVehicleFeature['properties']>>
+    ): AppDepartureFeeder[] {
+        return feeders.map(([feederTripId, routeId, arrivalMs, minTransferS, maxWaitS]) => {
+            const route = routes[routeId];
+            const delay = tripIndex.get(feederTripId)?.delay;
+            const hold_s = typeof delay === 'number'
+                ? Math.max(0, Math.round((arrivalMs + (delay + minTransferS) * 1000 - scheduledMs) / 1000))
+                : null;
+            return {
+                line: route ? String(route.name) : routeId,
+                route_color: route?.route_color ?? undefined,
+                type: normalizeRouteType(route ? route.type : 'unknown'),
+                max_wait_s: maxWaitS,
+                hold_s,
+                will_miss: hold_s !== null && hold_s > maxWaitS,
+            };
         });
     }
 }

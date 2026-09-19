@@ -166,7 +166,13 @@
       "shareTitle": "Spoj linky {{line}}",
       "shareText": "Sledujte polohu spoje linky {{line}} živě na departs.app",
       "requestStop": "Zastávka na znamení",
-      "track": "Sledovat vozidlo"
+      "track": "Sledovat vozidlo",
+      "connections": {
+        "title": "Přestupy",
+        "waitsUpTo": "počká až {{minutes}} min",
+        "mayNotWait": "Nemusí počkat"
+      },
+      "continuesAs": "Pokračuje jako linka"
     },
     "departures": {
       "noUpcoming": "Nebyly nalezeny žádné nejbližší odjezdy.",
@@ -200,7 +206,15 @@
       "officialBoard": "Virtuální tablo",
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",
-      "removeFromFavorites": "Odebrat z oblíbených"
+      "removeFromFavorites": "Odebrat z oblíbených",
+      "feeder": {
+        "waitsFor": "Čeká na {{line}} (max. {{minutes}} min)",
+        "heldFor": "Čeká ~{{minutes}} min na {{line}}",
+        "wontWait": "Nepočká na {{line}}",
+        "waitsForLines": "Čeká na přípoje: {{lines}}",
+        "waitsForMany": "přípoje"
+      },
+      "continuesAs": "Pokračuje jako linka {{line}} směr {{headsign}}"
     }
   },
   "update": {

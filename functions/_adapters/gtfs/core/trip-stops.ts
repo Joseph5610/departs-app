@@ -4,7 +4,8 @@ import { appClient } from '../../../_core/ApiClient';
 import { MEMORY_CACHE_TTL } from '../../../_core/utils/CacheManager';
 import { LruCache } from '../../../_core/utils/LruCache';
 import { tripChunkId } from './config';
-import type { Station } from '../services/vehicles/types';
+import type { GtfsTripConnection, Station } from '../services/vehicles/types';
+import type { GtfsContinuation } from './continuations';
 
 /**
  * Trip stops by chunk, keyed by `${citySlug}:${chunkId}`.
@@ -52,7 +53,9 @@ export async function getTripStops(city: CityConfig, tripId: string): Promise<St
                     coordinates: [Number(s.lon) || 0, Number(s.lat) || 0] as [number, number],
                     is_wheelchair_accessible: null,
                     zone_id: s.zone_id as string | null,
-                    is_request_stop: s.is_request_stop as boolean | undefined
+                    is_request_stop: s.is_request_stop as boolean | undefined,
+                    connections: s.connections as GtfsTripConnection[] | undefined,
+                    continues_as: s.continues_as as GtfsContinuation | undefined
                 };
             }));
         }

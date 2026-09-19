@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
@@ -6,9 +6,12 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { formatDelay } from '../../../utils/dateUtils';
 import type { Departure } from '../../../types/transit';
+import type { DepartureFeeder } from '../../../types/departures';
+import type { Continuation } from '../../../types/vehicles';
 import { useTranslation } from 'react-i18next';
-import { Accessibility, Snowflake, Train } from 'lucide-react';
+import { Accessibility, CornerDownRight, Hourglass, Snowflake, Train } from 'lucide-react';
 import { LineBadge } from '../../LineBadge';
+import { DEPARTURES_CONFIG } from '@/config/constants';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -89,7 +92,7 @@ export const DepartureItem = memo(({
             </div>
 
             {/* Icons Block - before headsign like official PID tables */}
-            <div className="flex gap-1.5 opacity-40 items-center shrink-0 min-w-[32px] ml-1">
+            <div className="flex gap-1.5 opacity-40 items-center shrink-0 w-10 ml-1">
                 {dep.is_wheelchair_accessible && (
                     <Accessibility size={16} strokeWidth={1.5}  />
                 )}
@@ -97,6 +100,11 @@ export const DepartureItem = memo(({
                     <Snowflake size={16} strokeWidth={1.5}  />
                 )}
             </div>
+
+            {dep.continues_as && <ContinuationHint continuation={dep.continues_as} />}
+            {dep.connections && dep.connections.length > 0 && (
+                <FeederHint feeders={dep.connections} />
+            )}
 
             {/* Headsign (shown when not redundant with group header) */}
             {!hideHeadsign && (
@@ -135,3 +143,63 @@ export const DepartureItem = memo(({
 });
 
 DepartureItem.displayName = 'DepartureItem';
+
+/** The line the vehicle continues as after this trip's last stop. */
+const ContinuationHint = ({ continuation }: { continuation: Continuation }) => {
+    const { t } = useTranslation();
+    const label = t('map.departures.continuesAs', { line: continuation.line, headsign: continuation.headsign });
+
+    return (
+        <span title={label} className="flex items-center gap-1 shrink-0 text-muted-foreground">
+            <span className="sr-only">{label}</span>
+            <CornerDownRight size={12} strokeWidth={2} aria-hidden="true" />
+            <LineBadge name={continuation.line} routeColor={continuation.route_color ?? ''} size="sm" />
+        </span>
+    );
+};
+
+/** The first trip this departure waits for, with the expected hold when the feeder is live. */
+const FeederHint = ({ feeders }: { feeders: DepartureFeeder[] }) => {
+    const { t } = useTranslation();
+
+    const lines = useMemo(() => {
+        const byName = new Map<string, string>();
+        for (const f of feeders) if (!byName.has(f.line)) byName.set(f.line, f.route_color ?? '');
+        return [...byName].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+    }, [feeders]);
+
+    let missed: string[] = [];
+    let held: DepartureFeeder | null = null;
+    for (const f of feeders) {
+        if (f.will_miss) missed = [...missed, f.line];
+        else if (f.hold_s !== null && f.hold_s >= 60 && (!held || f.hold_s > (held.hold_s ?? 0))) held = f;
+    }
+    const heldMinutes = held ? Math.round((held.hold_s ?? 0) / 60) : 0;
+    const label = missed.length > 0
+        ? t('map.departures.feeder.wontWait', { line: missed.join(', ') })
+        : held
+            ? t('map.departures.feeder.heldFor', { line: held.line, minutes: heldMinutes })
+            : t('map.departures.feeder.waitsForLines', { lines: lines.map(([name]) => name).join(', ') });
+
+    const showBadges = lines.length <= DEPARTURES_CONFIG.MAX_FEEDER_BADGES;
+
+    return (
+        <span
+            title={label}
+            className={cn(
+                "flex items-center gap-1 min-w-0 text-[10px] font-semibold tabular-nums",
+                showBadges ? "shrink-0" : "shrink",
+                missed.length > 0 ? "text-destructive" : "text-muted-foreground"
+            )}
+        >
+            <span className="sr-only">{label}</span>
+            <Hourglass size={12} strokeWidth={2} className="shrink-0" aria-hidden="true" />
+            {showBadges
+                ? lines.map(([name, color]) => (
+                    <LineBadge key={name} name={name} routeColor={color} size="sm" className="opacity-70" />
+                ))
+                : <span className="truncate" aria-hidden="true">{t('map.departures.feeder.waitsForMany')}</span>}
+            {held && <span aria-hidden="true">~{heldMinutes} min</span>}
+        </span>
+    );
+};
