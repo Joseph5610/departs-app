@@ -4,7 +4,8 @@ import type { CityConfig } from '../../../../_core/city-config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../../../_core/utils/CacheManager';
 import { getGtfsRoutes, getGtfsTripRoutes, type GtfsTripRoutesData } from '../../core/gtfs-data';
 import { aggregateCityStats } from '../../../../_core/utils/statsAggregator';
-import { parseSearchParams, parseBoundsParam, vehicleQuerySchema } from '../../../../_core/schemas';
+import { parseSearchParams, vehicleQuerySchema } from '../../../../_core/schemas';
+import { filterVehicles } from '../../../../_core/utils/vehicleFilter';
 import { getGtfsRtFeed } from '../../core/gtfs-rt-feed';
 import { VehiclesMapper } from './VehiclesMapper';
 import { GTFS_CONFIG } from '../../core/config';
@@ -180,36 +181,8 @@ export class VehiclesService {
     }
 
     async getFilteredVehicles(ctx: EventContext<Env, string, unknown>): Promise<AppVehicleCollection> {
-        const allVehicles = await this.getCachedMappedVehicles();
-
         const { searchParams } = new URL(ctx.request.url);
-        const { routeType: routeTypes, routeShortName: routeShortNames, bounds } = parseSearchParams(searchParams, vehicleQuerySchema);
-        let filtered = allVehicles.features;
-
-        if (routeTypes && routeTypes.length > 0) {
-            const allowedTypes = new Set(routeTypes.map(r => r.toLowerCase()));
-            filtered = filtered.filter(f => allowedTypes.has(f.properties.route_type));
-        }
-
-        if (routeShortNames && routeShortNames.length > 0) {
-            const allowedNames = new Set(routeShortNames.map(r => r.toUpperCase()));
-            filtered = filtered.filter(f => allowedNames.has(f.properties.route_short_name.toString().toUpperCase()));
-        }
-
-        if (bounds) {
-            const [minLat, minLng, maxLat, maxLng] = parseBoundsParam(bounds);
-            filtered = filtered.filter(f => {
-                if (!f.geometry || !f.geometry.coordinates) return false;
-                const [lng, lat] = f.geometry.coordinates;
-                return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
-            });
-        }
-
-        return {
-            type: 'FeatureCollection',
-            features: filtered,
-            status: allVehicles.status
-        };
+        return filterVehicles(await this.getCachedMappedVehicles(), parseSearchParams(searchParams, vehicleQuerySchema));
     }
 
     async getStats(): Promise<AppCityStats> {

@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.4] - 2026-09-19
+
+### Fixed
+
+- Prague vehicles load the fleet once and filter per map view, stopping CPU-limit 503s when zoomed out.
+
 ## [0.73.3] - 2026-09-19
 
 ### Fixed
