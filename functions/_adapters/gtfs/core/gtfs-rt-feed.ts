@@ -5,6 +5,15 @@ import type { CityConfig } from '../../../_core/city-config';
 import { UPSTREAM_TTL_S } from '../../../_core/config';
 import { ApiError } from '../../../_core/errors';
 
+/** The last decoded feed per city with its raw bytes, so an unchanged download is not decoded again. */
+const lastDecoded = new Map<string, { bytes: Uint8Array; feed: transit_realtime.FeedMessage }>();
+
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+}
+
 /**
  * Fetches, decodes, and caches the GTFS-RT FeedMessage for a given city.
  * This ensures that both AlertsService and VehiclesService share the same 
@@ -29,8 +38,14 @@ export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.
                 return null;
             }
 
-            const buffer = await rtRes.arrayBuffer();
-            return transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+            // Upstreams publish less often than the debounce refetches; decoding is the expensive part.
+            const bytes = new Uint8Array(await rtRes.arrayBuffer());
+            const previous = lastDecoded.get(city.slug);
+            if (previous && sameBytes(previous.bytes, bytes)) return previous.feed;
+
+            const decoded = transit_realtime.FeedMessage.decode(bytes);
+            lastDecoded.set(city.slug, { bytes, feed: decoded });
+            return decoded;
         },
         (feed) => !feed || !feed.entity || feed.entity.length === 0
     );
