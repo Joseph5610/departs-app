@@ -113,6 +113,8 @@ export const VEHICLE_ANIMATION = {
     DURATION_MS: 1000,
     /** Squared degree distance (~1.5 km) beyond which a vehicle snaps instead of sliding. */
     MAX_SLIDE_DISTANCE_SQ: 0.0002,
+    /** How long an off-screen vehicle's last shown position and time are remembered; must exceed QUERY_TIMING_MS.LIVE_GC. */
+    ABSENT_MEMORY_MS: 2 * 60 * 1000,
 };
 
 /**

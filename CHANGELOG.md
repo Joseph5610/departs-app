@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.73.1] - 2026-09-19
+
+### Fixed
+
+- Brno: two vehicles can no longer be matched to the same trip, which sent vehicles onto the wrong line and made a click open a different vehicle.
+- Opening a vehicle always shows the vehicle that was clicked, never another one found by its trip.
+- Vehicles no longer jump back to older positions when zooming out after they were off screen.
+
 ## [0.73.0] - 2026-09-18
 
 ### Added

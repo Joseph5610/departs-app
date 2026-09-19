@@ -91,19 +91,21 @@ export class VehiclesService {
         if (!collection.features || collection.features.length === 0) return {};
 
         const index = getVehicleIndex(collection);
-        const liveMatch = (gtfsTripId ? index.byTrip.get(gtfsTripId) : undefined)
-            ?? (vehicleId ? index.byVehicle.get(vehicleId) : undefined);
+        // The requested vehicle wins: a trip lookup can land on a different vehicle, which would move
+        // the selection. If that vehicle has moved on to another trip the enricher treats it as ended.
+        const liveMatch = (vehicleId ? index.byVehicle.get(vehicleId) : undefined)
+            ?? (gtfsTripId ? index.byTrip.get(gtfsTripId) : undefined);
 
         if (!liveMatch) return {};
 
         // The raw stopId is deliberately kept off the public AppVehicleFeature, so pull it from the
-        // already-cached feed. Trip identity wins over vehicle identity: a vehicle may have moved on
-        // to a later trip, in which case its current entity is not the one being asked about.
+        // already-cached feed, from the matched vehicle's own entity for the trip it was mapped to.
         const [feed, , tripRoutes] = await this.getCoreData();
         let lastStopId: string | undefined;
 
         if (feed && feed.entity) {
-            const rawMatch = this.findRawEntity(feed.entity, vehicleId, gtfsTripId, tripRoutes);
+            const matchedVehicleId = liveMatch.properties.vehicle_id || vehicleId;
+            const rawMatch = this.findRawEntity(feed.entity, matchedVehicleId, liveMatch.properties.gtfs_trip_id, tripRoutes);
             if (rawMatch?.vehicle?.stopId) {
                 lastStopId = rawMatch.vehicle.stopId.toString();
             }
@@ -121,21 +123,15 @@ export class VehiclesService {
         gtfsTripId: string | undefined,
         tripRoutes: GtfsTripRoutesData
     ): transit_realtime.IFeedEntity | undefined {
-        if (gtfsTripId) {
-            for (const entity of entities) {
-                if (!this.isRelevantEntity(entity)) continue;
-                if (this.matchesTripId(entity, gtfsTripId, tripRoutes)) return entity;
-            }
+        let vehicleOnly: transit_realtime.IFeedEntity | undefined;
+        for (const entity of entities) {
+            if (!this.isRelevantEntity(entity)) continue;
+            const isVehicle = !vehicleId || this.matchesVehicleId(entity, vehicleId);
+            if (!isVehicle) continue;
+            if (gtfsTripId && this.matchesTripId(entity, gtfsTripId, tripRoutes)) return entity;
+            if (vehicleId && !vehicleOnly) vehicleOnly = entity;
         }
-
-        if (vehicleId) {
-            for (const entity of entities) {
-                if (!this.isRelevantEntity(entity)) continue;
-                if (this.matchesVehicleId(entity, vehicleId)) return entity;
-            }
-        }
-
-        return undefined;
+        return vehicleOnly;
     }
 
     async getCachedMappedVehicles(): Promise<AppVehicleCollection> {

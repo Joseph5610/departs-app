@@ -74,6 +74,7 @@ export const useVehicleAnimation = (
     // Per source: stream and detail timestamps come from different clocks and must not be compared.
     const displayTimesRef = useRef<Map<string, number>>(new Map());
     const selectedTimesRef = useRef<Map<string, number>>(new Map());
+    const lastSeenRef = useRef<Map<string, number>>(new Map());
 
     // Stable references for react-map-gl to initialize sources.
     // Since the object references never change, React Map GL never automatically calls setData,
@@ -171,7 +172,23 @@ export const useVehicleAnimation = (
         displayFeatures.forEach((f) => processFeature(f, displayTime, displayTimesRef.current, nextDisplayTimes));
         selectedFeatures.forEach((f) => processFeature(f, selectedTime, selectedTimesRef.current, nextSelectedTimes));
 
+        // A vehicle that left the viewport comes back from an older cached bounds response, so its last shown state must outlive its absence.
+        const nextLastSeen = new Map<string, number>();
+        nextPositions.forEach((_, id) => nextLastSeen.set(id, now));
+        lastSeenRef.current.forEach((seenAt, id) => {
+            if (nextLastSeen.has(id) || now - seenAt > VEHICLE_ANIMATION.ABSENT_MEMORY_MS) return;
+            const pos = lastPositionsRef.current.get(id);
+            if (!pos) return;
+            nextPositions.set(id, pos);
+            nextLastSeen.set(id, seenAt);
+            const shownDisplayTime = displayTimesRef.current.get(id);
+            if (shownDisplayTime !== undefined) nextDisplayTimes.set(id, shownDisplayTime);
+            const shownSelectedTime = selectedTimesRef.current.get(id);
+            if (shownSelectedTime !== undefined) nextSelectedTimes.set(id, shownSelectedTime);
+        });
+
         // Update refs
+        lastSeenRef.current = nextLastSeen;
         targetsRef.current = nextTargets;
         lastPositionsRef.current = nextPositions;
         displayTimesRef.current = nextDisplayTimes;

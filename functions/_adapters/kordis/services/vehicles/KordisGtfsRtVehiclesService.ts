@@ -8,6 +8,14 @@ import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { getCurrentLocalSeconds, getZonedDateString, wrapDaySeconds } from '../../../../_core/utils/time';
 import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
+interface TripClaim {
+    label: string;
+    entity: transit_realtime.IFeedEntity;
+    tripId: string;
+    isNative: boolean;
+    gapMins: number;
+}
+
 export class KordisGtfsRtVehiclesService extends VehiclesService {
     
     /**
@@ -20,43 +28,17 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-     * Resolves a raw feed trip id to the id used by the current GTFS export.
-     *
-     * KORDIS renumbers nearly every trip on each export while the feed keeps emitting the previous
-     * numbering, so a raw id being present in `tripRoutes` does NOT mean it is the same trip - it is
-     * usually a different one that inherited the number. The alias table, built from the operator's
-     * own run id, carries the intended trip.
-     *
-     * Both readings are plausible because ids get recycled, and which one is right depends on
-     * whether the feed has caught up with the export. Rather than assume, prefer whichever one is
-     * actually running: that keeps working when the feed still lags AND once it catches up.
-     * Returns null only when the alias table explicitly marks the trip as dropped.
+     * Trip ids a raw feed id may stand for in the current export: itself, and the trip its run maps
+     * to when the id comes from an older numbering. Ids are recycled across exports, so both can be
+     * valid at once and the choice is left to `assignTrips`. An alias of null marks a dropped trip.
      */
-    private resolveTripId(
-        rawTripId: string,
-        tripRoutes: GtfsTripRoutesData,
-        windows: TripWindows | null,
-        todayBit: number,
-        currentMins: number,
-    ): string | null {
+    private candidateTripIds(rawTripId: string, tripRoutes: GtfsTripRoutesData): string[] {
         const alias = tripRoutes.tripAliases?.[rawTripId];
-        if (alias === undefined) return rawTripId;
-        if (alias === null) return null;
-
-        const rawIsCurrentTrip = Boolean(tripRoutes.tripRoutes && rawTripId in tripRoutes.tripRoutes);
-        if (!rawIsCurrentTrip || !windows) return alias;
-
-        // Recycled id: only the raw reading wins, and only while it is the one in service.
-        const rawRunning = this.isRunning(windows.trips[rawTripId], todayBit, currentMins);
-        const aliasRunning = this.isRunning(windows.trips[alias], todayBit, currentMins);
-        return rawRunning && !aliasRunning ? rawTripId : alias;
-    }
-
-    /** Whether a trip operates today and the current time falls inside its window. */
-    private isRunning(window: TripWindow | undefined, todayBit: number, currentMins: number): boolean {
-        if (!window) return false;
-        if (todayBit && !operatesOnDay(window, todayBit)) return false;
-        return currentMins >= window[0] && currentMins <= window[1];
+        if (alias === null) return [];
+        const candidates: string[] = [];
+        if (rawTripId in tripRoutes.tripRoutes) candidates.push(rawTripId);
+        if (alias && alias !== rawTripId && alias in tripRoutes.tripRoutes) candidates.push(alias);
+        return candidates;
     }
 
     /**
@@ -69,47 +51,60 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
     }
 
     /**
-     * Selects the best-matching entity from a group of duplicate vehicle entries
-     * by finding the trip active at the current time. Falls back to the first entry.
+     * Picks one trip per vehicle such that no trip is served by two vehicles.
+     *
+     * KORDIS emits every vehicle several times, each entity carrying the run's trip id from a
+     * different export numbering. Resolved independently, a stale id on one vehicle can alias onto
+     * the trip another vehicle is really driving. Claims are granted strongest first - running now,
+     * then an id native to the current export over an aliased one, then nearest window - and a
+     * vehicle whose best reading is taken falls back to its next one.
      */
-    private selectBestEntity(
-        entities: transit_realtime.IFeedEntity[],
-        windows: TripWindows,
+    private assignTrips(
+        groupedEntities: Record<string, transit_realtime.IFeedEntity[]>,
+        tripRoutesObj: GtfsTripRoutesData,
+        windows: TripWindows | null,
         todayBit: number,
         currentMins: number,
-        tripRoutesObj: { tripRoutes: Record<string, string>, tripAliases: Record<string, string | null> }
-    ): transit_realtime.IFeedEntity {
-        let bestMatch: transit_realtime.IFeedEntity | null = null;
-        let minTimeDiff = Infinity;
-
-        for (const entity of entities) {
-            const rawTripId = entity.vehicle?.trip?.tripId;
-            if (!rawTripId) continue;
-            
-            const tripId = this.resolveTripId(rawTripId, tripRoutesObj, windows, todayBit, currentMins);
-            if (!tripId) continue; // dropped trip
-
-            const window = windows.trips[tripId];
-
-            if (window) {
-                if (operatesOnDay(window, todayBit)) {
-                    let diff = 0;
-                    if (currentMins < window[0]) diff = window[0] - currentMins;
-                    else if (currentMins > window[1]) diff = currentMins - window[1];
-
-                    if (diff === 0) {
-                        return entity; // Found perfect active trip
-                    }
-                    
-                    if (diff < minTimeDiff) {
-                        minTimeDiff = diff;
-                        bestMatch = entity;
-                    }
+    ): Map<string, { entity: transit_realtime.IFeedEntity; tripId: string }> {
+        const claims: TripClaim[] = [];
+        for (const label of Object.keys(groupedEntities)) {
+            for (const entity of groupedEntities[label]) {
+                const rawTripId = entity.vehicle?.trip?.tripId;
+                if (!rawTripId) continue;
+                for (const tripId of this.candidateTripIds(rawTripId, tripRoutesObj)) {
+                    claims.push({
+                        label,
+                        entity,
+                        tripId,
+                        isNative: tripId === rawTripId,
+                        gapMins: this.windowGap(windows?.trips[tripId], todayBit, currentMins),
+                    });
                 }
             }
         }
-        
-        return bestMatch ?? entities[0];
+
+        claims.sort((a, b) =>
+            Number(a.gapMins > 0) - Number(b.gapMins > 0)
+            || Number(b.isNative) - Number(a.isNative)
+            || a.gapMins - b.gapMins);
+
+        const assigned = new Map<string, { entity: transit_realtime.IFeedEntity; tripId: string }>();
+        const takenTrips = new Set<string>();
+        for (const claim of claims) {
+            if (assigned.has(claim.label) || takenTrips.has(claim.tripId)) continue;
+            assigned.set(claim.label, { entity: claim.entity, tripId: claim.tripId });
+            takenTrips.add(claim.tripId);
+        }
+        return assigned;
+    }
+
+    /** Minutes between now and a trip's window today: 0 while running, Infinity if it does not run today. */
+    private windowGap(window: TripWindow | undefined, todayBit: number, currentMins: number): number {
+        if (!window) return Infinity;
+        if (todayBit && !operatesOnDay(window, todayBit)) return Infinity;
+        if (currentMins < window[0]) return window[0] - currentMins;
+        if (currentMins > window[1]) return currentMins - window[1];
+        return 0;
     }
 
     /**
@@ -167,23 +162,10 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
                     currentMins = ctx.currentMinutes;
                 }
 
-                const keys = Object.keys(groupedEntities);
-                for (let i = 0; i < keys.length; i++) {
-                    const label = keys[i];
-                    const entities = groupedEntities[label];
-
-                    const selectedEntity = (entities.length > 1 && windows)
-                        ? this.selectBestEntity(entities, windows, todayBit, currentMins, tripRoutesObj)
-                        : entities[0];
-
+                const assignments = this.assignTrips(groupedEntities, tripRoutesObj, windows, todayBit, currentMins);
+                for (const [label, { entity: selectedEntity, tripId }] of assignments) {
                     const vp = selectedEntity.vehicle;
                     if (!vp) continue;
-
-                    const rawTripId = vp.trip?.tripId;
-                    if (!rawTripId) continue;
-
-                    const tripId = this.resolveTripId(rawTripId, tripRoutesObj, windows, todayBit, currentMins);
-                    if (!tripId) continue;
 
                     const routeInfo = tripRoutesObj.tripRoutes[tripId];
                     if (!routeInfo) continue;
