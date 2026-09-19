@@ -34,7 +34,7 @@ test.describe('Favorites Tests', () => {
         });
 
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
+            response => /\/[^/]+\/map-stops\.json(\?|$)/.test(response.url()) && response.status() === 200,
             { timeout: 30000 }
         );
 

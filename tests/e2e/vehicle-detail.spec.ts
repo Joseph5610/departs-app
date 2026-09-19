@@ -101,7 +101,7 @@ test.describe('Vehicle Detail & Timeline Tests', () => {
 
         // Wait for the stops API response
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
+            response => /\/[^/]+\/map-stops\.json(\?|$)/.test(response.url()) && response.status() === 200,
             { timeout: 30000 }
         );
 

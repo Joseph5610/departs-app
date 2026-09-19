@@ -40,7 +40,7 @@ test.describe('Smoke tests', () => {
 
         // Wait for the stops API response to finish loading so the stop search index is fully built
         const stopsResponsePromise = page.waitForResponse(
-            response => response.url().match(/\/api\/.*\/stops/) !== null && response.status() === 200,
+            response => /\/[^/]+\/map-stops\.json(\?|$)/.test(response.url()) && response.status() === 200,
             { timeout: 30000 }
         );
 
