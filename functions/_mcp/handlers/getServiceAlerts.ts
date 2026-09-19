@@ -1,6 +1,7 @@
 import type { AppAlertsResponse } from "../../_core/types";
 import type { CityAdapter } from "../../_adapters/CityAdapter";
 import type { McpContext } from "../types";
+import { MCP_DEFAULTS } from "../../_core/config";
 import { createMockContext, getMcpTimeContext, loadInfotexts } from "../utils";
 
 /**
@@ -39,7 +40,7 @@ export async function handleGetServiceAlerts(
         city: resolvedCity,
         ...getMcpTimeContext(resolvedCity, Date.now()),
         alerts_count: alerts.length,
-        alerts: alerts.map((a) => ({
+        alerts: alerts.slice(0, Number(args.limit) || MCP_DEFAULTS.ALERTS_LIMIT).map((a) => ({
             title: a.title,
             description: a.description,
             affected_lines: a.lines || [],

@@ -1,5 +1,6 @@
 import type { McpContext } from "../types";
-import { MCP_DEFAULTS } from "../../_core/config";
+import { MCP_CACHE_MAX_ENTRIES, MCP_CACHE_TTL_S, MCP_DEFAULTS } from "../../_core/config";
+import { LruCache } from "../../_core/utils/LruCache";
 import { resolveAdapter } from "../utils";
 import { validateToolArgs } from "../validation";
 
@@ -11,8 +12,20 @@ import { handleGetRealtimeVehicles } from "./getRealtimeVehicles";
 import { handleGetServiceAlerts } from "./getServiceAlerts";
 import { handleGetVehicleDetail } from "./getVehicleDetail";
 
+/** Keys whose values locate a person (their position), so they never reach the logs. */
+const UNLOGGED_ARGS = new Set(["latitude", "longitude"]);
+
+/** Tool answers by `tool|city|args`, per isolate; each entry lives for its tool's `MCP_CACHE_TTL_S`. */
+const resultCache = new LruCache<{ value: unknown; expiresAt: number }>({ maxEntries: MCP_CACHE_MAX_ENTRIES });
+
+const stableArgs = (args: Record<string, unknown>): string =>
+    JSON.stringify(Object.keys(args).sort().map(key => [key, args[key]]));
+
+const loggableArgs = (args: Record<string, unknown>): string =>
+    JSON.stringify(Object.fromEntries(Object.entries(args).filter(([key]) => !UNLOGGED_ARGS.has(key) && key !== "city")));
+
 /**
- * Dispatcher for MCP tool calls.
+ * Dispatcher for MCP tool calls. Identical calls within the tool's TTL are answered from memory.
  */
 export async function handleToolCall(
     name: string,
@@ -21,8 +34,28 @@ export async function handleToolCall(
 ): Promise<unknown> {
     // Validated up front, so every handler below can rely on the declared inputSchema's types and ranges.
     const args = validateToolArgs(name, rawArgs);
-
     const citySlug = (args.city as string | undefined) ?? MCP_DEFAULTS.CITY;
+    const cacheKey = `${name}|${citySlug}|${stableArgs(args)}`;
+    const now = Date.now();
+
+    const cached = resultCache.get(cacheKey);
+    const hit = cached !== undefined && cached.expiresAt > now;
+    console.log(`[MCP] ${name} city=${citySlug} args=${loggableArgs(args)} cache=${hit ? "hit" : "miss"}`);
+    if (hit) return cached.value;
+
+    const value = await runTool(name, args, ctx, citySlug);
+    const ttlS = MCP_CACHE_TTL_S[name];
+    const isError = typeof value === "object" && value !== null && "error" in value;
+    if (ttlS && !isError) resultCache.set(cacheKey, { value, expiresAt: now + ttlS * 1000 });
+    return value;
+}
+
+async function runTool(
+    name: string,
+    args: Record<string, unknown>,
+    ctx: McpContext,
+    citySlug: string
+): Promise<unknown> {
     const { adapter, citySlug: resolvedCity } = resolveAdapter(citySlug);
 
     switch (name) {

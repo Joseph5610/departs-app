@@ -7,6 +7,7 @@ import { MCP_DEFAULTS } from "../_core/config";
 import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
 import { formatTime } from "../_core/utils/time";
 import { distanceMeters } from "../_core/utils/geo";
+import { normalizeRouteType } from "../_core/utils/routeTypes";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -121,6 +122,32 @@ export async function loadStops(citySlug: string): Promise<StopFeature[]> {
     return stopsData.features;
 }
 
+/** Lowercase without diacritics, so `namesti svobody` finds `Náměstí Svobody`. */
+const foldName = (value: string): string => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/**
+ * Non-centroid stops whose name or id contains `query`, best match first: exact name, then name
+ * starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
+ */
+export function findStopsByName(stops: StopFeature[], query: string): StopFeature[] {
+    const q = foldName(query);
+    if (!q) return [];
+    const scored: Array<{ feature: StopFeature; rank: number; length: number }> = [];
+    for (const feature of stops) {
+        if (feature.properties?.is_centroid) continue;
+        const name = foldName(feature.properties?.stop_name ?? '');
+        const id = String(feature.properties?.stop_id ?? '').toLowerCase();
+        const rank = name === q ? 0 : name.startsWith(q) ? 1 : name.includes(q) ? 2 : id.includes(q) ? 3 : -1;
+        if (rank >= 0) scored.push({ feature, rank, length: name.length });
+    }
+    return scored.sort((a, b) => a.rank - b.rank || a.length - b.length).map(s => s.feature);
+}
+
+/** A stop's lines with the vehicle type as a word (`tram`), whatever form the city's stop data uses. */
+export function toMcpStopLines(feature: StopFeature) {
+    return (feature.properties?.lines ?? []).map(line => ({ ...line, type: normalizeRouteType(line.type) }));
+}
+
 /** Stops with coordinates, nearest first, paired with their distance in meters from the given point. */
 export function rankStopsByDistance(
     stops: StopFeature[],
@@ -212,7 +239,9 @@ export async function loadStopDepartures(
         departures = departures.filter((d) => matchesRouteType(d.type, routeTypeQuery));
     }
 
-    return departures.slice(0, limit);
+    // Adapters keep recently departed trips for the app to reconcile with live positions; MCP clients want what is still to come.
+    const nowMs = Date.now();
+    return departures.filter((d) => Date.parse(d.timestamp) >= nowMs).slice(0, limit);
 }
 
 /** All of the city's stop notice banners (infotexts); empty if they cannot be loaded. */

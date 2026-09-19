@@ -123,7 +123,7 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                             content: [
                                 {
                                     type: "text",
-                                    text: JSON.stringify(resultData, null, 2)
+                                    text: JSON.stringify(resultData)
                                 }
                             ]
                         }

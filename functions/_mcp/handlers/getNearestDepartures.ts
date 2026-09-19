@@ -74,6 +74,7 @@ export async function handleGetNearestDepartures(
         search_location: { latitude: lat, longitude: lon },
         radius_meters: radiusMeters,
         stops_count: nearestStopsResult.length,
+        ...(nearestStopsResult.length === 0 ? { message: `None of the ${nearby.length} nearest stops has an upcoming departure; service may not run here at this hour.` } : {}),
         nearest_stops: nearestStopsResult
     };
 }

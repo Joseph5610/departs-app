@@ -27,7 +27,8 @@ export async function handleGetVehicleDetail(
     if (args.vehicle_id) searchParams.vehicleId = String(args.vehicle_id);
 
     const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/vehicle-detail`, searchParams);
-    const detailData = await adapter.handleVehicleDetail(mockCtx);
+    // The route line is map geometry: thousands of coordinates an MCP client has no use for.
+    const { route_geojson: _routeGeojson, ...detailData } = await adapter.handleVehicleDetail(mockCtx);
 
     return {
         city: resolvedCity,

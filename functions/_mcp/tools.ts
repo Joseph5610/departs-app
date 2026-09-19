@@ -184,6 +184,10 @@ export const MCP_TOOLS: McpToolDefinition[] = [
                 line: {
                     type: "string",
                     description: "Optional line number filter (e.g. 'A', '17')."
+                },
+                limit: {
+                    type: "number",
+                    description: `Maximum number of alerts to return (default: ${MCP_DEFAULTS.ALERTS_LIMIT}); alerts_count gives the total.`
                 }
             }
         }

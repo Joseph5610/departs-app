@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { loadStops } from "../utils";
+import { findStopsByName, loadStops, toMcpStopLines } from "../utils";
 
 /**
  * Handles the 'search_stops' MCP tool invocation.
@@ -13,15 +13,8 @@ export async function handleSearchStops(
     args: Record<string, unknown>,
     resolvedCity: string
 ): Promise<unknown> {
-    const query = String(args.query || "").trim().toLowerCase();
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
-    const features = await loadStops(resolvedCity);
-    const filtered = features.filter((f) => {
-        const nameMatch = f.properties?.stop_name?.toLowerCase().includes(query);
-        const idMatch = String(f.properties?.stop_id || "").toLowerCase().includes(query);
-        const isCentroid = f.properties?.is_centroid;
-        return (nameMatch || idMatch) && !isCentroid;
-    }).slice(0, limit);
+    const filtered = findStopsByName(await loadStops(resolvedCity), String(args.query || "")).slice(0, limit);
 
     return {
         city: resolvedCity,
@@ -33,7 +26,7 @@ export async function handleSearchStops(
             platform_code: f.properties?.platform_code || null,
             is_centroid: f.properties?.is_centroid,
             coordinates: f.geometry?.coordinates,
-            lines: f.properties?.lines || []
+            lines: toMcpStopLines(f)
         }))
     };
 }

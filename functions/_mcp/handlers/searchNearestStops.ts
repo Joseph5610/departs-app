@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { loadStops, rankStopsByDistance } from "../utils";
+import { loadStops, rankStopsByDistance, toMcpStopLines } from "../utils";
 
 /**
  * Handles the 'search_nearest_stops' MCP tool invocation.
@@ -36,7 +36,7 @@ export async function handleSearchNearestStops(
             distance_meters: Math.round(distance),
             is_centroid: f.properties?.is_centroid,
             coordinates: f.geometry?.coordinates,
-            lines: f.properties?.lines || []
+            lines: toMcpStopLines(f)
         }))
     };
 }

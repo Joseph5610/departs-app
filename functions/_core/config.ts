@@ -37,10 +37,28 @@ export const UPSTREAM_TTL_S = {
     STATIC_DATA: 86400,
 };
 
+/**
+ * How long an MCP tool's answer is reused for an identical call (seconds). Live tools match the
+ * `/api` edge TTLs; stop search reads the daily stop list.
+ */
+export const MCP_CACHE_TTL_S: Record<string, number> = {
+    search_stops: 3600,
+    search_nearest_stops: 3600,
+    get_next_departures: CACHE_TTL.DEPARTURES,
+    get_nearest_departures: CACHE_TTL.DEPARTURES,
+    get_realtime_vehicles: CACHE_TTL.VEHICLES,
+    get_vehicle_detail: CACHE_TTL.VEHICLE_DETAIL,
+    get_service_alerts: 60,
+};
+
+/** Upper bound on distinct MCP calls kept by the tool result cache. */
+export const MCP_CACHE_MAX_ENTRIES = 256;
+
 /** Values the MCP tools fall back to when the client leaves an argument out. */
 export const MCP_DEFAULTS = {
     CITY: 'prague',
     RESULT_LIMIT: 10,
+    ALERTS_LIMIT: 20,
     VEHICLES_LIMIT: 25,
     NEAREST_STOPS_RADIUS_M: 1000,
     NEAREST_DEPARTURES_RADIUS_M: 500,
