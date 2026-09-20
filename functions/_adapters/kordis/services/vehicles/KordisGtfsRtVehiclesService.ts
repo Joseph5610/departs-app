@@ -6,7 +6,7 @@ import { VehiclesMapper } from '../../../gtfs/services/vehicles/VehiclesMapper';
 import { getTripWindows, dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../gtfs/core/trip-windows';
 import { GTFS_CONFIG } from '../../../gtfs/core/config';
 import { DAY_MINS, getLocalClock, wrapDaySeconds } from '../../../../_core/utils/time';
-import type { GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
+import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../gtfs/core/gtfs-data';
 
 interface TripClaim {
     label: string;
@@ -184,6 +184,39 @@ export class KordisGtfsRtVehiclesService extends VehiclesService {
             },
             (col) => !col || col.status === 'upstream_offline' || !col.features || col.features.length === 0
         );
+    }
+
+    protected override resolveEntityTripId(
+        entity: transit_realtime.IFeedEntity,
+        requestedTripId: string | undefined,
+        tripRoutes: GtfsTripRoutesData
+    ): string | undefined {
+        const rawTripId = entity.vehicle?.trip?.tripId;
+        if (!rawTripId) return undefined;
+        const candidates = this.candidateTripIds(rawTripId, tripRoutes);
+        // The client named the trip it opened, so an id recycled across exports resolves to that one.
+        return requestedTripId && candidates.includes(requestedTripId) ? requestedTripId : candidates[0];
+    }
+
+    protected override async mapLiveEntity(
+        entity: transit_realtime.IFeedEntity,
+        tripId: string,
+        gtfsData: GtfsRoutesData,
+        tripRoutes: GtfsTripRoutesData
+    ): Promise<AppVehicleFeature | null> {
+        const vp = entity.vehicle;
+        if (!vp || this.isInvalidDpmbVehicle(entity)) return null;
+
+        const mapped = await super.mapLiveEntity(entity, tripId, gtfsData, tripRoutes);
+        if (!mapped) return null;
+
+        const windows = await getTripWindows(this.city);
+        const isBeforeTrack = this.isVehicleBeforeTrack(this.findTripWindow(tripId, windows), getLocalClock(this.city.timezone).mins);
+        const label = vp.vehicle?.label || vp.vehicle?.licensePlate || vp.vehicle?.id || entity.id;
+        const route = gtfsData.routes[tripRoutes.tripRoutes[tripId]];
+        // Copy, never write through: `vp` belongs to the FeedMessage CacheManager shares.
+        const mappable: transit_realtime.IVehiclePosition = vp.vehicle ? { ...vp, vehicle: { ...vp.vehicle, id: label } } : vp;
+        return VehiclesMapper.mapVehicle(mappable, tripId, route, mapped.properties.origin_timestamp ?? new Date().toISOString(), null, isBeforeTrack);
     }
 
     /**
