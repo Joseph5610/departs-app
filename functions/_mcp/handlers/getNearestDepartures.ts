@@ -1,4 +1,4 @@
-import type { CityAdapter } from "../../_adapters/CityAdapter";
+import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
@@ -9,14 +9,14 @@ import { loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMc
  *
  * @param args - Tool arguments containing `latitude`, `longitude`, optional `radius_meters`, `line`, `route_type`, `limit`, `city`.
  * @param ctx - Cloudflare Pages Function event context.
- * @param adapter - Resolved CityAdapter for the target city.
+ * @param city - The target city's use-cases.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Grouped departure boards for nearest stops with distance and active infotexts.
  */
 export async function handleGetNearestDepartures(
     args: Record<string, unknown>,
     ctx: McpContext,
-    adapter: CityAdapter,
+    city: CityUseCases,
     resolvedCity: string
 ): Promise<unknown> {
     const lat = Number(args.latitude);
@@ -29,7 +29,7 @@ export async function handleGetNearestDepartures(
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
     const [stops, infotexts] = await Promise.all([
         loadStops(resolvedCity),
-        loadInfotexts(ctx, adapter, resolvedCity)
+        loadInfotexts(ctx, city, resolvedCity)
     ]);
 
     const ranked = rankStopsByDistance(stops, lat, lon);
@@ -49,7 +49,7 @@ export async function handleGetNearestDepartures(
         if (!sId) return null;
 
         try {
-            const departures = await loadStopDepartures(ctx, adapter, resolvedCity, sId, args, limit);
+            const departures = await loadStopDepartures(ctx, city, sId, args, limit);
             const stopInfotexts = toMcpStopInfotexts(infotexts, sId);
             if (departures.length === 0 && stopInfotexts.length === 0) return null;
 

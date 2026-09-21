@@ -1,8 +1,8 @@
 import { Env } from "../../_core/types";
-import { withCityRoute } from "../../_core/api-utils";
+import { withCityRoute } from "../../_cities/route";
 import { CACHE_TTL } from "../../_core/config";
 
 export const onRequest: PagesFunction<Env> = withCityRoute(
-    (adapter, context) => adapter.handleAlerts(context),
+    (city, context) => city.alerts.getAlerts(context),
     CACHE_TTL.RSS_INCIDENTS
 );

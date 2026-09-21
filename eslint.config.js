@@ -58,4 +58,37 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': noUnusedVars,
     },
   },
+
+  // Backend layering: _core -> _feeds -> _domain -> _cities -> api/, _mcp/. A layer imports only from layers to its left.
+  {
+    files: ['functions/_core/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: layerBan('_core', ['_feeds', '_domain', '_cities', '_mcp']) }] },
+  },
+  {
+    files: ['functions/_feeds/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: layerBan('_feeds', ['_domain', '_cities', '_mcp']) }] },
+  },
+  {
+    files: ['functions/_domain/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'CacheManager', 'LruCache'])] }] },
+  },
+  {
+    // Bearing history across feed snapshots is state the mapping keeps, not an upstream cache.
+    files: ['functions/_domain/duk/vehicles/DukVehicleSource.ts', 'functions/_domain/dpmp/vehicles/DpmpVehicleSource.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'CacheManager'])] }] },
+  },
 ])
+
+function domainIoBan(modules) {
+  return modules.map((name) => ({
+    group: [`**/${name}`],
+    message: `_domain never fetches or caches upstream data; do it in _feeds and read the result (${name}).`,
+  }))
+}
+
+function layerBan(layer, banned) {
+  return banned.map((target) => ({
+    group: [`**/${target}`, `**/${target}/**`],
+    message: `${layer} may not depend on ${target}; dependencies flow _core -> _feeds -> _domain -> _cities.`,
+  }))
+}

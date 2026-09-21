@@ -4,6 +4,19 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.0] - 2026-09-21
+
+### Changed
+
+- Backend adapters rebuilt around sources, indexes and per-city configuration; adapter inheritance is gone.
+- Ústecký kraj vehicles read prebuilt hourly trip tracks instead of fetching a trip chunk per vehicle, which no longer exceeds the Cloudflare subrequest limit.
+- Alerts are mapped once per five minutes instead of on every request.
+
+### Fixed
+
+- Vehicle positions that stop being refreshed are reported as stale and then dropped, everywhere, instead of being served as live.
+- Ústecký kraj assigns fewer vehicles to the wrong trip, since every running trip is now available for matching.
+
 ## [0.73.6] - 2026-09-19
 
 ### Fixed

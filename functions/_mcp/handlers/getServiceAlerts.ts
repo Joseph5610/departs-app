@@ -1,8 +1,8 @@
 import type { AppAlertsResponse } from "../../_core/types";
-import type { CityAdapter } from "../../_adapters/CityAdapter";
+import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { createMockContext, getMcpTimeContext, loadInfotexts } from "../utils";
+import { buildRequestContext, getMcpTimeContext, loadInfotexts } from "../utils";
 
 /**
  * Handles the 'get_service_alerts' MCP tool invocation.
@@ -10,21 +10,21 @@ import { createMockContext, getMcpTimeContext, loadInfotexts } from "../utils";
  * 
  * @param args - Tool arguments containing optional `line` filter and `city`.
  * @param ctx - Cloudflare Pages Function event context.
- * @param adapter - Resolved CityAdapter for the target city.
+ * @param city - The target city's use-cases.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Active service alerts and stop infotext notices.
  */
 export async function handleGetServiceAlerts(
     args: Record<string, unknown>,
     ctx: McpContext,
-    adapter: CityAdapter,
+    city: CityUseCases,
     resolvedCity: string
 ): Promise<unknown> {
-    const mockAlertsCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/alerts`);
+    const alertsCtx = buildRequestContext(ctx);
 
     const [alertsData, infotextsData] = await Promise.all([
-        adapter.handleAlerts(mockAlertsCtx).catch((): AppAlertsResponse => ({ alerts: [] })),
-        loadInfotexts(ctx, adapter, resolvedCity)
+        city.alerts.getAlerts(alertsCtx).catch((): AppAlertsResponse => ({ alerts: [] })),
+        loadInfotexts(ctx, city, resolvedCity)
     ]);
 
     let alerts = (alertsData?.alerts || []);

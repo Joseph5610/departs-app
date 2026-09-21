@@ -1,10 +1,9 @@
-import type { EventContext } from "@cloudflare/workers-types";
-import { MapStopsService } from "../_core/MapStopsService";
-import type { Env, AppInfotext, AppDeparture, AppStopCollection } from "../_core/types";
+import { MapStopsService } from "../_feeds/stops";
+import type { AppInfotext, AppDeparture, AppStopCollection, CityRequestContext, Env } from "../_core/types";
 import type { McpContext } from "./types";
-import { CITY_REGISTRY, getCityConfig } from "../_core/city-config";
+import { CITY_REGISTRY, getCityConfig, getCityUseCases } from "../_cities";
+import type { CityUseCases } from "../_domain/use-cases";
 import { MCP_DEFAULTS } from "../_core/config";
-import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
 import { formatTime } from "../_core/utils/time";
 import { distanceMeters } from "../_core/utils/geo";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
@@ -61,16 +60,11 @@ export async function readBoundedText(request: Request, maxBytes: number): Promi
 }
 
 /**
- * Creates a synthetic EventContext for invoking CityAdapter methods.
- * Reuses 100% of underlying API caching, normalization, and fetch wrappers.
+ * Builds the `CityRequestContext` a use-case needs, straight from the MCP call's own env and
+ * `waitUntil` — no `Request` to fake, since nothing downstream reads anything but the query.
  */
-export function createMockContext(
-    ctx: EventContext<Env, string, unknown>,
-    citySlug: string,
-    urlPath: string,
-    searchParams?: Record<string, string> | URLSearchParams
-): EventContext<Env, string, unknown> {
-    const url = new URL(`https://departs.app${urlPath}`);
+export function buildRequestContext(ctx: McpContext, searchParams?: Record<string, string> | URLSearchParams): CityRequestContext {
+    const url = new URL('https://departs.app/mcp');
     if (searchParams) {
         if (searchParams instanceof URLSearchParams) {
             searchParams.forEach((v, k) => url.searchParams.append(k, v));
@@ -81,34 +75,21 @@ export function createMockContext(
         }
     }
 
-    const request = new Request(url.toString(), {
-        headers: {
-            'User-Agent': 'departs-mcp-server/1.0',
-            'Accept': 'application/json'
-        }
-    });
-
     return {
-        request,
+        url,
         env: ctx.env,
-        params: { city: citySlug },
-        functionPath: urlPath,
-        data: {},
-        next: async () => new Response("Not found", { status: 404 }),
         waitUntil: (promise: Promise<unknown>) => ctx.waitUntil(promise)
-    } as unknown as EventContext<Env, string, unknown>;
+    };
 }
 
-/**
- * Helper to get CityAdapter for a given city slug.
- */
-export function resolveAdapter(citySlug?: string): { adapter: CityAdapter; citySlug: string } {
+/** The use-cases of the requested city, or the default one. */
+export function resolveCity(citySlug: string | undefined, env: Env): { city: CityUseCases; citySlug: string } {
     const slug = (citySlug || MCP_DEFAULTS.CITY).toLowerCase();
     const cityConfig = getCityConfig(slug);
     if (!cityConfig) {
         throw new Error(`Unsupported city '${citySlug}'. Supported cities: ${Object.keys(CITY_REGISTRY).join(', ')}.`);
     }
-    return { adapter: getAdapter(cityConfig), citySlug: slug };
+    return { city: getCityUseCases(slug, env), citySlug: slug };
 }
 
 type StopFeature = AppStopCollection['features'][number];
@@ -238,8 +219,7 @@ export function toMcpDeparture(d: AppDeparture, timezone: string, nowMs: number)
  */
 export async function loadStopDepartures(
     ctx: McpContext,
-    adapter: CityAdapter,
-    citySlug: string,
+    city: CityUseCases,
     stopId: string,
     args: Record<string, unknown>,
     limit: number
@@ -250,8 +230,8 @@ export async function loadStopDepartures(
         if (id.trim()) searchParams.append("stopId", id.trim());
     }
 
-    const departuresCtx = createMockContext(ctx, citySlug, `/api/${citySlug}/departures`, searchParams);
-    let departures = (await adapter.handleDepartures(departuresCtx))?.departures || [];
+    const departuresCtx = buildRequestContext(ctx, searchParams);
+    let departures = (await city.departures.getDepartures(departuresCtx))?.departures || [];
 
     if (args.line) {
         const lineQuery = String(args.line).trim().toLowerCase();
@@ -262,15 +242,15 @@ export async function loadStopDepartures(
         departures = departures.filter((d) => matchesRouteType(d.type, routeTypeQuery));
     }
 
-    // Adapters keep recently departed trips for the app to reconcile with live positions; MCP clients want what is still to come.
+    // Departure boards keep recently departed trips for the app to reconcile with live positions; MCP clients want what is still to come.
     const nowMs = Date.now();
     return departures.filter((d) => Date.parse(d.timestamp) >= nowMs).slice(0, limit);
 }
 
 /** All of the city's stop notice banners (infotexts); empty if they cannot be loaded. */
-export async function loadInfotexts(ctx: McpContext, adapter: CityAdapter, citySlug: string): Promise<AppInfotext[]> {
+export async function loadInfotexts(ctx: McpContext, city: CityUseCases, citySlug: string): Promise<AppInfotext[]> {
     try {
-        const infotexts = await adapter.handleInfotexts(createMockContext(ctx, citySlug, `/api/${citySlug}/infotexts`));
+        const infotexts = await city.infotexts.getInfotexts(buildRequestContext(ctx));
         return Array.isArray(infotexts) ? infotexts : [];
     } catch (e) {
         console.error(`Failed to load infotexts for ${citySlug}:`, e);

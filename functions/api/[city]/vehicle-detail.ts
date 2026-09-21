@@ -1,8 +1,8 @@
 import { Env } from "../../_core/types";
-import { withCityRoute } from "../../_core/api-utils";
+import { withCityRoute } from "../../_cities/route";
 import { CACHE_TTL } from "../../_core/config";
 
 export const onRequest: PagesFunction<Env> = withCityRoute(
-    (adapter, context) => adapter.handleVehicleDetail(context),
+    (city, context) => city.detail.getVehicleDetail(context),
     CACHE_TTL.VEHICLE_DETAIL
 );

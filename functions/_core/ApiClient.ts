@@ -9,7 +9,7 @@ export interface ApiFetchOptions extends RequestInit {
 }
 
 /**
- * Unified API Client for handling outbound fetches across all adapters.
+ * Unified API Client for handling outbound fetches across all feeds.
  * Standardizes Timeouts, User-Agents, and Cloudflare caching.
  */
 export class ApiClient {

@@ -1,8 +1,8 @@
 import type { AppVehicleCollection } from "../../_core/types";
-import type { CityAdapter } from "../../_adapters/CityAdapter";
+import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { createMockContext } from "../utils";
+import { buildRequestContext } from "../utils";
 
 /**
  * Handles the 'get_realtime_vehicles' MCP tool invocation.
@@ -10,14 +10,14 @@ import { createMockContext } from "../utils";
  * 
  * @param args - Tool arguments containing optional `line`, `min_delay`, `limit`, and `city`.
  * @param ctx - Cloudflare Pages Function event context.
- * @param adapter - Resolved CityAdapter for the target city.
+ * @param city - The target city's use-cases.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Real-time vehicle positions with delay status in minutes and seconds.
  */
 export async function handleGetRealtimeVehicles(
     args: Record<string, unknown>,
     ctx: McpContext,
-    adapter: CityAdapter,
+    city: CityUseCases,
     resolvedCity: string
 ): Promise<unknown> {
     const limit = Number(args.limit) || MCP_DEFAULTS.VEHICLES_LIMIT;
@@ -29,8 +29,8 @@ export async function handleGetRealtimeVehicles(
         searchParams.routeShortName = String(args.line);
     }
 
-    const mockCtx = createMockContext(ctx, resolvedCity, `/api/${resolvedCity}/vehicles`, searchParams);
-    const vehiclesData = await adapter.handleVehicles(mockCtx) as AppVehicleCollection;
+    const vehiclesCtx = buildRequestContext(ctx, searchParams);
+    const vehiclesData = await city.vehicles.getVehicles(vehiclesCtx) as AppVehicleCollection;
 
     let vehicles = vehiclesData?.features || [];
 

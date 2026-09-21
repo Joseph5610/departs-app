@@ -2,9 +2,16 @@ import { ApiError } from "./errors";
 import { ERROR_MESSAGES } from "./config";
 import { ZodError } from "zod";
 import type { EventContext } from "@cloudflare/workers-types";
-import type { Env } from "./types";
-import { getCityConfig, type CityConfig } from "./city-config";
-import { getAdapter, type CityAdapter } from "../_adapters/CityAdapter";
+import type { CityRequestContext, Env } from "./types";
+
+/** The city use-case's actual inputs, read off the real Cloudflare request context. */
+export function toCityRequestContext(context: EventContext<Env, string, unknown>): CityRequestContext {
+    return {
+        url: new URL(context.request.url),
+        env: context.env,
+        waitUntil: (promise) => context.waitUntil(promise),
+    };
+}
 
 /**
  * Creates a standardized JSON error response.
@@ -30,7 +37,7 @@ export function createErrorResponse(message: string, status: number = 500): Resp
 /**
  * Converts thrown errors (like ApiError) into standardized JSON Responses.
  */
-function handleError(error: unknown): Response {
+export function handleError(error: unknown): Response {
     if (error instanceof ZodError) {
         return createErrorResponse("Invalid request parameters", 400);
     }
@@ -86,48 +93,3 @@ export const isAllowedOrigin = (origin: string | null): boolean => {
     if (!origin) return false;
     return ALLOWED_PATTERNS.some(pattern => pattern.test(origin));
 };
-
-/**
- * Higher-order function to wrap API routes with city context, adapter initialization,
- * error handling, and standardized responses.
- */
-export function withCityRoute(
-    handler: (adapter: CityAdapter, context: EventContext<Env, string, unknown>) => Promise<unknown>,
-    cacheTtl: number
-): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return withCity(async (city, context) => createSuccessResponse(await handler(getAdapter(city), context), cacheTtl));
-}
-
-/**
- * `withCityRoute` for handlers that need only the city's config and return an already-serialized JSON body.
- */
-export function withCityJsonBodyRoute(
-    handler: (city: CityConfig, context: EventContext<Env, string, unknown>) => Promise<BodyInit>,
-    cacheTtl: number
-): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return withCity(async (city, context) => createJsonBodyResponse(await handler(city, context), cacheTtl));
-}
-
-function withCity(
-    respond: (city: CityConfig, context: EventContext<Env, string, unknown>) => Promise<Response>
-): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return async (context) => {
-        const slug = context.params.city as string;
-        
-        if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
-            return createErrorResponse('Invalid city format', 400);
-        }
-
-        const city = getCityConfig(slug);
-
-        if (!city) {
-            return createErrorResponse('City not found', 404);
-        }
-
-        try {
-            return await respond(city, context);
-        } catch (error) {
-            return handleError(error);
-        }
-    };
-}

@@ -9,7 +9,7 @@ const HTML_ENTITY_MAP: Record<string, string> = {
 };
 
 /**
- * Turns upstream alert text (HTML or plain) into display text for any adapter's alert mapper.
+ * Turns upstream alert text (HTML or plain) into display text for any network's alert mapper.
  */
 export class AlertTextFormatter {
     /**

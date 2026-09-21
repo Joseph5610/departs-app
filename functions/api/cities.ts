@@ -1,5 +1,5 @@
 import type { AppCitiesResponse } from "../_core/types";
-import { CITY_REGISTRY } from "../_core/city-config";
+import { CITY_REGISTRY } from "../_cities";
 import { createSuccessResponse } from "../_core/api-utils";
 import { CACHE_TTL } from "../_core/config";
 

@@ -2,9 +2,8 @@
  * Shared backend configuration.
  *
  * This is the `_core` counterpart to `GTFS_CONFIG` and `GOLEMIO_CONFIG`: values that apply across every
- * adapter live here, adapter-specific ones stay in that adapter's own `core/config.ts`. Kept free of
- * imports on purpose, so any module - including `_core/schemas.ts` - can read it without pulling in the
- * adapter graph.
+ * network live here, network-specific ones stay in `_feeds/<network>/config.ts`. Kept free of imports on
+ * purpose, so any module - including `_core/schemas.ts` - can read it without pulling in the feeds.
  */
 
 /**
@@ -88,9 +87,9 @@ export const ERROR_MESSAGES = {
 /**
  * Ceilings on what a single request may ask for, enforced at the Zod boundary.
  *
- * These are adapter-agnostic: they bound the request itself, before any adapter sees it. Limits that
- * depend on how one adapter fetches - the platform count a GTFS departures request expands into, say -
- * belong in that adapter's config instead.
+ * These are network-agnostic: they bound the request itself, before any city sees it. Limits that
+ * depend on how one network fetches - the platform count a GTFS departures request expands into, say -
+ * belong in that network's config instead.
  */
 export const API_LIMITS = {
     /**

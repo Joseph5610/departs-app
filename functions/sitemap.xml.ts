@@ -1,7 +1,7 @@
 import { Env } from "./_core/types";
-import { getCityConfig, CITY_REGISTRY } from "./_core/city-config";
+import { getCityConfig, CITY_REGISTRY } from "./_cities";
 import { CACHE_TTL } from "./_core/config";
-import { MapStopsService } from "./_core/MapStopsService";
+import { MapStopsService } from "./_feeds/stops";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
     const domain = new URL(context.request.url).origin;

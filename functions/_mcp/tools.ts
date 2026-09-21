@@ -1,5 +1,5 @@
 import type { McpToolDefinition } from "./types";
-import { CITY_REGISTRY } from "../_core/city-config";
+import { CITY_REGISTRY } from "../_cities";
 import { MCP_DEFAULTS } from "../_core/config";
 
 /** Hidden regions are not offered to MCP clients until they launch. */

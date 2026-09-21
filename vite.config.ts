@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   server: {
     proxy: {
-      // Dev-only relay for DPMP_CONFIG.DEV_RELAY_PATH: egov.presov.sk offers only legacy TLS ciphers local workerd rejects.
+      // Dev-only relay for DPMP_REALTIME_URL (bound by `npm run dev`): egov.presov.sk offers only legacy TLS ciphers local workerd rejects.
       '/__dev/dpmp.csv': {
         target: 'https://egov.presov.sk',
         changeOrigin: true,

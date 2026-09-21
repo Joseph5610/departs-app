@@ -1,4 +1,4 @@
-import type { CityAdapter } from "../../_adapters/CityAdapter";
+import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { resolveStationByName, loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
@@ -10,14 +10,14 @@ import { resolveStationByName, loadStops, rankStopsByDistance, loadStopDeparture
  *
  * @param args - Tool arguments containing `stop_id`, `stop_name`, `latitude`/`longitude`, `line`, `route_type`, `limit`, `city`.
  * @param ctx - Cloudflare Pages Function event context.
- * @param adapter - Resolved CityAdapter for the target city.
+ * @param city - The target city's use-cases.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
  * @returns Departure board response with delay metadata and active infotexts.
  */
 export async function handleGetNextDepartures(
     args: Record<string, unknown>,
     ctx: McpContext,
-    adapter: CityAdapter,
+    city: CityUseCases,
     resolvedCity: string
 ): Promise<unknown> {
     let stopId = args.stop_id as string | undefined;
@@ -53,8 +53,8 @@ export async function handleGetNextDepartures(
     }
 
     const [departures, infotexts] = await Promise.all([
-        loadStopDepartures(ctx, adapter, resolvedCity, stopId, args, limit),
-        loadInfotexts(ctx, adapter, resolvedCity)
+        loadStopDepartures(ctx, city, stopId, args, limit),
+        loadInfotexts(ctx, city, resolvedCity)
     ]);
 
     const nowMs = Date.now();

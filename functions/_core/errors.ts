@@ -6,7 +6,7 @@ export class ApiError extends Error {
 }
 
 export class NotImplementedError extends ApiError {
-    constructor(message: string = 'Adapter not implemented') {
+    constructor(message: string = 'Not implemented for this city') {
         super(message, 501);
         this.name = 'NotImplementedError';
     }

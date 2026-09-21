@@ -1,7 +1,7 @@
 import type { McpContext } from "../types";
 import { MCP_CACHE_MAX_ENTRIES, MCP_CACHE_TTL_S, MCP_DEFAULTS } from "../../_core/config";
-import { LruCache } from "../../_core/utils/LruCache";
-import { resolveAdapter } from "../utils";
+import { LruCache } from "../../_core/feed/LruCache";
+import { resolveCity } from "../utils";
 import { validateToolArgs } from "../validation";
 
 import { handleSearchStops } from "./searchStops";
@@ -56,7 +56,7 @@ async function runTool(
     ctx: McpContext,
     citySlug: string
 ): Promise<unknown> {
-    const { adapter, citySlug: resolvedCity } = resolveAdapter(citySlug);
+    const { city, citySlug: resolvedCity } = resolveCity(citySlug, ctx.env);
 
     switch (name) {
         case "search_stops":
@@ -64,15 +64,15 @@ async function runTool(
         case "search_nearest_stops":
             return handleSearchNearestStops(args, resolvedCity);
         case "get_next_departures":
-            return handleGetNextDepartures(args, ctx, adapter, resolvedCity);
+            return handleGetNextDepartures(args, ctx, city, resolvedCity);
         case "get_nearest_departures":
-            return handleGetNearestDepartures(args, ctx, adapter, resolvedCity);
+            return handleGetNearestDepartures(args, ctx, city, resolvedCity);
         case "get_realtime_vehicles":
-            return handleGetRealtimeVehicles(args, ctx, adapter, resolvedCity);
+            return handleGetRealtimeVehicles(args, ctx, city, resolvedCity);
         case "get_service_alerts":
-            return handleGetServiceAlerts(args, ctx, adapter, resolvedCity);
+            return handleGetServiceAlerts(args, ctx, city, resolvedCity);
         case "get_vehicle_detail":
-            return handleGetVehicleDetail(args, ctx, adapter, resolvedCity);
+            return handleGetVehicleDetail(args, ctx, city, resolvedCity);
         default:
             throw new Error(`Unknown MCP tool '${name}'`);
     }
