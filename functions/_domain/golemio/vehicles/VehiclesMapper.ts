@@ -1,11 +1,25 @@
 import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../_core/types";
-import { GolemioVehiclePayload } from "../../../_feeds/golemio/schemas/vehicles";
+import type { GolemioFleetPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 
+type Fields = Record<string, unknown>;
+const isFields = (v: unknown): v is Fields => typeof v === 'object' && v !== null && !Array.isArray(v);
+const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+const num = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined);
+const bool = (v: unknown): boolean | undefined => (typeof v === 'boolean' ? v : undefined);
+const strOrNum = (v: unknown): string | number | undefined => (typeof v === 'string' || typeof v === 'number' ? v : undefined);
+
+function readPoint(v: unknown): AppVehicleFeature['geometry'] | null {
+    if (!isFields(v) || v.type !== 'Point' || !Array.isArray(v.coordinates) || v.coordinates.length !== 2) return null;
+    const [lon, lat] = v.coordinates;
+    return typeof lon === 'number' && typeof lat === 'number' ? { type: 'Point', coordinates: [lon, lat] } : null;
+}
+
 export class VehiclesMapper {
     /** `generatedAt` stands in for `last_updated` when the feed carries no per-vehicle timestamps. */
-    static map(data: GolemioVehiclePayload, generatedAt?: string): AppVehicleCollection {
+    /** Features are only shape-checked upstream, so every field is read with its type checked here. */
+    static map(data: GolemioFleetPayload, generatedAt?: string): AppVehicleCollection {
         let maxTimeUpdatedStr = '';
         const features: AppVehicleFeature[] = [];
 
@@ -16,45 +30,55 @@ export class VehiclesMapper {
 
         for (let i = 0; i < len; i++) {
             const f = rawFeatures[i];
-            if (!f || !f.properties) continue;
+            if (!isFields(f) || !isFields(f.properties)) continue;
 
             const p = f.properties;
-            const route_type = normalizeRouteType(p.route_type || '');
-            const route_short_name = p.gtfs_route_short_name || p.route_short_name || '';
+            const route_type = normalizeRouteType(strOrNum(p.route_type) || '');
+            const route_short_name = str(p.gtfs_route_short_name) || str(p.route_short_name) || '';
+            const origin_timestamp = str(p.origin_timestamp);
 
-            if (p.origin_timestamp && p.origin_timestamp > maxTimeUpdatedStr) {
-                maxTimeUpdatedStr = p.origin_timestamp;
+            if (origin_timestamp && origin_timestamp > maxTimeUpdatedStr) {
+                maxTimeUpdatedStr = origin_timestamp;
             }
 
             let vehicle_descriptor: AppVehicleDescriptor | undefined = undefined;
-            if (p.vehicle_descriptor) {
+            if (isFields(p.vehicle_descriptor)) {
                 vehicle_descriptor = {} as AppVehicleDescriptor;
                 const vd = p.vehicle_descriptor;
-                if (vd.operator != null) vehicle_descriptor.operator = vd.operator;
-                if (vd.vehicle_type != null) vehicle_descriptor.vehicle_type = vd.vehicle_type;
-                if (vd.is_wheelchair_accessible != null) vehicle_descriptor.is_wheelchair_accessible = vd.is_wheelchair_accessible;
-                if (vd.is_air_conditioned != null) vehicle_descriptor.is_air_conditioned = vd.is_air_conditioned;
-                if (vd.has_usb_chargers != null) vehicle_descriptor.has_usb_chargers = vd.has_usb_chargers;
-                if (vd.vehicle_registration_number != null) vehicle_descriptor.vehicle_registration_number = String(vd.vehicle_registration_number);
+                const operator = str(vd.operator);
+                const vehicle_type = str(vd.vehicle_type);
+                const is_wheelchair_accessible = bool(vd.is_wheelchair_accessible);
+                const is_air_conditioned = bool(vd.is_air_conditioned);
+                const has_usb_chargers = bool(vd.has_usb_chargers);
+                const registration = strOrNum(vd.vehicle_registration_number);
+                if (operator != null) vehicle_descriptor.operator = operator;
+                if (vehicle_type != null) vehicle_descriptor.vehicle_type = vehicle_type;
+                if (is_wheelchair_accessible != null) vehicle_descriptor.is_wheelchair_accessible = is_wheelchair_accessible;
+                if (is_air_conditioned != null) vehicle_descriptor.is_air_conditioned = is_air_conditioned;
+                if (has_usb_chargers != null) vehicle_descriptor.has_usb_chargers = has_usb_chargers;
+                if (registration != null) vehicle_descriptor.vehicle_registration_number = String(registration);
             }
 
-            const trip_headsign = p.gtfs_trip_headsign || p.trip_headsign;
+            const trip_headsign = str(p.gtfs_trip_headsign) || str(p.trip_headsign);
+            const vehicle_id = strOrNum(p.vehicle_id);
+            const last_stop_sequence = num(p.last_stop_sequence);
+            const run_number = strOrNum(p.run_number);
 
             features.push({
                 type: 'Feature',
-                geometry: f.geometry || null,
+                geometry: readPoint(f.geometry),
                 properties: {
-                    vehicle_id: p.vehicle_id ? String(p.vehicle_id) : null,
-                    gtfs_trip_id: p.gtfs_trip_id || '',
+                    vehicle_id: vehicle_id ? String(vehicle_id) : null,
+                    gtfs_trip_id: str(p.gtfs_trip_id) || '',
                     route_short_name,
                     route_type,
                     ...(trip_headsign ? { trip_headsign } : {}),
-                    bearing: p.bearing ?? null,
-                    delay: p.delay ?? null,
-                    state_position: (p.state_position || 'unknown') as AppVehicleFeature['properties']['state_position'],
-                    ...(p.last_stop_sequence != null ? { last_stop_sequence: p.last_stop_sequence } : {}),
-                    origin_timestamp: p.origin_timestamp ?? undefined,
-                    ...(p.run_number != null ? { run_number: p.run_number } : {}),
+                    bearing: num(p.bearing) ?? null,
+                    delay: num(p.delay) ?? null,
+                    state_position: (str(p.state_position) || 'unknown') as AppVehicleFeature['properties']['state_position'],
+                    ...(last_stop_sequence != null ? { last_stop_sequence } : {}),
+                    origin_timestamp,
+                    ...(run_number != null ? { run_number } : {}),
                     route_color: getVehicleColor(route_type, route_short_name),
                     vehicle_descriptor
                 }

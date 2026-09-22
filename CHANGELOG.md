@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - After a deploy, a browser still on the previous version no longer gets a blank page: a missing script now returns 404 instead of the app page cached as a script for a year.
 - Cheaper cold starts for the Worker: local time is computed without loading the timezone database, and the Brno fleet build no longer awaits per vehicle.
 - While the Worker fails, the edge keeps serving the last good API response for up to a minute instead of an error.
+- Prague vehicles validate only the shape of Golemio's fleet and type-check fields while mapping, instead of a per-vehicle schema that alone could exceed the Workers CPU limit.
 
 ### Removed
 

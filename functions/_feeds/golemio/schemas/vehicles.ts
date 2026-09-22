@@ -91,3 +91,12 @@ export const golemioVehiclePayloadSchema = golemioVehiclePropertiesSchema.partia
     origin_timestamp: z.string().nullish(),
 });
 export type GolemioVehiclePayload = z.infer<typeof golemioVehiclePayloadSchema>;
+
+/**
+ * Shape check only for the whole fleet: validating ~3,000 features per refresh costs more CPU than a
+ * request has. `VehiclesMapper` type-checks every field it reads instead.
+ */
+export const golemioFleetSchema = z.object({
+    features: z.array(z.unknown()).nullish(),
+});
+export type GolemioFleetPayload = z.infer<typeof golemioFleetSchema>;

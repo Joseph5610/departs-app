@@ -3,12 +3,12 @@ import { CACHE_TTL } from '../../_core/config';
 import { getResponseGeneratedAt } from '../../_core/ApiClient';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { golemioClient } from './GolemioClient';
-import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from './schemas/vehicles';
+import { golemioFleetSchema, type GolemioFleetPayload } from './schemas/vehicles';
 
 /** The whole Prague fleet as last read: Golemio's payload as received, and validated. */
 export interface GolemioFleet {
     payload: unknown;
-    data: GolemioVehiclePayload;
+    data: GolemioFleetPayload;
     /** When Golemio generated the answer, from the response headers. */
     generatedAt: string | undefined;
 }
@@ -47,16 +47,11 @@ async function readFleet(env: Env): Promise<GolemioFleet | null> {
     });
     if (payload === null) return null;
 
-    const parsed = golemioVehiclePayloadSchema.safeParse(payload);
+    const parsed = golemioFleetSchema.safeParse(payload);
     if (!parsed.success) {
         console.error("Critical Golemio vehicles structural change:", parsed.error);
         return null;
     }
 
-    const data = parsed.data;
-    if (data.features) {
-        data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
-    }
-
-    return { payload, data: data as GolemioVehiclePayload, generatedAt: getResponseGeneratedAt(response) };
+    return { payload, data: parsed.data, generatedAt: getResponseGeneratedAt(response) };
 }
