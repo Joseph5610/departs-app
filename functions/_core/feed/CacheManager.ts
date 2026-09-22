@@ -66,15 +66,19 @@ export class CacheManager {
 
         const pending = processingPromises.get(key);
         if (pending) {
+            // A refresh whose request was killed or cancelled never settles; past this age it is
+            // dropped even when a stale value exists, or that value would be served forever.
+            const isAbandoned = now - pending.startedAt >= PENDING_ABANDON_MS;
+
             // Someone is already rebuilding this key. If we hold anything at all, serve it stale
             // rather than waiting or rebuilding in parallel: for a 5s-TTL feed a slightly old answer
             // beats both a 3s stall and N requests each repeating the same expensive work. This is
             // the case that matters under load, when every concurrent request misses at once.
-            if (cached) {
+            if (cached && !isAbandoned) {
                 return cached.data as T;
             }
 
-            if (now - pending.startedAt < PENDING_ABANDON_MS) {
+            if (!isAbandoned) {
                 // Nothing to serve, so we do have to wait — but only for a bounded time, because a
                 // request torn down mid-flight (CPU kill, client cancel) leaves a promise that
                 // never settles.
@@ -91,9 +95,9 @@ export class CacheManager {
                 processingPromises.delete(key);
             }
 
-            // Waiting is an await point: another request may have populated the cache meanwhile.
+            // Waiting is an await point: another request may have refreshed the cache meanwhile.
             cached = memoryCache.get(key);
-            if (cached) {
+            if (cached && Date.now() - cached.timestamp < ttlMs) {
                 return cached.data as T;
             }
         }

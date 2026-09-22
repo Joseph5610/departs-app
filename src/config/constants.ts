@@ -212,7 +212,7 @@ export const QUERY_TIMING_MS = {
 
 /** Live vehicle polling: a failed poll is retried quickly and the last good positions stay on the map. */
 export const LIVE_VEHICLES_CONFIG = {
-    RETRY_COUNT: 3,
+    RETRY_COUNT: 1,
     RETRY_MAX_DELAY_MS: 4_000,
     /** Matches the backend's FEED_AGE_S.OFFLINE: positions older than this are dropped, not kept through an outage. */
     MAX_KEPT_AGE_MS: 5 * MINUTE_MS,
