@@ -141,25 +141,29 @@ export class CacheManager {
         return fetchPromise;
     }
 
-    /**
-     * Awaits an in-flight fetch owned by another request, but only for PENDING_WAIT_MS.
-     * Rejections propagate; a promise that simply never settles resolves as unsettled so the
-     * caller can fall back to its own fetch.
-     */
-    private static async waitForPending<T>(promise: Promise<unknown>): Promise<{ settled: true, value: T } | { settled: false }> {
-        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    private static waitForPending<T>(promise: Promise<unknown>): Promise<{ settled: true, value: T } | { settled: false }> {
+        return awaitShared(promise as Promise<T>);
+    }
+}
 
-        const timeout = new Promise<{ settled: false }>((resolve) => {
-            timeoutId = setTimeout(() => resolve({ settled: false }), PENDING_WAIT_MS);
-        });
+/**
+ * Awaits a promise started by another request, but only for `waitMs`. Rejections propagate; a
+ * promise that never settles - its request was killed or cancelled mid-flight - resolves as
+ * unsettled so the caller can do the work itself.
+ */
+export async function awaitShared<T>(promise: Promise<T>, waitMs: number = PENDING_WAIT_MS): Promise<{ settled: true, value: T } | { settled: false }> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-        try {
-            return await Promise.race([
-                (promise as Promise<T>).then((value) => ({ settled: true as const, value })),
-                timeout
-            ]);
-        } finally {
-            if (timeoutId !== undefined) clearTimeout(timeoutId);
-        }
+    const timeout = new Promise<{ settled: false }>((resolve) => {
+        timeoutId = setTimeout(() => resolve({ settled: false }), waitMs);
+    });
+
+    try {
+        return await Promise.race([
+            promise.then((value) => ({ settled: true as const, value })),
+            timeout
+        ]);
+    } finally {
+        if (timeoutId !== undefined) clearTimeout(timeoutId);
     }
 }

@@ -1,7 +1,7 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import type { AppVehicleCollection, AppVehicleDetail, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
-import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
+import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
 import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
 import type { SingleLiveVehicle, VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
@@ -27,7 +27,7 @@ const lastFixes = new LruCache<{ lat: number; lon: number; bearing: number | nul
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** The mapped fleet per traffic snapshot: built once per feed read, however many requests read it. */
-const collections = new WeakMap<object, Promise<AppVehicleCollection>>();
+const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
 
 /** Reports by vehicle id, built once per cached feed and collected with it. */
 const reportIndexes = new WeakMap<DukVehicleReport[], Map<string, DukVehicleReport>>();

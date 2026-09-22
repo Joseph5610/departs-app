@@ -100,3 +100,12 @@ export const API_LIMITS = {
     FEEDBACK_MESSAGE_MIN_CHARS: 5,
     FEEDBACK_MESSAGE_MAX_CHARS: 2000,
 };
+
+/** Per-snapshot builds shared between concurrent requests (vehicle collections, mapped alerts). */
+export const DERIVATION_CONFIG = {
+    /**
+     * A build still pending after this long is raced by a fresh one, since a build whose request was
+     * killed or cancelled never settles. Under the app's 10 s request timeout, above a slow cold build.
+     */
+    ABANDON_MS: 8000,
+};

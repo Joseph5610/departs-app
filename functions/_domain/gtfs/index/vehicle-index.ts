@@ -1,6 +1,6 @@
 import type { transit_realtime } from 'gtfs-realtime-bindings';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
-import { derive, type Snapshot } from '../../../_core/feed/source';
+import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
 import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
@@ -32,11 +32,7 @@ export interface VehicleMapping {
     assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData): Promise<Array<{ entity: transit_realtime.IFeedEntity; tripId: string }>>;
 }
 
-interface Derived {
-    all?: Promise<AppVehicleCollection>;
-}
-
-const derived = new WeakMap<object, Derived>();
+const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
 
 /**
  * Reads vehicles out of one feed snapshot.
@@ -64,9 +60,7 @@ export class VehicleIndex {
 
     /** Every vehicle in the network, for the map. Built once per snapshot and shared. */
     all(): Promise<AppVehicleCollection> {
-        const cache = derive<transit_realtime.FeedMessage, Derived>(this.snapshot, derived, () => ({}));
-        cache.all ??= this.buildAll();
-        return cache.all;
+        return deriveAsync(this.snapshot, collections, () => this.buildAll());
     }
 
     private async buildAll(): Promise<AppVehicleCollection> {

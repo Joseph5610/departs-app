@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The map no longer goes blank with "Source Offline" when a single refresh fails; failed polls are retried and the last positions stay on screen.
 - The map and stats panel share one city-wide vehicle feed through the edge cache instead of separate per-viewport and stats requests, so far fewer requests reach the backend.
 - The status panel badge shows the feed's state instead of the device's connection.
+- Vehicle and alert requests no longer hang when an earlier request was cut off while building the shared result; they rebuild it after a short wait.
 - Brno trip details attach the onward vehicles of their connections in the app instead of resolving the whole fleet on the server; Prague connections now show live delays too.
 
 ## [0.74.0] - 2026-09-21

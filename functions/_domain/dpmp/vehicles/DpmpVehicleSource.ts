@@ -1,7 +1,7 @@
 import { transit_realtime } from 'gtfs-realtime-bindings';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
-import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
+import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
 import { LruCache } from '../../../_core/feed/LruCache';
 import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
@@ -21,7 +21,7 @@ const { VehicleStopStatus } = transit_realtime.VehiclePosition;
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** The mapped fleet per CSV snapshot: built once per feed read, however many requests read it. */
-const collections = new WeakMap<object, Promise<AppVehicleCollection>>();
+const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
 
 interface Position {
     latitude: number;
