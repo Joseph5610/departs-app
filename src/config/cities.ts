@@ -161,7 +161,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         dataProvider: { nameKey: 'liveStatus.providerDpmp', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
         attributions: [
             { creator: 'Dopravný podnik mesta Prešov, a.s.', title: 'GTFS – MHD Prešov', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079', license: 'ccBy4' },
-            { creator: 'Dopravný podnik mesta Prešov, a.s.', title: 'On-line poloha vozidiel MHD mesta Prešov', url: 'https://egov.presov.sk/geodatakatalog/', license: 'ccBy4' },
+            { creator: 'Dopravný podnik mesta Prešov, a.s.', title: 'On-line poloha vozidiel MHD mesta Prešov', url: 'https://egov.presov.sk/Default.aspx', license: 'ccBy4' },
         ],
         debugFeedLabels: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
     },

@@ -17,7 +17,7 @@ const config: CityConfig = {
         realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
         staticDataUrl: 'https://data.departs.app',
         hasTripAliases: true,
-        vehicleMetadataFile: 'dpmb-vehicles.json?v=2'
+        vehicleMetadataFile: 'vehicles.json?v=3'
     },
     hasAlerts: true,
     isBeta: true,
@@ -29,7 +29,8 @@ const config: CityConfig = {
 
 /**
  * Brno (IDS JMK): the GTFS stack with KORDIS's own reading of its realtime feed - recycled trip ids,
- * vehicles repeated under several of them, and DPMB fleet metadata on the detail.
+ * vehicles repeated under several of them, and fleet metadata (DPMB and leased operators alike) on
+ * the detail.
  */
 export const city: City = {
     config,

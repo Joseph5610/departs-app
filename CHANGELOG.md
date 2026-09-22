@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.3] - 2026-09-22
+
+### Fixed
+
+- Brno's leased České dráhy RegioPanter trains show the train's own name and correct operator instead of being misattributed to DPMB.
+
 ## [0.74.2] - 2026-09-22
 
 ### Fixed
