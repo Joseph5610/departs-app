@@ -1,4 +1,4 @@
-import type { Env, AppVehicleCollection, AppCityStats, CityRequestContext } from "../../../_core/types";
+import type { Env, AppVehicleCollection, CityRequestContext } from "../../../_core/types";
 import type { VehiclesUseCase } from "../../use-cases";
 import { ERROR_MESSAGES } from "../../../_core/config";
 import { ApiError } from "../../../_core/errors";
@@ -7,7 +7,6 @@ import { withFeedAge } from "../../../_core/feed/freshness";
 import { getGolemioFleet } from "../../../_feeds/golemio/vehicles";
 import { VehiclesMapper } from "./VehiclesMapper";
 import { vehicleQuerySchema, parseSearchParams } from "../../../_core/schemas";
-import { aggregateCityStats } from "../../../_core/utils/statsAggregator";
 import { filterVehicles } from "../../../_core/utils/vehicleFilter";
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -36,14 +35,5 @@ export class VehiclesService implements VehiclesUseCase {
     async getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection> {
         const query = parseSearchParams(ctx.url.searchParams, vehicleQuerySchema);
         return filterVehicles(await this.collection(ctx.env), query);
-    }
-
-    /** City-wide statistics over the whole fleet. */
-    async getStats(ctx: CityRequestContext): Promise<AppCityStats> {
-        const collection = await this.collection(ctx.env);
-        if (collection.status === 'upstream_offline') {
-            throw new ApiError(ERROR_MESSAGES.VEHICLES_DATA_UNAVAILABLE, 503);
-        }
-        return aggregateCityStats(collection.features);
     }
 }

@@ -1,6 +1,5 @@
 import type {
     AppAlertsResponse,
-    AppCityStats,
     AppDepartureResponse,
     AppInfotext,
     AppVehicleCollection,
@@ -11,7 +10,6 @@ import type {
 /** What every city answers; `/api/[city]/*` routes and MCP tools call these directly. */
 export interface VehiclesUseCase {
     getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection>;
-    getStats(ctx: CityRequestContext): Promise<AppCityStats>;
 }
 
 export interface DeparturesUseCase {

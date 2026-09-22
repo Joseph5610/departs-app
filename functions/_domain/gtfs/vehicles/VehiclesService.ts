@@ -1,8 +1,5 @@
-import type { AppVehicleCollection, AppVehicleFeature, AppCityStats, CityRequestContext } from "../../../_core/types";
+import type { AppVehicleCollection, AppVehicleFeature, CityRequestContext } from "../../../_core/types";
 import type { CityConfig } from '../../../_core/city-config';
-import { ApiError } from '../../../_core/errors';
-import { ERROR_MESSAGES } from '../../../_core/config';
-import { aggregateCityStats } from '../../../_core/utils/statsAggregator';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { filterVehicles } from '../../../_core/utils/vehicleFilter';
 import { withFeedAge } from '../../../_core/feed/freshness';
@@ -55,13 +52,5 @@ export class VehiclesService implements VehiclesUseCase {
 
     async getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection> {
         return filterVehicles(await this.getCachedMappedVehicles(), parseSearchParams(ctx.url.searchParams, vehicleQuerySchema));
-    }
-
-    async getStats(): Promise<AppCityStats> {
-        const collection = await this.getCachedMappedVehicles();
-        if (collection.status === 'upstream_offline') {
-            throw new ApiError(ERROR_MESSAGES.VEHICLES_DATA_UNAVAILABLE, 503);
-        }
-        return aggregateCityStats(collection.features);
     }
 }

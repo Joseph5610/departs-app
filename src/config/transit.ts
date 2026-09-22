@@ -28,7 +28,7 @@ export const DELAY_TIERS = [
 
 export type DelayTierKey = typeof DELAY_TIERS[number]['key'];
 
-/** Thresholds for client-side city stats; keep in step with the backend aggregator behind /stats. */
+/** Thresholds for the city stats the app computes from the vehicle list. */
 export const STATS_AGGREGATION = {
     /** Delays beyond this in either direction are treated as ghost vehicles and ignored. */
     MAX_PLAUSIBLE_DELAY_S: 7200,
@@ -38,7 +38,7 @@ export const STATS_AGGREGATION = {
     /** Most-delayed rows shown before the card offers to expand. */
     MOST_DELAYED_PREVIEW: 5,
     BUSIEST_LINES_LIMIT: 5,
-    /** Placeholder for a missing vehicle or trip ID in most_delayed entries, also sent by /stats. */
+    /** Placeholder for a missing vehicle or trip ID in most_delayed entries. */
     MISSING_ID: 'N/A',
 };
 
