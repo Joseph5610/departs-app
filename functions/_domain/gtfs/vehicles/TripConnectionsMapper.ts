@@ -1,4 +1,4 @@
-import type { AppStopConnection, AppVehicleCollection, AppVehicleDetail, AppVehicleFeature } from '../../../_core/types';
+import type { AppStopConnection, AppVehicleDetail } from '../../../_core/types';
 import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import type { Station } from '../../../_feeds/gtfs/types';
 import { dayBit, operatesOnDay, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -7,7 +7,7 @@ import { DAY_MINS, toClockTime, type LocalClock } from '../../../_core/utils/tim
 import { isConnectionAtRisk } from '../../../_core/utils/connections';
 import { mapContinuation } from '../../../_feeds/gtfs/continuations';
 
-/** Turns the onward connections listed on a trip's stops into display rows with live data. */
+/** Turns the onward connections listed on a trip's stops into display rows; onward vehicles are attached by the app. */
 export class TripConnectionsMapper {
 
     /**
@@ -40,7 +40,6 @@ export class TripConnectionsMapper {
         stations: Station[],
         routes: Record<string, GtfsRoute>,
         windows: TripWindows | null,
-        live: AppVehicleCollection | null,
         clock: LocalClock
     ): void {
         const features = detail.stop_times?.features;
@@ -51,17 +50,12 @@ export class TripConnectionsMapper {
         const stationBySequence = new Map<number, Station>();
         for (const s of stations) stationBySequence.set(s.sequence, s);
 
-        const liveByTrip = new Map<string, NonNullable<AppVehicleFeature['properties']>>();
-        for (const f of live?.features ?? []) {
-            if (f.properties.gtfs_trip_id) liveByTrip.set(f.properties.gtfs_trip_id, f.properties);
-        }
-
         const delay = typeof detail.delay === 'number' ? detail.delay : null;
 
         for (const feature of features) {
             const station = stationBySequence.get(feature.properties.stop_sequence);
             if (station?.continues_as) {
-                const continuation = mapContinuation(station.continues_as, routes, liveByTrip);
+                const continuation = mapContinuation(station.continues_as, routes);
                 feature.properties.continues_as = {
                     ...continuation,
                     departure_time: continuation.departure_time && toClockTime(continuation.departure_time),
@@ -76,16 +70,14 @@ export class TripConnectionsMapper {
                 if (!window || !operatesOnDay(window, bit)) continue;
 
                 const route = routes[routeId];
-                const onward = liveByTrip.get(toTripId);
                 rows.push({
                     trip_id: toTripId,
-                    vehicle_id: onward?.vehicle_id || undefined,
                     line: route ? String(route.name) : routeId,
                     route_color: route?.route_color,
                     type: normalizeRouteType(route ? route.type : 'unknown'),
                     headsign,
                     departure_time: toClockTime(departureTime),
-                    delay: typeof onward?.delay === 'number' ? onward.delay : null,
+                    delay: null,
                     max_wait_s: maxWaitS,
                     at_risk: isConnectionAtRisk(arrivalTime, delay, minTransferS, departureTime, maxWaitS),
                 });

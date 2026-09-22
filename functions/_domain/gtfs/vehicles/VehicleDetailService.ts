@@ -1,4 +1,4 @@
-import type { AppVehicleDetail, AppVehicleCollection, CityRequestContext } from "../../../_core/types";
+import type { AppVehicleDetail, CityRequestContext } from "../../../_core/types";
 import type { CityConfig } from '../../../_core/city-config';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getTripShape } from '../../../_feeds/gtfs/shapes';
@@ -9,7 +9,6 @@ import { VehicleDetailMapper } from './VehicleDetailMapper';
 import { TripConnectionsMapper } from './TripConnectionsMapper';
 import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import type { Station } from '../../../_feeds/gtfs/types';
-import type { VehiclesService } from './VehiclesService';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
@@ -24,8 +23,7 @@ import type { VehicleDetailUseCase } from '../../use-cases';
 export class VehicleDetailService implements VehicleDetailUseCase {
     constructor(
         public readonly city: CityConfig,
-        private enricher?: VehicleDetailEnricher,
-        private vehiclesService?: VehiclesService
+        private enricher?: VehicleDetailEnricher
     ) {}
 
     async getVehicleDetail(ctx: CityRequestContext): Promise<AppVehicleDetail> {
@@ -60,24 +58,9 @@ export class VehicleDetailService implements VehicleDetailUseCase {
         return detail;
     }
 
+    /** Scheduled rows only: the app attaches the onward vehicles and their delays from the fleet it holds. */
     private async attachConnections(detail: AppVehicleDetail, stations: Station[], routes: Record<string, GtfsRoute>): Promise<void> {
-        const [windows, live] = await Promise.all([
-            getTripWindows(this.city),
-            this.getLiveVehicles(),
-        ]);
-        TripConnectionsMapper.attach(
-            detail, stations, routes, windows, live,
-            getLocalClock(this.city.timezone)
-        );
-    }
-
-    private async getLiveVehicles(): Promise<AppVehicleCollection | null> {
-        if (!this.vehiclesService) return null;
-        try {
-            return await this.vehiclesService.getCachedMappedVehicles();
-        } catch (e) {
-            console.error('Failed to load RT vehicles for trip connections:', e);
-            return null;
-        }
+        const windows = await getTripWindows(this.city);
+        TripConnectionsMapper.attach(detail, stations, routes, windows, getLocalClock(this.city.timezone));
     }
 }

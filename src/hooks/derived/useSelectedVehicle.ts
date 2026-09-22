@@ -4,7 +4,7 @@ import { useVehicleDetail } from '../data/useVehicleDetail';
 import type { VehicleDetail, VehicleFeature } from '../../types/transit';
 import type { StoredEnrichmentPatch } from '../../types/enrichment';
 import { memoizeLast } from '../../lib/memoize';
-import { applyEnrichment } from '../../lib/enrichment';
+import { applyEnrichment, enrichConnections } from '../../lib/enrichment';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 
 const mergeSelectedVehicle = memoizeLast((
@@ -67,6 +67,12 @@ const mergeSelectedVehicle = memoizeLast((
         merged.geometry = vehicleDetail!.geometry;
     } else if (isValid(liveMatch?.geometry)) {
         merged.geometry = liveMatch!.geometry;
+    }
+
+    const stopTimes = merged.stop_times;
+    if (stopTimes?.features) {
+        const features = enrichConnections(stopTimes.features, tripIndex);
+        if (features !== stopTimes.features) merged.stop_times = { ...stopTimes, features };
     }
 
     const baseTs = Math.max(vehiclesUpdatedAt || 0, detailUpdatedAt || 0);

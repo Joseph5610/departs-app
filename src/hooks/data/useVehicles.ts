@@ -81,7 +81,8 @@ export const useVehicles = () => {
 
     const networkVehicles = enrichNetworkVehicles(query.data, byTripId, byVehicleId, query.dataUpdatedAt || 0);
     const screenVehicles = selectScreenVehicles(networkVehicles, bounds, routeFilter, routeTypeFilter);
-    const { vehicleIndex, tripIndex } = buildVehicleIndexes(screenVehicles ?? null);
+    // Whole fleet, so off-screen vehicles resolve for the selection, departure boards and connections.
+    const { vehicleIndex, tripIndex } = buildVehicleIndexes(networkVehicles);
 
     return useMemo(() => ({
         vehicles: screenVehicles,

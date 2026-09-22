@@ -31,7 +31,7 @@ export interface GtfsOverrides {
 /** The use-cases of a city on the GTFS stack. */
 export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}): CityUseCases {
     const vehicles = new VehiclesService(config, overrides.vehicleSource ?? new GtfsRtVehicleSource(config));
-    const timetableDetail = new VehicleDetailService(config, overrides.enricher?.(vehicles) ?? new GtfsRtVehicleDetailEnricher(vehicles), vehicles);
+    const timetableDetail = new VehicleDetailService(config, overrides.enricher?.(vehicles) ?? new GtfsRtVehicleDetailEnricher(vehicles));
 
     return {
         vehicles,

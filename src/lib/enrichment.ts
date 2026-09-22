@@ -1,5 +1,5 @@
 import type { StoredEnrichmentPatch } from '../types/enrichment';
-import type { Departure, VehicleCollection, VehicleFeature, VehicleProperties } from '../types/transit';
+import type { Departure, VehicleCollection, VehicleDetail, VehicleFeature, VehicleProperties } from '../types/transit';
 import { DEPARTURES_CONFIG, ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
 
 type PatchIndex = Map<string, StoredEnrichmentPatch>;
@@ -137,4 +137,42 @@ export function enrichDepartures(
     }
 
     return result;
+}
+
+type StopTimeFeature = NonNullable<VehicleDetail['stop_times']>['features'][number];
+
+/**
+ * Fills the onward vehicle and its delay into each stop's connections, and the vehicle into its
+ * continuation, from the live fleet (already push-patched). The backend sends scheduled rows only.
+ * Returns `features` itself when nothing changes.
+ */
+export function enrichConnections(features: StopTimeFeature[], tripIndex: Map<string, VehicleFeature>): StopTimeFeature[] {
+    let changed = false;
+
+    const result = features.map((f): StopTimeFeature => {
+        const { connections, continues_as } = f.properties;
+        if (!connections && !continues_as) return f;
+
+        let featureChanged = false;
+        const nextConnections = connections?.map((c) => {
+            const live = tripIndex.get(c.trip_id)?.properties;
+            if (!live) return c;
+            featureChanged = true;
+            return {
+                ...c,
+                vehicle_id: c.vehicle_id || live.vehicle_id || undefined,
+                delay: typeof live.delay === 'number' ? live.delay : c.delay,
+            };
+        });
+
+        const onward = continues_as?.trip_id && !continues_as.vehicle_id ? tripIndex.get(continues_as.trip_id)?.properties : undefined;
+        const nextContinuation = continues_as && onward?.vehicle_id ? { ...continues_as, vehicle_id: onward.vehicle_id } : continues_as;
+        if (nextContinuation !== continues_as) featureChanged = true;
+
+        if (!featureChanged) return f;
+        changed = true;
+        return { ...f, properties: { ...f.properties, connections: nextConnections, continues_as: nextContinuation } };
+    });
+
+    return changed ? result : features;
 }
