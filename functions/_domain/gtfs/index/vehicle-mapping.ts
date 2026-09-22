@@ -6,6 +6,7 @@ import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 export class GtfsVehicleMapping implements VehicleMapping {
     /** A plain feed names the trip outright, so no vehicle can be claimed by two of them. */
     readonly resolvesPerEntity = true;
+    readonly usesTripWindows = false;
 
     isRelevant(_entity: transit_realtime.IFeedEntity): boolean {
         return true;
@@ -25,11 +26,11 @@ export class GtfsVehicleMapping implements VehicleMapping {
         return descriptor?.id === vehicleId || descriptor?.label === vehicleId || entity.id === vehicleId;
     }
 
-    async isBeforeTrack(_tripId: string): Promise<boolean> {
+    isBeforeTrack(): boolean {
         return false;
     }
 
-    async assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
+    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
         const assigned: Array<{ entity: transit_realtime.IFeedEntity; tripId: string }> = [];
         for (const entity of entities) {
             const tripId = this.tripCandidates(entity, tripRoutes)[0];

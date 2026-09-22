@@ -5,6 +5,14 @@ import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
 import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+import type { TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import type { LocalClock } from '../../../_core/utils/time';
+
+/** The schedule a mapping reads, loaded once per request so the per-vehicle path stays synchronous. */
+export interface MappingSchedule {
+    windows: TripWindows | null;
+    clock: LocalClock;
+}
 
 /**
  * What a network does differently with its realtime feed: which entities count, which trip an entity
@@ -18,7 +26,9 @@ export interface VehicleMapping {
     label(entity: transit_realtime.IFeedEntity): string | undefined;
     /** Whether an entity refers to the given vehicle; networks differ in which descriptor field carries it. */
     matchesVehicle(entity: transit_realtime.IFeedEntity, vehicleId: string): boolean;
-    isBeforeTrack(tripId: string): Promise<boolean>;
+    /** Whether `MappingSchedule.windows` must be loaded for this network. */
+    readonly usesTripWindows: boolean;
+    isBeforeTrack(tripId: string, schedule: MappingSchedule): boolean;
     /**
      * Whether an entity's own trip id settles which trip it serves.
      *
@@ -30,7 +40,7 @@ export interface VehicleMapping {
      * One trip per vehicle across the whole feed, for the map. Networks that repeat a vehicle under
      * several trip ids resolve the conflict here; the default takes each entity's first candidate.
      */
-    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData): Promise<Array<{ entity: transit_realtime.IFeedEntity; tripId: string }>>;
+    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData, schedule: MappingSchedule): Array<{ entity: transit_realtime.IFeedEntity; tripId: string }>;
 }
 
 const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
@@ -47,7 +57,8 @@ export class VehicleIndex {
         private readonly snapshot: Snapshot<GtfsRtFeed>,
         private readonly routes: GtfsRoutesData,
         private readonly tripRoutes: GtfsTripRoutesData,
-        private readonly mapping: VehicleMapping
+        private readonly mapping: VehicleMapping,
+        private readonly schedule: MappingSchedule
     ) {}
 
     /** When the feed behind this index was read. */
@@ -62,16 +73,16 @@ export class VehicleIndex {
     /** Every vehicle in the network, for the map. Built once per decoded feed and shared. */
     all(): Promise<AppVehicleCollection> {
         // Keyed by the decoded feed, which is reused while upstream bytes are unchanged: an unchanged feed is not rebuilt.
-        return deriveAsync(this.snapshot.data, collections, () => this.buildAll());
+        return deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
     }
 
-    private async buildAll(): Promise<AppVehicleCollection> {
+    private buildAll(): AppVehicleCollection {
         const relevant = this.entities.filter(entity => entity.vehicle && this.mapping.isRelevant(entity));
-        const assigned = await this.mapping.assignAll(relevant, this.tripRoutes);
+        const assigned = this.mapping.assignAll(relevant, this.tripRoutes, this.schedule);
 
         const features: AppVehicleFeature[] = [];
         for (const { entity, tripId } of assigned) {
-            const mapped = await this.map(entity, tripId);
+            const mapped = this.map(entity, tripId);
             if (mapped) features.push(mapped);
         }
         return { type: 'FeatureCollection', features, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
@@ -103,7 +114,7 @@ export class VehicleIndex {
 
                 const tripId = this.mapping.tripCandidates(entity, this.tripRoutes).find(id => tripIds.has(id) && !coveredTrips.has(id));
                 if (!tripId) continue;
-                const mapped = await this.map(entity, tripId);
+                const mapped = this.map(entity, tripId);
                 if (!mapped) continue;
                 coveredTrips.add(tripId);
                 if (label) coveredVehicles.add(label);
@@ -144,13 +155,13 @@ export class VehicleIndex {
         const tripId = gtfsTripId && candidates.includes(gtfsTripId) ? gtfsTripId : candidates[0];
         if (!tripId) return null;
 
-        const feature = await this.map(entity, tripId);
+        const feature = this.map(entity, tripId);
         // The raw stopId is deliberately kept off the public AppVehicleFeature.
         return feature ? { feature, lastStopId: entity.vehicle.stopId?.toString() } : null;
     }
 
     /** One entity as a vehicle feature; null when it is stale or its route is unknown. */
-    private async map(entity: transit_realtime.IFeedEntity, tripId: string): Promise<AppVehicleFeature | null> {
+    private map(entity: transit_realtime.IFeedEntity, tripId: string): AppVehicleFeature | null {
         const vp = entity.vehicle;
         if (!vp) return null;
 
@@ -165,6 +176,6 @@ export class VehicleIndex {
         // Copy, never write through: `vp` belongs to the feed snapshot shared with the alerts path.
         const mappable: transit_realtime.IVehiclePosition = label && vp.vehicle ? { ...vp, vehicle: { ...vp.vehicle, id: label } } : vp;
 
-        return VehiclesMapper.mapVehicle(mappable, tripId, route, new Date(lastUpdate).toISOString(), null, await this.mapping.isBeforeTrack(tripId));
+        return VehiclesMapper.mapVehicle(mappable, tripId, route, new Date(lastUpdate).toISOString(), null, this.mapping.isBeforeTrack(tripId, this.schedule));
     }
 }

@@ -5,20 +5,28 @@ export const DAY_MINS = 1440;
 const HOUR_MS = 3_600_000;
 const HALF_DAY_SECS = 43_200;
 
-/**
- * `hourCycle: 'h23'` rather than `hour12: false`, which ECMA-402 leaves free to resolve to h24 and
- * render midnight as "24".
- */
-const timeFormatters = new Map<string, Intl.DateTimeFormat>();
-
 /** Formats an instant as `HH:mm` in the given IANA timezone. */
 export function formatTime(date: Date, timezone: string): string {
-    let formatter = timeFormatters.get(timezone);
-    if (!formatter) {
-        formatter = new Intl.DateTimeFormat('cs-CZ', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-        timeFormatters.set(timezone, formatter);
-    }
-    return formatter.format(date);
+    const local = new Date(date.getTime() + zoneOffsetMs(timezone, date.getTime()));
+    return `${String(local.getUTCHours()).padStart(2, '0')}:${String(local.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+/**
+ * Zones on Central European Time with EU summer time. Their offset is computed rather than read from
+ * `Intl`, whose first use loads the timezone database at a CPU cost a cold Worker cannot afford.
+ */
+const EU_CENTRAL_ZONES = new Set(['Europe/Prague', 'Europe/Bratislava']);
+
+/** 01:00 UTC on the last Sunday of `month` (0-based), when EU summer time starts or ends. */
+function euTransitionMs(year: number, month: number): number {
+    const lastDay = Date.UTC(year, month + 1, 0, 1);
+    return lastDay - new Date(lastDay).getUTCDay() * DAY_MS;
+}
+
+function euCentralOffsetMs(atMs: number): number {
+    const year = new Date(atMs).getUTCFullYear();
+    const isSummer = atMs >= euTransitionMs(year, 2) && atMs < euTransitionMs(year, 9);
+    return (isSummer ? 2 : 1) * HOUR_MS;
 }
 
 /** Local wall-clock from a cached UTC offset, rather than formatting on every call. */
@@ -26,6 +34,8 @@ const offsetFormatters = new Map<string, Intl.DateTimeFormat>();
 const offsetCache = new Map<string, { hourBucket: number; offsetMs: number }>();
 
 function zoneOffsetMs(timezone: string, atMs: number): number {
+    if (EU_CENTRAL_ZONES.has(timezone)) return euCentralOffsetMs(atMs);
+
     // Keyed on the UTC hour, not a rolling window — a rolling one is bounded only in the future, so an
     // earlier instant would reuse a later one's offset. DST shifts land on UTC hour boundaries.
     const hourBucket = Math.floor(atMs / HOUR_MS);

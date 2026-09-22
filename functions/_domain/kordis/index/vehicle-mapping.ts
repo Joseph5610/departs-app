@@ -1,10 +1,9 @@
 import type { transit_realtime } from 'gtfs-realtime-bindings';
-import type { CityConfig } from '../../../_core/city-config';
-import type { VehicleMapping } from '../../gtfs/index/vehicle-index';
+import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-index';
 import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
-import { dayBit, getTripWindows, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { DAY_MINS, getLocalClock, wrapDaySeconds } from '../../../_core/utils/time';
+import { DAY_MINS, wrapDaySeconds } from '../../../_core/utils/time';
 
 interface TripClaim {
     label: string;
@@ -21,8 +20,8 @@ interface TripClaim {
 export class KordisVehicleMapping implements VehicleMapping {
     /** Its vehicles appear under several trip ids, so only the network-wide assignment settles them. */
     readonly resolvesPerEntity = false;
+    readonly usesTripWindows = true;
 
-    constructor(private readonly city: CityConfig) {}
 
     /** License plates starting with `dpmb` mark feed entries that are not real vehicles. */
     private isInvalidDpmbVehicle(entity: transit_realtime.IFeedEntity): boolean {
@@ -65,12 +64,11 @@ export class KordisVehicleMapping implements VehicleMapping {
     }
 
     /** At its origin, waiting for a departure that has not come yet. */
-    async isBeforeTrack(tripId: string): Promise<boolean> {
-        const windows = await getTripWindows(this.city);
+    isBeforeTrack(tripId: string, { windows, clock }: MappingSchedule): boolean {
         const window = windows?.trips[tripId];
         if (!window) return false;
 
-        const currentMins = getLocalClock(this.city.timezone).mins;
+        const currentMins = clock.mins;
         const diffMins = wrapDaySeconds(((window[0] % DAY_MINS) - (currentMins % DAY_MINS)) * 60) / 60;
         return diffMins > 1 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
     }
@@ -84,9 +82,7 @@ export class KordisVehicleMapping implements VehicleMapping {
      * then an id native to the current export over an aliased one, then nearest window - and a
      * vehicle whose best reading is taken falls back to its next one.
      */
-    async assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
-        const windows = await getTripWindows(this.city);
-        const clock = getLocalClock(this.city.timezone);
+    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData, { windows, clock }: MappingSchedule) {
         const todayBit = windows ? dayBit(windows, clock.date) : 0;
         const currentMins = windows ? clock.mins : 0;
 

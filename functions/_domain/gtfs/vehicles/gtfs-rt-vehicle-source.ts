@@ -5,6 +5,8 @@ import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
+import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { getLocalClock } from '../../../_core/utils/time';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -26,14 +28,15 @@ export class GtfsRtVehicleSource implements VehicleSource {
     /** Null when the feed or its static data cannot be read; every lookup then answers as offline. */
     private async index(): Promise<VehicleIndex | null> {
         try {
-            const [snapshot, routes, tripRoutes] = await Promise.all([
+            const [snapshot, routes, tripRoutes, windows] = await Promise.all([
                 getGtfsRtSnapshot(this.city),
                 getGtfsRoutes(this.city),
                 getGtfsTripRoutes(this.city),
+                this.mapping.usesTripWindows ? getTripWindows(this.city) : null,
             ]);
             // A failed trip-routes fetch returns empty; mapping against it would blank the map.
             if (Object.keys(tripRoutes.tripRoutes).length === 0) return null;
-            return new VehicleIndex(snapshot, routes, tripRoutes, this.mapping);
+            return new VehicleIndex(snapshot, routes, tripRoutes, this.mapping, { windows, clock: getLocalClock(this.city.timezone) });
         } catch (e) {
             console.error(`GTFS-RT index unavailable for ${this.city.slug}:`, e instanceof Error ? e.message : e);
             return null;

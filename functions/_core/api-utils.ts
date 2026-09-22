@@ -1,5 +1,5 @@
 import { ApiError } from "./errors";
-import { ERROR_MESSAGES } from "./config";
+import { CACHE_TTL, ERROR_MESSAGES } from "./config";
 import { ZodError } from "zod";
 import type { EventContext } from "@cloudflare/workers-types";
 import type { CityRequestContext, Env } from "./types";
@@ -72,7 +72,9 @@ export function createJsonBodyResponse(body: BodyInit, maxAge: number = 10): Res
     // poll arrives, so every poll misses and re-invokes the Function. Capped at 60s so long-lived
     // static responses are never served stale for long.
     const staleWhileRevalidate = Math.min(maxAge, 60);
-    const cacheControl = `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
+    // An uncacheable answer (max-age 0, e.g. an offline feed) must not be revived on error either.
+    const staleIfError = maxAge > 0 ? `, stale-if-error=${CACHE_TTL.STALE_IF_ERROR}` : '';
+    const cacheControl = `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}${staleIfError}`;
 
     return new Response(body, {
         headers: {

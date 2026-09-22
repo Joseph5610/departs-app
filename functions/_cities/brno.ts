@@ -34,7 +34,7 @@ const config: CityConfig = {
 export const city: City = {
     config,
     create: () => gtfsUseCases(config, {
-        vehicleSource: new GtfsRtVehicleSource(config, new KordisVehicleMapping(config)),
+        vehicleSource: new GtfsRtVehicleSource(config, new KordisVehicleMapping()),
         enricher: createKordisVehicleDetailEnricher,
         alertsMapper: createKordisAlertsMapper(),
     }),

@@ -19,6 +19,8 @@ export const CACHE_TTL = {
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h
     SITEMAP: 86400, // 24h
+    /** How long the edge may keep serving the last good response while the Worker fails (e.g. a CPU kill). */
+    STALE_IF_ERROR: 60,
 };
 
 /**
