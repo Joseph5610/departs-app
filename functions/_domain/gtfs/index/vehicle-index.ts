@@ -71,9 +71,11 @@ export class VehicleIndex {
     }
 
     /** Every vehicle in the network, for the map. Built once per decoded feed and shared. */
-    all(): Promise<AppVehicleCollection> {
+    async all(): Promise<AppVehicleCollection> {
         // Keyed by the decoded feed, which is reused while upstream bytes are unchanged: an unchanged feed is not rebuilt.
-        return deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
+        const built = await deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
+        // Stamped with this read, not the build: a reused fleet would otherwise age past the stale threshold.
+        return { ...built, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
     }
 
     private buildAll(): AppVehicleCollection {
