@@ -4,7 +4,7 @@ import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, Hand, type Luc
 import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
 import { cn } from '@/lib/utils';
-import { calculateTimeDifferenceSecs, addSecondsToTime, formatDelay } from '../../../utils/dateUtils';
+import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
 import { getDelayStatus } from '../../../config/transit';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -48,6 +48,16 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
         return stopTimes.filter((s) => Number(s.properties.stop_sequence) < effectiveSequence).length;
     }, [stopTimes, effectiveSequence]);
 
+    /** The line must stop at the last dot, not run behind that stop's own transfer card. */
+    const lastStop = useMemo(() => {
+        return stopTimes.reduce<StopFeature | null>((last, s) => {
+            if (!last) return s;
+            return Number(s.properties.stop_sequence) > Number(last.properties.stop_sequence) ? s : last;
+        }, null);
+    }, [stopTimes]);
+    const lastStopSequence = lastStop ? Number(lastStop.properties.stop_sequence) : null;
+    const lastStopIsPast = lastStopSequence !== null && effectiveSequence !== null && lastStopSequence < effectiveSequence;
+
     if (!stopTimes.length) return null;
 
     return (
@@ -68,45 +78,65 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                         </CollapsibleTrigger>
                     )}
                 </div>
-                <div className="relative pl-6 overflow-hidden!">
-                    <div className={cn(
-                        "absolute left-2.75 bottom-6 w-0.5 bg-border",
-                        (pastStopsCount === 0 || showPastStops) ? "top-6" : "top-0"
-                    )} />
+                <div>
+                    <div className="relative pl-6 overflow-hidden!">
+                        <div className={cn(
+                            "absolute left-2.75 bottom-6 w-0.5 bg-border",
+                            (pastStopsCount === 0 || showPastStops) ? "top-6" : "top-0"
+                        )} />
 
-                    {/* Past Stops (Collapsible) */}
-                    <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
+                        {/* Past Stops (Collapsible) */}
+                        <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
+                            {stopTimes
+                                .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
+                                .map((stop, idx: number) => (
+                                    <StopItem
+                                        key={`past-${stop.properties.stop_sequence || idx}`}
+                                        stop={stop}
+                                        isPast={true}
+                                        effectiveSequence={effectiveSequence}
+                                        nextStopSequence={nextStopSequence}
+                                        delay={delay}
+                                        isFirstTransfer={false}
+                                        isLastStop={false}
+                                    />
+                                ))
+                            }
+                        </CollapsibleContent>
+
+                        {/* Current & Future Stops */}
                         {stopTimes
-                            .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
+                            .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
                             .map((stop, idx: number) => (
                                 <StopItem
-                                    key={`past-${stop.properties.stop_sequence || idx}`}
+                                    key={`future-${stop.properties.stop_sequence || idx}`}
                                     stop={stop}
-                                    isPast={true}
+                                    isPast={false}
                                     effectiveSequence={effectiveSequence}
                                     nextStopSequence={nextStopSequence}
                                     delay={delay}
-                                    isFirstTransfer={false}
+                                    isFirstTransfer={Number(stop.properties.stop_sequence) === firstTransferSequence}
+                                    isLastStop={Number(stop.properties.stop_sequence) === lastStopSequence}
                                 />
                             ))
                         }
-                    </CollapsibleContent>
+                    </div>
 
-                    {/* Current & Future Stops */}
-                    {stopTimes
-                        .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
-                        .map((stop, idx: number) => (
-                            <StopItem
-                                key={`future-${stop.properties.stop_sequence || idx}`}
-                                stop={stop}
-                                isPast={false}
-                                effectiveSequence={effectiveSequence}
-                                nextStopSequence={nextStopSequence}
-                                delay={delay}
-                                isFirstTransfer={Number(stop.properties.stop_sequence) === firstTransferSequence}
-                            />
-                        ))
-                    }
+                    {/* The last stop's own transfers render outside the line's gutter so the line ends at its dot. */}
+                    {lastStop && (lastStop.properties.connections || lastStop.properties.continues_as) && (
+                        <div className="pl-6">
+                            {lastStop.properties.connections && (
+                                <StopConnections
+                                    connections={lastStop.properties.connections}
+                                    isPast={lastStopIsPast}
+                                    defaultOpen={Number(lastStop.properties.stop_sequence) === firstTransferSequence}
+                                />
+                            )}
+                            {lastStop.properties.continues_as && (
+                                <StopContinuation continuation={lastStop.properties.continues_as} isPast={lastStopIsPast} />
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </Collapsible>
@@ -115,13 +145,15 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
 
 StopTimeline.displayName = 'StopTimeline';
 
-const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer }: {
+const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop }: {
     stop: StopFeature,
     isPast: boolean,
     effectiveSequence: number | null,
     nextStopSequence: number | null,
     delay?: number | null,
-    isFirstTransfer: boolean
+    isFirstTransfer: boolean,
+    /** The line's own last stop; its transfer card is rendered outside the line's gutter instead. */
+    isLastStop: boolean
 }) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -268,10 +300,10 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                     })()}
                 </div>
             </div>
-            {stop.properties.connections && (
+            {!isLastStop && stop.properties.connections && (
                 <StopConnections connections={stop.properties.connections} isPast={isPast} defaultOpen={isFirstTransfer} />
             )}
-            {stop.properties.continues_as && (
+            {!isLastStop && stop.properties.continues_as && (
                 <StopContinuation continuation={stop.properties.continues_as} isPast={isPast} />
             )}
         </>
@@ -330,7 +362,15 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
     note?: string,
     isWarning?: boolean
 }) => {
+    const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+
+    const scheduledTime = time;
+    const hasRealtime = !!time && typeof delay === 'number' && delay !== 0;
+    const realtimeTime = hasRealtime ? addSecondsToTime(time as string, delay as number) : time;
+    const isLate = hasRealtime && scheduledTime && realtimeTime
+        ? getDelayStatus(calculateTimeDifferenceSecs(realtimeTime, scheduledTime)) === 'late'
+        : false;
 
     const content = (
         <>
@@ -346,17 +386,19 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
                     </span>
                 )}
             </span>
-            {typeof delay === 'number' && delay !== 0 && (
-                <span className={cn(
-                    "text-xs font-bold tabular-nums shrink-0",
-                    delay > 0 ? "text-destructive" : "text-sky-500"
-                )}>
-                    {formatDelay(delay)}
-                </span>
-            )}
             {time && (
-                <span className="text-xs tabular-nums text-muted-foreground shrink-0 text-right">
-                    {time.slice(0, 8)}
+                <span className="flex flex-col items-end shrink-0 min-w-17">
+                    <span className={cn(
+                        "text-xs tabular-nums",
+                        hasRealtime ? (isLate ? "text-destructive" : "text-primary") : "text-muted-foreground"
+                    )}>
+                        {realtimeTime?.slice(0, 8)}
+                    </span>
+                    {hasRealtime && (
+                        <span className="text-[9px] text-muted-foreground tabular-nums">
+                            {t('map.vehicleDetails.scheduledTime')} {scheduledTime?.slice(0, 8)}
+                        </span>
+                    )}
                 </span>
             )}
         </>
