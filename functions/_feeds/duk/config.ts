@@ -66,6 +66,8 @@ export const DUK_CONFIG = {
     UNPLACED_LINES_TTL_MS: 6 * 3_600_000,
     /** Portabo degrades when a station's platforms are asked for at once, so the survey walks them. */
     UNPLACED_SURVEY_CONCURRENCY: 2,
+    /** A survey stuck past this is assumed orphaned by a killed or cancelled request, and retried. */
+    UNPLACED_SURVEY_ABANDON_MS: 60_000,
     /** Portabo's catch-all platform, which carries no platform of its own. */
     VIRTUAL_POST: 999,
     /** Board post that asks Portabo for every platform of a station. */

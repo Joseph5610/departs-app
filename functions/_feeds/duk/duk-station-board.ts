@@ -48,7 +48,12 @@ const unplacedLinesCache = new LruCache<string[]>({
     ttlMs: DUK_CONFIG.UNPLACED_LINES_TTL_MS,
 });
 
-const surveysInFlight = new Set<string>();
+/**
+ * Started-at per node under survey. A `waitUntil` task killed or cancelled mid-flight never reaches
+ * its `finally`, so a bare in-flight flag would wedge that station's survey for the isolate's life;
+ * an entry older than `UNPLACED_SURVEY_ABANDON_MS` is treated as orphaned and retried instead.
+ */
+const surveysInFlight = new Map<string, number>();
 
 /** `H:MM:SS`, optionally negative, to seconds. */
 function parseDelay(value: string | null | undefined): number | null {
@@ -147,8 +152,10 @@ export function getDukUnplacedLines(city: CityConfig, node: string): Set<string>
  */
 export async function surveyDukUnplacedLines(city: CityConfig, node: string, posts: string[]): Promise<void> {
     const cacheKey = `${city.slug}:${node}`;
-    if (surveysInFlight.has(cacheKey) || unplacedLinesCache.get(cacheKey) !== undefined) return;
-    surveysInFlight.add(cacheKey);
+    const startedAt = surveysInFlight.get(cacheKey);
+    if (unplacedLinesCache.get(cacheKey) !== undefined) return;
+    if (startedAt !== undefined && Date.now() - startedAt < DUK_CONFIG.UNPLACED_SURVEY_ABANDON_MS) return;
+    surveysInFlight.set(cacheKey, Date.now());
     try {
         const placed = new Set<string>();
         for (let i = 0; i < posts.length; i += DUK_CONFIG.UNPLACED_SURVEY_CONCURRENCY) {
