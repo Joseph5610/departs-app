@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
 import { useStopSearch } from '../../../hooks/features/useStopSearch';
 import { usePosSearch } from '../../../hooks/features/usePosSearch';

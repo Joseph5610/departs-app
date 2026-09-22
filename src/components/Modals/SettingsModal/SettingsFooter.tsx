@@ -12,14 +12,15 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
-import { DATA_LICENSE_URLS, PROCESSED_DATA, SHARED_DATA_ATTRIBUTIONS, type DataAttribution } from '../../../config/attributions';
+import { DATA_LICENSE_URLS, PROCESSED_DATA_URL, SHARED_DATA_ATTRIBUTIONS, type DataAttribution, type DataLicenseId } from '../../../config/attributions';
 import { EXTERNAL_URLS, UI_TIMING_MS } from '../../../config/constants';
 import { formatDateTime } from '../../../utils/dateUtils';
 
-const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[] }> => [
+/** `processedDataLicense` is set only for city groups: departs.app processes a city's own data, not the shared OSM/Photon sources. */
+const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[]; processedDataLicense?: DataLicenseId }> => [
     ...Object.values(FRONTEND_CITIES_CONFIG)
         .filter(city => !city.isHidden || unlockedCities.includes(city.slug))
-        .map(city => ({ labelKey: `map.regions.${city.slug}`, sources: city.attributions })),
+        .map(city => ({ labelKey: `map.regions.${city.slug}`, sources: city.attributions, processedDataLicense: city.processedDataLicense ?? 'ccBy4' as DataLicenseId })),
     { labelKey: 'settings.attributions.shared', sources: SHARED_DATA_ATTRIBUTIONS },
 ];
 
@@ -49,6 +50,30 @@ const AttributionItem: React.FC<{ source: DataAttribution }> = ({ source }) => {
                 ) : (
                     <Badge variant="outline" className={badgeClassName}>{licenseLabel}</Badge>
                 )}
+            </ItemActions>
+        </Item>
+    );
+};
+
+/**
+ * How departs.app republishes one city's processed data, under that city's own licence. The row
+ * itself links to the source doc, so - unlike `AttributionItem` - the badge stays a plain label:
+ * an anchor can't nest inside the row's own anchor.
+ */
+const ProcessedDataItem: React.FC<{ license: DataLicenseId }> = ({ license }) => {
+    const { t } = useTranslation();
+    const licenseLabel = t(`settings.attributions.licenses.${license}`);
+    return (
+        <Item variant="settings" size="none" render={<a href={PROCESSED_DATA_URL} target="_blank" rel="noopener noreferrer" />}>
+            <ItemMedia variant="icon" className="text-muted-foreground">
+                <Scale size={18} strokeWidth={2} />
+            </ItemMedia>
+            <ItemContent>
+                <ItemTitle className="text-foreground">{t('settings.attributions.processedTitle')}</ItemTitle>
+                <ItemDescription className="text-xs line-clamp-none">{t('settings.attributions.notice')}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+                <Badge variant="outline" className={badgeClassName}>{licenseLabel}</Badge>
             </ItemActions>
         </Item>
     );
@@ -196,32 +221,11 @@ export const SettingsFooter: React.FC = () => {
                         <Card variant="subtle" size="none" className="overflow-hidden gap-0">
                             <ItemGroup className="gap-0">
                                 {group.sources.map(source => <AttributionItem key={`${source.url}|${source.title}`} source={source} />)}
+                                {group.processedDataLicense && <ProcessedDataItem license={group.processedDataLicense} />}
                             </ItemGroup>
                         </Card>
                     </div>
                 ))}
-                <Card variant="subtle" size="none" className="overflow-hidden gap-0">
-                    <ItemGroup className="gap-0">
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<a href={PROCESSED_DATA.url} target="_blank" rel="noopener noreferrer" />}
-                        >
-                            <ItemMedia variant="icon" className="text-muted-foreground">
-                                <Scale size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">{t('settings.attributions.processedTitle')}</ItemTitle>
-                                <ItemDescription className="text-xs line-clamp-none">{t('settings.attributions.notice')}</ItemDescription>
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge variant="outline" className={badgeClassName}>
-                                    {t(`settings.attributions.licenses.${PROCESSED_DATA.license}`)}
-                                </Badge>
-                            </ItemActions>
-                        </Item>
-                    </ItemGroup>
-                </Card>
             </div>
 
             {updatedAt && (

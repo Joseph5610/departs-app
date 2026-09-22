@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import { CitySelectionList } from './CitySelectionList';
 import { cn } from '@/lib/utils';

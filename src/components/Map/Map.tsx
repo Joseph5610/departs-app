@@ -1,9 +1,8 @@
-import React, { lazy, Suspense, useMemo, useCallback, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useMemo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
-import { navigate } from 'wouter/use-browser-location';
+import { closeDetail, goBack, navigate, useBackTarget } from '../../lib/history';
 import { paths } from '../../lib/routes';
-import { useLocation } from 'wouter';
 
 import MapGL, { Marker } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
@@ -61,6 +60,7 @@ const MapInner: React.FC = () => {
     // Store Actions
     const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedId = tripId || vehicleId;
+    const isPanelRoute = Boolean(selectedStopId || selectedId || posId || isStatsRoute || isFavoritesRoute);
 
     // Viewport Store
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
@@ -93,33 +93,15 @@ const MapInner: React.FC = () => {
     const initialViewState = useMemo(() => getInitialViewState(), []);
 
 
-    const [location] = useLocation();
-    const returnPath = useSelectionStore(s => s.returnPath);
-    const setReturnPath = useSelectionStore(s => s.actions.setReturnPath);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
+    const backTarget = useBackTarget();
 
-    const prevLocationRef = React.useRef(location);
+    const handleBack = useCallback(() => goBack(paths.city(selectedCity)), [selectedCity]);
 
-    useEffect(() => {
-        if (prevLocationRef.current !== location) {
-            setReturnPath(prevLocationRef.current);
-            prevLocationRef.current = location;
-        }
-    }, [location, setReturnPath]);
+    const closePanel = useCallback(() => closeDetail(paths.city(selectedCity)), [selectedCity]);
 
-    const handleBack = useCallback(() => {
-        if (returnPath && returnPath !== location) {
-            navigate(returnPath);
-        } else {
-            navigate(paths.city(selectedCity));
-        }
-    }, [returnPath, location, selectedCity]);
-
-    const closePanel = useCallback(() => navigate(paths.city(selectedCity)), [selectedCity]);
-
-    const isRootPath = !returnPath || returnPath === paths.city(selectedCity) || returnPath === `${paths.city(selectedCity)}/` || returnPath === '/';
     const hasActiveDetailPanel = Boolean(selectedVehicle || selectedStop || selectedPos);
-    const shouldShowBackButton = hasActiveDetailPanel && returnPath !== null && returnPath !== location && !isRootPath;
+    const shouldShowBackButton = hasActiveDetailPanel && backTarget !== null;
 
     const panelTitle = useMemo(() => {
         if (selectedVehicle) {
@@ -214,7 +196,7 @@ const MapInner: React.FC = () => {
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === MAP_LAYERS.STOP_ENTRANCES) {
-                        navigate(paths.city(selectedCity)); // Close panel on background click
+                        if (isPanelRoute) closePanel(); // Close panel on background click
                         return;
                     }
 

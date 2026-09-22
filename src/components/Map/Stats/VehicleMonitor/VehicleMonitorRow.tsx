@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../../../lib/history';
 import { paths } from '../../../../lib/routes';
 import { ChevronRight } from 'lucide-react';
 import { LineBadge } from '../../../LineBadge';

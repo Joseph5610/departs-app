@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../lib/history';
 import { useRouteParams } from '../useRouteParams';
 import { useCities } from '../data/useCities';
 import { getUrlUnlockedCity, usePreferencesStore } from '../../state/preferencesStore';

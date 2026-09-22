@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3 } from 'lucide-react';
-import { navigate } from 'wouter/use-browser-location';
+import { closeDetail, navigate } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -51,11 +51,13 @@ export const MapControls = React.memo(() => {
     }, [setIsAlertsOpen]);
 
     const onStats = React.useCallback(() => {
-        navigate(isStatsRoute ? paths.city(selectedCity) : paths.stats(selectedCity));
+        if (isStatsRoute) closeDetail(paths.city(selectedCity));
+        else navigate(paths.stats(selectedCity));
     }, [isStatsRoute, selectedCity]);
 
     const onToggleFavorites = React.useCallback(() => {
-        navigate(isFavoritesRoute ? paths.city(selectedCity) : paths.favorites(selectedCity));
+        if (isFavoritesRoute) closeDetail(paths.city(selectedCity));
+        else navigate(paths.favorites(selectedCity));
     }, [isFavoritesRoute, selectedCity]);
 
 

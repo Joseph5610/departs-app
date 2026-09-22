@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Loader2, Train, ArrowRight } from 'lucide-react';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';

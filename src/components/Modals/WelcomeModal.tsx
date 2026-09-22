@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useVisibleCities } from '../../hooks/data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate, replaceUrl } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import { DEFAULT_CITY_SLUG } from '../../config/cities';
 import { CitySelectionList } from '../Map/CitySelectionList';
@@ -57,7 +57,7 @@ export const WelcomeModal: React.FC = React.memo(() => {
 
             const url = new URL(window.location.href);
             url.searchParams.delete('skipTutorial');
-            window.history.replaceState({}, '', url.toString());
+            replaceUrl(url.toString());
         }
     }, [isHomepage, hasSeenWelcome, isSkipTutorial, setHasSeenWelcome, handleLocate]);
 

@@ -30,8 +30,10 @@ export const SHARED_DATA_ATTRIBUTIONS: DataAttribution[] = [
     { creator: 'OpenStreetMap contributors', title: 'Map data (CARTO basemaps) and place search (Photon by komoot)', url: 'https://www.openstreetmap.org/copyright', license: 'odbl1' },
 ];
 
-/** The processed static data departs.app publishes, and where its sources and changes are documented. */
-export const PROCESSED_DATA = {
-    url: 'https://github.com/Joseph5610/departs-data#-license',
-    license: 'ccBy4' as DataLicenseId,
-};
+/**
+ * Where departs.app documents its processed static data: sources, changes and, per city, the
+ * licence it republishes under (`InitialCityConfig.processedDataLicense`, CC BY 4.0 by default;
+ * a city built from an ODbL source stays ODbL, since ODbL's share-alike clause forbids relicensing
+ * a derivative database).
+ */
+export const PROCESSED_DATA_URL = 'https://github.com/Joseph5610/departs-data#-license';

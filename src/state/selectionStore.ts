@@ -3,14 +3,12 @@ import { create } from 'zustand';
 interface SelectionState {
     isFollowing: boolean;
     selectedLine: string | null;
-    returnPath: string | null;
 }
 
 interface SelectionActions {
     setIsFollowing: (isFollowing: boolean) => void;
     toggleLineFilter: (line: string | null) => void;
     clearLineFilter: () => void;
-    setReturnPath: (path: string | null) => void;
 }
 
 export interface SelectionStore extends SelectionState {
@@ -21,7 +19,6 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
     // State
     isFollowing: false,
     selectedLine: null,
-    returnPath: null,
 
     // Actions
     actions: {
@@ -33,7 +30,5 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
             })),
             
         clearLineFilter: () => set({ selectedLine: null }),
-
-        setReturnPath: (path) => set({ returnPath: path }),
     },
 }));

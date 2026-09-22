@@ -6,7 +6,7 @@ import React from 'react';
 import { useCityConfig, useVisibleCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../lib/history';
 import { cityOverviewCamera } from '../../utils/mapUtils';
 
 /**

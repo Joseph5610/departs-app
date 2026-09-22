@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, Hand, type LucideIcon } from 'lucide-react';
-import { navigate } from 'wouter/use-browser-location';
+import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
 import { cn } from '@/lib/utils';
 import { calculateTimeDifferenceSecs, addSecondsToTime, formatDelay } from '../../../utils/dateUtils';

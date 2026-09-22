@@ -8,7 +8,7 @@ import { useRouteParams } from '../../hooks/useRouteParams';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
-import { navigate } from 'wouter/use-browser-location';
+import { closeDetail, navigate } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import type { AppError } from '@/types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
@@ -55,7 +55,7 @@ export const DetailPanelContent: React.FC = memo(() => {
     useEffect(() => {
         if (selectedVehicle && isVehicleError && !loadingDetail && !vehicleDetail) {
             toast.error(t('toasts.vehicleNotFound'));
-            navigate(paths.city(selectedCity));
+            closeDetail(paths.city(selectedCity));
         }
     }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t, selectedCity]);
 

@@ -13,6 +13,7 @@ import { QueryCache } from '@tanstack/react-query'
 import { AppErrorCode, type AppError } from './types/error'
 import i18n from './i18n/config'
 import { TRANSIT_REFRESH_MS } from './config/constants'
+import { initHistoryDepth } from './lib/history'
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -33,6 +34,8 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+initHistoryDepth()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

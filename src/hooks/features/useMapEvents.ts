@@ -1,4 +1,5 @@
 import type { Map, SymbolLayerSpecification } from 'maplibre-gl';
+import { replaceUrl } from '../../lib/history';
 import { useCallback, useRef } from 'react';
 import { useSelectionStore } from '../../state/selectionStore';
 import { useViewportStore } from '../../state/viewportStore';
@@ -73,7 +74,7 @@ export const useMapEvents = () => {
         url.searchParams.set('lat', latitude.toFixed(5));
         url.searchParams.set('lng', longitude.toFixed(5));
         url.searchParams.set('z', zoom.toFixed(2));
-        window.history.replaceState({}, '', url.toString());
+        replaceUrl(url.toString());
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
         vpActions.setBounds(currentBounds);

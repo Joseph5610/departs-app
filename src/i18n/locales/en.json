@@ -99,7 +99,7 @@
     "attributions": {
       "shared": "Map & place search",
       "processedTitle": "How departs.app changes the data",
-      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse departs.app. The processed data, their sources and changes are published under CC BY 4.0.",
+      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse departs.app. Sources and changes are documented here.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
