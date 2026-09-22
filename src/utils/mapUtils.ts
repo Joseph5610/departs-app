@@ -88,16 +88,6 @@ export const snapBoundsToTiles = (
     return [tileYToLat(maxY, n), tileXToLon(minX, n), tileYToLat(minY, n), tileXToLon(maxX, n)];
 };
 
-/**
- * Whether `south,west,north,east` viewport bounds overlap a city's `[west, south, east, north]` box.
- * False right after a city switch, while the viewport still shows the previous city.
- */
-export const boundsOverlapCity = (bounds: string, cityBounds: readonly [number, number, number, number]): boolean => {
-    const [south, west, north, east] = bounds.split(',').map(Number);
-    const [cityWest, citySouth, cityEast, cityNorth] = cityBounds;
-    return west <= cityEast && east >= cityWest && south <= cityNorth && north >= citySouth;
-};
-
 /** Camera move to a city's overview, for opening or switching a city. */
 export const cityOverviewCamera = (center: [number, number]) => ({
     center,

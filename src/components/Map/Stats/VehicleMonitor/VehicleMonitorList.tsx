@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Search, X, Activity } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { useVehicles } from '../../../../hooks/data/useVehicles';
-import { useNetworkVehicles } from '../../../../hooks/data/useNetworkVehicles';
-import type { VehicleCollection } from '../../../../types/transit';
 import { useVehicleMonitor } from '../../../../hooks/derived/useVehicleMonitor';
 import type { SearchField } from '../../../../hooks/derived/useVehicleMonitor';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
@@ -32,11 +30,7 @@ export const VehicleMonitorList: React.FC = () => {
     const [searchField, setSearchField] = useState<SearchField>('line');
     const [modeFilter, setModeFilter] = useState<string>('all');
 
-    const screenVehicles = useVehicles().vehicles;
-    const { data: networkVehicles, isFetching: isNetworkFetching } = useNetworkVehicles();
-
-    // Prefer networkVehicles if available, fallback to screenVehicles
-    const activeCollection: VehicleCollection | null = (networkVehicles?.features?.length ? networkVehicles : screenVehicles) || screenVehicles || networkVehicles || null;
+    const { networkVehicles: activeCollection, isFetching: isNetworkFetching } = useVehicles();
 
     const isLoading = (!activeCollection?.features || activeCollection.features.length === 0) && isNetworkFetching;
 

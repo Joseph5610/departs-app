@@ -110,6 +110,8 @@ const SystemStatusDetails: React.FC = () => {
     };
 
     const statusDetails = getStatusDetails();
+    // The badge describes the feed; the connection card below describes the device.
+    const isFeedLive = status.type === 'healthy' || status.type === 'refreshing' || status.type === 'stale';
     const providerName = t(cityConfig.dataProvider.nameKey);
     const providerUrl = cityConfig.dataProvider.url;
 
@@ -135,7 +137,7 @@ const SystemStatusDetails: React.FC = () => {
                         </div>
                         <div className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5", statusDetails.color)}>
                             <div className={cn("w-1.5 h-1.5 rounded-full", statusDetails.dotColor)} />
-                            {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
+                            {isFeedLive ? t('liveStatus.live') : t('liveStatus.offline')}
                         </div>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">

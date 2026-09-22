@@ -1,39 +1,52 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { useQuery, keepPreviousData, queryOptions, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import type { VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { enrichVehicleCollection } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
+import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
-import { boundsOverlapCity } from '../../utils/mapUtils';
-import { useCityConfig } from './useCities';
-import type { AppError } from '../../types/error';
+import { AppErrorCode, type AppError } from '../../types/error';
+import { filterVehiclesToView } from '../../lib/vehicle-filter';
 
-const fetchVehicles = async (selectedCity: string, bounds: string | null, routeFilter: string[] | null, routeTypeFilter: string[]): Promise<VehicleCollection | null> => {
-    const params = new URLSearchParams();
+/**
+ * The city's whole fleet. An `upstream_offline` answer is thrown while recent positions are held, so it
+ * is retried and one failed backend refresh does not blank the map; past MAX_KEPT_AGE_MS it is shown.
+ */
+const fetchNetworkVehicles = async (selectedCity: string, client: QueryClient, queryKey: QueryKey): Promise<VehicleCollection | null> => {
+    const collection = await apiFetch<VehicleCollection>(`/${selectedCity}/vehicles`, LIVE_FETCH_OPTIONS);
+    if (collection?.status !== 'upstream_offline') return collection;
 
-    if (bounds) {
-        params.set('bounds', bounds);
-    }
-    if (routeFilter && routeFilter.length > 0) {
-        routeFilter.forEach((line) => {
-            params.append('routeShortName', line);
-        });
-    }
-    if (routeTypeFilter.length > 0) {
-        routeTypeFilter.forEach((type) => {
-            params.append('routeType', type);
-        });
-    }
+    const previous = client.getQueryData<VehicleCollection | null>(queryKey);
+    const previousMs = previous?.last_updated ? Date.parse(previous.last_updated) : NaN;
+    const isHoldingRecent = !!previous?.features.length && Date.now() - previousMs < LIVE_VEHICLES_CONFIG.MAX_KEPT_AGE_MS;
+    if (!isHoldingRecent) return collection;
 
-    const queryStr = params.toString();
-    return apiFetch<VehicleCollection>(`/${selectedCity}/vehicles${queryStr ? `?${queryStr}` : ''}`, LIVE_FETCH_OPTIONS);
+    const error = new Error('Vehicle source offline') as AppError;
+    error.code = AppErrorCode.UPSTREAM_ERROR;
+    error.isUpstream = true;
+    throw error;
 };
 
-const enrichScreenVehicles = memoizeLast(enrichVehicleCollection);
+/**
+ * One city-wide query shared by the map and the stats views. It carries no viewport or filter
+ * parameters, so every client of a city requests the same URL and the edge cache answers most polls.
+ */
+const networkVehiclesQueryOptions = (selectedCity: string) => queryOptions<VehicleCollection | null, AppError>({
+    queryKey: ['vehicles', selectedCity],
+    queryFn: ({ client, queryKey }) => fetchNetworkVehicles(selectedCity, client, queryKey),
+    refetchInterval: TRANSIT_REFRESH_MS,
+    staleTime: QUERY_TIMING_MS.LIVE_STALE,
+    gcTime: QUERY_TIMING_MS.LIVE_GC,
+    placeholderData: keepPreviousData,
+    retry: LIVE_VEHICLES_CONFIG.RETRY_COUNT,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, LIVE_VEHICLES_CONFIG.RETRY_MAX_DELAY_MS),
+});
+
+const enrichNetworkVehicles = memoizeLast(enrichVehicleCollection);
+const selectScreenVehicles = memoizeLast(filterVehiclesToView);
 
 const buildVehicleIndexes = memoizeLast((collection: VehicleCollection | null) => {
     const vehicleIndex = new Map<string, VehicleFeature>();
@@ -48,43 +61,36 @@ const buildVehicleIndexes = memoizeLast((collection: VehicleCollection | null) =
 /**
  * useVehicles
  * 
- * Subscribes to the live vehicle API and handles high-frequency location updates.
- * Synchronizes backend details (low-frequency) with live map stream (high-frequency).
- * Disables polling automatically while the map is dragged or the user is tracking.
+ * The city's live fleet with push patches applied, as `networkVehicles`, and the part of it in the
+ * current map view and filters, as `vehicles`. One query serves the map and the stats views.
  */
 export const useVehicles = () => {
     const bounds = useViewportStore(s => s.debouncedBounds);
     const routeFilter = useViewportStore(s => s.routeFilter);
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const cityBounds = useCityConfig().bounds;
-    // After a city switch the viewport still shows the previous city until the camera arrives.
-    const isViewportInCity = !!bounds && boundsOverlapCity(bounds, cityBounds);
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
 
-    const query = useQuery<VehicleCollection | null, AppError>({
-        queryKey: ['vehicles', selectedCity, bounds, routeFilter, routeTypeFilter],
-        queryFn: () => fetchVehicles(selectedCity, bounds, routeFilter, routeTypeFilter),
-        enabled: !!selectedCity && isViewportInCity,
-        refetchInterval: (query) => (bounds && query.state.dataUpdatedAt ? TRANSIT_REFRESH_MS : false),
-        staleTime: QUERY_TIMING_MS.LIVE_STALE,
-        gcTime: QUERY_TIMING_MS.LIVE_GC,
-        placeholderData: keepPreviousData,
-        retry: 1,
+    // Not tied to the map view: the stats views read the same fleet while the map is elsewhere.
+    const query = useQuery({
+        ...networkVehiclesQueryOptions(selectedCity),
+        enabled: !!selectedCity,
     });
 
-    const enrichedCollection = enrichScreenVehicles(query.data, byTripId, byVehicleId, query.dataUpdatedAt || 0);
-    const { vehicleIndex, tripIndex } = buildVehicleIndexes(enrichedCollection);
+    const networkVehicles = enrichNetworkVehicles(query.data, byTripId, byVehicleId, query.dataUpdatedAt || 0);
+    const screenVehicles = selectScreenVehicles(networkVehicles, bounds, routeFilter, routeTypeFilter);
+    const { vehicleIndex, tripIndex } = buildVehicleIndexes(screenVehicles ?? null);
 
     return useMemo(() => ({
-        vehicles: enrichedCollection,
+        vehicles: screenVehicles,
+        networkVehicles,
         vehicleIndex,
         tripIndex,
         isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         dataUpdatedAt: query.dataUpdatedAt
-    }), [enrichedCollection, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
+    }), [screenVehicles, networkVehicles, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
 };

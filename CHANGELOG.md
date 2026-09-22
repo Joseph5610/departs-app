@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.1] - 2026-09-22
+
+### Fixed
+
+- The map no longer goes blank with "Source Offline" when a single refresh fails; failed polls are retried and the last positions stay on screen.
+- The map and stats panel share one city-wide vehicle feed through the edge cache instead of separate per-viewport and stats requests, so far fewer requests reach the backend.
+- The status panel badge shows the feed's state instead of the device's connection.
+
 ## [0.74.0] - 2026-09-21
 
 ### Changed

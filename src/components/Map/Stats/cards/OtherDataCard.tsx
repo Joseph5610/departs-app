@@ -6,7 +6,7 @@ import type { CityStats } from '../../../../types/transit';
 
 interface OtherDataCardProps {
     activeStats: CityStats;
-    networkStats?: CityStats;
+    networkStats?: CityStats | null;
 }
 
 export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, networkStats }) => {

@@ -8,13 +8,16 @@ import { getCity, useCasesOf } from "./index";
 
 /**
  * Wraps an API route: resolves the city from the path, hands its use-cases to `handler`, and turns
- * the result or a thrown error into a standardized response.
+ * the result or a thrown error into a standardized response. `cacheTtl` may depend on the result.
  */
-export function withCityRoute(
-    handler: (city: CityUseCases, context: CityRequestContext) => Promise<unknown>,
-    cacheTtl: number
+export function withCityRoute<T>(
+    handler: (city: CityUseCases, context: CityRequestContext) => Promise<T>,
+    cacheTtl: number | ((result: T) => number)
 ): (context: EventContext<Env, string, unknown>) => Promise<Response> {
-    return withCity(async (city, context) => createSuccessResponse(await handler(useCasesOf(city, context.env), toCityRequestContext(context)), cacheTtl));
+    return withCity(async (city, context) => {
+        const result = await handler(useCasesOf(city, context.env), toCityRequestContext(context));
+        return createSuccessResponse(result, typeof cacheTtl === 'function' ? cacheTtl(result) : cacheTtl);
+    });
 }
 
 /**

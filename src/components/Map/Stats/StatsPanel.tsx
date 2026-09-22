@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
 import { Activity, AlertTriangle } from 'lucide-react';
 import { useVehicles } from '../../../hooks/data/useVehicles';
-import { useNetworkVehicles } from '../../../hooks/data/useNetworkVehicles';
-import { useCityStats } from '../../../hooks/data/useCityStats';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -29,8 +27,7 @@ export const StatsPanel = React.memo(() => {
     const setTab = usePreferencesStore(s => s.actions.setStatsTab);
     const viewMode = usePreferencesStore(s => s.statsViewMode);
 
-    const { vehicles } = useVehicles();
-    const { data: networkVehicles, isFetching: isNetworkFetching } = useNetworkVehicles(tab === 'network');
+    const { vehicles, networkVehicles, isFetching: isNetworkFetching } = useVehicles();
     
     const screenStats = useMemo(
         () => (vehicles?.features ? aggregateCityStats(vehicles.features) : null),
@@ -42,14 +39,12 @@ export const StatsPanel = React.memo(() => {
         [networkVehicles]
     );
 
-    const { data: networkApiStats, isFetching: isApiFetching } = useCityStats(tab === 'network');
-
     if (viewMode === 'vehicles') {
         return <VehicleMonitorList />;
     }
     
-    const activeStats = tab === 'screen' ? screenStats : (enrichedNetworkStats || networkApiStats);
-    const isFetching = tab === 'network' && (isNetworkFetching || isApiFetching) && !activeStats;
+    const activeStats = tab === 'screen' ? screenStats : enrichedNetworkStats;
+    const isFetching = tab === 'network' && isNetworkFetching && !activeStats;
     const hasNetworkDelayData = !hasEnrichment || !!enrichedNetworkStats;
 
     return (
@@ -114,7 +109,7 @@ export const StatsPanel = React.memo(() => {
                     <MovementStateCard stats={activeStats} />
                     <VehicleMixCard stats={activeStats} />
                     <BusiestLinesCard stats={activeStats} />
-                    <OtherDataCard activeStats={activeStats} networkStats={enrichedNetworkStats || networkApiStats} />
+                    <OtherDataCard activeStats={activeStats} networkStats={enrichedNetworkStats} />
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center py-12 text-muted-foreground text-sm">
