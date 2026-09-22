@@ -1,4 +1,5 @@
 import type { transit_realtime } from 'gtfs-realtime-bindings';
+import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
@@ -43,7 +44,7 @@ const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
  */
 export class VehicleIndex {
     constructor(
-        private readonly snapshot: Snapshot<transit_realtime.FeedMessage>,
+        private readonly snapshot: Snapshot<GtfsRtFeed>,
         private readonly routes: GtfsRoutesData,
         private readonly tripRoutes: GtfsTripRoutesData,
         private readonly mapping: VehicleMapping
@@ -55,12 +56,13 @@ export class VehicleIndex {
     }
 
     private get entities(): transit_realtime.IFeedEntity[] {
-        return this.snapshot.data.entity ?? [];
+        return this.snapshot.data.entity;
     }
 
-    /** Every vehicle in the network, for the map. Built once per snapshot and shared. */
+    /** Every vehicle in the network, for the map. Built once per decoded feed and shared. */
     all(): Promise<AppVehicleCollection> {
-        return deriveAsync(this.snapshot, collections, () => this.buildAll());
+        // Keyed by the decoded feed, which is reused while upstream bytes are unchanged: an unchanged feed is not rebuilt.
+        return deriveAsync(this.snapshot.data, collections, () => this.buildAll());
     }
 
     private async buildAll(): Promise<AppVehicleCollection> {

@@ -1,12 +1,12 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL, UPSTREAM_TTL_S } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
+import { decodeGtfsRtFeed, type GtfsRtFeed } from './gtfs-rt-decode';
 
 /** The last decoded feed per city with its raw bytes, so an unchanged download is not decoded again. */
-const lastDecoded = new Map<string, { bytes: Uint8Array; feed: transit_realtime.FeedMessage }>();
+const lastDecoded = new Map<string, { bytes: Uint8Array; feed: GtfsRtFeed }>();
 
 function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
     if (a.length !== b.length) return false;
@@ -14,18 +14,18 @@ function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
     return true;
 }
 
-const sources = new Map<string, () => Promise<Snapshot<transit_realtime.FeedMessage> | null>>();
+const sources = new Map<string, () => Promise<Snapshot<GtfsRtFeed> | null>>();
 
 function sourceFor(city: CityConfig, rtUrl: string) {
     let source = sources.get(city.slug);
     if (source) return source;
 
-    source = createSource<transit_realtime.FeedMessage>({
+    source = createSource<GtfsRtFeed>({
         key: `gtfs_rt_feed_${city.slug}`,
         // Matches how often clients poll and how often the edge revalidates; upstreams publish
         // every 20-30s, so a shorter window only repeats the same decode and assignment.
         ttlMs: CACHE_TTL.VEHICLES * 1000,
-        isEmpty: (feed) => !feed.entity || feed.entity.length === 0,
+        isEmpty: (feed) => feed.entity.length === 0,
         read: async () => {
             const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
@@ -41,7 +41,7 @@ function sourceFor(city: CityConfig, rtUrl: string) {
             const previous = lastDecoded.get(city.slug);
             if (previous && sameBytes(previous.bytes, bytes)) return previous.feed;
 
-            const decoded = transit_realtime.FeedMessage.decode(bytes);
+            const decoded = decodeGtfsRtFeed(bytes);
             lastDecoded.set(city.slug, { bytes, feed: decoded });
             return decoded;
         },
@@ -51,7 +51,7 @@ function sourceFor(city: CityConfig, rtUrl: string) {
 }
 
 /** The city's realtime feed as a snapshot: the decoded message and when it was read. */
-export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<transit_realtime.FeedMessage>> {
+export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<GtfsRtFeed>> {
     const rtUrl = city.feed?.realtimeUrl;
     if (!rtUrl) {
         throw new ApiError(`No realtimeUrl configured for city: ${city.slug}`, 501);
@@ -65,6 +65,6 @@ export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<tran
 }
 
 /** The decoded feed alone, for callers that do not care when it was read. */
-export async function getGtfsRtFeed(city: CityConfig): Promise<transit_realtime.FeedMessage> {
+export async function getGtfsRtFeed(city: CityConfig): Promise<GtfsRtFeed> {
     return (await getGtfsRtSnapshot(city)).data;
 }

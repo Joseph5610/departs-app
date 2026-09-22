@@ -57,7 +57,7 @@ export interface Derivation<D> {
  * next caller retries. A build pending past `DERIVATION_CONFIG.ABANDON_MS` is raced by a fresh one rather
  * than awaited forever, since one started by a killed or cancelled request never settles.
  */
-export function deriveAsync<T, D>(snapshot: Snapshot<T>, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
+export function deriveAsync<D>(snapshot: object, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
     const existing = cache.get(snapshot);
     if (!existing) return startDerivation(snapshot, cache, build);
     if (existing.resolved) return existing.promise;
@@ -71,7 +71,7 @@ export function deriveAsync<T, D>(snapshot: Snapshot<T>, cache: WeakMap<object, 
     });
 }
 
-function startDerivation<T, D>(snapshot: Snapshot<T>, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
+function startDerivation<D>(snapshot: object, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
     const derivation: Derivation<D> = { promise: build(), startedAt: Date.now(), resolved: false };
     cache.set(snapshot, derivation);
     derivation.promise.then(

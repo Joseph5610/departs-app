@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.2] - 2026-09-22
+
+### Fixed
+
+- A Ústecký kraj station's unplaced-line survey no longer stays wedged for the rest of the isolate's life if the request running it is cut off mid-flight.
+- Brno vehicles decode the realtime feed with a lean decoder and skip rebuilding the fleet while the feed is unchanged, cutting the CPU that pushed requests over the Workers limit.
+
 ## [0.74.1] - 2026-09-22
 
 ### Fixed
