@@ -2,19 +2,7 @@ import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from ".
 import type { GolemioFleetPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
-
-type Fields = Record<string, unknown>;
-const isFields = (v: unknown): v is Fields => typeof v === 'object' && v !== null && !Array.isArray(v);
-const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
-const num = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined);
-const bool = (v: unknown): boolean | undefined => (typeof v === 'boolean' ? v : undefined);
-const strOrNum = (v: unknown): string | number | undefined => (typeof v === 'string' || typeof v === 'number' ? v : undefined);
-
-function readPoint(v: unknown): AppVehicleFeature['geometry'] | null {
-    if (!isFields(v) || v.type !== 'Point' || !Array.isArray(v.coordinates) || v.coordinates.length !== 2) return null;
-    const [lon, lat] = v.coordinates;
-    return typeof lon === 'number' && typeof lat === 'number' ? { type: 'Point', coordinates: [lon, lat] } : null;
-}
+import { isFields, str, num, bool, strOrNum, readPoint } from "./fields";
 
 export class VehiclesMapper {
     /** `generatedAt` stands in for `last_updated` when the feed carries no per-vehicle timestamps. */

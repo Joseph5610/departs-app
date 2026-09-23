@@ -1,43 +1,110 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppRouteFeature, AppVehicleDescriptor } from "../../../_core/types";
-import { GolemioVehiclePayload, GolemioStopTimeFeature, GolemioShapeFeature } from "../../../_feeds/golemio/schemas/vehicles";
+import type { GolemioVehicleDetailPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
+import { isFields, str, num, bool, strOrNum, type Fields } from "./fields";
+
+/** `vehicle_descriptor`, read defensively; every field optional, matching `AppVehicleDescriptor`. */
+function readDescriptor(v: unknown): AppVehicleDescriptor | undefined {
+    if (!isFields(v)) return undefined;
+    const descriptor: AppVehicleDescriptor = {};
+    const operator = str(v.operator);
+    const vehicle_type = str(v.vehicle_type);
+    const is_wheelchair_accessible = bool(v.is_wheelchair_accessible);
+    const is_air_conditioned = bool(v.is_air_conditioned);
+    const has_usb_chargers = bool(v.has_usb_chargers);
+    const registration = strOrNum(v.vehicle_registration_number);
+    if (operator != null) descriptor.operator = operator;
+    if (vehicle_type != null) descriptor.vehicle_type = vehicle_type;
+    if (is_wheelchair_accessible != null) descriptor.is_wheelchair_accessible = is_wheelchair_accessible;
+    if (is_air_conditioned != null) descriptor.is_air_conditioned = is_air_conditioned;
+    if (has_usb_chargers != null) descriptor.has_usb_chargers = has_usb_chargers;
+    if (registration != null) descriptor.vehicle_registration_number = registration;
+    return Object.keys(descriptor).length > 0 ? descriptor : undefined;
+}
+
+/** A bare `{type, coordinates}` geometry of any GeoJSON type, kept as-is (unlike `readPoint`, which only accepts `Point`). */
+function readGeometry(v: unknown): { type: string; coordinates: number[] | number[][] } | undefined {
+    if (!isFields(v) || typeof v.type !== 'string' || !Array.isArray(v.coordinates)) return undefined;
+    return { type: v.type, coordinates: v.coordinates as number[] | number[][] };
+}
+
+type StopTimeFeature = NonNullable<AppVehicleDetail['stop_times']>['features'][number];
+
+/** One `stop_times.features[]` entry, read defensively. Null when it carries no usable stop_id. */
+function readStopTimeFeature(v: unknown): StopTimeFeature | null {
+    if (!isFields(v) || !isFields(v.properties)) return null;
+    const p = v.properties;
+    const properties: AppStopTimeProperties = {
+        stop_id: str(p.stop_id) || '',
+        stop_name: str(p.stop_name) || '',
+        stop_sequence: num(p.stop_sequence) ?? 0,
+        arrival_time: str(p.arrival_time) || '',
+        departure_time: str(p.departure_time) || '',
+    };
+    const realtime_arrival_time = str(p.realtime_arrival_time);
+    const realtime_departure_time = str(p.realtime_departure_time);
+    const zone_id = str(p.zone_id);
+    const is_wheelchair_accessible = bool(p.is_wheelchair_accessible);
+    const shape_dist_traveled = num(p.shape_dist_traveled);
+    if (realtime_arrival_time != null) properties.realtime_arrival_time = realtime_arrival_time;
+    if (realtime_departure_time != null) properties.realtime_departure_time = realtime_departure_time;
+    if (zone_id != null) properties.zone_id = zone_id;
+    if (is_wheelchair_accessible != null) properties.is_wheelchair_accessible = is_wheelchair_accessible;
+    if (shape_dist_traveled != null) properties.shape_dist_traveled = shape_dist_traveled;
+
+    return { type: 'Feature', geometry: readGeometry(v.geometry), properties };
+}
+
+/** `shapes`, either a bare array or `{ features: [...] }`, both allowed by Golemio. */
+function shapeFeatures(shapes: unknown): unknown[] | null {
+    if (Array.isArray(shapes)) return shapes;
+    if (isFields(shapes) && Array.isArray(shapes.features)) return shapes.features;
+    return null;
+}
 
 /**
  * Mapper for parsing vehicle details from the Golemio API.
- * 
+ *
  * Supports two payload shapes:
  * 1. Live GTFS-Realtime `vehiclepositions` (which contains position/delay data but lacks route shapes).
  * 2. Static GTFS schedule fallback (used when live data is missing).
+ *
+ * The payload is only shape-checked upstream (`golemioVehicleDetailSchema`) - it embeds a full route
+ * shape and stop_times, and per-field validation there costs the same CPU the fleet schema was built
+ * to avoid - so every field is read defensively here instead.
  */
 export class VehicleDetailMapper {
     /**
      * Normalizes a Golemio vehicle detail payload into a standard AppVehicleDetail object.
-     * 
+     *
      * @param data Raw payload from Golemio API
      * @param tripId The requested trip ID
      * @param isStatic If true, indicates this data comes from static schedules and live tracking is unavailable.
      *                 The frontend must preserve any existing live position data when merging this.
      * @returns Normalized vehicle detail object
      */
-    static map(data: GolemioVehiclePayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean): AppVehicleDetail {
-        // Golemio returns either a FeatureCollection or a bare Feature.
-        // Extract properties from whichever shape we received.
-        const feature = data.features?.[0];
-        const p = feature?.properties ?? data;
-        const geometry = feature?.geometry ?? data.geometry;
-        const extracted_vehicle_id = p.vehicle_id ? String(p.vehicle_id) : (p.id ? String(p.id) : '');
-        const gtfs_trip_id = p.gtfs_trip_id || tripId;
-        const route_short_name = p.route_short_name || '';
-        const route_type = normalizeRouteType(p.route_type || '');
-        const trip_headsign = p.trip_headsign || '';
-        const bearing = p.bearing ?? null;
-        const delay = p.delay ?? 0;
-        const state_position = (p.state_position ?? 'unknown') as AppVehicleDetail['state_position'];
-        
-        const run_number = p.run_number || '';
-        const last_stop_sequence = data.last_stop_sequence ?? p.last_stop_sequence ?? 0;
-        const origin_timestamp = data.origin_timestamp ?? p.origin_timestamp;
+    static map(data: GolemioVehicleDetailPayload, tripId: string, requestedVehicleId: string | null, isStatic: boolean): AppVehicleDetail {
+        // Golemio returns either a FeatureCollection or a bare Feature; extract whichever shape we got.
+        const rawFeatures = Array.isArray(data.features) ? data.features : null;
+        const feature = rawFeatures && isFields(rawFeatures[0]) ? rawFeatures[0] as Fields : undefined;
+        const p: Fields = feature && isFields(feature.properties) ? feature.properties : data;
+        const geometry = readGeometry(feature ? feature.geometry : data.geometry);
+
+        const vehicleIdField = strOrNum(p.vehicle_id);
+        const idField = strOrNum(p.id);
+        const extracted_vehicle_id = vehicleIdField != null ? String(vehicleIdField) : (idField != null ? String(idField) : '');
+        const gtfs_trip_id = str(p.gtfs_trip_id) || tripId;
+        const route_short_name = str(p.route_short_name) || '';
+        const route_type = normalizeRouteType(strOrNum(p.route_type) || '');
+        const trip_headsign = str(p.trip_headsign) || '';
+        const bearing = num(p.bearing) ?? null;
+        const delay = num(p.delay) ?? 0;
+        const state_position = (str(p.state_position) ?? 'unknown') as AppVehicleDetail['state_position'];
+
+        const run_number = strOrNum(p.run_number) ?? '';
+        const last_stop_sequence = num(data.last_stop_sequence) ?? num(p.last_stop_sequence) ?? 0;
+        const origin_timestamp = str(data.origin_timestamp) ?? str(p.origin_timestamp);
 
         const routeColor = getVehicleColor(route_type, route_short_name);
 
@@ -54,55 +121,41 @@ export class VehicleDetailMapper {
             origin_timestamp: origin_timestamp ?? undefined,
             run_number,
             route_color: routeColor,
-            vehicle_descriptor: (() => {
-                const desc = data.vehicle_descriptor || p.vehicle_descriptor;
-                if (!desc) return undefined;
-                return Object.fromEntries(Object.entries(desc).filter(([_, v]) => v != null)) as AppVehicleDescriptor;
-            })(),
-            geometry: geometry ?? undefined,
+            vehicle_descriptor: readDescriptor(data.vehicle_descriptor) ?? readDescriptor(p.vehicle_descriptor),
+            geometry: geometry ? { type: 'Point', coordinates: geometry.coordinates as [number, number] } : undefined,
             is_static_fallback: isStatic,
-            shape_dist_traveled: p.shape_dist_traveled ?? (data as { shape_dist_traveled?: number }).shape_dist_traveled ?? undefined,
+            shape_dist_traveled: num(p.shape_dist_traveled) ?? num(data.shape_dist_traveled),
         };
 
-        // Process Stop Times (The schedule of stops for this trip)
-        if (data.stop_times && Array.isArray(data.stop_times.features)) {
-            vehicleData.stop_times = {
-                features: data.stop_times.features
-                    .filter((st: GolemioStopTimeFeature | null): st is GolemioStopTimeFeature => st != null && st.properties != null)
-                    .map((st) => {
-                        const stProps = st.properties;
-                    const stopId = stProps.stop_id || '';
-
-                    return {
-                        type: 'Feature' as const,
-                        geometry: st.geometry ?? undefined,
-                        properties: {
-                            ...Object.fromEntries(Object.entries(stProps).filter(([_, v]) => v != null)),
-                            stop_id: stopId,
-                        } as AppStopTimeProperties
-                    };
-                })
-            };
+        // Stop times: the schedule of stops for this trip.
+        const stopTimesFeatures = isFields(data.stop_times) && Array.isArray(data.stop_times.features)
+            ? data.stop_times.features
+            : null;
+        if (stopTimesFeatures) {
+            const features = [];
+            for (const raw of stopTimesFeatures) {
+                const st = readStopTimeFeature(raw);
+                if (st) features.push(st);
+            }
+            vehicleData.stop_times = { features };
         }
 
-        // Shape and Stops processing: Reconstruct a continuous LineString and add Stop points
+        // Shape and stops: reconstruct a continuous LineString and add stop points.
         const routeFeatures: AppRouteFeature[] = [];
 
-        const shapes = data.shapes;
-        if (shapes) {
-            const shapesFeatures = 'features' in shapes ? shapes.features : (Array.isArray(shapes) ? shapes : null);
-            
-            if (shapesFeatures && shapesFeatures.length >= 2) {
-                const validFeatures = shapesFeatures.filter((sf: GolemioShapeFeature) => sf.geometry?.type === 'Point');
-                const coordinates = validFeatures.map((sf: GolemioShapeFeature) => sf.geometry.coordinates as [number, number]);
-                const shapeDists = validFeatures.map((sf: GolemioShapeFeature) => sf.properties?.shape_dist_traveled ?? 0);
-                
+        const rawShapeFeatures = shapeFeatures(data.shapes);
+        if (rawShapeFeatures && rawShapeFeatures.length >= 2) {
+            const points = rawShapeFeatures
+                .map((sf) => (isFields(sf) ? { geometry: readGeometry(sf.geometry), properties: sf.properties } : null))
+                .filter((sf): sf is { geometry: ReturnType<typeof readGeometry>; properties: unknown } => sf != null && sf.geometry?.type === 'Point');
+
+            if (points.length >= 2) {
+                const coordinates = points.map(sf => sf.geometry!.coordinates as [number, number]);
+                const shapeDists = points.map(sf => (isFields(sf.properties) ? num(sf.properties.shape_dist_traveled) : undefined) ?? 0);
+
                 routeFeatures.push({
                     type: 'Feature',
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: coordinates
-                    },
+                    geometry: { type: 'LineString', coordinates },
                     properties: {
                         route_color: routeColor,
                         shape_dist_traveled: shapeDists
@@ -114,7 +167,7 @@ export class VehicleDetailMapper {
         const validStops = vehicleData.stop_times?.features
             ?.filter(st => st.geometry && st.geometry.type === 'Point' && Array.isArray(st.geometry.coordinates)) || [];
 
-        validStops.forEach((st: typeof validStops[0], index: number) => {
+        validStops.forEach((st, index) => {
             const isTerminal = index === 0 || index === validStops.length - 1;
             if (st.geometry) {
                 routeFeatures.push({
@@ -132,7 +185,7 @@ export class VehicleDetailMapper {
             vehicleData.route_geojson = {
                 type: 'FeatureCollection',
                 features: routeFeatures
-            } as NonNullable<AppVehicleDetail['route_geojson']>;
+            };
         }
 
         return vehicleData;

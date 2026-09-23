@@ -31,7 +31,7 @@ export async function getVehicleRanges(city: CityConfig): Promise<VehicleRange[]
         `vehicle_ranges_${city.slug}_${fileName}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${fileName}`, { cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
+            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${fileName}`, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
             if (!res.ok) return null;
             const data = await res.json() as VehicleRangesFile;
             const ranges: VehicleRange[] = [];

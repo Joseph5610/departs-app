@@ -100,3 +100,13 @@ export const golemioFleetSchema = z.object({
     features: z.array(z.unknown()).nullish(),
 });
 export type GolemioFleetPayload = z.infer<typeof golemioFleetSchema>;
+
+/**
+ * Shape check only for one trip's detail: it embeds a full route shape (a trip's geometry, easily
+ * hundreds of points) and stop times, and validating those per-field through `golemioVehiclePayloadSchema`
+ * costs the same per-item CPU the fleet schema above was built to avoid. `VehicleDetailMapper`
+ * type-checks every field it reads instead. Confirms only that the response is an object at all - it
+ * may be a bare vehicle-properties object or a FeatureCollection, and the mapper reads either shape.
+ */
+export const golemioVehicleDetailSchema = z.record(z.string(), z.unknown());
+export type GolemioVehicleDetailPayload = z.infer<typeof golemioVehicleDetailSchema>;

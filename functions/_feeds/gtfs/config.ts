@@ -39,6 +39,16 @@ export const GTFS_CONFIG = {
 
     /** Leading characters of a trip_id that name its trips chunk. */
     TRIP_CHUNK_PREFIX: 3,
+
+    /**
+     * The built fleet, edge-cached (see `ApiClient.ts`'s `readEdgeCache`/`writeEdgeCache`) so a fresh
+     * isolate reads it instead of redecoding the feed and reassigning every vehicle. Younger than
+     * `FLEET_CACHE_FRESH_MS`: served as-is. Younger than `FLEET_CACHE_STALE_MS`: served as-is, and a
+     * background rebuild is kicked off via `waitUntil`. Older, or no cache entry: rebuilt synchronously.
+     */
+    FLEET_CACHE_FRESH_MS: 10_000,
+    /** Upstreams publish every 20-30s, so a background refresh inside that window still finds new data. */
+    FLEET_CACHE_STALE_MS: 30_000,
 } as const;
 
 /*

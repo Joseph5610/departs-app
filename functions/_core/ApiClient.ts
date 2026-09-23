@@ -1,4 +1,51 @@
 
+/** `caches.default`, the Workers edge Cache API - present on Cloudflare, absent in local Node tooling. */
+function edgeCache(): Cache | null {
+    return typeof caches !== 'undefined' ? caches.default : null;
+}
+
+/**
+ * A cache key from `key`: an absolute URL (an upstream fetch) is used as-is; anything else (a value
+ * this Worker computed, not fetched, e.g. `vehicles_brno`) is namespaced under an internal URL.
+ */
+function keyRequest(key: string): Request {
+    const url = /^https?:\/\//.test(key) ? key : `https://edge-cache.internal/${encodeURIComponent(key)}`;
+    return new Request(url, { method: 'GET' });
+}
+
+/**
+ * Reads an entry from the Workers edge Cache API (`caches.default`), keyed by `key` (a URL for an
+ * upstream fetch, or an arbitrary string for a value this Worker computed itself). Null on a miss, an
+ * expired entry, or a runtime with no Cache API. This is the one place that touches `caches.default`
+ * directly; `ApiClient.fetch`'s own caching and every caller that caches a computed value share it.
+ */
+export async function readEdgeCache(key: string): Promise<Response | null> {
+    const cache = edgeCache();
+    if (!cache) return null;
+    try {
+        return (await cache.match(keyRequest(key))) ?? null;
+    } catch (e) {
+        console.error(`[edgeCache] read failed for '${key}':`, e);
+        return null;
+    }
+}
+
+/**
+ * Stores `response` under `key` for `ttlS` seconds, surviving an isolate eviction within this colo -
+ * the Cache API entry does not, so a fresh isolate reads it instead of recomputing from scratch.
+ */
+export async function writeEdgeCache(key: string, response: Response, ttlS: number): Promise<void> {
+    const cache = edgeCache();
+    if (!cache) return;
+    try {
+        const cacheable = new Response(response.body, response);
+        cacheable.headers.set('Cache-Control', `s-maxage=${ttlS}`);
+        await cache.put(keyRequest(key), cacheable);
+    } catch (e) {
+        console.error(`[edgeCache] write failed for '${key}':`, e);
+    }
+}
+
 export interface ApiFetchOptions extends RequestInit {
     /** Custom TTL for Cloudflare cache */
     cacheTtl?: number;
@@ -73,16 +120,8 @@ export class ApiClient {
 
         try {
             if (isCacheableGet) {
-                // caches is a global available in CF Workers
-                const cache = typeof caches !== 'undefined' ? caches.default : null;
-                const cacheKey = new Request(finalUrl, { method: 'GET' });
-
-                if (cache) {
-                    const cachedResponse = await cache.match(cacheKey);
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                }
+                const cached = await readEdgeCache(finalUrl);
+                if (cached) return cached;
 
                 const response = await fetch(finalUrl, {
                     ...fetchInit,
@@ -91,13 +130,9 @@ export class ApiClient {
                     signal: controller.signal
                 });
 
-                if (cache && response.status === 200) {
-                    // Cache API requires Cache-Control headers to be set to cache it
-                    const responseToCache = new Response(response.clone().body, response);
-                    responseToCache.headers.set('Cache-Control', `s-maxage=${cacheTtl}`);
-                    
-                    // Await the cache put so it finishes before the worker isolates die
-                    await cache.put(cacheKey, responseToCache).catch((e: unknown) => console.error("Cache put error:", e));
+                if (response.status === 200) {
+                    // Await the write so it finishes before the isolate dies, not just fires and drops.
+                    await writeEdgeCache(finalUrl, response.clone(), cacheTtl);
                 }
 
                 return response;

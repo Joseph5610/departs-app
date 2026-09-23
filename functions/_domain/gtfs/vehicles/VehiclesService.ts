@@ -20,14 +20,17 @@ export class VehiclesService implements VehiclesUseCase {
      * Every vehicle in the network with the status its age earns it, which is what every caller
      * outside this class reads: past `FEED_AGE_S.OFFLINE` it holds no positions at all, so a
      * departure board or a detail cannot show one the map has already dropped.
+     *
+     * `waitUntil`, when the caller has one, lets a source refresh its own cache in the background
+     * instead of this call paying for it; omitted, the source falls back to building synchronously.
      */
-    async getCachedMappedVehicles(): Promise<AppVehicleCollection> {
-        return withFeedAge(await this.source.all());
+    async getCachedMappedVehicles(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection> {
+        return withFeedAge(await this.source.all(waitUntil));
     }
 
     /** Live vehicles for a known set of trips, for departure boards. */
-    async getLiveVehiclesForTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {
-        return this.source.forTrips ? this.source.forTrips(tripIds) : this.getCachedMappedVehicles();
+    async getLiveVehiclesForTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {
+        return this.source.forTrips ? this.source.forTrips(tripIds, waitUntil) : this.getCachedMappedVehicles(waitUntil);
     }
 
     /** The live position of one vehicle, for a detail request that names its vehicle and trip. */
@@ -51,6 +54,6 @@ export class VehiclesService implements VehiclesUseCase {
     }
 
     async getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection> {
-        return filterVehicles(await this.getCachedMappedVehicles(), parseSearchParams(ctx.url.searchParams, vehicleQuerySchema));
+        return filterVehicles(await this.getCachedMappedVehicles(ctx.waitUntil), parseSearchParams(ctx.url.searchParams, vehicleQuerySchema));
     }
 }

@@ -1,5 +1,6 @@
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
+import { UPSTREAM_TTL_S } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 
 export interface GtfsRoute {
@@ -35,7 +36,7 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 
     return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const rRes = await appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`);
+            const rRes = await appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
 
             if (!rRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}`);
@@ -91,11 +92,11 @@ export async function getGtfsTripRoutes(city: CityConfig): Promise<GtfsTripRoute
     return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
             const fetchPromises = [
-                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`)
+                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA })
             ];
 
             if (city.feed?.hasTripAliases) {
-                fetchPromises.push(appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`).catch(() => new Response(null, { status: 404 })));
+                fetchPromises.push(appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA }).catch(() => new Response(null, { status: 404 })));
             }
 
             const results = await Promise.all(fetchPromises);

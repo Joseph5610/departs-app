@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.4] - 2026-09-23
+
+### Fixed
+
+- Brno and Prague requests read the last built vehicle list from the edge cache instead of always rebuilding it, so a fresh Worker isolate no longer pays the full CPU cost that was pushing it over the platform's per-request limit; the rebuild runs in the background instead.
+- Every Brno/KORDIS static and live-feed fetch now uses the same reliable edge cache Prague's requests already had, instead of an unreliable hint that left a fresh isolate re-downloading everything.
+- Prague's vehicle detail no longer validates a trip's full route shape field-by-field, which could on its own push a cold request over the CPU limit.
+
 ## [0.74.3] - 2026-09-22
 
 ### Fixed

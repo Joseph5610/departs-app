@@ -32,7 +32,7 @@ export function getParentChildMap(city: CityConfig): Promise<Record<string, stri
         `parent_child_map_${city.slug}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${baseUrl}/${city.slug}/parent_child_map.json`);
+            const res = await appClient.fetch(`${baseUrl}/${city.slug}/parent_child_map.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
             if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
             return await res.json() as Record<string, string[]>;
         }
@@ -66,6 +66,7 @@ export async function getDepartureRows(city: CityConfig, stopIds: string[]): Pro
     await Promise.all(Array.from(byChunk, async ([chunkId, ids]) => {
         try {
             const res = await appClient.fetch(`${baseUrl}/${city.slug}/departures/${chunkId}.json`, {
+                cacheTtl: UPSTREAM_TTL_S.DEPARTURE_CHUNKS,
                 cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_CHUNKS }
             });
             if (!res.ok) return;

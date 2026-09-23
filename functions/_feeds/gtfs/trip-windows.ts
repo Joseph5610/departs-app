@@ -33,7 +33,7 @@ export async function getTripWindows(city: CityConfig): Promise<TripWindows | nu
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
             try {
-                const res = await appClient.fetch(url, { cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
+                const res = await appClient.fetch(url, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
                 if (!res.ok) {
                     console.error(`Failed to fetch trip_windows.json for ${city.slug}: ${res.status}`);
                     return null;

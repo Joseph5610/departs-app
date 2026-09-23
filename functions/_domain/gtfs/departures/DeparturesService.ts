@@ -39,12 +39,16 @@ export async function collectDepartureTuples(
 }
 
 /** Live vehicles for a departure board; null when the city has no vehicles service or the read fails. */
-export async function boardVehicles(vehiclesService: VehiclesService | undefined, tripIds?: Set<string>): Promise<AppVehicleCollection | null> {
+export async function boardVehicles(
+    vehiclesService: VehiclesService | undefined,
+    tripIds?: Set<string>,
+    waitUntil?: (promise: Promise<unknown>) => void
+): Promise<AppVehicleCollection | null> {
     try {
         if (vehiclesService) {
             return tripIds
-                ? await vehiclesService.getLiveVehiclesForTrips(tripIds)
-                : await vehiclesService.getCachedMappedVehicles();
+                ? await vehiclesService.getLiveVehiclesForTrips(tripIds, waitUntil)
+                : await vehiclesService.getCachedMappedVehicles(waitUntil);
         }
     } catch (e) {
         console.error('Failed to load RT vehicles for departures via service:', e);
@@ -76,7 +80,7 @@ export class DeparturesService implements DeparturesUseCase {
             }
 
             const { routes } = await getGtfsRoutes(this.city);
-            const rtVehicles = await boardVehicles(this.vehiclesService, collectTripIds(allDeps));
+            const rtVehicles = await boardVehicles(this.vehiclesService, collectTripIds(allDeps), ctx.waitUntil);
 
             return { departures: DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles) };
         } catch (e) {

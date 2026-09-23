@@ -2,13 +2,13 @@ import type { Env } from '../../_core/types';
 import { CACHE_TTL, ERROR_MESSAGES } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { golemioClient } from './GolemioClient';
-import { golemioVehiclePayloadSchema, type GolemioVehiclePayload } from './schemas/vehicles';
+import { golemioVehicleDetailSchema, type GolemioVehicleDetailPayload } from './schemas/vehicles';
 
 /**
  * A trip's detail from Golemio: the live vehicle on it when a vehicle is named and Golemio has it,
  * otherwise the static GTFS trip. `isStatic` says which one answered.
  */
-export async function getTripDetail(env: Env, tripId: string, vehicleId: string | null): Promise<{ data: GolemioVehiclePayload; isStatic: boolean }> {
+export async function getTripDetail(env: Env, tripId: string, vehicleId: string | null): Promise<{ data: GolemioVehicleDetailPayload; isStatic: boolean }> {
     const scopes = ['info', 'stop_times', 'shapes', 'vehicle_descriptor'];
 
     const fetchStaticTrip = async () => {
@@ -41,20 +41,12 @@ export async function getTripDetail(env: Env, tripId: string, vehicleId: string 
     }
 
     const rawData = await response.json();
-    const parsed = golemioVehiclePayloadSchema.safeParse(rawData);
+    const parsed = golemioVehicleDetailSchema.safeParse(rawData);
 
     if (!parsed.success) {
         console.error(`Critical Golemio vehicle detail structural change for ${tripId}:`, parsed.error);
         throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
     }
 
-    const data = parsed.data as GolemioVehiclePayload;
-    if (data.features) {
-        data.features = data.features.filter((f): f is NonNullable<typeof f> => f !== null);
-    }
-    if (data.stop_times && data.stop_times.features) {
-        data.stop_times.features = data.stop_times.features.filter((f): f is NonNullable<typeof f> => f !== null);
-    }
-
-    return { data, isStatic };
+    return { data: parsed.data, isStatic };
 }

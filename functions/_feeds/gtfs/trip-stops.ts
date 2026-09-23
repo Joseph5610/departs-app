@@ -36,7 +36,7 @@ export async function getTripStops(city: CityConfig, tripId: string): Promise<St
 
     const tripUrl = `${staticDataUrl}/${city.slug}/trips/${encodeURIComponent(chunkId)}.json`;
     try {
-        const tripRes = await appClient.fetch(tripUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
+        const tripRes = await appClient.fetch(tripUrl, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
         if (!tripRes.ok) return [];
 
         const chunkData = JSON.parse(await tripRes.text()) as Record<string, unknown[]>;

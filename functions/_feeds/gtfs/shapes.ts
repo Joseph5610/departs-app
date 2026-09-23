@@ -54,9 +54,9 @@ async function fetchShapeGeometry(city: CityConfig, staticDataUrl: string, shape
     const chunkId = shapeChunkId(shapeId);
     const url = `${staticDataUrl}/${city.slug}/shape_chunks/${encodeURIComponent(chunkId)}.json`;
 
-    // `cf` is only a hint here: data.departs.app sits in the same zone as the Worker, where
-    // edge caching of subrequests is unreliable. The memo above is the cache that matters.
-    const res = await appClient.fetch(url, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
+    // Top-level cacheTtl puts this through ApiClient's explicit caches.default path, not just the `cf`
+    // hint: data.departs.app sits in the same zone as the Worker, where that hint alone is unreliable.
+    const res = await appClient.fetch(url, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
     if (!res.ok) return null;
 
     const chunk = JSON.parse(await res.text()) as Record<string, ShapeGeometry>;
@@ -69,7 +69,7 @@ function getTripShapeIndex(city: CityConfig, staticDataUrl: string): Promise<Rec
         `trip_shapes_${city.slug}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/trip_shapes.json`, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
+            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/trip_shapes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
             if (!res.ok) return {};
             return await res.json() as Record<string, string>;
         },

@@ -3,10 +3,12 @@ import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
+import { readCachedFleet, writeCachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
+import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
@@ -43,12 +45,47 @@ export class GtfsRtVehicleSource implements VehicleSource {
         }
     }
 
-    async all(): Promise<AppVehicleCollection> {
-        const index = await this.index();
-        return index ? index.all() : OFFLINE;
+    /**
+     * The whole fleet. A fresh isolate reads the last build from the edge cache instead of redecoding
+     * the feed and reassigning every vehicle: a killed cold build cannot happen if it never runs. Only
+     * a cold cache (no traffic in this colo for `FLEET_CACHE_STALE_MS`) still builds synchronously.
+     */
+    async all(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection> {
+        const cached = await readCachedFleet(this.city.slug);
+        if (cached) {
+            const age = Date.now() - cached.builtAt;
+            if (age < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached.collection;
+            if (age < GTFS_CONFIG.FLEET_CACHE_STALE_MS) {
+                if (waitUntil) waitUntil(this.rebuild());
+                return cached.collection;
+            }
+        }
+        return this.rebuild();
     }
 
-    async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {
+    /** Builds the fleet and, unless it is offline, edge-caches it for the next isolate to read. */
+    private async rebuild(): Promise<AppVehicleCollection> {
+        const index = await this.index();
+        const collection = index ? await index.all() : OFFLINE;
+
+        if (collection.status !== 'upstream_offline') {
+            await writeCachedFleet(this.city.slug, collection, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
+        }
+
+        return collection;
+    }
+
+    async forTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {
+        if (!this.mapping.resolvesPerEntity) {
+            // KORDIS-style networks resolve a trip only network-wide (see VehicleMapping.resolvesPerEntity),
+            // so this is exactly as expensive as `all()` either way - share its cached build rather than
+            // building a second, uncached copy.
+            const all = await this.all(waitUntil);
+            if (all.status === 'upstream_offline') return OFFLINE;
+            if (isTooOld(Date.parse(all.last_updated ?? '') || 0)) return null;
+            return { ...all, features: all.features.filter(f => tripIds.has(f.properties.gtfs_trip_id)) };
+        }
+
         const index = await this.index();
         if (!index) return OFFLINE;
         return isTooOld(index.fetchedAt) ? null : index.forTrips(tripIds);

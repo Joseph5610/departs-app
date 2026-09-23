@@ -27,7 +27,9 @@ function sourceFor(city: CityConfig, rtUrl: string) {
         ttlMs: CACHE_TTL.VEHICLES * 1000,
         isEmpty: (feed) => feed.entity.length === 0,
         read: async () => {
-            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
+            // `cacheTtl` (top-level) puts this through ApiClient's explicit caches.default path, which
+            // survives an isolate eviction; `cf.cacheTtl` alone is only a same-zone hint and does not.
+            const rtRes = await appClient.fetch(rtUrl, { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED, cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
             });
