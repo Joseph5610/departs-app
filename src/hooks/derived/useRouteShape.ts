@@ -1,30 +1,50 @@
 import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
-import { useTripShape } from '../data/useTripShape';
+import { useTripShape, type TripShape } from '../data/useTripShape';
+import { useCityConfig } from '../data/useCities';
 import { useRouteParams } from '../useRouteParams';
 import { useSelectedVehicle } from './useSelectedVehicle';
-import type { FeatureCollection, Feature, LineString } from 'geojson';
+import type { VehicleDetail } from '../../types/vehicles';
+import type { FeatureCollection, Feature, LineString, Point } from 'geojson';
 
-/** The detail's route with its station-to-station line replaced by the trip's real shape, when one is known. */
-function withTripShape(geojson: FeatureCollection | undefined, shape: [number, number][] | null): FeatureCollection | undefined {
-    if (!geojson || !shape) return geojson;
-    return {
-        ...geojson,
-        features: geojson.features.map(f => f.geometry?.type === 'LineString'
-            ? { ...f, geometry: { type: 'LineString', coordinates: shape } }
-            : f),
-    };
+/**
+ * The route layer of a trip: its line - the real shape when one is known, else straight between its
+ * stops once the shape is known to be missing - followed by its stops, the first and last marked as terminals.
+ */
+function buildRoute(detail: VehicleDetail, shape: TripShape | null, isShapeLoading: boolean): FeatureCollection | null {
+    const stopPoints = (detail.stop_times?.features ?? [])
+        .map(st => st.geometry)
+        .filter((g): g is Point & { coordinates: [number, number] } => g?.type === 'Point' && Array.isArray(g.coordinates));
+
+    const features: Feature[] = [];
+    const lineCoordinates = shape?.coordinates ?? (isShapeLoading ? [] : stopPoints.map(g => g.coordinates));
+    if (lineCoordinates.length > 1) {
+        features.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: lineCoordinates },
+            properties: { route_color: detail.route_color, ...(shape?.distances ? { shape_dist_traveled: shape.distances } : {}) },
+        });
+    }
+    stopPoints.forEach((geometry, index) => {
+        features.push({
+            type: 'Feature',
+            geometry,
+            properties: { route_color: detail.route_color, is_terminal: index === 0 || index === stopPoints.length - 1 },
+        });
+    });
+    return features.length > 0 ? { type: 'FeatureCollection', features } : null;
 }
 
 export const useRouteShape = (): FeatureCollection | null => {
     const { data: vehicleDetail } = useVehicleDetail();
     const selectedVehicle = useSelectedVehicle();
+    const hasTripShapes = Boolean(useCityConfig().hasTripShapes);
     const { tripId } = useRouteParams();
-    const tripShape = useTripShape(tripId);
+    const { shape: tripShape, isLoading: isShapeLoading } = useTripShape(tripId);
 
     return useMemo(() => {
-        const geojson = withTripShape(vehicleDetail?.route_geojson as FeatureCollection | undefined, tripShape);
-        if (!selectedVehicle || !geojson?.features?.length) return null;
+        const geojson = vehicleDetail && hasTripShapes ? buildRoute(vehicleDetail, tripShape, isShapeLoading) : null;
+        if (!selectedVehicle || !geojson) return null;
 
         const lineFeature = geojson.features.find(f => f.geometry?.type === 'LineString') as Feature<LineString> | undefined;
         if (!lineFeature) return geojson;
@@ -75,5 +95,5 @@ export const useRouteShape = (): FeatureCollection | null => {
                 ...otherFeatures
             ]
         };
-    }, [selectedVehicle, vehicleDetail, tripShape]);
+    }, [selectedVehicle, vehicleDetail, hasTripShapes, tripShape, isShapeLoading]);
 };

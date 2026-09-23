@@ -362,6 +362,5 @@ export async function getDukLiveOnlyDetail(
         ...feature.properties,
         geometry: feature.geometry,
         stop_times: { features },
-        route_geojson: undefined,
     };
 }

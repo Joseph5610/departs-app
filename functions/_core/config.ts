@@ -37,7 +37,7 @@ export const UPSTREAM_TTL_S = {
     DEPARTURE_BUCKETS: 3600,
     /** Golemio stop pages, trip windows and the fleet register. */
     SCHEDULE_DATA: 7200,
-    /** Routes, stop enrichment, trip stops, shapes and the shape index. */
+    /** Routes, stop enrichment and trip stops. */
     STATIC_DATA: 86400,
 };
 

@@ -27,8 +27,7 @@ export async function handleGetVehicleDetail(
     if (args.vehicle_id) searchParams.vehicleId = String(args.vehicle_id);
 
     const detailCtx = buildRequestContext(ctx, searchParams);
-    // The route line is map geometry: thousands of coordinates an MCP client has no use for.
-    const { route_geojson: _routeGeojson, ...detailData } = await city.detail.getVehicleDetail(detailCtx);
+    const detailData = await city.detail.getVehicleDetail(detailCtx);
 
     return {
         city: resolvedCity,

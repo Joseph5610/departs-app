@@ -63,18 +63,6 @@ const golemioStopTimeFeatureSchema = z.object({
 });
 export type GolemioStopTimeFeature = z.infer<typeof golemioStopTimeFeatureSchema>;
 
-const golemioShapeFeatureSchema = z.object({
-    type: z.literal('Feature'),
-    geometry: z.object({
-        type: z.literal('Point'),
-        coordinates: z.tuple([z.number(), z.number()])
-    }),
-    properties: z.object({
-        shape_dist_traveled: z.number()
-    })
-});
-export type GolemioShapeFeature = z.infer<typeof golemioShapeFeatureSchema>;
-
 export const golemioVehiclePayloadSchema = golemioVehiclePropertiesSchema.partial().extend({
     type: z.string().optional(),
     features: z.array(golemioVehicleFeatureSchema.nullable()).nullish(),
@@ -82,10 +70,6 @@ export const golemioVehiclePayloadSchema = golemioVehiclePropertiesSchema.partia
     stop_times: z.object({ 
         features: z.array(golemioStopTimeFeatureSchema.nullable())
     }).nullish(),
-    shapes: z.union([
-        z.array(golemioShapeFeatureSchema),
-        z.object({ features: z.array(golemioShapeFeatureSchema) })
-    ]).optional(),
     vehicle_descriptor: golemioVehicleDescriptorSchema.nullish(),
     last_stop_sequence: z.coerce.number().nullish(),
     origin_timestamp: z.string().nullish(),

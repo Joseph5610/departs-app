@@ -1,4 +1,3 @@
-import type { FeatureCollection, LineString } from 'geojson';
 
 export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
 
@@ -89,7 +88,6 @@ export interface VehicleDetail extends BaseVehicleProperties {
             };
         }>;
     };
-    route_geojson?: FeatureCollection<LineString>;
     is_static_fallback?: boolean;
 }
 

@@ -19,7 +19,6 @@ export class VehicleDetailMapper {
         const rType = normalizeRouteType(route ? route.type : '3');
 
         const stopFeatures = this.buildStopFeatures(stations);
-        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR);
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : '';
 
@@ -40,7 +39,6 @@ export class VehicleDetailMapper {
                 vehicle_registration_number: String(vehicleId || '')
             },
             last_stop_sequence: undefined,
-            route_geojson: routeGeoJson,
             stop_times: {
                 features: stopFeatures
             }
@@ -67,46 +65,4 @@ export class VehicleDetailMapper {
             };
         });
     }
-
-    /** Station-to-station line; the app swaps in the trip's real shape from the static data CDN. */
-    static buildRouteGeoJson(allStations: Station[], routeColor: string) {
-        const stations = allStations.filter(isLocated);
-        const coordinates: [number, number][] = stations.map((st) => st.coordinates);
-        
-        if (coordinates.length > 1) {
-            const lineFeature = {
-                type: 'Feature' as const,
-                geometry: {
-                    type: 'LineString' as const,
-                    coordinates
-                },
-                properties: { route_color: routeColor }
-            };
-
-            // Add Point features for each stop so routeStopsLayer and routeTerminalsLayer render
-            // correctly on the map (matching Prague/Golemio behaviour).
-            const stopFeatures = stations.map((st, index) => {
-                const isTerminal = index === 0 || index === stations.length - 1;
-                return {
-                    type: 'Feature' as const,
-                    geometry: {
-                        type: 'Point' as const,
-                        coordinates: st.coordinates
-                    },
-                    properties: {
-                        route_color: routeColor,
-                        is_terminal: isTerminal
-                    }
-                };
-            });
-
-            return {
-                type: 'FeatureCollection' as const,
-                features: [lineFeature, ...stopFeatures]
-            };
-        }
-        return undefined;
-    }
-
-
 }

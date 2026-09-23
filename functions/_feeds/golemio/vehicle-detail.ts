@@ -9,7 +9,7 @@ import { golemioVehicleDetailSchema, type GolemioVehicleDetailPayload } from './
  * otherwise the static GTFS trip. `isStatic` says which one answered.
  */
 export async function getTripDetail(env: Env, tripId: string, vehicleId: string | null): Promise<{ data: GolemioVehicleDetailPayload; isStatic: boolean }> {
-    const scopes = ['info', 'stop_times', 'shapes', 'vehicle_descriptor'];
+    const scopes = ['info', 'stop_times', 'vehicle_descriptor'];
 
     const fetchStaticTrip = async () => {
         const res = await golemioClient.fetch(`/v2/public/gtfs/trips/${tripId}`, env, {

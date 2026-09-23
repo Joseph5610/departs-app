@@ -25,7 +25,7 @@ export interface InitialCityConfig {
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
-    /** Route shapes are read by the app from the static data CDN (`trip_shapes.json` + `shape_chunks/`), not from the detail API. */
+    /** Route shapes are read by the app from the static data CDN; without them the detail shows no route on the map. */
     hasTripShapes?: boolean;
     /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
     isHidden?: boolean;
@@ -80,6 +80,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         bounds: [14.22, 49.94, 14.71, 50.18],
         hasPointsOfSale: true,
         hasAlerts: true,
+        hasTripShapes: true,
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']

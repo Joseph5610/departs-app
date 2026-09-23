@@ -208,16 +208,18 @@ export const QUERY_TIMING_MS = {
     POINTS_OF_SALE_STALE: DAY_MS,
     POINTS_OF_SALE_GC: 7 * DAY_MS,
     GEOCODING_STALE: 5 * MINUTE_MS,
-    /** Route shapes change only with a timetable export; kept on the device (IndexedDB) this long. */
+    /** Route shapes change only with a timetable export. */
     TRIP_SHAPES_STALE: 4 * HOUR_MS,
-    /** A shape chunk holds hundreds of shapes, so an unused one is let go quickly. */
+    /** A shape bucket holds several shapes of up to thousands of points, so an unused one is let go quickly. */
     TRIP_SHAPES_GC: 5 * MINUTE_MS,
 };
 
-/** Addressing of the static route shapes on the data CDN. */
+/** Addressing of the static route shapes on the data CDN; must match `CHUNKING` in the departs-gtfs-data build script. */
 export const TRIP_SHAPES_CONFIG = {
-    /** Shapes live in `shape_chunks/<shape_id % CHUNK_COUNT>.json`; must match the departs-gtfs-data build script. */
-    CHUNK_COUNT: 512,
+    /** `trip_shape_buckets/<bucketOf(trip_id)>.json`: trip id -> shape id. */
+    TRIP_BUCKET_COUNT: 512,
+    /** `shape_buckets/<bucketOf(shape_id)>.json`: shape id -> geometry. */
+    SHAPE_BUCKET_COUNT: 1024,
 };
 
 /** Live vehicle polling: a failed poll is retried quickly and the last good positions stay on the map. */
