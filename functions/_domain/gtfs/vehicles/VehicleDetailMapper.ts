@@ -12,15 +12,14 @@ export class VehicleDetailMapper {
         tripId: string,
         vehicleId: string | null,
         stations: Station[],
-        route: GtfsRoute | null,
-        tripShape: [number, number][][] | null = null
+        route: GtfsRoute | null
     ): AppVehicleDetail {
         const lineName = route?.name || undefined;
         const routeColor = route?.route_color || undefined;
         const rType = normalizeRouteType(route ? route.type : '3');
 
         const stopFeatures = this.buildStopFeatures(stations);
-        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR, tripShape);
+        const routeGeoJson = this.buildRouteGeoJson(stations, routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR);
         
         const headsign = stations.length > 0 ? stations[stations.length - 1].name : '';
 
@@ -69,13 +68,10 @@ export class VehicleDetailMapper {
         });
     }
 
-    static buildRouteGeoJson(allStations: Station[], routeColor: string, tripShape: [number, number][][] | null = null) {
+    /** Station-to-station line; the app swaps in the trip's real shape from the static data CDN. */
+    static buildRouteGeoJson(allStations: Station[], routeColor: string) {
         const stations = allStations.filter(isLocated);
-        // If a real GTFS shape is available, flatten multi-line segments into a single coordinate array.
-        // Otherwise, fall back to straight station-to-station lines.
-        const coordinates: [number, number][] = tripShape
-            ? tripShape.flat()
-            : stations.map((st) => st.coordinates);
+        const coordinates: [number, number][] = stations.map((st) => st.coordinates);
         
         if (coordinates.length > 1) {
             const lineFeature = {

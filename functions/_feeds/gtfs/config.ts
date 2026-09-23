@@ -28,12 +28,6 @@ export const GTFS_CONFIG = {
     // Fallback route color if none is provided
     DEFAULT_ROUTE_COLOR: '#888888',
 
-    /**
-     * Number of buckets the static shape geometry is split across. Shapes are addressed by
-     * `shape_id % SHAPE_CHUNK_COUNT`, which keeps every chunk small without needing an index.
-     */
-    SHAPE_CHUNK_COUNT: 512,
-
     /** Leading characters of a stop_id that name its departures chunk. */
     DEPARTURES_CHUNK_PREFIX: 4,
 
@@ -52,9 +46,9 @@ export const GTFS_CONFIG = {
 } as const;
 
 /*
- * Chunk addressing for the three static data sets. Each of these is a contract with the
+ * Chunk addressing for the static data sets the Worker reads. Each is a contract with the
  * departs-data build script: change one side and the Worker requests files that do not exist.
- * They are deliberately different — shapes bucket numerically, the other two by id prefix.
+ * Route shapes are read by the app itself (`TRIP_SHAPES_CONFIG` in src/config/constants.ts).
  */
 
 /** stops/<prefix>.json — must match the departures chunking in the build script. */
@@ -65,10 +59,4 @@ export function departuresChunkId(stopId: string): string {
 /** trips/<prefix>.json — must match the trip chunking in the build script. */
 export function tripChunkId(tripId: string): string {
     return tripId.substring(0, GTFS_CONFIG.TRIP_CHUNK_PREFIX).toUpperCase();
-}
-
-/** shape_chunks/<bucket>.json — must match SHAPE_CHUNK_COUNT in the build script. */
-export function shapeChunkId(shapeId: string): string {
-    const numeric = parseInt(shapeId, 10);
-    return String((Number.isNaN(numeric) ? 0 : Math.abs(numeric)) % GTFS_CONFIG.SHAPE_CHUNK_COUNT);
 }

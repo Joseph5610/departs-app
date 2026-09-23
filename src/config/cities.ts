@@ -25,6 +25,8 @@ export interface InitialCityConfig {
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
+    /** Route shapes are read by the app from the static data CDN (`trip_shapes.json` + `shape_chunks/`), not from the detail API. */
+    hasTripShapes?: boolean;
     /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
     isHidden?: boolean;
     /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
@@ -106,6 +108,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
         hasAlerts: true,
+        hasTripShapes: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []
@@ -153,6 +156,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         country: 'SK',
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
+        hasTripShapes: true,
         filters: {
             vehicles: ['bus', 'trolleybus'],
             stops: []
