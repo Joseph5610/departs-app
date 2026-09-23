@@ -6,6 +6,12 @@ export interface SingleLiveVehicle {
     lastStopId?: string;
 }
 
+/** The whole fleet already serialized, without `status`, for a request that needs it unfiltered. */
+export interface SerializedFleet {
+    json: string;
+    lastUpdated?: string;
+}
+
 /**
  * Where a network's vehicles come from: a GTFS-RT feed, Prešov's CSV export, DÚK's Portabo feed.
  * `VehiclesService` composes one of these; filtering, stats and the live/detail lookups are shared.
@@ -17,6 +23,11 @@ export interface VehicleSource {
      * blocking this call on it; omitted, a source falls back to building synchronously as before.
      */
     all(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection>;
+    /**
+     * `all()` as the JSON the source already holds, sparing a parse and a re-serialize; null when
+     * offline. Omitted where the source keeps no serialized build.
+     */
+    allSerialized?(waitUntil?: (promise: Promise<unknown>) => void): Promise<SerializedFleet | null>;
     /**
      * The vehicles serving the given trips, for departure boards; null once the source is too old to
      * serve positions. Omitted where reading the whole network is no dearer: answered from `all()`.

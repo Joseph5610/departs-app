@@ -2,9 +2,9 @@ import type { AppVehicleCollection, AppVehicleFeature, CityRequestContext } from
 import type { CityConfig } from '../../../_core/city-config';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { filterVehicles } from '../../../_core/utils/vehicleFilter';
-import { withFeedAge } from '../../../_core/feed/freshness';
+import { feedStatusAt, withFeedAge } from '../../../_core/feed/freshness';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
-import type { VehiclesUseCase } from '../../use-cases';
+import type { VehiclesBody, VehiclesUseCase } from '../../use-cases';
 
 /**
  * Vehicles of a city on the GTFS stack. Where they come from is the `VehicleSource`; filtering,
@@ -55,5 +55,21 @@ export class VehiclesService implements VehiclesUseCase {
 
     async getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection> {
         return filterVehicles(await this.getCachedMappedVehicles(ctx.waitUntil), parseSearchParams(ctx.url.searchParams, vehicleQuerySchema));
+    }
+
+    /** The unfiltered map request, answered from the source's serialized build with only `status` stamped on. */
+    async getVehiclesBody(ctx: CityRequestContext): Promise<VehiclesBody | null> {
+        if (!this.source.allSerialized) return null;
+        const { bounds, routeType, routeShortName } = parseSearchParams(ctx.url.searchParams, vehicleQuerySchema);
+        if (bounds || routeType?.length || routeShortName?.length) return null;
+
+        const fleet = await this.source.allSerialized(ctx.waitUntil);
+        const status = fleet ? feedStatusAt(fleet.lastUpdated ? Date.parse(fleet.lastUpdated) : NaN) : 'upstream_offline';
+        if (!fleet || status === 'upstream_offline') {
+            const offline: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline', last_updated: fleet?.lastUpdated };
+            return { body: JSON.stringify(offline), offline: true };
+        }
+        // `json` is a serialized object without `status`, so the key is appended before its closing brace.
+        return { body: `${fleet.json.slice(0, -1)},"status":"${status}"}`, offline: false };
     }
 }

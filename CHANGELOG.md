@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.74.5] - 2026-09-23
+
+### Fixed
+
+- The GTFS vehicle map request is served from the already-serialized fleet build, and concurrent requests share one rebuild, cutting CPU per request under the platform limit.
+
 ## [0.74.4] - 2026-09-23
 
 ### Fixed

@@ -3,13 +3,14 @@ import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
-import { readCachedFleet, writeCachedFleet } from '../../../_feeds/gtfs/fleet-cache';
+import { readCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
+import { DERIVATION_CONFIG } from '../../../_core/config';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
+import type { SerializedFleet, SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
@@ -45,34 +46,55 @@ export class GtfsRtVehicleSource implements VehicleSource {
         }
     }
 
+    /** The in-flight rebuild, shared so concurrent requests in this isolate never build twice. */
+    private rebuilding: { promise: Promise<CachedFleet | null>; startedAt: number } | null = null;
+
     /**
      * The whole fleet. A fresh isolate reads the last build from the edge cache instead of redecoding
      * the feed and reassigning every vehicle: a killed cold build cannot happen if it never runs. Only
      * a cold cache (no traffic in this colo for `FLEET_CACHE_STALE_MS`) still builds synchronously.
      */
     async all(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection> {
+        return (await this.fleet(waitUntil))?.collection ?? OFFLINE;
+    }
+
+    async allSerialized(waitUntil?: (promise: Promise<unknown>) => void): Promise<SerializedFleet | null> {
+        const fleet = await this.fleet(waitUntil);
+        return fleet ? { json: fleet.json, lastUpdated: fleet.lastUpdated } : null;
+    }
+
+    /** The current build, or null when the feed or its static data cannot be read. */
+    private async fleet(waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet | null> {
         const cached = await readCachedFleet(this.city.slug);
         if (cached) {
             const age = Date.now() - cached.builtAt;
-            if (age < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached.collection;
+            if (age < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
             if (age < GTFS_CONFIG.FLEET_CACHE_STALE_MS) {
                 if (waitUntil) waitUntil(this.rebuild());
-                return cached.collection;
+                return cached;
             }
         }
         return this.rebuild();
     }
 
-    /** Builds the fleet and, unless it is offline, edge-caches it for the next isolate to read. */
-    private async rebuild(): Promise<AppVehicleCollection> {
+    /** One build at a time; one pending past `ABANDON_MS` belongs to a killed request and is replaced. */
+    private rebuild(): Promise<CachedFleet | null> {
+        const pending = this.rebuilding;
+        if (pending && Date.now() - pending.startedAt < DERIVATION_CONFIG.ABANDON_MS) return pending.promise;
+
+        const promise: Promise<CachedFleet | null> = this.build().finally(() => {
+            if (this.rebuilding?.promise === promise) this.rebuilding = null;
+        });
+        this.rebuilding = { promise, startedAt: Date.now() };
+        return promise;
+    }
+
+    /** Builds the fleet and, unless it is offline, caches it for this and the next isolate to read. */
+    private async build(): Promise<CachedFleet | null> {
         const index = await this.index();
         const collection = index ? await index.all() : OFFLINE;
-
-        if (collection.status !== 'upstream_offline') {
-            await writeCachedFleet(this.city.slug, collection, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
-        }
-
-        return collection;
+        if (collection.status === 'upstream_offline') return null;
+        return writeCachedFleet(this.city.slug, collection, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
     }
 
     async forTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {

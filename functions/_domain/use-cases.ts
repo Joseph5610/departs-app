@@ -10,6 +10,13 @@ import type {
 /** What every city answers; `/api/[city]/*` routes and MCP tools call these directly. */
 export interface VehiclesUseCase {
     getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection>;
+    /** `getVehicles` as a ready JSON body, where the city can serve it without re-serializing; null otherwise. */
+    getVehiclesBody?(ctx: CityRequestContext): Promise<VehiclesBody | null>;
+}
+
+export interface VehiclesBody {
+    body: string;
+    offline: boolean;
 }
 
 export interface DeparturesUseCase {

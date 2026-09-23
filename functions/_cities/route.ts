@@ -21,6 +21,15 @@ export function withCityRoute<T>(
 }
 
 /**
+ * `withCityRoute` for a handler that builds its own `Response`.
+ */
+export function withCityResponseRoute(
+    handler: (city: CityUseCases, context: CityRequestContext) => Promise<Response>
+): (context: EventContext<Env, string, unknown>) => Promise<Response> {
+    return withCity((city, context) => handler(useCasesOf(city, context.env), toCityRequestContext(context)));
+}
+
+/**
  * `withCityRoute` for handlers that need only the city's config and return an already-serialized JSON body.
  */
 export function withCityJsonBodyRoute(

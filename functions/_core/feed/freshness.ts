@@ -24,10 +24,17 @@ export function withFeedAge(collection: AppVehicleCollection, readAt?: number, n
     // Age is measured from when we read the source, not from what it claims: a source that stops
     // stamping its answers, or stops changing the stamp, must not make a frozen cache look live.
     const updatedMs = readAt ?? (collection.last_updated ? Date.parse(collection.last_updated) : NaN);
-    const ageS = Number.isNaN(updatedMs) ? 0 : (nowMs - updatedMs) / 1000;
+    const status = feedStatusAt(updatedMs, nowMs);
 
-    if (ageS > FEED_AGE_S.OFFLINE) {
-        return { type: 'FeatureCollection', features: [], status: 'upstream_offline', last_updated: collection.last_updated };
+    if (status === 'upstream_offline') {
+        return { type: 'FeatureCollection', features: [], status, last_updated: collection.last_updated };
     }
-    return { ...collection, status: ageS > FEED_AGE_S.STALE ? 'stale' : 'ok' };
+    return { ...collection, status };
+}
+
+/** The status a collection last updated at `updatedMs` (NaN: unknown, treated as new) has earned by `nowMs`. */
+export function feedStatusAt(updatedMs: number, nowMs: number = Date.now()): NonNullable<AppVehicleCollection['status']> {
+    const ageS = Number.isNaN(updatedMs) ? 0 : (nowMs - updatedMs) / 1000;
+    if (ageS > FEED_AGE_S.OFFLINE) return 'upstream_offline';
+    return ageS > FEED_AGE_S.STALE ? 'stale' : 'ok';
 }
