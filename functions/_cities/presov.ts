@@ -15,7 +15,7 @@ const config: CityConfig = {
     feed: {
         realtimeUrl: 'https://egov.presov.sk/geodatakatalog/dpmp.csv',
         staticDataUrl: 'https://data.departs.app',
-        vehicleMetadataFile: 'dpmp-vehicles.json'
+        vehicleMetadataFile: 'dpmp-vehicles.json?v=2'
     },
     isBeta: true,
     filters: {
