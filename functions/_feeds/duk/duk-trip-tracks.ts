@@ -5,13 +5,13 @@ import { UPSTREAM_TTL_S } from '../../_core/config';
 import { LruCache } from '../../_core/feed/LruCache';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import type { TripWindows } from '../gtfs/trip-windows';
-import { tripChunkId } from '../gtfs/config';
+import { tripBucketId } from '../gtfs/config';
 import { DUK_CONFIG } from './config';
 
 /** Where a trip's timetable puts it: one entry per located stop, in travel order, absolute values. */
 export interface TripTrack {
     stopIds: string[];
-    /** Position of each entry in the trip's full stop list; only set when read from a trip chunk. */
+    /** Position of each entry in the trip's full stop list; only set when read from a trip bucket. */
     sequence?: number[];
     lastArrivalSecs: number;
     departureSecs: number[];
@@ -113,7 +113,7 @@ async function loadHour(city: CityConfig, hour: number): Promise<Map<string, Tri
 export class TripTrackLookup {
     /** In-flight loads are shared: every vehicle of a request asks at the same moment. */
     private readonly hours = new Map<number, Promise<Map<string, TripTrack>>>();
-    private readonly chunksRead = new Set<string>();
+    private readonly bucketsRead = new Set<string>();
 
     private constructor(
         private readonly city: CityConfig,
@@ -130,24 +130,24 @@ export class TripTrackLookup {
         return new TripTrackLookup(city, windows, hour, windows ? await loadHour(city, hour) : new Map());
     }
 
-    /** False means no track data at all, so callers may read trip chunks instead. */
+    /** False means no track data at all, so callers may read trip buckets instead. */
     get isAvailable(): boolean {
         return this.running.size > 0;
     }
 
     /**
-     * Whether this request may still read a trip from its own chunk.
+     * Whether this request may still read a trip from its own bucket.
      *
      * The hour files exist so a request does not make one subrequest per candidate trip. Stragglers
      * - a trip the file does not carry, or the whole file missing before a data rollout - are still
-     * read from their chunks, but only from so many distinct ones, since that is what costs a
-     * subrequest. A chunk already read is free.
+     * read from their buckets, but only from so many distinct ones, since that is what costs a
+     * subrequest. A bucket already read is free.
      */
-    allowChunkRead(tripId: string): boolean {
-        const chunk = tripChunkId(tripId);
-        if (this.chunksRead.has(chunk)) return true;
-        if (this.chunksRead.size >= DUK_CONFIG.TRACK_CHUNKS_PER_REQUEST) return false;
-        this.chunksRead.add(chunk);
+    allowBucketRead(tripId: string): boolean {
+        const bucket = tripBucketId(tripId);
+        if (this.bucketsRead.has(bucket)) return true;
+        if (this.bucketsRead.size >= DUK_CONFIG.TRACK_BUCKETS_PER_REQUEST) return false;
+        this.bucketsRead.add(bucket);
         return true;
     }
 

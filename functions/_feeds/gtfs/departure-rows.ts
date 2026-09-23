@@ -4,7 +4,7 @@ import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
-import { departuresChunkId } from './config';
+import { departuresBucketId, GTFS_CONFIG } from './config';
 import type { GtfsDepartureTuple } from './types';
 
 /**
@@ -12,10 +12,10 @@ import type { GtfsDepartureTuple } from './types';
  *
  * The rows carry absolute timestamps and are rebuilt daily, so they are static within a request
  * window; only the realtime overlay is time-sensitive. Holding them keeps the 10s departure poll
- * from re-parsing a whole chunk (up to ~1.2MB) every time.
+ * from re-parsing a whole bucket (~100KB) every time.
  */
 const rowsByStop = new LruCache<GtfsDepartureTuple[]>({
-    maxEntries: 512,
+    maxEntries: GTFS_CONFIG.DEPARTURE_ROWS_CACHE_MAX_ENTRIES,
     ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
 
@@ -39,8 +39,22 @@ export function getParentChildMap(city: CityConfig): Promise<Record<string, stri
     );
 }
 
+const parentIndexes = new WeakMap<Record<string, string[]>, Map<string, string>>();
+
+/** Each platform's parent station, built once per loaded parent-child map. */
+function parentIndexOf(parentChildMap: Record<string, string[]>): Map<string, string> {
+    let parentOf = parentIndexes.get(parentChildMap);
+    if (parentOf) return parentOf;
+    parentOf = new Map();
+    for (const parent in parentChildMap) {
+        for (const child of parentChildMap[parent]) parentOf.set(child, parent);
+    }
+    parentIndexes.set(parentChildMap, parentOf);
+    return parentOf;
+}
+
 /**
- * The timetable rows of the given stops, one subrequest per chunk they share and none for stops
+ * The timetable rows of the given stops, one subrequest per bucket they share and none for stops
  * already held. A stop the data does not know simply has no rows.
  */
 export async function getDepartureRows(city: CityConfig, stopIds: string[]): Promise<Map<string, GtfsDepartureTuple[]>> {
@@ -55,30 +69,31 @@ export async function getDepartureRows(city: CityConfig, stopIds: string[]): Pro
     }
     if (missing.length === 0) return rows;
 
-    const byChunk = new Map<string, string[]>();
+    const parentOf = parentIndexOf(await getParentChildMap(city));
+    const byBucket = new Map<string, string[]>();
     for (const id of missing) {
-        const chunkId = encodeURIComponent(departuresChunkId(id));
-        const ids = byChunk.get(chunkId);
+        const bucketId = departuresBucketId(id, parentOf);
+        const ids = byBucket.get(bucketId);
         if (ids) ids.push(id);
-        else byChunk.set(chunkId, [id]);
+        else byBucket.set(bucketId, [id]);
     }
 
-    await Promise.all(Array.from(byChunk, async ([chunkId, ids]) => {
+    await Promise.all(Array.from(byBucket, async ([bucketId, ids]) => {
         try {
-            const res = await appClient.fetch(`${baseUrl}/${city.slug}/departures/${chunkId}.json`, {
-                cacheTtl: UPSTREAM_TTL_S.DEPARTURE_CHUNKS,
-                cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_CHUNKS }
+            const res = await appClient.fetch(`${baseUrl}/${city.slug}/departure_buckets/${bucketId}.json`, {
+                cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS,
+                cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS }
             });
             if (!res.ok) return;
 
-            const chunk = JSON.parse(await res.text()) as Record<string, GtfsDepartureTuple[]>;
+            const bucket = JSON.parse(await res.text()) as Record<string, GtfsDepartureTuple[]>;
             for (const id of ids) {
-                const tuples = chunk[id] ?? [];
+                const tuples = bucket[id] ?? [];
                 rowsByStop.set(`${city.slug}:${id}`, tuples);
                 rows.set(id, tuples);
             }
         } catch (e) {
-            console.error(`Failed to load departures chunk ${chunkId} for ${city.slug}:`, e);
+            console.error(`Failed to load departures bucket ${bucketId} for ${city.slug}:`, e);
         }
     }));
 

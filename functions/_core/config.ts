@@ -33,8 +33,8 @@ export const UPSTREAM_TTL_S = {
      * top of this, but this is what actually survives an isolate eviction between them.
      */
     GTFS_RT_FEED: 10,
-    /** Per-stop GTFS departure chunks. */
-    DEPARTURE_CHUNKS: 3600,
+    /** Per-station GTFS departure buckets. */
+    DEPARTURE_BUCKETS: 3600,
     /** Golemio stop pages, trip windows and the fleet register. */
     SCHEDULE_DATA: 7200,
     /** Routes, stop enrichment, trip stops, shapes and the shape index. */
@@ -56,7 +56,7 @@ export const MCP_CACHE_TTL_S: Record<string, number> = {
 };
 
 /** Upper bound on distinct MCP calls kept by the tool result cache. */
-export const MCP_CACHE_MAX_ENTRIES = 256;
+export const MCP_CACHE_MAX_ENTRIES = 64;
 
 /** Values the MCP tools fall back to when the client leaves an argument out. */
 export const MCP_DEFAULTS = {

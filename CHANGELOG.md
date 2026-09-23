@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The GTFS vehicle map request is served from the already-serialized fleet build, and concurrent requests share one rebuild, cutting CPU per request under the platform limit.
 - Route shapes for Brno and Prešov are loaded by the app straight from the static data CDN instead of through the vehicle-detail API, taking that work and memory off the backend.
+- Brno, Prešov and DÚK timetables are read from small hashed files instead of chunks up to 1.3MB, fixing the backend running out of CPU after a few minutes of traffic.
 
 ## [0.74.4] - 2026-09-23
 

@@ -118,7 +118,7 @@ export class DukVehicleSource implements VehicleSource {
 
     /**
      * The trip's final located stop. The hour's tracks hold every trip running in it, so a miss means
-     * the trip is not running now; only a missing file at all (data not rolled out yet) reads chunks.
+     * the trip is not running now; only a missing file at all (data not rolled out yet) reads buckets.
      */
     private async lastStopId(tripId: string, tracks: TripTrackLookup): Promise<string | undefined> {
         const track = await this.trackOf(tripId, tracks);
@@ -142,7 +142,7 @@ export class DukVehicleSource implements VehicleSource {
     }
 
     /** Only for trips the hour's track file does not cover, so a data rollout can lag a deploy. */
-    private async trackFromChunk(tripId: string): Promise<TripTrack | null> {
+    private async trackFromBucket(tripId: string): Promise<TripTrack | null> {
         const stops = (await getTripStops(this.city, tripId)).filter(isLocated);
         if (stops.length === 0) return null;
         const last = stops[stops.length - 1];
@@ -204,9 +204,9 @@ export class DukVehicleSource implements VehicleSource {
         return this.nextStopBearing(report, track) ?? this.legBearing(report, track) ?? this.movementBearing(report);
     }
 
-    /** The hour's tracks cover every trip running now; a chunk is read only before the data is rolled out. */
+    /** The hour's tracks cover every trip running now; a bucket is read only before the data is rolled out. */
     private async trackOf(tripId: string, tracks: TripTrackLookup): Promise<TripTrack | null> {
-        return await tracks.get(tripId) ?? (tracks.allowChunkRead(tripId) ? await this.trackFromChunk(tripId) : null);
+        return await tracks.get(tripId) ?? (tracks.allowBucketRead(tripId) ? await this.trackFromBucket(tripId) : null);
     }
 
     private nextStopBearing(report: DukVehicleReport, track: TripTrack): number | null {
@@ -299,10 +299,10 @@ export class DukVehicleSource implements VehicleSource {
         const liveVehicleId = liveMatch?.properties.vehicle_id;
         if (!liveMatch || !tripId || !liveVehicleId) return { liveMatch };
 
-        // One trip, so its own chunk is the cheap read here, and it carries the stop sequences the app shows.
+        // One trip, so its own bucket is the cheap read here, and it carries the stop sequences the app shows.
         const [reports, track] = await Promise.all([
             getDukTrafficFeed(this.city).catch(() => null),
-            this.trackFromChunk(tripId),
+            this.trackFromBucket(tripId),
         ]);
         const report = reports ? getReportIndex(reports).get(liveVehicleId) : undefined;
         const passed = report && track ? this.lastPassedIndex(report, track) : null;

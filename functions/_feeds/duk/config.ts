@@ -12,8 +12,8 @@ export const DUK_CONFIG = {
     TRACK_HOURS_PER_REQUEST: 3,
     /** How long an hour that failed to load is left alone, so one bad response is not retried per request. */
     TRACK_FAILURE_TTL_MS: 60_000,
-    /** Trip chunks one request may read when the hour file is missing; the subrequest limit is 50. */
-    TRACK_CHUNKS_PER_REQUEST: 30,
+    /** Trip buckets one request may read when the hour file is missing; the subrequest limit is 50. */
+    TRACK_BUCKETS_PER_REQUEST: 30,
     /** Width of a CIS JŘ line number; the feed reports it as an unpadded integer. */
     LINE_NUMBER_LENGTH: 6,
 
