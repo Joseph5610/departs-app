@@ -1,93 +1,17 @@
-import type { transit_realtime } from 'gtfs-realtime-bindings';
+import type * as GtfsRt from '../../_core/gtfsRtTypes';
+import { ProtobufReader as Reader, WIRE_BYTES } from '../../_core/protobufReader';
 
 /**
  * A GTFS-RT feed read for vehicles only: vehicle entities decoded to the fields the app reads, alert
  * entities kept as raw bytes for the alerts path to decode on its own schedule.
  */
 export interface GtfsRtFeed {
-    entity: transit_realtime.IFeedEntity[];
+    entity: GtfsRt.IFeedEntity[];
     alertEntities: Uint8Array[];
 }
 
-const WIRE_VARINT = 0;
-const WIRE_FIXED64 = 1;
-const WIRE_BYTES = 2;
-const WIRE_FIXED32 = 5;
-
-const utf8 = new TextDecoder();
-
-/**
- * Minimal protobuf cursor over one buffer. Sub-messages share it and are bounded by an end offset, so
- * decoding allocates nothing but the decoded objects.
- */
-class Reader {
-    pos = 0;
-    private readonly view: DataView;
-
-    constructor(readonly buf: Uint8Array) {
-        this.view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    }
-
-    /** Varints up to 2^53, enough for uint64 timestamps. */
-    varint(): number {
-        let byte = this.buf[this.pos++];
-        if (byte < 0x80) return byte;
-        let result = byte & 0x7f;
-        let factor = 128;
-        do {
-            byte = this.buf[this.pos++];
-            result += (byte & 0x7f) * factor;
-            factor *= 128;
-        } while (byte & 0x80);
-        return result;
-    }
-
-    float(): number {
-        const value = this.view.getFloat32(this.pos, true);
-        this.pos += 4;
-        return value;
-    }
-
-    double(): number {
-        const value = this.view.getFloat64(this.pos, true);
-        this.pos += 8;
-        return value;
-    }
-
-    /** Reads a length prefix and returns where that field ends; the cursor is left at its start. */
-    end(): number {
-        const length = this.varint();
-        return this.pos + length;
-    }
-
-    string(): string {
-        const length = this.varint();
-        const start = this.pos;
-        const end = start + length;
-        this.pos = end;
-        let text = '';
-        for (let i = start; i < end; i++) {
-            const byte = this.buf[i];
-            if (byte > 0x7f) return utf8.decode(this.buf.subarray(start, end));
-            text += String.fromCharCode(byte);
-        }
-        return text;
-    }
-
-    skip(wireType: number): void {
-        if (wireType === WIRE_VARINT) this.varint();
-        else if (wireType === WIRE_FIXED64) this.pos += 8;
-        else if (wireType === WIRE_BYTES) {
-            const length = this.varint();
-            this.pos += length;
-        }
-        else if (wireType === WIRE_FIXED32) this.pos += 4;
-        else throw new Error(`Unsupported protobuf wire type ${wireType}`);
-    }
-}
-
-function readTrip(r: Reader, end: number): transit_realtime.ITripDescriptor {
-    const trip: transit_realtime.ITripDescriptor = {};
+function readTrip(r: Reader, end: number): GtfsRt.ITripDescriptor {
+    const trip: GtfsRt.ITripDescriptor = {};
     while (r.pos < end) {
         const tag = r.varint();
         const field = tag >>> 3;
@@ -102,8 +26,8 @@ function readTrip(r: Reader, end: number): transit_realtime.ITripDescriptor {
     return trip;
 }
 
-function readPosition(r: Reader, end: number): transit_realtime.IPosition {
-    const position: transit_realtime.IPosition = { latitude: 0, longitude: 0 };
+function readPosition(r: Reader, end: number): GtfsRt.IPosition {
+    const position: GtfsRt.IPosition = { latitude: 0, longitude: 0 };
     while (r.pos < end) {
         const tag = r.varint();
         const field = tag >>> 3;
@@ -117,8 +41,8 @@ function readPosition(r: Reader, end: number): transit_realtime.IPosition {
     return position;
 }
 
-function readDescriptor(r: Reader, end: number): transit_realtime.IVehicleDescriptor {
-    const descriptor: transit_realtime.IVehicleDescriptor = {};
+function readDescriptor(r: Reader, end: number): GtfsRt.IVehicleDescriptor {
+    const descriptor: GtfsRt.IVehicleDescriptor = {};
     while (r.pos < end) {
         const tag = r.varint();
         const field = tag >>> 3;
@@ -130,8 +54,8 @@ function readDescriptor(r: Reader, end: number): transit_realtime.IVehicleDescri
     return descriptor;
 }
 
-function readVehicle(r: Reader, end: number): transit_realtime.IVehiclePosition {
-    const vehicle: transit_realtime.IVehiclePosition = {};
+function readVehicle(r: Reader, end: number): GtfsRt.IVehiclePosition {
+    const vehicle: GtfsRt.IVehiclePosition = {};
     while (r.pos < end) {
         const tag = r.varint();
         const field = tag >>> 3;
@@ -164,7 +88,7 @@ export function decodeGtfsRtFeed(bytes: Uint8Array): GtfsRtFeed {
 
         const entityEnd = r.end();
         const entityStart = r.pos;
-        const entity: transit_realtime.IFeedEntity = { id: '' };
+        const entity: GtfsRt.IFeedEntity = { id: '' };
         let isAlert = false;
         while (r.pos < entityEnd) {
             const entityTag = r.varint();

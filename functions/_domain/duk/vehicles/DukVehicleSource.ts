@@ -1,4 +1,4 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleDetail, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
@@ -19,7 +19,7 @@ import { getDukVehicleColor } from '../colors';
 import { DukTripMatcher, type TripMatch } from './DukTripMatcher';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 
-const { VehicleStopStatus } = transit_realtime.VehiclePosition;
+const { VehicleStopStatus } = GtfsRt;
 
 /** Last position per vehicle, to derive a heading from movement where the feed has none. */
 const lastFixes = new LruCache<{ lat: number; lon: number; bearing: number | null }>({ maxEntries: DUK_CONFIG.BEARING_CACHE_MAX_ENTRIES });
@@ -164,7 +164,7 @@ export class DukVehicleSource implements VehicleSource {
         stationNames: Map<number, string>
     ): AppVehicleFeature {
         const state = report.state !== null ? DUK_STATE_MAPPING[report.state] : undefined;
-        const vp: transit_realtime.IVehiclePosition = {
+        const vp: GtfsRt.IVehiclePosition = {
             position: { latitude: report.latitude, longitude: report.longitude, bearing: report.bearing ?? undefined },
             currentStatus: state === 'at_stop' ? VehicleStopStatus.STOPPED_AT : VehicleStopStatus.IN_TRANSIT_TO,
             timestamp: Math.floor(timestampMs / 1000),

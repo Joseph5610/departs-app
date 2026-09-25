@@ -1,12 +1,12 @@
 import type { AppVehicleFeature, AppVehicleProperties } from '../../../_core/types';
-import type { transit_realtime } from 'gtfs-realtime-bindings';
+import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { normalizeRouteType } from '../../../_core/utils/routeTypes';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 
 export class VehiclesMapper {
     static mapVehicle(
-        vehicleObj: transit_realtime.IVehiclePosition,
+        vehicleObj: GtfsRt.IVehiclePosition,
         tripId: string,
         route: GtfsRoute,
         originTimestamp: string,

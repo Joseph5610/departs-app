@@ -1,10 +1,11 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import type * as GtfsRt from '../../_core/gtfsRtTypes';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL } from '../../_core/config';
+import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
 import { getGtfsRtFeed } from './gtfs-rt-feed';
 
-type AlertEntities = transit_realtime.IFeedEntity[];
+type AlertEntities = GtfsRt.IFeedEntity[];
 
 const sources = new Map<string, () => Promise<Snapshot<AlertEntities> | null>>();
 
@@ -20,7 +21,7 @@ function sourceFor(city: CityConfig) {
             try {
                 const feed = await getGtfsRtFeed(city);
                 // Decoded here, on the alerts window, so the vehicles path never pays for alert text.
-                return feed.alertEntities.map(bytes => transit_realtime.FeedEntity.decode(bytes));
+                return feed.alertEntities.map(decodeAlertEntity);
             } catch (e) {
                 console.warn(`[GTFS Alerts] getGtfsRtFeed failed: ${e instanceof Error ? e.message : e}`);
                 return null;

@@ -1,4 +1,4 @@
-import type { transit_realtime } from 'gtfs-realtime-bindings';
+import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { VehicleMapping } from './vehicle-index';
 import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 
@@ -8,20 +8,20 @@ export class GtfsVehicleMapping implements VehicleMapping {
     readonly resolvesPerEntity = true;
     readonly usesTripWindows = false;
 
-    isRelevant(_entity: transit_realtime.IFeedEntity): boolean {
+    isRelevant(_entity: GtfsRt.IFeedEntity): boolean {
         return true;
     }
 
-    tripCandidates(entity: transit_realtime.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
+    tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
         const tripId = entity.vehicle?.trip?.tripId;
         return tripId && tripId in tripRoutes.tripRoutes ? [tripId] : [];
     }
 
-    label(_entity: transit_realtime.IFeedEntity): string | undefined {
+    label(_entity: GtfsRt.IFeedEntity): string | undefined {
         return undefined;
     }
 
-    matchesVehicle(entity: transit_realtime.IFeedEntity, vehicleId: string): boolean {
+    matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean {
         const descriptor = entity.vehicle?.vehicle;
         return descriptor?.id === vehicleId || descriptor?.label === vehicleId || entity.id === vehicleId;
     }
@@ -30,8 +30,8 @@ export class GtfsVehicleMapping implements VehicleMapping {
         return false;
     }
 
-    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
-        const assigned: Array<{ entity: transit_realtime.IFeedEntity; tripId: string }> = [];
+    assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
+        const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
         for (const entity of entities) {
             const tripId = this.tripCandidates(entity, tripRoutes)[0];
             if (tripId) assigned.push({ entity, tripId });

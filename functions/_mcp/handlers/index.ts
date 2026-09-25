@@ -1,5 +1,6 @@
 import type { McpContext } from "../types";
 import { MCP_CACHE_MAX_ENTRIES, MCP_CACHE_TTL_S, MCP_DEFAULTS } from "../../_core/config";
+import { readEdgeCache, writeEdgeCache } from "../../_core/ApiClient";
 import { LruCache } from "../../_core/feed/LruCache";
 import { resolveCity } from "../utils";
 import { validateToolArgs } from "../validation";
@@ -25,7 +26,10 @@ const loggableArgs = (args: Record<string, unknown>): string =>
     JSON.stringify(Object.fromEntries(Object.entries(args).filter(([key]) => !UNLOGGED_ARGS.has(key) && key !== "city")));
 
 /**
- * Dispatcher for MCP tool calls. Identical calls within the tool's TTL are answered from memory.
+ * Dispatcher for MCP tool calls. Identical calls within the tool's TTL are answered from memory first,
+ * then from the edge Cache API (`readEdgeCache`/`writeEdgeCache`, the same one `ApiClient` uses for
+ * upstream fetches) - the in-memory cache alone is per isolate and does not survive eviction, which is
+ * what let a `/mcp` isolate cold-start into the full CPU cost of every tool on every eviction.
  */
 export async function handleToolCall(
     name: string,
@@ -39,14 +43,27 @@ export async function handleToolCall(
     const now = Date.now();
 
     const cached = resultCache.get(cacheKey);
-    const hit = cached !== undefined && cached.expiresAt > now;
-    console.log(`[MCP] ${name} city=${citySlug} args=${loggableArgs(args)} cache=${hit ? "hit" : "miss"}`);
-    if (hit) return cached.value;
+    if (cached !== undefined && cached.expiresAt > now) {
+        console.log(`[MCP] ${name} city=${citySlug} args=${loggableArgs(args)} cache=hit`);
+        return cached.value;
+    }
 
-    const value = await runTool(name, args, ctx, citySlug);
     const ttlS = MCP_CACHE_TTL_S[name];
+    const edgeHit = ttlS ? await readEdgeCache(cacheKey) : null;
+    if (edgeHit) {
+        const value: unknown = await edgeHit.json();
+        resultCache.set(cacheKey, { value, expiresAt: now + ttlS * 1000 });
+        console.log(`[MCP] ${name} city=${citySlug} args=${loggableArgs(args)} cache=edge`);
+        return value;
+    }
+
+    console.log(`[MCP] ${name} city=${citySlug} args=${loggableArgs(args)} cache=miss`);
+    const value = await runTool(name, args, ctx, citySlug);
     const isError = typeof value === "object" && value !== null && "error" in value;
-    if (ttlS && !isError) resultCache.set(cacheKey, { value, expiresAt: now + ttlS * 1000 });
+    if (ttlS && !isError) {
+        resultCache.set(cacheKey, { value, expiresAt: now + ttlS * 1000 });
+        ctx.waitUntil(writeEdgeCache(cacheKey, new Response(JSON.stringify(value)), ttlS));
+    }
     return value;
 }
 

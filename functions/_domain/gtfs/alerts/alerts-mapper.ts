@@ -1,12 +1,12 @@
 import type { AppAlert, AppRouteType } from "../../../_core/types";
 import type { GtfsRoutesData, GtfsRoute } from "../../../_feeds/gtfs/gtfs-data";
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { AlertTextFormatter } from "../../../_core/utils/AlertTextFormatter";
 
 /** What every network's alerts feed answers `/api/[city]/alerts` with. */
 export interface AlertsMapper {
-    mapAlerts(rawAlerts: transit_realtime.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident?: boolean): AppAlert[];
+    mapAlerts(rawAlerts: GtfsRt.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident?: boolean): AppAlert[];
 }
 
 /**
@@ -15,9 +15,9 @@ export interface AlertsMapper {
  */
 export interface AlertsMapperHooks {
     parseContent?(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null };
-    parseIsDetour?(alert: transit_realtime.IAlert, headerStr: string, rawHeader?: string | null, rawDesc?: string | null): boolean;
+    parseIsDetour?(alert: GtfsRt.IAlert, headerStr: string, rawHeader?: string | null, rawDesc?: string | null): boolean;
     resolveRoute?(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined;
-    parseExtensions?(alert: transit_realtime.IAlert, appAlert: AppAlert): void;
+    parseExtensions?(alert: GtfsRt.IAlert, appAlert: AppAlert): void;
 }
 
 export function parseTitle(rawTitle?: string | null): string {
@@ -34,7 +34,7 @@ export function defaultParseContent(rawHeader?: string | null, rawDesc?: string 
     return { title: parseTitle(rawHeader), description: parseDescription(rawDesc) };
 }
 
-export function defaultParseIsDetour(alert: transit_realtime.IAlert): boolean {
+export function defaultParseIsDetour(alert: GtfsRt.IAlert): boolean {
     return String(alert.effect) === '4' ||
         String(alert.effect) === '9' ||
         String(alert.effect) === 'DETOUR';
@@ -54,7 +54,7 @@ export function defaultResolveRoute(routeId: string, gtfsData: GtfsRoutesData | 
  * resolution and extra fields without forking the whole method.
  */
 export function mapGtfsAlerts(
-    rawAlerts: transit_realtime.IFeedEntity[],
+    rawAlerts: GtfsRt.IFeedEntity[],
     gtfsData: GtfsRoutesData | null,
     forceIncident: boolean = false,
     hooks: AlertsMapperHooks = {}

@@ -1,4 +1,4 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import { createGtfsAlertsMapper, defaultParseIsDetour, defaultResolveRoute, type AlertsMapper } from '../../gtfs/alerts/alerts-mapper';
 import { AlertTextFormatter } from '../../../_core/utils/AlertTextFormatter';
 import type { GtfsRoutesData, GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
@@ -32,7 +32,7 @@ function restoreStructure(text: string): string {
         .trim();
 }
 
-function parseIsDetour(alert: transit_realtime.IAlert, headerStr: string, rawHeader?: string | null, rawDesc?: string | null): boolean {
+function parseIsDetour(alert: GtfsRt.IAlert, headerStr: string, rawHeader?: string | null, rawDesc?: string | null): boolean {
     const isTweet = Boolean(
         (rawHeader && rawHeader.toUpperCase().includes('TWEET')) ||
         (rawDesc && rawDesc.toUpperCase().includes('TWEET:'))

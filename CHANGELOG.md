@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Route shapes for Brno and Prešov are loaded by the app straight from the static data CDN instead of through the vehicle-detail API, taking that work and memory off the backend.
 - Brno, Prešov and DÚK timetables are read from small hashed files instead of chunks up to 1.3MB, fixing the backend running out of CPU after a few minutes of traffic.
 - Prague route shapes now come from the PID GTFS like the other cities, and the app builds every route line itself, so the vehicle-detail API no longer carries any route geometry.
+- Prague's planned-exclusions alerts are read with a parser built for that feed's shape instead of a generic XML parser, which alone cost more CPU than a request has on this feed's size.
+- Brno and Prague service alerts are decoded with a parser built for that message instead of the generic protobuf library, cutting CPU on every alert refresh.
 
 ## [0.74.4] - 2026-09-23
 

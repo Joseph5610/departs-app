@@ -10,7 +10,7 @@ import { VehiclesService } from './vehicles/VehiclesService';
 import type { VehicleSource } from './vehicles/vehicle-source';
 import { GtfsRtVehicleSource } from './vehicles/gtfs-rt-vehicle-source';
 import { createGtfsAlertsMapper, type AlertsMapper } from './alerts/alerts-mapper';
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
 import { getGtfsRtFeed } from '../../_feeds/gtfs/gtfs-rt-feed';
 
 /**
@@ -43,7 +43,7 @@ export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}):
         debugFeed: overrides.debugFeed ?? {
             async getRawFeed(_ctx, type) {
                 const feed = await getGtfsRtFeed(config);
-                return type === 'alerts' ? feed.alertEntities.map(bytes => transit_realtime.FeedEntity.decode(bytes)) : feed.entity;
+                return type === 'alerts' ? feed.alertEntities.map(decodeAlertEntity) : feed.entity;
             },
         },
     };

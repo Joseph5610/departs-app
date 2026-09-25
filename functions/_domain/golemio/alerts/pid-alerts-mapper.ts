@@ -1,4 +1,4 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import { createGtfsAlertsMapper, type AlertsMapper } from '../../gtfs/alerts/alerts-mapper';
 import type { AppAlert } from '../../../_core/types';
 
@@ -6,8 +6,8 @@ export interface PidAlertExtension {
     causeDetail?: { translation?: Array<{ text: string, language?: string }> };
 }
 
-function parseExtensions(alert: transit_realtime.IAlert, appAlert: AppAlert): void {
-    const customAlert = alert as transit_realtime.IAlert & PidAlertExtension;
+function parseExtensions(alert: GtfsRt.IAlert, appAlert: AppAlert): void {
+    const customAlert = alert as GtfsRt.IAlert & PidAlertExtension;
 
     if (customAlert.causeDetail?.translation) {
         const causeDetail: { cs?: string, en?: string } = {};

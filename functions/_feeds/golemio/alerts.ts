@@ -1,5 +1,4 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
-import { XMLParser } from 'fast-xml-parser';
+import type * as GtfsRt from '../../_core/gtfsRtTypes';
 import { z } from 'zod';
 import type { Env } from '../../_core/types';
 import { CACHE_TTL, ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../_core/config';
@@ -7,38 +6,33 @@ import { ApiError } from '../../_core/errors';
 import { appClient } from '../../_core/ApiClient';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { createSource, type Snapshot } from '../../_core/feed/source';
+import { decodeAlertFeed } from '../../_core/gtfsRtAlerts';
 import type { GtfsRoute, GtfsRoutesData } from '../gtfs/gtfs-data';
 import { GOLEMIO_CONFIG } from './config';
 import { golemioClient } from './GolemioClient';
 import { golemioRouteSchema, pidRssItemSchema } from './schemas/alerts';
+import { readRssItems } from './rss-exclusions';
 
 export type PidRssItem = z.infer<typeof pidRssItemSchema>;
 
 /** Both PID alert feeds and the routes their incidents refer to; null for a part that could not be read. */
 export interface PidAlertFeeds {
     /** GTFS-RT alert entities (incidents). */
-    incidents: transit_realtime.IFeedEntity[] | null;
+    incidents: GtfsRt.IFeedEntity[] | null;
     routes: GtfsRoutesData | null;
     /** RSS items (planned exclusions). */
     exclusions: PidRssItem[] | null;
 }
 
-const rssParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
-
-/** The only part of the RSS document this codebase navigates. */
-interface RssDocument {
-    rss?: { channel?: { item?: unknown } };
-}
-
-/** Shared PID RSS parse — the parser options must match wherever the feed is read. */
-function parseRssXml(xmlString: string): RssDocument {
-    return rssParser.parse(xmlString) as RssDocument;
-}
-
-/** The RSS document's items, validated; a malformed item is dropped rather than failing the rest. */
+/**
+ * The RSS document's items, validated; a malformed item is dropped rather than failing the rest.
+ *
+ * Reads items with `readRssItems` (a parser purpose-built for this feed's flat item shape) rather
+ * than the generic `XMLParser` used by `parseRssXml`: on the real ~450 KB, ~250-item feed, the
+ * generic parse alone cost 20-25ms, over the CPU limit on its own regardless of isolate warmth.
+ */
 function parseRssItems(xmlString: string): PidRssItem[] {
-    const item = parseRssXml(xmlString)?.rss?.channel?.item;
-    const rawItems: unknown[] = item ? (Array.isArray(item) ? item : [item]) : [];
+    const rawItems = readRssItems(xmlString);
 
     const safeArraySchema = z.array(pidRssItemSchema.nullable().catch(err => {
         console.warn("Skipping invalid RSS item:", err);
@@ -64,13 +58,18 @@ async function fetchExclusionsXml(): Promise<string> {
     return await response.text();
 }
 
-async function fetchIncidents(env: Env): Promise<transit_realtime.FeedMessage> {
+/**
+ * The feed's alert entities, decoded with `decodeAlertFeed` - a parser purpose-built for the GTFS-RT
+ * `Alert` message, not the generated decoder - so the app's own `IFeedEntity` shape comes straight out
+ * of the decode instead of a second pass over a protobufjs message tree.
+ */
+async function fetchIncidents(env: Env): Promise<GtfsRt.IFeedEntity[]> {
     const response = await golemioClient.fetch("/v2/vehiclepositions/gtfsrt/alerts.pb", env, { cacheTtl: CACHE_TTL.RSS_INCIDENTS });
     if (!response.ok) {
         throw new Error(`Failed to fetch PB alerts: ${response.status}`);
     }
     const buffer = await response.arrayBuffer();
-    return transit_realtime.FeedMessage.decode(new Uint8Array(buffer));
+    return decodeAlertFeed(new Uint8Array(buffer));
 }
 
 /** PID routes by id and by short name, for the lines incidents name. Read once a day. */
@@ -123,7 +122,7 @@ async function readAlertFeeds(env: Env): Promise<PidAlertFeeds> {
     }
 
     return {
-        incidents: incidentsRes.status === 'fulfilled' ? incidentsRes.value.entity.filter(e => e.alert != null) : null,
+        incidents: incidentsRes.status === 'fulfilled' ? incidentsRes.value : null,
         routes: routesRes.status === 'fulfilled' ? routesRes.value : null,
         exclusions: exclusionsRes.status === 'fulfilled' ? exclusionsRes.value : null,
     };
@@ -151,7 +150,7 @@ export async function getRawPidAlertFeeds(env: Env): Promise<{ incidents: unknow
     ]);
 
     return {
-        incidents: incidentsRes.status === 'fulfilled' ? incidentsRes.value.toJSON() : null,
-        exclusions: exclusionsRes.status === 'fulfilled' ? parseRssXml(exclusionsRes.value) : null,
+        incidents: incidentsRes.status === 'fulfilled' ? incidentsRes.value : null,
+        exclusions: exclusionsRes.status === 'fulfilled' ? readRssItems(exclusionsRes.value) : null,
     };
 }

@@ -1,4 +1,4 @@
-import type { transit_realtime } from 'gtfs-realtime-bindings';
+import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-index';
 import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -7,7 +7,7 @@ import { DAY_MINS, wrapDaySeconds } from '../../../_core/utils/time';
 
 interface TripClaim {
     label: string;
-    entity: transit_realtime.IFeedEntity;
+    entity: GtfsRt.IFeedEntity;
     tripId: string;
     isNative: boolean;
     gapMins: number;
@@ -24,12 +24,12 @@ export class KordisVehicleMapping implements VehicleMapping {
 
 
     /** License plates starting with `dpmb` mark feed entries that are not real vehicles. */
-    private isInvalidDpmbVehicle(entity: transit_realtime.IFeedEntity): boolean {
+    private isInvalidDpmbVehicle(entity: GtfsRt.IFeedEntity): boolean {
         const lp = entity.vehicle?.vehicle?.licensePlate;
         return !!lp && lp.trim().toLowerCase().startsWith('dpmb');
     }
 
-    isRelevant(entity: transit_realtime.IFeedEntity): boolean {
+    isRelevant(entity: GtfsRt.IFeedEntity): boolean {
         return !this.isInvalidDpmbVehicle(entity);
     }
 
@@ -38,7 +38,7 @@ export class KordisVehicleMapping implements VehicleMapping {
      * to when the id comes from an older numbering. Ids are recycled across exports, so both can be
      * valid at once and the choice is left to `assignAll`. An alias of null marks a dropped trip.
      */
-    tripCandidates(entity: transit_realtime.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
+    tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
         const rawTripId = entity.vehicle?.trip?.tripId;
         if (!rawTripId) return [];
 
@@ -50,12 +50,12 @@ export class KordisVehicleMapping implements VehicleMapping {
         return candidates;
     }
 
-    label(entity: transit_realtime.IFeedEntity): string | undefined {
+    label(entity: GtfsRt.IFeedEntity): string | undefined {
         const vp = entity.vehicle;
         return vp?.vehicle?.label || vp?.vehicle?.licensePlate || vp?.vehicle?.id || entity.id || undefined;
     }
 
-    matchesVehicle(entity: transit_realtime.IFeedEntity, vehicleId: string): boolean {
+    matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean {
         const descriptor = entity.vehicle?.vehicle;
         return descriptor?.id === vehicleId
             || descriptor?.label === vehicleId
@@ -82,14 +82,14 @@ export class KordisVehicleMapping implements VehicleMapping {
      * then an id native to the current export over an aliased one, then nearest window - and a
      * vehicle whose best reading is taken falls back to its next one.
      */
-    assignAll(entities: transit_realtime.IFeedEntity[], tripRoutes: GtfsTripRoutesData, { windows, clock }: MappingSchedule) {
+    assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData, { windows, clock }: MappingSchedule) {
         const todayBit = windows ? dayBit(windows, clock.date) : 0;
         const currentMins = windows ? clock.mins : 0;
 
         // Grouped by vehicle first, then by the order the feed lists them: equally strong claims are
         // decided by this order, so it has to be the same one every time.
-        const byVehicle = new Map<string, transit_realtime.IFeedEntity[]>();
-        const order = new Map<transit_realtime.IFeedEntity, number>();
+        const byVehicle = new Map<string, GtfsRt.IFeedEntity[]>();
+        const order = new Map<GtfsRt.IFeedEntity, number>();
         const nowMs = Date.now();
         for (const entity of entities) {
             order.set(entity, order.size);
@@ -127,7 +127,7 @@ export class KordisVehicleMapping implements VehicleMapping {
             || Number(b.isNative) - Number(a.isNative)
             || a.gapMins - b.gapMins);
 
-        const assigned: Array<{ entity: transit_realtime.IFeedEntity; tripId: string }> = [];
+        const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
         const takenVehicles = new Set<string>();
         const takenTrips = new Set<string>();
         for (const claim of claims) {
@@ -158,9 +158,9 @@ export type { TripWindows };
  * Equally strong claims are decided by this order, and numbered vehicles come first because that is
  * the order the board has always resolved them in.
  */
-function sortedByLabel(byVehicle: Map<string, transit_realtime.IFeedEntity[]>): Array<[string, transit_realtime.IFeedEntity[]]> {
-    const numeric: Array<[string, transit_realtime.IFeedEntity[]]> = [];
-    const rest: Array<[string, transit_realtime.IFeedEntity[]]> = [];
+function sortedByLabel(byVehicle: Map<string, GtfsRt.IFeedEntity[]>): Array<[string, GtfsRt.IFeedEntity[]]> {
+    const numeric: Array<[string, GtfsRt.IFeedEntity[]]> = [];
+    const rest: Array<[string, GtfsRt.IFeedEntity[]]> = [];
     for (const entry of byVehicle) {
         (/^\d+$/.test(entry[0]) ? numeric : rest).push(entry);
     }

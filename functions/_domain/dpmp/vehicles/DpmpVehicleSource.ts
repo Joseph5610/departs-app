@@ -1,4 +1,4 @@
-import { transit_realtime } from 'gtfs-realtime-bindings';
+import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
@@ -16,7 +16,7 @@ import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
 import { DpmpTripMatcher } from './DpmpTripMatcher';
 
-const { VehicleStopStatus } = transit_realtime.VehiclePosition;
+const { VehicleStopStatus } = GtfsRt;
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
@@ -144,7 +144,7 @@ export class DpmpVehicleSource implements VehicleSource {
         const route: GtfsRoute = routesByName[row.routeNumber]
             ?? { name: row.routeNumber, type: DPMP_CONFIG.FALLBACK_ROUTE_TYPE };
 
-        const vp: transit_realtime.IVehiclePosition = {
+        const vp: GtfsRt.IVehiclePosition = {
             position: {
                 latitude: position.latitude,
                 longitude: position.longitude,
