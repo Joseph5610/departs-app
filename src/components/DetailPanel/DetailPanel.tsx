@@ -26,6 +26,8 @@ interface DetailPanelProps {
     id?: string;
     platformCode?: string;
     subHeader?: React.ReactNode;
+    /** Each change collapses the mobile drawer to its lowest snap point. */
+    collapseRequest?: number;
     children: React.ReactNode;
 }
 
@@ -35,7 +37,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
-export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, children }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, collapseRequest, children }) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -92,6 +94,12 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     if (id !== prevId) {
         setPrevId(id);
         setActiveSnapPoint(DRAWER_SNAP.DEFAULT);
+    }
+
+    const [prevCollapseRequest, setPrevCollapseRequest] = useState(collapseRequest);
+    if (collapseRequest !== prevCollapseRequest) {
+        setPrevCollapseRequest(collapseRequest);
+        setActiveSnapPoint(DRAWER_SNAP.SNAP_POINTS[0]);
     }
 
     if (isMobile) {

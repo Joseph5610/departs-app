@@ -26,6 +26,7 @@ import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { useRouteParams } from '../../hooks/useRouteParams';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { useRememberedPlace } from '../../hooks/data/useGeocoding';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { MapControls } from './MapControls';
@@ -56,6 +57,8 @@ import { StatsTabs } from './Stats/StatsTabs';
 const MapInner: React.FC = () => {
     const { t } = useTranslation();
     const mapEvents = useMapEvents();
+    const isMobile = useIsMobile();
+    const [drawerCollapseRequest, setDrawerCollapseRequest] = useState(0);
 
     // Store Actions
     const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
@@ -196,7 +199,9 @@ const MapInner: React.FC = () => {
                 onClick={(evt) => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === MAP_LAYERS.STOP_ENTRANCES) {
-                        if (isPanelRoute) closePanel(); // Close panel on background click
+                        if (!isPanelRoute) return;
+                        if (isMobile) setDrawerCollapseRequest(n => n + 1);
+                        else closePanel();
                         return;
                     }
 
@@ -296,6 +301,7 @@ const MapInner: React.FC = () => {
                 title={detailTitle}
                 platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
                 subHeader={detailSubHeader}
+                collapseRequest={drawerCollapseRequest}
             >
                 {detailContent}
             </DetailPanel>

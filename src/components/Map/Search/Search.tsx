@@ -256,7 +256,7 @@ export const Search: React.FC = React.memo(() => {
     return (
         <div
             className={cn(
-                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-105 md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-50 transition-[left,width] duration-300 ease-in-out",
+                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-105 md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-1000 transition-[left,width] duration-300 ease-in-out",
                 isSidebarOpen && "md:left-(--visible-center-x) md:w-90"
             )}
             data-vaul-no-drag

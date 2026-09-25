@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Search offers a line filter for any line the city actually runs, replacing the per-city line-name patterns.
 - Search finds live vehicles by their number (e.g. "8414") and opens the selected one.
+- On mobile, tapping the map collapses the detail drawer instead of closing it.
+
+### Fixed
+
+- Search results on mobile are no longer hidden behind an open detail drawer.
 
 ## [0.74.6] - 2026-09-25
 
