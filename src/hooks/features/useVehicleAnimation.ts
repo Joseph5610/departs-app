@@ -143,40 +143,25 @@ const stepTrack = (track: Track, time: number): boolean => {
 };
 
 /**
- * Hook to smoothly animate vehicle movements on the map.
- * Intercepts new vehicle data and runs a requestAnimationFrame loop to slide
- * vehicles from their previous positions to their new positions.
+ * Slides one map source's vehicles from their previous to their new positions. Each source runs its own
+ * loop so an update to one never re-sends or restarts the other.
  *
  * Performance: Bypasses React state completely during animation frames
- * by calling setData directly on MapLibre GeoJSON sources.
+ * by calling setData directly on the MapLibre GeoJSON source.
  */
-export const useVehicleAnimation = (
+const useAnimatedSource = (
     mapRef: React.RefObject<MapRef | null>,
     mapLoaded: boolean,
-    displayVehicles: VehicleCollection | null,
-    selectedVehicleFeature: VehicleCollection | null,
-    showVehicles: boolean
-) => {
+    sourceId: string,
+    collection: VehicleCollection | null,
+    isVisible: boolean
+): VehicleCollection => {
     const animationFrameRef = useRef<number | null>(null);
-    // One track per source: the stream and the detail arrive at different moments, and sharing positions let one drag the other back and forth.
-    const displayTrackRef = useRef<Track>(emptyTrack());
-    const selectedTrackRef = useRef<Track>(emptyTrack());
+    const trackRef = useRef<Track>(emptyTrack());
 
-    // Stable references for react-map-gl to initialize sources.
-    // Since the object references never change, React Map GL never automatically calls setData,
-    // allowing our requestAnimationFrame loop to have full exclusive control over updates.
-    const displayGeoJSON = React.useMemo<VehicleCollection>(() => ({
-        type: 'FeatureCollection',
-        features: []
-    }), []);
-    const selectedGeoJSON = React.useMemo<VehicleCollection>(() => ({
-        type: 'FeatureCollection',
-        features: []
-    }), []);
-
-    // Store the latest raw features to reconstruct GeoJSON during the animation
-    const displayVehiclesRawRef = useRef<VehicleFeature[]>([]);
-    const selectedVehiclesRawRef = useRef<VehicleFeature[]>([]);
+    // Stable reference for react-map-gl to initialize the source; it never changes, so react-map-gl
+    // never calls setData itself and the requestAnimationFrame loop has exclusive control over updates.
+    const geojson = React.useMemo<VehicleCollection>(() => ({ type: 'FeatureCollection', features: [] }), []);
 
     useEffect(() => {
         if (!mapLoaded) return;
@@ -184,49 +169,28 @@ export const useVehicleAnimation = (
         const map = mapRef.current?.getMap();
         if (!map) return;
 
-        const now = performance.now();
-
-        // Process main stream vehicles
-        const displayFeatures = displayVehicles?.features || [];
-        displayVehiclesRawRef.current = displayFeatures;
-
-        // Process selected vehicle
-        const selectedFeatures = selectedVehicleFeature?.features || [];
-        selectedVehiclesRawRef.current = selectedFeatures;
-
-        displayTrackRef.current = advanceTrack(displayTrackRef.current, displayFeatures, parseTime(displayVehicles?.last_updated), now);
-        selectedTrackRef.current = advanceTrack(selectedTrackRef.current, selectedFeatures, parseTime(selectedVehicleFeature?.last_updated), now);
+        const features = collection?.features || [];
+        trackRef.current = advanceTrack(trackRef.current, features, parseTime(collection?.last_updated), performance.now());
 
         let isFirstFrame = true;
 
         const animate = (time: number) => {
-            const displayTrack = displayTrackRef.current;
-            const selectedTrack = selectedTrackRef.current;
-            const displayMoved = stepTrack(displayTrack, time);
-            const selectedMoved = stepTrack(selectedTrack, time);
+            const track = trackRef.current;
+            const moved = stepTrack(track, time);
+            const source = map.getSource(sourceId) as GeoJSONSource | undefined;
 
-            // Direct map mutation bypassing React; a source is only re-sent when one of its vehicles moved.
-            const cityVehiclesSource = map.getSource(MAP_SOURCES.VEHICLES) as GeoJSONSource | undefined;
-            const selectedVehicleSource = map.getSource(MAP_SOURCES.SELECTED_VEHICLE) as GeoJSONSource | undefined;
-
-            if (cityVehiclesSource && (isFirstFrame || displayMoved)) {
-                displayGeoJSON.features = withDisplayedPositions(displayVehiclesRawRef.current, displayTrack.positions);
-                // Respect showVehicles here too: this path bypasses the React prop guard on <Source>.
-                cityVehiclesSource.setData(showVehicles ? displayGeoJSON : EMPTY_FEATURE_COLLECTION);
-            }
-
-            if (selectedVehicleSource && (isFirstFrame || selectedMoved)) {
-                selectedGeoJSON.features = withDisplayedPositions(selectedVehiclesRawRef.current, selectedTrack.positions);
-                selectedVehicleSource.setData(selectedGeoJSON);
+            if (source && (isFirstFrame || moved)) {
+                geojson.features = withDisplayedPositions(features, track.positions);
+                // Respect visibility here too: this path bypasses the React prop guard on <Source>.
+                source.setData(isVisible ? geojson : EMPTY_FEATURE_COLLECTION);
             }
 
             isFirstFrame = false;
-            if (displayTrack.targets.size > 0 || selectedTrack.targets.size > 0) {
+            if (track.targets.size > 0) {
                 animationFrameRef.current = requestAnimationFrame(animate);
             }
         };
 
-        // Start/Restart animation loop
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
         }
@@ -237,7 +201,24 @@ export const useVehicleAnimation = (
                 cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, [mapLoaded, displayVehicles, selectedVehicleFeature, mapRef, displayGeoJSON, selectedGeoJSON, showVehicles]);
+    }, [mapLoaded, mapRef, sourceId, collection, geojson, isVisible]);
+
+    return geojson;
+};
+
+/**
+ * Hook to smoothly animate vehicle movements on the map: the main stream and the selected vehicle,
+ * each through its own source and animation loop.
+ */
+export const useVehicleAnimation = (
+    mapRef: React.RefObject<MapRef | null>,
+    mapLoaded: boolean,
+    displayVehicles: VehicleCollection | null,
+    selectedVehicleFeature: VehicleCollection | null,
+    showVehicles: boolean
+) => {
+    const displayGeoJSON = useAnimatedSource(mapRef, mapLoaded, MAP_SOURCES.VEHICLES, displayVehicles, showVehicles);
+    const selectedGeoJSON = useAnimatedSource(mapRef, mapLoaded, MAP_SOURCES.SELECTED_VEHICLE, selectedVehicleFeature, true);
 
     return {
         displayGeoJSON,

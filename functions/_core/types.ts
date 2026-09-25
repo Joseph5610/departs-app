@@ -61,22 +61,30 @@ export interface AppStopTimeProperties {
     continues_as?: AppContinuation;
 }
 
-/** The trip the same vehicle continues as; ids are absent when only the line is known. */
+/**
+ * The trip the same vehicle continues as; ids are absent when only the line is known.
+ * GTFS sends `route_id` raw for the frontend to resolve `type`; Golemio resolves both at build time.
+ */
 export interface AppContinuation {
     trip_id?: string;
     vehicle_id?: string;
+    route_id?: string;
     line: string;
-    type: AppRouteType;
+    type?: AppRouteType;
     headsign: string;
     departure_time?: string;
 }
 
-/** An onward trip scheduled to wait at this stop for the trip being viewed. */
+/**
+ * An onward trip scheduled to wait at this stop for the trip being viewed.
+ * GTFS sends `route_id` raw for the frontend to resolve `line`/`type`; Golemio resolves both at build time.
+ */
 export interface AppStopConnection {
     trip_id: string;
     vehicle_id?: string;
-    line: string;
-    type: AppRouteType;
+    route_id?: string;
+    line?: string;
+    type?: AppRouteType;
     headsign: string;
     /** Scheduled departure, `HH:MM:SS` like the stop times. */
     departure_time: string;

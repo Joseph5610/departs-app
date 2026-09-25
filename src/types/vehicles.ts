@@ -102,6 +102,7 @@ export interface VehicleDetail extends BaseVehicleProperties {
 export interface StopConnection {
     trip_id: string;
     vehicle_id?: string;
+    route_id?: string;
     line: string;
     route_color?: string;
     type: RouteType;
@@ -116,6 +117,7 @@ export interface StopConnection {
 export interface Continuation {
     trip_id?: string;
     vehicle_id?: string;
+    route_id?: string;
     line: string;
     route_color?: string;
     type: RouteType;

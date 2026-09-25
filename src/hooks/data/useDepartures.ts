@@ -7,7 +7,7 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, DELAY_STATS_WINDOW_MS, DEPARTURES_CONFIG } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
-import { enrichDepartures, enrichDepartureRouteMetadata, enrichFeederHold } from '../../lib/enrichment';
+import { enrichLiveDepartures } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
 import { routeTypeRank } from '../../config/transit';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
@@ -74,9 +74,7 @@ const withDelayDeltas = (stopKey: string, departures: Departure[]): Departure[] 
     return result;
 };
 
-const brandDepartures = memoizeLast(enrichDepartureRouteMetadata);
-const enrichStopDepartures = memoizeLast(enrichDepartures);
-const computeFeederHold = memoizeLast(enrichFeederHold);
+const enrichStopDepartures = memoizeLast(enrichLiveDepartures);
 
 const filterDepartures = memoizeLast((departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean) => {
     const hasAirConditioningData = departures.some(dep => dep.is_air_conditioned === true);
@@ -241,13 +239,11 @@ export const useDepartures = () => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { tripIndex } = useVehicles();
-    const { byShortName } = useRouteMetadata();
+    const { byShortName, byId } = useRouteMetadata();
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
-    const brandedDepartures = brandDepartures(query.data?.departures ?? NO_DEPARTURES, byShortName);
-    const enrichedDepartures = enrichStopDepartures(brandedDepartures, tripIndex, byTripId, byVehicleId, dataUpdatedAt);
-    const departuresWithHold = computeFeederHold(enrichedDepartures, tripIndex);
-    const { filtered, hasAirConditioningData, hasRequestStop } = filterDepartures(departuresWithHold, selectedLine, requireAirConditioned);
+    const liveDepartures = enrichStopDepartures(query.data?.departures ?? NO_DEPARTURES, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt);
+    const { filtered, hasAirConditioningData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned);
     const groupedDepartures = groupDepartures(filtered, departureSort);
     const delayStats = computeDelayStats(filtered, dataUpdatedAt);
     const isFiltered = !!selectedLine || (requireAirConditioned && hasAirConditioningData);

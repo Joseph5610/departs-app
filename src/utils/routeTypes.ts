@@ -1,5 +1,7 @@
 import type { RouteType } from '../types/vehicles';
 
+const NAMED_ROUTE_TYPES = new Set<string>(['tram', 'metro', 'train', 'bus', 'ferry', 'funicular', 'trolleybus']);
+
 /**
  * Normalizes a GTFS route_type (numeric GTFS 0-12, extended 100-999, or string) to a vehicle type
  * slug. Mirrors `functions/_core/utils/routeTypes.ts` - the backend still does this normalization
@@ -11,7 +13,7 @@ export const normalizeRouteType = (type: number | string | undefined | null): Ro
     if (type === undefined || type === null) return 'unknown';
     const strType = String(type).toLowerCase();
 
-    if (['tram', 'metro', 'train', 'bus', 'ferry', 'funicular', 'trolleybus'].includes(strType)) {
+    if (NAMED_ROUTE_TYPES.has(strType)) {
         return strType as RouteType;
     }
 

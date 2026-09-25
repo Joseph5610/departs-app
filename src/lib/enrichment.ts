@@ -1,7 +1,7 @@
 import type { StoredEnrichmentPatch } from '../types/enrichment';
 import type { Departure, DepartureFeeder, VehicleCollection, VehicleDetail, VehicleFeature, VehicleProperties } from '../types/transit';
 import type { RSSItem } from '../types/alerts';
-import type { RouteInfo } from '../types/vehicles';
+import type { RouteInfo, RouteType } from '../types/vehicles';
 import { DEPARTURES_CONFIG, ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
 import { normalizeRouteType, routeJoinKey } from '../utils/routeTypes';
 
@@ -95,6 +95,31 @@ export function applyEnrichment<T extends object>(
 const brandFrom = (name: string | undefined, type: string | undefined, byShortName: Map<string, RouteInfo>): RouteInfo | undefined =>
     name ? byShortName.get(routeJoinKey(type, name)) : undefined;
 
+/**
+ * A connection/continuation's line/type/color: by `route_id` (GTFS, which sends no name/type of its
+ * own) when present, else by name (Golemio, which already has both). Undefined means nothing to add -
+ * Golemio's existing `line`/`type` stay untouched, same as `brandFrom`. A `route_id` lookup miss still
+ * fills `line`/`type` from whatever the backend sent (GTFS continuations keep a raw `line` fallback,
+ * connections have none) or the bare id, since GTFS entries carry no name/type of their own to fall
+ * back on otherwise.
+ */
+const resolveLineType = (
+    routeId: string | undefined,
+    line: string | undefined,
+    type: RouteType | undefined,
+    byId: Map<string, RouteInfo>,
+    byShortName: Map<string, RouteInfo>,
+): { line: string; type: RouteType; route_color?: string } | undefined => {
+    if (routeId) {
+        const route = byId.get(routeId);
+        return route
+            ? { line: route.name, type: normalizeRouteType(route.type), route_color: route.route_color }
+            : { line: line ?? routeId, type: type ?? 'unknown' };
+    }
+    const route = brandFrom(line, type, byShortName);
+    return route ? { line: line!, type: type!, route_color: route.route_color } : undefined;
+};
+
 /** A trip's current live properties from the fleet stream, or undefined if it isn't running right now. */
 const liveOf = (tripId: string, tripIndex: Map<string, VehicleFeature>): VehicleFeature['properties'] | undefined =>
     tripIndex.get(tripId)?.properties;
@@ -123,8 +148,8 @@ export function enrichVehicleRouteMetadata(
 }
 
 /** Overwrites `route_color` on a departure and its feeders/continuation from the static join. */
-export function enrichDepartureRouteMetadata(departures: Departure[], byShortName: Map<string, RouteInfo>): Departure[] {
-    if (!departures.length || byShortName.size === 0) return departures;
+export function enrichDepartureRouteMetadata(departures: Departure[], byShortName: Map<string, RouteInfo>, byId: Map<string, RouteInfo>): Departure[] {
+    if (!departures.length || (byShortName.size === 0 && byId.size === 0)) return departures;
 
     let changed = false;
     const result = departures.map((dep): Departure => {
@@ -142,8 +167,12 @@ export function enrichDepartureRouteMetadata(departures: Departure[], byShortNam
             if (connectionsChanged) connections = nextConnections;
         }
 
-        const continuesRoute = dep.continues_as ? brandFrom(dep.continues_as.line, dep.continues_as.type, byShortName) : undefined;
-        const continues_as = continuesRoute ? { ...dep.continues_as!, route_color: continuesRoute.route_color } : dep.continues_as;
+        const routedContinuation = dep.continues_as
+            ? resolveLineType(dep.continues_as.route_id, dep.continues_as.line, dep.continues_as.type, byId, byShortName)
+            : undefined;
+        const continues_as = routedContinuation
+            ? { ...dep.continues_as!, line: routedContinuation.line, type: routedContinuation.type, route_color: routedContinuation.route_color }
+            : dep.continues_as;
 
         if (!route && connections === dep.connections && continues_as === dep.continues_as) return dep;
         changed = true;
@@ -162,9 +191,10 @@ export function enrichDepartureRouteMetadata(departures: Departure[], byShortNam
  * neither input has changed.
  */
 export function enrichFeederHold(departures: Departure[], tripIndex: Map<string, VehicleFeature>): Departure[] {
-    if (!departures.length) return departures;
-    return departures.map((dep): Departure => {
+    let changed = false;
+    const result = departures.map((dep): Departure => {
         if (!dep.connections?.length) return dep;
+        changed = true;
         const connections = dep.connections.map((f): DepartureFeeder => {
             const delay = liveOf(f.trip_id, tripIndex)?.delay;
             const hold_s = typeof delay === 'number' ? Math.max(0, f.base_hold_s + delay) : null;
@@ -172,6 +202,22 @@ export function enrichFeederHold(departures: Departure[], tripIndex: Map<string,
         });
         return { ...dep, connections };
     });
+    return changed ? result : departures;
+}
+
+/** The full live pipeline for fetched departures: static branding, push patches and past-drop, then feeder holds. */
+export function enrichLiveDepartures(
+    departures: Departure[],
+    tripIndex: Map<string, VehicleFeature>,
+    byTripId: PatchIndex,
+    byVehicleId: PatchIndex,
+    byShortName: Map<string, RouteInfo>,
+    byId: Map<string, RouteInfo>,
+    baseTimestamp: number,
+): Departure[] {
+    const branded = enrichDepartureRouteMetadata(departures, byShortName, byId);
+    const enriched = enrichDepartures(branded, tripIndex, byTripId, byVehicleId, baseTimestamp);
+    return enrichFeederHold(enriched, tripIndex);
 }
 
 /**
@@ -277,7 +323,12 @@ type StopTimeFeature = NonNullable<VehicleDetail['stop_times']>['features'][numb
  * continuation, from the live fleet (already push-patched), and brands both from the static routes
  * join. The backend sends scheduled rows only. Returns `features` itself when nothing changes.
  */
-export function enrichConnections(features: StopTimeFeature[], tripIndex: Map<string, VehicleFeature>, byShortName: Map<string, RouteInfo>): StopTimeFeature[] {
+export function enrichConnections(
+    features: StopTimeFeature[],
+    tripIndex: Map<string, VehicleFeature>,
+    byShortName: Map<string, RouteInfo>,
+    byId: Map<string, RouteInfo>,
+): StopTimeFeature[] {
     let changed = false;
 
     const result = features.map((f): StopTimeFeature => {
@@ -287,21 +338,25 @@ export function enrichConnections(features: StopTimeFeature[], tripIndex: Map<st
         let featureChanged = false;
         const nextConnections = connections?.map((c) => {
             const live = liveOf(c.trip_id, tripIndex);
-            const route = brandFrom(c.line, c.type, byShortName);
-            if (!live && !route) return c;
+            const routed = resolveLineType(c.route_id, c.line, c.type, byId, byShortName);
+            if (!live && !routed) return c;
             featureChanged = true;
             return {
                 ...c,
                 vehicle_id: c.vehicle_id || live?.vehicle_id || undefined,
                 delay: typeof live?.delay === 'number' ? live.delay : c.delay,
-                ...(route ? { route_color: route.route_color } : {}),
+                ...(routed ? { line: routed.line, type: routed.type, route_color: routed.route_color } : {}),
             };
         });
 
         const onward = continues_as?.trip_id && !continues_as.vehicle_id ? liveOf(continues_as.trip_id, tripIndex) : undefined;
-        const continuesRoute = continues_as ? brandFrom(continues_as.line, continues_as.type, byShortName) : undefined;
-        const nextContinuation = continues_as && (onward?.vehicle_id || continuesRoute)
-            ? { ...continues_as, ...(onward?.vehicle_id ? { vehicle_id: onward.vehicle_id } : {}), ...(continuesRoute ? { route_color: continuesRoute.route_color } : {}) }
+        const routedContinuation = continues_as ? resolveLineType(continues_as.route_id, continues_as.line, continues_as.type, byId, byShortName) : undefined;
+        const nextContinuation = continues_as && (onward?.vehicle_id || routedContinuation)
+            ? {
+                ...continues_as,
+                ...(onward?.vehicle_id ? { vehicle_id: onward.vehicle_id } : {}),
+                ...(routedContinuation ? { line: routedContinuation.line, type: routedContinuation.type, route_color: routedContinuation.route_color } : {}),
+            }
             : continues_as;
         if (nextContinuation !== continues_as) featureChanged = true;
 

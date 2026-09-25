@@ -1,8 +1,6 @@
 import type { AppStopConnection, AppVehicleDetail } from '../../../_core/types';
-import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import type { Station } from '../../../_feeds/gtfs/types';
 import { dayBit, operatesOnDay, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
-import { normalizeRouteType } from '../../../_core/utils/routeTypes';
 import { DAY_MINS, toClockTime, type LocalClock } from '../../../_core/utils/time';
 import { isConnectionAtRisk } from '../../../_core/utils/connections';
 import { mapContinuation } from '../../../_feeds/gtfs/continuations';
@@ -38,7 +36,6 @@ export class TripConnectionsMapper {
     static attach(
         detail: AppVehicleDetail,
         stations: Station[],
-        routes: Record<string, GtfsRoute>,
         windows: TripWindows | null,
         clock: LocalClock
     ): void {
@@ -55,7 +52,7 @@ export class TripConnectionsMapper {
         for (const feature of features) {
             const station = stationBySequence.get(feature.properties.stop_sequence);
             if (station?.continues_as) {
-                const continuation = mapContinuation(station.continues_as, routes);
+                const continuation = mapContinuation(station.continues_as);
                 feature.properties.continues_as = {
                     ...continuation,
                     departure_time: continuation.departure_time && toClockTime(continuation.departure_time),
@@ -69,11 +66,9 @@ export class TripConnectionsMapper {
                 const window = windows.trips[toTripId];
                 if (!window || !operatesOnDay(window, bit)) continue;
 
-                const route = routes[routeId];
                 rows.push({
                     trip_id: toTripId,
-                    line: route ? String(route.name) : routeId,
-                    type: normalizeRouteType(route ? route.type : 'unknown'),
+                    route_id: routeId,
                     headsign,
                     departure_time: toClockTime(departureTime),
                     delay: null,

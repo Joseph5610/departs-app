@@ -125,6 +125,16 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
         [stopsData, showStops, filterGeoJSON]
     );
 
+    // Memoized: react-map-gl re-sends a source to the map worker whenever its `data` identity changes.
+    const userLocationData = React.useMemo(() => userLocation ? {
+        type: 'FeatureCollection' as const,
+        features: [{
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: userLocation },
+            properties: {}
+        }]
+    } : EMPTY_FEATURE_COLLECTION, [userLocation]);
+
     if (!mapLoaded) return null;
 
     return (
@@ -144,14 +154,7 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
                 />
             </Source>
 
-            <Source id={MAP_SOURCES.USER_LOCATION} type="geojson" data={userLocation ? {
-                type: 'FeatureCollection',
-                features: [{
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: userLocation },
-                    properties: {}
-                }]
-            } : EMPTY_FEATURE_COLLECTION}>
+            <Source id={MAP_SOURCES.USER_LOCATION} type="geojson" data={userLocationData}>
                 <Layer {...userLocationPulse} />
                 <Layer {...userLocationPoint} />
             </Source>

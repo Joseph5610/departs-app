@@ -1,12 +1,12 @@
 import '../../lib/zod-config';
 import { z } from 'zod/mini';
-import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { apiFetch } from '../../lib/api-client';
 import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
 import type { RouteInfo } from '../../types/vehicles';
 import { routeJoinKey } from '../../utils/routeTypes';
+import { memoizeLast } from '../../lib/memoize';
 
 const routesFileSchema = z.record(z.string(), z.object({
     name: z.string(),
@@ -41,6 +41,21 @@ const EMPTY: RouteMetadata = { byId: new Map(), byShortName: new Map(), byName: 
 
 const KORDIS_NUMERIC_ID = /^L([A-Z0-9]+)D/i;
 
+/** Module-level so every observer of the same cached file gets the same Map identities, which downstream `memoizeLast` pipelines key on. */
+const buildRouteMetadata = memoizeLast((data: Record<string, RouteInfo>): RouteMetadata => {
+    const byId = new Map(Object.entries(data));
+    const byShortName = new Map<string, RouteInfo>();
+    const byName = new Map<string, RouteInfo>();
+    const byKordisNumeric = new Map<string, RouteInfo>();
+    for (const [id, route] of byId) {
+        byShortName.set(routeJoinKey(route.type, route.name), route);
+        byName.set(route.name.toUpperCase(), route);
+        const match = KORDIS_NUMERIC_ID.exec(id);
+        if (match) byKordisNumeric.set(match[1].toUpperCase(), route);
+    }
+    return { byId, byShortName, byName, byKordisNumeric };
+});
+
 /**
  * A city's route branding (name/color), read straight from the static data CDN - the same file the
  * backend's own `routesByName` lookup reads, fetched directly instead of embedded in API responses.
@@ -48,25 +63,11 @@ const KORDIS_NUMERIC_ID = /^L([A-Z0-9]+)D/i;
 export function useRouteMetadata(): RouteMetadata {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    const select = useCallback((data: Record<string, RouteInfo>): RouteMetadata => {
-        const byId = new Map(Object.entries(data));
-        const byShortName = new Map<string, RouteInfo>();
-        const byName = new Map<string, RouteInfo>();
-        const byKordisNumeric = new Map<string, RouteInfo>();
-        for (const [id, route] of byId) {
-            byShortName.set(routeJoinKey(route.type, route.name), route);
-            byName.set(route.name.toUpperCase(), route);
-            const match = KORDIS_NUMERIC_ID.exec(id);
-            if (match) byKordisNumeric.set(match[1].toUpperCase(), route);
-        }
-        return { byId, byShortName, byName, byKordisNumeric };
-    }, []);
-
     const { data } = useQuery({
         queryKey: ['route-metadata', selectedCity],
         queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/routes.json`)),
         enabled: !!selectedCity,
-        select,
+        select: buildRouteMetadata,
         staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
         gcTime: QUERY_TIMING_MS.TRIP_SHAPES_GC,
     });

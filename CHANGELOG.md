@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Route colors and line names for every city, including Prague, now come from one shared static source, fixing Prague's substitute-service and night-line highlighting along the way.
 - Departure boards now correctly warn when a connecting service won't wait, for Prague too - this silently never worked there before.
 - Alert line names and colors, including Brno's KORDIS-specific id quirks, now resolve the same way as vehicles/departures, off the backend request path.
+- Vehicle-detail transfer and continuation line names/colors for Brno/Prešov now resolve on the frontend too, off the backend request path.
+- Fixed the live vehicle and departure pipelines recomputing on every render since route branding moved to the frontend.
+- The selected trip's route line draws as soon as its shape loads, and selected-vehicle updates no longer re-send the whole fleet to the map.
 
 ## [0.74.5] - 2026-09-23
 

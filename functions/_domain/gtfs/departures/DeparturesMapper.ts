@@ -112,7 +112,7 @@ export class DeparturesMapper {
                 is_wheelchair_accessible: isWheelchairAccessible,
                 is_request_stop: is_request_stop_num === 1,
                 ...(extras?.feeders ? { connections: this.mapFeeders(extras.feeders, timestamp_ms, routes) } : {}),
-                ...(extras?.continues ? { continues_as: mapContinuation(extras.continues, routes, tripIndex) } : {})
+                ...(extras?.continues ? { continues_as: mapContinuation(extras.continues, tripIndex) } : {})
             } as AppDeparture;
         });
     }

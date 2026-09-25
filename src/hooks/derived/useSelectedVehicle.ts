@@ -18,6 +18,7 @@ const mergeSelectedVehicle = memoizeLast((
     byTripId: Map<string, StoredEnrichmentPatch>,
     byVehicleId: Map<string, StoredEnrichmentPatch>,
     byShortName: Map<string, RouteInfo>,
+    byId: Map<string, RouteInfo>,
     vehiclesUpdatedAt: number,
     detailUpdatedAt: number,
 ): VehicleDetail | null => {
@@ -74,7 +75,7 @@ const mergeSelectedVehicle = memoizeLast((
 
     const stopTimes = merged.stop_times;
     if (stopTimes?.features) {
-        const features = enrichConnections(stopTimes.features, tripIndex, byShortName);
+        const features = enrichConnections(stopTimes.features, tripIndex, byShortName, byId);
         if (features !== stopTimes.features) merged.stop_times = { ...stopTimes, features };
     }
 
@@ -98,7 +99,7 @@ export const useSelectedVehicle = () => {
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
-    const { byShortName } = useRouteMetadata();
+    const { byShortName, byId } = useRouteMetadata();
 
-    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, byShortName, vehiclesUpdatedAt, detailUpdatedAt);
+    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, byShortName, byId, vehiclesUpdatedAt, detailUpdatedAt);
 };

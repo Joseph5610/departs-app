@@ -6,7 +6,7 @@ import type { DeparturesResponse } from './useDepartures';
 import { useVehicles } from './useVehicles';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
-import { enrichDepartures, enrichDepartureRouteMetadata, enrichFeederHold } from '../../lib/enrichment';
+import { enrichLiveDepartures } from '../../lib/enrichment';
 import { apiFetch } from '../../lib/api-client';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { useRouteMetadata } from './useRouteMetadata';
@@ -34,23 +34,21 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { tripIndex } = useVehicles();
-    const { byShortName } = useRouteMetadata();
+    const { byShortName, byId } = useRouteMetadata();
 
     const departuresByStop = useMemo(() => {
         const byStop = new Map<string, Departure[]>();
         if (!query.data?.departures) return byStop;
 
-        const branded = enrichDepartureRouteMetadata(query.data.departures, byShortName);
-        const enriched = enrichDepartures(branded, tripIndex, byTripId, byVehicleId, query.dataUpdatedAt || 0);
-        const withHold = enrichFeederHold(enriched, tripIndex);
-        for (const dep of withHold) {
+        const live = enrichLiveDepartures(query.data.departures, tripIndex, byTripId, byVehicleId, byShortName, byId, query.dataUpdatedAt || 0);
+        for (const dep of live) {
             if (!dep.stopId) continue;
             const list = byStop.get(dep.stopId);
             if (list) list.push(dep);
             else byStop.set(dep.stopId, [dep]);
         }
         return byStop;
-    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId, byShortName]);
+    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId, byShortName, byId]);
 
     return { departuresByStop, isLoading: query.isLoading, isError: query.isError };
 };

@@ -10,9 +10,10 @@ import type { FeatureCollection, Feature, LineString, Point } from 'geojson';
 /**
  * The route layer of a trip: its line - the real shape when one is known, else straight between its
  * stops once the shape is known to be missing - followed by its stops, the first and last marked as terminals.
+ * The shape line is drawn as soon as it arrives, before the trip's stops (from its detail) are known.
  */
-function buildRoute(detail: VehicleDetail, shape: TripShape | null, isShapeLoading: boolean): FeatureCollection | null {
-    const stopPoints = (detail.stop_times?.features ?? [])
+function buildRoute(detail: VehicleDetail | undefined, routeColor: string, shape: TripShape | null, isShapeLoading: boolean): FeatureCollection | null {
+    const stopPoints = (detail?.stop_times?.features ?? [])
         .map(st => st.geometry)
         .filter((g): g is Point & { coordinates: [number, number] } => g?.type === 'Point' && Array.isArray(g.coordinates));
 
@@ -22,14 +23,14 @@ function buildRoute(detail: VehicleDetail, shape: TripShape | null, isShapeLoadi
         features.push({
             type: 'Feature',
             geometry: { type: 'LineString', coordinates: lineCoordinates },
-            properties: { route_color: detail.route_color, ...(shape?.distances ? { shape_dist_traveled: shape.distances } : {}) },
+            properties: { route_color: routeColor, ...(shape?.distances ? { shape_dist_traveled: shape.distances } : {}) },
         });
     }
     stopPoints.forEach((geometry, index) => {
         features.push({
             type: 'Feature',
             geometry,
-            properties: { route_color: detail.route_color, is_terminal: index === 0 || index === stopPoints.length - 1 },
+            properties: { route_color: routeColor, is_terminal: index === 0 || index === stopPoints.length - 1 },
         });
     });
     return features.length > 0 ? { type: 'FeatureCollection', features } : null;
@@ -42,15 +43,24 @@ export const useRouteShape = (): FeatureCollection | null => {
     const { tripId } = useRouteParams();
     const { shape: tripShape, isLoading: isShapeLoading } = useTripShape(tripId);
 
+    const routeColor = vehicleDetail?.route_color || selectedVehicle?.route_color || '';
+    const geojson = useMemo(
+        () => (hasTripShapes && (vehicleDetail || tripShape) ? buildRoute(vehicleDetail, routeColor, tripShape, isShapeLoading) : null),
+        [vehicleDetail, routeColor, hasTripShapes, tripShape, isShapeLoading],
+    );
+
+    const hasSelection = !!selectedVehicle;
+    const vDist = vehicleDetail?.shape_dist_traveled;
+    const statePos = vehicleDetail?.state_position ?? selectedVehicle?.state_position;
+    const pos = vehicleDetail?.geometry?.coordinates ?? selectedVehicle?.geometry?.coordinates;
+    const posLng = pos?.[0];
+    const posLat = pos?.[1];
+
     return useMemo(() => {
-        const geojson = vehicleDetail && hasTripShapes ? buildRoute(vehicleDetail, tripShape, isShapeLoading) : null;
-        if (!selectedVehicle || !geojson) return null;
+        if (!hasSelection || !geojson) return null;
 
         const lineFeature = geojson.features.find(f => f.geometry?.type === 'LineString') as Feature<LineString> | undefined;
         if (!lineFeature) return geojson;
-
-        const vDist = vehicleDetail?.shape_dist_traveled;
-        const statePos = vehicleDetail?.state_position ?? selectedVehicle.state_position;
 
         // Unstarted trip, missing distance, or before_track => render entire line as upcoming
         if (vDist === undefined || vDist === 0 || statePos === 'before_track' || statePos === 'before_track_delayed') {
@@ -65,15 +75,12 @@ export const useRouteShape = (): FeatureCollection | null => {
             const firstAhead = shapeDists.findIndex(d => d > vDist);
             // No point ahead of the vehicle: it has passed the whole shape.
             splitIdx = firstAhead === -1 ? coords.length - 1 : firstAhead - 1;
-        } else {
-            const pos = vehicleDetail?.geometry?.coordinates ?? selectedVehicle.geometry?.coordinates;
-            if (pos) {
-                let minDist = Infinity;
-                coords.forEach(([lng, lat], i) => {
-                    const dist = (lng - pos[0]) ** 2 + (lat - pos[1]) ** 2;
-                    if (dist < minDist) { minDist = dist; splitIdx = i; }
-                });
-            }
+        } else if (posLng !== undefined && posLat !== undefined) {
+            let minDist = Infinity;
+            coords.forEach(([lng, lat], i) => {
+                const dist = (lng - posLng) ** 2 + (lat - posLat) ** 2;
+                if (dist < minDist) { minDist = dist; splitIdx = i; }
+            });
         }
 
         if (splitIdx <= 0) return geojson;
@@ -95,5 +102,5 @@ export const useRouteShape = (): FeatureCollection | null => {
                 ...otherFeatures
             ]
         };
-    }, [selectedVehicle, vehicleDetail, hasTripShapes, tripShape, isShapeLoading]);
+    }, [hasSelection, geojson, vDist, statePos, posLng, posLat]);
 };

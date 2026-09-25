@@ -6,7 +6,6 @@ import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
 import { VehicleDetailMapper } from './VehicleDetailMapper';
 import { TripConnectionsMapper } from './TripConnectionsMapper';
-import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import type { Station } from '../../../_feeds/gtfs/types';
 import { vehicleDetailQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { ApiError } from '../../../_core/errors';
@@ -50,15 +49,15 @@ export class VehicleDetailService implements VehicleDetailUseCase {
 
         // Runs after enrichment, which supplies the delay that decides whether a connection is at risk.
         if (stations.some(s => s.connections || s.continues_as)) {
-            await this.attachConnections(detail, stations, routes);
+            await this.attachConnections(detail, stations);
         }
 
         return detail;
     }
 
     /** Scheduled rows only: the app attaches the onward vehicles and their delays from the fleet it holds. */
-    private async attachConnections(detail: AppVehicleDetail, stations: Station[], routes: Record<string, GtfsRoute>): Promise<void> {
+    private async attachConnections(detail: AppVehicleDetail, stations: Station[]): Promise<void> {
         const windows = await getTripWindows(this.city);
-        TripConnectionsMapper.attach(detail, stations, routes, windows, getLocalClock(this.city.timezone));
+        TripConnectionsMapper.attach(detail, stations, windows, getLocalClock(this.city.timezone));
     }
 }
