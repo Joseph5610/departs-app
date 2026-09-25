@@ -3,7 +3,7 @@ import type { Departure, DepartureFeeder, VehicleCollection, VehicleDetail, Vehi
 import type { RSSItem } from '../types/alerts';
 import type { RouteInfo } from '../types/vehicles';
 import { DEPARTURES_CONFIG, ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
-import { routeJoinKey } from '../utils/routeTypes';
+import { normalizeRouteType, routeJoinKey } from '../utils/routeTypes';
 
 type PatchIndex = Map<string, StoredEnrichmentPatch>;
 
@@ -174,9 +174,20 @@ export function enrichFeederHold(departures: Departure[], tripIndex: Map<string,
     });
 }
 
-/** Overwrites `route_color` on each alert's affected-lines list from the static routes join. */
-export function enrichAlertLineMetadata(alerts: RSSItem[], byShortName: Map<string, RouteInfo>): RSSItem[] {
-    if (!alerts.length || byShortName.size === 0) return alerts;
+/**
+ * Resolves each alert's affected-lines list. GTFS-RT-sourced entries arrive with only `route_id` -
+ * looked up by id, falling back to KORDIS's numeric-id table when the id isn't a direct match (its
+ * alert feed gives a bare numeric id where routes.json's own key is the full GTFS one). RSS-sourced
+ * entries already carry `name`/`type` (no route id exists for them) and only pick up `route_color`,
+ * via the same by-name join vehicles/departures use.
+ */
+export function enrichAlertLineMetadata(
+    alerts: RSSItem[],
+    byId: Map<string, RouteInfo>,
+    byName: Map<string, RouteInfo>,
+    byKordisNumeric: Map<string, RouteInfo>,
+): RSSItem[] {
+    if (!alerts.length || (byId.size === 0 && byName.size === 0)) return alerts;
 
     let changed = false;
     const result = alerts.map((alert): RSSItem => {
@@ -184,10 +195,15 @@ export function enrichAlertLineMetadata(alerts: RSSItem[], byShortName: Map<stri
 
         let lineMetadataChanged = false;
         const nextLineMetadata = alert.line_metadata.map((entry) => {
-            const route = brandFrom(entry.name, entry.type, byShortName);
-            if (!route) return entry;
+            // GTFS-RT alerts key by route_id; RSS exclusions carry no id, only a plain line name.
+            const key = entry.route_id ?? entry.name;
+            if (!key) return entry;
+            const upper = key.toUpperCase();
+            const route = (entry.route_id && byId.get(entry.route_id)) || byName.get(upper) || byKordisNumeric.get(upper);
             lineMetadataChanged = true;
-            return { ...entry, route_color: route.route_color };
+            return route
+                ? { ...entry, name: route.name, type: normalizeRouteType(route.type), route_color: route.route_color }
+                : { ...entry, name: entry.name ?? key, type: entry.type ?? 'unknown' as const };
         });
 
         if (!lineMetadataChanged) return alert;

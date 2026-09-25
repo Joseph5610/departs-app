@@ -1,7 +1,6 @@
 import * as GtfsRt from '../../../_core/gtfsRtTypes';
-import { createGtfsAlertsMapper, defaultParseIsDetour, defaultResolveRoute, type AlertsMapper } from '../../gtfs/alerts/alerts-mapper';
+import { createGtfsAlertsMapper, defaultParseIsDetour, type AlertsMapper } from '../../gtfs/alerts/alerts-mapper';
 import { AlertTextFormatter } from '../../../_core/utils/AlertTextFormatter';
-import type { GtfsRoutesData, GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 
 function extractNumericId(guid?: string): number {
     if (!guid) return 0;
@@ -73,38 +72,12 @@ function parseContent(rawHeader?: string | null, rawDesc?: string | null): { tit
     };
 }
 
-/**
- * Resolves a raw GTFS-RT routeId to GTFS route metadata, Kordis-specific: real-time feeds pass
- * numeric IDs like "120", whereas static GTFS route keys use "L120D99".
- */
-const kordisRouteMapCache = new WeakMap<GtfsRoutesData, Map<string, GtfsRoute>>();
-
-function resolveRoute(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined {
-    const standard = defaultResolveRoute(routeId, gtfsData);
-    if (standard || !gtfsData) return standard;
-
-    let map = kordisRouteMapCache.get(gtfsData);
-    if (!map) {
-        map = new Map<string, GtfsRoute>();
-        for (const key in gtfsData.routes) {
-            // GTFS key format: "L120D99" -> shortId = "120"
-            const match = /^L([A-Z0-9]+)D/i.exec(key);
-            if (match) {
-                map.set(match[1].toUpperCase(), gtfsData.routes[key]);
-            }
-        }
-        kordisRouteMapCache.set(gtfsData, map);
-    }
-
-    return map.get(routeId.toUpperCase());
-}
-
 export function createKordisAlertsMapper(): AlertsMapper {
-    const base = createGtfsAlertsMapper({ parseIsDetour, parseContent, resolveRoute });
+    const base = createGtfsAlertsMapper({ parseIsDetour, parseContent });
     return {
-        mapAlerts(rawAlerts, gtfsData, forceIncident) {
+        mapAlerts(rawAlerts, forceIncident) {
             // Newest first (descending numeric ID).
-            return base.mapAlerts(rawAlerts, gtfsData, forceIncident).sort((a, b) => extractNumericId(b.guid) - extractNumericId(a.guid));
+            return base.mapAlerts(rawAlerts, forceIncident).sort((a, b) => extractNumericId(b.guid) - extractNumericId(a.guid));
         }
     };
 }

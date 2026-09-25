@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Brno vehicles are matched to the right trip again while KORDIS broadcasts the previous timetable export's trip ids, instead of many landing on an unrelated line.
 - Route colors and line names for every city, including Prague, now come from one shared static source, fixing Prague's substitute-service and night-line highlighting along the way.
 - Departure boards now correctly warn when a connecting service won't wait, for Prague too - this silently never worked there before.
+- Alert line names and colors, including Brno's KORDIS-specific id quirks, now resolve the same way as vehicles/departures, off the backend request path.
 
 ## [0.74.5] - 2026-09-23
 

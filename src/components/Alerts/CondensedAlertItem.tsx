@@ -75,7 +75,7 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
                                     {lines.map((line, idx) => (
                                         <LineBadge
                                             key={`${line.name}-${idx}`}
-                                            name={line.name}
+                                            name={line.name ?? ''}
                                             routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
                                             size="md"
                                         />

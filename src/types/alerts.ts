@@ -11,8 +11,14 @@ export interface RSSItem {
     link: string;
     guid?: string;
     priority?: string;
-    lines?: string[];
-    line_metadata?: Array<{ name: string; route_color: string; type: RouteType }>;
+    /**
+     * One entry per affected route. GTFS-RT-sourced alerts (KORDIS/PID) arrive with only `route_id`
+     * set - raw and unresolved - and get `name`/`type`/`route_color` filled in by
+     * `enrichAlertLineMetadata` from the same routes.json join vehicles/departures use. RSS-sourced
+     * exclusions arrive with `name`/`type` already set (no route id exists for them) and only pick
+     * up `route_color` from that same enrichment step.
+     */
+    line_metadata?: Array<{ route_id?: string; name?: string; route_color?: string; type?: RouteType }>;
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;

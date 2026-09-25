@@ -12,6 +12,8 @@ export const FALLBACK_ROUTE_COLOR = '#5A5A5A';
 export const MOBILE_BREAKPOINT = 768;
 export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
 export const VEHICLE_ALERTS_PREVIEW_COUNT = 2;
+/** A "show more" row is only worth it when it hides at least this many alerts. */
+export const VEHICLE_ALERTS_MIN_OVERFLOW = 2;
 
 export const PREFERENCES_LIMITS = {
     SEARCH_HISTORY: 5,

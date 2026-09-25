@@ -42,8 +42,8 @@ const getTransportMode = (item: RSSItem): string => {
         const type = meta.type;
         
         if (type === 'trolleybus') return 'bus';
-        if (type === 'unknown') continue;
-        
+        if (!type || type === 'unknown') continue;
+
         return type;
     }
 
@@ -94,7 +94,7 @@ export const AlertsModal: React.FC = React.memo(() => {
                 const q = normalizeString(searchQuery.trim());
                 const matchesTitle = normalizeString(item.title).includes(q);
                 const matchesDesc = item.description ? normalizeString(item.description).includes(q) : false;
-                const matchesLine = item.lines?.some((l: string) => normalizeString(l).includes(q));
+                const matchesLine = item.line_metadata?.some((m) => m.name && normalizeString(m.name).includes(q));
                 if (!matchesTitle && !matchesDesc && !matchesLine) return false;
             }
             return true;

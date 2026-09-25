@@ -221,8 +221,14 @@ export interface AppAlert {
     valid_to: string | null;
     guid?: string;
     priority?: string;
-    lines?: string[];
-    line_metadata?: Array<{ name: string; type: AppRouteType }>;
+    /**
+     * One entry per affected route, all unresolved - name/type/color resolution happens on the
+     * frontend from its own routes.json join. GTFS-RT-sourced alerts (KORDIS/PID) send `route_id`,
+     * exactly what the feed gives (numeric for KORDIS, the real routes.json key for PID). RSS-sourced
+     * exclusions carry no route id at all, so they send `name` only - the frontend resolves type/color
+     * the same way, keyed by name instead of id.
+     */
+    line_metadata?: Array<{ route_id?: string; name?: string }>;
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;

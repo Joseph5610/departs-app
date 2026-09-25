@@ -1,22 +1,19 @@
-import type { AppAlert, AppRouteType } from "../../../_core/types";
-import type { GtfsRoutesData, GtfsRoute } from "../../../_feeds/gtfs/gtfs-data";
+import type { AppAlert } from "../../../_core/types";
 import * as GtfsRt from '../../../_core/gtfsRtTypes';
-import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { AlertTextFormatter } from "../../../_core/utils/AlertTextFormatter";
 
 /** What every network's alerts feed answers `/api/[city]/alerts` with. */
 export interface AlertsMapper {
-    mapAlerts(rawAlerts: GtfsRt.IFeedEntity[], gtfsData: GtfsRoutesData | null, forceIncident?: boolean): AppAlert[];
+    mapAlerts(rawAlerts: GtfsRt.IFeedEntity[], forceIncident?: boolean): AppAlert[];
 }
 
 /**
  * Where a network's alerts differ from the GTFS-RT default: how the header/description text is
- * read, what counts as a detour, how a route id resolves, and any extra fields on the entity.
+ * read, what counts as a detour, and any extra fields on the entity.
  */
 export interface AlertsMapperHooks {
     parseContent?(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null };
     parseIsDetour?(alert: GtfsRt.IAlert, headerStr: string, rawHeader?: string | null, rawDesc?: string | null): boolean;
-    resolveRoute?(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined;
     parseExtensions?(alert: GtfsRt.IAlert, appAlert: AppAlert): void;
 }
 
@@ -40,28 +37,22 @@ export function defaultParseIsDetour(alert: GtfsRt.IAlert): boolean {
         String(alert.effect) === 'DETOUR';
 }
 
-/** Resolves a raw GTFS-RT routeId to GTFS route metadata. */
-export function defaultResolveRoute(routeId: string, gtfsData: GtfsRoutesData | null): GtfsRoute | undefined {
-    if (!gtfsData) return undefined;
-    return gtfsData.routes[routeId] || gtfsData.routesByName[routeId.toUpperCase()];
-}
-
 /**
  * Maps raw GTFS-RT feed entities into application-specific AppAlert structures.
  *
  * Orchestrates the translation of standard GTFS fields (headers, descriptions, affected routes,
- * active periods); `hooks` let a network customize content parsing, detour detection, route
- * resolution and extra fields without forking the whole method.
+ * active periods); `hooks` let a network customize content parsing, detour detection and extra
+ * fields without forking the whole method. Affected routes are sent as raw `route_id`s - the
+ * frontend resolves name/type/color itself from the same static file it already joins vehicles
+ * and departures against.
  */
 export function mapGtfsAlerts(
     rawAlerts: GtfsRt.IFeedEntity[],
-    gtfsData: GtfsRoutesData | null,
     forceIncident: boolean = false,
     hooks: AlertsMapperHooks = {}
 ): AppAlert[] {
     const parseContent = hooks.parseContent ?? defaultParseContent;
     const parseIsDetour = hooks.parseIsDetour ?? ((alert) => defaultParseIsDetour(alert));
-    const resolveRoute = hooks.resolveRoute ?? defaultResolveRoute;
     const parseExtensions = hooks.parseExtensions;
 
     return rawAlerts.map((entity) => {
@@ -71,31 +62,13 @@ export function mapGtfsAlerts(
         const { title: headerStr, description } = parseContent(rawHeader, rawDesc);
         const isDetour = parseIsDetour(alert, headerStr, rawHeader, rawDesc);
 
-        const lines: string[] = [];
-        const line_metadata: Array<{ name: string; type: AppRouteType }> = [];
-
+        const routeIds = new Set<string>();
         if (alert.informedEntity) {
             for (const ie of alert.informedEntity) {
-                if (ie.routeId) {
-                    const matchingRoute = resolveRoute(ie.routeId, gtfsData);
-                    const lineDisplayName = (matchingRoute?.short_name || matchingRoute?.name || ie.routeId) as string;
-                    lines.push(lineDisplayName);
-                    line_metadata.push({
-                        name: lineDisplayName,
-                        type: matchingRoute ? normalizeRouteType(matchingRoute.type) : 'unknown'
-                    });
-                }
+                if (ie.routeId) routeIds.add(ie.routeId);
             }
         }
-
-        const uniqueLines = [...new Set(lines)];
-
-        const seenMeta = new Set<string>();
-        const uniqueMetadata = line_metadata.filter(meta => {
-            if (seenMeta.has(meta.name)) return false;
-            seenMeta.add(meta.name);
-            return true;
-        });
+        const line_metadata = [...routeIds].map(route_id => ({ route_id }));
 
         let valid_from: string | null = null;
         let valid_to: string | null = null;
@@ -121,8 +94,7 @@ export function mapGtfsAlerts(
             valid_to: valid_to,
             guid: entity.id,
             priority: 'normal',
-            lines: uniqueLines.length > 0 ? uniqueLines : undefined,
-            line_metadata: uniqueMetadata.length > 0 ? uniqueMetadata : undefined,
+            line_metadata: line_metadata.length > 0 ? line_metadata : undefined,
             isActive: true,
             isFuture: false,
             cause: alert.cause ? String(alert.cause) : undefined,
@@ -138,6 +110,6 @@ export function mapGtfsAlerts(
 /** The default GTFS-RT alerts mapper, or one customized by `hooks` for a specific network. */
 export function createGtfsAlertsMapper(hooks: AlertsMapperHooks = {}): AlertsMapper {
     return {
-        mapAlerts: (rawAlerts, gtfsData, forceIncident = false) => mapGtfsAlerts(rawAlerts, gtfsData, forceIncident, hooks)
+        mapAlerts: (rawAlerts, forceIncident = false) => mapGtfsAlerts(rawAlerts, forceIncident, hooks)
     };
 }

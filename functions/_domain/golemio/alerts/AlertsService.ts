@@ -29,9 +29,9 @@ export class AlertsService implements AlertsUseCase {
     private map(feeds: PidAlertFeeds): AppAlertsResponse {
         let incidents: AppAlert[] = [];
         let incidentsFailed = true;
-        if (feeds.incidents && feeds.routes) {
+        if (feeds.incidents) {
             try {
-                incidents = this.gtfsMapper.mapAlerts(feeds.incidents, feeds.routes, true);
+                incidents = this.gtfsMapper.mapAlerts(feeds.incidents, true);
                 incidentsFailed = false;
             } catch (e) {
                 console.error("Failed to map GTFS-RT alerts", e);

@@ -36,9 +36,9 @@ export const useGlobalAlerts = () => {
         staleTime: QUERY_TIMING_MS.NOTICES_STALE,
     });
 
-    const { byShortName } = useRouteMetadata();
+    const { byId, byName, byKordisNumeric } = useRouteMetadata();
     const brandedAlerts = alertsQuery.data
-        ? { ...alertsQuery.data, alerts: brandAlerts(alertsQuery.data.alerts ?? NO_ALERTS, byShortName) }
+        ? { ...alertsQuery.data, alerts: brandAlerts(alertsQuery.data.alerts ?? NO_ALERTS, byId, byName, byKordisNumeric) }
         : alertsQuery.data;
 
     return {

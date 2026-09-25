@@ -13,7 +13,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { VEHICLE_ALERTS_PREVIEW_COUNT } from '../../../config/constants';
+import { VEHICLE_ALERTS_MIN_OVERFLOW, VEHICLE_ALERTS_PREVIEW_COUNT } from '../../../config/constants';
 import { isHighPriorityAlert } from '../../../utils/transitUtils';
 import type { RSSItem } from '../../../types/alerts';
 
@@ -88,9 +88,8 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
         const upperRouteName = routeName.toUpperCase();
         return allItems
             .filter(item => {
-                const matchesLine = item.lines?.some((l: string) => String(l).toUpperCase() === upperRouteName);
                 const matchesMetadata = item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName);
-                return (matchesLine || matchesMetadata) && item.isActive;
+                return matchesMetadata && item.isActive;
             })
             .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
     }, [rssData, displayVehicle?.routeName]);
@@ -160,8 +159,11 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
     const [showAll, setShowAll] = useState(false);
     const { openAlert } = useUiStore(s => s.actions);
 
-    const preview = alerts.slice(0, VEHICLE_ALERTS_PREVIEW_COUNT);
-    const overflow = alerts.slice(VEHICLE_ALERTS_PREVIEW_COUNT);
+    const previewCount = alerts.length - VEHICLE_ALERTS_PREVIEW_COUNT < VEHICLE_ALERTS_MIN_OVERFLOW
+        ? alerts.length
+        : VEHICLE_ALERTS_PREVIEW_COUNT;
+    const preview = alerts.slice(0, previewCount);
+    const overflow = alerts.slice(previewCount);
 
     const renderItem = (alert: RSSItem, idx: number) => {
         const guid = alert.guid;
@@ -183,7 +185,7 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
                 {overflow.length > 0 && (
                     <>
                         <CollapsibleContent>
-                            {overflow.map((alert, idx) => renderItem(alert, idx + VEHICLE_ALERTS_PREVIEW_COUNT))}
+                            {overflow.map((alert, idx) => renderItem(alert, idx + previewCount))}
                         </CollapsibleContent>
                         <CollapsibleTrigger className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-border/50 micro-label text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors outline-none cursor-pointer">
                             {showAll ? t('alerts.showLess') : t('alerts.showMore', { count: overflow.length })}

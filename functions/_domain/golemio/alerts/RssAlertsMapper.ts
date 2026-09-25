@@ -1,21 +1,8 @@
-import { AppAlert, AppRouteType } from "../../../_core/types";
+import { AppAlert } from "../../../_core/types";
 import type { PidRssItem } from "../../../_feeds/golemio/alerts";
 import { AlertTextFormatter } from "../../../_core/utils/AlertTextFormatter";
 
 export class RssAlertsMapper {
-    
-    private static guessType(name: string): AppRouteType {
-        const n = String(name).toUpperCase().trim();
-        if (['A', 'B', 'C'].includes(n)) return 'metro';
-        if (n === 'LD' || /^LD[0-9]/.test(n) || n.includes('LANOVKA')) return 'funicular';
-        if (/^P[1-9][0-9]?$/.test(n)) return 'ferry';
-        const num = parseInt(n, 10);
-        if (!isNaN(num) && num >= 50 && num <= 60) return 'trolleybus';
-        if (/^[1-9][0-9]?$/.test(n)) return 'tram';
-        if (/^S[0-9]/.test(n) || /^R[0-9]/.test(n)) return 'train';
-        if (/^9[0-9][0-9]?$/.test(n)) return n.length === 2 ? 'tram' : 'bus'; // Night tram 9x, night bus 9xx
-        return 'bus'; // Default
-    }
 
     /** Maps validated PID RSS items (planned exclusions) into alerts. */
     static mapRSS(parsedItems: PidRssItem[]): AppAlert[] {
@@ -91,11 +78,7 @@ export class RssAlertsMapper {
                 valid_to,
                 guid: guid || undefined,
                 priority: priority || undefined,
-                lines,
-                line_metadata: lines.map(name => ({
-                    name,
-                    type: RssAlertsMapper.guessType(name)
-                })),
+                line_metadata: lines.map(name => ({ name })),
                 isActive,
                 isFuture
             });
