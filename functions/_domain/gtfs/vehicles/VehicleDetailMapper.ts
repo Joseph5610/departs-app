@@ -2,7 +2,6 @@ import type { AppVehicleDetail } from "../../../_core/types";
 import type { GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import type { Station } from '../../../_feeds/gtfs/types';
 import { normalizeRouteType } from '../../../_core/utils/routeTypes';
-import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { isLocated } from '../../../_feeds/gtfs/trip-stops';
 import { toClockTime } from '../../../_core/utils/time';
 
@@ -15,7 +14,6 @@ export class VehicleDetailMapper {
         route: GtfsRoute | null
     ): AppVehicleDetail {
         const lineName = route?.name || undefined;
-        const routeColor = route?.route_color || undefined;
         const rType = normalizeRouteType(route ? route.type : '3');
 
         const stopFeatures = this.buildStopFeatures(stations);
@@ -30,7 +28,6 @@ export class VehicleDetailMapper {
             trip_headsign: headsign,
             bearing: null,
             delay: null,
-            route_color: routeColor || GTFS_CONFIG.DEFAULT_ROUTE_COLOR,
             is_static_fallback: true,
             state_position: 'before_track',
             origin_timestamp: undefined,

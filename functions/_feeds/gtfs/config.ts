@@ -25,9 +25,6 @@ export const GTFS_CONFIG = {
     // Delay threshold for a "before_track" vehicle to become "before_track_delayed"
     BEFORE_TRACK_DELAY_THRESHOLD_SECS: 60,
 
-    // Fallback route color if none is provided
-    DEFAULT_ROUTE_COLOR: '#888888',
-
     /** Files a stop's departures are hashed across (`departure_buckets/`). */
     DEPARTURE_BUCKET_COUNT: 1024,
 
@@ -48,8 +45,8 @@ export const GTFS_CONFIG = {
      * background rebuild is kicked off via `waitUntil`. Older, or no cache entry: rebuilt synchronously.
      */
     FLEET_CACHE_FRESH_MS: 10_000,
-    /** Upstreams publish every 20-30s, so a background refresh inside that window still finds new data. */
-    FLEET_CACHE_STALE_MS: 30_000,
+    /** Deadline before a request is forced onto a synchronous rebuild, not a freshness target. */
+    FLEET_CACHE_STALE_MS: 60_000,
 } as const;
 
 /*

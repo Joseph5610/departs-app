@@ -16,7 +16,6 @@ export function mapContinuation(
         trip_id: tripId ?? undefined,
         vehicle_id: (tripId && liveByTrip?.get(tripId)?.vehicle_id) || undefined,
         line: route ? String(route.name) : line,
-        route_color: route?.route_color ?? undefined,
         type: normalizeRouteType(route ? route.type : 'unknown'),
         headsign,
         departure_time: departureTime ?? undefined,

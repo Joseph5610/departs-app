@@ -10,7 +10,7 @@ import { decodeAlertFeed } from '../../_core/gtfsRtAlerts';
 import type { GtfsRoute, GtfsRoutesData } from '../gtfs/gtfs-data';
 import { GOLEMIO_CONFIG } from './config';
 import { golemioClient } from './GolemioClient';
-import { golemioRouteSchema, pidRssItemSchema } from './schemas/alerts';
+import { pidRssItemSchema } from './schemas/alerts';
 import { readRssItems } from './rss-exclusions';
 
 export type PidRssItem = z.infer<typeof pidRssItemSchema>;
@@ -72,42 +72,37 @@ async function fetchIncidents(env: Env): Promise<GtfsRt.IFeedEntity[]> {
     return decodeAlertFeed(new Uint8Array(buffer));
 }
 
-/** PID routes by id and by short name, for the lines incidents name. Read once a day. */
-function getRoutes(env: Env): Promise<GtfsRoutesData> {
+/**
+ * PID routes by id and by short name, for the lines incidents name - reads `prague/routes.json`,
+ * the same static file the frontend and the GTFS cities' `getGtfsRoutes` read.
+ */
+function getRoutes(): Promise<GtfsRoutesData> {
     return CacheManager.getOrFetch(
         'prague_routes_map',
-        MEMORY_CACHE_TTL.ONE_DAY_MS,
+        MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const routesRes = await golemioClient.fetch("/v2/gtfs/routes", env, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
-            if (!routesRes.ok) throw new Error("Failed to fetch routes");
+            const res = await appClient.fetch(GOLEMIO_CONFIG.ROUTES_DATA_URL, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            if (!res.ok) {
+                console.error("Failed to fetch Prague routes:", res.status);
+                return { routes: {}, routesByName: {} };
+            }
 
-            const routesJson = await routesRes.json();
-            const parsedRoutes = z.array(golemioRouteSchema).safeParse(routesJson);
-            const routesData = parsedRoutes.success ? parsedRoutes.data : [];
-
-            const routes: Record<string, GtfsRoute> = {};
+            const routes = await res.json() as Record<string, GtfsRoute>;
             const routesByName: Record<string, GtfsRoute> = {};
-            for (const r of routesData) {
-                const route = {
-                    name: r.route_id,
-                    short_name: r.route_short_name,
-                    type: r.route_type,
-                    route_color: r.route_color ? '#' + r.route_color : undefined
-                };
-                routes[r.route_id] = route;
-                if (r.route_short_name) {
-                    routesByName[r.route_short_name.toUpperCase()] = route;
-                }
+            for (const rId in routes) {
+                if (routes[rId].name) routesByName[routes[rId].name.toUpperCase()] = routes[rId];
             }
             return { routes, routesByName };
-        }
+        },
+        // An empty route table is an upstream failure, not a valid result - see getGtfsRoutes.
+        (data) => !data || Object.keys(data.routes).length === 0
     );
 }
 
 async function readAlertFeeds(env: Env): Promise<PidAlertFeeds> {
     const [incidentsRes, routesRes, exclusionsRes] = await Promise.allSettled([
         fetchIncidents(env),
-        getRoutes(env),
+        getRoutes(),
         fetchExclusionsXml().then(parseRssItems),
     ]);
 

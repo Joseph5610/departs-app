@@ -1,6 +1,5 @@
 import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../_core/types";
 import type { GolemioFleetPayload } from "../../../_feeds/golemio/schemas/vehicles";
-import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { isFields, str, num, bool, strOrNum, readPoint } from "./fields";
 
@@ -67,7 +66,6 @@ export class VehiclesMapper {
                     ...(last_stop_sequence != null ? { last_stop_sequence } : {}),
                     origin_timestamp,
                     ...(run_number != null ? { run_number } : {}),
-                    route_color: getVehicleColor(route_type, route_short_name),
                     vehicle_descriptor
                 }
             });

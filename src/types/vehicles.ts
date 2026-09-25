@@ -1,6 +1,13 @@
 
 export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
 
+/** One route's display branding, as published in `<city>/routes.json` (see `useRouteMetadata`). */
+export interface RouteInfo {
+    name: string;
+    type: string;
+    route_color: string;
+}
+
 interface VehicleDescriptor {
     operator?: string;
     vehicle_type?: string;

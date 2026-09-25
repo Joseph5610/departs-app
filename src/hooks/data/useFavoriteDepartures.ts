@@ -6,9 +6,10 @@ import type { DeparturesResponse } from './useDepartures';
 import { useVehicles } from './useVehicles';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
-import { enrichDepartures } from '../../lib/enrichment';
+import { enrichDepartures, enrichDepartureRouteMetadata, enrichFeederHold } from '../../lib/enrichment';
 import { apiFetch } from '../../lib/api-client';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { useRouteMetadata } from './useRouteMetadata';
 
 /**
  * Live departures for several stops fetched in one request, enriched and grouped by stop ID.
@@ -33,20 +34,23 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { tripIndex } = useVehicles();
+    const { byShortName } = useRouteMetadata();
 
     const departuresByStop = useMemo(() => {
         const byStop = new Map<string, Departure[]>();
         if (!query.data?.departures) return byStop;
 
-        const enriched = enrichDepartures(query.data.departures, tripIndex, byTripId, byVehicleId, query.dataUpdatedAt || 0);
-        for (const dep of enriched) {
+        const branded = enrichDepartureRouteMetadata(query.data.departures, byShortName);
+        const enriched = enrichDepartures(branded, tripIndex, byTripId, byVehicleId, query.dataUpdatedAt || 0);
+        const withHold = enrichFeederHold(enriched, tripIndex);
+        for (const dep of withHold) {
             if (!dep.stopId) continue;
             const list = byStop.get(dep.stopId);
             if (list) list.push(dep);
             else byStop.set(dep.stopId, [dep]);
         }
         return byStop;
-    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId]);
+    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId, byShortName]);
 
     return { departuresByStop, isLoading: query.isLoading, isError: query.isError };
 };

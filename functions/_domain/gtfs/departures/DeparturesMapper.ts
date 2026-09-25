@@ -107,40 +107,34 @@ export class DeparturesMapper {
                 timestamp: new Date(rtTimestampMs).toISOString(),
                 delay: delaySecs,
                 isCanceled: false,
-                route_color: route?.route_color ?? undefined,
                 stopId: stopId,
                 is_air_conditioned: isAirConditioned,
                 is_wheelchair_accessible: isWheelchairAccessible,
                 is_request_stop: is_request_stop_num === 1,
-                ...(extras?.feeders ? { connections: this.mapFeeders(extras.feeders, timestamp_ms, routes, tripIndex) } : {}),
+                ...(extras?.feeders ? { connections: this.mapFeeders(extras.feeders, timestamp_ms, routes) } : {}),
                 ...(extras?.continues ? { continues_as: mapContinuation(extras.continues, routes, tripIndex) } : {})
             } as AppDeparture;
         });
     }
 
     /**
-     * Resolves the trips a departure waits for. The hold is informational: the departure's own
-     * timestamp is never shifted by it.
+     * The trips a departure waits for, and how long it would already hold for each if the feeder
+     * arrives exactly on schedule. The frontend adds the feeder's live delay to get the real hold -
+     * this is pure scheduling arithmetic, no live lookup, so it costs nothing on a cold isolate.
      */
     private static mapFeeders(
         feeders: GtfsFeederTuple[],
         scheduledMs: number,
-        routes: Record<string, GtfsRoute>,
-        tripIndex: Map<string, NonNullable<AppVehicleFeature['properties']>>
+        routes: Record<string, GtfsRoute>
     ): AppDepartureFeeder[] {
         return feeders.map(([feederTripId, routeId, arrivalMs, minTransferS, maxWaitS]) => {
             const route = routes[routeId];
-            const delay = tripIndex.get(feederTripId)?.delay;
-            const hold_s = typeof delay === 'number'
-                ? Math.max(0, Math.round((arrivalMs + (delay + minTransferS) * 1000 - scheduledMs) / 1000))
-                : null;
             return {
                 line: route ? String(route.name) : routeId,
-                route_color: route?.route_color ?? undefined,
                 type: normalizeRouteType(route ? route.type : 'unknown'),
+                trip_id: feederTripId,
+                base_hold_s: Math.round((arrivalMs + minTransferS * 1000 - scheduledMs) / 1000),
                 max_wait_s: maxWaitS,
-                hold_s,
-                will_miss: hold_s !== null && hold_s > maxWaitS,
             };
         });
     }

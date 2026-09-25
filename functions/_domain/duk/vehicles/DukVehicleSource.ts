@@ -15,7 +15,6 @@ import { formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } fr
 import { getDukStationNames, getDukTrafficFeed, getDukTrafficSnapshot, type DukVehicleReport } from '../../../_feeds/duk/duk-traffic-feed';
 import { TripTrackLookup, type TripTrack } from '../../../_feeds/duk/duk-trip-tracks';
 import { DUK_STATE_MAPPING } from '../dukConstants';
-import { getDukVehicleColor } from '../colors';
 import { DukTripMatcher, type TripMatch } from './DukTripMatcher';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 
@@ -174,7 +173,7 @@ export class DukVehicleSource implements VehicleSource {
         // Everything the feed reports without a CIS line is a train.
         const fallbackType = report.lineNumber ? 'bus' : 'train';
         const route: GtfsRoute = timetableRoute
-            ?? { name: report.lineName, type: fallbackType, route_color: getDukVehicleColor(fallbackType, report.lineName) };
+            ?? { name: report.lineName, type: fallbackType };
         const tripId = matchedTripId ?? report.feedTripId ?? `dummy-${report.vehicleId}`;
 
         const feature = VehiclesMapper.mapVehicle(vp, tripId, route, new Date(timestampMs).toISOString(), report.delay, state === 'before_track');

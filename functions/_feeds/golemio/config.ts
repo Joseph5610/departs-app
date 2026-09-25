@@ -8,6 +8,8 @@ export const GOLEMIO_CONFIG = {
     STOPS_MAX_OFFSET: 40000,
     /** Held connections and through-running built from the PID GTFS, merged by trip id. */
     CONNECTIONS_DATA_URL: 'https://data.departs.app/prague/connections.json',
+    /** Route names/types built from the PID GTFS - the same file the frontend reads directly for branding. */
+    ROUTES_DATA_URL: 'https://data.departs.app/prague/routes.json',
     FEEDS: {
         exclusions: 'https://pid.cz/feed/rss-vyluky/',
     }

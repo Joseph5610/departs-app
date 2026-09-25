@@ -1,5 +1,4 @@
 import { AppAlert, AppRouteType } from "../../../_core/types";
-import { getVehicleColor } from "../vehicles/colors";
 import type { PidRssItem } from "../../../_feeds/golemio/alerts";
 import { AlertTextFormatter } from "../../../_core/utils/AlertTextFormatter";
 
@@ -93,14 +92,10 @@ export class RssAlertsMapper {
                 guid: guid || undefined,
                 priority: priority || undefined,
                 lines,
-                line_metadata: lines.map(name => {
-                    const t = RssAlertsMapper.guessType(name);
-                    return {
-                        name,
-                        type: t,
-                        route_color: getVehicleColor(t, name)
-                    };
-                }),
+                line_metadata: lines.map(name => ({
+                    name,
+                    type: RssAlertsMapper.guessType(name)
+                })),
                 isActive,
                 isFuture
             });

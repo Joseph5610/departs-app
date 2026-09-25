@@ -13,7 +13,6 @@ import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/duk-station-board';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
-import { getDukVehicleColor } from '../colors';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
@@ -29,7 +28,6 @@ interface TimetableLink {
     tripId: string;
     headsign: string;
     routeType: string | number;
-    routeColor?: string;
     isWheelchairAccessible: boolean | null;
     isRequestStop: boolean;
 }
@@ -207,7 +205,6 @@ export class DukDeparturesService implements DeparturesUseCase {
             delay,
             isCanceled: false,
             platform: platform && Number(platform) < DUK_CONFIG.FIRST_UNNUMBERED_POST ? platform : undefined,
-            route_color: link?.routeColor ?? getDukVehicleColor(type, entry.line),
             stopId,
             is_air_conditioned: vehicle?.vehicle_descriptor?.is_air_conditioned ?? null,
             is_wheelchair_accessible: isStepFree || vehicle?.vehicle_descriptor?.is_wheelchair_accessible === true ? true : link?.isWheelchairAccessible ?? null,
@@ -273,7 +270,6 @@ function toLink(tuple: GtfsDepartureTuple, route: GtfsRoute): TimetableLink {
         tripId: tuple[0],
         headsign: tuple[2],
         routeType: route.type,
-        routeColor: route.route_color,
         isWheelchairAccessible: wheelchair === 1 ? true : wheelchair === 2 ? false : null,
         isRequestStop: tuple[5] === 1,
     };

@@ -1,6 +1,5 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppVehicleDescriptor } from "../../../_core/types";
 import type { GolemioVehicleDetailPayload } from "../../../_feeds/golemio/schemas/vehicles";
-import { getVehicleColor } from "./colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { isFields, str, num, bool, strOrNum, type Fields } from "./fields";
 
@@ -99,8 +98,6 @@ export class VehicleDetailMapper {
         const last_stop_sequence = num(data.last_stop_sequence) ?? num(p.last_stop_sequence) ?? 0;
         const origin_timestamp = str(data.origin_timestamp) ?? str(p.origin_timestamp);
 
-        const routeColor = getVehicleColor(route_type, route_short_name);
-
         const vehicleData: AppVehicleDetail = {
             vehicle_id: extracted_vehicle_id || requestedVehicleId || null,
             gtfs_trip_id,
@@ -113,7 +110,6 @@ export class VehicleDetailMapper {
             last_stop_sequence,
             origin_timestamp: origin_timestamp ?? undefined,
             run_number,
-            route_color: routeColor,
             vehicle_descriptor: readDescriptor(data.vehicle_descriptor) ?? readDescriptor(p.vehicle_descriptor),
             geometry: geometry ? { type: 'Point', coordinates: geometry.coordinates as [number, number] } : undefined,
             is_static_fallback: isStatic,

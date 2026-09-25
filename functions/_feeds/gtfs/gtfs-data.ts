@@ -7,7 +7,6 @@ export interface GtfsRoute {
     name: string;
     short_name?: string;
     type: string | number;
-    route_color?: string;
 }
 
 /**

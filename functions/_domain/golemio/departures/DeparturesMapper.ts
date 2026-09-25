@@ -1,6 +1,5 @@
 import { AppDeparture, AppDepartureResponse } from "../../../_core/types";
 import { GolemioDepartureItem } from "../../../_feeds/golemio/schemas/departures";
-import { getVehicleColor } from "../vehicles/colors";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { departureConnections } from "../connections/connections";
 import type { LiveConnections } from "../../../_feeds/golemio/connections";
@@ -70,7 +69,6 @@ export class DeparturesMapper {
             tripId: item.trip?.id,
             vehicleId: item.vehicle?.id ?? undefined,
             platform: item.stop?.platform_code || (isMetro && item.stop?.id ? item.stop.id.match(/Z\d+(\d)P?$/)?.[1] : undefined),
-            route_color: getVehicleColor(type, line),
             is_wheelchair_accessible: item.vehicle?.is_wheelchair_accessible,
             is_air_conditioned: item.vehicle?.is_air_conditioned,
             ...departureConnections(connections, item.trip?.id, item.stop?.id, item.departure.timestamp_scheduled)

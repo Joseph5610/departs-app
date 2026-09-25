@@ -5,8 +5,8 @@ import { appClient } from '../../_core/ApiClient';
 
 /** `[to_trip_id, line, route_type, headsign, departure_time, min_transfer_s, max_wait_s, dayFlags]` */
 export type OnwardRow = [string, string, string, string, string, number, number, number];
-/** `[from_trip_id, line, route_type, arrival_time, min_transfer_s, max_wait_s, dayFlags]` */
-export type FeederRow = [string, string, string, string, number, number, number];
+/** `[from_trip_id, line, route_type, arrival_ms, min_transfer_s, max_wait_s]` - one row per day the feeder trip runs, timestamp already resolved to that day. */
+export type FeederRow = [string, string, string, number, number, number];
 /** `[trip_id, line, route_type, headsign, departure_time]` */
 export type ContinuationRow = [string, string, string, string, string];
 

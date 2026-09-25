@@ -72,7 +72,7 @@ export function mapGtfsAlerts(
         const isDetour = parseIsDetour(alert, headerStr, rawHeader, rawDesc);
 
         const lines: string[] = [];
-        const line_metadata: Array<{ name: string; route_color: string; type: AppRouteType }> = [];
+        const line_metadata: Array<{ name: string; type: AppRouteType }> = [];
 
         if (alert.informedEntity) {
             for (const ie of alert.informedEntity) {
@@ -80,20 +80,10 @@ export function mapGtfsAlerts(
                     const matchingRoute = resolveRoute(ie.routeId, gtfsData);
                     const lineDisplayName = (matchingRoute?.short_name || matchingRoute?.name || ie.routeId) as string;
                     lines.push(lineDisplayName);
-
-                    if (matchingRoute) {
-                        line_metadata.push({
-                            name: lineDisplayName,
-                            route_color: (matchingRoute.route_color as string) || '#888888',
-                            type: normalizeRouteType(matchingRoute.type)
-                        });
-                    } else {
-                        line_metadata.push({
-                            name: lineDisplayName,
-                            route_color: '#888888',
-                            type: 'unknown'
-                        });
-                    }
+                    line_metadata.push({
+                        name: lineDisplayName,
+                        type: matchingRoute ? normalizeRouteType(matchingRoute.type) : 'unknown'
+                    });
                 }
             }
         }

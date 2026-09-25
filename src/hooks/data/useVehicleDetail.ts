@@ -5,6 +5,11 @@ import { useRouteParams } from '../useRouteParams';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
+import { enrichVehicleDetailRouteMetadata } from '../../lib/enrichment';
+import { memoizeLast } from '../../lib/memoize';
+import { useRouteMetadata } from './useRouteMetadata';
+
+const brandVehicleDetail = memoizeLast(enrichVehicleDetailRouteMetadata);
 
 const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
     const params = new URLSearchParams({ tripId });
@@ -16,6 +21,7 @@ export const useVehicleDetail = () => {
     const { tripId, vehicleId } = useRouteParams();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const queryClient = useQueryClient();
+    const { byShortName } = useRouteMetadata();
 
     const query = useQuery({
         queryKey: ['vehicle-detail', selectedCity, vehicleId, tripId],
@@ -25,6 +31,8 @@ export const useVehicleDetail = () => {
         refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
         gcTime: QUERY_TIMING_MS.LIVE_GC,
     });
+
+    const data = query.data ? brandVehicleDetail(query.data, byShortName) : query.data;
 
     // Sync newer geometry and location data from vehicle detail back to the global stream
     // This prevents the vehicle jumping back to an old position when deselecting it
@@ -59,6 +67,6 @@ export const useVehicleDetail = () => {
         }
     }, [query.data, queryClient, selectedCity, vehicleId, tripId]);
 
-    return query;
+    return { ...query, data };
 };
 

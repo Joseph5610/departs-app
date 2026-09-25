@@ -79,7 +79,7 @@ export class KordisVehicleMapping implements VehicleMapping {
      * KORDIS emits every vehicle several times, each entity carrying the run's trip id from a
      * different export numbering. Resolved independently, a stale id on one vehicle can alias onto
      * the trip another vehicle is really driving. Claims are granted strongest first - running now,
-     * then an id native to the current export over an aliased one, then nearest window - and a
+     * then the reading of the numbering the feed is currently on, then nearest window - and a
      * vehicle whose best reading is taken falls back to its next one.
      */
     assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData, { windows, clock }: MappingSchedule) {
@@ -122,9 +122,10 @@ export class KordisVehicleMapping implements VehicleMapping {
             }
         }
 
+        const preferNative = this.feedReadsNative(claims);
         claims.sort((a, b) =>
             Number(a.gapMins > 0) - Number(b.gapMins > 0)
-            || Number(b.isNative) - Number(a.isNative)
+            || (preferNative ? Number(b.isNative) - Number(a.isNative) : Number(a.isNative) - Number(b.isNative))
             || a.gapMins - b.gapMins);
 
         const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
@@ -138,6 +139,28 @@ export class KordisVehicleMapping implements VehicleMapping {
         }
         // Strength decided the claims; the answer keeps the feed's own order.
         return assigned.sort((a, b) => (order.get(a.entity) ?? 0) - (order.get(b.entity) ?? 0));
+    }
+
+    /**
+     * Which numbering the feed is on right now, voted by entities where only one reading is running.
+     *
+     * KORDIS sometimes broadcasts the current export's ids and sometimes lags a whole export behind;
+     * when both readings of an id run at once, the feed-wide majority decides which one it means.
+     */
+    private feedReadsNative(claims: TripClaim[]): boolean {
+        const running = new Map<GtfsRt.IFeedEntity, { native: boolean; alias: boolean }>();
+        for (const claim of claims) {
+            if (claim.gapMins !== 0) continue;
+            const reading = running.get(claim.entity) ?? { native: false, alias: false };
+            if (claim.isNative) reading.native = true;
+            else reading.alias = true;
+            running.set(claim.entity, reading);
+        }
+        let balance = 0;
+        for (const { native, alias } of running.values()) {
+            if (native !== alias) balance += native ? 1 : -1;
+        }
+        return balance >= 0;
     }
 
     /** Minutes between now and a trip's window today: 0 while running, Infinity if it does not run today. */

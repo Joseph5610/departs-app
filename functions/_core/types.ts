@@ -66,7 +66,6 @@ export interface AppContinuation {
     trip_id?: string;
     vehicle_id?: string;
     line: string;
-    route_color?: string;
     type: AppRouteType;
     headsign: string;
     departure_time?: string;
@@ -77,7 +76,6 @@ export interface AppStopConnection {
     trip_id: string;
     vehicle_id?: string;
     line: string;
-    route_color?: string;
     type: AppRouteType;
     headsign: string;
     /** Scheduled departure, `HH:MM:SS` like the stop times. */
@@ -91,13 +89,12 @@ export interface AppStopConnection {
 /** An arriving trip that a departure is scheduled to wait for. */
 export interface AppDepartureFeeder {
     line: string;
-    route_color?: string;
     type: AppRouteType;
+    /** Join key for the frontend's own live delay lookup - the feeder's actual `hold_s`/`will_miss` are computed there. */
+    trip_id: string;
+    /** Hold this departure would need if the feeder arrives exactly on schedule; add the feeder's live delay for the real expected hold. */
+    base_hold_s: number;
     max_wait_s: number;
-    /** Expected hold beyond the scheduled departure; null without live data for the feeder. */
-    hold_s: number | null;
-    /** The feeder is late enough that the departure will not wait for it. */
-    will_miss: boolean;
 }
 
 export interface AppStopProperties {
@@ -160,7 +157,6 @@ export interface AppVehicleProperties {
     run_number?: string | number;
     vehicle_descriptor?: AppVehicleDescriptor;
     is_static_fallback?: boolean;
-    route_color: string;
     shape_dist_traveled?: number;
 }
 
@@ -202,7 +198,6 @@ export interface AppDeparture {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
-    route_color?: string;
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
     stopId?: string;
@@ -227,7 +222,7 @@ export interface AppAlert {
     guid?: string;
     priority?: string;
     lines?: string[];
-    line_metadata?: Array<{ name: string; route_color: string; type: AppRouteType }>;
+    line_metadata?: Array<{ name: string; type: AppRouteType }>;
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;

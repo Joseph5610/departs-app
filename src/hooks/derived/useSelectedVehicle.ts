@@ -1,8 +1,10 @@
 import { useRouteParams } from '../useRouteParams';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
+import { useRouteMetadata } from '../data/useRouteMetadata';
 import type { VehicleDetail, VehicleFeature } from '../../types/transit';
 import type { StoredEnrichmentPatch } from '../../types/enrichment';
+import type { RouteInfo } from '../../types/vehicles';
 import { memoizeLast } from '../../lib/memoize';
 import { applyEnrichment, enrichConnections } from '../../lib/enrichment';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
@@ -15,6 +17,7 @@ const mergeSelectedVehicle = memoizeLast((
     vehicleDetail: VehicleDetail | undefined,
     byTripId: Map<string, StoredEnrichmentPatch>,
     byVehicleId: Map<string, StoredEnrichmentPatch>,
+    byShortName: Map<string, RouteInfo>,
     vehiclesUpdatedAt: number,
     detailUpdatedAt: number,
 ): VehicleDetail | null => {
@@ -71,7 +74,7 @@ const mergeSelectedVehicle = memoizeLast((
 
     const stopTimes = merged.stop_times;
     if (stopTimes?.features) {
-        const features = enrichConnections(stopTimes.features, tripIndex);
+        const features = enrichConnections(stopTimes.features, tripIndex, byShortName);
         if (features !== stopTimes.features) merged.stop_times = { ...stopTimes, features };
     }
 
@@ -95,6 +98,7 @@ export const useSelectedVehicle = () => {
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+    const { byShortName } = useRouteMetadata();
 
-    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, vehiclesUpdatedAt, detailUpdatedAt);
+    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, byShortName, vehiclesUpdatedAt, detailUpdatedAt);
 };

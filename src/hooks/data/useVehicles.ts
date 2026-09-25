@@ -4,8 +4,9 @@ import type { VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useViewportStore } from '../../state/viewportStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
-import { enrichVehicleCollection } from '../../lib/enrichment';
+import { enrichVehicleCollection, enrichVehicleRouteMetadata } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
+import { useRouteMetadata } from './useRouteMetadata';
 import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import { AppErrorCode, type AppError } from '../../types/error';
@@ -45,6 +46,7 @@ const networkVehiclesQueryOptions = (selectedCity: string) => queryOptions<Vehic
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, LIVE_VEHICLES_CONFIG.RETRY_MAX_DELAY_MS),
 });
 
+const brandNetworkVehicles = memoizeLast(enrichVehicleRouteMetadata);
 const enrichNetworkVehicles = memoizeLast(enrichVehicleCollection);
 const selectScreenVehicles = memoizeLast(filterVehiclesToView);
 
@@ -72,6 +74,7 @@ export const useVehicles = () => {
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+    const { byShortName } = useRouteMetadata();
 
     // Not tied to the map view: the stats views read the same fleet while the map is elsewhere.
     const query = useQuery({
@@ -79,7 +82,8 @@ export const useVehicles = () => {
         enabled: !!selectedCity,
     });
 
-    const networkVehicles = enrichNetworkVehicles(query.data, byTripId, byVehicleId, query.dataUpdatedAt || 0);
+    const brandedVehicles = brandNetworkVehicles(query.data, byShortName);
+    const networkVehicles = enrichNetworkVehicles(brandedVehicles, byTripId, byVehicleId, query.dataUpdatedAt || 0);
     const screenVehicles = selectScreenVehicles(networkVehicles, bounds, routeFilter, routeTypeFilter);
     // Whole fleet, so off-screen vehicles resolve for the selection, departure boards and connections.
     const { vehicleIndex, tripIndex } = buildVehicleIndexes(networkVehicles);

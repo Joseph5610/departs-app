@@ -73,7 +73,6 @@ export class TripConnectionsMapper {
                 rows.push({
                     trip_id: toTripId,
                     line: route ? String(route.name) : routeId,
-                    route_color: route?.route_color,
                     type: normalizeRouteType(route ? route.type : 'unknown'),
                     headsign,
                     departure_time: toClockTime(departureTime),

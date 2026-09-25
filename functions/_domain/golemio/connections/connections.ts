@@ -1,9 +1,8 @@
 import type { AppContinuation, AppDepartureFeeder, AppStopConnection, AppVehicleDetail } from "../../../_core/types";
-import type { ContinuationRow, LiveConnections, TripConnections } from "../../../_feeds/golemio/connections";
+import type { ContinuationRow, FeederRow, LiveConnections, TripConnections } from "../../../_feeds/golemio/connections";
 import { DAY_SECS, getPreviousDateString, toSecs, type LocalClock } from "../../../_core/utils/time";
 import { isConnectionAtRisk } from "../../../_core/utils/connections";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
-import { getVehicleColor } from "../vehicles/colors";
 
 const bitOf = (file: LiveConnections, dayStr: string): number => {
     const idx = file.days.indexOf(dayStr);
@@ -25,11 +24,17 @@ function serviceDayBit(file: LiveConnections, trip: TripConnections, localDate: 
 const isPastMidnight = (time: string | null | undefined): boolean => !!time && toSecs(time) >= DAY_SECS;
 
 function toContinuation([tripId, line, routeType, headsign, departureTime]: ContinuationRow): AppContinuation {
-    const type = normalizeRouteType(routeType);
-    return { trip_id: tripId, line, route_color: getVehicleColor(type, line), type, headsign, departure_time: departureTime };
+    return { trip_id: tripId, line, type: normalizeRouteType(routeType), headsign, departure_time: departureTime };
 }
 
-/** Feeders and continuation for one departure; its own stop id is the platform it leaves from. */
+/**
+ * Feeders and continuation for one departure; its own stop id is the platform it leaves from.
+ *
+ * Feeders' timestamps are already resolved per day at build time (`FeederRow`), so unlike
+ * continuations this needs no day-of-week matching - a trip_id may have two rows (today's and
+ * tomorrow's occurrence) if it runs both days; whichever's baked-in time is closest to this
+ * departure's own scheduled time is the relevant one.
+ */
 export function departureConnections(
     file: LiveConnections | null,
     tripId: string | undefined,
@@ -40,17 +45,23 @@ export function departureConnections(
     if (!file || !trip) return {};
 
     const rows = stopId ? trip.in?.[stopId] : undefined;
-    // Golemio timestamps carry the local offset, so the first ten characters are the local date.
-    const localDate = scheduledIso.slice(0, 10).replace(/-/g, '');
-    const bit = rows ? serviceDayBit(file, trip, localDate, rows.some(r => isPastMidnight(r[3]))) : 0;
+    const scheduledMs = Date.parse(scheduledIso);
+
+    const byLine = new Map<string, FeederRow>();
+    for (const row of rows ?? []) {
+        const existing = byLine.get(row[1]);
+        if (!existing || Math.abs(row[3] - scheduledMs) < Math.abs(existing[3] - scheduledMs)) byLine.set(row[1], row);
+    }
 
     const connections: AppDepartureFeeder[] = [];
-    const seenLines = new Set<string>();
-    for (const [, line, routeType, , , maxWaitS, dayFlags] of rows ?? []) {
-        if (!(dayFlags & bit) || seenLines.has(line)) continue;
-        seenLines.add(line);
-        const type = normalizeRouteType(routeType);
-        connections.push({ line, route_color: getVehicleColor(type, line), type, max_wait_s: maxWaitS, hold_s: null, will_miss: false });
+    for (const [feederTripId, line, routeType, arrivalMs, minTransferS, maxWaitS] of byLine.values()) {
+        connections.push({
+            line,
+            type: normalizeRouteType(routeType),
+            trip_id: feederTripId,
+            base_hold_s: Math.round((arrivalMs + minTransferS * 1000 - scheduledMs) / 1000),
+            max_wait_s: maxWaitS,
+        });
     }
 
     return {
@@ -77,12 +88,10 @@ export function attachTripConnections(detail: AppVehicleDetail, file: LiveConnec
         const connections: AppStopConnection[] = [];
         for (const [toTripId, line, routeType, headsign, departureTime, minTransferS, maxWaitS, dayFlags] of rows) {
             if (!(dayFlags & bit)) continue;
-            const type = normalizeRouteType(routeType);
             connections.push({
                 trip_id: toTripId,
                 line,
-                route_color: getVehicleColor(type, line),
-                type,
+                type: normalizeRouteType(routeType),
                 headsign,
                 departure_time: departureTime,
                 delay: null,
