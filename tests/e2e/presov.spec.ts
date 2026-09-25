@@ -16,7 +16,7 @@ test.describe('Prešov Backend API tests', () => {
     });
 
     test('should return stops with synthetic centroids', async ({ request }) => {
-        const res = await request.get('/api/presov/stops');
+        const res = await request.get('https://data.departs.app/presov/map-stops.json');
         expect(res.ok()).toBeTruthy();
 
         const data = await res.json();
@@ -29,7 +29,7 @@ test.describe('Prešov Backend API tests', () => {
     });
 
     test('should return departures for a station', async ({ request }) => {
-        const stopsRes = await request.get('/api/presov/stops');
+        const stopsRes = await request.get('https://data.departs.app/presov/map-stops.json');
         const stopsData = await stopsRes.json();
         const centroid = stopsData.features.find((f: { properties?: { is_centroid?: boolean } }) => f.properties?.is_centroid === true);
 

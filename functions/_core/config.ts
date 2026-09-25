@@ -14,7 +14,6 @@ export const CACHE_TTL = {
     VEHICLES: 10,
     VEHICLE_DETAIL: 10,
     INFOTEXTS: 900, // 15m
-    STOPS: 43200, // 12h (allow morning enrichment updates)
     CITIES: 43200, // 12h
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h

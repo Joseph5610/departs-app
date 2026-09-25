@@ -16,12 +16,31 @@ export interface GtfsRoute {
  */
 export interface GtfsRoutesData {
     routes: Record<string, GtfsRoute>;
-    routesByName: Record<string, GtfsRoute>;
+}
+
+const routesByNameCache = new WeakMap<Record<string, GtfsRoute>, Record<string, GtfsRoute>>();
+
+/** Uppercased short name and name -> route, built once per cached route table and only for feeds keyed by line number. */
+export function getRoutesByName(routes: Record<string, GtfsRoute>): Record<string, GtfsRoute> {
+    const cached = routesByNameCache.get(routes);
+    if (cached) return cached;
+    const byName: Record<string, GtfsRoute> = {};
+    for (const rId in routes) {
+        const r = routes[rId];
+        if (r.short_name) {
+            byName[r.short_name.toUpperCase()] = r;
+        }
+        if (r.name) {
+            byName[r.name.toUpperCase()] = r;
+        }
+    }
+    routesByNameCache.set(routes, byName);
+    return byName;
 }
 
 /**
  * Fetches and caches GTFS routes (routes.json).
- * Used by endpoints that need to resolve route colors and names without needing to map live trips.
+ * Used by endpoints that need to resolve route names and types without needing to map live trips.
  * 
  * @param city The city to fetch routes for
  */
@@ -39,25 +58,14 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 
             if (!rRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}`);
-                return { routes: {}, routesByName: {} };
+                return { routes: {} };
             }
 
             const routes = await rRes.json() as Record<string, GtfsRoute>;
-            const routesByName: Record<string, GtfsRoute> = {};
-            for (const rId in routes) {
-                const r = routes[rId];
-                if (r.short_name) {
-                    routesByName[r.short_name.toUpperCase()] = r;
-                }
-                if (r.name) {
-                    routesByName[r.name.toUpperCase()] = r;
-                }
-            }
-
-            return { routes, routesByName };
+            return { routes };
         } catch (e) {
             console.error(`Failed to parse or fetch GTFS static data for ${citySlug}:`, e);
-            return { routes: {}, routesByName: {} };
+            return { routes: {} };
         }
     },
     // An empty route table is an upstream failure, not a valid result. Without this the empty

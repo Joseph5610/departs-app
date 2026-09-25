@@ -62,9 +62,8 @@ function readStopTimeFeature(v: unknown): StopTimeFeature | null {
  * 1. Live GTFS-Realtime `vehiclepositions` (position and delay).
  * 2. Static GTFS schedule fallback (used when live data is missing).
  *
- * The payload is only shape-checked upstream (`golemioVehicleDetailSchema`) - it embeds a full route
- * shape and stop_times, and per-field validation there costs the same CPU the fleet schema was built
- * to avoid - so every field is read defensively here instead.
+ * The payload is only shape-checked upstream (`golemioVehicleDetailSchema`), so every field is read
+ * defensively here instead.
  */
 export class VehicleDetailMapper {
     /**

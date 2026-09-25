@@ -5,7 +5,7 @@ import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed
 import { LruCache } from '../../../_core/feed/LruCache';
 import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
-import { getGtfsRoutes, getGtfsTripRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
+import { getGtfsRoutes, getGtfsTripRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { getVehicleRanges, findVehicleRange, type VehicleRange } from '../../../_feeds/gtfs/vehicle-ranges';
@@ -113,9 +113,10 @@ export class DpmpVehicleSource implements VehicleSource {
         }
         this.bridgeDropouts(latestByVehicle, nowMs);
 
+        const routesByName = getRoutesByName(routes.routes);
         const mapped = await Promise.all(
             Array.from(latestByVehicle.values(), ({ row, timestampMs }) =>
-                this.mapRow(row, timestampMs, matcher, ctx, routes.routesByName)
+                this.mapRow(row, timestampMs, matcher, ctx, routesByName)
             )
         );
         const features: AppVehicleFeature[] = [];

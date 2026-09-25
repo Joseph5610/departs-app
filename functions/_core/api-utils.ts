@@ -60,7 +60,7 @@ export function createSuccessResponse(data: unknown, maxAge: number = 10): Respo
 }
 
 /**
- * `createSuccessResponse` for a body that is already serialized JSON, such as a streamed static file.
+ * `createSuccessResponse` for a body that is already serialized JSON, such as a cached vehicle snapshot.
  *
  * @param body Serialized JSON body
  * @param maxAge Cache max-age in seconds (default: 10)

@@ -9,7 +9,7 @@ test.describe('Brno Backend API tests', () => {
     // valid JSON under Cloudflare limits without UI flakiness.
 
     test('should return valid GeoJSON for stops', async ({ request }) => {
-        const res = await request.get('/api/brno/stops');
+        const res = await request.get('https://data.departs.app/brno/map-stops.json');
         expect(res.ok()).toBeTruthy();
         
         const data = await res.json();
@@ -23,7 +23,7 @@ test.describe('Brno Backend API tests', () => {
 
     test('should return departures for a valid stop', async ({ request }) => {
         // First get a stop
-        const stopsRes = await request.get('/api/brno/stops');
+        const stopsRes = await request.get('https://data.departs.app/brno/map-stops.json');
         const stopsData = await stopsRes.json();
         
         const centroid = stopsData.features.find((f: { properties?: { is_centroid?: boolean } }) => f.properties?.is_centroid === true);

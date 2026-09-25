@@ -17,8 +17,8 @@ import { GOLEMIO_CONFIG } from "../../../_feeds/golemio/config";
  */
 export class VehicleDetailService implements VehicleDetailUseCase {
     /**
-     * Fetches detailed data for a specific vehicle or trip, including its real-time position,
-     * shape trajectory, and upcoming stop times. Falls back to static schedule if real-time fails.
+     * Fetches detailed data for a specific vehicle or trip, including its real-time position
+     * and upcoming stop times. Falls back to static schedule if real-time fails.
      * 
      * @returns {Promise<AppVehicleDetail>} Comprehensive vehicle and route details
      * @throws {ApiError} If tripId is missing or upstream fetch fails

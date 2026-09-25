@@ -15,7 +15,7 @@ export interface LruCacheOptions {
  *
  * Unlike CacheManager (which retains every key it is given for the lifetime of the
  * isolate), this is intended for keyspaces that are large and unbounded — for example
- * per-shape route geometry, where an isolate could otherwise accumulate every shape
+ * per-trip stop lists, where an isolate could otherwise accumulate every trip
  * in the network and exhaust its memory budget.
  */
 export class LruCache<T> {

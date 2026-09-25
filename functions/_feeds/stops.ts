@@ -14,7 +14,7 @@ const mapStopsSchema = z.object({
 
 /**
  * A city's final stop list, prebuilt by departs-data as `<city>/map-stops.json`.
- * The Worker never groups or enriches stops itself; it passes the file through or reads it for MCP and the sitemap.
+ * The app reads it from the static data CDN directly; the Worker reads it only for MCP and the sitemap.
  */
 export class MapStopsService {
     constructor(private readonly city: CityConfig) {}
@@ -30,15 +30,6 @@ export class MapStopsService {
             }
             return parsed.data as AppStopCollection;
         });
-    }
-
-    /** The stop file's body, streamed through without parsing. */
-    async getStopsBody(): Promise<ReadableStream> {
-        const res = await this.fetchFile(this.fileUrl());
-        if (!res.body) {
-            throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
-        }
-        return res.body;
     }
 
     private async fetchFile(url: string): Promise<Response> {

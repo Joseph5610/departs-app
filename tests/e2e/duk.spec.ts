@@ -19,7 +19,7 @@ test.describe('Ústecký kraj (DÚK) Backend API tests', () => {
     });
 
     test('should return stations with their Portabo platforms', async ({ request }) => {
-        const res = await request.get('/api/duk/stops');
+        const res = await request.get('https://data.departs.app/duk/map-stops.json');
         expect(res.ok()).toBeTruthy();
 
         const { features } = await res.json() as { features: StopFeature[] };
@@ -34,7 +34,7 @@ test.describe('Ústecký kraj (DÚK) Backend API tests', () => {
     });
 
     test('should return departures for a station and only that platform for a platform', async ({ request }) => {
-        const { features } = await (await request.get('/api/duk/stops')).json() as { features: StopFeature[] };
+        const { features } = await (await request.get('https://data.departs.app/duk/map-stops.json')).json() as { features: StopFeature[] };
         const platform = features.find(f => !f.properties.is_centroid && f.properties.platform_code);
         expect(platform).toBeDefined();
 
