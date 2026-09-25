@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.75.0] - 2026-09-25
+
+### Changed
+
+- Search offers a line filter for any line the city actually runs, replacing the per-city line-name patterns.
+- Search finds live vehicles by their number (e.g. "8414") and opens the selected one.
+
 ## [0.74.6] - 2026-09-25
 
 ### Fixed

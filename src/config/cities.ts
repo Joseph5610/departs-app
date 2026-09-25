@@ -60,8 +60,6 @@ export interface LineRules {
     metroClosedHours: [number, number] | null;
     /** Night lines are listed after the day lines of their mode. */
     isNightLine: (routeType: string, lineName: string) => boolean;
-    /** Line-name shape accepted as a line filter even before the stop data has loaded. */
-    linePattern: RegExp;
 }
 
 export const DEFAULT_LINE_RULES: LineRules = {
@@ -69,7 +67,6 @@ export const DEFAULT_LINE_RULES: LineRules = {
     trainLinePrefixes: ['S', 'R'],
     metroClosedHours: null,
     isNightLine: () => false,
-    linePattern: /^([0-9]{1,3}[A-Z]?|[SR]\d{1,2})$/i,
 };
 
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
@@ -100,7 +97,6 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
                 if (Number.isNaN(num)) return false;
                 return (routeType === 'tram' && num >= 90 && num < 100) || (routeType === 'bus' && num >= 900);
             },
-            linePattern: /^([A-C]|S\d{1,2}|R\d{1,2}|X[A-Z0-9-]{1,3}|[0-9]{1,3}[A-Z]?|AE|LD|P\d|H\d|MHD\s?\d{1,2})$/i,
         },
     },
     brno: {

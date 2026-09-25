@@ -24,7 +24,9 @@
     "favorites": "Oblíbené zastávky",
     "recent": "Nedávné",
     "places": "Místa a adresy",
-    "pointsOfSale": "Prodejní místa"
+    "pointsOfSale": "Prodejní místa",
+    "vehicles": "Vozidla",
+    "vehicleNumber": "Vůz {{number}}"
   },
   "settings": {
     "title": "Nastavení",

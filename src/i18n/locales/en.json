@@ -23,7 +23,9 @@
     "favorites": "Favorite Stops",
     "recent": "Recent",
     "places": "Places & Addresses",
-    "pointsOfSale": "Points of Sale"
+    "pointsOfSale": "Points of Sale",
+    "vehicles": "Vehicles",
+    "vehicleNumber": "Vehicle {{number}}"
   },
   "settings": {
     "title": "Settings",

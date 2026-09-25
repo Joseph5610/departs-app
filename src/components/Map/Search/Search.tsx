@@ -13,7 +13,8 @@ import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
 import { MAP_CAMERA } from '../../../config/constants';
 import { useStops } from '../../../hooks/data/useStops';
-import { useLineRules } from '../../../hooks/data/useCities';
+import { useVehicles } from '../../../hooks/data/useVehicles';
+import { useRouteMetadata } from '../../../hooks/data/useRouteMetadata';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import type { PosSearchResult } from '../../../utils/posSearch';
@@ -23,6 +24,10 @@ import { Button } from '@/components/ui/button';
 import { SearchDropdown } from './SearchDropdown';
 import { CitySwitcher } from '../CitySwitcher';
 import { getLineMetadataMap } from '@/utils/transitUtils';
+import { parseLineQuery } from '@/utils/lineSearch';
+import { searchVehicles } from '@/utils/vehicleSearch';
+import { useSelectionStore } from '../../../state/selectionStore';
+import type { VehicleFeature } from '../../../types/transit';
 
 /**
  * Search Component
@@ -89,27 +94,22 @@ export const Search: React.FC = React.memo(() => {
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
 
-    const linesFromQuery = React.useMemo(() =>
-        query.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0 && s.length <= 10),
-    [query]);
-
-    const lineMetadataMap = React.useMemo(() => 
-        getLineMetadataMap(stops.allFeatures?.features || []), 
-    [stops.allFeatures]);
-
-    const { linePattern } = useLineRules();
-    const isLineLike = React.useMemo(() => {
-        const trimmed = query.trim().toUpperCase();
-        if (trimmed.length === 0) return false;
-        const looksLikeLine = (name: string) => lineMetadataMap.has(name) || linePattern.test(name);
-
-        if (trimmed.includes(',')) {
-            return linesFromQuery.length > 0 && linesFromQuery.every(looksLikeLine);
+    const { byName: routesByName } = useRouteMetadata();
+    const lineMetadataMap = React.useMemo(() => {
+        const map = getLineMetadataMap(stops.allFeatures?.features || []);
+        for (const [name, route] of routesByName) {
+            if (!map.has(name)) map.set(name, { route_color: route.route_color, type: route.type });
         }
-        return looksLikeLine(trimmed);
-    }, [query, linesFromQuery, lineMetadataMap, linePattern]);
+        return map;
+    }, [stops.allFeatures, routesByName]);
 
-    const showDropdown = (results.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || isLineLike || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
+    const queryLines = React.useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
+
+    const { networkVehicles } = useVehicles();
+    const vehicleResults = React.useMemo(() => searchVehicles(query, networkVehicles), [query, networkVehicles]);
+    const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
+
+    const showDropdown = (results.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -205,6 +205,14 @@ export const Search: React.FC = React.memo(() => {
         setIsOpen(false);
     };
 
+    const handleVehicleSelect = (vehicle: VehicleFeature) => {
+        const { gtfs_trip_id, vehicle_id } = vehicle.properties;
+        setIsFollowing(true);
+        navigate(paths.trip(selectedCity, gtfs_trip_id, vehicle_id));
+        setQuery('');
+        setIsOpen(false);
+    };
+
     const handlePosSelect = (result: PosSearchResult) => {
         const { pos } = result;
         flyTo({
@@ -278,8 +286,13 @@ export const Search: React.FC = React.memo(() => {
                                 setIsOpen(true);
                             }}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && results.length > 0) {
+                                if (e.key !== 'Enter') return;
+                                if (vehicleResults.length > 0) {
+                                    handleVehicleSelect(vehicleResults[0]);
+                                } else if (results.length > 0) {
                                     handleStopSelect(results[0]);
+                                } else if (queryLines) {
+                                    handleLineSelect(queryLines);
                                 }
                             }}
                             onFocus={() => setIsOpen(true)}
@@ -321,8 +334,8 @@ export const Search: React.FC = React.memo(() => {
                         favoriteStops={favoriteStops}
                         query={query}
                         activeFilter={activeFilter}
-                        isLineLike={isLineLike}
-                        linesFromQuery={linesFromQuery}
+                        queryLines={queryLines}
+                        vehicleResults={vehicleResults}
                         geocodingResults={geocodingResults}
                         posResults={posResults}
                         onStopSelect={handleStopSelect}
@@ -330,6 +343,7 @@ export const Search: React.FC = React.memo(() => {
                         onLineSelect={handleLineSelect}
                         onPlaceSelect={handlePlaceSelect}
                         onPosSelect={handlePosSelect}
+                        onVehicleSelect={handleVehicleSelect}
                         lineMetadataMap={lineMetadataMap}
                     />
                 )}

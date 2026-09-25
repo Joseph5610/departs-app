@@ -55,6 +55,17 @@ export const STOP_SEARCH = {
     },
 };
 
+export const VEHICLE_SEARCH = {
+    /** Only digit-bearing queries without spaces or commas are checked against vehicle numbers. */
+    QUERY_SHAPE: /^(?=.*\d)[A-Z0-9-]+$/,
+    RESULT_LIMIT: 5,
+};
+
+export const LINE_SEARCH = {
+    /** Shape of a line name accepted before any line data is known: short, no spaces, contains a digit. */
+    GENERIC_LINE_SHAPE: /^(?=.*\d)[A-Z0-9-]{1,6}$/,
+};
+
 export const POS_SEARCH = {
     MIN_QUERY_LENGTH: 3,
     /** Points of sale are a side answer next to stops, so the dropdown keeps the group short. */

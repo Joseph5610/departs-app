@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
 import { getLineMetadataFromMap } from '@/utils/transitUtils';
 import { searchHistoryKey } from '@/utils/searchHistory';
@@ -10,7 +10,8 @@ import {
     CommandGroup,
 } from '@/components/ui/command';
 
-import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
+import type { StopFeature, SearchHistoryItem, VehicleFeature } from '../../../types/transit';
+import { vehicleDisplayNumber } from '@/utils/vehicleSearch';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import type { PosSearchResult } from '../../../utils/posSearch';
 
@@ -20,8 +21,8 @@ interface SearchDropdownProps {
     favoriteStops: string[];
     query: string;
     activeFilter: string[] | null;
-    isLineLike: boolean;
-    linesFromQuery: string[];
+    queryLines: string[] | null;
+    vehicleResults: VehicleFeature[];
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
     onStopSelect: (stop: StopFeature) => void;
@@ -29,6 +30,7 @@ interface SearchDropdownProps {
     onLineSelect: (lines: string[]) => void;
     onPlaceSelect: (result: GeocodingResult) => void;
     onPosSelect: (result: PosSearchResult) => void;
+    onVehicleSelect: (vehicle: VehicleFeature) => void;
     lineMetadataMap: Map<string, { route_color: string; type: string }>;
 }
 
@@ -56,8 +58,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     favoriteStops,
     query,
     activeFilter,
-    isLineLike,
-    linesFromQuery,
+    queryLines,
+    vehicleResults,
     geocodingResults,
     posResults,
     onStopSelect,
@@ -65,6 +67,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     onLineSelect,
     onPlaceSelect,
     onPosSelect,
+    onVehicleSelect,
     lineMetadataMap
 }) => {
     const { t } = useTranslation();
@@ -139,13 +142,37 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     </CommandGroup>
                 )}
 
+                {/* Live vehicles by number */}
+                {vehicleResults.length > 0 && (
+                    <CommandGroup
+                        heading={<GroupHeading icon={<BusFront size={14} className="text-primary" strokeWidth={2} />} label={t('search.vehicles')} count={vehicleResults.length} />}
+                        variant="search"
+                    >
+                        {vehicleResults.map((vehicle) => {
+                            const p = vehicle.properties;
+                            const vehicleId = p.vehicle_id ?? '';
+                            return (
+                                <SearchItem
+                                    key={vehicleId}
+                                    icon={<BusFront size={16} strokeWidth={1.5} />}
+                                    title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
+                                    subtitle={p.trip_headsign}
+                                    lines={[{ name: String(p.route_short_name), type: p.route_type, route_color: p.route_color }]}
+                                    testId={`search-item-vehicle-${vehicleId}`}
+                                    onClick={() => onVehicleSelect(vehicle)}
+                                />
+                            );
+                        })}
+                    </CommandGroup>
+                )}
+
                 {/* Line filter suggestion */}
-                {isLineLike && (
+                {queryLines && (
                     <CommandGroup className="p-0">
                         <SearchItem
                             icon={<SearchIcon size={16} strokeWidth={1.5} />}
                             title={t('search.filterByLine')}
-                            lines={linesFromQuery.map(l => {
+                            lines={queryLines.map(l => {
                                 const meta = getLineMetadataFromMap(l, lineMetadataMap);
                                 return {
                                     name: l,
@@ -154,8 +181,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 };
                             })}
                             variant="primary"
-                            testId={`search-item-line-${linesFromQuery.join('-')}`}
-                            onClick={() => onLineSelect(linesFromQuery)}
+                            testId={`search-item-line-${queryLines.join('-')}`}
+                            onClick={() => onLineSelect(queryLines)}
                         />
                     </CommandGroup>
                 )}
