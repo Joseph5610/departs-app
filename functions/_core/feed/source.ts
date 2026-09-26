@@ -1,6 +1,8 @@
 import { awaitShared, CacheManager } from './CacheManager';
 import { DERIVATION_CONFIG } from '../config';
 
+export { awaitShared };
+
 /** What a source returns: the data and when it was read, so age is never guessed. */
 export interface Snapshot<T> {
     data: T;

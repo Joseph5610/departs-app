@@ -3,14 +3,16 @@ import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL, UPSTREAM_TTL_S } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
-import { decodeGtfsRtFeed, type GtfsRtFeed } from './gtfs-rt-decode';
+import { decodeGtfsRtFeed, feedHeaderTimestamp, type GtfsRtFeed } from './gtfs-rt-decode';
 
 /** The last decoded feed per city with its raw bytes, so an unchanged download is not decoded again. */
-const lastDecoded = new Map<string, { bytes: Uint8Array; feed: GtfsRtFeed }>();
+const lastDecoded = new Map<string, { bytes: Uint8Array; headerTimestamp: number | undefined; feed: GtfsRtFeed }>();
 
-function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+/** Whether a download is the one already decoded: by header timestamp when the feed stamps one, else byte for byte. */
+function isSameFeed(previous: { bytes: Uint8Array; headerTimestamp: number | undefined }, bytes: Uint8Array, headerTimestamp: number | undefined): boolean {
+    if (previous.bytes.length !== bytes.length) return false;
+    if (headerTimestamp !== undefined) return previous.headerTimestamp === headerTimestamp;
+    for (let i = 0; i < bytes.length; i++) if (previous.bytes[i] !== bytes[i]) return false;
     return true;
 }
 
@@ -40,11 +42,12 @@ function sourceFor(city: CityConfig, rtUrl: string) {
 
             // Upstreams publish less often than the debounce refetches; decoding is the expensive part.
             const bytes = new Uint8Array(await rtRes.arrayBuffer());
+            const headerTimestamp = feedHeaderTimestamp(bytes);
             const previous = lastDecoded.get(city.slug);
-            if (previous && sameBytes(previous.bytes, bytes)) return previous.feed;
+            if (previous && isSameFeed(previous, bytes, headerTimestamp)) return previous.feed;
 
             const decoded = decodeGtfsRtFeed(bytes);
-            lastDecoded.set(city.slug, { bytes, feed: decoded });
+            lastDecoded.set(city.slug, { bytes, headerTimestamp, feed: decoded });
             return decoded;
         },
     });

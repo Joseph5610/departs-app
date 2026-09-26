@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.75.1] - 2026-09-26
+
+### Fixed
+
+- Brno's vehicle rebuild uses about a third less CPU (no full-feed byte compare, leaner decode, a native sort for trip assignment), easing the Worker CPU-limit kills that took every city down with it.
+- A request no longer hangs on another request's vehicle rebuild that was killed mid-flight.
+
 ## [0.75.0] - 2026-09-25
 
 ### Changed

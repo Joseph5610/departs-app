@@ -5,6 +5,7 @@ import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import { readCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { DERIVATION_CONFIG } from '../../../_core/config';
+import { awaitShared } from '../../../_core/feed/source';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -70,23 +71,40 @@ export class GtfsRtVehicleSource implements VehicleSource {
             const age = Date.now() - cached.builtAt;
             if (age < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
             if (age < GTFS_CONFIG.FLEET_CACHE_STALE_MS) {
-                if (waitUntil) waitUntil(this.rebuild());
+                if (waitUntil) waitUntil(this.refreshInBackground());
                 return cached;
             }
         }
         return this.rebuild();
     }
 
-    /** One build at a time; one pending past `ABANDON_MS` belongs to a killed request and is replaced. */
-    private rebuild(): Promise<CachedFleet | null> {
+    /**
+     * One build at a time. Another request's build is awaited only until `ABANDON_MS` after it started:
+     * one whose request was killed never settles, and waiting on it would hang this request too.
+     */
+    private async rebuild(): Promise<CachedFleet | null> {
         const pending = this.rebuilding;
-        if (pending && Date.now() - pending.startedAt < DERIVATION_CONFIG.ABANDON_MS) return pending.promise;
+        if (pending) {
+            const waitMs = pending.startedAt + DERIVATION_CONFIG.ABANDON_MS - Date.now();
+            if (waitMs > 0) {
+                const shared = await awaitShared(pending.promise, waitMs);
+                if (shared.settled) return shared.value;
+            }
+            if (this.rebuilding !== pending) return this.rebuild();
+        }
 
         const promise: Promise<CachedFleet | null> = this.build().finally(() => {
             if (this.rebuilding?.promise === promise) this.rebuilding = null;
         });
         this.rebuilding = { promise, startedAt: Date.now() };
         return promise;
+    }
+
+    /** A rebuild for `waitUntil`: none is started while another is still in flight. */
+    private refreshInBackground(): Promise<unknown> {
+        const pending = this.rebuilding;
+        if (pending && Date.now() - pending.startedAt < DERIVATION_CONFIG.ABANDON_MS) return Promise.resolve();
+        return this.rebuild();
     }
 
     /** Builds the fleet and, unless it is offline, caches it for this and the next isolate to read. */

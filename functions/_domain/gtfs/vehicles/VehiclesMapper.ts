@@ -11,7 +11,9 @@ export class VehiclesMapper {
         route: GtfsRoute,
         originTimestamp: string,
         delay: number | null,
-        isBeforeTrack: boolean = false
+        isBeforeTrack: boolean = false,
+        /** Replaces the descriptor's own id, for networks that publish their vehicles under another one. */
+        vehicleIdOverride?: string
     ): AppVehicleFeature {
         const vp = vehicleObj;
         
@@ -26,11 +28,11 @@ export class VehiclesMapper {
 
         // Deliberate: 0 means "no fix" far more often than due north here, so not `?? null`.
         const bearing = vp.position?.bearing ? Number(vp.position.bearing) : undefined;
-        const vehicleId = vp.vehicle?.id || '';
+        const vehicleId = vehicleIdOverride || vp.vehicle?.id || '';
         const vehicleLabel = vp.vehicle?.label || vehicleId;
         const licensePlate = vp.vehicle?.licensePlate;
         
-        return {
+        const feature: AppVehicleFeature = {
             type: 'Feature',
             geometry: {
                 type: 'Point',
@@ -47,13 +49,13 @@ export class VehiclesMapper {
                 state_position: statePosition,
                 origin_timestamp: originTimestamp,
                 bearing: bearing ?? null,
-                
-                ...(vp.currentStopSequence && vp.currentStopSequence > 0 ? { last_stop_sequence: vp.currentStopSequence } : {}),
-                
+
                 vehicle_descriptor: {
                     vehicle_registration_number: licensePlate || vehicleLabel || vehicleId
                 }
             }
         };
+        if (vp.currentStopSequence && vp.currentStopSequence > 0) feature.properties.last_stop_sequence = vp.currentStopSequence;
+        return feature;
     }
 }

@@ -1,5 +1,5 @@
 import type * as GtfsRt from '../../_core/gtfsRtTypes';
-import { ProtobufReader as Reader, WIRE_BYTES } from '../../_core/protobufReader';
+import { ProtobufReader as Reader, WIRE_BYTES, WIRE_VARINT } from '../../_core/protobufReader';
 
 /**
  * A GTFS-RT feed read for vehicles only: vehicle entities decoded to the fields the app reads, alert
@@ -16,11 +16,6 @@ function readTrip(r: Reader, end: number): GtfsRt.ITripDescriptor {
         const tag = r.varint();
         const field = tag >>> 3;
         if (field === 1) trip.tripId = r.string();
-        else if (field === 2) trip.startTime = r.string();
-        else if (field === 3) trip.startDate = r.string();
-        else if (field === 4) trip.scheduleRelationship = r.varint();
-        else if (field === 5) trip.routeId = r.string();
-        else if (field === 6) trip.directionId = r.varint();
         else r.skip(tag & 7);
     }
     return trip;
@@ -34,8 +29,6 @@ function readPosition(r: Reader, end: number): GtfsRt.IPosition {
         if (field === 1) position.latitude = r.float();
         else if (field === 2) position.longitude = r.float();
         else if (field === 3) position.bearing = r.float();
-        else if (field === 4) position.odometer = r.double();
-        else if (field === 5) position.speed = r.float();
         else r.skip(tag & 7);
     }
     return position;
@@ -72,8 +65,25 @@ function readVehicle(r: Reader, end: number): GtfsRt.IVehiclePosition {
 }
 
 /**
+ * The FeedHeader's timestamp, read without decoding anything else; undefined when the feed does not
+ * lead with a header or the header carries none.
+ */
+export function feedHeaderTimestamp(bytes: Uint8Array): number | undefined {
+    const r = new Reader(bytes);
+    if (bytes.length === 0 || r.varint() !== ((1 << 3) | WIRE_BYTES)) return undefined;
+    const end = r.end();
+    while (r.pos < end) {
+        const tag = r.varint();
+        if (tag === ((3 << 3) | WIRE_VARINT)) return r.varint();
+        r.skip(tag & 7);
+    }
+    return undefined;
+}
+
+/**
  * Decodes the vehicle positions of a GTFS-RT FeedMessage, several times faster than the generated
- * decoder since it builds only the fields read downstream. Alert entities are returned undecoded.
+ * decoder since it builds only the fields read downstream: every string it skips is an allocation a
+ * cold isolate would otherwise pay for in GC. Alert entities are returned undecoded.
  */
 export function decodeGtfsRtFeed(bytes: Uint8Array): GtfsRtFeed {
     const feed: GtfsRtFeed = { entity: [], alertEntities: [] };

@@ -174,10 +174,7 @@ export class VehicleIndex {
         const route = this.routes.routes[this.tripRoutes.tripRoutes[tripId]];
         if (!route) return null;
 
-        const label = this.mapping.label(entity);
-        // Copy, never write through: `vp` belongs to the feed snapshot shared with the alerts path.
-        const mappable: GtfsRt.IVehiclePosition = label && vp.vehicle ? { ...vp, vehicle: { ...vp.vehicle, id: label } } : vp;
-
-        return VehiclesMapper.mapVehicle(mappable, tripId, route, new Date(lastUpdate).toISOString(), null, this.mapping.isBeforeTrack(tripId, this.schedule));
+        const label = vp.vehicle ? this.mapping.label(entity) : undefined;
+        return VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null, this.mapping.isBeforeTrack(tripId, this.schedule), label);
     }
 }

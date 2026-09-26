@@ -3,11 +3,12 @@ import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-i
 import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { DAY_MINS, wrapDaySeconds } from '../../../_core/utils/time';
+import { DAY_MINS, DAY_SECS, wrapDaySeconds } from '../../../_core/utils/time';
 
 interface TripClaim {
     label: string;
-    entity: GtfsRt.IFeedEntity;
+    /** The entity's position in the feed. */
+    index: number;
     tripId: string;
     isNative: boolean;
     gapMins: number;
@@ -88,57 +89,60 @@ export class KordisVehicleMapping implements VehicleMapping {
 
         // Grouped by vehicle first, then by the order the feed lists them: equally strong claims are
         // decided by this order, so it has to be the same one every time.
-        const byVehicle = new Map<string, GtfsRt.IFeedEntity[]>();
-        const order = new Map<GtfsRt.IFeedEntity, number>();
+        const byVehicle = new Map<string, number[]>();
         const nowMs = Date.now();
-        for (const entity of entities) {
-            order.set(entity, order.size);
-            const vp = entity.vehicle;
+        for (let i = 0; i < entities.length; i++) {
+            const vp = entities[i].vehicle;
             if (!vp) continue;
 
             const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
             if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
 
-            const label = this.label(entity);
+            const label = this.label(entities[i]);
             if (!label) continue;
 
             const group = byVehicle.get(label);
-            if (group) group.push(entity);
-            else byVehicle.set(label, [entity]);
+            if (group) group.push(i);
+            else byVehicle.set(label, [i]);
         }
 
         const claims: TripClaim[] = [];
         for (const [label, group] of sortedByLabel(byVehicle)) {
-            for (const entity of group) {
+            for (const index of group) {
+                const entity = entities[index];
+                const rawTripId = entity.vehicle?.trip?.tripId;
                 for (const tripId of this.tripCandidates(entity, tripRoutes)) {
                     claims.push({
                         label,
-                        entity,
+                        index,
                         tripId,
-                        isNative: tripId === entity.vehicle?.trip?.tripId,
+                        isNative: tripId === rawTripId,
                         gapMins: this.windowGap(windows?.trips[tripId], todayBit, currentMins),
                     });
                 }
             }
         }
 
-        const preferNative = this.feedReadsNative(claims);
-        claims.sort((a, b) =>
-            Number(a.gapMins > 0) - Number(b.gapMins > 0)
-            || (preferNative ? Number(b.isNative) - Number(a.isNative) : Number(a.isNative) - Number(b.isNative))
-            || a.gapMins - b.gapMins);
+        const order = claimOrder(claims, this.feedReadsNative(claims));
 
-        const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
+        const tripOf: Array<string | undefined> = new Array(entities.length);
         const takenVehicles = new Set<string>();
         const takenTrips = new Set<string>();
-        for (const claim of claims) {
+        for (let k = 0; k < order.length; k++) {
+            const claim = claims[order[k]];
             if (takenVehicles.has(claim.label) || takenTrips.has(claim.tripId)) continue;
             takenVehicles.add(claim.label);
             takenTrips.add(claim.tripId);
-            assigned.push({ entity: claim.entity, tripId: claim.tripId });
+            tripOf[claim.index] = claim.tripId;
         }
+
         // Strength decided the claims; the answer keeps the feed's own order.
-        return assigned.sort((a, b) => (order.get(a.entity) ?? 0) - (order.get(b.entity) ?? 0));
+        const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
+        for (let i = 0; i < entities.length; i++) {
+            const tripId = tripOf[i];
+            if (tripId !== undefined) assigned.push({ entity: entities[i], tripId });
+        }
+        return assigned;
     }
 
     /**
@@ -148,13 +152,13 @@ export class KordisVehicleMapping implements VehicleMapping {
      * when both readings of an id run at once, the feed-wide majority decides which one it means.
      */
     private feedReadsNative(claims: TripClaim[]): boolean {
-        const running = new Map<GtfsRt.IFeedEntity, { native: boolean; alias: boolean }>();
+        const running = new Map<number, { native: boolean; alias: boolean }>();
         for (const claim of claims) {
             if (claim.gapMins !== 0) continue;
-            const reading = running.get(claim.entity) ?? { native: false, alias: false };
+            const reading = running.get(claim.index) ?? { native: false, alias: false };
             if (claim.isNative) reading.native = true;
             else reading.alias = true;
-            running.set(claim.entity, reading);
+            running.set(claim.index, reading);
         }
         let balance = 0;
         for (const { native, alias } of running.values()) {
@@ -181,12 +185,38 @@ export type { TripWindows };
  * Equally strong claims are decided by this order, and numbered vehicles come first because that is
  * the order the board has always resolved them in.
  */
-function sortedByLabel(byVehicle: Map<string, GtfsRt.IFeedEntity[]>): Array<[string, GtfsRt.IFeedEntity[]]> {
-    const numeric: Array<[string, GtfsRt.IFeedEntity[]]> = [];
-    const rest: Array<[string, GtfsRt.IFeedEntity[]]> = [];
+function sortedByLabel(byVehicle: Map<string, number[]>): Array<[string, number[]]> {
+    const numeric: Array<[string, number[]]> = [];
+    const rest: Array<[string, number[]]> = [];
     for (const entry of byVehicle) {
         (/^\d+$/.test(entry[0]) ? numeric : rest).push(entry);
     }
     numeric.sort((a, b) => Number(a[0]) - Number(b[0]));
     return [...numeric, ...rest];
+}
+
+/** Longest gap a claim's sort key tells apart, past any GTFS service day; longer ones (and Infinity) tie. */
+const MAX_KEYED_GAP_SECS = 3 * DAY_SECS;
+
+/**
+ * Claim indexes strongest first: running now, then the reading the feed is on, then nearest window,
+ * ties kept in claim order. One numeric key per claim sorted natively, since a comparator sort over
+ * every claim was the costliest step of a fleet build.
+ */
+function claimOrder(claims: TripClaim[], preferNative: boolean): Uint32Array {
+    const count = claims.length;
+    const keys = new Float64Array(count);
+    for (let i = 0; i < count; i++) {
+        const { gapMins, isNative } = claims[i];
+        const isPreferred = isNative === preferNative;
+        // Gaps are whole seconds: windows are whole minutes and the clock whole seconds.
+        const gap = Math.min(Math.round(gapMins * 60), MAX_KEYED_GAP_SECS + 1);
+        const rank = (gapMins > 0 ? 2 : 0) + (isPreferred ? 0 : 1);
+        keys[i] = ((rank * (MAX_KEYED_GAP_SECS + 2) + gap) * count) + i;
+    }
+    keys.sort();
+
+    const order = new Uint32Array(count);
+    for (let i = 0; i < count; i++) order[i] = keys[i] % count;
+    return order;
 }
