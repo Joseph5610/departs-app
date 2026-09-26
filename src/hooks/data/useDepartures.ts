@@ -4,7 +4,7 @@ import type { Departure } from '../../types/transit';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useSelectionStore } from '../../state/selectionStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, DELAY_STATS_WINDOW_MS, DEPARTURES_CONFIG } from '../../config/constants';
+import { LIVE_FETCH_OPTIONS, DELAY_STATS_WINDOW_MS, DEPARTURES_CONFIG } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import type { AppError } from '../../types/error';
 import { enrichLiveDepartures } from '../../lib/enrichment';
@@ -220,6 +220,7 @@ export const useDepartures = () => {
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const departureSort = usePreferencesStore(s => s.departureSort);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
 
     const query = useQuery<DeparturesResponse | null, AppError>({
         queryKey: ['departures', selectedCity, stopId],
@@ -232,8 +233,8 @@ export const useDepartures = () => {
             return { ...data, departures: withDelayDeltas(`${selectedCity}:${stopId}`, data.departures) };
         },
         enabled: !!stopId,
-        refetchInterval: TRANSIT_REFRESH_MS,
-        staleTime: TRANSIT_REFRESH_MS
+        refetchInterval: refreshMs,
+        staleTime: refreshMs
     });
 
     const byTripId = useEnrichmentStore(s => s.byTripId);

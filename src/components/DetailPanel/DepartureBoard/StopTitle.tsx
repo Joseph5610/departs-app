@@ -14,7 +14,7 @@ export const StopTitle: React.FC<StopTitleProps> = React.memo(({ title }) => {
 
     return (
         <span className="flex items-center gap-2">
-            {title}
+            <span className="line-clamp-2">{title}</span>
             {hasRequestStop && (
                 <Popover>
                     <PopoverTrigger className="flex items-center mt-0.5 cursor-pointer outline-none">

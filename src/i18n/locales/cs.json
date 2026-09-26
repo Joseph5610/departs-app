@@ -110,6 +110,10 @@
         "permission": "Použito se svolením",
         "notStated": "Licence neuvedena"
       }
+    },
+    "refreshInterval": {
+      "title": "Obnova živých dat",
+      "description": "Jak často se aktualizují vozidla a odjezdy. Pomalejší šetří data i baterii."
     }
   },
   "welcome": {
@@ -156,6 +160,7 @@
       "viewStopDepartures": "Zobrazit odjezdy pro {{stopName}}",
       "notAvailable": "N/A",
       "lineLabel": "Linka {{line}}",
+      "lineTitle": "Linka <badge/>",
       "ac": "Klima",
       "runNumber": "Oběh",
       "enrichedTooltip": "Tato data jsou aktualizována v reálném čase přímo z vozidla (Live Stream).",
@@ -233,7 +238,7 @@
     "stale": "Živá data neaktuální",
     "modalTitle": "Stav systému",
     "explanationTitle": "O živých datech",
-    "explanationText": "Aplikace Departs sleduje veřejnou dopravu v reálném čase stahováním souřadnic vozidel z oficiálních otevřených datových proudů každých 10 sekund. Tento panel ukazuje aktuální stav těchto integrací.",
+    "explanationText": "Aplikace Departs sleduje veřejnou dopravu v reálném čase stahováním souřadnic vozidel z oficiálních otevřených datových proudů každých {{seconds}} sekund. Tento panel ukazuje aktuální stav těchto integrací.",
     "connection": "Vaše připojení",
     "online": "Online",
     "region": "Vybraná oblast",
@@ -256,7 +261,8 @@
     "upstreamErrorDesc": "API dopravního podniku je momentálně nedostupné nebo vrací chyby.",
     "offlineDesc": "Zkontrolujte prosím své připojení k síti. Nelze se připojit k serverům dopravy.",
     "refreshingDesc": "Stahování nejnovějších poloh vozidel...",
-    "filtered": "Filtrováno"
+    "filtered": "Filtrováno",
+    "refreshInterval": "Obnovovat každých"
   },
   "toasts": {
     "geoNotSupported": "Váš prohlížeč nepodporuje geolokaci.",

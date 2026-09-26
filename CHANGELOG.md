@@ -18,10 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search offers a line filter for any line the city actually runs, replacing the per-city line-name patterns.
 - Search finds live vehicles by their number (e.g. "8414") and opens the selected one.
 - On mobile, tapping the map collapses the detail drawer instead of closing it.
+- Live data refresh rate is selectable (10s, 20s or 30s) in Settings and the system status panel.
+- Stop and vehicle panel actions moved to the panel header: vehicles show share, stops show favorite, with sort, share, the official board and feedback in a menu.
+- The vehicle panel shows its line badge once, in the header, leaving the hero card to the headsign.
 
 ### Fixed
 
 - Search results on mobile are no longer hidden behind an open detail drawer.
+- Opening the app no longer asks for location; it only follows you at launch when permission is already granted.
+- Locating yourself in another city switches to that city instead of showing it with the previous city's data.
 
 ## [0.74.6] - 2026-09-25
 

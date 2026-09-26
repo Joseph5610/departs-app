@@ -26,6 +26,8 @@ interface DetailPanelProps {
     id?: string;
     platformCode?: string;
     subHeader?: React.ReactNode;
+    /** Buttons shown left of the close button. */
+    actions?: React.ReactNode;
     /** Each change collapses the mobile drawer to its lowest snap point. */
     collapseRequest?: number;
     children: React.ReactNode;
@@ -37,7 +39,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
  */
-export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, collapseRequest, children }) => {
+export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, children }) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -59,21 +61,25 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         </span>
     );
 
+    // A clamp on the title element itself clips a badge taller than one text line in Safari.
+    const clampedTitle = typeof title === 'string' ? <span className="line-clamp-2">{title}</span> : title;
+
     const headerContent = (
         <div className="flex w-full items-center justify-between pt-2">
             <div className="flex gap-1 min-w-0 flex-1 items-center">
                 {backButton}
                 {platformBadge}
                 {isMobile ? (
-                    <DrawerTitle className="text-xl font-semibold text-foreground line-clamp-2 tracking-tight leading-tight">
-                        {title || ''}
+                    <DrawerTitle className="min-w-0 text-xl font-semibold text-foreground tracking-tight leading-tight">
+                        {clampedTitle}
                     </DrawerTitle>
                 ) : (
-                    <SheetTitle className="text-xl font-semibold text-foreground line-clamp-2 tracking-tight text-left leading-tight">
-                        {title || ''}
+                    <SheetTitle className="min-w-0 text-xl font-semibold text-foreground tracking-tight text-left leading-tight">
+                        {clampedTitle}
                     </SheetTitle>
                 )}
             </div>
+            {actions}
             <Button
                 variant="ghost"
                 size="icon-sm"
@@ -126,6 +132,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                     hideOverlay={true}
                     aria-describedby={undefined}
                     onOpenAutoFocus={(e) => e.preventDefault()}
+                    onEscapeKeyDown={(e) => {
+                        // Vaul hears Escape before an open menu does; let the menu close alone.
+                        if (e.target instanceof Element && e.target.closest('[role="menu"], [aria-expanded="true"]')) e.preventDefault();
+                    }}
                 >
                     {/* 
                         Draggable Header Area:

@@ -27,7 +27,8 @@ export const LiveStatus: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const closeModal = useCallback(() => setIsModalOpen(false), []);
     const now = useNow();
-    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now);
+    const refreshIntervalS = usePreferencesStore(s => s.refreshIntervalS);
+    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now, refreshIntervalS);
 
     if (!bounds) return null;
 
@@ -73,7 +74,7 @@ export const LiveStatus: React.FC = () => {
                         
                         {config.icon}
                         
-                        <div className="flex items-center gap-1.5 pt-[1px]">
+                        <div className="flex items-center gap-1.5 pt-px">
                             <span className={cn("text-[9px] font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
                                 {config.text}
                             </span>

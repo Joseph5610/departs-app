@@ -7,7 +7,7 @@ import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { enrichVehicleCollection, enrichVehicleRouteMetadata } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
 import { useRouteMetadata } from './useRouteMetadata';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '../../config/constants';
+import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import { AppErrorCode, type AppError } from '../../types/error';
 import { filterVehiclesToView } from '../../lib/vehicle-filter';
@@ -35,10 +35,10 @@ const fetchNetworkVehicles = async (selectedCity: string, client: QueryClient, q
  * One city-wide query shared by the map and the stats views. It carries no viewport or filter
  * parameters, so every client of a city requests the same URL and the edge cache answers most polls.
  */
-const networkVehiclesQueryOptions = (selectedCity: string) => queryOptions<VehicleCollection | null, AppError>({
+const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: number) => queryOptions<VehicleCollection | null, AppError>({
     queryKey: ['vehicles', selectedCity],
     queryFn: ({ client, queryKey }) => fetchNetworkVehicles(selectedCity, client, queryKey),
-    refetchInterval: TRANSIT_REFRESH_MS,
+    refetchInterval: refreshMs,
     staleTime: QUERY_TIMING_MS.LIVE_STALE,
     gcTime: QUERY_TIMING_MS.LIVE_GC,
     placeholderData: keepPreviousData,
@@ -71,6 +71,7 @@ export const useVehicles = () => {
     const routeFilter = useViewportStore(s => s.routeFilter);
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
 
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
@@ -78,7 +79,7 @@ export const useVehicles = () => {
 
     // Not tied to the map view: the stats views read the same fleet while the map is elsewhere.
     const query = useQuery({
-        ...networkVehiclesQueryOptions(selectedCity),
+        ...networkVehiclesQueryOptions(selectedCity, refreshMs),
         enabled: !!selectedCity,
     });
 

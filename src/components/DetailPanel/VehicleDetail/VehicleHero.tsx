@@ -1,8 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap, Share2 } from 'lucide-react';
+import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useShare } from '../../../hooks/features/useShare';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,6 @@ import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { getDelayStatus } from '../../../config/transit';
 import { safeHexColor } from '@/lib/color';
 import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
-import { LineBadge } from '../../LineBadge';
 import { useNow } from '../../../hooks/useNow';
 
 export const VehicleHero: React.FC<VehicleHeroProps> = ({
@@ -24,7 +22,6 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     hasEnrichment
 }) => {
     const { t } = useTranslation();
-    const { share } = useShare();
 
     if (!displayVehicle) return null;
 
@@ -41,17 +38,19 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
             }}
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center">
-                        <LineBadge 
-                            name={displayVehicle.routeName} 
-                            routeColor={bgColor} 
-                            size="xl" 
-                            className="shadow-sm border-white/10" 
-                        />
-                    </div>
-
-                    <div className="flex gap-2">
+                <div className="flex justify-between items-start gap-3">
+                    <h2 data-testid="vehicle-headsign" className="flex-1 min-w-0 text-2xl font-bold tracking-tight leading-tight text-foreground/90">
+                        {displayVehicle.trip_headsign ? (
+                            <span className="animate-in fade-in duration-500">
+                                {displayVehicle.trip_headsign}
+                            </span>
+                        ) : isDetailLoading ? (
+                            <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
+                        ) : (
+                            t('map.vehicleDetails.headingToDestination')
+                        )}
+                    </h2>
+                    <div className="flex gap-2 shrink-0">
                         {isDetailLoading && (
                             <Skeleton className="w-8 h-8 rounded-full bg-neutral-800/50" />
                         )}
@@ -73,36 +72,8 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                 <MapPinOff size={16} strokeWidth={2} />
                             )}
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full w-8 h-8 shrink-0 text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                share({
-                                    title: t('map.vehicleDetails.shareTitle', { line: displayVehicle.routeName }),
-                                    text: t('map.vehicleDetails.shareText', { line: displayVehicle.routeName }),
-                                    tripId: displayVehicle.gtfs_trip_id,
-                                    vehicleId: displayVehicle.vehicle_id || undefined
-                                });
-                            }}
-                            aria-label={t('common.share')}
-                        >
-                            <Share2 size={16} strokeWidth={1.5} />
-                        </Button>
                     </div>
                 </div>
-                <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
-                    {displayVehicle.trip_headsign ? (
-                        <span className="animate-in fade-in duration-500">
-                            {displayVehicle.trip_headsign}
-                        </span>
-                    ) : isDetailLoading ? (
-                        <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
-                    ) : (
-                        t('map.vehicleDetails.headingToDestination')
-                    )}
-                </h2>
             </div>
             
             <div className="relative z-10 flex flex-col gap-3 px-4 pb-4">

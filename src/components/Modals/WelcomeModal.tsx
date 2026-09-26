@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight } from 'lucide-react';
-import { useLocate } from '../../hooks/features/useGeolocation';
+import { useLocate, locateAfterWelcome } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useVisibleCities } from '../../hooks/data/useCities';
@@ -65,7 +65,7 @@ export const WelcomeModal: React.FC = React.memo(() => {
 
     const handleClose = () => {
         setHasSeenWelcome(true);
-        handleLocate();
+        locateAfterWelcome();
 
         if (activeCitySlug) {
             const city = cities.find(c => c.slug === activeCitySlug);

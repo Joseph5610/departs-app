@@ -191,9 +191,11 @@ export const MAX_REASONABLE_WALKING_DISTANCE = 750;
 export const CATCH_BUFFER = 120;
 
 /**
- * Transit data refresh intervals
+ * Live data refresh intervals the user can pick, in seconds. Nothing below the backend's CACHE_TTL.VEHICLES (10s), which would only re-fetch the cached response.
  */
-export const TRANSIT_REFRESH_S = 10;
+export const REFRESH_INTERVAL_OPTIONS_S = [10, 20, 30] as const;
+export type RefreshIntervalS = typeof REFRESH_INTERVAL_OPTIONS_S[number];
+export const TRANSIT_REFRESH_S: RefreshIntervalS = 10;
 export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
 
 const MINUTE_MS = 60 * 1000;
@@ -280,8 +282,8 @@ export const GEOLOCATION_TIMING_MS = {
     FRESH_FIX: 10_000,
     WATCH_TIMEOUT: 15_000,
     WATCH_MAX_AGE: 10_000,
-    ONE_SHOT_TIMEOUT: 10_000,
-    ONE_SHOT_MAX_AGE: 5_000,
+    /** A focus request with no fresh fix after this long gives up. */
+    FOCUS_TIMEOUT: 20_000,
 };
 
 export const LOCATION_PRIVACY = {

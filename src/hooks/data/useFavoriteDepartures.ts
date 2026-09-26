@@ -8,7 +8,7 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { enrichLiveDepartures } from '../../lib/enrichment';
 import { apiFetch } from '../../lib/api-client';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS } from '../../config/constants';
+import { LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { useRouteMetadata } from './useRouteMetadata';
 
 /**
@@ -16,6 +16,7 @@ import { useRouteMetadata } from './useRouteMetadata';
  */
 export const useFavoriteDepartures = (stopIds: string[]) => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
 
     const query = useQuery<DeparturesResponse | null, AppError>({
         queryKey: ['departures', 'bulk', selectedCity, stopIds.join(',')],
@@ -25,8 +26,8 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
             stopIds.forEach(id => params.append('stopId', id));
             return apiFetch<DeparturesResponse>(`/${selectedCity}/departures?${params.toString()}`, LIVE_FETCH_OPTIONS);
         },
-        refetchInterval: TRANSIT_REFRESH_MS,
-        staleTime: TRANSIT_REFRESH_MS,
+        refetchInterval: refreshMs,
+        staleTime: refreshMs,
         placeholderData: keepPreviousData,
         enabled: stopIds.length > 0
     });

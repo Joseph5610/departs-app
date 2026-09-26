@@ -12,6 +12,7 @@ import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
+import { PanelActions } from '../DetailPanel/PanelActions';
 import { PointOfSaleHeader } from '../DetailPanel/PointOfSaleHeader';
 import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
@@ -33,6 +34,7 @@ import { MapControls } from './MapControls';
 import { PointsOfSaleLayer } from './PointsOfSaleLayer';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
 import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
+import { VehicleTitle } from '../DetailPanel/VehicleDetail/VehicleTitle';
 import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
 import type { PointOfSale } from '../../types/pointsOfSale';
 import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
@@ -120,17 +122,23 @@ const MapInner: React.FC = () => {
     }, [selectedVehicle, selectedStop, selectedPos, t]);
 
     // Stable elements, so the memoized DetailPanel skips re-rendering on every vehicle poll.
+    const vehicleLine = selectedVehicle?.route_short_name;
+    const vehicleRouteColor = selectedVehicle?.route_color;
     const detailTitle = useMemo(() => (
         isStatsRoute ? t('stats.title') :
         isFavoritesRoute ? t('favorites.title') :
+        vehicleLine ? <VehicleTitle line={vehicleLine} routeColor={vehicleRouteColor ?? ''} /> :
         (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
-    ), [isStatsRoute, isFavoritesRoute, selectedStop, panelTitle, t]);
+    ), [isStatsRoute, isFavoritesRoute, vehicleLine, vehicleRouteColor, selectedStop, panelTitle, t]);
 
     const detailSubHeader = useMemo(() => (
         isStatsRoute ? <StatsTabs /> :
         selectedPos ? <PointOfSaleHeader pos={selectedPos} /> :
         (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
+
+    const hasShareableSelection = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedStop || selectedVehicle);
+    const detailActions = useMemo(() => (hasShareableSelection ? <PanelActions /> : undefined), [hasShareableSelection]);
 
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
@@ -301,6 +309,7 @@ const MapInner: React.FC = () => {
                 title={detailTitle}
                 platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
                 subHeader={detailSubHeader}
+                actions={detailActions}
                 collapseRequest={drawerCollapseRequest}
             >
                 {detailContent}

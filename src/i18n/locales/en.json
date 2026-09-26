@@ -109,6 +109,10 @@
         "permission": "Used with permission",
         "notStated": "No licence stated"
       }
+    },
+    "refreshInterval": {
+      "title": "Live data refresh",
+      "description": "How often vehicles and departures update. Slower saves data and battery."
     }
   },
   "welcome": {
@@ -155,6 +159,7 @@
       "viewStopDepartures": "View departures for {{stopName}}",
       "notAvailable": "N/A",
       "lineLabel": "Line {{line}}",
+      "lineTitle": "Line <badge/>",
       "ac": "AC",
       "runNumber": "Run",
       "enrichedTooltip": "This data is updated in real-time directly from the vehicle (Live Stream).",
@@ -230,7 +235,7 @@
     "stale": "Live Data Stale",
     "modalTitle": "System Status",
     "explanationTitle": "About Live Data",
-    "explanationText": "Departs tracks public transit in real-time by fetching vehicle coordinates from official open data streams every 10 seconds. This panel shows the live health of those integrations.",
+    "explanationText": "Departs tracks public transit in real-time by fetching vehicle coordinates from official open data streams every {{seconds}} seconds. This panel shows the live health of those integrations.",
     "connection": "Your connection",
     "online": "Online",
     "region": "Selected region",
@@ -253,7 +258,8 @@
     "upstreamErrorDesc": "The transit agency API is currently unavailable or returning errors.",
     "offlineDesc": "Please check your network connection. Unable to connect to the transit servers.",
     "refreshingDesc": "Fetching the latest transit vehicle positions...",
-    "filtered": "Filtered"
+    "filtered": "Filtered",
+    "refreshInterval": "Refresh every"
   },
   "toasts": {
     "geoNotSupported": "Your browser does not support geolocation.",

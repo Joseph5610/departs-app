@@ -7,7 +7,7 @@ import { useCityConfig, useVisibleCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { navigate } from '../../lib/history';
-import { cityOverviewCamera } from '../../utils/mapUtils';
+import { cityOverviewCamera, findCityAt } from '../../utils/mapUtils';
 
 /**
  * useAutoCitySwitch
@@ -64,15 +64,7 @@ export const useAutoCitySwitch = () => {
             
             const center = map.getCenter();
             
-            let newCity = cities.find(city => {
-                const [minLng, minLat, maxLng, maxLat] = city.bounds;
-                return (
-                    center.lng >= minLng &&
-                    center.lng <= maxLng &&
-                    center.lat >= minLat &&
-                    center.lat <= maxLat
-                );
-            });
+            let newCity = findCityAt(cities, [center.lng, center.lat]);
 
             // If the map center is not strictly inside any city's bounding box,
             // try to find a city whose center point is visible on the screen

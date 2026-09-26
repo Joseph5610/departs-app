@@ -34,7 +34,7 @@ export const MapControls = React.memo(() => {
     const incidentsCount = React.useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
 
     // Geolocation Store
-    const isGeoPending = useGeolocationStore(s => s.isGeoPending);
+    const isGeoPending = useGeolocationStore(s => s.focusRequest === 'locate');
     const onLocate = useLocate();
 
     // Metadata Store

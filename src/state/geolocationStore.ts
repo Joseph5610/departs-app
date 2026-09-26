@@ -2,10 +2,14 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { LOCATION_PRIVACY } from '../config/constants';
 
+/** Why the map should move to the next fresh fix: a locate tap, or a silent automatic focus (launch, welcome). */
+export type FocusRequest = 'locate' | 'auto';
+
 export interface GeolocationState {
     userLocation: [number, number] | null;
     userSpeed: number | null;
-    isGeoPending: boolean;
+    focusRequest: FocusRequest | null;
+    focusRequestedAt: number;
     watchId: number | null;
     lastUpdatedAt: number;
     lastLocation: { lat: number; lng: number } | null;
@@ -14,7 +18,7 @@ export interface GeolocationState {
 interface GeolocationActions {
     setUserLocation: (location: [number, number] | null) => void;
     setUserSpeed: (speed: number | null) => void;
-    setIsGeoPending: (pending: boolean) => void;
+    requestFocus: (request: FocusRequest | null) => void;
     setWatchId: (id: number | null) => void;
     setLastUpdatedAt: (time: number) => void;
     setLastLocation: (location: { lat: number; lng: number } | null) => void;
@@ -43,7 +47,8 @@ export const useGeolocationStore = create<GeolocationStore>()(
             // State
             userLocation: null,
             userSpeed: null,
-            isGeoPending: false,
+            focusRequest: null,
+            focusRequestedAt: 0,
             watchId: null,
             lastUpdatedAt: 0,
             lastLocation: null,
@@ -52,7 +57,7 @@ export const useGeolocationStore = create<GeolocationStore>()(
             actions: {
                 setUserLocation: (userLocation) => set({ userLocation }),
                 setUserSpeed: (userSpeed) => set({ userSpeed }),
-                setIsGeoPending: (isGeoPending) => set({ isGeoPending }),
+                requestFocus: (focusRequest) => set({ focusRequest, focusRequestedAt: Date.now() }),
                 setWatchId: (watchId) => set({ watchId }),
                 setLastUpdatedAt: (lastUpdatedAt) => set({ lastUpdatedAt }),
                 setLastLocation: (lastLocation) => set({ lastLocation: coarsenLocation(lastLocation) }),

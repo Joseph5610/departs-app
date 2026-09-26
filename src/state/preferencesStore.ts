@@ -4,7 +4,7 @@ import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
 import { getDefaultCitySlug } from '../utils/viewerCountry';
 import { matchRoutePath } from '../lib/routes';
 import { FRONTEND_CITIES_CONFIG } from '../config/cities';
-import { PREFERENCES_LIMITS } from '../config/constants';
+import { PREFERENCES_LIMITS, REFRESH_INTERVAL_OPTIONS_S, TRANSIT_REFRESH_S, type RefreshIntervalS } from '../config/constants';
 import { searchHistoryKey } from '../utils/searchHistory';
 
 interface PreferencesState {
@@ -26,6 +26,8 @@ interface PreferencesState {
     statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
     hasSeenWelcome: boolean;
+    /** How often live vehicles and departures refresh. */
+    refreshIntervalS: RefreshIntervalS;
     /** Hidden regions this device may pick from the city list, unlocked by opening `?beta=<slug>`. */
     unlockedCities: string[];
 }
@@ -51,6 +53,7 @@ interface PreferencesActions {
     setDelayFilter: (filter: string[]) => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
     setStatsViewMode: (mode: 'overview' | 'vehicles') => void;
+    setRefreshIntervalS: (seconds: RefreshIntervalS) => void;
 }
 
 export interface PreferencesStore extends PreferencesState {
@@ -75,6 +78,7 @@ const PERSISTED_KEYS = [
     'isMcpBannerDismissed',
     'hasSeenWelcome',
     'unlockedCities',
+    'refreshIntervalS',
 ] as const satisfies ReadonlyArray<keyof PreferencesState>;
 
 type PersistedPreferences = Pick<PreferencesState, typeof PERSISTED_KEYS[number]>;
@@ -137,7 +141,9 @@ const mergePersisted = (persisted: unknown, current: PreferencesStore): Preferen
         const value = stored[key];
         const fallback = current[key];
         if (value === undefined) continue;
-        if (key === 'searchHistory') {
+        if (key === 'refreshIntervalS') {
+            if ((REFRESH_INTERVAL_OPTIONS_S as readonly unknown[]).includes(value)) merged[key] = value;
+        } else if (key === 'searchHistory') {
             if (Array.isArray(value)) merged[key] = uniqueHistory(value.filter(isSearchHistoryItem));
         } else if (Array.isArray(fallback)) {
             if (isStringArray(value)) merged[key] = value;
@@ -172,6 +178,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             isMcpBannerDismissed: false,
             unlockedCities: [getUrlUnlockedCity()].filter((slug): slug is string => slug !== null),
             hasSeenWelcome: false,
+            refreshIntervalS: TRANSIT_REFRESH_S,
 
             // Actions
             actions: {
@@ -208,6 +215,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setDelayFilter: (filter) => set({ delayFilter: filter }),
                 setStatsTab: (tab) => set({ statsTab: tab }),
                 setStatsViewMode: (mode) => set({ statsViewMode: mode }),
+                setRefreshIntervalS: (refreshIntervalS) => set({ refreshIntervalS }),
             },
         }),
         {

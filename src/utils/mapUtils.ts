@@ -88,6 +88,10 @@ export const snapBoundsToTiles = (
     return [tileYToLat(maxY, n), tileXToLon(minX, n), tileYToLat(minY, n), tileXToLon(maxX, n)];
 };
 
+/** The city whose bounds contain `[lng, lat]`, if any. */
+export const findCityAt = <T extends { bounds: [number, number, number, number] }>(cities: T[], [lng, lat]: [number, number]): T | undefined =>
+    cities.find(({ bounds: [minLng, minLat, maxLng, maxLat] }) => lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat);
+
 /** Camera move to a city's overview, for opening or switching a city. */
 export const cityOverviewCamera = (center: [number, number]) => ({
     center,

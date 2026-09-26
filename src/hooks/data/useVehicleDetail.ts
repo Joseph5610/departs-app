@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
 import { useRouteParams } from '../useRouteParams';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { TRANSIT_REFRESH_MS, LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
+import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '../../config/constants';
 import { apiFetch } from '../../lib/api-client';
 import { enrichVehicleDetailRouteMetadata } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
@@ -20,6 +20,7 @@ const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId
 export const useVehicleDetail = () => {
     const { tripId, vehicleId } = useRouteParams();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
     const queryClient = useQueryClient();
     const { byShortName } = useRouteMetadata();
 
@@ -27,8 +28,8 @@ export const useVehicleDetail = () => {
         queryKey: ['vehicle-detail', selectedCity, vehicleId, tripId],
         queryFn: () => fetchVehicleDetail(selectedCity, vehicleId, tripId!),
         enabled: !!tripId && !!selectedCity,
-        staleTime: TRANSIT_REFRESH_MS,
-        refetchInterval: TRANSIT_REFRESH_MS, // matches vehicle update frequency
+        staleTime: refreshMs,
+        refetchInterval: refreshMs,
         gcTime: QUERY_TIMING_MS.LIVE_GC,
     });
 

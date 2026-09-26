@@ -1,11 +1,9 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownAz, Clock, Star, MapPin, Share2, Activity, ExternalLink, Footprints, MoreHorizontal, MessageSquareHeart, Snowflake, ArrowUpDown } from 'lucide-react';
-import { FALLBACK_ROUTE_COLOR, PREFERENCES_LIMITS } from '../../../config/constants';
+import { MapPin, Activity, Footprints, Snowflake } from 'lucide-react';
+import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useUiStore } from '../../../state/uiStore';
-import { useShare } from '../../../hooks/features/useShare';
 import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
 import { useDepartures } from '../../../hooks/data/useDepartures';
@@ -13,14 +11,10 @@ import { useCityConfig, useLineRules } from '../../../hooks/data/useCities';
 import { ROUTE_TYPE_ORDER, routeTypeRank } from '../../../config/transit';
 import { useNavigate } from '../../../hooks/features/useNavigate';
 import { formatStopDistance } from '../../../hooks/derived/useStopDistance';
-import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { LineBadge } from '../../LineBadge';
-import { toast } from 'sonner';
 
 /**
  * DepartureBoardHeader
@@ -28,23 +22,18 @@ import { toast } from 'sonner';
  * Sticky subheader for the departure board.
  * Compact 2-row layout:
  *   Row 1: [Distance pill] [Delay indicator] [PID link]
- *   Row 2: [Line badges ...] [Share] [Fav] [Sort toggle]
+ *   Row 2: [Line badges ...]
  */
 export const DepartureBoardHeader = React.memo(() => {
     const { t } = useTranslation();
 
     // Preferences
-    const departureSort = usePreferencesStore(s => s.departureSort);
-    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
-    const { setDepartureSort, toggleFavorite, toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
-    const { setIsFeedbackOpen } = useUiStore(s => s.actions);
+    const { toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
 
-    const { share } = useShare();
     const selectedLine = useSelectionStore(s => s.selectedLine);
     const { toggleLineFilter } = useSelectionStore(s => s.actions);
 
-    const isMobile = useIsMobile();
 
     // Selection
     
@@ -55,11 +44,10 @@ export const DepartureBoardHeader = React.memo(() => {
     const { handleNavigate, stopDistanceInfo } = useNavigate();
     const { data: departuresData, delayStats, isError, hasAirConditioningData } = useDepartures();
 
-    const { virtualTableUrl, lineChipsFromDepartures } = useCityConfig();
+    const { lineChipsFromDepartures } = useCityConfig();
     const lineRules = useLineRules();
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
-    const isFavorite = selectedStop ? favoriteStops.includes(selectedStop.stop_id) : false;
 
     const uniqueLines = React.useMemo(() => {
         const source = lineChipsFromDepartures
@@ -88,16 +76,6 @@ export const DepartureBoardHeader = React.memo(() => {
             return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
     }, [selectedStop, lineRules, lineChipsFromDepartures, departuresData]);
-
-    const handleShare = useCallback(() => {
-        if (selectedStop) {
-            share({
-                title: t('map.departures.shareTitle', { name: selectedStop.stop_name }),
-                text: t('map.departures.shareText', { name: selectedStop.stop_name }),
-                stopId: selectedStop.stop_id
-            });
-        }
-    }, [selectedStop, share, t]);
 
     if (!showHeader) {
         return null;
@@ -155,120 +133,6 @@ export const DepartureBoardHeader = React.memo(() => {
                             </>
                         )}
                     </div>
-                </div>
-
-                <div className="flex gap-1 shrink-0 items-center pr-1">
-                    {/* Sort Action */}
-                    <DropdownMenu>
-                        <Tooltip>
-                            <TooltipTrigger render={
-                                <DropdownMenuTrigger render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon-xs"
-                                        className="text-muted-foreground"
-                                    >
-                                        <ArrowUpDown size={16} strokeWidth={1.5} />
-                                    </Button>
-                                } />
-                            } />
-                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                                {t('map.departures.sort')}
-                            </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuRadioGroup value={departureSort} onValueChange={(value) => setDepartureSort(value as 'line' | 'departure')}>
-                                <DropdownMenuRadioItem value="departure" className="flex items-center gap-2">
-                                    <Clock size={14} strokeWidth={1.5} className="mr-1 text-muted-foreground" />
-                                    <span>{t('map.departures.sortByDeparture')}</span>
-                                </DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem value="line" className="flex items-center gap-2">
-                                    <ArrowDownAz size={14} strokeWidth={1.5} className="mr-1 text-muted-foreground" />
-                                    <span>{t('map.departures.sortByLine')}</span>
-                                </DropdownMenuRadioItem>
-                            </DropdownMenuRadioGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Favorite */}
-                    <Tooltip>
-                        <TooltipTrigger render={
-                            <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                data-testid="favorite-btn"
-                                onClick={() => {
-                                    if (selectedStop) {
-                                        if (!isFavorite && favoriteStops.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
-                                            toast.error(t('toasts.favoritesLimitReached'));
-                                            return;
-                                        }
-                                        toggleFavorite(selectedStop.stop_id);
-                                    }
-                                }}
-                                className={cn(
-                                    "text-muted-foreground",
-                                    isFavorite && "text-amber-500 hover:text-amber-400"
-                                )}
-                            >
-                                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
-                            </Button>
-                        } />
-                        <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                            {isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
-                        </TooltipContent>
-                    </Tooltip>
-
-                    {/* Desktop Dropdown or Mobile Share */}
-                    {!isMobile ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger render={
-                                <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    data-testid="more-options-btn"
-                                    aria-label={t('common.moreOptions')}
-                                    className="text-muted-foreground"
-                                >
-                                    <MoreHorizontal size={16} strokeWidth={1.5} />
-                                </Button>
-                            } />
-                            <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
-                                    <Share2 size={14} className="mr-2" strokeWidth={1.5} />
-                                    {t('common.share')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem render={<div onClick={() => setIsFeedbackOpen(true)} />}>
-                                    <MessageSquareHeart size={14} className="mr-2" strokeWidth={1.5} />
-                                    {t('feedback.title')}
-                                </DropdownMenuItem>
-                                {virtualTableUrl && selectedStop && (
-                                    <DropdownMenuItem render={<a href={`${virtualTableUrl}${selectedStop.stop_id.replace(/,/g, ';')}&title=${encodeURIComponent(selectedStop.stop_name || '')}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer" />}>
-                                        <ExternalLink size={14} className="mr-2" strokeWidth={1.5} />
-                                        {t('map.departures.officialBoard')}
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <Tooltip>
-                            <TooltipTrigger render={
-                                <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    onClick={handleShare}
-                                    data-testid="share-btn"
-                                    aria-label={t('common.share')}
-                                    className="text-muted-foreground"
-                                >
-                                    <Share2 size={16} strokeWidth={1.5} />
-                                </Button>
-                            } />
-                            <TooltipContent side="bottom" className="text-[11px] px-2 py-1">
-                                {t('common.share')}
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
                 </div>
             </div>
 

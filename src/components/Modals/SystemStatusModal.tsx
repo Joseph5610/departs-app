@@ -11,6 +11,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { useCityConfig } from '../../hooks/data/useCities';
 import { useNow } from '../../hooks/useNow';
+import { usePreferencesStore } from '../../state/preferencesStore';
+import { RefreshIntervalPicker } from '../RefreshIntervalPicker';
 import { cn } from '@/lib/utils';
 import { 
     Wifi, 
@@ -37,7 +39,8 @@ const SystemStatusDetails: React.FC = () => {
     const cityConfig = useCityConfig();
     const status = useSystemStatus();
     const now = useNow();
-    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now);
+    const refreshIntervalS = usePreferencesStore(s => s.refreshIntervalS);
+    const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now, refreshIntervalS);
 
     // Format data freshness
     const freshnessText = (() => {
@@ -207,6 +210,14 @@ const SystemStatusDetails: React.FC = () => {
                             {status.isFetching ? '-' : `${nextRefreshIn}s`}
                         </span>
                     </div>
+
+                    <div className="flex flex-col gap-2.5 p-3.5 rounded-2xl border border-border/50 bg-card shadow-sm col-span-2">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('liveStatus.refreshInterval')}</span>
+                        </div>
+                        <RefreshIntervalPicker />
+                    </div>
                 </div>
 
                 {/* How It Works Info Card */}
@@ -216,7 +227,7 @@ const SystemStatusDetails: React.FC = () => {
                         {t('liveStatus.explanationTitle')}
                     </AlertTitle>
                     <AlertDescription className="text-xs leading-relaxed text-muted-foreground">
-                        {t('liveStatus.explanationText')}
+                        {t('liveStatus.explanationText', { seconds: refreshIntervalS })}
                     </AlertDescription>
                 </Alert>
             </div>

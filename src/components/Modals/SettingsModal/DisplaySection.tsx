@@ -24,6 +24,7 @@ import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useCityConfig } from '../../../hooks/data/useCities';
 import { DELAY_TIERS, ROUTE_TYPE_ORDER, type DelayTierKey } from '../../../config/transit';
 import { ROUTE_TYPE_ICONS } from '../../routeTypeIcons';
+import { RefreshIntervalPicker } from '../../RefreshIntervalPicker';
 
 const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));
 
@@ -250,6 +251,18 @@ export const DisplaySection: React.FC = () => {
                                 testId="theme-system"
                             />
                         </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
+                    {t('settings.refreshInterval.title')}
+                </h3>
+                <Card variant="subtle" size="none">
+                    <div className="flex flex-col gap-3 p-3">
+                        <p className="text-xs text-muted-foreground px-1">{t('settings.refreshInterval.description')}</p>
+                        <RefreshIntervalPicker />
                     </div>
                 </Card>
             </div>
