@@ -1,7 +1,7 @@
 import { Env } from "./_core/types";
 import { getCityConfig, CITY_REGISTRY } from "./_cities";
 import { CACHE_TTL } from "./_core/config";
-import { MapStopsService } from "./_feeds/stops";
+import { getSitemapStopIds } from "./_feeds/stop-search";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
     const domain = new URL(context.request.url).origin;
@@ -31,36 +31,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     </url>`;
 
         try {
-            const stopsData = await new MapStopsService(city).getStops();
-            if (stopsData && stopsData.features) {
-                const addedIds = new Set<string>();
-                const knownIds = new Set<string>();
-                for (const feature of stopsData.features) {
-                    if (feature.properties?.stop_id) knownIds.add(feature.properties.stop_id);
-                }
-
-                for (const feature of stopsData.features) {
-                    const stopId = feature.properties?.stop_id;
-                    const isCentroid = feature.properties?.is_centroid;
-
-                    if (stopId && isCentroid) {
-                        // Synthetic centroids (Prešov) have no bare-id twin, so link their first platform instead.
-                        const bareId = stopId.replace('centroid-', '');
-                        const cleanId = knownIds.has(bareId) ? bareId : feature.properties?.all_ids?.[0];
-                        if (!cleanId) continue;
-                        
-                        if (!addedIds.has(cleanId)) {
-                            addedIds.add(cleanId);
-                            xml += `
-    <url>
-        <loc>${domain}/${citySlug}/stop/${encodeURIComponent(cleanId)}</loc>
+            // One native replace over departs-data's prebuilt id list: per-stop work here would not fit a request's CPU budget.
+            const ids = await getSitemapStopIds(city);
+            xml += `\n${ids.trim().replace(/^(.+)$/gm, `    <url>
+        <loc>${domain}/${citySlug}/stop/$1</loc>
         <changefreq>hourly</changefreq>
         <priority>0.8</priority>
-    </url>`;
-                        }
-                    }
-                }
-            }
+    </url>`)}`;
         } catch (err) {
             console.error(`Failed to fetch stops for sitemap in ${citySlug}`, err);
         }
@@ -71,8 +48,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return new Response(xml, {
         headers: {
             'Content-Type': 'application/xml',
-            // Cache sitemap heavily for 24 hours
-            'Cache-Control': `public, max-age=${CACHE_TTL.SITEMAP}, s-maxage=${CACHE_TTL.SITEMAP}`
+            'Cache-Control': `public, max-age=${CACHE_TTL.SITEMAP}, s-maxage=${CACHE_TTL.SITEMAP}, stale-while-revalidate=${CACHE_TTL.SITEMAP_STALE_WHILE_REVALIDATE}, stale-if-error=${CACHE_TTL.SITEMAP_STALE_IF_ERROR}`
         }
     });
 };

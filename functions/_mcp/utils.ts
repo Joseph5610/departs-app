@@ -1,12 +1,13 @@
-import { MapStopsService } from "../_feeds/stops";
-import type { AppInfotext, AppDeparture, AppStopCollection, CityRequestContext, Env } from "../_core/types";
+import { getStopSearch, stopFeatures, type StopSearch } from "../_feeds/stop-search";
+import type { AppInfotext, AppDeparture, AppStopFeature, CityRequestContext, Env } from "../_core/types";
+import type { CityConfig } from "../_core/city-config";
 import type { McpContext } from "./types";
 import { CITY_REGISTRY, getCityConfig, getCityUseCases } from "../_cities";
 import type { CityUseCases } from "../_domain/use-cases";
 import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
-import { distanceMeters } from "../_core/utils/geo";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
+import { distanceMeters } from "../_core/utils/geo";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -92,36 +93,26 @@ export function resolveCity(citySlug: string | undefined, env: Env): { city: Cit
     return { city: getCityUseCases(slug, env), citySlug: slug };
 }
 
-type StopFeature = AppStopCollection['features'][number];
+type StopFeature = AppStopFeature;
 type RankedStop = { feature: StopFeature; distance: number };
 
-/** All stops of the city, from its prebuilt stop list. */
-export async function loadStops(citySlug: string): Promise<StopFeature[]> {
+/** The city's stop search index; throws for a city without static stop data. */
+function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<StopSearch> } {
     const city = getCityConfig(citySlug);
-    if (!city) return [];
-    const stopsData = await new MapStopsService(city).getStops();
-    return stopsData.features;
+    if (!city) throw new Error(`Unsupported city '${citySlug}'.`);
+    return { city, search: getStopSearch(city) };
 }
 
-/** Lowercase without diacritics, so `namesti svobody` finds `Náměstí Svobody`. */
-const foldName = (value: string): string => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-
 /**
- * Non-centroid stops whose name or id contains `query`, best match first: exact name, then name
- * starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
+ * Up to `limit` non-centroid stops whose name or id contains `query`, best match first: exact name, then
+ * name starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
  */
-export function findStopsByName(stops: StopFeature[], query: string): StopFeature[] {
-    const q = foldName(query);
-    if (!q) return [];
-    const scored: Array<{ feature: StopFeature; rank: number; length: number }> = [];
-    for (const feature of stops) {
-        if (feature.properties?.is_centroid) continue;
-        const name = foldName(feature.properties?.stop_name ?? '');
-        const id = String(feature.properties?.stop_id ?? '').toLowerCase();
-        const rank = name === q ? 0 : name.startsWith(q) ? 1 : name.includes(q) ? 2 : id.includes(q) ? 3 : -1;
-        if (rank >= 0) scored.push({ feature, rank, length: name.length });
-    }
-    return scored.sort((a, b) => a.rank - b.rank || a.length - b.length).map(s => s.feature);
+export async function findStopsByName(citySlug: string, query: string, limit: number): Promise<StopFeature[]> {
+    const { city, search: pending } = stopSearchOf(citySlug);
+    const search = await pending;
+    const indexes = search.byName(query, limit);
+    const features = await stopFeatures(city, search, indexes);
+    return indexes.flatMap(i => features.get(i) ?? []);
 }
 
 /** PID-style node shared by every platform of a station (`U1146Z11` -> `U1146`); undefined for other id schemes. */
@@ -131,41 +122,55 @@ const stationNode = (stopId: string): string | undefined => /^(?:centroid-)?(U\d
  * The station a name query means, as every platform id serving it: all stops with the best match's
  * exact name in the same node, so both directions and every mode (tram, bus, metro, train) are included.
  */
-export function resolveStationByName(stops: StopFeature[], query: string): { stopIds: string; stopName: string } | null {
-    const best = findStopsByName(stops, query)[0];
+export async function resolveStationByName(citySlug: string, query: string): Promise<{ stopIds: string; stopName: string } | null> {
+    const { city, search: pending } = stopSearchOf(citySlug);
+    const search = await pending;
+    const bestIndex = search.byName(query, 1)[0];
+    if (bestIndex === undefined) return null;
+
+    const sameName = search.withFoldedName(search.foldedName(bestIndex));
+    const features = await stopFeatures(city, search, [bestIndex, ...sameName]);
+    const best = features.get(bestIndex);
     const stopName = best?.properties?.stop_name;
     if (!best || !stopName) return null;
 
     const node = stationNode(best.properties.stop_id);
     const ids = new Set<string>();
-    for (const feature of stops) {
-        const p = feature.properties;
-        if (!p || p.is_centroid || p.stop_name !== stopName || Number(p.location_type) === 2) continue;
+    for (const index of sameName) {
+        const p = features.get(index)?.properties;
+        if (!p || p.stop_name !== stopName || Number(p.location_type) === 2) continue;
         if (stationNode(p.stop_id) !== node) continue;
         for (const id of p.stop_id.split(',')) if (id) ids.add(id);
     }
     return { stopIds: [...ids].join(','), stopName };
 }
 
+/** Up to `limit` stops within `radiusM` of the point (anywhere, when omitted), nearest first, with their distance in meters. */
+export async function nearestStops(
+    citySlug: string,
+    lat: number,
+    lon: number,
+    options: { includeCentroids?: boolean; radiusM?: number; limit: number }
+): Promise<RankedStop[]> {
+    const { city, search: pending } = stopSearchOf(citySlug);
+    const search = await pending;
+    const ranked = search.nearest(lat, lon, options);
+    const features = await stopFeatures(city, search, ranked.map(r => r.index));
+    const radiusM = options.radiusM ?? Infinity;
+    return ranked
+        .flatMap(({ index }) => {
+            const feature = features.get(index);
+            if (!feature) return [];
+            const [stopLon, stopLat] = feature.geometry.coordinates;
+            return [{ feature, distance: distanceMeters(lat, lon, stopLat, stopLon) }];
+        })
+        .filter(stop => stop.distance <= radiusM)
+        .sort((a, b) => a.distance - b.distance);
+}
+
 /** A stop's lines with the vehicle type as a word (`tram`), whatever form the city's stop data uses. */
 export function toMcpStopLines(feature: StopFeature) {
     return (feature.properties?.lines ?? []).map(line => ({ ...line, type: normalizeRouteType(line.type) }));
-}
-
-/** Stops with coordinates, nearest first, paired with their distance in meters from the given point. */
-export function rankStopsByDistance(
-    stops: StopFeature[],
-    lat: number,
-    lon: number,
-    { includeCentroids = false }: { includeCentroids?: boolean } = {}
-): RankedStop[] {
-    const ranked: RankedStop[] = [];
-    for (const feature of stops) {
-        if (!feature.geometry?.coordinates || (!includeCentroids && feature.properties?.is_centroid)) continue;
-        const [stopLon, stopLat] = feature.geometry.coordinates;
-        ranked.push({ feature, distance: distanceMeters(lat, lon, stopLat, stopLon) });
-    }
-    return ranked.sort((a, b) => a.distance - b.distance);
 }
 
 /**

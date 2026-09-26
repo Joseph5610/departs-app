@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Brno's vehicle rebuild uses about a third less CPU (no full-feed byte compare, leaner decode, a native sort for trip assignment), easing the Worker CPU-limit kills that took every city down with it.
 - Requests no longer wait on another request's unfinished upstream fetch or build, which stalled every city after one request was killed and cascaded into CPU-limit failures.
+- MCP stop search and nearest-stop tools read a prebuilt search index instead of parsing the whole stop list, which alone exceeded the Worker CPU limit (Prague's is 11MB).
+- The sitemap is built from a prebuilt stop id list instead of parsing every city's stop list, which could never finish within the CPU limit.
 
 ## [0.75.0] - 2026-09-25
 

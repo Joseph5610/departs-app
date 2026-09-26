@@ -18,6 +18,10 @@ export const CACHE_TTL = {
     RSS_INCIDENTS: 300, // 5m
     RSS_EXCLUSIONS: 3600, // 1h
     SITEMAP: 86400, // 24h
+    /** How long the edge may serve the last sitemap while a request rebuilds it in the background. */
+    SITEMAP_STALE_WHILE_REVALIDATE: 3600,
+    /** How long the edge may keep serving the last sitemap while the Worker fails to rebuild it. */
+    SITEMAP_STALE_IF_ERROR: 86400,
     /** How long the edge may keep serving the last good response while the Worker fails (e.g. a CPU kill). */
     STALE_IF_ERROR: 60,
 };
@@ -111,4 +115,16 @@ export const CACHE_CONFIG = {
     REFRESH_WINDOW_MS: 10_000,
     /** How soon a key holding fallback (failed or empty) data is fetched again, instead of its full TTL. */
     FALLBACK_RETRY_MS: 5000,
+};
+
+/** The stop search index MCP tools read (`functions/_feeds/stop-search.ts`, written by departs-data's `writeStopSearch`). */
+export const STOP_SEARCH_CONFIG = {
+    /** Stops per `stop_details/<block>.json`; must match departs-data's `STOP_DETAILS_BLOCK`. */
+    DETAILS_BLOCK: 256,
+    /** Detail blocks kept per isolate; one is a few tens of KB. */
+    DETAILS_CACHE_MAX_ENTRIES: 64,
+    /** Name lengths a match's rank tells apart; longer names tie. */
+    MAX_KEYED_NAME_LENGTH: 4096,
+    /** Slack on the flat-projection radius check, so a stop the haversine puts just inside is not dropped first. */
+    RADIUS_MARGIN: 1.01,
 };

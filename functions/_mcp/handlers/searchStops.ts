@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { findStopsByName, loadStops, toMcpStopLines } from "../utils";
+import { findStopsByName, toMcpStopLines } from "../utils";
 
 /**
  * Handles the 'search_stops' MCP tool invocation.
@@ -14,7 +14,7 @@ export async function handleSearchStops(
     resolvedCity: string
 ): Promise<unknown> {
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
-    const filtered = findStopsByName(await loadStops(resolvedCity), String(args.query || "")).slice(0, limit);
+    const filtered = await findStopsByName(resolvedCity, String(args.query || ""), limit);
 
     return {
         city: resolvedCity,
