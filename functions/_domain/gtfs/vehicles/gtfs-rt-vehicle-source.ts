@@ -10,7 +10,7 @@ import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import type { SerializedFleet, SingleLiveVehicle, VehicleSource } from './vehicle-source';
+import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
@@ -58,10 +58,6 @@ export class GtfsRtVehicleSource implements VehicleSource {
         return (await this.fleet(waitUntil))?.collection ?? OFFLINE;
     }
 
-    async allSerialized(waitUntil?: (promise: Promise<unknown>) => void): Promise<SerializedFleet | null> {
-        const fleet = await this.fleet(waitUntil);
-        return fleet ? { json: fleet.json, lastUpdated: fleet.lastUpdated } : null;
-    }
 
     /** The current build, or null when the feed or its static data cannot be read. */
     private async fleet(waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet | null> {

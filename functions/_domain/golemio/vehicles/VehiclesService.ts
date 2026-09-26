@@ -1,13 +1,14 @@
 import type { Env, AppVehicleCollection, CityRequestContext } from "../../../_core/types";
 import type { VehiclesUseCase } from "../../use-cases";
+import { vehiclesBody, type VehiclesBody } from "../../../_core/feed/vehicles-body";
 import { ERROR_MESSAGES } from "../../../_core/config";
 import { ApiError } from "../../../_core/errors";
-import { derive } from "../../../_core/feed/source";
+import { derive, type Snapshot } from "../../../_core/feed/source";
 import { withFeedAge } from "../../../_core/feed/freshness";
-import { getGolemioFleet } from "../../../_feeds/golemio/vehicles";
+import { getGolemioFleet, type GolemioFleet } from "../../../_feeds/golemio/vehicles";
 import { VehiclesMapper } from "./VehiclesMapper";
 import { vehicleQuerySchema, parseSearchParams } from "../../../_core/schemas";
-import { filterVehicles } from "../../../_core/utils/vehicleFilter";
+import { filterVehicles, isUnfiltered } from "../../../_core/utils/vehicleFilter";
 
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
@@ -20,8 +21,7 @@ export class VehiclesService implements VehiclesUseCase {
     private async collection(env: Env): Promise<AppVehicleCollection> {
         const snapshot = await getGolemioFleet(env);
         if (!snapshot) return OFFLINE;
-        const collection = derive(snapshot, collections, () => VehiclesMapper.map(snapshot.data.data, snapshot.data.generatedAt));
-        return withFeedAge(collection, snapshot.fetchedAt);
+        return withFeedAge(mappedFleet(snapshot), snapshot.fetchedAt);
     }
 
     /** Golemio's vehicle positions payload as received, for the debug feed. */
@@ -31,9 +31,20 @@ export class VehiclesService implements VehiclesUseCase {
         return payload;
     }
 
+    /** The unfiltered map request, answered from the snapshot's collection serialized once. */
+    async getVehiclesBody(ctx: CityRequestContext): Promise<VehiclesBody | null> {
+        if (!isUnfiltered(parseSearchParams(ctx.url.searchParams, vehicleQuerySchema))) return null;
+        const snapshot = await getGolemioFleet(ctx.env);
+        return snapshot ? vehiclesBody(mappedFleet(snapshot), snapshot.fetchedAt) : vehiclesBody(OFFLINE);
+    }
+
     /** Active vehicles within the requested map bounds, route types and lines. */
     async getVehicles(ctx: CityRequestContext): Promise<AppVehicleCollection> {
         const query = parseSearchParams(ctx.url.searchParams, vehicleQuerySchema);
         return filterVehicles(await this.collection(ctx.env), query);
     }
+}
+
+function mappedFleet(snapshot: Snapshot<GolemioFleet>): AppVehicleCollection {
+    return derive(snapshot, collections, () => VehiclesMapper.map(snapshot.data.data, snapshot.data.generatedAt));
 }

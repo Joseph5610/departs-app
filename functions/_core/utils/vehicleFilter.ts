@@ -1,6 +1,11 @@
 import type { AppVehicleCollection } from '../types';
 import { parseBoundsParam } from '../schemas';
 
+/** Whether a query asks for the whole fleet, which is answered from the serialized collection. */
+export function isUnfiltered({ bounds, routeType, routeShortName }: VehicleFilter): boolean {
+    return !bounds && !routeType?.length && !routeShortName?.length;
+}
+
 export interface VehicleFilter {
     bounds?: string | null;
     routeType?: string[];

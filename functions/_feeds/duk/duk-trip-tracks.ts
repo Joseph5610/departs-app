@@ -22,8 +22,21 @@ export interface TripTrack {
 /** Shape check only: validating a thousand trips field by field costs more CPU than a request has. */
 const tracksFileSchema = z.object({
     stops: z.array(z.string()).min(1),
-    trips: z.record(z.string(), z.tuple([z.number(), z.array(z.number()), z.array(z.number()), z.array(z.number()), z.array(z.number())])),
+    trips: z.record(z.string(), z.unknown()),
 });
+
+type RawTrack = [number, number[], number[], number[], number[]];
+
+const isNumbers = (value: unknown): value is number[] => {
+    if (!Array.isArray(value)) return false;
+    for (const n of value) if (typeof n !== 'number') return false;
+    return true;
+};
+
+/** `decode` type-checks each trip it reads, which Zod would do for the whole file at several times the cost. */
+const isRawTrack = (value: unknown): value is RawTrack =>
+    Array.isArray(value) && value.length === 5 && typeof value[0] === 'number'
+    && isNumbers(value[1]) && isNumbers(value[2]) && isNumbers(value[3]) && isNumbers(value[4]);
 
 /** Hour files are large, so an isolate keeps only the few it is actually serving from. */
 const hourFiles = new LruCache<Map<string, TripTrack>>({
@@ -50,7 +63,9 @@ const fromDeltas = (values: number[], scale = 1): number[] => {
 function decode(file: z.infer<typeof tracksFileSchema>): Map<string, TripTrack> {
     const tracks = new Map<string, TripTrack>();
     for (const tripId in file.trips) {
-        const [lastArrivalSecs, stopIdx, secs, lat, lon] = file.trips[tripId];
+        const raw = file.trips[tripId];
+        if (!isRawTrack(raw)) continue;
+        const [lastArrivalSecs, stopIdx, secs, lat, lon] = raw;
         // The four arrays describe the same stops, so a short one would silently produce NaN distances.
         if (stopIdx.length === 0 || secs.length !== stopIdx.length || lat.length !== stopIdx.length || lon.length !== stopIdx.length) continue;
         const stopIds = stopIdx.map(i => file.stops[i]);

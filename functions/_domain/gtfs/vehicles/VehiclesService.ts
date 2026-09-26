@@ -1,10 +1,11 @@
 import type { AppVehicleCollection, AppVehicleFeature, CityRequestContext } from "../../../_core/types";
 import type { CityConfig } from '../../../_core/city-config';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
-import { filterVehicles } from '../../../_core/utils/vehicleFilter';
-import { feedStatusAt, withFeedAge } from '../../../_core/feed/freshness';
+import { filterVehicles, isUnfiltered } from '../../../_core/utils/vehicleFilter';
+import { withFeedAge } from '../../../_core/feed/freshness';
+import { vehiclesBody, type VehiclesBody } from '../../../_core/feed/vehicles-body';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
-import type { VehiclesBody, VehiclesUseCase } from '../../use-cases';
+import type { VehiclesUseCase } from '../../use-cases';
 
 /**
  * Vehicles of a city on the GTFS stack. Where they come from is the `VehicleSource`; filtering,
@@ -57,19 +58,9 @@ export class VehiclesService implements VehiclesUseCase {
         return filterVehicles(await this.getCachedMappedVehicles(ctx.waitUntil), parseSearchParams(ctx.url.searchParams, vehicleQuerySchema));
     }
 
-    /** The unfiltered map request, answered from the source's serialized build with only `status` stamped on. */
+    /** The unfiltered map request, answered from the source's collection serialized once. */
     async getVehiclesBody(ctx: CityRequestContext): Promise<VehiclesBody | null> {
-        if (!this.source.allSerialized) return null;
-        const { bounds, routeType, routeShortName } = parseSearchParams(ctx.url.searchParams, vehicleQuerySchema);
-        if (bounds || routeType?.length || routeShortName?.length) return null;
-
-        const fleet = await this.source.allSerialized(ctx.waitUntil);
-        const status = fleet ? feedStatusAt(fleet.lastUpdated ? Date.parse(fleet.lastUpdated) : NaN) : 'upstream_offline';
-        if (!fleet || status === 'upstream_offline') {
-            const offline: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline', last_updated: fleet?.lastUpdated };
-            return { body: JSON.stringify(offline), offline: true };
-        }
-        // `json` is a serialized object without `status`, so the key is appended before its closing brace.
-        return { body: `${fleet.json.slice(0, -1)},"status":"${status}"}`, offline: false };
+        if (!isUnfiltered(parseSearchParams(ctx.url.searchParams, vehicleQuerySchema))) return null;
+        return vehiclesBody(await this.source.all(ctx.waitUntil));
     }
 }

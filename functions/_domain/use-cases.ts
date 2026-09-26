@@ -1,3 +1,4 @@
+import type { VehiclesBody } from '../_core/feed/vehicles-body';
 import type {
     AppAlertsResponse,
     AppDepartureResponse,
@@ -14,10 +15,6 @@ export interface VehiclesUseCase {
     getVehiclesBody?(ctx: CityRequestContext): Promise<VehiclesBody | null>;
 }
 
-export interface VehiclesBody {
-    body: string;
-    offline: boolean;
-}
 
 export interface DeparturesUseCase {
     getDepartures(ctx: CityRequestContext): Promise<AppDepartureResponse>;

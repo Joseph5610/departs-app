@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Requests no longer wait on another request's unfinished upstream fetch or build, which stalled every city after one request was killed and cascaded into CPU-limit failures.
 - MCP stop search and nearest-stop tools read a prebuilt search index instead of parsing the whole stop list, which alone exceeded the Worker CPU limit (Prague's is 11MB).
 - The sitemap is built from a prebuilt stop id list instead of parsing every city's stop list, which could never finish within the CPU limit.
+- DÚK's first vehicle request on a fresh Worker uses about a third less CPU, no longer validating every value of its trip-track and station files.
 
 ## [0.75.0] - 2026-09-25
 

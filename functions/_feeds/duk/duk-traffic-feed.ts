@@ -30,9 +30,8 @@ const vehicleSchema = z.object({
 
 const trafficSchema = z.object({ VehicleList: z.array(z.unknown()).nullish() });
 
-const stationsSchema = z.object({
-    ItemList: z.array(z.object({ Node: z.number(), Name: z.string().nullish() })).nullish(),
-});
+/** Shape check only: thousands of stations validated field by field cost several times the parse; the loop checks the two it reads. */
+const stationsSchema = z.object({ ItemList: z.array(z.unknown()).nullish() });
 
 /** One vehicle report from the Portabo `GetTraffic` feed. */
 export interface DukVehicleReport {
@@ -174,7 +173,9 @@ export async function getDukStationNames(city: CityConfig): Promise<Map<number, 
                 const parsed = stationsSchema.safeParse(await res.json());
                 if (!parsed.success) return names;
                 for (const item of parsed.data.ItemList ?? []) {
-                    if (item.Name && !names.has(item.Node)) names.set(item.Node, item.Name);
+                    if (typeof item !== 'object' || item === null) continue;
+                    const { Node, Name } = item as { Node?: unknown; Name?: unknown };
+                    if (typeof Node === 'number' && typeof Name === 'string' && Name && !names.has(Node)) names.set(Node, Name);
                 }
             } catch (e) {
                 console.warn(`[DUK] Station names fetch failed for ${city.slug}:`, e);

@@ -71,15 +71,12 @@ export class VehiclesMapper {
             });
         }
 
+        // No `status` here: `withFeedAge` and `vehiclesBody` stamp it from when the snapshot was read.
         const maxTimeUpdated = maxTimeUpdatedStr ? new Date(maxTimeUpdatedStr).getTime() : 0;
-        const THRESHOLD_MS = 10 * 60 * 1000;
-        const isStale = maxTimeUpdated > 0 && (Date.now() - maxTimeUpdated > THRESHOLD_MS);
-        const status = isStale ? 'stale' : 'ok';
 
-        return { 
-            type: 'FeatureCollection', 
+        return {
+            type: 'FeatureCollection',
             features,
-            status,
             last_updated: maxTimeUpdated > 0 ? new Date(maxTimeUpdated).toISOString() : generatedAt
         };
     }
