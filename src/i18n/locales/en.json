@@ -212,6 +212,7 @@
       "atStop": "You are at the stop",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
+      "canceled": "Canceled",
       "feeder": {
         "waitsFor": "Waits for {{line}} (up to {{minutes}} min)",
         "heldFor": "Held ~{{minutes}} min for {{line}}",

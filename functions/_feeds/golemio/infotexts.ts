@@ -5,13 +5,10 @@ import { ApiError } from '../../_core/errors';
 import { golemioClient } from './GolemioClient';
 import { golemioInfotextSchema, type GolemioInfotext } from './schemas/infotexts';
 
-/** PID's current and future infotexts; a malformed one is dropped rather than failing the rest. */
+/** PID's current infotexts; a malformed one is dropped rather than failing the rest. */
 export async function getGolemioInfotexts(env: Env): Promise<GolemioInfotext[]> {
     const response = await golemioClient.fetch("/v3/pid/infotexts", env, {
-        cacheTtl: CACHE_TTL.INFOTEXTS,
-        searchParams: {
-            includeFuture: "true"
-        }
+        cacheTtl: CACHE_TTL.INFOTEXTS
     });
 
     if (!response.ok) {

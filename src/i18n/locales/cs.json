@@ -215,6 +215,7 @@
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",
       "removeFromFavorites": "Odebrat z oblíbených",
+      "canceled": "Zrušen",
       "feeder": {
         "waitsFor": "Čeká na {{line}} (max. {{minutes}} min)",
         "heldFor": "Čeká ~{{minutes}} min na {{line}}",

@@ -4,6 +4,7 @@ import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { formatDelay } from '../../../utils/dateUtils';
 import type { Departure } from '../../../types/transit';
 import type { DepartureFeeder } from '../../../types/departures';
@@ -56,6 +57,7 @@ export const DepartureItem = memo(({
     };
 
     const isTrain = dep.type === 'train';
+    const isCanceled = dep.isCanceled;
 
     return (
         <Button
@@ -73,10 +75,13 @@ export const DepartureItem = memo(({
         >
             {/* Time + Delay Block */}
             <div className="flex gap-2 shrink-0 w-[85px] items-baseline">
-                <span className="text-muted-foreground text-sm font-medium tabular-nums">
+                <span className={cn(
+                    "text-muted-foreground text-sm font-medium tabular-nums",
+                    isCanceled && "line-through opacity-60"
+                )}>
                     {format(parseISO(dep.scheduled), 'HH:mm')}
                 </span>
-                <div className="flex gap-1 items-center">
+                {!isCanceled && <div className="flex gap-1 items-center">
                     {typeof dep.delay === 'number' && dep.delay !== 0 && (
                         <span className={cn(
                             "text-xs font-bold tabular-nums",
@@ -90,11 +95,11 @@ export const DepartureItem = memo(({
                         lastUpdate={dep.lastDelayUpdate}
                         isInline={true}
                     />
-                </div>
+                </div>}
             </div>
 
             {/* Icons Block - before headsign like official PID tables */}
-            <div className="flex gap-1.5 opacity-40 items-center shrink-0 w-10 ml-1">
+            <div className={cn("flex gap-1.5 opacity-40 items-center shrink-0 w-10 ml-1", isCanceled && "opacity-20")}>
                 {dep.is_wheelchair_accessible && (
                     <Accessibility size={16} strokeWidth={1.5}  />
                 )}
@@ -111,7 +116,10 @@ export const DepartureItem = memo(({
             {/* Headsign (shown when not redundant with group header) */}
             {!hideHeadsign && (
                 <span className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-foreground text-sm font-medium leading-tight truncate min-w-0">
+                    <span className={cn(
+                        "text-foreground text-sm font-medium leading-tight truncate min-w-0",
+                        isCanceled && "line-through text-muted-foreground"
+                    )}>
                         {dep.headsign}
                     </span>
                     {forHeadsign(dep.headsign, dep.line).map((line) => (
@@ -127,7 +135,7 @@ export const DepartureItem = memo(({
                 {/* Platform Badge (trains only, metro is handled in group header) */}
                 {dep.platform && isTrain && (
                     <div 
-                        className="flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1.5 py-0.5 bg-muted rounded-md border mr-1"
+                        className={cn("flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1.5 py-0.5 bg-muted rounded-md border mr-1", isCanceled && "opacity-50")}
                         title={t('map.departures.platform')}
                     >
                         <Train size={12} className="opacity-50"  />
@@ -135,10 +143,15 @@ export const DepartureItem = memo(({
                     </div>
                 )}
 
-                {/* Countdown */}
-                <span className="text-sm font-bold leading-none shrink-0 min-w-[48px] text-right tabular-nums">
-                    <Countdown timestamp={dep.timestamp} />
-                </span>
+                {isCanceled ? (
+                    <Badge variant="destructive" className="rounded-md font-semibold">
+                        {t('map.departures.canceled')}
+                    </Badge>
+                ) : (
+                    <span className="text-sm font-bold leading-none shrink-0 min-w-[48px] text-right tabular-nums">
+                        <Countdown timestamp={dep.timestamp} />
+                    </span>
+                )}
             </div>
         </Button>
     );

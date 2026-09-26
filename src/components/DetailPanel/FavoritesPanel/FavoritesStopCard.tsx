@@ -172,7 +172,10 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                         <ArrowRight size={12} className="text-muted-foreground/30 shrink-0"  strokeWidth={1.5} />
 
                                         {/* Headsign */}
-                                        <span className="text-foreground/80 font-medium truncate min-w-0 leading-tight">
+                                        <span className={cn(
+                                            "text-foreground/80 font-medium truncate min-w-0 leading-tight",
+                                            dep.isCanceled && "line-through text-muted-foreground"
+                                        )}>
                                             {dep.headsign}
                                         </span>
                                     </div>
@@ -189,8 +192,7 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                             </div>
                                         )}
 
-                                        {/* Delay */}
-                                        {typeof dep.delay === 'number' && dep.delay !== 0 && (
+                                        {!dep.isCanceled && typeof dep.delay === 'number' && dep.delay !== 0 && (
                                             <span className={cn(
                                                 "text-[9px] font-bold tabular-nums",
                                                 dep.delay > 0 ? "text-destructive" : "text-sky-400"
@@ -199,10 +201,15 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                             </span>
                                         )}
 
-                                        {/* Countdown */}
-                                        <span className="text-xs font-bold text-foreground/90 text-right min-w-10 tabular-nums">
-                                            <Countdown timestamp={dep.timestamp} />
-                                        </span>
+                                        {dep.isCanceled ? (
+                                            <Badge variant="destructive" className="rounded-md h-4 px-1.5 text-[10px] font-semibold">
+                                                {t('map.departures.canceled')}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-xs font-bold text-foreground/90 text-right min-w-10 tabular-nums">
+                                                <Countdown timestamp={dep.timestamp} />
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             );

@@ -208,7 +208,8 @@
       "officialBoard": "Virtuálna tabuľa",
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",
-      "removeFromFavorites": "Odobrať z obľúbených"
+      "removeFromFavorites": "Odobrať z obľúbených",
+      "canceled": "Zrušený"
     }
   },
   "update": {
