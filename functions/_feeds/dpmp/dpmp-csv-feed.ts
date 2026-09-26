@@ -1,26 +1,9 @@
-import { z } from 'zod';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { ApiError } from '../../_core/errors';
 import { DPMP_CONFIG } from './config';
-
-const rowSchema = z.object({
-    ROUTE_NUMBER: z.string().trim().min(1),
-    PLANNED_START: z.string().trim().regex(/^\d{1,2}:\d{2}$/),
-    DIRECTION: z.string().trim(),
-    BUS_STOP_ORDER_NUM: z.coerce.number().int().nonnegative(),
-    BUS_STOP_NAME_1: z.string().trim(),
-    BUS_STOP_NAME_2: z.string().trim(),
-    PLANNED_ROAD: z.coerce.number(),
-    REAL_ROAD: z.coerce.number(),
-    LATITUDE: z.coerce.number().min(-90).max(90),
-    LONGITUDE: z.coerce.number().min(-180).max(180),
-    VARIATION: z.coerce.number().int(),
-    VEHICLE_NUMBER: z.string().trim().min(1),
-    DATE_TIME: z.string().trim().min(1),
-});
 
 /** One vehicle report from the DPMP realtime CSV. */
 export interface DpmpVehicleRow {
@@ -44,41 +27,59 @@ export interface DpmpVehicleRow {
     dateTime: string;
 }
 
+/** A cell as a finite number, as `Number()` reads it (an empty cell is 0); null when it is not one. */
+function finite(cell: string): number | null {
+    const value = Number(cell);
+    return Number.isFinite(value) ? value : null;
+}
+
+/** One CSV row, every cell checked as it is read; null when a required cell is missing or malformed. */
+function parseRow(column: (name: string) => string): DpmpVehicleRow | null {
+    const routeNumber = column('ROUTE_NUMBER').trim();
+    const plannedStart = column('PLANNED_START').trim();
+    const vehicleNumber = column('VEHICLE_NUMBER').trim();
+    const dateTime = column('DATE_TIME').trim();
+    const stopOrder = finite(column('BUS_STOP_ORDER_NUM'));
+    const plannedRoad = finite(column('PLANNED_ROAD'));
+    const realRoad = finite(column('REAL_ROAD'));
+    const latitude = finite(column('LATITUDE'));
+    const longitude = finite(column('LONGITUDE'));
+    const variation = finite(column('VARIATION'));
+    if (!routeNumber || !/^\d{1,2}:\d{2}$/.test(plannedStart) || !vehicleNumber || !dateTime) return null;
+    if (stopOrder === null || !Number.isInteger(stopOrder) || stopOrder < 0 || plannedRoad === null || realRoad === null) return null;
+    if (latitude === null || Math.abs(latitude) > 90 || longitude === null || Math.abs(longitude) > 180) return null;
+    if (variation === null || !Number.isInteger(variation)) return null;
+
+    const hasFix = latitude !== 0 && longitude !== 0;
+    return {
+        routeNumber: routeNumber.toUpperCase(),
+        plannedStart,
+        direction: column('DIRECTION').trim().toUpperCase(),
+        stopOrder,
+        stopName: column('BUS_STOP_NAME_1').trim(),
+        nextStopName: column('BUS_STOP_NAME_2').trim(),
+        plannedRoad,
+        realRoad,
+        latitude: hasFix ? latitude : null,
+        longitude: hasFix ? longitude : null,
+        variation,
+        vehicleNumber,
+        dateTime,
+    };
+}
+
+/** The export's rows; a malformed row is dropped rather than failing the rest. Read without a per-row schema, which cost more than the parse. */
 function parseDpmpCsv(text: string): DpmpVehicleRow[] {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     if (lines.length === 0) return [];
 
-    const header = lines[0].split(DPMP_CONFIG.CSV_DELIMITER).map(h => h.trim());
+    const header = new Map(lines[0].split(DPMP_CONFIG.CSV_DELIMITER).map((h, i) => [h.trim(), i]));
     const rows: DpmpVehicleRow[] = [];
-
     for (let i = 1; i < lines.length; i++) {
         const cells = lines[i].split(DPMP_CONFIG.CSV_DELIMITER);
-        const record: Record<string, string> = {};
-        for (let c = 0; c < header.length; c++) record[header[c]] = cells[c] ?? '';
-
-        const parsed = rowSchema.safeParse(record);
-        if (!parsed.success) continue;
-
-        const r = parsed.data;
-        const hasFix = r.LATITUDE !== 0 && r.LONGITUDE !== 0;
-
-        rows.push({
-            routeNumber: r.ROUTE_NUMBER.toUpperCase(),
-            plannedStart: r.PLANNED_START,
-            direction: r.DIRECTION.toUpperCase(),
-            stopOrder: r.BUS_STOP_ORDER_NUM,
-            stopName: r.BUS_STOP_NAME_1,
-            nextStopName: r.BUS_STOP_NAME_2,
-            plannedRoad: r.PLANNED_ROAD,
-            realRoad: r.REAL_ROAD,
-            latitude: hasFix ? r.LATITUDE : null,
-            longitude: hasFix ? r.LONGITUDE : null,
-            variation: r.VARIATION,
-            vehicleNumber: r.VEHICLE_NUMBER,
-            dateTime: r.DATE_TIME,
-        });
+        const row = parseRow((name) => cells[header.get(name) ?? -1] ?? '');
+        if (row) rows.push(row);
     }
-
     return rows;
 }
 

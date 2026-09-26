@@ -24,9 +24,6 @@ export class VehicleDetailService implements VehicleDetailUseCase {
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
     async getVehicleDetail(ctx: CityRequestContext): Promise<AppVehicleDetail> {
-        // Started, not awaited - see the note in DeparturesService: this is independent of the trip
-        // fetch below and only needs to be resolved at the mapping step.
-        const connectionsPromise = getLiveConnections();
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(ctx.url.searchParams, vehicleDetailQuerySchema);
         
         const vehicleId = rawVehicleId ?? null;
@@ -36,6 +33,8 @@ export class VehicleDetailService implements VehicleDetailUseCase {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
+        // Started, not awaited: independent of the trip fetch and only needed at the mapping step.
+        const connectionsPromise = getLiveConnections([tripId]);
         const { data, isStatic } = await getTripDetail(ctx.env, tripId, vehicleId);
 
         const detail = VehicleDetailMapper.map(data, tripId, vehicleId, isStatic);

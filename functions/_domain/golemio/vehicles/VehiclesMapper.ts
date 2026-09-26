@@ -1,7 +1,7 @@
 import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../_core/types";
 import type { GolemioFleetPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
-import { isFields, str, num, bool, strOrNum, readPoint } from "./fields";
+import { isFields, str, num, bool, strOrNum, readPoint } from "../../../_core/utils/fields";
 
 export class VehiclesMapper {
     /** `generatedAt` stands in for `last_updated` when the feed carries no per-vehicle timestamps. */

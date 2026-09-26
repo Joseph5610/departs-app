@@ -1,10 +1,9 @@
-import { z } from 'zod';
 import type { Env } from '../../_core/types';
 import { CACHE_TTL, ERROR_MESSAGES } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { GOLEMIO_CONFIG } from './config';
 import { golemioClient } from './GolemioClient';
-import { golemioDepartureItemSchema, type GolemioDepartureItem } from './schemas/departures';
+import { golemioDepartureBoardsSchema, readDepartureItem, type GolemioDepartureItem } from './schemas/departures';
 
 /**
  * Departure boards for groups of platform ids, one board per group in request order. A malformed
@@ -30,16 +29,19 @@ export async function getDepartureBoards(env: Env, stopIdGroups: string[][]): Pr
 
     const rawData = await response.json();
 
-    const safeSchema = z.array(z.array(golemioDepartureItemSchema.nullable().catch(err => {
-        console.warn("Skipping invalid departure item:", err);
-        return null;
-    })));
-
-    const parsed = safeSchema.safeParse(rawData);
+    const parsed = golemioDepartureBoardsSchema.safeParse(rawData);
     if (!parsed.success) {
         console.error("Critical Golemio structural change:", parsed.error);
         throw new ApiError(ERROR_MESSAGES.UPSTREAM_ERROR(502), 502);
     }
 
-    return parsed.data.map(group => group.filter((item): item is GolemioDepartureItem => item !== null));
+    return parsed.data.map(group => {
+        const items: GolemioDepartureItem[] = [];
+        for (const raw of group) {
+            const item = readDepartureItem(raw);
+            if (item) items.push(item);
+            else console.warn("Skipping invalid departure item");
+        }
+        return items;
+    });
 }

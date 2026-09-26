@@ -58,7 +58,7 @@ export const GTFS_CONFIG = {
 const utf8 = new TextEncoder();
 
 /** FNV-1a (32-bit) of the id's UTF-8 bytes, modulo `count` - must match `bucketOf` in the build script. */
-function bucketOf(id: string, count: number): string {
+export function bucketOf(id: string, count: number): string {
     let hash = 0x811c9dc5;
     for (const byte of utf8.encode(id)) {
         hash = Math.imul(hash ^ byte, 0x01000193) >>> 0;

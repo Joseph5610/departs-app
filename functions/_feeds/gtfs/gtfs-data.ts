@@ -2,6 +2,7 @@ import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
+import { isEmptyRecord } from '../../_core/utils/fields';
 
 export interface GtfsRoute {
     name: string;
@@ -70,7 +71,7 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
     },
     // An empty route table is an upstream failure, not a valid result. Without this the empty
     // object would be cached for the full TTL and every vehicle would be dropped for two hours.
-    (data) => !data || Object.keys(data.routes).length === 0);
+    (data) => !data || isEmptyRecord(data.routes));
 }
 
 /**
@@ -81,48 +82,35 @@ export interface GtfsTripRoutesData {
     tripAliases: Record<string, string | null>;
 }
 
-/**
- * Fetches and caches GTFS trip routes (trip_routes.json) and aliases.
- * This is a heavier payload (e.g., 350KB for Brno) and is strictly used by endpoints
- * that need to map live vehicle GTFS-RT updates to their underlying routes.
- * 
- * @param city The city to fetch trip routes for
- */
-export async function getGtfsTripRoutes(city: CityConfig): Promise<GtfsTripRoutesData> {
-    const citySlug = city.slug;
-    const staticDataUrl = city.feed?.staticDataUrl;
+/** A city's trip id -> route id (`trip_routes.json`), for resolving a trip's line. */
+export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string, string>> {
+    return getStaticRecord(city, 'trip_routes.json');
+}
 
+/**
+ * Trip ids of older timetable exports -> the current trip (`trip_aliases.json`), for networks whose
+ * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
+ */
+export async function getGtfsTripAliases(city: CityConfig): Promise<Record<string, string | null>> {
+    return city.feed?.hasTripAliases ? getStaticRecord(city, 'trip_aliases.json') : {};
+}
+
+/** A static data file holding one record, cached per city; an unreadable or empty file is fetched again soon. */
+async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Record<string, T>> {
+    const staticDataUrl = city.feed?.staticDataUrl;
     if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
-    const cacheKey = `gtfs_trip_routes_${citySlug}`;
-
-    return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
+    return CacheManager.getOrFetch(`gtfs_${file}_${city.slug}`, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const fetchPromises = [
-                appClient.fetch(`${staticDataUrl}/${citySlug}/trip_routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA })
-            ];
-
-            if (city.feed?.hasTripAliases) {
-                fetchPromises.push(appClient.fetch(`${staticDataUrl}/${citySlug}/trip_aliases.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA }).catch(() => new Response(null, { status: 404 })));
+            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${file}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            if (!res.ok) {
+                console.error(`Error fetching ${file} for ${city.slug}: ${res.status}`);
+                return {};
             }
-
-            const results = await Promise.all(fetchPromises);
-            const trRes = results[0];
-            const aliasRes = results[1];
-
-            if (!trRes.ok) {
-                console.error(`Error fetching GTFS trip routes for ${citySlug}: ${trRes.status}`);
-                return { tripRoutes: {}, tripAliases: {} };
-            }
-
-            const tripRoutes = await trRes.json() as Record<string, string>;
-            const tripAliases = (aliasRes && aliasRes.ok) ? await aliasRes.json() as Record<string, string | null> : {};
-
-            return { tripRoutes, tripAliases };
+            return await res.json() as Record<string, T>;
         } catch (e) {
-            console.error(`Failed to parse or fetch GTFS trip routes for ${citySlug}:`, e);
-            return { tripRoutes: {}, tripAliases: {} };
+            console.error(`Failed to parse or fetch ${file} for ${city.slug}:`, e);
+            return {};
         }
-    },
-    (data) => !data || Object.keys(data.tripRoutes).length === 0);
+    }, isEmptyRecord);
 }

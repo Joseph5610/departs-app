@@ -4,30 +4,10 @@ import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { ApiError } from '../../_core/errors';
+import { bool, isFields, num, str } from '../../_core/utils/fields';
 import { DUK_CONFIG } from './config';
 
-const vehicleSchema = z.object({
-    ID: z.number(),
-    Delay: z.number().nullish(),
-    LineID: z.number().nullish(),
-    RouteID: z.number().nullish(),
-    CISLineID: z.number().nullish(),
-    HasLowfloor: z.boolean().nullish(),
-    isAirConditioned: z.boolean().nullish(),
-    Latitude: z.number().nullish(),
-    Longitude: z.number().nullish(),
-    StationNode: z.number().nullish(),
-    FinalNode: z.number().nullish(),
-    ArrivalDT: z.string().nullish(),
-    TODepartureDT: z.string().nullish(),
-    State: z.number().nullish(),
-    Azimut: z.number().nullish(),
-    LastActivityDT: z.string().nullish(),
-    GPSPositionDT: z.string().nullish(),
-    qride_tripID: z.string().nullish(),
-    qride_linename: z.string().nullish(),
-});
-
+/** Shape check only: `toReport` type-checks each field it reads, at a fraction of a per-vehicle schema's cost. */
 const trafficSchema = z.object({ VehicleList: z.array(z.unknown()).nullish() });
 
 /** Shape check only: thousands of stations validated field by field cost several times the parse; the loop checks the two it reads. */
@@ -86,26 +66,35 @@ function reportTime(activity: string | null | undefined, gps: string | null | un
     return ms !== null && ms <= Date.now() + DUK_CONFIG.MAX_CLOCK_SKEW_MS ? new Date(ms).toISOString() : null;
 }
 
-function toReport(v: z.infer<typeof vehicleSchema>): DukVehicleReport | null {
-    if (!v.Latitude || !v.Longitude) return null;
+/** One vehicle of the traffic list, every field type-checked as it is read; null without an id or a position. */
+function toReport(raw: unknown): DukVehicleReport | null {
+    if (!isFields(raw)) return null;
+    const id = num(raw.ID);
+    const latitude = num(raw.Latitude);
+    const longitude = num(raw.Longitude);
+    if (id === undefined || !latitude || !longitude) return null;
+    const lineId = num(raw.LineID);
+    const cisLineId = num(raw.CISLineID);
+    const lineName = str(raw.qride_linename);
+    const delay = num(raw.Delay);
     return {
-        vehicleId: String(v.ID),
-        lineNumber: v.CISLineID ? String(v.CISLineID).padStart(DUK_CONFIG.LINE_NUMBER_LENGTH, '0') : null,
-        tripNumber: v.RouteID ?? null,
-        lineName: v.CISLineID ? v.qride_linename || String(v.LineID ?? '') : trainLineName(v.qride_linename, v.LineID),
-        delay: typeof v.Delay === 'number' ? v.Delay * 60 : null,
-        latitude: v.Latitude,
-        longitude: v.Longitude,
-        bearing: v.Azimut || null,
-        stationNode: v.StationNode || null,
-        stationArrivalMs: feedTimeMs(v.ArrivalDT),
-        stationDepartureMs: feedTimeMs(v.TODepartureDT),
-        finalNode: v.FinalNode || null,
-        state: v.State ?? null,
-        timestamp: reportTime(v.LastActivityDT, v.GPSPositionDT),
-        isLowFloor: v.HasLowfloor ?? null,
-        isAirConditioned: v.isAirConditioned ?? null,
-        feedTripId: v.qride_tripID || null,
+        vehicleId: String(id),
+        lineNumber: cisLineId ? String(cisLineId).padStart(DUK_CONFIG.LINE_NUMBER_LENGTH, '0') : null,
+        tripNumber: num(raw.RouteID) ?? null,
+        lineName: cisLineId ? lineName || String(lineId ?? '') : trainLineName(lineName, lineId),
+        delay: delay !== undefined ? delay * 60 : null,
+        latitude,
+        longitude,
+        bearing: num(raw.Azimut) || null,
+        stationNode: num(raw.StationNode) || null,
+        stationArrivalMs: feedTimeMs(str(raw.ArrivalDT)),
+        stationDepartureMs: feedTimeMs(str(raw.TODepartureDT)),
+        finalNode: num(raw.FinalNode) || null,
+        state: num(raw.State) ?? null,
+        timestamp: reportTime(str(raw.LastActivityDT), str(raw.GPSPositionDT)),
+        isLowFloor: bool(raw.HasLowfloor) ?? null,
+        isAirConditioned: bool(raw.isAirConditioned) ?? null,
+        feedTripId: str(raw.qride_tripID) || null,
     };
 }
 
@@ -138,9 +127,7 @@ export async function getDukTrafficSnapshot(city: CityConfig): Promise<Snapshot<
 
             const out: DukVehicleReport[] = [];
             for (const raw of parsed.data.VehicleList ?? []) {
-                const vehicle = vehicleSchema.safeParse(raw);
-                if (!vehicle.success) continue;
-                const report = toReport(vehicle.data);
+                const report = toReport(raw);
                 if (report) out.push(report);
             }
             return out;

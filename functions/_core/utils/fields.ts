@@ -1,8 +1,7 @@
 /**
- * Typed reads over an object zod has only shape-checked (or not checked at all), shared by
- * `VehiclesMapper` (the fleet, ~3,000 features per refresh) and `VehicleDetailMapper` (one trip):
- * validating every field of every feature costs more CPU than either endpoint's budget allows, so the
- * envelope is checked and every field is read defensively here instead.
+ * Typed reads over an object zod has only shape-checked (or not checked at all), for upstream lists
+ * too large to validate field by field within a request's CPU budget (Golemio's fleet, Portabo's
+ * traffic): the envelope is checked and every field is read defensively here instead.
  */
 
 export type Fields = Record<string, unknown>;
@@ -18,4 +17,10 @@ export function readPoint(v: unknown): { type: 'Point'; coordinates: [number, nu
     if (!isFields(v) || v.type !== 'Point' || !Array.isArray(v.coordinates) || v.coordinates.length !== 2) return null;
     const [lon, lat] = v.coordinates as unknown[];
     return typeof lon === 'number' && typeof lat === 'number' ? { type: 'Point', coordinates: [lon, lat] } : null;
+}
+
+/** Whether an object has no own enumerable key, without listing the keys of a large one first. */
+export function isEmptyRecord(record: object): boolean {
+    for (const _ in record) return false;
+    return true;
 }

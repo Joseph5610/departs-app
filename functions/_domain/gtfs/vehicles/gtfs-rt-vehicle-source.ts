@@ -1,7 +1,8 @@
 import type { AppVehicleCollection } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
-import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
+import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
+import { isEmptyRecord } from '../../../_core/utils/fields';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import { readCachedFleet, readFleetPlates, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { CACHE_CONFIG } from '../../../_core/config';
@@ -31,15 +32,16 @@ export class GtfsRtVehicleSource implements VehicleSource {
     /** Null when the feed or its static data cannot be read; every lookup then answers as offline. */
     private async index(): Promise<VehicleIndex | null> {
         try {
-            const [snapshot, routes, tripRoutes, windows] = await Promise.all([
+            const [snapshot, routes, tripRoutes, tripAliases, windows] = await Promise.all([
                 getGtfsRtSnapshot(this.city),
                 getGtfsRoutes(this.city),
                 getGtfsTripRoutes(this.city),
+                getGtfsTripAliases(this.city),
                 this.mapping.usesTripWindows ? getTripWindows(this.city) : null,
             ]);
             // A failed trip-routes fetch returns empty; mapping against it would blank the map.
-            if (Object.keys(tripRoutes.tripRoutes).length === 0) return null;
-            return new VehicleIndex(snapshot, routes, tripRoutes, this.mapping, { windows, clock: getLocalClock(this.city.timezone) });
+            if (isEmptyRecord(tripRoutes)) return null;
+            return new VehicleIndex(snapshot, routes, { tripRoutes, tripAliases }, this.mapping, { windows, clock: getLocalClock(this.city.timezone) });
         } catch (e) {
             console.error(`GTFS-RT index unavailable for ${this.city.slug}:`, e instanceof Error ? e.message : e);
             return null;

@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Brno vehicle detail reads the vehicle from the stored fleet instead of decoding the whole KORDIS feed on every request, which pushed requests over the CPU limit and took other cities down with them.
+- Prague departures and vehicle detail read only the connection files of the trips they show instead of the whole 785 KB connections file, and Brno, Prešov and Prague use less CPU on a fresh Worker for departures, vehicle detail and vehicles.
 
 ## [0.75.1] - 2026-09-26
 

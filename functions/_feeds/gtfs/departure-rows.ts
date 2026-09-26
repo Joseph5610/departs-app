@@ -39,18 +39,21 @@ export function getParentChildMap(city: CityConfig): Promise<Record<string, stri
     );
 }
 
-const parentIndexes = new WeakMap<Record<string, string[]>, Map<string, string>>();
-
-/** Each platform's parent station, built once per loaded parent-child map. */
-function parentIndexOf(parentChildMap: Record<string, string[]>): Map<string, string> {
-    let parentOf = parentIndexes.get(parentChildMap);
-    if (parentOf) return parentOf;
-    parentOf = new Map();
+/**
+ * The parent station of each of `stopIds` that has one, scanning the map only until all are found:
+ * a board names a platform or two, and indexing every platform of the city first cost more than the rest.
+ */
+function parentsOf(parentChildMap: Record<string, string[]>, stopIds: string[]): Map<string, string> {
+    const wanted = new Set(stopIds);
+    const found = new Map<string, string>();
     for (const parent in parentChildMap) {
-        for (const child of parentChildMap[parent]) parentOf.set(child, parent);
+        for (const child of parentChildMap[parent]) {
+            if (!wanted.has(child)) continue;
+            found.set(child, parent);
+            if (found.size === wanted.size) return found;
+        }
     }
-    parentIndexes.set(parentChildMap, parentOf);
-    return parentOf;
+    return found;
 }
 
 /**
@@ -69,7 +72,7 @@ export async function getDepartureRows(city: CityConfig, stopIds: string[]): Pro
     }
     if (missing.length === 0) return rows;
 
-    const parentOf = parentIndexOf(await getParentChildMap(city));
+    const parentOf = parentsOf(await getParentChildMap(city), missing);
     const byBucket = new Map<string, string[]>();
     for (const id of missing) {
         const bucketId = departuresBucketId(id, parentOf);

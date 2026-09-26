@@ -1,6 +1,8 @@
 import { GOLEMIO_CONFIG } from "./config";
 import { UPSTREAM_TTL_S } from "../../_core/config";
-import { CacheManager, MEMORY_CACHE_TTL } from "../../_core/feed/CacheManager";
+import { MEMORY_CACHE_TTL } from "../../_core/feed/CacheManager";
+import { LruCache } from "../../_core/feed/LruCache";
+import { bucketOf } from "../gtfs/config";
 import { appClient } from '../../_core/ApiClient';
 
 /** `[to_trip_id, line, route_type, headsign, departure_time, min_transfer_s, max_wait_s, dayFlags]` */
@@ -24,24 +26,38 @@ export interface LiveConnections {
     trips: Record<string, TripConnections>;
 }
 
-/**
- * Fetches the Prague connections file once per isolate. Null when unavailable, which leaves
- * departures and trip detail exactly as Golemio returns them.
- */
-export async function getLiveConnections(): Promise<LiveConnections | null> {
-    return CacheManager.getOrFetch('prague_connections', MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
-        try {
-            const res = await appClient.fetch(GOLEMIO_CONFIG.CONNECTIONS_DATA_URL, {
-                cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA }
-            });
-            if (!res.ok) {
-                console.error("Failed to fetch Prague connections:", res.status);
-                return null;
-            }
-            return JSON.parse(await res.text()) as LiveConnections;
-        } catch (e) {
-            console.error("Failed to load Prague connections:", e);
+const buckets = new LruCache<LiveConnections>({ maxEntries: GOLEMIO_CONFIG.CONNECTION_BUCKETS_CACHED, ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS });
+
+/** One bucket file; null when it cannot be read. Only parsed files are kept, never a read under way. */
+async function getBucket(bucketId: string): Promise<LiveConnections | null> {
+    const held = buckets.get(bucketId);
+    if (held) return held;
+    try {
+        const res = await appClient.fetch(`${GOLEMIO_CONFIG.CONNECTION_BUCKETS_URL}/${bucketId}.json`, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } });
+        if (!res.ok) {
+            console.error(`Failed to fetch Prague connection bucket ${bucketId}:`, res.status);
             return null;
         }
-    }, (data) => !data);
+        const bucket = JSON.parse(await res.text()) as LiveConnections;
+        buckets.set(bucketId, bucket);
+        return bucket;
+    } catch (e) {
+        console.error(`Failed to load Prague connection bucket ${bucketId}:`, e);
+        return null;
+    }
+}
+
+/**
+ * The connections of the given trips, read from only the buckets holding them: a board or a detail
+ * names a handful of the network's trips. Null when none could be read, which leaves departures and
+ * trip detail exactly as Golemio returns them.
+ */
+export async function getLiveConnections(tripIds: Iterable<string | undefined>): Promise<LiveConnections | null> {
+    const bucketIds = new Set<string>();
+    for (const tripId of tripIds) if (tripId) bucketIds.add(bucketOf(tripId, GOLEMIO_CONFIG.CONNECTION_BUCKET_COUNT));
+
+    const files = (await Promise.all(Array.from(bucketIds, getBucket))).filter((file): file is LiveConnections => file !== null);
+    if (files.length === 0) return null;
+    if (files.length === 1) return files[0];
+    return { days: files[0].days, trips: Object.assign({}, ...files.map(file => file.trips)) };
 }

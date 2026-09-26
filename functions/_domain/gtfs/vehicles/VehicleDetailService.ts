@@ -28,7 +28,7 @@ export class VehicleDetailService implements VehicleDetailUseCase {
         const { vehicleId: rawVehicleId, tripId } = parseSearchParams(ctx.url.searchParams, vehicleDetailQuerySchema);
         const vehicleId = rawVehicleId || null;
 
-        const [stations, { routes }, { tripRoutes }] = await Promise.all([
+        const [stations, { routes }, tripRoutes] = await Promise.all([
             getTripStops(this.city, tripId),
             getGtfsRoutes(this.city),
             getGtfsTripRoutes(this.city),

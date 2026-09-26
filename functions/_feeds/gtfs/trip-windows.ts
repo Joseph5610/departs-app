@@ -2,6 +2,7 @@ import type { CityConfig } from '../../_core/city-config';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { appClient } from '../../_core/ApiClient';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
+import { isEmptyRecord } from '../../_core/utils/fields';
 
 /**
  * A trip's operating window: `[start_mins, end_mins, dayFlags, direction_id?]`.
@@ -44,7 +45,7 @@ export async function getTripWindows(city: CityConfig): Promise<TripWindows | nu
                 return null;
             }
         },
-        (data) => !data || Object.keys(data.trips).length === 0
+        (data) => !data || isEmptyRecord(data.trips)
     );
 }
 

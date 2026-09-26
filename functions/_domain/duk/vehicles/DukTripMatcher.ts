@@ -10,7 +10,7 @@ interface Candidate {
 }
 
 interface MatchIndex {
-    /** `line|spoj` -> static trips carrying that CIS JŘ trip number. */
+    /** `spoj-line` -> static trips carrying that CIS JŘ trip number. */
     byNumber: Map<string, Candidate[]>;
     /** line -> all its static trips. */
     byLine: Map<string, Candidate[]>;
@@ -25,7 +25,8 @@ export interface TripMatch {
 /** Built once per loaded windows file and collected with it. */
 const indexes = new WeakMap<TripWindows, MatchIndex>();
 
-const matchKey = (lineNumber: string, tripNumber: number | string) => `${lineNumber}|${tripNumber}`;
+/** `<spoj>-<line>`: the leading part of a static trip id, so the index slices it instead of splitting every id. */
+const matchKey = (lineNumber: string, tripNumber: number | string) => `${tripNumber}-${lineNumber}`;
 
 /**
  * Resolves Portabo vehicles to static trips by CIS JŘ line and trip number.
@@ -48,11 +49,13 @@ export class DukTripMatcher {
             else map.set(key, [candidate]);
         };
         for (const tripId in this.windows.trips) {
-            const [tripNumber, lineNumber] = tripId.split('-');
-            if (!tripNumber || !lineNumber) continue;
+            const lineStart = tripId.indexOf('-') + 1;
+            const lineEnd = tripId.indexOf('-', lineStart);
+            const end = lineEnd === -1 ? tripId.length : lineEnd;
+            if (lineStart <= 1 || end <= lineStart) continue;
             const candidate = { tripId, window: this.windows.trips[tripId] };
-            add(index.byNumber, matchKey(lineNumber, tripNumber), candidate);
-            add(index.byLine, lineNumber, candidate);
+            add(index.byNumber, tripId.slice(0, end), candidate);
+            add(index.byLine, tripId.slice(lineStart, end), candidate);
         }
 
         indexes.set(this.windows, index);

@@ -1,5 +1,5 @@
 import type { CityConfig } from '../../../_core/city-config';
-import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
+import type { GtfsRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
@@ -40,7 +40,7 @@ export class DpmpTripMatcher {
         private readonly city: CityConfig,
         private readonly windows: TripWindows,
         private readonly routes: GtfsRoutesData,
-        private readonly tripRoutes: GtfsTripRoutesData
+        private readonly tripRoutes: Record<string, string>
     ) {}
 
     private getIndex(): MatchIndex {
@@ -51,7 +51,7 @@ export class DpmpTripMatcher {
         for (const tripId in this.windows.trips) {
             const window = this.windows.trips[tripId];
             const directionId = window[3];
-            const routeId = this.tripRoutes.tripRoutes[tripId];
+            const routeId = this.tripRoutes[tripId];
             const route = routeId ? this.routes.routes[routeId] : undefined;
             if (directionId === undefined || !route) continue;
 

@@ -43,8 +43,6 @@ export class DeparturesService implements DeparturesUseCase {
      * @throws {ApiError} If stopId is missing or upstream fetch fails
      */
     async getDepartures(ctx: CityRequestContext): Promise<AppDepartureResponse> {
-        // Started, not awaited: independent of the board fetch below.
-        const connectionsPromise = getLiveConnections();
         const { stopId: rawStopIds } = parseSearchParams(ctx.url.searchParams, departuresQuerySchema);
         const stopIds = rawStopIds.filter((id): id is string => !!id);
 
@@ -54,6 +52,7 @@ export class DeparturesService implements DeparturesUseCase {
 
         const data = await getDepartureBoards(ctx.env, stopIds.map(id => this.filterStopIdsForDepartures(id)));
 
-        return DeparturesMapper.map(data, stopIds, await connectionsPromise);
+        const connections = await getLiveConnections(data.flatMap(group => group.map(item => item.trip?.id)));
+        return DeparturesMapper.map(data, stopIds, connections);
     }
 }

@@ -51,11 +51,10 @@ const lastFixes = new LruCache<LastFix>({ maxEntries: DPMP_CONFIG.BEARING_CACHE_
  * Epoch ms of a CSV `DATE_TIME`. Only its time of day is trusted: after midnight DPMP keeps
  * stamping the previous operating day's date, so the time is placed at its occurrence nearest now.
  */
-function reportTimeMs(dateTime: string, nowMs: number, timezone: string): number | null {
+function reportTimeMs(dateTime: string, nowMs: number, today: string, timezone: string): number | null {
     const time = /(\d{2}:\d{2}(?::\d{2})?)\s*$/.exec(dateTime)?.[1];
     if (!time) return null;
 
-    const today = getLocalClock(timezone, nowMs).date;
     const atMs = zonedLocalToEpochMs(`${today.slice(0, 4)}-${today.slice(4, 6)}-${today.slice(6, 8)} ${time}`, timezone);
     if (atMs === null) return null;
 
@@ -96,13 +95,13 @@ export class DpmpVehicleSource implements VehicleSource {
             getTripWindows(this.city),
         ]);
 
-        const ctx = getLocalClock(this.city.timezone);
-        const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes) : null;
         const nowMs = Date.now();
+        const ctx = getLocalClock(this.city.timezone, nowMs);
+        const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes) : null;
 
         const latestByVehicle = new Map<string, SeenRow>();
         for (const row of rows) {
-            const timestampMs = reportTimeMs(row.dateTime, nowMs, this.city.timezone) ?? nowMs;
+            const timestampMs = reportTimeMs(row.dateTime, nowMs, ctx.date, this.city.timezone) ?? nowMs;
             if (nowMs - timestampMs > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) continue;
             const existing = latestByVehicle.get(row.vehicleNumber);
             if (!existing || existing.timestampMs < timestampMs) {

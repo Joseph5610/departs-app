@@ -1,7 +1,7 @@
 import { AppVehicleDetail, AppStopTimeProperties, AppVehicleDescriptor } from "../../../_core/types";
 import type { GolemioVehicleDetailPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
-import { isFields, str, num, bool, strOrNum, type Fields } from "./fields";
+import { isFields, str, num, bool, strOrNum, type Fields } from "../../../_core/utils/fields";
 
 /** `vehicle_descriptor`, read defensively; every field optional, matching `AppVehicleDescriptor`. */
 function readDescriptor(v: unknown): AppVehicleDescriptor | undefined {
