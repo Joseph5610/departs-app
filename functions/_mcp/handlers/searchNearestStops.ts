@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { loadStops, rankStopsByDistance, toMcpStopLines } from "../utils";
+import { nearestStops, toMcpStopLines } from "../utils";
 
 /**
  * Handles the 'search_nearest_stops' MCP tool invocation.
@@ -21,8 +21,7 @@ export async function handleSearchNearestStops(
 
     const radiusMeters = Number(args.radius_meters) || MCP_DEFAULTS.NEAREST_STOPS_RADIUS_M;
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
-    const stopsInRadius = rankStopsByDistance(await loadStops(resolvedCity), lat, lon)
-        .filter((s) => s.distance <= radiusMeters);
+    const stopsInRadius = await nearestStops(resolvedCity, lat, lon, { radiusM: radiusMeters, limit });
 
     return {
         city: resolvedCity,

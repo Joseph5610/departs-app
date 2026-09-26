@@ -1,7 +1,7 @@
 import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
+import { nearestStops, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
 
 /**
  * Handles the 'get_nearest_departures' MCP tool invocation.
@@ -27,18 +27,13 @@ export async function handleGetNearestDepartures(
 
     const radiusMeters = Number(args.radius_meters) || MCP_DEFAULTS.NEAREST_DEPARTURES_RADIUS_M;
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
-    const [stops, infotexts] = await Promise.all([
-        loadStops(resolvedCity),
+    const [inRadius, infotexts] = await Promise.all([
+        nearestStops(resolvedCity, lat, lon, { radiusM: radiusMeters, limit: MCP_DEFAULTS.NEAREST_DEPARTURES_MAX_STOPS }),
         loadInfotexts(ctx, city, resolvedCity)
     ]);
-
-    const ranked = rankStopsByDistance(stops, lat, lon);
-    let nearby = ranked.filter((s) => s.distance <= radiusMeters);
-    if (nearby.length === 0) {
-        nearby = ranked.slice(0, MCP_DEFAULTS.NEAREST_DEPARTURES_FALLBACK_STOPS);
-    } else {
-        nearby = nearby.slice(0, MCP_DEFAULTS.NEAREST_DEPARTURES_MAX_STOPS);
-    }
+    const nearby = inRadius.length > 0
+        ? inRadius
+        : await nearestStops(resolvedCity, lat, lon, { limit: MCP_DEFAULTS.NEAREST_DEPARTURES_FALLBACK_STOPS });
 
     const nowMs = Date.now();
     const timeContext = getMcpTimeContext(resolvedCity, nowMs);

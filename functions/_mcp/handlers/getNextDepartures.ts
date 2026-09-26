@@ -1,7 +1,7 @@
 import type { CityUseCases } from "../../_domain/use-cases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { resolveStationByName, loadStops, rankStopsByDistance, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
+import { resolveStationByName, nearestStops, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
 
 /**
  * Handles the 'get_next_departures' MCP tool invocation.
@@ -26,7 +26,7 @@ export async function handleGetNextDepartures(
 
     // 1. If stop_id is missing but stop_name is provided, search stops
     if (!stopId && args.stop_name) {
-        const station = resolveStationByName(await loadStops(resolvedCity), String(args.stop_name));
+        const station = await resolveStationByName(resolvedCity, String(args.stop_name));
         if (station) {
             stopId = station.stopIds;
             stopNameResolved = station.stopName;
@@ -40,7 +40,7 @@ export async function handleGetNextDepartures(
         const lat = Number(args.latitude);
         const lon = Number(args.longitude);
         if (!isNaN(lat) && !isNaN(lon)) {
-            const closest = rankStopsByDistance(await loadStops(resolvedCity), lat, lon, { includeCentroids: true })[0]?.feature;
+            const closest = (await nearestStops(resolvedCity, lat, lon, { includeCentroids: true, limit: 1 }))[0]?.feature;
             if (closest) {
                 stopId = closest.properties?.stop_id;
                 stopNameResolved = closest.properties?.stop_name;

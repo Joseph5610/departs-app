@@ -139,11 +139,6 @@ export interface AppStopFeature {
     properties: AppStopProperties;
 }
 
-export interface AppStopCollection {
-    type: 'FeatureCollection';
-    features: AppStopFeature[];
-}
-
 export interface AppVehicleCollection {
     type: 'FeatureCollection';
     features: AppVehicleFeature[];
