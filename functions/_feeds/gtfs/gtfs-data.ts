@@ -2,7 +2,6 @@ import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
-import { isEmptyRecord } from '../../_core/utils/fields';
 
 export interface GtfsRoute {
     name: string;
@@ -71,7 +70,7 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
     },
     // An empty route table is an upstream failure, not a valid result. Without this the empty
     // object would be cached for the full TTL and every vehicle would be dropped for two hours.
-    (data) => !data || isEmptyRecord(data.routes));
+    (data) => !data || Object.keys(data.routes).length === 0);
 }
 
 /**
@@ -83,7 +82,7 @@ export interface GtfsTripRoutesData {
 }
 
 /** A city's trip id -> route id (`trip_routes.json`), for resolving a trip's line. */
-export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string, string>> {
+export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string, string> | null> {
     return getStaticRecord(city, 'trip_routes.json');
 }
 
@@ -92,11 +91,15 @@ export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string
  * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
  */
 export async function getGtfsTripAliases(city: CityConfig): Promise<Record<string, string | null>> {
-    return city.feed?.hasTripAliases ? getStaticRecord(city, 'trip_aliases.json') : {};
+    return (city.feed?.hasTripAliases ? await getStaticRecord<string | null>(city, 'trip_aliases.json') : null) ?? {};
 }
 
-/** A static data file holding one record, cached per city; an unreadable or empty file is fetched again soon. */
-async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Record<string, T>> {
+/**
+ * A static data file holding one record, cached per city; null when it is unreadable or empty, and then
+ * fetched again soon. Emptiness is judged from the text: asking a parsed table of thousands of keys
+ * whether it has any costs as much as listing them all.
+ */
+async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Record<string, T> | null> {
     const staticDataUrl = city.feed?.staticDataUrl;
     if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
@@ -105,12 +108,13 @@ async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Recor
             const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${file}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
             if (!res.ok) {
                 console.error(`Error fetching ${file} for ${city.slug}: ${res.status}`);
-                return {};
+                return null;
             }
-            return await res.json() as Record<string, T>;
+            const text = await res.text();
+            return text.trim() === '{}' ? null : JSON.parse(text) as Record<string, T>;
         } catch (e) {
             console.error(`Failed to parse or fetch ${file} for ${city.slug}:`, e);
-            return {};
+            return null;
         }
-    }, isEmptyRecord);
+    }, (data) => data === null);
 }

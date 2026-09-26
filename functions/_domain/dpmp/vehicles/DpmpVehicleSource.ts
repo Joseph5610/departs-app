@@ -97,7 +97,7 @@ export class DpmpVehicleSource implements VehicleSource {
 
         const nowMs = Date.now();
         const ctx = getLocalClock(this.city.timezone, nowMs);
-        const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes) : null;
+        const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes ?? {}) : null;
 
         const latestByVehicle = new Map<string, SeenRow>();
         for (const row of rows) {

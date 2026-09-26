@@ -34,7 +34,7 @@ export class VehicleDetailService implements VehicleDetailUseCase {
             getGtfsTripRoutes(this.city),
         ]);
 
-        const routeId = tripRoutes[tripId];
+        const routeId = tripRoutes?.[tripId];
         const route = routeId ? routes[routeId] : null;
 
         if (stations.length === 0 && !route) {

@@ -44,7 +44,7 @@ export const GTFS_CONFIG = {
      * `FLEET_CACHE_FRESH_MS`: served as-is. Younger than `FLEET_CACHE_STALE_MS`: served as-is, and a
      * background rebuild is kicked off via `waitUntil`. Older, or no cache entry: rebuilt synchronously.
      */
-    FLEET_CACHE_FRESH_MS: 10_000,
+    FLEET_CACHE_FRESH_MS: 15_000,
     /** Deadline before a request is forced onto a synchronous rebuild, not a freshness target. */
     FLEET_CACHE_STALE_MS: 60_000,
 } as const;

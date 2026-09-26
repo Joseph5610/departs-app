@@ -2,7 +2,6 @@ import type { AppVehicleCollection } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
-import { isEmptyRecord } from '../../../_core/utils/fields';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import { readCachedFleet, readFleetPlates, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { CACHE_CONFIG } from '../../../_core/config';
@@ -40,7 +39,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
                 this.mapping.usesTripWindows ? getTripWindows(this.city) : null,
             ]);
             // A failed trip-routes fetch returns empty; mapping against it would blank the map.
-            if (isEmptyRecord(tripRoutes)) return null;
+            if (!tripRoutes) return null;
             return new VehicleIndex(snapshot, routes, { tripRoutes, tripAliases }, this.mapping, { windows, clock: getLocalClock(this.city.timezone) });
         } catch (e) {
             console.error(`GTFS-RT index unavailable for ${this.city.slug}:`, e instanceof Error ? e.message : e);
@@ -108,11 +107,11 @@ export class GtfsRtVehicleSource implements VehicleSource {
 
     async find(vehicleId: string, gtfsTripId?: string): Promise<SingleLiveVehicle> {
         if (!this.mapping.resolvesPerEntity && vehicleId) {
-            // The stored build already resolved every vehicle to its trip: read the one vehicle instead of decoding the whole feed.
+            // The stored build already resolved every vehicle to its trip, the map's answer: a vehicle on another trip there has moved on.
             const fleet = await this.fleet();
             if (fleet && isTooOld(Date.parse(fleet.lastUpdated ?? '') || 0)) return {};
             const feature = fleet?.collection.features.find(f => f.properties.vehicle_id === vehicleId);
-            if (fleet && feature && (!gtfsTripId || feature.properties.gtfs_trip_id === gtfsTripId)) {
+            if (fleet && feature) {
                 const plates = await readFleetPlates(this.city.slug, fleet);
                 return { liveMatch: feature, lastStopId: feature.properties.last_stop_id, registrationNumber: plates[vehicleId] };
             }

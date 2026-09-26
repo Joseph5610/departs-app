@@ -18,9 +18,3 @@ export function readPoint(v: unknown): { type: 'Point'; coordinates: [number, nu
     const [lon, lat] = v.coordinates as unknown[];
     return typeof lon === 'number' && typeof lat === 'number' ? { type: 'Point', coordinates: [lon, lat] } : null;
 }
-
-/** Whether an object has no own enumerable key, without listing the keys of a large one first. */
-export function isEmptyRecord(record: object): boolean {
-    for (const _ in record) return false;
-    return true;
-}
