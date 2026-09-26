@@ -234,7 +234,8 @@ export const useDepartures = () => {
         },
         enabled: !!stopId,
         refetchInterval: refreshMs,
-        staleTime: refreshMs
+        staleTime: refreshMs,
+        retry: false,
     });
 
     const byTripId = useEnrichmentStore(s => s.byTripId);

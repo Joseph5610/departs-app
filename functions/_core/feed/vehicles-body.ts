@@ -16,19 +16,24 @@ const serialized = new WeakMap<AppVehicleCollection, string>();
  * `collection` must be the source's own shared object, not a per-request copy, or nothing is reused.
  */
 export function vehiclesBody(collection: AppVehicleCollection, readAt?: number): VehiclesBody {
-    const updatedMs = readAt ?? (collection.last_updated ? Date.parse(collection.last_updated) : NaN);
-    const status = collection.status === 'upstream_offline' ? 'upstream_offline' : feedStatusAt(updatedMs);
-
-    if (status === 'upstream_offline') {
-        const offline: AppVehicleCollection = { type: 'FeatureCollection', features: [], status, last_updated: collection.last_updated };
-        return { body: JSON.stringify(offline), offline: true };
-    }
-
+    if (collection.status === 'upstream_offline') return offlineBody(collection.last_updated);
     let json = serialized.get(collection);
     if (json === undefined) {
         json = JSON.stringify({ ...collection, status: undefined });
         serialized.set(collection, json);
     }
+    return vehiclesBodyFromJson(json, readAt ?? (collection.last_updated ? Date.parse(collection.last_updated) : NaN), collection.last_updated);
+}
+
+/** `vehiclesBody` for a collection the source already holds serialized without `status`, sparing a parse and a re-serialize. */
+export function vehiclesBodyFromJson(json: string, updatedMs: number, lastUpdated?: string): VehiclesBody {
+    const status = feedStatusAt(updatedMs);
+    if (status === 'upstream_offline') return offlineBody(lastUpdated);
     // `json` is a serialized object without `status`, so the key is appended before its closing brace.
     return { body: `${json.slice(0, -1)},"status":"${status}"}`, offline: false };
+}
+
+function offlineBody(lastUpdated?: string): VehiclesBody {
+    const offline: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline', last_updated: lastUpdated };
+    return { body: JSON.stringify(offline), offline: true };
 }

@@ -46,7 +46,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
         }
     }
 
-    /** When this isolate last started a background rebuild, so concurrent stale reads start only one. */
+    /** When this isolate last started a background refresh, so concurrent stale reads start only one. */
     private refreshStartedAt = 0;
 
     /**
@@ -58,6 +58,10 @@ export class GtfsRtVehicleSource implements VehicleSource {
         return (await this.fleet(waitUntil))?.collection ?? OFFLINE;
     }
 
+    async allJson(waitUntil?: (promise: Promise<unknown>) => void): Promise<{ json: string; lastUpdated?: string } | null> {
+        const fleet = await this.fleet(waitUntil);
+        return fleet ? { json: fleet.json, lastUpdated: fleet.lastUpdated } : null;
+    }
 
     /** The current build, or null when the feed or its static data cannot be read. */
     private async fleet(waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet | null> {

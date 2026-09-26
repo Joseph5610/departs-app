@@ -42,8 +42,8 @@ const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: number) =>
     staleTime: QUERY_TIMING_MS.LIVE_STALE,
     gcTime: QUERY_TIMING_MS.LIVE_GC,
     placeholderData: keepPreviousData,
-    retry: LIVE_VEHICLES_CONFIG.RETRY_COUNT,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, LIVE_VEHICLES_CONFIG.RETRY_MAX_DELAY_MS),
+    // The next poll is the retry: an immediate one only doubles the load on a struggling backend.
+    retry: false,
 });
 
 const brandNetworkVehicles = memoizeLast(enrichVehicleRouteMetadata);

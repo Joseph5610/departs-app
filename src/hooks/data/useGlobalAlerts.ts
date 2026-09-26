@@ -24,6 +24,7 @@ export const useGlobalAlerts = () => {
         enabled: !!selectedCity && hasAlerts,
         refetchInterval: QUERY_TIMING_MS.ALERTS_REFRESH,
         staleTime: QUERY_TIMING_MS.NOTICES_STALE,
+        retry: false,
     });
 
     const infotextsQuery = useQuery<Infotext[]>({
@@ -34,6 +35,7 @@ export const useGlobalAlerts = () => {
         enabled: !!selectedCity && !!cityConfig.hasInfotexts,
         refetchInterval: QUERY_TIMING_MS.INFOTEXTS_REFRESH,
         staleTime: QUERY_TIMING_MS.NOTICES_STALE,
+        retry: false,
     });
 
     const { byId, byName, byKordisNumeric } = useRouteMetadata();

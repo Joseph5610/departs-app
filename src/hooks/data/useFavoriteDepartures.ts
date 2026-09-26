@@ -29,6 +29,7 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
         refetchInterval: refreshMs,
         staleTime: refreshMs,
         placeholderData: keepPreviousData,
+        retry: false,
         enabled: stopIds.length > 0
     });
 

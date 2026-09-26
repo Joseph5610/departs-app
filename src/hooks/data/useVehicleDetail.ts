@@ -31,6 +31,7 @@ export const useVehicleDetail = () => {
         staleTime: refreshMs,
         refetchInterval: refreshMs,
         gcTime: QUERY_TIMING_MS.LIVE_GC,
+        retry: false,
     });
 
     const data = query.data ? brandVehicleDetail(query.data, byShortName) : query.data;

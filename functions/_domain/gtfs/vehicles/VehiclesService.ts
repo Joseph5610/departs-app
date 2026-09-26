@@ -3,7 +3,7 @@ import type { CityConfig } from '../../../_core/city-config';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { filterVehicles, isUnfiltered } from '../../../_core/utils/vehicleFilter';
 import { withFeedAge } from '../../../_core/feed/freshness';
-import { vehiclesBody, type VehiclesBody } from '../../../_core/feed/vehicles-body';
+import { vehiclesBody, vehiclesBodyFromJson, type VehiclesBody } from '../../../_core/feed/vehicles-body';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 import type { VehiclesUseCase } from '../../use-cases';
 
@@ -61,6 +61,12 @@ export class VehiclesService implements VehiclesUseCase {
     /** The unfiltered map request, answered from the source's collection serialized once. */
     async getVehiclesBody(ctx: CityRequestContext): Promise<VehiclesBody | null> {
         if (!isUnfiltered(parseSearchParams(ctx.url.searchParams, vehicleQuerySchema))) return null;
+        if (this.source.allJson) {
+            const fleet = await this.source.allJson(ctx.waitUntil);
+            return fleet
+                ? vehiclesBodyFromJson(fleet.json, fleet.lastUpdated ? Date.parse(fleet.lastUpdated) : NaN, fleet.lastUpdated)
+                : vehiclesBody({ type: 'FeatureCollection', features: [], status: 'upstream_offline' });
+        }
         return vehiclesBody(await this.source.all(ctx.waitUntil));
     }
 }

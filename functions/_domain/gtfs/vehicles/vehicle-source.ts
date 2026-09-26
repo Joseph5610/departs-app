@@ -17,6 +17,8 @@ export interface VehicleSource {
      * blocking this call on it; omitted, a source falls back to building synchronously as before.
      */
     all(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection>;
+    /** `all()` as the JSON (without `status`) the source already holds, sparing a parse and re-serialize; null when offline. */
+    allJson?(waitUntil?: (promise: Promise<unknown>) => void): Promise<{ json: string; lastUpdated?: string } | null>;
     /**
      * The vehicles serving the given trips, for departure boards; null once the source is too old to
      * serve positions. Omitted where reading the whole network is no dearer: answered from `all()`.
