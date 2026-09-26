@@ -59,24 +59,26 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                         {isDetailLoading && (
                             <Skeleton className="w-8 h-8 rounded-full bg-neutral-800/50" />
                         )}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onToggleFollow}
-                            className={cn(
-                                "rounded-full w-8 h-8 shrink-0 transition-colors cursor-pointer",
-                                isFollowing 
-                                    ? "bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30" 
-                                    : "text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40"
-                            )}
-                            aria-label={t('map.vehicleDetails.track')}
-                        >
-                            {isFollowing ? (
-                                <MapPin size={16} strokeWidth={2.5} />
-                            ) : (
-                                <MapPinOff size={16} strokeWidth={2} />
-                            )}
-                        </Button>
+                        {!displayVehicle.isStaticFallback && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onToggleFollow}
+                                className={cn(
+                                    "rounded-full w-8 h-8 shrink-0 transition-colors cursor-pointer",
+                                    isFollowing 
+                                        ? "bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30" 
+                                        : "text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40"
+                                )}
+                                aria-label={t('map.vehicleDetails.track')}
+                            >
+                                {isFollowing ? (
+                                    <MapPin size={16} strokeWidth={2.5} />
+                                ) : (
+                                    <MapPinOff size={16} strokeWidth={2} />
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
