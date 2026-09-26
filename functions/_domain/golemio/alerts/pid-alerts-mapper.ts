@@ -2,7 +2,7 @@ import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import { createGtfsAlertsMapper, type AlertsMapper } from '../../gtfs/alerts/alerts-mapper';
 import type { AppAlert } from '../../../_core/types';
 
-export interface PidAlertExtension {
+interface PidAlertExtension {
     causeDetail?: { translation?: Array<{ text: string, language?: string }> };
 }
 

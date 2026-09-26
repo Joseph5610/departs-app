@@ -10,7 +10,7 @@ export interface JsonRpcRequest {
     params?: Record<string, unknown>;
 }
 
-export interface McpToolProperty {
+interface McpToolProperty {
     type: string;
     enum?: string[];
     description: string;

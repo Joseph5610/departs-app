@@ -1,7 +1,7 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-index';
 import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
-import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { dayBit, operatesOnDay, type TripWindow } from '../../../_feeds/gtfs/trip-windows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MINS, DAY_SECS, wrapDaySeconds } from '../../../_core/utils/time';
 
@@ -177,7 +177,6 @@ export class KordisVehicleMapping implements VehicleMapping {
     }
 }
 
-export type { TripWindows };
 
 /**
  * Vehicles in numeric order where their ids are numbers, then the rest as the feed lists them.

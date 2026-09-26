@@ -44,7 +44,7 @@ function readLines(block: string): { line: string | string[] } | '' | undefined 
 }
 
 /** One `<item>` as a plain object shaped like `fast-xml-parser`'s output, ready for `pidRssItemSchema`. */
-export function readRssItem(block: string): Record<string, unknown> {
+function readRssItem(block: string): Record<string, unknown> {
     const item: Record<string, unknown> = {};
     for (const tag of ['title', 'pubDate', 'guid', 'link', 'priority', 'content:encoded', 'description', 'date', 'dateFrom', 'dateTo']) {
         const value = tagText(block, tag);

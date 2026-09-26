@@ -17,17 +17,17 @@ export interface AlertsMapperHooks {
     parseExtensions?(alert: GtfsRt.IAlert, appAlert: AppAlert): void;
 }
 
-export function parseTitle(rawTitle?: string | null): string {
+function parseTitle(rawTitle?: string | null): string {
     if (!rawTitle) return '';
     return AlertTextFormatter.fromHtml(rawTitle) || '';
 }
 
-export function parseDescription(rawDesc?: string | null): string | null {
+function parseDescription(rawDesc?: string | null): string | null {
     if (!rawDesc) return null;
     return AlertTextFormatter.fromHtml(rawDesc);
 }
 
-export function defaultParseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
+function defaultParseContent(rawHeader?: string | null, rawDesc?: string | null): { title: string; description: string | null } {
     return { title: parseTitle(rawHeader), description: parseDescription(rawDesc) };
 }
 
@@ -46,7 +46,7 @@ export function defaultParseIsDetour(alert: GtfsRt.IAlert): boolean {
  * frontend resolves name/type/color itself from the same static file it already joins vehicles
  * and departures against.
  */
-export function mapGtfsAlerts(
+function mapGtfsAlerts(
     rawAlerts: GtfsRt.IFeedEntity[],
     forceIncident: boolean = false,
     hooks: AlertsMapperHooks = {}

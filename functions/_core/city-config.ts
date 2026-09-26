@@ -1,7 +1,7 @@
 /** ISO 3166-1 alpha-2 code of the country a city belongs to. */
 type CountryCode = 'CZ' | 'SK';
 
-export interface FeedConfig {
+interface FeedConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
     hasTripAliases?: boolean;

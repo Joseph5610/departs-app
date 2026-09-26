@@ -105,7 +105,7 @@ export interface AppDepartureFeeder {
     max_wait_s: number;
 }
 
-export interface AppStopProperties {
+interface AppStopProperties {
     stop_id: string;
     stop_name: string;
     platform_code?: string | null;
@@ -256,7 +256,7 @@ export interface AppAlertsResponse {
     alerts: AppAlert[];
 }
 
-export interface AppCity {
+interface AppCity {
     slug: string;
     name: string;
     /** ISO 3166-1 alpha-2 code, used to group cities in the switcher. */

@@ -20,7 +20,7 @@ export interface Station {
 /** `[feeder_trip_id, feeder_route_id, feeder_arrival_ms, min_transfer_s, max_wait_s]` */
 export type GtfsFeederTuple = [string, string, number, number, number];
 
-export interface GtfsDepartureExtras {
+interface GtfsDepartureExtras {
     feeders?: GtfsFeederTuple[];
     continues?: GtfsContinuation;
 }

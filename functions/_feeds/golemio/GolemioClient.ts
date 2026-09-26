@@ -4,7 +4,7 @@ import { ApiError } from "../../_core/errors";
 import { GOLEMIO_CONFIG } from "./config";
 import { ApiClient, ApiFetchOptions } from "../../_core/ApiClient";
 
-export class GolemioClient {
+class GolemioClient {
     private client: ApiClient;
 
     constructor() {
