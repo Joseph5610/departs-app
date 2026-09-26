@@ -1,7 +1,7 @@
 import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
-import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
+import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
 import { LruCache } from '../../../_core/feed/LruCache';
 import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
@@ -21,7 +21,7 @@ const { VehicleStopStatus } = GtfsRt;
 const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** The mapped fleet per CSV snapshot: built once per feed read, however many requests read it. */
-const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
+const collections = new WeakMap<object, AppVehicleCollection>();
 
 interface Position {
     latitude: number;

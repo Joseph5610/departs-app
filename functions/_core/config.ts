@@ -105,11 +105,10 @@ export const API_LIMITS = {
     FEEDBACK_MESSAGE_MAX_CHARS: 2000,
 };
 
-/** Per-snapshot builds shared between concurrent requests (vehicle collections, mapped alerts). */
-export const DERIVATION_CONFIG = {
-    /**
-     * A build still pending after this long is raced by a fresh one, since a build whose request was
-     * killed or cancelled never settles. Under the app's 10 s request timeout, above a slow cold build.
-     */
-    ABANDON_MS: 8000,
+/** In-memory feed caching (`CacheManager`). */
+export const CACHE_CONFIG = {
+    /** While another request refreshes a key for up to this long, callers holding a stale value serve it instead of fetching too. */
+    REFRESH_WINDOW_MS: 10_000,
+    /** How soon a key holding fallback (failed or empty) data is fetched again, instead of its full TTL. */
+    FALLBACK_RETRY_MS: 5000,
 };

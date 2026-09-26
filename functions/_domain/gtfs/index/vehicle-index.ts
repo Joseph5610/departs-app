@@ -1,7 +1,7 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
-import { deriveAsync, type Derivation, type Snapshot } from '../../../_core/feed/source';
+import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
 import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
@@ -43,7 +43,7 @@ export interface VehicleMapping {
     assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData, schedule: MappingSchedule): Array<{ entity: GtfsRt.IFeedEntity; tripId: string }>;
 }
 
-const collections = new WeakMap<object, Derivation<AppVehicleCollection>>();
+const collections = new WeakMap<object, AppVehicleCollection>();
 
 /**
  * Reads vehicles out of one feed snapshot.

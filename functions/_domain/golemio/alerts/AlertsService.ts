@@ -2,13 +2,13 @@ import type { AppAlertsResponse, AppAlert, Env, CityRequestContext } from "../..
 import type { AlertsUseCase } from "../../use-cases";
 import { ERROR_MESSAGES } from "../../../_core/config";
 import { ApiError } from "../../../_core/errors";
-import { deriveAsync, type Derivation } from "../../../_core/feed/source";
+import { deriveAsync } from "../../../_core/feed/source";
 import { getPidAlertFeeds, getRawPidAlertFeeds, type PidAlertFeeds } from "../../../_feeds/golemio/alerts";
 import { RssAlertsMapper } from "./RssAlertsMapper";
 import { createPidAlertsMapper } from './pid-alerts-mapper';
 
 /** Mapped alerts per feeds snapshot: parsing and mapping a few hundred alerts runs once per snapshot. */
-const mapped = new WeakMap<object, Derivation<AppAlertsResponse>>();
+const mapped = new WeakMap<object, AppAlertsResponse>();
 
 /** Prague alerts: incidents from GTFS-RT and planned exclusions from the PID RSS feed. */
 export class AlertsService implements AlertsUseCase {

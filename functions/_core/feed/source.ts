@@ -1,7 +1,4 @@
-import { awaitShared, CacheManager } from './CacheManager';
-import { DERIVATION_CONFIG } from '../config';
-
-export { awaitShared };
+import { CacheManager } from './CacheManager';
 
 /** What a source returns: the data and when it was read, so age is never guessed. */
 export interface Snapshot<T> {
@@ -47,38 +44,14 @@ export function derive<T, D extends object>(snapshot: Snapshot<T>, cache: WeakMa
     return built;
 }
 
-/** A per-snapshot async build, when it started and whether it has resolved. */
-export interface Derivation<D> {
-    promise: Promise<D>;
-    startedAt: number;
-    resolved: boolean;
-}
-
 /**
- * `derive` for an async build: concurrent callers share one build, and a rejected one is dropped so the
- * next caller retries. A build pending past `DERIVATION_CONFIG.ABANDON_MS` is raced by a fresh one rather
- * than awaited forever, since one started by a killed or cancelled request never settles.
+ * `derive` for an async build. Only a finished build is shared: one still under way belongs to another
+ * request and may never settle, so a caller that finds none builds its own.
  */
-export function deriveAsync<D>(snapshot: object, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
+export async function deriveAsync<D extends object>(snapshot: object, cache: WeakMap<object, D>, build: () => Promise<D>): Promise<D> {
     const existing = cache.get(snapshot);
-    if (!existing) return startDerivation(snapshot, cache, build);
-    if (existing.resolved) return existing.promise;
-
-    const waitMs = Math.max(0, existing.startedAt + DERIVATION_CONFIG.ABANDON_MS - Date.now());
-    return awaitShared(existing.promise, waitMs).then((shared) => {
-        if (shared.settled) return shared.value;
-        if (cache.get(snapshot) !== existing) return deriveAsync(snapshot, cache, build);
-        // A slow build may still finish first; whichever does is kept.
-        return startDerivation(snapshot, cache, () => Promise.race([existing.promise, build()]));
-    });
-}
-
-function startDerivation<D>(snapshot: object, cache: WeakMap<object, Derivation<D>>, build: () => Promise<D>): Promise<D> {
-    const derivation: Derivation<D> = { promise: build(), startedAt: Date.now(), resolved: false };
-    cache.set(snapshot, derivation);
-    derivation.promise.then(
-        () => { derivation.resolved = true; },
-        () => { if (cache.get(snapshot) === derivation) cache.delete(snapshot); }
-    );
-    return derivation.promise;
+    if (existing) return existing;
+    const built = await build();
+    cache.set(snapshot, built);
+    return built;
 }

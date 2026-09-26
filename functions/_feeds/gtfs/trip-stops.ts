@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../_core/city-config';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { appClient } from '../../_core/ApiClient';
-import { awaitShared, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
+import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
 import { GTFS_CONFIG, tripBucketId } from './config';
 import type { GtfsTripConnection, Station } from './types';
@@ -20,10 +20,10 @@ const tripStopsCache = new LruCache<Station[]>({
 });
 
 /**
- * The last few buckets as parsed, keyed by `${citySlug}:${bucketId}` and held as the pending read, so a
- * vehicle build asking for many trips of one bucket, at once or in a row, parses it once.
+ * The last few buckets as parsed, keyed by `${citySlug}:${bucketId}`, so a vehicle build asking for many
+ * trips of one bucket in a row parses it once. Holds parsed buckets only, never a read under way.
  */
-const rawBucketCache = new LruCache<Promise<RawTripBucket | null>>({
+const rawBucketCache = new LruCache<RawTripBucket>({
     maxEntries: GTFS_CONFIG.TRIP_BUCKETS_CACHE_MAX_ENTRIES,
     ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
@@ -34,22 +34,15 @@ async function fetchTripBucket(url: string): Promise<RawTripBucket | null> {
     return JSON.parse(await res.text()) as RawTripBucket;
 }
 
-/** A bucket's parsed JSON, shared with a read already under way unless that read was abandoned by a killed request. */
+/** A bucket's parsed JSON; null when the file cannot be read. */
 async function getTripBucket(city: CityConfig, staticDataUrl: string, bucketId: string): Promise<RawTripBucket | null> {
     const key = `${city.slug}:${bucketId}`;
-    const pending = rawBucketCache.get(key);
-    if (pending) {
-        const shared = await awaitShared(pending);
-        if (shared.settled) return shared.value;
-    }
+    const held = rawBucketCache.get(key);
+    if (held) return held;
 
-    const read = fetchTripBucket(`${staticDataUrl}/${city.slug}/trip_buckets/${bucketId}.json`);
-    rawBucketCache.set(key, read);
-    read.then(
-        (bucket) => { if (bucket === null && rawBucketCache.get(key) === read) rawBucketCache.delete(key); },
-        () => { if (rawBucketCache.get(key) === read) rawBucketCache.delete(key); }
-    );
-    return read;
+    const bucket = await fetchTripBucket(`${staticDataUrl}/${city.slug}/trip_buckets/${bucketId}.json`);
+    if (bucket) rawBucketCache.set(key, bucket);
+    return bucket;
 }
 
 function toStation(st: unknown, idx: number): Station {
