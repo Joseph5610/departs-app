@@ -151,6 +151,7 @@
       "staticFallback": "Poloha nie je k dispozícii",
       "staticFallbackDescription": "Tento spoj momentálne nemá aktívne sledovanie polohy. Zobrazený je plánovaný cestovný poriadok.",
       "headingToDestination": "Smer",
+      "directionLabel": "Smer",
       "onTime": "Načas",
       "unknownDelay": "Neznáme meškanie",
       "delayLabel": "Meškanie {{minutes}} min",

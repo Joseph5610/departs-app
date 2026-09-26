@@ -150,6 +150,7 @@
       "staticFallback": "Live position not available",
       "staticFallbackDescription": "This trip currently does not have active real-time tracking. Showing scheduled timetable.",
       "headingToDestination": "Heading to destination",
+      "directionLabel": "Direction",
       "onTime": "On time",
       "unknownDelay": "Unknown delay",
       "delayLabel": "Delay {{minutes}} min",

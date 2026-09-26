@@ -39,17 +39,22 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
                 <div className="flex justify-between items-start gap-3">
-                    <h2 data-testid="vehicle-headsign" className="flex-1 min-w-0 text-2xl font-bold tracking-tight leading-tight text-foreground/90">
-                        {displayVehicle.trip_headsign ? (
-                            <span className="animate-in fade-in duration-500">
-                                {displayVehicle.trip_headsign}
-                            </span>
-                        ) : isDetailLoading ? (
-                            <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
-                        ) : (
-                            t('map.vehicleDetails.headingToDestination')
-                        )}
-                    </h2>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            {t('map.vehicleDetails.directionLabel')}
+                        </span>
+                        <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
+                            {displayVehicle.trip_headsign ? (
+                                <span className="animate-in fade-in duration-500">
+                                    {displayVehicle.trip_headsign}
+                                </span>
+                            ) : isDetailLoading ? (
+                                <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
+                            ) : (
+                                t('map.vehicleDetails.headingToDestination')
+                            )}
+                        </h2>
+                    </div>
                     <div className="flex gap-2 shrink-0">
                         {isDetailLoading && (
                             <Skeleton className="w-8 h-8 rounded-full bg-neutral-800/50" />
