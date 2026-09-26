@@ -4,6 +4,21 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.0] - 2026-09-26
+
+### Added
+
+- Departures flagged as canceled by the feed are struck through with a "Canceled" badge instead of a countdown, on the stop board and favorites.
+
+### Changed
+
+- Vehicle model, operator, air conditioning and low-floor for Brno and Prešov come from the fleet register read by the app, shown on vehicle detail and departure boards; the backend no longer reads it.
+- The vehicles list no longer carries vehicle descriptors or registration numbers for Brno and Prešov; licence plates appear on vehicle detail only.
+
+### Fixed
+
+- Brno vehicle detail reads the vehicle from the stored fleet instead of decoding the whole KORDIS feed on every request, which pushed requests over the CPU limit and took other cities down with them.
+
 ## [0.75.1] - 2026-09-26
 
 ### Fixed

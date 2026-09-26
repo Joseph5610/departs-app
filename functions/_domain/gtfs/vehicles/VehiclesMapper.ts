@@ -30,7 +30,6 @@ export class VehiclesMapper {
         const bearing = vp.position?.bearing ? Number(vp.position.bearing) : undefined;
         const vehicleId = vehicleIdOverride || vp.vehicle?.id || '';
         const vehicleLabel = vp.vehicle?.label || vehicleId;
-        const licensePlate = vp.vehicle?.licensePlate;
         
         const feature: AppVehicleFeature = {
             type: 'Feature',
@@ -49,10 +48,6 @@ export class VehiclesMapper {
                 state_position: statePosition,
                 origin_timestamp: originTimestamp,
                 bearing: bearing ?? null,
-
-                vehicle_descriptor: {
-                    vehicle_registration_number: licensePlate || vehicleLabel || vehicleId
-                }
             }
         };
         if (vp.currentStopSequence && vp.currentStopSequence > 0) feature.properties.last_stop_sequence = vp.currentStopSequence;

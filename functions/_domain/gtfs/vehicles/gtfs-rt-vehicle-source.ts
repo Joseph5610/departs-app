@@ -3,7 +3,7 @@ import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
-import { readCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
+import { readCachedFleet, readFleetPlates, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { CACHE_CONFIG } from '../../../_core/config';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
@@ -83,9 +83,9 @@ export class GtfsRtVehicleSource implements VehicleSource {
     /** Builds the fleet and, unless it is offline, caches it for this and the next isolate to read. */
     private async build(): Promise<CachedFleet | null> {
         const index = await this.index();
-        const collection = index ? await index.all() : OFFLINE;
-        if (collection.status === 'upstream_offline') return null;
-        return writeCachedFleet(this.city.slug, collection, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
+        if (!index) return null;
+        const { collection, plates } = await index.allWithPlates();
+        return writeCachedFleet(this.city.slug, collection, plates, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
     }
 
     async forTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {
@@ -105,12 +105,23 @@ export class GtfsRtVehicleSource implements VehicleSource {
     }
 
     async find(vehicleId: string, gtfsTripId?: string): Promise<SingleLiveVehicle> {
+        if (!this.mapping.resolvesPerEntity && vehicleId) {
+            // The stored build already resolved every vehicle to its trip: read the one vehicle instead of decoding the whole feed.
+            const fleet = await this.fleet();
+            if (fleet && isTooOld(Date.parse(fleet.lastUpdated ?? '') || 0)) return {};
+            const feature = fleet?.collection.features.find(f => f.properties.vehicle_id === vehicleId);
+            if (fleet && feature && (!gtfsTripId || feature.properties.gtfs_trip_id === gtfsTripId)) {
+                const plates = await readFleetPlates(this.city.slug, fleet);
+                return { liveMatch: feature, lastStopId: feature.properties.last_stop_id, registrationNumber: plates[vehicleId] };
+            }
+        }
+
         const index = await this.index();
         if (!index) return { liveMatch: undefined };
         // Past this age the map has gone dark, so a detail must not still claim a live position.
         if (isTooOld(index.fetchedAt)) return {};
 
         const found = await index.find(vehicleId, gtfsTripId);
-        return found ? { liveMatch: found.feature, lastStopId: found.lastStopId } : {};
+        return found ? { liveMatch: found.feature, lastStopId: found.lastStopId, registrationNumber: found.registrationNumber } : {};
     }
 }

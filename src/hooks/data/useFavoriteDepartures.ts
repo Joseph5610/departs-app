@@ -10,6 +10,7 @@ import { enrichLiveDepartures } from '../../lib/enrichment';
 import { apiFetch } from '../../lib/api-client';
 import { LIVE_FETCH_OPTIONS } from '../../config/constants';
 import { useRouteMetadata } from './useRouteMetadata';
+import { useFleetLookup } from './useVehicleMetadata';
 
 /**
  * Live departures for several stops fetched in one request, enriched and grouped by stop ID.
@@ -37,12 +38,13 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { tripIndex } = useVehicles();
     const { byShortName, byId } = useRouteMetadata();
+    const fleet = useFleetLookup();
 
     const departuresByStop = useMemo(() => {
         const byStop = new Map<string, Departure[]>();
         if (!query.data?.departures) return byStop;
 
-        const live = enrichLiveDepartures(query.data.departures, tripIndex, byTripId, byVehicleId, byShortName, byId, query.dataUpdatedAt || 0);
+        const live = enrichLiveDepartures(query.data.departures, tripIndex, byTripId, byVehicleId, byShortName, byId, query.dataUpdatedAt || 0, fleet);
         for (const dep of live) {
             if (!dep.stopId) continue;
             const list = byStop.get(dep.stopId);
@@ -50,7 +52,7 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
             else byStop.set(dep.stopId, [dep]);
         }
         return byStop;
-    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId, byShortName, byId]);
+    }, [query.data, query.dataUpdatedAt, tripIndex, byTripId, byVehicleId, byShortName, byId, fleet]);
 
     return { departuresByStop, isLoading: query.isLoading, isError: query.isError };
 };

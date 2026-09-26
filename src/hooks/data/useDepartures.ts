@@ -13,6 +13,7 @@ import { routeTypeRank } from '../../config/transit';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
 import { useVehicles } from './useVehicles';
 import { useRouteMetadata } from './useRouteMetadata';
+import { useFleetLookup } from './useVehicleMetadata';
 
 export interface DepartureSubGroup {
     groupId: string;
@@ -242,9 +243,10 @@ export const useDepartures = () => {
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { tripIndex } = useVehicles();
     const { byShortName, byId } = useRouteMetadata();
+    const fleet = useFleetLookup();
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
-    const liveDepartures = enrichStopDepartures(query.data?.departures ?? NO_DEPARTURES, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt);
+    const liveDepartures = enrichStopDepartures(query.data?.departures ?? NO_DEPARTURES, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt, fleet);
     const { filtered, hasAirConditioningData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned);
     const groupedDepartures = groupDepartures(filtered, departureSort);
     const delayStats = computeDelayStats(filtered, dataUpdatedAt);

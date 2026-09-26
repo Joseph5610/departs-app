@@ -43,7 +43,7 @@ export const useVehicleMonitor = ({
 
         for (const feature of rawFeatures) {
             const p = feature.properties as VehicleProperties;
-            const vId = p.vehicle_id || p.vehicle_descriptor?.vehicle_registration_number?.toString() || undefined;
+            const vId = p.vehicle_id || undefined;
             const slug = p.route_type;
 
             modeCounts[slug] = (modeCounts[slug] || 0) + 1;

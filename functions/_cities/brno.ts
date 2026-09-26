@@ -3,7 +3,6 @@ import type { City } from './types';
 import { gtfsUseCases } from '../_domain/gtfs/use-cases';
 import { GtfsRtVehicleSource } from '../_domain/gtfs/vehicles/gtfs-rt-vehicle-source';
 import { KordisVehicleMapping } from '../_domain/kordis/index/vehicle-mapping';
-import { createKordisVehicleDetailEnricher } from '../_domain/kordis/vehicles/kordis-detail-enricher';
 import { createKordisAlertsMapper } from '../_domain/kordis/alerts/kordis-alerts-mapper';
 
 const config: CityConfig = {
@@ -16,8 +15,7 @@ const config: CityConfig = {
     feed: {
         realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
         staticDataUrl: 'https://data.departs.app',
-        hasTripAliases: true,
-        vehicleMetadataFile: 'vehicles.json?v=3'
+        hasTripAliases: true
     },
     hasAlerts: true,
     isBeta: true,
@@ -29,14 +27,12 @@ const config: CityConfig = {
 
 /**
  * Brno (IDS JMK): the GTFS stack with KORDIS's own reading of its realtime feed - recycled trip ids,
- * vehicles repeated under several of them, and fleet metadata (DPMB and leased operators alike) on
- * the detail.
+ * vehicles repeated under several of them, and padded stop ids.
  */
 export const city: City = {
     config,
     create: () => gtfsUseCases(config, {
         vehicleSource: new GtfsRtVehicleSource(config, new KordisVehicleMapping()),
-        enricher: createKordisVehicleDetailEnricher,
         alertsMapper: createKordisAlertsMapper(),
     }),
 };

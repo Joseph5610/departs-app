@@ -8,7 +8,6 @@ import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, getGtfsTripRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
-import { getVehicleRanges, findVehicleRange, type VehicleRange } from '../../../_feeds/gtfs/vehicle-ranges';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
 import { bearingDeg, distanceMeters } from '../../../_core/utils/geo';
@@ -91,11 +90,10 @@ export class DpmpVehicleSource implements VehicleSource {
 
     private async build(snapshot: Snapshot<DpmpVehicleRow[]>): Promise<AppVehicleCollection> {
         const rows = snapshot.data;
-        const [routes, tripRoutes, windows, fleet] = await Promise.all([
+        const [routes, tripRoutes, windows] = await Promise.all([
             getGtfsRoutes(this.city),
             getGtfsTripRoutes(this.city),
             getTripWindows(this.city),
-            getVehicleRanges(this.city),
         ]);
 
         const ctx = getLocalClock(this.city.timezone);
@@ -121,7 +119,7 @@ export class DpmpVehicleSource implements VehicleSource {
         );
         const features: AppVehicleFeature[] = [];
         for (const feature of mapped) {
-            if (feature) features.push(this.withFleetMetadata(feature, fleet));
+            if (feature) features.push(feature);
         }
 
         return { type: 'FeatureCollection', features, last_updated: new Date(nowMs).toISOString() };
@@ -197,22 +195,6 @@ export class DpmpVehicleSource implements VehicleSource {
         }
     }
 
-    /** Adds the operator and, when the side number is in the fleet register, model and equipment. */
-    private withFleetMetadata(feature: AppVehicleFeature, fleet: VehicleRange[] | null): AppVehicleFeature {
-        const vehicleNumber = Number(feature.properties.vehicle_id);
-        const range = fleet && Number.isFinite(vehicleNumber) ? findVehicleRange(vehicleNumber, fleet) : null;
-
-        feature.properties.vehicle_descriptor = {
-            ...feature.properties.vehicle_descriptor,
-            operator: DPMP_CONFIG.OPERATOR,
-            ...(range ? {
-                vehicle_type: range.vehicle_type,
-                is_air_conditioned: range.is_air_conditioned === true,
-                is_wheelchair_accessible: range.is_wheelchair_accessible === true,
-            } : {}),
-        };
-        return feature;
-    }
 
     /**
      * Places a vehicle with no GPS fix on its current stop segment, advanced by the share of the

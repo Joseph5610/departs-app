@@ -9,6 +9,8 @@ import { GTFS_CONFIG } from './config';
  */
 export class CachedFleet {
     private parsed: AppVehicleCollection | undefined;
+    /** Licence plates by `vehicle_id`, once read; see `readFleetPlates`. */
+    plates: Record<string, string> | undefined;
 
     /** `json` is the collection without `status`, which is stamped per request from `lastUpdated`. */
     constructor(
@@ -37,6 +39,19 @@ function cacheKey(citySlug: string): string {
     return `vehicles_fleet_${citySlug}`;
 }
 
+/** Plates are a separate entry, so the fleet answer never carries them and only a detail reads them. */
+function platesKey(citySlug: string): string {
+    return `vehicles_fleet_plates_${citySlug}`;
+}
+
+/** The licence plates stored with `fleet`'s city, by `vehicle_id`; empty when none were stored. */
+export async function readFleetPlates(citySlug: string, fleet: CachedFleet): Promise<Record<string, string>> {
+    if (fleet.plates) return fleet.plates;
+    const res = await readEdgeCache(platesKey(citySlug));
+    fleet.plates = res ? await res.json() as Record<string, string> : {};
+    return fleet.plates;
+}
+
 async function readEdgeFleet(citySlug: string): Promise<CachedFleet | null> {
     const res = await readEdgeCache(cacheKey(citySlug));
     if (!res) return null;
@@ -60,13 +75,17 @@ export async function readCachedFleet(citySlug: string): Promise<CachedFleet | n
 }
 
 /** Stores a freshly built fleet in this isolate and at the edge for `ttlS` seconds. */
-export async function writeCachedFleet(citySlug: string, collection: AppVehicleCollection, ttlS: number): Promise<CachedFleet> {
+export async function writeCachedFleet(citySlug: string, collection: AppVehicleCollection, plates: Record<string, string>, ttlS: number): Promise<CachedFleet> {
     const json = JSON.stringify({ ...collection, status: undefined });
     const entry = new CachedFleet(Date.now(), json, collection.last_updated, { ...collection, status: undefined });
+    entry.plates = plates;
     inMemory.set(citySlug, entry);
 
     const headers = new Headers({ 'Content-Type': 'application/json', [BUILT_AT_HEADER]: String(entry.builtAt) });
     if (entry.lastUpdated) headers.set(LAST_UPDATED_HEADER, entry.lastUpdated);
-    await writeEdgeCache(cacheKey(citySlug), new Response(json, { headers }), ttlS);
+    await Promise.all([
+        writeEdgeCache(cacheKey(citySlug), new Response(json, { headers }), ttlS),
+        writeEdgeCache(platesKey(citySlug), new Response(JSON.stringify(plates), { headers: { 'Content-Type': 'application/json' } }), ttlS),
+    ]);
     return entry;
 }

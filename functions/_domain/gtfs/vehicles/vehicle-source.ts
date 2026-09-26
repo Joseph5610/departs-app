@@ -4,6 +4,8 @@ import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/typ
 export interface SingleLiveVehicle {
     liveMatch?: AppVehicleFeature;
     lastStopId?: string;
+    /** The licence plate, where the network has one apart from `vehicle_id`; shown only on a detail. */
+    registrationNumber?: string;
 }
 
 /**

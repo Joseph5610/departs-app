@@ -2,9 +2,10 @@ import { useRouteParams } from '../useRouteParams';
 import { useVehicles } from '../data/useVehicles';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useRouteMetadata } from '../data/useRouteMetadata';
+import { useFleetLookup } from '../data/useVehicleMetadata';
 import type { VehicleDetail, VehicleFeature } from '../../types/transit';
 import type { StoredEnrichmentPatch } from '../../types/enrichment';
-import type { RouteInfo } from '../../types/vehicles';
+import type { RouteInfo, VehicleMetadata } from '../../types/vehicles';
 import { memoizeLast } from '../../lib/memoize';
 import { applyEnrichment, enrichConnections } from '../../lib/enrichment';
 import { useEnrichmentStore } from '../../state/enrichmentStore';
@@ -19,6 +20,7 @@ const mergeSelectedVehicle = memoizeLast((
     byVehicleId: Map<string, StoredEnrichmentPatch>,
     byShortName: Map<string, RouteInfo>,
     byId: Map<string, RouteInfo>,
+    metadata: VehicleMetadata | undefined,
     vehiclesUpdatedAt: number,
     detailUpdatedAt: number,
 ): VehicleDetail | null => {
@@ -73,6 +75,17 @@ const mergeSelectedVehicle = memoizeLast((
         merged.geometry = liveMatch!.geometry;
     }
 
+    if (metadata) {
+        const descriptor = merged.vehicle_descriptor;
+        merged.vehicle_descriptor = {
+            ...descriptor,
+            operator: metadata.operator,
+            vehicle_type: metadata.vehicle_type ?? descriptor?.vehicle_type,
+            is_air_conditioned: metadata.is_air_conditioned ?? descriptor?.is_air_conditioned,
+            is_wheelchair_accessible: metadata.is_wheelchair_accessible ?? descriptor?.is_wheelchair_accessible,
+        };
+    }
+
     const stopTimes = merged.stop_times;
     if (stopTimes?.features) {
         const features = enrichConnections(stopTimes.features, tripIndex, byShortName, byId);
@@ -100,6 +113,7 @@ export const useSelectedVehicle = () => {
     const byTripId = useEnrichmentStore(s => s.byTripId);
     const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { byShortName, byId } = useRouteMetadata();
+    const metadata = useFleetLookup()?.(vehicleId ?? vehicleDetail?.vehicle_id);
 
-    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, byShortName, byId, vehiclesUpdatedAt, detailUpdatedAt);
+    return mergeSelectedVehicle(tripId, vehicleId, vehicleIndex, tripIndex, vehicleDetail, byTripId, byVehicleId, byShortName, byId, metadata, vehiclesUpdatedAt, detailUpdatedAt);
 };

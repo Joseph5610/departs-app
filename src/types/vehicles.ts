@@ -124,3 +124,14 @@ export interface Continuation {
     headsign: string;
     departure_time?: string;
 }
+
+/** A vehicle's entry in its city's fleet register (the static data CDN's `vehicleMetadata` file). */
+export interface VehicleMetadata {
+    operator: string;
+    vehicle_type?: string;
+    is_air_conditioned?: boolean;
+    is_wheelchair_accessible?: boolean;
+}
+
+/** A vehicle's register entry by its id; the city's default operator for a vehicle the register does not list. */
+export type FleetLookup = (vehicleId: string | null | undefined) => VehicleMetadata | undefined;

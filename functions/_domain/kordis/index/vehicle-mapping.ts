@@ -51,6 +51,11 @@ export class KordisVehicleMapping implements VehicleMapping {
         return candidates;
     }
 
+    /** KORDIS pads its stop ids ("U01611Z01"); the timetable writes them unpadded ("U1611Z1"). */
+    stopId(entity: GtfsRt.IFeedEntity): string | undefined {
+        return entity.vehicle?.stopId?.replace(/U0*(\d+)/i, 'U$1').replace(/Z0*(\d+)/i, 'Z$1');
+    }
+
     label(entity: GtfsRt.IFeedEntity): string | undefined {
         const vp = entity.vehicle;
         return vp?.vehicle?.label || vp?.vehicle?.licensePlate || vp?.vehicle?.id || entity.id || undefined;

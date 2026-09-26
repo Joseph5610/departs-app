@@ -63,7 +63,7 @@ export function aggregateCityStats(features: VehicleFeature[]): CityStats {
 
             if (delay > STATS_AGGREGATION.DELAYED_THRESHOLD_S && p.route_short_name) {
                 delayedVehicles.push({
-                    vehicle_id: p.vehicle_id || p.vehicle_descriptor?.vehicle_registration_number?.toString() || STATS_AGGREGATION.MISSING_ID,
+                    vehicle_id: p.vehicle_id || STATS_AGGREGATION.MISSING_ID,
                     gtfs_trip_id: p.gtfs_trip_id || STATS_AGGREGATION.MISSING_ID,
                     line: p.route_short_name.toString(),
                     delay,

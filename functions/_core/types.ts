@@ -156,6 +156,8 @@ export interface AppVehicleProperties {
     delay: number | null;
     state_position?: AppVehicleState;
     last_stop_sequence?: number | null;
+    /** The feed's stop id where it reports no stop sequence (Brno), for a detail to place the vehicle on its trip. */
+    last_stop_id?: string;
     origin_timestamp?: string;
     run_number?: string | number;
     vehicle_descriptor?: AppVehicleDescriptor;

@@ -48,7 +48,7 @@ export class VehiclesService implements VehiclesUseCase {
         let byTrip: AppVehicleFeature | undefined;
         for (const feature of features) {
             const props = feature.properties;
-            if (vehicleId && (props.vehicle_id === vehicleId || String(props.vehicle_descriptor?.vehicle_registration_number ?? '') === vehicleId)) return feature;
+            if (vehicleId && props.vehicle_id === vehicleId) return feature;
             if (gtfsTripId && !byTrip && props.gtfs_trip_id === gtfsTripId) byTrip = feature;
         }
         return byTrip;

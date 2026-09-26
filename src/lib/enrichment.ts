@@ -1,7 +1,7 @@
 import type { StoredEnrichmentPatch } from '../types/enrichment';
 import type { Departure, DepartureFeeder, VehicleCollection, VehicleDetail, VehicleFeature, VehicleProperties } from '../types/transit';
 import type { RSSItem } from '../types/alerts';
-import type { RouteInfo, RouteType } from '../types/vehicles';
+import type { FleetLookup, RouteInfo, RouteType } from '../types/vehicles';
 import { DEPARTURES_CONFIG, ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
 import { normalizeRouteType, routeJoinKey } from '../utils/routeTypes';
 
@@ -205,7 +205,24 @@ export function enrichFeederHold(departures: Departure[], tripIndex: Map<string,
     return changed ? result : departures;
 }
 
-/** The full live pipeline for fetched departures: static branding, push patches and past-drop, then feeder holds. */
+/** AC and low-floor of each departure's live vehicle from the fleet register; the live stream may still override them. */
+function withFleetMetadata(departures: Departure[], fleet: FleetLookup | undefined): Departure[] {
+    if (!fleet) return departures;
+    let changed = false;
+    const result = departures.map((dep) => {
+        const metadata = dep.vehicleId ? fleet(dep.vehicleId) : undefined;
+        if (metadata?.is_air_conditioned === undefined && metadata?.is_wheelchair_accessible === undefined) return dep;
+        changed = true;
+        return {
+            ...dep,
+            is_air_conditioned: metadata.is_air_conditioned ?? dep.is_air_conditioned,
+            is_wheelchair_accessible: metadata.is_wheelchair_accessible ?? dep.is_wheelchair_accessible,
+        };
+    });
+    return changed ? result : departures;
+}
+
+/** The full live pipeline for fetched departures: static branding, fleet register, push patches and past-drop, then feeder holds. */
 export function enrichLiveDepartures(
     departures: Departure[],
     tripIndex: Map<string, VehicleFeature>,
@@ -214,8 +231,9 @@ export function enrichLiveDepartures(
     byShortName: Map<string, RouteInfo>,
     byId: Map<string, RouteInfo>,
     baseTimestamp: number,
+    fleet?: FleetLookup,
 ): Departure[] {
-    const branded = enrichDepartureRouteMetadata(departures, byShortName, byId);
+    const branded = withFleetMetadata(enrichDepartureRouteMetadata(departures, byShortName, byId), fleet);
     const enriched = enrichDepartures(branded, tripIndex, byTripId, byVehicleId, baseTimestamp);
     return enrichFeederHold(enriched, tripIndex);
 }
@@ -262,7 +280,7 @@ export function enrichAlertLineMetadata(
 
 /** The ID a push patch is keyed by; feeds without vehicle IDs are matched by fleet number. */
 const patchVehicleId = (p: VehicleProperties): string | undefined =>
-    p.vehicle_id || p.vehicle_descriptor?.vehicle_registration_number?.toString() || undefined;
+    p.vehicle_id || undefined;
 
 /**
  * Applies push patches to every vehicle. Returns the input collection itself when no patch applies,

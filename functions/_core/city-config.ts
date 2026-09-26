@@ -5,8 +5,6 @@ interface FeedConfig {
     realtimeUrl?: string;
     staticDataUrl?: string;
     hasTripAliases?: boolean;
-    /** Fleet metadata ranges under `${staticDataUrl}/${slug}/`, matched by vehicle number. */
-    vehicleMetadataFile?: string;
     [key: string]: string | boolean | undefined;
 }
 

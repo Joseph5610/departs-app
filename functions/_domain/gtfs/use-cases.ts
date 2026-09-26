@@ -5,7 +5,6 @@ import { VehicleDetailService } from './vehicles/VehicleDetailService';
 import { AlertsService } from './alerts/AlertsService';
 import { InfotextsService } from './infotexts/InfotextsService';
 import { GtfsRtVehicleDetailEnricher } from './vehicles/GtfsRtVehicleDetailEnricher';
-import type { VehicleDetailEnricher } from './vehicles/VehicleDetailEnricher';
 import { VehiclesService } from './vehicles/VehiclesService';
 import type { VehicleSource } from './vehicles/vehicle-source';
 import { GtfsRtVehicleSource } from './vehicles/gtfs-rt-vehicle-source';
@@ -20,7 +19,6 @@ import { getGtfsRtFeed } from '../../_feeds/gtfs/gtfs-rt-feed';
 export interface GtfsOverrides {
     /** Where vehicles come from; the default reads the city's GTFS-RT feed. */
     vehicleSource?: VehicleSource;
-    enricher?: (vehicles: VehiclesService) => VehicleDetailEnricher;
     alertsMapper?: AlertsMapper;
     departures?: (vehicles: VehiclesService) => DeparturesUseCase;
     /** Wraps the timetable detail, for vehicles the timetable does not cover. */
@@ -32,7 +30,7 @@ export interface GtfsOverrides {
 /** The use-cases of a city on the GTFS stack. */
 export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}): CityUseCases {
     const vehicles = new VehiclesService(config, overrides.vehicleSource ?? new GtfsRtVehicleSource(config));
-    const timetableDetail = new VehicleDetailService(config, overrides.enricher?.(vehicles) ?? new GtfsRtVehicleDetailEnricher(vehicles));
+    const timetableDetail = new VehicleDetailService(config, new GtfsRtVehicleDetailEnricher(vehicles));
 
     return {
         vehicles,

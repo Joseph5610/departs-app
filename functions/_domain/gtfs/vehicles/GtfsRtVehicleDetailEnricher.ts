@@ -11,22 +11,11 @@ import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
  * for the live position and delay of the vehicle. It then injects this live data
  * and recalculates all upcoming stop arrival/departure times.
  */
-export interface GtfsRtEnricherOptions {
-    /** Maps a feed stop id to the timetable's form, for networks whose ids differ (KORDIS pads them). */
-    normalizeStopId?(stopId: string): string;
-    /** Runs on every detail after the live data, for network-specific metadata. */
-    afterEnrich?(detail: AppVehicleDetail): Promise<AppVehicleDetail>;
-}
-
 export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
-    constructor(
-        protected vehiclesService: VehiclesService,
-        private readonly options: GtfsRtEnricherOptions = {}
-    ) {}
+    constructor(protected vehiclesService: VehiclesService) {}
 
     async enrich(detail: AppVehicleDetail, _ctx: CityRequestContext): Promise<AppVehicleDetail> {
-        const enriched = await this.enrichLive(detail);
-        return this.options.afterEnrich ? this.options.afterEnrich(enriched) : enriched;
+        return this.enrichLive(detail);
     }
 
     private async enrichLive(detail: AppVehicleDetail): Promise<AppVehicleDetail> {
@@ -37,6 +26,9 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         const result = await this.vehiclesService.getSingleLiveVehicle(detail.vehicle_id || '', detail.gtfs_trip_id);
         const liveMatch = result.liveMatch;
         const lastStopId = result.lastStopId;
+        if (result.registrationNumber) {
+            detail.vehicle_descriptor = { ...detail.vehicle_descriptor, vehicle_registration_number: result.registrationNumber };
+        }
 
         if (liveMatch) {
             // Check if the live vehicle is actually on the requested trip.
@@ -150,20 +142,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         features: NonNullable<NonNullable<AppVehicleDetail['stop_times']>['features']>,
         lastStopId: string
     ) {
-        const normalizedTarget = this.normalizeStopId(lastStopId);
-
-        // 1. Direct or clean ID match
-        const match = features.find(s => {
-            const sid = s.properties.stop_id;
-            if (!sid) return false;
-            return (
-                sid === lastStopId ||
-                sid === normalizedTarget ||
-                this.normalizeStopId(sid) === normalizedTarget
-            );
-        });
-
-        return match;
+        return features.find(s => s.properties.stop_id === lastStopId);
     }
 
     /**
@@ -244,7 +223,4 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         return delaySecs;
     }
 
-    private normalizeStopId(stopId: string): string {
-        return this.options.normalizeStopId?.(stopId) ?? stopId;
-    }
 }

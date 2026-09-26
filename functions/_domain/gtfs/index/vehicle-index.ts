@@ -24,6 +24,8 @@ export interface VehicleMapping {
     tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[];
     /** The id the network publishes this vehicle under; undefined keeps the feed's own. */
     label(entity: GtfsRt.IFeedEntity): string | undefined;
+    /** The entity's last stop in the timetable's id form; undefined keeps the feed's own. */
+    stopId?(entity: GtfsRt.IFeedEntity): string | undefined;
     /** Whether an entity refers to the given vehicle; networks differ in which descriptor field carries it. */
     matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean;
     /** Whether `MappingSchedule.windows` must be loaded for this network. */
@@ -44,6 +46,9 @@ export interface VehicleMapping {
 }
 
 const collections = new WeakMap<object, AppVehicleCollection>();
+
+/** Each build's licence plates by `vehicle_id`, where the plate differs from it: shown only on a detail, never in the fleet answer. */
+const platesByBuild = new WeakMap<AppVehicleCollection, Record<string, string>>();
 
 /**
  * Reads vehicles out of one feed snapshot.
@@ -78,16 +83,28 @@ export class VehicleIndex {
         return { ...built, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
     }
 
+    /** `all()` with its licence plates, for a source that stores the build for details to read. */
+    async allWithPlates(): Promise<{ collection: AppVehicleCollection; plates: Record<string, string> }> {
+        const built = await deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
+        return { collection: { ...built, last_updated: new Date(this.snapshot.fetchedAt).toISOString() }, plates: platesByBuild.get(built) ?? {} };
+    }
+
     private buildAll(): AppVehicleCollection {
         const relevant = this.entities.filter(entity => entity.vehicle && this.mapping.isRelevant(entity));
         const assigned = this.mapping.assignAll(relevant, this.tripRoutes, this.schedule);
 
         const features: AppVehicleFeature[] = [];
+        const plates: Record<string, string> = {};
         for (const { entity, tripId } of assigned) {
             const mapped = this.map(entity, tripId);
-            if (mapped) features.push(mapped);
+            if (!mapped) continue;
+            features.push(mapped);
+            const plate = entity.vehicle?.vehicle?.licensePlate;
+            if (plate && mapped.properties.vehicle_id && plate !== mapped.properties.vehicle_id) plates[mapped.properties.vehicle_id] = plate;
         }
-        return { type: 'FeatureCollection', features, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
+        const collection: AppVehicleCollection = { type: 'FeatureCollection', features, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
+        platesByBuild.set(collection, plates);
+        return collection;
     }
 
     /**
@@ -133,7 +150,7 @@ export class VehicleIndex {
      * The requested vehicle wins over its trip: a trip lookup can land on a different vehicle, which
      * would move the selection. A trip-only match still serves a stale or unknown vehicle id.
      */
-    async find(vehicleId: string, gtfsTripId?: string): Promise<{ feature: AppVehicleFeature; lastStopId?: string } | null> {
+    async find(vehicleId: string, gtfsTripId?: string): Promise<{ feature: AppVehicleFeature; lastStopId?: string; registrationNumber?: string } | null> {
         let vehicleOnly: GtfsRt.IFeedEntity | undefined;
         let tripOnly: GtfsRt.IFeedEntity | undefined;
 
@@ -158,8 +175,7 @@ export class VehicleIndex {
         if (!tripId) return null;
 
         const feature = this.map(entity, tripId);
-        // The raw stopId is deliberately kept off the public AppVehicleFeature.
-        return feature ? { feature, lastStopId: entity.vehicle.stopId?.toString() } : null;
+        return feature ? { feature, lastStopId: this.stopIdOf(entity), registrationNumber: entity.vehicle.vehicle?.licensePlate || undefined } : null;
     }
 
     /** One entity as a vehicle feature; null when it is stale or its route is unknown. */
@@ -175,6 +191,14 @@ export class VehicleIndex {
         if (!route) return null;
 
         const label = vp.vehicle ? this.mapping.label(entity) : undefined;
-        return VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null, this.mapping.isBeforeTrack(tripId, this.schedule), label);
+        const feature = VehiclesMapper.mapVehicle(vp, tripId, route, new Date(lastUpdate).toISOString(), null, this.mapping.isBeforeTrack(tripId, this.schedule), label);
+        // The feed's only progress signal (no stop sequence, no delay): a detail places the vehicle on its trip from it.
+        const stopId = this.stopIdOf(entity);
+        if (stopId) feature.properties.last_stop_id = stopId;
+        return feature;
+    }
+
+    private stopIdOf(entity: GtfsRt.IFeedEntity): string | undefined {
+        return this.mapping.stopId ? this.mapping.stopId(entity) : entity.vehicle?.stopId ?? undefined;
     }
 }
