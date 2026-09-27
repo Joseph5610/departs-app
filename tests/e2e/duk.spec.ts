@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { FRONTEND_CITIES_CONFIG } from '../../src/config/cities';
 
-interface StopProps { stop_id: string; is_centroid?: boolean; parent_station?: string | null; platform_code?: string | null }
-interface StopFeature { properties: StopProps }
+/** Ústí n.L., Divadlo and its platform 1. Fixed ids: CI must not fetch data.departs.app itself, where Bot Fight Mode challenges runner IPs. */
+const STATION_ID = 'centroid-1734';
+const PLATFORM_ID = '1734-1';
+const PLATFORM_CODE = '1';
 
 test.describe('Ústecký kraj (DÚK) Backend API tests', () => {
     test.skip(!FRONTEND_CITIES_CONFIG['duk'], 'DÚK support is currently disabled in config');
@@ -18,36 +20,17 @@ test.describe('Ústecký kraj (DÚK) Backend API tests', () => {
         expect(duk.hasAlerts).toBeFalsy();
     });
 
-    test('should return stations with their Portabo platforms', async ({ request }) => {
-        const res = await request.get('https://data.departs.app/duk/map-stops.json');
-        expect(res.ok()).toBeTruthy();
-
-        const { features } = await res.json() as { features: StopFeature[] };
-        const station = features.find(f => f.properties.is_centroid);
-        expect(station?.properties.stop_id).toMatch(/^centroid-\d+$/);
-
-        const platforms = features.filter(f => f.properties.parent_station === station?.properties.stop_id);
-        expect(platforms.length).toBeGreaterThan(0);
-        for (const platform of platforms) {
-            expect(platform.properties.stop_id).toMatch(/^\d+-\d+$/);
-        }
-    });
-
     test('should return departures for a station and only that platform for a platform', async ({ request }) => {
-        const { features } = await (await request.get('https://data.departs.app/duk/map-stops.json')).json() as { features: StopFeature[] };
-        const platform = features.find(f => !f.properties.is_centroid && f.properties.platform_code);
-        expect(platform).toBeDefined();
-
-        const stationRes = await request.get(`/api/duk/departures?stopId=${encodeURIComponent(platform!.properties.parent_station!)}`);
+        const stationRes = await request.get(`/api/duk/departures?stopId=${STATION_ID}`);
         expect(stationRes.ok()).toBeTruthy();
         expect(Array.isArray((await stationRes.json()).departures)).toBe(true);
 
-        const platformRes = await request.get(`/api/duk/departures?stopId=${encodeURIComponent(platform!.properties.stop_id)}`);
+        const platformRes = await request.get(`/api/duk/departures?stopId=${PLATFORM_ID}`);
         expect(platformRes.ok()).toBeTruthy();
         const { departures } = await platformRes.json() as { departures: Array<{ platform?: string; stopId: string }> };
         for (const dep of departures) {
-            expect(dep.stopId).toBe(platform!.properties.stop_id);
-            if (dep.platform) expect(dep.platform).toBe(platform!.properties.platform_code);
+            expect(dep.stopId).toBe(PLATFORM_ID);
+            if (dep.platform) expect(dep.platform).toBe(PLATFORM_CODE);
         }
     });
 

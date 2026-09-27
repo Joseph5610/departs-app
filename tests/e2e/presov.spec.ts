@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { FRONTEND_CITIES_CONFIG } from '../../src/config/cities';
 
+/** Trojica. A fixed id: CI must not fetch data.departs.app itself, where Bot Fight Mode challenges runner IPs. */
+const STATION_ID = 'centroid-trojica';
+
 test.describe('Prešov Backend API tests', () => {
     test.skip(!FRONTEND_CITIES_CONFIG['presov'], 'Prešov city support is currently disabled in config');
 
@@ -15,25 +18,8 @@ test.describe('Prešov Backend API tests', () => {
         expect(presov.hasAlerts).toBeFalsy();
     });
 
-    test('should return stops with synthetic centroids', async ({ request }) => {
-        const res = await request.get('https://data.departs.app/presov/map-stops.json');
-        expect(res.ok()).toBeTruthy();
-
-        const data = await res.json();
-        expect(data.type).toBe('FeatureCollection');
-        expect(data.features.length).toBeGreaterThan(0);
-
-        const centroid = data.features.find((f: { properties?: { is_centroid?: boolean } }) => f.properties?.is_centroid === true);
-        expect(centroid).toBeDefined();
-        expect(centroid.properties.stop_id).toMatch(/^centroid-/);
-    });
-
     test('should return departures for a station', async ({ request }) => {
-        const stopsRes = await request.get('https://data.departs.app/presov/map-stops.json');
-        const stopsData = await stopsRes.json();
-        const centroid = stopsData.features.find((f: { properties?: { is_centroid?: boolean } }) => f.properties?.is_centroid === true);
-
-        const depsRes = await request.get(`/api/presov/departures?stopId=${encodeURIComponent(centroid.properties.stop_id)}`);
+        const depsRes = await request.get(`/api/presov/departures?stopId=${STATION_ID}`);
         expect(depsRes.ok()).toBeTruthy();
 
         const depsData = await depsRes.json();
