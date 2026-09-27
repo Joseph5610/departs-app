@@ -25,36 +25,26 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'icon.png', 'cities/*.webp'],
+      includeAssets: ['favicon.png', 'icon.png', 'cities/*.webp'],
+      // Icons, favicon and iOS launch screens come from pwa-assets.config.ts; their <link> tags are injected into index.html.
+      pwaAssets: {
+        config: true,
+        overrideManifestIcons: true,
+      },
       manifest: {
+        id: '/',
         name: 'Departs.app',
         short_name: 'Departs',
         description: 'Real-time Public Transport Visualization',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
       },
       workbox: {
         // Admin pages load on demand; precaching them would ship them to every installed PWA.
         globIgnores: ['**/AdminRoutes-*'],
+        // Generated icons aren't picked up by includeManifestIcons; #boot-splash needs pwa-192x192.png offline.
+        globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico'],
         navigateFallback: '/',
         navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/],
         manifestTransforms: [

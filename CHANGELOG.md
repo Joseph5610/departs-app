@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Android and other Chromium browsers now offer an in-app prompt to install the app, plus an Install app entry in Settings.
+- The installed app on iPhone and iPad now opens on a launch screen with the app icon instead of a black screen.
+- Android now gets a dedicated maskable app icon, so launchers no longer crop the regular one.
 
 ## [0.76.5] - 2026-09-27
 
