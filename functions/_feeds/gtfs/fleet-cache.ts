@@ -17,6 +17,8 @@ export class CachedFleet {
         readonly builtAt: number,
         readonly json: string,
         readonly lastUpdated: string | undefined,
+        /** The header timestamp of the feed this was built from, so an unchanged feed is not built again. */
+        readonly feedTimestamp: number | undefined,
         parsed?: AppVehicleCollection
     ) {
         this.parsed = parsed;
@@ -31,6 +33,7 @@ export class CachedFleet {
 
 const BUILT_AT_HEADER = 'X-Fleet-Built-At';
 const LAST_UPDATED_HEADER = 'X-Fleet-Last-Updated';
+const FEED_TIMESTAMP_HEADER = 'X-Fleet-Feed-Timestamp';
 
 /** This isolate's newest build per city, so a warm isolate skips both the Cache API and the parse. */
 const inMemory = new Map<string, CachedFleet>();
@@ -57,7 +60,8 @@ async function readEdgeFleet(citySlug: string): Promise<CachedFleet | null> {
     if (!res) return null;
     const builtAt = Number(res.headers.get(BUILT_AT_HEADER));
     if (!Number.isFinite(builtAt) || builtAt <= 0) return null;
-    return new CachedFleet(builtAt, await res.text(), res.headers.get(LAST_UPDATED_HEADER) ?? undefined);
+    const feedTimestamp = Number(res.headers.get(FEED_TIMESTAMP_HEADER)) || undefined;
+    return new CachedFleet(builtAt, await res.text(), res.headers.get(LAST_UPDATED_HEADER) ?? undefined, feedTimestamp);
 }
 
 /**
@@ -75,14 +79,15 @@ export async function readCachedFleet(citySlug: string): Promise<CachedFleet | n
 }
 
 /** Stores a freshly built fleet in this isolate and at the edge for `ttlS` seconds. */
-export async function writeCachedFleet(citySlug: string, collection: AppVehicleCollection, plates: Record<string, string>, ttlS: number): Promise<CachedFleet> {
+export async function writeCachedFleet(citySlug: string, collection: AppVehicleCollection, plates: Record<string, string>, ttlS: number, feedTimestamp: number | undefined): Promise<CachedFleet> {
     const json = JSON.stringify({ ...collection, status: undefined });
-    const entry = new CachedFleet(Date.now(), json, collection.last_updated, { ...collection, status: undefined });
+    const entry = new CachedFleet(Date.now(), json, collection.last_updated, feedTimestamp, { ...collection, status: undefined });
     entry.plates = plates;
     inMemory.set(citySlug, entry);
 
     const headers = new Headers({ 'Content-Type': 'application/json', [BUILT_AT_HEADER]: String(entry.builtAt) });
     if (entry.lastUpdated) headers.set(LAST_UPDATED_HEADER, entry.lastUpdated);
+    if (feedTimestamp !== undefined) headers.set(FEED_TIMESTAMP_HEADER, String(feedTimestamp));
     await Promise.all([
         writeEdgeCache(cacheKey(citySlug), new Response(json, { headers }), ttlS),
         writeEdgeCache(platesKey(citySlug), new Response(JSON.stringify(plates), { headers: { 'Content-Type': 'application/json' } }), ttlS),

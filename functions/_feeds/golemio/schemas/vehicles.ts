@@ -5,7 +5,8 @@ import { z } from 'zod';
  * request has. `VehiclesMapper` type-checks every field it reads instead.
  */
 export const golemioFleetSchema = z.object({
-    features: z.array(z.unknown()).nullish(),
+    // `z.array(z.unknown())` would still visit every feature just to accept it.
+    features: z.custom<unknown[]>((v) => Array.isArray(v)).nullish(),
 });
 export type GolemioFleetPayload = z.infer<typeof golemioFleetSchema>;
 

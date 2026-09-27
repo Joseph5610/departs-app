@@ -31,10 +31,7 @@ export const CACHE_TTL = {
  * Live upstream feeds reuse the matching `CACHE_TTL` entry instead.
  */
 export const UPSTREAM_TTL_S = {
-    /**
-     * GTFS-RT protobuf. Matches CACHE_TTL.VEHICLES: the in-memory debounce in CacheManager sits on
-     * top of this, but this is what actually survives an isolate eviction between them.
-     */
+    /** GTFS-RT protobuf, as a `cf.cacheTtl` hint only; matches CACHE_TTL.VEHICLES. */
     GTFS_RT_FEED: 10,
     /** Per-station GTFS departure buckets. */
     DEPARTURE_BUCKETS: 3600,

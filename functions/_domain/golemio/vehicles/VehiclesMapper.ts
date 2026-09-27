@@ -30,20 +30,16 @@ export class VehiclesMapper {
 
             let vehicle_descriptor: AppVehicleDescriptor | undefined = undefined;
             if (isFields(p.vehicle_descriptor)) {
-                vehicle_descriptor = {} as AppVehicleDescriptor;
                 const vd = p.vehicle_descriptor;
-                const operator = str(vd.operator);
-                const vehicle_type = str(vd.vehicle_type);
-                const is_wheelchair_accessible = bool(vd.is_wheelchair_accessible);
-                const is_air_conditioned = bool(vd.is_air_conditioned);
-                const has_usb_chargers = bool(vd.has_usb_chargers);
                 const registration = strOrNum(vd.vehicle_registration_number);
-                if (operator != null) vehicle_descriptor.operator = operator;
-                if (vehicle_type != null) vehicle_descriptor.vehicle_type = vehicle_type;
-                if (is_wheelchair_accessible != null) vehicle_descriptor.is_wheelchair_accessible = is_wheelchair_accessible;
-                if (is_air_conditioned != null) vehicle_descriptor.is_air_conditioned = is_air_conditioned;
-                if (has_usb_chargers != null) vehicle_descriptor.has_usb_chargers = has_usb_chargers;
-                if (registration != null) vehicle_descriptor.vehicle_registration_number = String(registration);
+                vehicle_descriptor = {
+                    operator: str(vd.operator),
+                    vehicle_type: str(vd.vehicle_type),
+                    is_wheelchair_accessible: bool(vd.is_wheelchair_accessible),
+                    is_air_conditioned: bool(vd.is_air_conditioned),
+                    has_usb_chargers: bool(vd.has_usb_chargers),
+                    vehicle_registration_number: registration != null ? String(registration) : undefined,
+                };
             }
 
             const trip_headsign = str(p.gtfs_trip_headsign) || str(p.trip_headsign);
@@ -51,6 +47,7 @@ export class VehiclesMapper {
             const last_stop_sequence = num(p.last_stop_sequence);
             const run_number = strOrNum(p.run_number);
 
+            // Absent fields stay as undefined keys, which JSON drops: every feature keeps one shape, which V8 maps and serializes faster.
             features.push({
                 type: 'Feature',
                 geometry: readPoint(f.geometry),
@@ -59,13 +56,13 @@ export class VehiclesMapper {
                     gtfs_trip_id: str(p.gtfs_trip_id) || '',
                     route_short_name,
                     route_type,
-                    ...(trip_headsign ? { trip_headsign } : {}),
+                    trip_headsign: trip_headsign || undefined,
                     bearing: num(p.bearing) ?? null,
                     delay: num(p.delay) ?? null,
                     state_position: (str(p.state_position) || 'unknown') as AppVehicleFeature['properties']['state_position'],
-                    ...(last_stop_sequence != null ? { last_stop_sequence } : {}),
+                    last_stop_sequence: last_stop_sequence ?? undefined,
                     origin_timestamp,
-                    ...(run_number != null ? { run_number } : {}),
+                    run_number: run_number ?? undefined,
                     vehicle_descriptor
                 }
             });

@@ -8,6 +8,8 @@ import { ProtobufReader as Reader, WIRE_BYTES, WIRE_VARINT } from '../../_core/p
 export interface GtfsRtFeed {
     entity: GtfsRt.IFeedEntity[];
     alertEntities: Uint8Array[];
+    /** The FeedHeader's timestamp (seconds), when the feed stamps one: which publication this is. */
+    headerTimestamp?: number;
 }
 
 function readTrip(r: Reader, end: number): GtfsRt.ITripDescriptor {

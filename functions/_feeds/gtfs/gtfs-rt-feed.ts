@@ -29,9 +29,8 @@ function sourceFor(city: CityConfig, rtUrl: string) {
         ttlMs: CACHE_TTL.VEHICLES * 1000,
         isEmpty: (feed) => feed.entity.length === 0,
         read: async () => {
-            // `cacheTtl` (top-level) puts this through ApiClient's explicit caches.default path, which
-            // survives an isolate eviction; `cf.cacheTtl` alone is only a same-zone hint and does not.
-            const rtRes = await appClient.fetch(rtUrl, { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED, cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
+            // No edge copy (`cacheTtl`): fresh isolates share the stored fleet built from this feed, and a raw copy expires before the next rebuild reads it.
+            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
             });
@@ -47,6 +46,7 @@ function sourceFor(city: CityConfig, rtUrl: string) {
             if (previous && isSameFeed(previous, bytes, headerTimestamp)) return previous.feed;
 
             const decoded = decodeGtfsRtFeed(bytes);
+            decoded.headerTimestamp = headerTimestamp;
             lastDecoded.set(city.slug, { bytes, headerTimestamp, feed: decoded });
             return decoded;
         },

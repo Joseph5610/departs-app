@@ -73,20 +73,33 @@ export class GtfsRtVehicleSource implements VehicleSource {
             if (age < GTFS_CONFIG.FLEET_CACHE_STALE_MS) {
                 if (waitUntil && Date.now() - this.refreshStartedAt >= CACHE_CONFIG.REFRESH_WINDOW_MS) {
                     this.refreshStartedAt = Date.now();
-                    waitUntil(this.build());
+                    waitUntil(this.build(cached));
                 }
                 return cached;
             }
         }
-        return this.build();
+        return this.build(cached);
     }
 
-    /** Builds the fleet and, unless it is offline, caches it for this and the next isolate to read. */
-    private async build(): Promise<CachedFleet | null> {
+    /**
+     * Builds the fleet and, unless it is offline, caches it for this and the next isolate to read. When
+     * the feed is still the publication `stored` was built from, `stored` is only re-stamped as read now:
+     * upstreams publish less often than the fleet goes stale, and a fresh isolate has no build of its own to reuse.
+     */
+    private async build(stored: CachedFleet | null): Promise<CachedFleet | null> {
+        const ttlS = GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000;
+        if (stored?.feedTimestamp !== undefined) {
+            const snapshot = await getGtfsRtSnapshot(this.city).catch(() => null);
+            if (snapshot?.data.headerTimestamp === stored.feedTimestamp) {
+                const collection = { ...stored.collection, last_updated: new Date(snapshot.fetchedAt).toISOString() };
+                return writeCachedFleet(this.city.slug, collection, await readFleetPlates(this.city.slug, stored), ttlS, stored.feedTimestamp);
+            }
+        }
+
         const index = await this.index();
         if (!index) return null;
         const { collection, plates } = await index.allWithPlates();
-        return writeCachedFleet(this.city.slug, collection, plates, GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000);
+        return writeCachedFleet(this.city.slug, collection, plates, ttlS, index.feedTimestamp);
     }
 
     async forTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {

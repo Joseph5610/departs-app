@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.2] - 2026-09-27
+
+### Fixed
+
+- Brno's fleet is no longer rebuilt when KORDIS has not published a new feed since the stored build (it publishes every ~35 s); the stored build is re-stamped instead, roughly halving the rebuilds that pushed Worker requests over the CPU limit.
+- Prague's vehicles list maps and checks the Golemio fleet with less CPU, and the KORDIS feed and Golemio fleet are no longer copied to the edge cache, where the copy expired before anything read it.
+
 ## [0.76.1] - 2026-09-27
 
 ### Changed

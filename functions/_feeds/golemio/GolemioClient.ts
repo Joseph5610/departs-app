@@ -1,5 +1,5 @@
 import { Env } from "../../_core/types";
-import { CACHE_TTL, ERROR_MESSAGES } from "../../_core/config";
+import { ERROR_MESSAGES } from "../../_core/config";
 import { ApiError } from "../../_core/errors";
 import { GOLEMIO_CONFIG } from "./config";
 import { ApiClient, ApiFetchOptions } from "../../_core/ApiClient";
@@ -27,7 +27,6 @@ class GolemioClient {
 
         return this.client.fetch(path, {
             ...options,
-            cacheTtl: options.cacheTtl ?? CACHE_TTL.VEHICLES,
             headers: {
                 ...options.headers,
                 "X-Access-Token": apiKey,

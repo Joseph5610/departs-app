@@ -29,8 +29,9 @@ export function getGolemioFleet(env: Env): Promise<Snapshot<GolemioFleet> | null
 }
 
 async function readFleet(env: Env): Promise<GolemioFleet | null> {
+    // No edge copy (`cacheTtl`): this only runs when the edge-cached vehicles answer has expired, and a copy with the same lifetime has expired with it.
     const response = await golemioClient.fetch("/v2/public/vehiclepositions", env, {
-        cacheTtl: CACHE_TTL.VEHICLES
+        cf: { cacheTtl: CACHE_TTL.VEHICLES }
     }).catch((error: unknown) => {
         console.error(`Golemio vehicles feed is down`, error);
         return null;
