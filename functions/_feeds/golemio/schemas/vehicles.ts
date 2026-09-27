@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 /**
- * Shape check only for the whole fleet: validating ~3,000 features per refresh costs more CPU than a
+ * Shape check only for all vehicle positions: validating ~3,000 features per refresh costs more CPU than a
  * request has. `VehiclesMapper` type-checks every field it reads instead.
  */
-export const golemioFleetSchema = z.object({
+export const golemioVehiclePositionsSchema = z.object({
     // `z.array(z.unknown())` would still visit every feature just to accept it.
     features: z.custom<unknown[]>((v) => Array.isArray(v)).nullish(),
 });
-export type GolemioFleetPayload = z.infer<typeof golemioFleetSchema>;
+export type GolemioVehiclePositionsPayload = z.infer<typeof golemioVehiclePositionsSchema>;
 
 /**
  * Shape check only for one trip's detail: `VehicleDetailMapper` type-checks every field it reads

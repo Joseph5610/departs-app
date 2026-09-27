@@ -1,12 +1,12 @@
 import { AppVehicleFeature, AppVehicleCollection, AppVehicleDescriptor } from "../../../_core/types";
-import type { GolemioFleetPayload } from "../../../_feeds/golemio/schemas/vehicles";
+import type { GolemioVehiclePositionsPayload } from "../../../_feeds/golemio/schemas/vehicles";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 import { isFields, str, num, bool, strOrNum, readPoint } from "../../../_core/utils/fields";
 
 export class VehiclesMapper {
     /** `generatedAt` stands in for `last_updated` when the feed carries no per-vehicle timestamps. */
     /** Features are only shape-checked upstream, so every field is read with its type checked here. */
-    static map(data: GolemioFleetPayload, generatedAt?: string): AppVehicleCollection {
+    static map(data: GolemioVehiclePositionsPayload, generatedAt?: string): AppVehicleCollection {
         let maxTimeUpdatedStr = '';
         const features: AppVehicleFeature[] = [];
 

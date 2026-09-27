@@ -3,35 +3,35 @@ import { CACHE_TTL } from '../../_core/config';
 import { getResponseGeneratedAt } from '../../_core/ApiClient';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { golemioClient } from './GolemioClient';
-import { golemioFleetSchema, type GolemioFleetPayload } from './schemas/vehicles';
+import { golemioVehiclePositionsSchema, type GolemioVehiclePositionsPayload } from './schemas/vehicles';
 
-/** The whole Prague fleet as last read: Golemio's payload as received, and validated. */
-export interface GolemioFleet {
+/** Golemio's vehicle positions as last read: the payload as received, and validated. */
+export interface GolemioVehiclePositions {
     payload: unknown;
-    data: GolemioFleetPayload;
+    data: GolemioVehiclePositionsPayload;
     /** When Golemio generated the answer, from the response headers. */
     generatedAt: string | undefined;
 }
 
-const fleetSource = createSource<GolemioFleet, Env>({
+const positionsSource = createSource<GolemioVehiclePositions, Env>({
     key: 'golemio_vehicles',
     ttlMs: CACHE_TTL.VEHICLES * 1000,
-    isEmpty: (fleet) => !fleet.data.features || fleet.data.features.length === 0,
-    read: readFleet,
+    isEmpty: (positions) => !positions.data.features || positions.data.features.length === 0,
+    read: readVehiclePositions,
 });
 
 /**
- * The Prague fleet, read once per `CACHE_TTL.VEHICLES`; the map view, the stats and the debug feed
+ * Golemio's vehicle positions, read once per `CACHE_TTL.VEHICLES`; the map view, the stats and the debug feed
  * all read this snapshot. A failed read keeps the last good one; null only when there never was one.
  */
-export function getGolemioFleet(env: Env): Promise<Snapshot<GolemioFleet> | null> {
-    return fleetSource(env);
+export function getGolemioVehiclePositions(env: Env): Promise<Snapshot<GolemioVehiclePositions> | null> {
+    return positionsSource(env);
 }
 
-async function readFleet(env: Env): Promise<GolemioFleet | null> {
-    // No edge copy (`cacheTtl`): this only runs when the edge-cached vehicles answer has expired, and a copy with the same lifetime has expired with it.
+async function readVehiclePositions(env: Env): Promise<GolemioVehiclePositions | null> {
+    // Uncached: this only runs when the edge-cached vehicles answer has expired, so any copy of the positions would be at least as old.
     const response = await golemioClient.fetch("/v2/public/vehiclepositions", env, {
-        cf: { cacheTtl: CACHE_TTL.VEHICLES }
+        cache: 'no-store'
     }).catch((error: unknown) => {
         console.error(`Golemio vehicles feed is down`, error);
         return null;
@@ -48,7 +48,7 @@ async function readFleet(env: Env): Promise<GolemioFleet | null> {
     });
     if (payload === null) return null;
 
-    const parsed = golemioFleetSchema.safeParse(payload);
+    const parsed = golemioVehiclePositionsSchema.safeParse(payload);
     if (!parsed.success) {
         console.error("Critical Golemio vehicles structural change:", parsed.error);
         return null;

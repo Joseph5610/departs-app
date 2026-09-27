@@ -1,7 +1,7 @@
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
-import { CACHE_TTL, UPSTREAM_TTL_S } from '../../_core/config';
+import { CACHE_TTL } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { decodeGtfsRtFeed, feedHeaderTimestamp, type GtfsRtFeed } from './gtfs-rt-decode';
 
@@ -29,8 +29,8 @@ function sourceFor(city: CityConfig, rtUrl: string) {
         ttlMs: CACHE_TTL.VEHICLES * 1000,
         isEmpty: (feed) => feed.entity.length === 0,
         read: async () => {
-            // No edge copy (`cacheTtl`): fresh isolates share the stored fleet built from this feed, and a raw copy expires before the next rebuild reads it.
-            const rtRes = await appClient.fetch(rtUrl, { cf: { cacheTtl: UPSTREAM_TTL_S.GTFS_RT_FEED } }).catch((err) => {
+            // Uncached: the stored fleet is the shared copy, and a cached feed (KORDIS sends max-age=86400) would be re-stamped as current.
+            const rtRes = await appClient.fetch(rtUrl, { cache: 'no-store' }).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
             });

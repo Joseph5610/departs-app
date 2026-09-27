@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.3] - 2026-09-27
+
+### Fixed
+
+- Brno vehicles no longer lag up to a minute behind KORDIS: the feed is read uncached, so a cached copy of the previous publication (KORDIS sends a one-day max-age) is never re-stamped as current.
+
 ## [0.76.2] - 2026-09-27
 
 ### Fixed

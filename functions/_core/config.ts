@@ -31,8 +31,6 @@ export const CACHE_TTL = {
  * Live upstream feeds reuse the matching `CACHE_TTL` entry instead.
  */
 export const UPSTREAM_TTL_S = {
-    /** GTFS-RT protobuf, as a `cf.cacheTtl` hint only; matches CACHE_TTL.VEHICLES. */
-    GTFS_RT_FEED: 10,
     /** Per-station GTFS departure buckets. */
     DEPARTURE_BUCKETS: 3600,
     /** Golemio stop pages, trip windows and the fleet register. */
