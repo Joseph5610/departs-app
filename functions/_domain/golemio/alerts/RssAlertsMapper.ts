@@ -1,6 +1,18 @@
 import { AppAlert } from "../../../_core/types";
-import type { PidRssItem } from "../../../_feeds/golemio/alerts";
+import type { PidRssItem } from "../../../_feeds/golemio/rss-exclusions";
 import { AlertTextFormatter } from "../../../_core/utils/AlertTextFormatter";
+
+const LEADING_SEPARATOR = /[;\s.]/;
+const TRAILING_SEPARATOR = /[;\s]/;
+
+/** Drops leading `;`, `.` and whitespace, and trailing `;` and whitespace. */
+function trimSeparators(text: string): string {
+    let start = 0;
+    let end = text.length;
+    while (start < end && LEADING_SEPARATOR.test(text[start])) start++;
+    while (end > start && TRAILING_SEPARATOR.test(text[end - 1])) end--;
+    return text.slice(start, end);
+}
 
 export class RssAlertsMapper {
 
@@ -8,7 +20,6 @@ export class RssAlertsMapper {
     static mapRSS(parsedItems: PidRssItem[]): AppAlert[] {
         const itemType = 'exclusion';
 
-        const now = new Date();
         const items: AppAlert[] = [];
 
         const dateRangeRegex = /(\d{1,2}\.\s*\d{1,2}\.\s*(?:\d{4}\s*)?\d{1,2}:\d{2})\s*-\s*(.*?)(?=\s*(?:;|<|(?:Dotčené\s+)?(?:L|l)inky:|Z\s+důvodu|$))/i;
@@ -41,33 +52,13 @@ export class RssAlertsMapper {
             // Deduplicate lines
             lines = Array.from(new Set(lines));
 
-            let isActive = true;
-            let isFuture = false;
-            let valid_from: string | null = null;
-            let valid_to: string | null = null;
-
-            // Exclusions
-            const start = item.dateFrom ? new Date(Number(item.dateFrom) * 1000) : null;
-            const end = item.dateTo ? new Date(Number(item.dateTo) * 1000) : null;
-
-            if (start) {
-                valid_from = start.toISOString();
-                if (start > now) {
-                    isActive = false;
-                    isFuture = true;
-                }
-            }
-            if (end) {
-                valid_to = end.toISOString();
-                if (end < now) {
-                    isActive = false;
-                }
-            }
+            const valid_from = item.dateFrom ? new Date(Number(item.dateFrom) * 1000).toISOString() : null;
+            const valid_to = item.dateTo ? new Date(Number(item.dateTo) * 1000).toISOString() : null;
 
             // Clean description
-            const cleanedDescription = (AlertTextFormatter.fromHtml(
+            const cleanedDescription = trimSeparators(AlertTextFormatter.fromHtml(
                 description.replace(dateRangeRegex, '').replace(linesRegex, '')
-            ) || '').replace(/^[;\s.]+|[;\s]+$/g, '');
+            ) || '');
 
             items.push({
                 type: itemType,
@@ -79,8 +70,6 @@ export class RssAlertsMapper {
                 guid: guid || undefined,
                 priority: priority || undefined,
                 line_metadata: lines.map(name => ({ name })),
-                isActive,
-                isFuture
             });
         }
 

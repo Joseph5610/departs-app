@@ -95,8 +95,6 @@ function mapGtfsAlerts(
             guid: entity.id,
             priority: 'normal',
             line_metadata: line_metadata.length > 0 ? line_metadata : undefined,
-            isActive: true,
-            isFuture: false,
             cause: alert.cause ? String(alert.cause) : undefined,
             effect: alert.effect ? String(alert.effect) : undefined
         };

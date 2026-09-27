@@ -278,6 +278,15 @@ export function enrichAlertLineMetadata(
     return changed ? result : alerts;
 }
 
+/** Alerts with `isActive`/`isFuture` as of `nowMs`, from their validity window; an alert without dates is active. */
+export function withAlertTiming(alerts: RSSItem[], nowMs: number): RSSItem[] {
+    return alerts.map((alert) => {
+        const isFuture = !!alert.valid_from && Date.parse(alert.valid_from) > nowMs;
+        const hasEnded = !!alert.valid_to && Date.parse(alert.valid_to) < nowMs;
+        return { ...alert, isActive: !isFuture && !hasEnded, isFuture };
+    });
+}
+
 /** The ID a push patch is keyed by; feeds without vehicle IDs are matched by fleet number. */
 const patchVehicleId = (p: VehicleProperties): string | undefined =>
     p.vehicle_id || undefined;

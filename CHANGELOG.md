@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.1] - 2026-09-27
+
+### Changed
+
+- Whether an alert is active or upcoming is worked out in the app from its validity dates, so incidents announced for later show as upcoming.
+
+### Fixed
+
+- Prague alerts keep the parsed planned closures at the edge for an hour and parse the RSS feed with less CPU, instead of every fresh Worker re-parsing the 450 KB feed over the CPU limit.
+- Brno's vehicle rebuild reads trip aliases as runs of consecutive ids (35 KB instead of 400 KB), cutting CPU on a fresh Worker.
+
 ## [0.76.0] - 2026-09-26
 
 ### Added

@@ -12,6 +12,8 @@ export const GOLEMIO_CONFIG = {
     CONNECTION_BUCKET_COUNT: 256,
     /** Parsed buckets kept per isolate; each is a few KB. */
     CONNECTION_BUCKETS_CACHED: 128,
+    /** How long mapped planned exclusions stay at the edge: rebuilt after `CACHE_TTL.RSS_EXCLUSIONS`, served past it while the feed is down. */
+    EXCLUSIONS_STORE_S: 6 * 3600,
     FEEDS: {
         exclusions: 'https://pid.cz/feed/rss-vyluky/',
     }

@@ -234,8 +234,6 @@ export interface AppAlert {
      * the same way, keyed by name instead of id.
      */
     line_metadata?: Array<{ route_id?: string; name?: string }>;
-    isActive?: boolean;
-    isFuture?: boolean;
     cause?: string;
     causeDetail?: { cs?: string; en?: string };
     effect?: string;

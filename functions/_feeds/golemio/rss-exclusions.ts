@@ -1,10 +1,24 @@
 /**
  * A lean extractor for PID's planned-exclusions RSS feed (`GOLEMIO_CONFIG.FEEDS.exclusions`,
- * ~450 KB, ~250 items): pulls out exactly the flat tags `pidRssItemSchema` reads, instead of
- * `fast-xml-parser`'s generic XMLParser building a full document tree, which cost 17-25ms on this
- * feed - CPU-killed on its own regardless of isolate warmth. Feeds `pidRssItemSchema` the same shape
- * `fast-xml-parser` would have, so validation and every transform downstream are unchanged.
+ * ~450 KB, ~250 items): pulls out exactly the flat tags an item carries, instead of a generic XML
+ * parser building a full document tree. Every value is text it extracted itself, so items come out
+ * typed and need no schema pass.
  */
+
+/** One planned exclusion as the feed states it; absent tags stay undefined. */
+export interface PidRssItem {
+    title?: string;
+    pubDate?: string;
+    guid?: string | null;
+    link?: string;
+    priority?: string | null;
+    'content:encoded'?: string | null;
+    description?: string | null;
+    date?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    lines?: string[] | null;
+}
 
 const XML_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
 
@@ -20,42 +34,70 @@ function decodeEntities(text: string): string {
     });
 }
 
-/** A tag's inner text, CDATA unwrapped (left literal, as `fast-xml-parser` leaves it) or entity-decoded and trimmed. */
+/**
+ * The raw inner text of the first `<tag>…</tag>` (or `''` for `<tag/>`), found as the regex
+ * `<tag(?:\s[^>]*)?>([\s\S]*?)<\/tag>|<tag(?:\s[^>]*)?\/>` would, without compiling one per tag and item.
+ */
+function tagInner(block: string, tag: string): string | undefined {
+    const open = `<${tag}`;
+    const close = `</${tag}>`;
+    for (let at = block.indexOf(open); at >= 0; at = block.indexOf(open, at + 1)) {
+        const next = at + open.length;
+        const c = block[next];
+        if (c === '>') {
+            const end = block.indexOf(close, next + 1);
+            if (end >= 0) return block.slice(next + 1, end);
+        } else if (c === '/' && block[next + 1] === '>') {
+            return '';
+        } else if (c !== undefined && /\s/.test(c)) {
+            const gt = block.indexOf('>', next);
+            if (gt >= 0) {
+                const end = block.indexOf(close, gt + 1);
+                if (end >= 0) return block.slice(gt + 1, end);
+                if (block[gt - 1] === '/') return '';
+            }
+        }
+    }
+    return undefined;
+}
+
+/** A tag's inner text, CDATA unwrapped (left literal) or entity-decoded and trimmed. */
 function tagText(block: string, tag: string): string | undefined {
-    const re = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>|<${tag}(?:\\s[^>]*)?\\/>`);
-    const m = re.exec(block);
-    if (!m) return undefined;
-    const raw = m[1] ?? '';
+    const raw = tagInner(block, tag);
+    if (raw === undefined) return undefined;
     const cdata = /^\s*<!\[CDATA\[([\s\S]*)\]\]>\s*$/.exec(raw);
     return cdata ? cdata[1] : decodeEntities(raw).trim();
 }
 
-/**
- * `<lines><line>A</line><line>B</line></lines>` as `fast-xml-parser` would shape it: one string or an
- * array of them. `undefined` only when the `<lines>` tag itself is absent - present but empty is `''`
- * (fast-xml-parser's own reading of an empty element), which `pidRssItemSchema` treats differently.
- */
-function readLines(block: string): { line: string | string[] } | '' | undefined {
+/** The `<line>` values of `<lines>`; null when the tag is present but empty, undefined when absent. */
+function readLines(block: string): string[] | null | undefined {
     const linesBlock = /<lines(?:\s[^>]*)?>([\s\S]*?)<\/lines>/.exec(block)?.[1];
     if (linesBlock === undefined) return undefined;
     const lines = [...linesBlock.matchAll(/<line(?:\s[^>]*)?>([\s\S]*?)<\/line>/g)].map(m => decodeEntities(m[1]).trim());
-    if (lines.length === 0) return '';
-    return { line: lines.length === 1 ? lines[0] : lines };
+    return lines.length === 0 ? null : lines;
 }
 
-/** One `<item>` as a plain object shaped like `fast-xml-parser`'s output, ready for `pidRssItemSchema`. */
-function readRssItem(block: string): Record<string, unknown> {
-    const item: Record<string, unknown> = {};
-    for (const tag of ['title', 'pubDate', 'guid', 'link', 'priority', 'content:encoded', 'description', 'date', 'dateFrom', 'dateTo']) {
-        const value = tagText(block, tag);
-        if (value !== undefined) item[tag] = value;
-    }
-    const lines = readLines(block);
-    if (lines !== undefined) item.lines = lines;
-    return item;
+/** Empty text as null, absent as undefined. */
+const orNull = (v: string | undefined): string | null | undefined => (v === undefined ? undefined : v || null);
+
+function readRssItem(block: string): PidRssItem {
+    const text = (tag: string) => tagText(block, tag);
+    return {
+        title: text('title')?.trim(),
+        pubDate: text('pubDate')?.trim(),
+        guid: orNull(text('guid')?.trim()),
+        link: text('link')?.trim(),
+        priority: orNull(text('priority')?.trim()),
+        'content:encoded': orNull(text('content:encoded')),
+        description: orNull(text('description')),
+        date: text('date'),
+        dateFrom: text('dateFrom'),
+        dateTo: text('dateTo'),
+        lines: readLines(block),
+    };
 }
 
 /** Every `<item>` in an RSS `<channel>`, in document order. */
-export function readRssItems(xml: string): Record<string, unknown>[] {
+export function readRssItems(xml: string): PidRssItem[] {
     return [...xml.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/g)].map(m => readRssItem(m[1]));
 }

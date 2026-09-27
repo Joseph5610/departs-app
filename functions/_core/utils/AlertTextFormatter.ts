@@ -29,7 +29,7 @@ export class AlertTextFormatter {
             .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/gi, (match) => HTML_ENTITY_MAP[match.toLowerCase()] || match)
             .replace(/[\r\t]+/g, '\n');
 
-        const lines = cleaned.split('\n').map(l => l.replace(/[ \u00a0]{2,}/g, ' ').trim());
+        const lines = cleaned.replace(/[ \u00a0]{2,}/g, ' ').split('\n').map(l => l.trim());
         const resultLines: string[] = [];
         let previousWasEmpty = false;
 

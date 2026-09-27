@@ -5,10 +5,11 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { useRouteMetadata } from './useRouteMetadata';
 import { QUERY_TIMING_MS } from '../../config/constants';
-import { enrichAlertLineMetadata } from '../../lib/enrichment';
+import { enrichAlertLineMetadata, withAlertTiming } from '../../lib/enrichment';
 import { memoizeLast } from '../../lib/memoize';
 
 const brandAlerts = memoizeLast(enrichAlertLineMetadata);
+const timeAlerts = memoizeLast(withAlertTiming);
 const NO_ALERTS: RSSItem[] = [];
 
 export const useGlobalAlerts = () => {
@@ -40,7 +41,7 @@ export const useGlobalAlerts = () => {
 
     const { byId, byName, byKordisNumeric } = useRouteMetadata();
     const brandedAlerts = alertsQuery.data
-        ? { ...alertsQuery.data, alerts: brandAlerts(alertsQuery.data.alerts ?? NO_ALERTS, byId, byName, byKordisNumeric) }
+        ? { ...alertsQuery.data, alerts: brandAlerts(timeAlerts(alertsQuery.data.alerts ?? NO_ALERTS, alertsQuery.dataUpdatedAt), byId, byName, byKordisNumeric) }
         : alertsQuery.data;
 
     return {

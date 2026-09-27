@@ -43,7 +43,7 @@ export class KordisVehicleMapping implements VehicleMapping {
         const rawTripId = entity.vehicle?.trip?.tripId;
         if (!rawTripId) return [];
 
-        const alias = tripRoutes.tripAliases?.[rawTripId];
+        const alias = tripRoutes.tripAliases.get(rawTripId);
         if (alias === null) return [];
         const candidates: string[] = [];
         if (rawTripId in tripRoutes.tripRoutes) candidates.push(rawTripId);

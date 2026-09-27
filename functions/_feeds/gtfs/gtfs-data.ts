@@ -2,6 +2,7 @@ import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
+import { EMPTY_TRIP_RUNS, TripRuns, type TripRunsFile } from './trip-runs';
 
 export interface GtfsRoute {
     name: string;
@@ -78,7 +79,7 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
  */
 export interface GtfsTripRoutesData {
     tripRoutes: Record<string, string>;
-    tripAliases: Record<string, string | null>;
+    tripAliases: TripRuns;
 }
 
 /** A city's trip id -> route id (`trip_routes.json`), for resolving a trip's line. */
@@ -87,11 +88,11 @@ export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string
 }
 
 /**
- * Trip ids of older timetable exports -> the current trip (`trip_aliases.json`), for networks whose
+ * Trip ids of older timetable exports -> the current trip (`trip_alias_runs.json`), for networks whose
  * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
  */
-export async function getGtfsTripAliases(city: CityConfig): Promise<Record<string, string | null>> {
-    return (city.feed?.hasTripAliases ? await getStaticRecord<string | null>(city, 'trip_aliases.json') : null) ?? {};
+export async function getGtfsTripAliases(city: CityConfig): Promise<TripRuns> {
+    return (city.feed?.hasTripAliases ? await getStaticFile(city, 'trip_alias_runs.json', (text) => new TripRuns(JSON.parse(text) as TripRunsFile)) : null) ?? EMPTY_TRIP_RUNS;
 }
 
 /**
@@ -100,6 +101,11 @@ export async function getGtfsTripAliases(city: CityConfig): Promise<Record<strin
  * whether it has any costs as much as listing them all.
  */
 async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Record<string, T> | null> {
+    return getStaticFile(city, file, (text) => JSON.parse(text) as Record<string, T>);
+}
+
+/** A static data file read by `parse`, cached per city; null when it is unreadable or empty. */
+async function getStaticFile<T>(city: CityConfig, file: string, parse: (text: string) => T): Promise<T | null> {
     const staticDataUrl = city.feed?.staticDataUrl;
     if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
 
@@ -111,7 +117,7 @@ async function getStaticRecord<T>(city: CityConfig, file: string): Promise<Recor
                 return null;
             }
             const text = await res.text();
-            return text.trim() === '{}' ? null : JSON.parse(text) as Record<string, T>;
+            return text.trim() === '{}' ? null : parse(text);
         } catch (e) {
             console.error(`Failed to parse or fetch ${file} for ${city.slug}:`, e);
             return null;
