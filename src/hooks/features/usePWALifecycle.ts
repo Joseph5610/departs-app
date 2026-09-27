@@ -13,8 +13,7 @@ export const usePWALifecycle = () => {
     const { t } = useTranslation();
     const canInstall = usePWAStore(s => s.canInstall);
     const { promptInstall } = usePWAStore(s => s.actions);
-    const isInstallPromptDismissed = usePreferencesStore(s => s.isInstallPromptDismissed);
-    const { setIsInstallPromptDismissed } = usePreferencesStore(s => s.actions);
+    const { setHasSeenInstallPrompt } = usePreferencesStore(s => s.actions);
 
     const {
         offlineReady: [offlineReady],
@@ -56,22 +55,23 @@ export const usePWALifecycle = () => {
         }
     }, [needRefresh, updateServiceWorker, t]);
 
-    // Offer installation once the browser allows it, until the user installs or dismisses it
+    // Offer installation once per device; afterwards Settings keeps an Install app entry
     useEffect(() => {
-        if (!canInstall || isInstallPromptDismissed) {
+        if (!canInstall) {
             toast.dismiss('pwa-install');
             return;
         }
+        if (usePreferencesStore.getState().hasSeenInstallPrompt) return;
+        setHasSeenInstallPrompt(true);
         toast(t('install.title'), {
             description: t('install.description'),
             action: {
                 label: t('install.button'),
                 onClick: () => { void promptInstall(); },
             },
-            onDismiss: () => setIsInstallPromptDismissed(true),
             closeButton: true,
             duration: Infinity,
             id: 'pwa-install',
         });
-    }, [canInstall, isInstallPromptDismissed, promptInstall, setIsInstallPromptDismissed, t]);
+    }, [canInstall, promptInstall, setHasSeenInstallPrompt, t]);
 };

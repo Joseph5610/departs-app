@@ -26,7 +26,7 @@ interface PreferencesState {
     statsViewMode: 'overview' | 'vehicles';
     isMcpBannerDismissed: boolean;
     hasSeenWelcome: boolean;
-    isInstallPromptDismissed: boolean;
+    hasSeenInstallPrompt: boolean;
     /** How often live vehicles and departures refresh. */
     refreshIntervalS: RefreshIntervalS;
     /** Hidden regions this device may pick from the city list, unlocked by opening `?beta=<slug>`. */
@@ -41,7 +41,7 @@ interface PreferencesActions {
     setStopTypeFilter: (filter: string[]) => void;
     setIsMcpBannerDismissed: (dismissed: boolean) => void;
     setHasSeenWelcome: (seen: boolean) => void;
-    setIsInstallPromptDismissed: (dismissed: boolean) => void;
+    setHasSeenInstallPrompt: (seen: boolean) => void;
     setDepartureSort: (sort: 'line' | 'departure') => void;
     setRouteTypeFilter: (filter: string[]) => void;
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
@@ -79,7 +79,7 @@ const PERSISTED_KEYS = [
     'delayFilter',
     'isMcpBannerDismissed',
     'hasSeenWelcome',
-    'isInstallPromptDismissed',
+    'hasSeenInstallPrompt',
     'unlockedCities',
     'refreshIntervalS',
 ] as const satisfies ReadonlyArray<keyof PreferencesState>;
@@ -181,7 +181,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             isMcpBannerDismissed: false,
             unlockedCities: [getUrlUnlockedCity()].filter((slug): slug is string => slug !== null),
             hasSeenWelcome: false,
-            isInstallPromptDismissed: false,
+            hasSeenInstallPrompt: false,
             refreshIntervalS: TRANSIT_REFRESH_S,
 
             // Actions
@@ -193,7 +193,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setIsMcpBannerDismissed: (dismissed) => set({ isMcpBannerDismissed: dismissed }),
                 setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
-                setIsInstallPromptDismissed: (dismissed) => set({ isInstallPromptDismissed: dismissed }),
+                setHasSeenInstallPrompt: (seen) => set({ hasSeenInstallPrompt: seen }),
                 setDepartureSort: (sort) => set({ departureSort: sort }),
                 setRouteTypeFilter: (filter) => set({ routeTypeFilter: filter }),
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),
