@@ -87,6 +87,7 @@
     },
     "viewSource": "View source on GitHub",
     "versionBadge": "v{{version}}",
+    "install": "Install app",
     "updates": {
       "check": "Check for updates",
       "checking": "Checking for updates...",
@@ -227,6 +228,11 @@
     "newVersion": "New version available!",
     "updateNow": "Update now to get latest features.",
     "updateButton": "Update"
+  },
+  "install": {
+    "title": "Install Departs",
+    "description": "Add the app to your home screen for quick access.",
+    "button": "Install"
   },
   "liveStatus": {
     "refreshing": "Refreshing",

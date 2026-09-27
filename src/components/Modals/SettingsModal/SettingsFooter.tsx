@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Clock, Database, Scale, MessageSquareHeart, GitBranch } from 'lucide-react';
+import { RefreshCw, Download, Clock, Database, Scale, MessageSquareHeart, GitBranch } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '../../../state/pwaStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -93,6 +93,8 @@ export const SettingsFooter: React.FC = () => {
 
     // PWA
     const needRefresh = usePWAStore(s => s.needRefresh);
+    const canInstall = usePWAStore(s => s.canInstall);
+    const { promptInstall } = usePWAStore(s => s.actions);
 
     // Reset checking state if update is found
     React.useEffect(() => {
@@ -169,6 +171,21 @@ export const SettingsFooter: React.FC = () => {
                             <ItemTitle className="text-foreground">{t('feedback.title')}</ItemTitle>
                         </ItemContent>
                     </Item>
+
+                    {canInstall && (
+                        <Item
+                            variant="settings"
+                            size="none"
+                            render={<button onClick={() => { void promptInstall(); }} />}
+                        >
+                            <ItemMedia variant="icon" className="text-primary">
+                                <Download size={18} strokeWidth={2} />
+                            </ItemMedia>
+                            <ItemContent>
+                                <ItemTitle className="text-foreground">{t('settings.install')}</ItemTitle>
+                            </ItemContent>
+                        </Item>
+                    )}
 
                     <Item
                         variant="settings"

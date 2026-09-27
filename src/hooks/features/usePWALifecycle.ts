@@ -3,13 +3,18 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { usePWAStore } from '../../state/pwaStore';
+import { usePreferencesStore } from '../../state/preferencesStore';
 
 /**
  * Headless hook to manage the PWA lifecycle.
- * Handles service worker registration, state syncing to Zustand, and update notifications.
+ * Handles service worker registration, state syncing to Zustand, update notifications and the install prompt.
  */
 export const usePWALifecycle = () => {
     const { t } = useTranslation();
+    const canInstall = usePWAStore(s => s.canInstall);
+    const { promptInstall } = usePWAStore(s => s.actions);
+    const isInstallPromptDismissed = usePreferencesStore(s => s.isInstallPromptDismissed);
+    const { setIsInstallPromptDismissed } = usePreferencesStore(s => s.actions);
 
     const {
         offlineReady: [offlineReady],
@@ -50,4 +55,23 @@ export const usePWALifecycle = () => {
             });
         }
     }, [needRefresh, updateServiceWorker, t]);
+
+    // Offer installation once the browser allows it, until the user installs or dismisses it
+    useEffect(() => {
+        if (!canInstall || isInstallPromptDismissed) {
+            toast.dismiss('pwa-install');
+            return;
+        }
+        toast(t('install.title'), {
+            description: t('install.description'),
+            action: {
+                label: t('install.button'),
+                onClick: () => { void promptInstall(); },
+            },
+            onDismiss: () => setIsInstallPromptDismissed(true),
+            closeButton: true,
+            duration: Infinity,
+            id: 'pwa-install',
+        });
+    }, [canInstall, isInstallPromptDismissed, promptInstall, setIsInstallPromptDismissed, t]);
 };

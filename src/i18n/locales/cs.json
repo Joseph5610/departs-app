@@ -88,6 +88,7 @@
     },
     "viewSource": "Zdrojový kód na GitHubu",
     "versionBadge": "v{{version}}",
+    "install": "Nainstalovat aplikaci",
     "updates": {
       "check": "Zkontrolovat aktualizace",
       "checking": "Kontrola aktualizací...",
@@ -230,6 +231,11 @@
     "newVersion": "Nová verze k dispozici!",
     "updateNow": "Aktualizujte pro nejnovější funkce.",
     "updateButton": "Aktualizovat"
+  },
+  "install": {
+    "title": "Nainstalujte Departs",
+    "description": "Přidejte si aplikaci na plochu pro rychlý přístup.",
+    "button": "Instalovat"
   },
   "liveStatus": {
     "refreshing": "Aktualizace",
