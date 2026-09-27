@@ -4,7 +4,6 @@ import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import { readCachedFleet, readFleetPlates, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
-import { CACHE_CONFIG } from '../../../_core/config';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -47,38 +46,29 @@ export class GtfsRtVehicleSource implements VehicleSource {
         }
     }
 
-    /** When this isolate last started a background refresh, so concurrent stale reads start only one. */
-    private refreshStartedAt = 0;
-
     /**
      * The whole fleet. A fresh isolate reads the last build from the edge cache instead of redecoding
-     * the feed and reassigning every vehicle: a killed cold build cannot happen if it never runs. Only
-     * a cold cache (no traffic in this colo for `FLEET_CACHE_STALE_MS`) still builds synchronously.
+     * the feed and reassigning every vehicle.
      */
-    async all(waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection> {
-        return (await this.fleet(waitUntil))?.collection ?? OFFLINE;
+    async all(): Promise<AppVehicleCollection> {
+        return (await this.fleet())?.collection ?? OFFLINE;
     }
 
-    async allJson(waitUntil?: (promise: Promise<unknown>) => void): Promise<{ json: string; lastUpdated?: string } | null> {
-        const fleet = await this.fleet(waitUntil);
+    async allJson(): Promise<{ json: string; lastUpdated?: string } | null> {
+        const fleet = await this.fleet();
         return fleet ? { json: fleet.json, lastUpdated: fleet.lastUpdated } : null;
     }
 
-    /** The current build, or null when the feed or its static data cannot be read. */
-    private async fleet(waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet | null> {
+    /**
+     * The current build, or null when the feed or its static data cannot be read. A stale build is
+     * refreshed in this request, not after it: served first, the refresh reached only the next request.
+     */
+    private async fleet(): Promise<CachedFleet | null> {
         const cached = await readCachedFleet(this.city.slug);
-        if (cached) {
-            const age = Date.now() - cached.builtAt;
-            if (age < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
-            if (age < GTFS_CONFIG.FLEET_CACHE_STALE_MS) {
-                if (waitUntil && Date.now() - this.refreshStartedAt >= CACHE_CONFIG.REFRESH_WINDOW_MS) {
-                    this.refreshStartedAt = Date.now();
-                    waitUntil(this.build(cached));
-                }
-                return cached;
-            }
-        }
-        return this.build(cached);
+        if (cached && Date.now() - cached.builtAt < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
+        const built = await this.build(cached);
+        if (built) return built;
+        return cached && Date.now() - cached.builtAt < GTFS_CONFIG.FLEET_CACHE_STALE_MS ? cached : null;
     }
 
     /**
@@ -102,12 +92,12 @@ export class GtfsRtVehicleSource implements VehicleSource {
         return writeCachedFleet(this.city.slug, collection, plates, ttlS, index.feedTimestamp);
     }
 
-    async forTrips(tripIds: Set<string>, waitUntil?: (promise: Promise<unknown>) => void): Promise<AppVehicleCollection | null> {
+    async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {
         if (!this.mapping.resolvesPerEntity) {
             // KORDIS-style networks resolve a trip only network-wide (see VehicleMapping.resolvesPerEntity),
             // so this is exactly as expensive as `all()` either way - share its cached build rather than
             // building a second, uncached copy.
-            const all = await this.all(waitUntil);
+            const all = await this.all();
             if (all.status === 'upstream_offline') return OFFLINE;
             if (isTooOld(Date.parse(all.last_updated ?? '') || 0)) return null;
             return { ...all, features: all.features.filter(f => tripIds.has(f.properties.gtfs_trip_id)) };

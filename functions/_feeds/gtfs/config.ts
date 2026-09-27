@@ -41,11 +41,11 @@ export const GTFS_CONFIG = {
     /**
      * The built fleet, edge-cached (see `ApiClient.ts`'s `readEdgeCache`/`writeEdgeCache`) so a fresh
      * isolate reads it instead of redecoding the feed and reassigning every vehicle. Younger than
-     * `FLEET_CACHE_FRESH_MS`: served as-is. Younger than `FLEET_CACHE_STALE_MS`: served as-is, and a
-     * background rebuild is kicked off via `waitUntil`. Older, or no cache entry: rebuilt synchronously.
+     * `FLEET_CACHE_FRESH_MS`: served as-is. Older: rebuilt, or re-stamped for an unchanged feed, within
+     * the request, so no answer lags the feed by more than this.
      */
-    FLEET_CACHE_FRESH_MS: 15_000,
-    /** Deadline before a request is forced onto a synchronous rebuild, not a freshness target. */
+    FLEET_CACHE_FRESH_MS: 10_000,
+    /** How long a build is kept, and still served when a rebuild fails. */
     FLEET_CACHE_STALE_MS: 60_000,
 } as const;
 

@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.4] - 2026-09-27
+
+### Fixed
+
+- Brno vehicle positions follow KORDIS within seconds again: a stale stored fleet is refreshed within the request instead of after it, which delayed every new feed by a request and left positions a minute old.
+
 ## [0.76.3] - 2026-09-27
 
 ### Fixed
