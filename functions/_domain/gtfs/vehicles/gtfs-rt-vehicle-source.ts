@@ -2,8 +2,10 @@ import type { AppVehicleCollection } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
-import { getGtfsRtSnapshot } from '../../../_feeds/gtfs/gtfs-rt-feed';
-import { readCachedFleet, readFleetPlates, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
+import { getGtfsRtSnapshot, getGtfsRtSnapshotIfChanged } from '../../../_feeds/gtfs/gtfs-rt-feed';
+import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
+import type { Snapshot } from '../../../_core/feed/source';
+import { readCachedFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -27,11 +29,14 @@ export class GtfsRtVehicleSource implements VehicleSource {
         private readonly mapping: VehicleMapping = new GtfsVehicleMapping()
     ) {}
 
-    /** Null when the feed or its static data cannot be read; every lookup then answers as offline. */
-    private async index(): Promise<VehicleIndex | null> {
+    /**
+     * Null when the feed or its static data cannot be read; every lookup then answers as offline. `feed`
+     * is a snapshot the caller already read, so the feed is not downloaded twice.
+     */
+    private async index(feed?: Snapshot<GtfsRtFeed>): Promise<VehicleIndex | null> {
         try {
             const [snapshot, routes, tripRoutes, tripAliases, windows] = await Promise.all([
-                getGtfsRtSnapshot(this.city),
+                feed ?? getGtfsRtSnapshot(this.city),
                 getGtfsRoutes(this.city),
                 getGtfsTripRoutes(this.city),
                 getGtfsTripAliases(this.city),
@@ -56,7 +61,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
 
     async allJson(): Promise<{ json: string; lastUpdated?: string } | null> {
         const fleet = await this.fleet();
-        return fleet ? { json: fleet.json, lastUpdated: fleet.lastUpdated } : null;
+        return fleet ? { json: fleet.body, lastUpdated: fleet.lastUpdated } : null;
     }
 
     /**
@@ -78,18 +83,18 @@ export class GtfsRtVehicleSource implements VehicleSource {
      */
     private async build(stored: CachedFleet | null): Promise<CachedFleet | null> {
         const ttlS = GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000;
-        if (stored?.feedTimestamp !== undefined) {
-            const snapshot = await getGtfsRtSnapshot(this.city).catch(() => null);
-            if (snapshot?.data.headerTimestamp === stored.feedTimestamp) {
-                const collection = { ...stored.collection, last_updated: new Date(snapshot.fetchedAt).toISOString() };
-                return writeCachedFleet(this.city.slug, collection, await readFleetPlates(this.city.slug, stored), ttlS, stored.feedTimestamp);
-            }
+        let feed: Snapshot<GtfsRtFeed> | undefined;
+        if (stored?.feedEtag) {
+            // An unreadable feed falls through to `index()`, whose source keeps serving the last good read.
+            const changed = await getGtfsRtSnapshotIfChanged(this.city, stored.feedEtag).catch(() => undefined);
+            if (changed === null) return restampCachedFleet(this.city.slug, stored, new Date().toISOString(), ttlS);
+            feed = changed;
         }
 
-        const index = await this.index();
+        const index = await this.index(feed);
         if (!index) return null;
         const { collection, plates } = await index.allWithPlates();
-        return writeCachedFleet(this.city.slug, collection, plates, ttlS, index.feedTimestamp);
+        return writeCachedFleet(this.city.slug, collection, plates, ttlS, index.feedEtag);
     }
 
     async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {

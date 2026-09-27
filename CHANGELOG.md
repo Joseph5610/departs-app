@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.76.5] - 2026-09-27
+
+### Fixed
+
+- Loading skeletons for the vehicle panel, departure board and favorites now match the current layouts.
+- Brno asks KORDIS conditionally whether its feed changed and reuses the stored fleet when it has not, cutting that check from about 10 ms to 2 ms of Worker CPU on a fresh instance.
+
 ## [0.76.4] - 2026-09-27
 
 ### Fixed

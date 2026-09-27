@@ -16,6 +16,19 @@ function isSameFeed(previous: { bytes: Uint8Array; headerTimestamp: number | und
     return true;
 }
 
+/** A downloaded feed, decoded unless it is the publication this isolate decoded last. */
+async function decodeResponse(city: CityConfig, res: Response): Promise<GtfsRtFeed> {
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    const headerTimestamp = feedHeaderTimestamp(bytes);
+    const previous = lastDecoded.get(city.slug);
+    if (previous && isSameFeed(previous, bytes, headerTimestamp)) return previous.feed;
+
+    const decoded = decodeGtfsRtFeed(bytes);
+    decoded.etag = res.headers.get('etag') ?? undefined;
+    lastDecoded.set(city.slug, { bytes, headerTimestamp, feed: decoded });
+    return decoded;
+}
+
 const sources = new Map<string, () => Promise<Snapshot<GtfsRtFeed> | null>>();
 
 function sourceFor(city: CityConfig, rtUrl: string) {
@@ -39,16 +52,7 @@ function sourceFor(city: CityConfig, rtUrl: string) {
                 return null;
             }
 
-            // Upstreams publish less often than the debounce refetches; decoding is the expensive part.
-            const bytes = new Uint8Array(await rtRes.arrayBuffer());
-            const headerTimestamp = feedHeaderTimestamp(bytes);
-            const previous = lastDecoded.get(city.slug);
-            if (previous && isSameFeed(previous, bytes, headerTimestamp)) return previous.feed;
-
-            const decoded = decodeGtfsRtFeed(bytes);
-            decoded.headerTimestamp = headerTimestamp;
-            lastDecoded.set(city.slug, { bytes, headerTimestamp, feed: decoded });
-            return decoded;
+            return decodeResponse(city, rtRes);
         },
     });
     sources.set(city.slug, source);
@@ -67,6 +71,19 @@ export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<Gtfs
         throw new ApiError(`GTFS-RT fetch failed for city: ${city.slug}`, 502);
     }
     return snapshot;
+}
+
+/**
+ * The city's feed unless it is still the publication with `etag`, asked conditionally: an unchanged feed
+ * is neither downloaded nor decoded (null), a changed one is read once and returned. Throws when unreadable.
+ */
+export async function getGtfsRtSnapshotIfChanged(city: CityConfig, etag: string): Promise<Snapshot<GtfsRtFeed> | null> {
+    const rtUrl = city.feed?.realtimeUrl;
+    if (!rtUrl) throw new ApiError(`No realtimeUrl configured for city: ${city.slug}`, 501);
+    const res = await appClient.fetch(rtUrl, { cache: 'no-store', headers: { 'If-None-Match': etag } });
+    if (res.status === 304) return null;
+    if (!res.ok) throw new ApiError(`GTFS-RT fetch failed for city: ${city.slug}`, 502);
+    return { data: await decodeResponse(city, res), fetchedAt: Date.now() };
 }
 
 /** The decoded feed alone, for callers that do not care when it was read. */

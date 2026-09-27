@@ -71,9 +71,9 @@ export class VehicleIndex {
         return this.snapshot.fetchedAt;
     }
 
-    /** Which publication of the feed this index reads, when the feed stamps one. */
-    get feedTimestamp(): number | undefined {
-        return this.snapshot.data.headerTimestamp;
+    /** The ETag of the feed publication this index reads, when the upstream sends one. */
+    get feedEtag(): string | undefined {
+        return this.snapshot.data.etag;
     }
 
     private get entities(): GtfsRt.IFeedEntity[] {
