@@ -1,45 +1,28 @@
+import '../../lib/zod-config';
+import { z } from 'zod/mini';
 import { useQuery } from '@tanstack/react-query';
-import localforage from 'localforage';
 import type { StopCollection, StopFeature } from '../../types/transit';
 import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { memoizeLast } from '../../lib/memoize';
 import type { AppError } from '../../types/error';
 import { usePreferencesStore } from '../../state/preferencesStore';
-import { EXTERNAL_URLS, QUERY_TIMING_MS, STOPS_DEVICE_CACHE } from '../../config/constants';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE } from '../../config/constants';
+import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 
-localforage.config({
-    name: 'departs',
-    storeName: 'stops_cache'
+/** Checks the structure the map layers and stop index rely on; each stop's other properties are optional. */
+const stopsFileSchema = z.object({
+    type: z.literal('FeatureCollection'),
+    features: z.array(z.looseObject({
+        geometry: z.looseObject({ coordinates: z.tuple([z.number(), z.number()]) }),
+        properties: z.looseObject({ stop_id: z.string() }),
+    })),
 });
 
-const VERSIONED_KEY_PREFIX = `${STOPS_DEVICE_CACHE.KEY_PREFIX}${STOPS_DEVICE_CACHE.VERSION}`;
-
-interface CachedStops {
-    data: StopCollection;
-    updatedAt: number;
-}
-
-const readCachedStops = async (key: string): Promise<CachedStops | null> => {
-    try {
-        return await localforage.getItem<CachedStops>(key);
-    } catch (error) {
-        console.warn('Stops device cache unavailable, downloading instead', error);
-        return null;
-    }
-};
-
-/** Saves the stops and drops copies left by earlier cache versions. Storage failures never fail the query. */
-const writeCachedStops = async (key: string, value: CachedStops): Promise<void> => {
-    try {
-        await localforage.setItem(key, value);
-        const keys = await localforage.keys();
-        const stale = keys.filter(k => k.startsWith(STOPS_DEVICE_CACHE.KEY_PREFIX) && !k.startsWith(VERSIONED_KEY_PREFIX));
-        await Promise.all(stale.map(k => localforage.removeItem(k)));
-    } catch (error) {
-        console.warn('Could not save stops to the device cache', error);
-    }
-};
+const stopsPersister = createDevicePersister((data): StopCollection => {
+    stopsFileSchema.parse(data);
+    return data as StopCollection;
+});
 
 const splitStops = memoizeLast((collection: StopCollection | undefined) => {
     if (!collection || !Array.isArray(collection.features)) {
@@ -76,36 +59,24 @@ const buildStopIndex = memoizeLast((collection: StopCollection | undefined) => {
 /**
  * useStops
  *
- * Fetches the selected city's prebuilt stop list from the static data host, kept on the device (IndexedDB) for a day to speed up startup.
+ * Fetches the selected city's prebuilt stop list from the static data host, kept on the device (IndexedDB) across launches.
  * Provides GeoJSON for the map layers and an index resolving any stop or platform ID.
  */
 export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    const query = useQuery<CachedStops, AppError>({
-        queryKey: ['stops', selectedCity],
-        queryFn: async () => {
-            const now = Date.now();
-            const key = `${VERSIONED_KEY_PREFIX}_${selectedCity}`;
-            const cached = await readCachedStops(key);
-
-            if (cached?.data && cached?.updatedAt && (now - cached.updatedAt < QUERY_TIMING_MS.STOPS_DEVICE_CACHE)) {
-                return cached;
-            }
-
-            const data = await apiFetch<StopCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/map-stops.json?v=${STOPS_DEVICE_CACHE.VERSION}`);
-            const result = { data, updatedAt: now };
-            await writeCachedStops(key, result);
-            return result;
-        },
-        staleTime: QUERY_TIMING_MS.STOPS_DEVICE_CACHE,
+    const query = useQuery<StopCollection, AppError>({
+        queryKey: ['stops', selectedCity, DEVICE_CACHE.VERSION],
+        queryFn: () => apiFetch<StopCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/map-stops.json?v=${DEVICE_CACHE.VERSION}`),
+        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STOPS_STALE),
         gcTime: Infinity,
+        persister: stopsPersister,
     });
 
-    const collection = query.data?.data;
+    const collection = query.data;
     const { stops, centroids } = splitStops(collection);
     const stopIndex = buildStopIndex(collection);
-    const updatedAt = query.data?.updatedAt ?? null;
+    const updatedAt = query.data ? query.dataUpdatedAt : null;
     const isLoading = query.isLoading;
 
     return useMemo(() => ({

@@ -5,6 +5,7 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { apiFetch } from '../../lib/api-client';
 import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
 import { memoizeLast } from '../../lib/memoize';
+import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 import { useCityConfig } from './useCities';
 import type { FleetLookup, VehicleMetadata } from '../../types/vehicles';
 
@@ -16,6 +17,8 @@ const fleetFileSchema = z.record(z.string(), z.array(z.object({
     is_air_conditioned: z.optional(z.boolean()),
     is_wheelchair_accessible: z.optional(z.boolean()),
 })));
+
+const fleetPersister = createDevicePersister((data) => fleetFileSchema.parse(data));
 
 interface FleetRange extends VehicleMetadata {
     min: number;
@@ -67,8 +70,9 @@ export function useFleetLookup(): FleetLookup | undefined {
         queryFn: async () => fleetFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/${source!.file}`)),
         enabled: !!selectedCity && !!source,
         select: buildRanges,
-        staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
-        gcTime: QUERY_TIMING_MS.TRIP_SHAPES_GC,
+        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
+        gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
+        persister: fleetPersister,
     });
 
     return source ? buildLookup(ranges ?? NO_RANGES, source.operator) : undefined;

@@ -217,14 +217,18 @@ export const QUERY_TIMING_MS = {
     INFOTEXTS_REFRESH: 5 * MINUTE_MS,
     CITIES_STALE: HOUR_MS,
     CITIES_GC: DAY_MS,
-    /** How long stops kept on the device (IndexedDB) are used before being downloaded again. */
-    STOPS_DEVICE_CACHE: DAY_MS,
+    /** How long stops are used before being downloaded again. */
+    STOPS_STALE: DAY_MS,
     /** Points of sale change roughly monthly. */
     POINTS_OF_SALE_STALE: DAY_MS,
     POINTS_OF_SALE_GC: 7 * DAY_MS,
     GEOCODING_STALE: 5 * MINUTE_MS,
     /** Route shapes change only with a timetable export. */
     TRIP_SHAPES_STALE: 4 * HOUR_MS,
+    /** Route colors and the fleet register; a device copy is shown instantly and refreshed in the background once older. */
+    STATIC_METADATA_STALE: 4 * HOUR_MS,
+    /** Device-cached queries stay in memory for the session; the device copy already outlives it. */
+    STATIC_METADATA_GC: Infinity,
     /** A shape bucket holds several shapes of up to thousands of points, so an unused one is let go quickly. */
     TRIP_SHAPES_GC: 5 * MINUTE_MS,
 };
@@ -252,10 +256,18 @@ export const GEOCODING_CONFIG = {
     CACHE_LIMIT: 100,
 };
 
-export const STOPS_DEVICE_CACHE = {
-    /** Bump to invalidate every device's cached stops; it is also sent as `?v=` to bust the CDN cache. */
+/** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
+export const DEVICE_CACHE = {
+    /** Bump to discard every device's cached static data; it is also sent as `?v=` to bust the CDN copy of the stops. */
     VERSION: 'v50',
-    KEY_PREFIX: 'city_stops_storage_',
+    /** Entries older than this are dropped instead of shown while refreshing. */
+    MAX_AGE: 14 * DAY_MS,
+    /** On a metered connection a copy is refreshed only once older than this, however short its usual stale time. */
+    METERED_STALE: DAY_MS,
+    DB_NAME: 'departs',
+    STORE_NAME: 'query_cache',
+    /** Stores left by earlier cache implementations, deleted on startup. */
+    LEGACY_STORE_NAMES: ['stops_cache'],
 };
 
 export const DEPARTURES_CONFIG = {

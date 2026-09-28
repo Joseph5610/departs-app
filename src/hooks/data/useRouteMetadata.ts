@@ -7,6 +7,7 @@ import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
 import type { RouteInfo } from '../../types/vehicles';
 import { routeJoinKey } from '../../utils/routeTypes';
 import { memoizeLast } from '../../lib/memoize';
+import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 
 const routesFileSchema = z.record(z.string(), z.object({
     name: z.string(),
@@ -36,6 +37,8 @@ export interface RouteMetadata {
      */
     byKordisNumeric: Map<string, RouteInfo>;
 }
+
+const routesPersister = createDevicePersister((data) => routesFileSchema.parse(data));
 
 const EMPTY: RouteMetadata = { byId: new Map(), byShortName: new Map(), byName: new Map(), byKordisNumeric: new Map() };
 
@@ -68,8 +71,9 @@ export function useRouteMetadata(): RouteMetadata {
         queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/routes.json`)),
         enabled: !!selectedCity,
         select: buildRouteMetadata,
-        staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
-        gcTime: QUERY_TIMING_MS.TRIP_SHAPES_GC,
+        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
+        gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
+        persister: routesPersister,
     });
 
     return data ?? EMPTY;

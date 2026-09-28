@@ -4,6 +4,7 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
 import { useRouteParams } from '../useRouteParams';
+import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 
 /** Validates each entry on its own, so one malformed point of sale is dropped instead of the whole list. */
 const parsePointsOfSale = (json: unknown): PointOfSale[] => {
@@ -15,6 +16,8 @@ const parsePointsOfSale = (json: unknown): PointOfSale[] => {
     }
     return valid;
 };
+
+const pointsOfSalePersister = createDevicePersister(parsePointsOfSale);
 
 /** `preload` lets the search load the list while the map layer is still hidden. */
 export function usePointsOfSale(preload = false) {
@@ -42,7 +45,8 @@ export function usePointsOfSale(preload = false) {
             return parsePointsOfSale(await res.json());
         },
         enabled: isEnabled,
-        staleTime: QUERY_TIMING_MS.POINTS_OF_SALE_STALE,
+        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.POINTS_OF_SALE_STALE),
         gcTime: QUERY_TIMING_MS.POINTS_OF_SALE_GC,
+        persister: pointsOfSalePersister,
     });
 }

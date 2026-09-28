@@ -14,6 +14,7 @@ import { AppErrorCode, type AppError } from './types/error'
 import i18n from './i18n/config'
 import { TRANSIT_REFRESH_MS } from './config/constants'
 import { initHistoryDepth } from './lib/history'
+import { pruneDeviceCache, refreshDeviceCacheWhenUnmetered } from './lib/deviceCache'
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -36,6 +37,8 @@ const queryClient = new QueryClient({
 })
 
 initHistoryDepth()
+pruneDeviceCache()
+refreshDeviceCacheWhenUnmetered(queryClient)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

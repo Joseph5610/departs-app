@@ -1,18 +1,35 @@
+import '../../lib/zod-config';
+import { z } from 'zod/mini';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CitiesResponse } from '../../types/transit';
 import type { City } from '../../types/cities';
 import { apiFetch } from '@/lib/api-client';
+import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { QUERY_TIMING_MS } from '../../config/constants';
 import { DEFAULT_LINE_RULES, FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '../../config/cities';
 import { usePreferencesStore } from '../../state/preferencesStore';
+
+/** The fields the app joins on; the rest of each city is optional and read defensively. */
+const citiesResponseSchema = z.object({
+    cities: z.array(z.looseObject({
+        slug: z.string(),
+        name: z.string(),
+        country: z.string(),
+        center: z.tuple([z.number(), z.number()]),
+        bounds: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+    })),
+});
+
+const citiesPersister = createDevicePersister((data): CitiesResponse => citiesResponseSchema.parse(data));
 
 export function useCities() {
     return useQuery<CitiesResponse, Error>({
         queryKey: ['cities', 'v2'],
         queryFn: () => apiFetch<CitiesResponse>('/cities'),
-        staleTime: QUERY_TIMING_MS.CITIES_STALE,
+        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.CITIES_STALE),
         gcTime: QUERY_TIMING_MS.CITIES_GC,
+        persister: citiesPersister,
         refetchOnWindowFocus: false,
     });
 }

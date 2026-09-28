@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.0] - 2026-09-28
+
+### Added
+
+- Line colors, stops, cities, fleet data and points of sale are kept on the device, so a cold start shows them instantly and refreshes them in the background.
+- On mobile data or with the system data saver on (where the browser reports it), static data is refreshed at most once a day, and right away after switching to wifi.
+
 ## [0.78.0] - 2026-09-28
 
 ### Added
