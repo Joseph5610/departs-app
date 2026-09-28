@@ -63,7 +63,7 @@ export const DepartureBoardHeader = React.memo(() => {
 
         const getLineGroup = (line: { name: string, type: string }) => {
             const name = line.name.toUpperCase();
-            if (line.type === 'metro' || lineRules.metroLineNames.includes(name)) return routeTypeRank('metro');
+            if (line.type === 'metro') return routeTypeRank('metro');
             if (line.type === 'train' || lineRules.trainLinePrefixes.some(prefix => name.startsWith(prefix))) return routeTypeRank('train');
             const rank = routeTypeRank(line.type);
             return lineRules.isNightLine(line.type, name) ? rank + ROUTE_TYPE_ORDER.length + 1 : rank;

@@ -302,7 +302,8 @@
     "train": "Vlaky",
     "ferry": "Prievozy",
     "funicular": "Lanovky",
-    "other": "Ostatné"
+    "other": "Ostatné",
+    "airport": "Letisko"
   },
   "errors": {
     "generic": "Niečo sa nepodarilo",

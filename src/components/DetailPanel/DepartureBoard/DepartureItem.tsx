@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { Accessibility, CornerDownRight, Hourglass, Snowflake, Train } from 'lucide-react';
 import { LineBadge } from '../../LineBadge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
-import { useMetroLines } from '@/hooks/derived/useMetroLines';
+import { useInterchanges } from '@/hooks/derived/useInterchanges';
+import { InterchangeBadges } from '../../InterchangeBadges';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -34,7 +35,7 @@ export const DepartureItem = memo(({
     hideHeadsign
 }: DepartureItemProps) => {
     const { t } = useTranslation();
-    const { forHeadsign } = useMetroLines();
+    const { forHeadsign } = useInterchanges();
     const clickStartPos = useRef<{ x: number, y: number } | null>(null);
 
     const handlePointerDown = (e: React.PointerEvent) => {
@@ -122,9 +123,7 @@ export const DepartureItem = memo(({
                     )}>
                         {dep.headsign}
                     </span>
-                    {forHeadsign(dep.headsign, dep.line).map((line) => (
-                        <LineBadge key={line.name} name={line.name} routeColor={line.route_color} />
-                    ))}
+                    <InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} />
                 </span>
             )}
             {/* Spacer when headsign is hidden */}

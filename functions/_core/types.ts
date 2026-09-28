@@ -115,12 +115,9 @@ interface AppStopProperties {
     is_centroid?: boolean;
     is_drop_off_only?: boolean;
     is_train?: number;
-    metro_a?: number;
-    metro_b?: number;
-    metro_c?: number;
     metro_lines?: Array<{ name: string; route_color: string }>;
-    metro_color?: string;
-    metro_color_2?: string;
+    /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
+    interchanges?: string[];
     all_ids?: string[];
     lines?: Array<{
         name: string;

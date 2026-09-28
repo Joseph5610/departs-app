@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.78.0] - 2026-09-28
+
+### Added
+
+- Prague transfer badges on departure boards and vehicle stop lists now come from PID's own timetable data and also show train, airport and ferry connections.
+
+### Changed
+
+- Prague station links are shorter: a station's id now lists only the platforms it departs from, not its pathway nodes and track sectors.
+- Map metro colours are read from each stop's metro lines; the separate per-line flags and colour fields are gone from the stop data.
+
 ## [0.77.0] - 2026-09-27
 
 ### Added

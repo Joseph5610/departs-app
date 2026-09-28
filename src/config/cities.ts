@@ -54,8 +54,6 @@ export interface InitialCityConfig {
 }
 
 export interface LineRules {
-    /** Metro line names, recognised even when a departure's type isn't marked as metro. */
-    metroLineNames: string[];
     /** Line-name prefixes treated as trains when the type is missing. */
     trainLinePrefixes: string[];
     /** Local hours [from, to) with no metro service, to explain an empty metro board. */
@@ -65,7 +63,6 @@ export interface LineRules {
 }
 
 export const DEFAULT_LINE_RULES: LineRules = {
-    metroLineNames: [],
     trainLinePrefixes: ['S', 'R'],
     metroClosedHours: null,
     isNightLine: () => false,
@@ -92,7 +89,6 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         ],
         debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
         lineRules: {
-            metroLineNames: ['A', 'B', 'C'],
             metroClosedHours: [0, 5],
             isNightLine: (routeType, lineName) => {
                 const num = parseInt(lineName.replace(/\D/g, ''), 10);

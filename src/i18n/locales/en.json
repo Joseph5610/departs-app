@@ -313,7 +313,8 @@
     "train": "Trains",
     "ferry": "Ferries",
     "funicular": "Funiculars",
-    "other": "Other"
+    "other": "Other",
+    "airport": "Airport"
   },
   "errors": {
     "generic": "Something went wrong",

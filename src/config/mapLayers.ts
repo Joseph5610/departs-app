@@ -63,7 +63,12 @@ export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
 const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
 const METRO_LINE_COUNT: ExpressionSpecification = ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]];
-const IS_RAIL_STATION: ExpressionSpecification = ['any', ['==', ['get', 'is_train'], 1], ['==', ['get', 'metro_a'], 1], ['==', ['get', 'metro_b'], 1], ['==', ['get', 'metro_c'], 1]];
+const IS_RAIL_STATION: ExpressionSpecification = ['any', ['==', ['get', 'is_train'], 1], ['>', METRO_LINE_COUNT, 0]];
+/** Colour of the stop's n-th metro line, or `fallback` when it has fewer lines. */
+const metroColor = (index: number, fallback: ExpressionSpecification | string): ExpressionSpecification => ['case',
+    ['>', METRO_LINE_COUNT, index], ['to-color', ['get', 'route_color', ['object', ['at', index, ['array', ['get', 'metro_lines']]]]]],
+    fallback
+];
 
 const MAP_TOKENS = {
     zoom: {
@@ -149,11 +154,7 @@ export const stopPoints: CircleLayerSpecification = {
             MAP_TOKENS.zoom.stops.min, 5.7,
             MAP_TOKENS.zoom.stops.max, 20.9
         ],
-        'circle-color': [
-            'coalesce',
-            ['get', 'metro_color'],
-            ['case', ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]
-        ],
+        'circle-color': metroColor(0, ['case', ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]),
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 1.0, MAP_TOKENS.zoom.stops.max, 2.0],
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
         'circle-opacity': [
@@ -180,7 +181,7 @@ export const transferOuterPoints: CircleLayerSpecification = {
             MAP_TOKENS.zoom.stops.min, 6.5,
             MAP_TOKENS.zoom.stops.max, 24
         ],
-        'circle-color': ['coalesce', ['get', 'metro_color'], '#0f172a'],
+        'circle-color': metroColor(0, '#0f172a'),
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 1, MAP_TOKENS.zoom.stops.max, 3],
         'circle-opacity': 0.85
@@ -201,7 +202,7 @@ export const transferInnerPoints: CircleLayerSpecification = {
             MAP_TOKENS.zoom.stops.min, 4.5,
             MAP_TOKENS.zoom.stops.max, 16
         ],
-        'circle-color': ['coalesce', ['get', 'metro_color_2'], '#ffffff'],
+        'circle-color': metroColor(1, '#ffffff'),
         'circle-opacity': 0.85
     }
 };

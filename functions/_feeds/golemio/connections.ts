@@ -20,7 +20,7 @@ export interface TripConnections {
     continues?: ContinuationRow;
 }
 
-/** `prague/connections.json`, built by departs-data from the PID GTFS. */
+/** `prague/connection_buckets/`, built by departs-data from the PID GTFS. */
 export interface LiveConnections {
     days: string[];
     trips: Record<string, TripConnections>;

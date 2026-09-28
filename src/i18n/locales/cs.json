@@ -316,7 +316,8 @@
     "train": "Vlaky",
     "ferry": "Přívozy",
     "funicular": "Lanovky",
-    "other": "Ostatní"
+    "other": "Ostatní",
+    "airport": "Letiště"
   },
   "errors": {
     "generic": "Něco se nepovedlo",
