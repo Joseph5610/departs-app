@@ -4,11 +4,8 @@ import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront 
 import { SearchItem } from './SearchItem';
 import { getLineMetadataFromMap } from '@/utils/transitUtils';
 import { searchHistoryKey } from '@/utils/searchHistory';
-import {
-    Command,
-    CommandList,
-    CommandGroup,
-} from '@/components/ui/command';
+import { Autocomplete } from '@base-ui/react/autocomplete';
+import { cn } from '@/lib/utils';
 
 import type { StopFeature, SearchHistoryItem, VehicleFeature } from '../../../types/transit';
 import { vehicleDisplayNumber } from '@/utils/vehicleSearch';
@@ -34,6 +31,17 @@ interface SearchDropdownProps {
     lineMetadataMap: Map<string, { route_color: string; type: string }>;
 }
 
+const SearchGroup: React.FC<{ heading?: React.ReactNode; className?: string; children: React.ReactNode }> = ({ heading, className, children }) => (
+    <Autocomplete.Group className={cn('overflow-hidden text-foreground p-0', className)}>
+        {heading && (
+            <Autocomplete.GroupLabel className="px-3 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {heading}
+            </Autocomplete.GroupLabel>
+        )}
+        {children}
+    </Autocomplete.Group>
+);
+
 const GroupHeading: React.FC<{ icon: React.ReactNode; label: string; count: number }> = ({ icon, label, count }) => (
     <div className="flex items-center justify-between w-full">
         <div className="flex gap-2 items-center">
@@ -49,7 +57,7 @@ const GroupHeading: React.FC<{ icon: React.ReactNode; label: string; count: numb
 /**
  * SearchDropdown
  *
- * Renders the dropdown panel below the search input using Shadcn Command primitives.
+ * Renders the dropdown panel below the search input as the Base UI Autocomplete list owned by Search.
  * Shows recent searches, favorites, line filter suggestions, and stop results.
  */
 export const SearchDropdown: React.FC<SearchDropdownProps> = ({
@@ -94,15 +102,10 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
     return (
         <div className="mt-2 overflow-hidden max-h-[60vh] rounded-2xl glassy p-1.5 shadow-xl">
-            <Command
-                shouldFilter={false}
-                className="bg-transparent! p-0 rounded-none!"
-            >
-                <CommandList className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
+            <Autocomplete.List className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
                 {showHistory && (
-                    <CommandGroup
+                    <SearchGroup
                         heading={<GroupHeading icon={<Clock size={14} className="text-primary" strokeWidth={2} />} label={t('search.recent')} count={searchHistory.length} />}
-                        variant="search"
                     >
                         {searchHistory.map((item) => (
                             <SearchItem
@@ -129,24 +132,22 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 onClick={() => onHistorySelect(item)}
                             />
                         ))}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Favorites heading */}
                 {query === '' && results.length > 0 && (
-                    <CommandGroup
+                    <SearchGroup
                         heading={<GroupHeading icon={<Star size={14} className="text-amber-500 fill-amber-500/20" strokeWidth={2} />} label={t('search.favorites')} count={results.length} />}
-                        variant="search"
                     >
                         {renderStopResults('fav')}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Live vehicles by number */}
                 {vehicleResults.length > 0 && (
-                    <CommandGroup
+                    <SearchGroup
                         heading={<GroupHeading icon={<BusFront size={14} className="text-primary" strokeWidth={2} />} label={t('search.vehicles')} count={vehicleResults.length} />}
-                        variant="search"
                     >
                         {vehicleResults.map((vehicle) => {
                             const p = vehicle.properties;
@@ -163,12 +164,12 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 />
                             );
                         })}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Line filter suggestion */}
                 {queryLines && (
-                    <CommandGroup className="p-0">
+                    <SearchGroup>
                         <SearchItem
                             icon={<SearchIcon size={16} strokeWidth={1.5} />}
                             title={t('search.filterByLine')}
@@ -184,21 +185,20 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                             testId={`search-item-line-${queryLines.join('-')}`}
                             onClick={() => onLineSelect(queryLines)}
                         />
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Search results */}
                 {query !== '' && results.length > 0 && (
-                    <CommandGroup className="p-0">
+                    <SearchGroup>
                         {renderStopResults('res')}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Points of sale */}
                 {posResults.length > 0 && (
-                    <CommandGroup
+                    <SearchGroup
                         heading={<GroupHeading icon={<Ticket size={14} className="text-emerald-500" strokeWidth={2} />} label={t('search.pointsOfSale')} count={posResults.length} />}
-                        variant="search"
                     >
                         {posResults.map((result) => (
                             <SearchItem
@@ -210,14 +210,13 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 onClick={() => onPosSelect(result)}
                             />
                         ))}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
 
                 {/* Geocoding / places */}
                 {geocodingResults.length > 0 && (
-                    <CommandGroup
+                    <SearchGroup
                         heading={<GroupHeading icon={<Building2 size={14} className="text-primary" strokeWidth={2} />} label={t('search.places')} count={geocodingResults.length} />}
-                        variant="search"
                     >
                         {geocodingResults.map((place) => (
                             <SearchItem
@@ -229,10 +228,9 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 onClick={() => onPlaceSelect(place)}
                             />
                         ))}
-                    </CommandGroup>
+                    </SearchGroup>
                 )}
-            </CommandList>
-        </Command>
+            </Autocomplete.List>
         </div>
     );
 };

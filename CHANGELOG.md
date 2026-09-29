@@ -4,6 +4,20 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.1] - 2026-09-29
+
+### Added
+
+- Search results can be browsed with the arrow keys, and Enter opens the highlighted result.
+
+### Fixed
+
+- On mobile, text fields in dialogs opened over the detail drawer (feedback, alerts search) can be focused and typed into again.
+
+### Changed
+
+- The mobile detail drawer and the search dropdown are built on Base UI, removing vaul, cmdk and Radix.
+
 ## [0.79.0] - 2026-09-28
 
 ### Added

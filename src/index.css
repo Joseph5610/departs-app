@@ -204,20 +204,6 @@
     }
   }
 
-  /* Force map interaction even when a drawer blocks the body */
-  .maplibregl-map,
-  .maplibregl-canvas {
-    pointer-events: auto;
-  }
-
-  /* Fix for Vaul drawer wrapper blocking clicks when opened directly */
-  [vaul-drawer-wrapper] {
-    pointer-events: none !important;
-  }
-  [vaul-drawer-wrapper] > * {
-    pointer-events: auto;
-  }
-
   /* Rely matches the backdrop behavior in dialog.tsx - modal backdrops naturally block interaction */
 
   button,
@@ -243,12 +229,6 @@
     #root {
       height: 100vh;
     }
-  }
-
-  /* Prevent Radix/Vaul from disabling clicks on the main app tree when a non-modal drawer opens */
-  [data-aria-hidden="true"],
-  [data-scroll-locked] {
-    pointer-events: auto !important;
   }
 
   /* Make all Lucide icons crisp and prevent blurry antialiasing */

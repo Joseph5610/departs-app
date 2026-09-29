@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -37,7 +37,7 @@ interface DetailPanelProps {
  * DetailPanel
  *
  * Responsive panel for displaying stop and vehicle details.
- * Uses a sidebar (Sheet) on desktop and a bottom drawer (vaul) on mobile.
+ * Uses a sidebar (Sheet) on desktop and a bottom drawer (Base UI) on mobile.
  */
 export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, children }) => {
     const isMobile = useIsMobile();
@@ -95,6 +95,9 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
 
     const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(DRAWER_SNAP.DEFAULT);
 
+    const swipeCloseFromRef = useRef<number | string | null>(null);
+    const swipeCollapseRef = useRef(false);
+
     // Reset snap point when selection changes (id change) during render
     const [prevId, setPrevId] = useState(id);
     if (id !== prevId) {
@@ -112,61 +115,54 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         return (
             <Drawer
                 open={isOpen}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        onClose();
+                onOpenChange={(open, details) => {
+                    if (open || details.reason === 'outside-press' || details.reason === 'focus-out') return;
+                    // A swipe-close from above the lowest snap point collapses instead; only the lowest one dismisses.
+                    if (details.reason === 'swipe' && swipeCloseFromRef.current !== DRAWER_SNAP.SNAP_POINTS[0]) {
+                        details.cancel();
+                        swipeCollapseRef.current = true;
+                        return;
                     }
+                    onClose();
                 }}
                 snapPoints={DRAWER_SNAP.SNAP_POINTS}
-                activeSnapPoint={activeSnapPoint}
-                setActiveSnapPoint={setActiveSnapPoint}
+                snapPoint={activeSnapPoint}
+                onSnapPointChange={(snapPoint, details) => {
+                    if (snapPoint === null && details.reason === 'swipe') swipeCloseFromRef.current = activeSnapPoint;
+                    // A canceled swipe-close restores the previous snap point right after onOpenChange.
+                    if (swipeCollapseRef.current && snapPoint !== null) {
+                        swipeCollapseRef.current = false;
+                        setActiveSnapPoint(DRAWER_SNAP.SNAP_POINTS[0]);
+                        return;
+                    }
+                    setActiveSnapPoint(snapPoint);
+                }}
                 modal={false}
-                dismissible={true}
-                shouldScaleBackground={false}
-                disablePreventScroll={true}
-                noBodyStyles={true}
+                disablePointerDismissal={true}
             >
                 <DrawerContent
                     variant="glassy"
-                    className="max-h-[96%] h-full flex flex-col pointer-events-none outline-none rounded-t-[32px]! text-foreground"
-                    hideOverlay={true}
+                    className="outline-none text-foreground"
+                    initialFocus={false}
                     aria-describedby={undefined}
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                    onEscapeKeyDown={(e) => {
-                        // Vaul hears Escape before an open menu does; let the menu close alone.
-                        if (e.target instanceof Element && e.target.closest('[role="menu"], [aria-expanded="true"]')) e.preventDefault();
-                    }}
-                >
-                    {/* 
-                        Draggable Header Area:
-                        With handleOnly removed, the ENTIRE DrawerContent is draggable by default.
-                        The header (station name, subheader) is naturally part of the drag area.
-                        No DrawerHandle component needed — just a visual bar.
-                    */}
-                    <div className="shrink-0 flex flex-col pointer-events-auto">
-                        {/* Visual Handle Bar (purely cosmetic, not a DrawerHandle) */}
-                        <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-border mb-2" />
+                    data-testid="detail-panel"
+                    header={
+                        <div className="shrink-0 flex flex-col">
+                            <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-border mb-2" />
 
-                        <div className="mt-2 px-6 pb-2">
-                            {headerContent}
-                        </div>
-
-                        {subHeader && (
-                            <div className="w-full">
-                                {subHeader}
+                            <div className="mt-2 px-6 pb-2">
+                                {headerContent}
                             </div>
-                        )}
-                    </div>
 
-                    {/* 
-                        Scrollable Content Area:
-                        data-vaul-no-drag prevents scrolling here from triggering drawer drag.
-                        This is the standard vaul pattern for large drag areas.
-                    */}
-                    <div
-                        data-vaul-no-drag
-                        className="flex-1 min-h-0 overflow-y-auto px-6 pointer-events-auto overscroll-contain custom-scrollbar"
-                    >
+                            {subHeader && (
+                                <div className="w-full">
+                                    {subHeader}
+                                </div>
+                            )}
+                        </div>
+                    }
+                >
+                    <div className="flex-1 min-h-0 overflow-y-auto px-6 overscroll-contain custom-scrollbar">
                         <div className="pb-[45dvh]">
                             {children}
                         </div>

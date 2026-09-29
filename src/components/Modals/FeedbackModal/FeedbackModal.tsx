@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ import { Card } from '@/components/ui/card';
 import { IconToggle, type IconToggleProps } from '../../IconToggle';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 import { useUiStore } from '../../../state/uiStore';
 import { feedbackPayloadSchema, type FeedbackPayload } from '../../../types/feedback';
@@ -128,152 +128,146 @@ export const FeedbackModal: React.FC = React.memo(() => {
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 min-h-0 px-6">
-                    <Form {...form}>
-                        <form id="feedback-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2 pb-6">
-                            
-                            {/* Type Selection */}
-                            <FormField
-                                control={form.control}
-                                name="type"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1.5">
-                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-                                            {t('feedback.type')}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Card variant="subtle" size="none">
-                                                <div className="p-3">
-                                                    <div className="grid grid-cols-3 gap-2">
-                                                        <TypeButton
-                                                            icon={Bug}
-                                                            label={t('feedback.typeBug')}
-                                                            isActive={field.value === 'bug'}
-                                                            onClick={() => field.onChange('bug')}
-                                                        />
-                                                        <TypeButton
-                                                            icon={Lightbulb}
-                                                            label={t('feedback.typeFeature')}
-                                                            isActive={field.value === 'feature_request'}
-                                                            onClick={() => field.onChange('feature_request')}
-                                                        />
-                                                        <TypeButton
-                                                            icon={MessageSquare}
-                                                            label={t('feedback.typeOther')}
-                                                            isActive={field.value === 'other'}
-                                                            onClick={() => field.onChange('other')}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </Card>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Message */}
-                            <FormField
-                                control={form.control}
-                                name="message"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1.5">
-                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-                                            {t('feedback.message')} *
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Textarea 
-                                                placeholder={t('feedback.messagePlaceholder')}
-                                                className="min-h-28 resize-none rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm leading-relaxed"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Email */}
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1.5">
-                                        <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-                                            {t('feedback.email')}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input 
-                                                type="email" 
-                                                placeholder={t('feedback.emailPlaceholder')} 
-                                                className="rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm h-11"
-                                                {...field} 
-                                                value={field.value || ''}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Diagnostics Switch */}
-                            <FormField
-                                control={form.control}
-                                name="includeDiagnostics"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-0">
-                                        <Card variant="subtle" size="none" className="overflow-hidden">
-                                            <Item
-                                                variant="settings"
-                                                size="none"
-                                                className="w-full border-0 p-4"
-                                            >
-                                                <ItemContent>
-                                                    <ItemTitle className="text-foreground">{t('feedback.diagnostics')}</ItemTitle>
-                                                    <ItemDescription className="text-xs leading-relaxed mt-0.5">{t('feedback.diagnosticsDesc')}</ItemDescription>
-                                                </ItemContent>
-                                                <ItemActions>
-                                                    <FormControl>
-                                                        <Switch 
-                                                            checked={field.value} 
-                                                            onCheckedChange={field.onChange} 
-                                                        />
-                                                    </FormControl>
-                                                </ItemActions>
-                                            </Item>
-
-                                            {includeDiagnostics && diagnosticSnapshot && (
-                                                <div className="px-4 pb-4 pt-1 border-t border-border/50">
-                                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all max-h-44">
-                                                        {JSON.stringify(diagnosticSnapshot, null, 2)}
-                                                    </pre>
-                                                </div>
-                                            )}
-                                        </Card>
-                                    </FormItem>
-                                )}
-                            />
-
-                            {TURNSTILE_SITE_KEY ? (
-                                <div className="flex justify-center mt-1">
-                                    <Turnstile
-                                        ref={turnstileRef}
-                                        siteKey={TURNSTILE_SITE_KEY}
-                                        onSuccess={(token) => setTurnstileToken(token)}
-                                        onExpire={() => setTurnstileToken(null)}
-                                        onError={() => setTurnstileToken(null)}
-                                        options={{
-                                            theme: 'auto'
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <Alert variant="warning">
-                                    <AlertDescription className="text-xs">{t('feedback.unavailable')}</AlertDescription>
-                                </Alert>
+                    <form id="feedback-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2 pb-6">
+                        
+                        {/* Type Selection */}
+                        <Controller
+                            control={form.control}
+                            name="type"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5">
+                                    <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                        {t('feedback.type')}
+                                    </FieldLabel>
+                                    <Card variant="subtle" size="none">
+                                        <div className="p-3">
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <TypeButton
+                                                    icon={Bug}
+                                                    label={t('feedback.typeBug')}
+                                                    isActive={field.value === 'bug'}
+                                                    onClick={() => field.onChange('bug')}
+                                                />
+                                                <TypeButton
+                                                    icon={Lightbulb}
+                                                    label={t('feedback.typeFeature')}
+                                                    isActive={field.value === 'feature_request'}
+                                                    onClick={() => field.onChange('feature_request')}
+                                                />
+                                                <TypeButton
+                                                    icon={MessageSquare}
+                                                    label={t('feedback.typeOther')}
+                                                    isActive={field.value === 'other'}
+                                                    onClick={() => field.onChange('other')}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Card>
+                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                </Field>
                             )}
+                        />
 
-                        </form>
-                    </Form>
+                        {/* Message */}
+                        <Controller
+                            control={form.control}
+                            name="message"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5">
+                                    <FieldLabel htmlFor="feedback-message" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                        {t('feedback.message')} *
+                                    </FieldLabel>
+                                    <Textarea
+                                        id="feedback-message"
+                                        aria-invalid={fieldState.invalid}
+                                        placeholder={t('feedback.messagePlaceholder')}
+                                        className="min-h-28 resize-none rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm leading-relaxed"
+                                        {...field}
+                                    />
+                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
+
+                        {/* Email */}
+                        <Controller
+                            control={form.control}
+                            name="email"
+                            render={({ field, fieldState }) => (
+                                <Field className="gap-1.5">
+                                    <FieldLabel htmlFor="feedback-email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                        {t('feedback.email')}
+                                    </FieldLabel>
+                                    <Input
+                                        id="feedback-email"
+                                        aria-invalid={fieldState.invalid}
+                                        type="email"
+                                        placeholder={t('feedback.emailPlaceholder')} 
+                                        className="rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm h-11"
+                                        {...field} 
+                                        value={field.value || ''}
+                                    />
+                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                </Field>
+                            )}
+                        />
+
+                        {/* Diagnostics Switch */}
+                        <Controller
+                            control={form.control}
+                            name="includeDiagnostics"
+                            render={({ field }) => (
+                                <Field className="gap-0">
+                                    <Card variant="subtle" size="none" className="overflow-hidden">
+                                        <Item
+                                            variant="settings"
+                                            size="none"
+                                            className="w-full border-0 p-4"
+                                        >
+                                            <ItemContent>
+                                                <ItemTitle className="text-foreground">{t('feedback.diagnostics')}</ItemTitle>
+                                                <ItemDescription className="text-xs leading-relaxed mt-0.5">{t('feedback.diagnosticsDesc')}</ItemDescription>
+                                            </ItemContent>
+                                            <ItemActions>
+                                                <Switch 
+                                                    checked={field.value} 
+                                                    onCheckedChange={field.onChange} 
+                                                />
+                                            </ItemActions>
+                                        </Item>
+
+                                        {includeDiagnostics && diagnosticSnapshot && (
+                                            <div className="px-4 pb-4 pt-1 border-t border-border/50">
+                                                <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all max-h-44">
+                                                    {JSON.stringify(diagnosticSnapshot, null, 2)}
+                                                </pre>
+                                            </div>
+                                        )}
+                                    </Card>
+                                </Field>
+                            )}
+                        />
+
+                        {TURNSTILE_SITE_KEY ? (
+                            <div className="flex justify-center mt-1">
+                                <Turnstile
+                                    ref={turnstileRef}
+                                    siteKey={TURNSTILE_SITE_KEY}
+                                    onSuccess={(token) => setTurnstileToken(token)}
+                                    onExpire={() => setTurnstileToken(null)}
+                                    onError={() => setTurnstileToken(null)}
+                                    options={{
+                                        theme: 'auto'
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <Alert variant="warning">
+                                <AlertDescription className="text-xs">{t('feedback.unavailable')}</AlertDescription>
+                            </Alert>
+                        )}
+
+                    </form>
                 </ScrollArea>
                 
                 <div className="px-6 pb-6 pt-3 shrink-0 border-t border-border/50 flex gap-3">

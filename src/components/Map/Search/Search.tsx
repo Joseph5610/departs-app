@@ -21,6 +21,7 @@ import type { PosSearchResult } from '../../../utils/posSearch';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Autocomplete } from '@base-ui/react/autocomplete';
 import { SearchDropdown } from './SearchDropdown';
 import { CitySwitcher } from '../CitySwitcher';
 import { getLineMetadataMap } from '@/utils/transitUtils';
@@ -259,95 +260,96 @@ export const Search: React.FC = React.memo(() => {
                 "fixed top-0 left-0 w-[calc(100%-56px)] md:w-105 md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-1000 transition-[left,width] duration-300 ease-in-out",
                 isSidebarOpen && "md:left-(--visible-center-x) md:w-90"
             )}
-            data-vaul-no-drag
         >
-            <div ref={containerRef}>
-                <div 
-                    className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" 
-                    data-testid="search-container"
-                >
-                    <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-muted/50" />
+            <Autocomplete.Root
+                inline
+                mode="none"
+                autoHighlight
+                open={isOpen && showDropdown}
+                onOpenChange={(open, details) => {
+                    if (!open && details.reason !== 'item-press') setIsOpen(false);
+                }}
+                value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', '), count: activeFilter.length }) : query}
+                onValueChange={(value, details) => {
+                    if (details.reason !== 'input-change' && details.reason !== 'input-clear') return;
+                    if (activeFilter) {
+                        onLineSelect(null);
+                        setQuery('');
+                    } else {
+                        setQuery(value);
+                    }
+                    if (selectedPlaceId) {
+                        setSelectedPlaceId(null);
+                    }
+                    setIsOpen(true);
+                }}
+            >
+                <div ref={containerRef}>
+                    <div 
+                        className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm" 
+                        data-testid="search-container"
+                    >
+                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-muted/50" />
                     
-                    <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
-                        <Input
-                            ref={inputRef}
-                            aria-label={t('search.placeholder')}
-                            value={activeFilter ? t('search.lineFilter', { line: activeFilter.join(', '), count: activeFilter.length }) : query}
-                            onChange={(e) => {
-                                if (activeFilter) {
-                                    onLineSelect(null);
-                                    setQuery('');
-                                } else {
-                                    setQuery(e.target.value);
-                                }
-                                if (selectedPlaceId) {
-                                    setSelectedPlaceId(null);
-                                }
-                                setIsOpen(true);
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key !== 'Enter') return;
-                                if (vehicleResults.length > 0) {
-                                    handleVehicleSelect(vehicleResults[0]);
-                                } else if (results.length > 0) {
-                                    handleStopSelect(results[0]);
-                                } else if (queryLines) {
-                                    handleLineSelect(queryLines);
-                                }
-                            }}
-                            onFocus={() => setIsOpen(true)}
-                            placeholder={t('search.placeholder')}
-                            className={cn(
-                                "h-full w-full bg-transparent border-0! pl-10 text-[15px] truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none",
-                                activeFilter && "text-primary font-medium"
-                            )}
-                            data-testid="search-input"
-                            readOnly={!!activeFilter}
-                        />
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
-                            <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-primary")}  />
-                        </div>
-                        {(query || activeFilter) && (
-                            <div className="absolute right-0 top-0 h-full flex items-center pr-1">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => {
-                                        if (selectedPlaceId) setSelectedPlaceId(null);
-                                        clearSearch();
-                                        inputRef.current?.focus();
-                                    }}
-                                    className="h-9 w-9 text-muted-foreground hover:bg-muted/50"
-                                    aria-label={t('search.clearFilter')}
-                                >
-                                    <X size={18} strokeWidth={2}  />
-                                </Button>
+                        <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
+                            <Autocomplete.Input
+                                ref={inputRef}
+                                render={<Input />}
+                                aria-label={t('search.placeholder')}
+                                onFocus={() => setIsOpen(true)}
+                                placeholder={t('search.placeholder')}
+                                className={cn(
+                                    "h-full w-full bg-transparent border-0! pl-10 text-[15px] truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none",
+                                    activeFilter && "text-primary font-medium"
+                                )}
+                                data-testid="search-input"
+                                readOnly={!!activeFilter}
+                            />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
+                                <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-primary")}  />
                             </div>
-                        )}
+                            {(query || activeFilter) && (
+                                <div className="absolute right-0 top-0 h-full flex items-center pr-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                            if (selectedPlaceId) setSelectedPlaceId(null);
+                                            clearSearch();
+                                            inputRef.current?.focus();
+                                        }}
+                                        className="h-9 w-9 text-muted-foreground hover:bg-muted/50"
+                                        aria-label={t('search.clearFilter')}
+                                    >
+                                        <X size={18} strokeWidth={2}  />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {isOpen && showDropdown && (
-                    <SearchDropdown
-                        results={results}
-                        searchHistory={searchHistory}
-                        favoriteStops={favoriteStops}
-                        query={query}
-                        activeFilter={activeFilter}
-                        queryLines={queryLines}
-                        vehicleResults={vehicleResults}
-                        geocodingResults={geocodingResults}
-                        posResults={posResults}
-                        onStopSelect={handleStopSelect}
-                        onHistorySelect={handleHistorySelect}
-                        onLineSelect={handleLineSelect}
-                        onPlaceSelect={handlePlaceSelect}
-                        onPosSelect={handlePosSelect}
-                        onVehicleSelect={handleVehicleSelect}
-                        lineMetadataMap={lineMetadataMap}
-                    />
-                )}
-            </div>
+                    {isOpen && showDropdown && (
+                        <SearchDropdown
+                            results={results}
+                            searchHistory={searchHistory}
+                            favoriteStops={favoriteStops}
+                            query={query}
+                            activeFilter={activeFilter}
+                            queryLines={queryLines}
+                            vehicleResults={vehicleResults}
+                            geocodingResults={geocodingResults}
+                            posResults={posResults}
+                            onStopSelect={handleStopSelect}
+                            onHistorySelect={handleHistorySelect}
+                            onLineSelect={handleLineSelect}
+                            onPlaceSelect={handlePlaceSelect}
+                            onPosSelect={handlePosSelect}
+                            onVehicleSelect={handleVehicleSelect}
+                            lineMetadataMap={lineMetadataMap}
+                        />
+                    )}
+                </div>
+            </Autocomplete.Root>
         </div>
     );
 });

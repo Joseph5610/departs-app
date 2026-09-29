@@ -51,7 +51,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ## 3. UI & DOMAIN RULES
 
-- **DetailPanel Abstraction**: Mobile (Vaul drawer) and Desktop (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break responsive switch logic.
+- **DetailPanel Abstraction**: Mobile (Base UI Drawer) and Desktop (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break responsive switch logic.
 - **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` or `800` Trolleybus.
 - **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` — lines A/B/C have distinct directional identities.
 - **Branding Authority**: Transit colors and icons originate from backend-provided branding or centralized frontend config (`src/utils/mapIcons.ts`).

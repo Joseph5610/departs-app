@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { LineBadge } from '../../LineBadge';
-import { CommandItem } from '@/components/ui/command';
+import { Autocomplete } from '@base-ui/react/autocomplete';
 import { STOP_SEARCH } from '@/config/constants';
 
 interface SearchItemProps {
@@ -61,7 +61,7 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
 /**
  * SearchItem
  *
- * A single row in the search dropdown using Shadcn CommandItem.
+ * A single row in the search dropdown; Enter on the keyboard-highlighted row triggers onClick.
  * Supports default, primary (line filter), and highlighted (favorite) visual variants.
  */
 export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => {
@@ -69,22 +69,21 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
     const displayLines = lines || metroLines?.map(m => ({ name: m.name, type: 'metro', route_color: m.route_color }));
 
     return (
-        <CommandItem
+        <Autocomplete.Item
             value={testId || title}
-            onSelect={onClick}
+            onClick={onClick}
             data-testid={testId}
             className={cn(
-                'w-full px-3 py-2 flex items-center gap-3 rounded-xl cursor-pointer transition-colors my-0.5',
-                '[&_svg.lucide-check]:hidden', // hide the default checkmark
+                'group/search-item relative w-full px-3 py-2 flex items-center gap-3 rounded-xl cursor-pointer select-none outline-hidden text-sm transition-colors my-0.5 [&_svg]:pointer-events-none [&_svg]:shrink-0',
                 variant === 'primary'
-                    ? 'data-[selected=true]:bg-primary/15! hover:bg-primary/15! text-primary'
-                    : 'data-[selected=true]:bg-accent! hover:bg-accent! active:bg-accent/80!'
+                    ? 'data-highlighted:bg-primary/15 hover:bg-primary/15 text-primary'
+                    : 'data-highlighted:bg-accent hover:bg-accent active:bg-accent/80'
             )}
         >
             <div className={cn(
                 'rounded-lg shrink-0 w-7 h-7 flex items-center justify-center transition-colors',
                 variant === 'primary' ? 'bg-primary/15 text-primary' :
-                highlight ? 'bg-amber-500/15 text-amber-500' : 'bg-foreground/5 text-muted-foreground/80 group-data-[selected=true]/command-item:text-foreground'
+                highlight ? 'bg-amber-500/15 text-amber-500' : 'bg-foreground/5 text-muted-foreground/80 group-data-highlighted/search-item:text-foreground'
             )}>
                 {icon}
             </div>
@@ -103,7 +102,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
                     )}
                 </div>
             </div>
-        </CommandItem>
+        </Autocomplete.Item>
     );
 };
 
