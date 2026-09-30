@@ -59,6 +59,7 @@ export const FeedExplorer: React.FC = () => {
             }
             return Array.isArray(data) ? data.length : 0; // gtfs array
         }
+        if (Array.isArray(data)) return data.length;
         const vehData = data as { entity?: unknown[], features?: unknown[] };
         return vehData.entity ? vehData.entity.length : vehData.features ? vehData.features.length : 0;
     };
