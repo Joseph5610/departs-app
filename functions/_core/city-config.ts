@@ -19,6 +19,8 @@ export interface CityConfig {
     isBeta?: boolean;
     /** Kept out of the city lists; reachable by its URL and unlocked for a device with `?beta=<slug>`. */
     isHidden?: boolean;
+    /** Operator shown on a vehicle detail whose own operator is unknown (a timetable-only detail, a feed naming none). */
+    networkOperator?: string;
     hasPointsOfSale?: boolean;
     /** Whether the city has a service-alerts source; the frontend hides the alerts UI otherwise. */
     hasAlerts?: boolean;

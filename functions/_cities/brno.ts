@@ -10,6 +10,7 @@ const config: CityConfig = {
     name: 'Brno',
     country: 'CZ',
     timezone: 'Europe/Prague',
+    networkOperator: 'IDS JMK',
     center: [16.6068, 49.1951],
     bounds: [16.44, 49.11, 16.77, 49.28],
     feed: {

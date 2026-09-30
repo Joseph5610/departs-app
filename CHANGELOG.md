@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.3] - 2026-09-30
+
+### Added
+
+- Vehicle details name the network as operator where the operator is unknown (PID, IDS JMK, DPMP, Doprava Ústeckého kraje); an operator from the feed or the fleet register still wins.
+
 ## [0.79.2] - 2026-09-29
 
 ### Added

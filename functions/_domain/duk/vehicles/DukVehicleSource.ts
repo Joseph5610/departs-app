@@ -185,6 +185,7 @@ export class DukVehicleSource implements VehicleSource {
         if (headsign) props.trip_headsign = headsign;
 
         props.vehicle_descriptor = {
+            operator: this.city.networkOperator,
             is_wheelchair_accessible: report.isLowFloor,
             is_air_conditioned: report.isAirConditioned,
         };

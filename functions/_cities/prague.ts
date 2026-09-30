@@ -16,6 +16,7 @@ const config: CityConfig = {
     feed: {
         staticDataUrl: 'https://data.departs.app'
     },
+    networkOperator: 'PID',
     hasPointsOfSale: true,
     hasAlerts: true,
     virtualTableUrl: 'https://data.pid.cz/departures/?ids=',

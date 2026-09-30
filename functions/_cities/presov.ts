@@ -10,6 +10,7 @@ const config: CityConfig = {
     name: 'Prešov',
     country: 'SK',
     timezone: 'Europe/Bratislava',
+    networkOperator: 'DPMP',
     center: [21.2393, 48.9985],
     bounds: [21.13, 48.93, 21.37, 49.08],
     feed: {

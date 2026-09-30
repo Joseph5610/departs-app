@@ -18,6 +18,7 @@ const config: CityConfig = {
         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis',
         staticDataUrl: 'https://data.departs.app'
     },
+    networkOperator: 'Doprava Ústeckého kraje',
     isBeta: true,
     isHidden: true,
     filters: {

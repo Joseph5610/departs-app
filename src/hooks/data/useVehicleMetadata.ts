@@ -46,13 +46,10 @@ function findRange(ranges: FleetRange[], vehicleNumber: number): FleetRange | un
 }
 
 /** One lookup per loaded register, so memoized consumers see a stable function. */
-const buildLookup = memoizeLast((ranges: FleetRange[], operator: string): FleetLookup => {
-    const unlisted: VehicleMetadata = { operator };
-    return (vehicleId) => {
-        if (!vehicleId) return undefined;
-        const vehicleNumber = Number(vehicleId);
-        return (Number.isFinite(vehicleNumber) ? findRange(ranges, vehicleNumber) : undefined) ?? unlisted;
-    };
+const buildLookup = memoizeLast((ranges: FleetRange[]): FleetLookup => (vehicleId) => {
+    if (!vehicleId) return undefined;
+    const vehicleNumber = Number(vehicleId);
+    return Number.isFinite(vehicleNumber) ? findRange(ranges, vehicleNumber) : undefined;
 });
 
 const NO_RANGES: FleetRange[] = [];
@@ -75,5 +72,5 @@ export function useFleetLookup(): FleetLookup | undefined {
         persister: fleetPersister,
     });
 
-    return source ? buildLookup(ranges ?? NO_RANGES, source.operator) : undefined;
+    return source ? buildLookup(ranges ?? NO_RANGES) : undefined;
 }

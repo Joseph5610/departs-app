@@ -1,6 +1,6 @@
 import type { Env } from '../_core/types';
 import type { CityConfig } from '../_core/city-config';
-import type { CityUseCases } from '../_domain/use-cases';
+import type { CityUseCases, VehicleDetailUseCase } from '../_domain/use-cases';
 import type { City } from './types';
 import { city as prague } from './prague';
 import { city as brno } from './brno';
@@ -22,6 +22,17 @@ export function getCity(slug: string): City | null {
     return CITIES[slug] ?? null;
 }
 
+/** A detail that names no operator of its own names the network's. */
+function withNetworkOperator(detail: VehicleDetailUseCase, operator: string): VehicleDetailUseCase {
+    return {
+        async getVehicleDetail(ctx) {
+            const result = await detail.getVehicleDetail(ctx);
+            if (result.vehicle_descriptor?.operator) return result;
+            return { ...result, vehicle_descriptor: { ...result.vehicle_descriptor, operator } };
+        },
+    };
+}
+
 const built = new WeakMap<Env, Map<City, CityUseCases>>();
 
 /** A city's use-cases, built once per `env`: they hold no request state, so requests share them. */
@@ -33,7 +44,9 @@ export function useCasesOf(city: City, env: Env): CityUseCases {
     }
     let useCases = byCity.get(city);
     if (!useCases) {
-        useCases = city.create(env);
+        const created = city.create(env);
+        const operator = city.config.networkOperator;
+        useCases = operator ? { ...created, detail: withNetworkOperator(created.detail, operator) } : created;
         byCity.set(city, useCases);
     }
     return useCases;
