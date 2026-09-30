@@ -4,7 +4,7 @@ import { useRouteParams } from '../../hooks/useRouteParams';
 import { useViewportStore } from '../../state/viewportStore';
 import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
 import { useNow } from '../../hooks/useNow';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { SystemStatusModal } from '../Modals/SystemStatusModal';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { Filter } from 'lucide-react';

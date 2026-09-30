@@ -1,7 +1,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 export type { DialogRootChangeEventDetails } from "@base-ui/react/dialog"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 

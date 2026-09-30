@@ -11,7 +11,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { navigate } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import { CitySelectionList } from './CitySelectionList';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { cityOverviewCamera } from '../../utils/mapUtils';
 import { UI_TIMING_MS } from '../../config/constants';
 

@@ -7,7 +7,7 @@ import { LineBadge } from '../../../LineBadge';
 import { Badge } from '@/components/ui/badge';
 import { usePreferencesStore } from '../../../../state/preferencesStore';
 import { useSelectionStore } from '../../../../state/selectionStore';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { getDelayStatus } from '../../../../config/transit';
 import type { EnrichedVehicleItem } from '../../../../hooks/derived/useVehicleMonitor';
 

@@ -31,6 +31,7 @@
   "settings": {
     "title": "Nastavení",
     "sections": {
+      "data": "Živá data",
       "display": "Zobrazení",
       "language": "Jazyk",
       "filters": "Filtry",
@@ -114,7 +115,7 @@
     },
     "refreshInterval": {
       "title": "Obnova živých dat",
-      "description": "Jak často se aktualizují vozidla a odjezdy. Pomalejší šetří data i baterii."
+      "description": "Pomalejší šetří data i baterii."
     }
   },
   "welcome": {
@@ -221,8 +222,7 @@
         "waitsFor": "Čeká na {{line}} (max. {{minutes}} min)",
         "heldFor": "Čeká ~{{minutes}} min na {{line}}",
         "wontWait": "Nepočká na {{line}}",
-        "waitsForLines": "Čeká na přípoje: {{lines}}",
-        "waitsForMany": "přípoje"
+        "waitsForLines": "Čeká na přípoje: {{lines}}"
       },
       "continuesAs": "Pokračuje jako linka {{line}} směr {{headsign}}"
     }
@@ -245,23 +245,19 @@
     "appError": "Chyba API",
     "stale": "Živá data neaktuální",
     "modalTitle": "Stav systému",
-    "explanationTitle": "O živých datech",
     "explanationText": "Aplikace Departs sleduje veřejnou dopravu v reálném čase stahováním souřadnic vozidel z oficiálních otevřených datových proudů každých {{seconds}} sekund. Tento panel ukazuje aktuální stav těchto integrací.",
     "connection": "Vaše připojení",
     "online": "Online",
-    "region": "Vybraná oblast",
     "dataProvider": "Zdroj dat",
-    "dataProviderLink": "Web",
     "providerGolemio": "Praha PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
     "providerDpmp": "Prešov MHD (DPMP)",
-    "providerDuk": "Doprava Ústeckého kraje (Portabo)",
+    "providerDuk": "Ústecký kraj DÚK (Portabo)",
     "dataFreshness": "Stáří dat",
-    "nextRefresh": "Další stažení za",
+    "nextRefreshIn": "další za {{seconds}}s",
     "secondsAgo": "před {{seconds}}s",
     "minutesAgo": "před {{minutes}}m",
     "justNow": "právě teď",
-    "status": "Stav",
     "statusOk": "V pořádku",
     "statusOkDesc": "Všechny integrace jsou v pořádku. Živé souřadnice se aktualizují normálně.",
     "statusStaleDesc": "API server je online, ale v poslední době nebyly přijaty žádné nové souřadnice.",
@@ -318,6 +314,15 @@
     "funicular": "Lanovky",
     "other": "Ostatní",
     "airport": "Letiště"
+  },
+  "amenities": {
+    "airConditioned": "Klimatizace",
+    "wheelchairAccessible": "Bezbariérový přístup",
+    "usbChargers": "USB nabíječky"
+  },
+  "interchange": {
+    "transfer": "Přestup: {{mode}}",
+    "metroLine": "Metro {{line}}"
   },
   "errors": {
     "generic": "Něco se nepovedlo",

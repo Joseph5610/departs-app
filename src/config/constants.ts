@@ -241,6 +241,16 @@ export const TRIP_SHAPES_CONFIG = {
     SHAPE_BUCKET_COUNT: 1024,
 };
 
+/** Estimating how far along its shape a vehicle is, for networks that publish no shape distances. */
+export const ROUTE_PROGRESS_CONFIG = {
+    /** A stop served twice snaps to its first pass when that is within this many metres of the closest one. */
+    STOP_SNAP_TOLERANCE_M: 25,
+    /** Stops either side of the reported one that bound where the vehicle is searched for on the shape. */
+    STOP_WINDOW: 1,
+    /** A vehicle further than this from its shape is off route, so none of the line is marked travelled. */
+    MAX_OFFSET_M: 300,
+};
+
 /** Live vehicle polling: a failed poll waits for the next one, and the last good positions stay on the map. */
 export const LIVE_VEHICLES_CONFIG = {
     /** Matches the backend's FEED_AGE_S.OFFLINE: positions older than this are dropped, not kept through an outage. */

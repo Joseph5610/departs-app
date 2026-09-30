@@ -8,7 +8,7 @@ import type { SearchField } from '../../../../hooks/derived/useVehicleMonitor';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
 import { SegmentedControl } from '../../../SegmentedControl';
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { useCityConfig } from '../../../../hooks/data/useCities';
 import { routeTypeRank } from '../../../../config/transit';
 import { ROUTE_TYPE_ICONS } from '../../../routeTypeIcons';

@@ -18,7 +18,7 @@ import { useRouteMetadata } from '../../../hooks/data/useRouteMetadata';
 import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
 import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
 import type { PosSearchResult } from '../../../utils/posSearch';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Autocomplete } from '@base-ui/react/autocomplete';

@@ -32,7 +32,7 @@ import {
     vehicleDirections,
     vehicleLabels,
     routeLineCasing,
-    routeLine,
+    createRouteLine,
     routeStops,
     routeTerminals,
     userLocationPulse,
@@ -41,6 +41,7 @@ import {
     MAP_SOURCES
 } from '../../config/mapLayers';
 import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
+import { safeHexColor } from '../../lib/color';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */
@@ -89,6 +90,9 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
     const { resolvedTheme } = useTheme();
     const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
+
+    const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
+    const routeLine = React.useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
 
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(

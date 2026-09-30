@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupedVirtuoso } from 'react-virtuoso';
 import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { routeTypeRank } from '../../config/transit';
 import { ROUTE_TYPE_ICONS } from '../routeTypeIcons';
 import { normalizeString } from '../../utils/stringUtils';

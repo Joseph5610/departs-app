@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '../../../state/uiStore';
@@ -138,6 +138,7 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                     {displayVehicle.stop_times?.features && displayVehicle.stop_times.features.length > 0 ? (
                         <StopTimeline
                             stopTimes={displayVehicle.stop_times.features}
+                            routeName={displayVehicle.routeName}
                             effectiveSequence={displayVehicle.effectiveSequence}
                             delay={displayVehicle.delay}
                         />

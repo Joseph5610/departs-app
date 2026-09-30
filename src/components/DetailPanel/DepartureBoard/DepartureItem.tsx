@@ -2,7 +2,7 @@ import { memo, useMemo, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDelay } from '../../../utils/dateUtils';
@@ -15,6 +15,7 @@ import { LineBadge } from '../../LineBadge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { InterchangeBadges } from '../../InterchangeBadges';
+import { IconTooltip } from '../../IconTooltip';
 
 interface DepartureItemProps {
     departure: Departure;
@@ -26,8 +27,8 @@ interface DepartureItemProps {
 /**
  * DepartureItem
  *
- * Compact, single-line tabular row for a departure.
- * Layout: [Time] [Icons] [Headsign?] [Delay + Delta] [Platform?] [Countdown]
+ * Compact tabular row for a departure.
+ * Layout: [Time / Delay] [Headsign? / Amenities + Hints] [Platform?] [Countdown]
  */
 export const DepartureItem = memo(({
     departure: dep,
@@ -59,6 +60,8 @@ export const DepartureItem = memo(({
 
     const isTrain = dep.type === 'train';
     const isCanceled = dep.isCanceled;
+    const hasDelay = typeof dep.delay === 'number' && dep.delay !== 0;
+    const hasMeta = dep.is_wheelchair_accessible || dep.is_air_conditioned || !!dep.continues_as || (dep.connections?.length ?? 0) > 0;
 
     return (
         <Button
@@ -67,79 +70,83 @@ export const DepartureItem = memo(({
             onClick={handleClick}
             data-testid={`departure-item-${dep.tripId}`}
             className={cn(
-                "w-full h-auto flex items-center justify-start gap-3 py-3 px-4 rounded-none font-normal text-left transition-colors",
+                "w-full h-auto min-h-13 flex items-center justify-start gap-3 py-2.5 px-4 rounded-none font-normal text-left transition-colors",
                 dep.tripId
                     ? "hover:bg-muted/50 cursor-pointer"
                     : "cursor-default",
                 "focus-visible:outline-none focus-visible:bg-muted/50"
             )}
         >
-            {/* Time + Delay Block */}
-            <div className="flex gap-2 shrink-0 w-[85px] items-baseline">
+            <div className="flex flex-col shrink-0 w-12 gap-0.5">
                 <span className={cn(
-                    "text-muted-foreground text-sm font-medium tabular-nums",
+                    "text-muted-foreground text-sm font-medium leading-tight tabular-nums",
                     isCanceled && "line-through opacity-60"
                 )}>
                     {format(parseISO(dep.scheduled), 'HH:mm')}
                 </span>
-                {!isCanceled && <div className="flex gap-1 items-center">
-                    {typeof dep.delay === 'number' && dep.delay !== 0 && (
+                {!isCanceled && hasDelay && (
+                    <span className="flex gap-1 items-center">
                         <span className={cn(
-                            "text-xs font-bold tabular-nums",
-                            dep.delay > 0 ? "text-destructive" : "text-sky-500"
+                            "text-xs font-bold leading-none tabular-nums",
+                            (dep.delay ?? 0) > 0 ? "text-destructive" : "text-sky-500"
                         )}>
-                            {formatDelay(dep.delay)}
+                            {formatDelay(dep.delay ?? 0)}
                         </span>
-                    )}
-                    <DelayDelta
-                        delta={dep.delayDelta || 0}
-                        lastUpdate={dep.lastDelayUpdate}
-                        isInline={true}
-                    />
-                </div>}
-            </div>
-
-            {/* Icons Block - before headsign like official PID tables */}
-            <div className={cn("flex gap-1.5 opacity-40 items-center shrink-0 w-10 ml-1", isCanceled && "opacity-20")}>
-                {dep.is_wheelchair_accessible && (
-                    <Accessibility size={16} strokeWidth={1.5}  />
-                )}
-                {dep.is_air_conditioned && (
-                    <Snowflake size={16} strokeWidth={1.5}  />
-                )}
-            </div>
-
-            {dep.continues_as && <ContinuationHint continuation={dep.continues_as} />}
-            {dep.connections && dep.connections.length > 0 && (
-                <FeederHint feeders={dep.connections} />
-            )}
-
-            {/* Headsign (shown when not redundant with group header) */}
-            {!hideHeadsign && (
-                <span className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={cn(
-                        "text-foreground text-sm font-medium leading-tight truncate min-w-0",
-                        isCanceled && "line-through text-muted-foreground"
-                    )}>
-                        {dep.headsign}
+                        <DelayDelta
+                            delta={dep.delayDelta || 0}
+                            lastUpdate={dep.lastDelayUpdate}
+                            isInline={true}
+                        />
                     </span>
-                    <InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} />
-                </span>
-            )}
-            {/* Spacer when headsign is hidden */}
-            {hideHeadsign && <div className="flex-1 min-w-0" />}
+                )}
+            </div>
+
+            <div className="flex flex-col flex-1 min-w-0 gap-1">
+                {!hideHeadsign && (
+                    <span className="flex items-center gap-2 min-w-0">
+                        <span className={cn(
+                            "text-foreground text-sm font-medium leading-tight truncate min-w-0",
+                            isCanceled && "line-through text-muted-foreground"
+                        )}>
+                            {dep.headsign}
+                        </span>
+                        <InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} />
+                    </span>
+                )}
+                {hasMeta && <span className={cn(
+                    "flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 text-muted-foreground",
+                    isCanceled && "opacity-50"
+                )}>
+                    <span className="flex items-center gap-1 w-8 shrink-0">
+                        {dep.is_wheelchair_accessible && (
+                            <IconTooltip label={t('amenities.wheelchairAccessible')} className="opacity-60">
+                                <Accessibility size={14} strokeWidth={1.5} aria-hidden="true" />
+                            </IconTooltip>
+                        )}
+                        {dep.is_air_conditioned && (
+                            <IconTooltip label={t('amenities.airConditioned')} className="opacity-60">
+                                <Snowflake size={14} strokeWidth={1.5} aria-hidden="true" />
+                            </IconTooltip>
+                        )}
+                    </span>
+                    {dep.continues_as && <ContinuationHint continuation={dep.continues_as} />}
+                    {dep.connections && dep.connections.length > 0 && (
+                        <FeederHint feeders={dep.connections} />
+                    )}
+                </span>}
+            </div>
 
             {/* Right Side Info Block */}
             <div className="flex gap-2 shrink-0 items-center">
                 {/* Platform Badge (trains only, metro is handled in group header) */}
                 {dep.platform && isTrain && (
-                    <div 
-                        className={cn("flex items-center justify-center shrink-0 min-w-[24px] gap-1 px-1.5 py-0.5 bg-muted rounded-md border mr-1", isCanceled && "opacity-50")}
-                        title={t('map.departures.platform')}
+                    <IconTooltip
+                        label={t('map.departures.platform')}
+                        className={cn("justify-center min-w-6 gap-1 px-1.5 py-0.5 bg-muted rounded-md border mr-1", isCanceled && "opacity-50")}
                     >
-                        <Train size={12} className="opacity-50"  />
+                        <Train size={12} className="opacity-50" aria-hidden="true" />
                         <span className="text-xs font-semibold text-muted-foreground leading-none tabular-nums">{dep.platform}</span>
-                    </div>
+                    </IconTooltip>
                 )}
 
                 {isCanceled ? (
@@ -164,11 +171,10 @@ const ContinuationHint = ({ continuation }: { continuation: Continuation }) => {
     const label = t('map.departures.continuesAs', { line: continuation.line, headsign: continuation.headsign });
 
     return (
-        <span title={label} className="flex items-center gap-1 shrink-0 text-muted-foreground">
-            <span className="sr-only">{label}</span>
-            <CornerDownRight size={12} strokeWidth={2} aria-hidden="true" />
+        <IconTooltip label={label} className="gap-1 text-muted-foreground">
+            <CornerDownRight size={14} strokeWidth={1.5} className="opacity-60" aria-hidden="true" />
             <LineBadge name={continuation.line} routeColor={continuation.route_color ?? ''} size="sm" />
-        </span>
+        </IconTooltip>
     );
 };
 
@@ -195,25 +201,23 @@ const FeederHint = ({ feeders }: { feeders: DepartureFeeder[] }) => {
             ? t('map.departures.feeder.heldFor', { line: held.line, minutes: heldMinutes })
             : t('map.departures.feeder.waitsForLines', { lines: lines.map(([name]) => name).join(', ') });
 
-    const showBadges = lines.length <= DEPARTURES_CONFIG.MAX_FEEDER_BADGES;
+    const visible = lines.slice(0, DEPARTURES_CONFIG.MAX_FEEDER_BADGES);
+    const hiddenCount = lines.length - visible.length;
 
     return (
-        <span
-            title={label}
+        <IconTooltip
+            label={label}
             className={cn(
-                "flex items-center gap-1 min-w-0 text-[10px] font-semibold tabular-nums",
-                showBadges ? "shrink-0" : "shrink",
+                "gap-1 text-[10px] font-semibold tabular-nums",
                 missed.length > 0 ? "text-destructive" : "text-muted-foreground"
             )}
         >
-            <span className="sr-only">{label}</span>
-            <Hourglass size={12} strokeWidth={2} className="shrink-0" aria-hidden="true" />
-            {showBadges
-                ? lines.map(([name, color]) => (
-                    <LineBadge key={name} name={name} routeColor={color} size="sm" className="opacity-70" />
-                ))
-                : <span className="truncate" aria-hidden="true">{t('map.departures.feeder.waitsForMany')}</span>}
+            <Hourglass size={14} strokeWidth={1.5} className="shrink-0 opacity-60" aria-hidden="true" />
+            {visible.map(([name, color]) => (
+                <LineBadge key={name} name={name} routeColor={color} size="sm" className="opacity-70" />
+            ))}
+            {hiddenCount > 0 && <span aria-hidden="true">+{hiddenCount}</span>}
             {held && <span aria-hidden="true">~{heldMinutes} min</span>}
-        </span>
+        </IconTooltip>
     );
 };

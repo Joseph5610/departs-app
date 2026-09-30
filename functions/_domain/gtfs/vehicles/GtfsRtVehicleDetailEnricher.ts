@@ -4,6 +4,9 @@ import type { VehiclesService } from "./VehiclesService";
 
 import { addSecondsToTime, getLocalClock, toSecs, wrapDaySeconds } from '../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+import { distanceToSegmentMeters } from '../../../_core/utils/geo';
+
+const isPoint = (c: number[] | number[][] | undefined): c is number[] => !!c && typeof c[0] === 'number' && typeof c[1] === 'number';
 
 /**
  * The standard GTFS-RT vehicle enricher.
@@ -82,7 +85,10 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             }
         }
         
-        detail.last_stop_sequence = resolvedSequence ?? liveMatch.properties.last_stop_sequence ?? undefined;
+        detail.last_stop_sequence = resolvedSequence
+            ?? liveMatch.properties.last_stop_sequence
+            ?? this.sequenceFromPosition(detail.stop_times?.features, liveMatch.geometry?.coordinates)
+            ?? undefined;
 
         // 3.5. Evaluate Before-Track Status.
         // This MUST run before the delay is estimated or propagated. A vehicle still waiting at its
@@ -143,6 +149,31 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         lastStopId: string
     ) {
         return features.find(s => s.properties.stop_id === lastStopId);
+    }
+
+    /**
+     * The stop a vehicle last left, read off the trip segment nearest its position. For feeds that
+     * report a stop outside the trip (KORDIS trains name railway points with no GTFS stop).
+     */
+    protected sequenceFromPosition(
+        features: NonNullable<AppVehicleDetail['stop_times']>['features'] | undefined,
+        position: number[] | undefined
+    ): number | null {
+        if (!features || features.length < 2 || !position) return null;
+        const [lon, lat] = position;
+        let best: number | null = null;
+        let bestDist = Infinity;
+        for (let i = 0; i < features.length - 1; i++) {
+            const a = features[i].geometry?.coordinates;
+            const b = features[i + 1].geometry?.coordinates;
+            if (!isPoint(a) || !isPoint(b)) continue;
+            const dist = distanceToSegmentMeters(lat, lon, a[1], a[0], b[1], b[0]);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = features[i].properties.stop_sequence;
+            }
+        }
+        return best;
     }
 
     /**

@@ -9,7 +9,7 @@ import { useCityConfig } from '../../hooks/data/useCities';
 import { useUiStore } from '../../state/uiStore';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { PREFERENCES_LIMITS } from '../../config/constants';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -29,7 +29,12 @@ import {
  * Header actions for the selected stop or vehicle. A vehicle shows share next to the menu; a stop
  * shows its favorite toggle there and moves share, departure sort and the official board into the menu.
  */
-export const PanelActions: React.FC = React.memo(() => {
+interface PanelActionsProps {
+    /** Bordered chip buttons for the stop action row instead of ghost header buttons. */
+    chips?: boolean;
+}
+
+export const PanelActions: React.FC<PanelActionsProps> = React.memo(({ chips }) => {
     const { t } = useTranslation();
     const { share } = useShare();
     const selectedStop = useSelectedStop();
@@ -65,6 +70,7 @@ export const PanelActions: React.FC = React.memo(() => {
 
     if (!tripId && !stopId) return null;
 
+    const chipClassName = chips ? 'size-7 rounded-full border border-border/50 bg-card shadow-sm' : undefined;
     const isFavorite = !!stopId && favoriteStops.includes(stopId);
     const handleToggleFavorite = () => {
         if (!stopId) return;
@@ -89,9 +95,9 @@ export const PanelActions: React.FC = React.memo(() => {
                     aria-label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
                     aria-pressed={isFavorite}
                     data-testid="favorite-btn"
-                    className={cn("shrink-0 text-muted-foreground", isFavorite && "text-amber-500 hover:text-amber-400")}
+                    className={cn("shrink-0 text-muted-foreground", chipClassName, isFavorite && "text-amber-500 hover:text-amber-400")}
                 >
-                    <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
+                    <Star size={chips ? 14 : 18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
                 </Button>
             ) : (
                 <Button
@@ -112,9 +118,9 @@ export const PanelActions: React.FC = React.memo(() => {
                         size="icon-sm"
                         aria-label={t('common.moreOptions')}
                         data-testid="more-options-btn"
-                        className="shrink-0 text-muted-foreground"
+                        className={cn("shrink-0 text-muted-foreground", chipClassName)}
                     >
-                        <MoreHorizontal size={20} strokeWidth={1.5} />
+                        <MoreHorizontal size={chips ? 16 : 20} strokeWidth={1.5} />
                     </Button>
                 } />
                 <DropdownMenuContent align="end" className="w-56">

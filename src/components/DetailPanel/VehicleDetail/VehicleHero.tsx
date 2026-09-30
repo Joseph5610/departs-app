@@ -1,12 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { IconTooltip } from '@/components/IconTooltip';
 import type { VehicleHeroProps } from './types';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { getDelayStatus } from '../../../config/transit';
@@ -32,9 +33,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     return (
         <Card 
             size="none"
-            className="border border-border/50 ring-0 shadow-xl relative flex flex-col transition-colors"
+            className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm dark:inset-shadow-[0_1px_0_rgb(255_255_255/0.07)]"
             style={{
-                backgroundColor: `color-mix(in srgb, ${bgColor} 12%, var(--hero-base))`
+                backgroundImage: `linear-gradient(160deg, color-mix(in srgb, ${bgColor} 18%, var(--hero-base)), color-mix(in srgb, ${bgColor} 11%, var(--hero-base)))`
             }}
         >
             <div className="relative z-10 flex flex-col p-4 pb-3">
@@ -188,7 +189,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
             {/* Render Footer outside CardContent if data exists */}
             {displayVehicle.vehicle_descriptor && (
-                <div className="relative z-10 flex gap-3 p-3 px-4 bg-muted/20 border-t border-border/50 justify-between items-center mt-auto">
+                <div className="relative z-10 flex gap-3 p-3 px-4 bg-foreground/3 border-t border-border/50 justify-between items-center mt-auto">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         {displayVehicle.vehicle_descriptor?.operator && (
                             <span className="micro-label text-muted-foreground/80 line-clamp-1">
@@ -225,15 +226,21 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
                       displayVehicle.vehicle_descriptor?.has_usb_chargers || 
                       displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                        <div className="flex gap-2 shrink-0 bg-muted/50 p-2 rounded-lg items-center h-fit">
+                        <div className="flex gap-2 shrink-0 bg-foreground/5 p-2 rounded-lg items-center h-fit">
                             {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
-                                <Snowflake size={14} className="text-sky-400" strokeWidth={2} />
+                                <IconTooltip label={t('amenities.airConditioned')}>
+                                    <Snowflake size={14} className="text-sky-400" strokeWidth={2} aria-hidden="true" />
+                                </IconTooltip>
                             )}
                             {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
-                                <Zap size={14} className="text-amber-400" strokeWidth={2} />
+                                <IconTooltip label={t('amenities.usbChargers')}>
+                                    <Zap size={14} className="text-amber-400" strokeWidth={2} aria-hidden="true" />
+                                </IconTooltip>
                             )}
                             {(displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                                <Accessibility size={14} className="text-emerald-400" strokeWidth={2} />
+                                <IconTooltip label={t('amenities.wheelchairAccessible')}>
+                                    <Accessibility size={14} className="text-emerald-400" strokeWidth={2} aria-hidden="true" />
+                                </IconTooltip>
                             )}
                         </div>
                     )}

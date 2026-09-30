@@ -1,6 +1,7 @@
 import { Bus, CableCar, Plane, Ship, Train, TramFront, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LineBadge } from './LineBadge';
+import { IconTooltip } from './IconTooltip';
 import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
 import { routeJoinKey } from '@/utils/routeTypes';
 import { metroLineOf } from '@/utils/interchanges';
@@ -35,14 +36,21 @@ export const InterchangeBadges = ({ codes }: { codes: readonly string[] }) => {
                 const metroLine = metroLineOf(code);
                 if (metroLine) {
                     const color = byShortName.get(routeJoinKey('metro', metroLine))?.route_color ?? FALLBACK_ROUTE_COLOR;
-                    return <LineBadge key={code} name={metroLine} routeColor={color} />;
+                    return (
+                        <IconTooltip key={code} label={t('interchange.transfer', { mode: t('interchange.metroLine', { line: metroLine }) })}>
+                            <LineBadge name={metroLine} routeColor={color} />
+                        </IconTooltip>
+                    );
                 }
                 const mode = MODE_ICONS[code];
                 if (!mode || seenIcons.has(mode.icon)) return null;
                 seenIcons.add(mode.icon);
                 const Icon = mode.icon;
-                const label = t(`transportModes.${mode.label}`);
-                return <Icon key={code} size={14} strokeWidth={1.75} className="text-muted-foreground" aria-label={label}><title>{label}</title></Icon>;
+                return (
+                    <IconTooltip key={code} label={t('interchange.transfer', { mode: t(`transportModes.${mode.label}`) })}>
+                        <Icon size={14} strokeWidth={1.75} className="text-muted-foreground" aria-hidden="true" />
+                    </IconTooltip>
+                );
             })}
         </span>
     );

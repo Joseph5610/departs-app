@@ -17,6 +17,7 @@ export type StopFeature = Required<Required<DisplayVehicle>['stop_times']>['feat
 
 export interface StopTimelineProps {
     stopTimes: StopFeature[];
+    routeName: DisplayVehicle['routeName'];
     effectiveSequence: DisplayVehicle['effectiveSequence'];
     delay?: number | null;
 }

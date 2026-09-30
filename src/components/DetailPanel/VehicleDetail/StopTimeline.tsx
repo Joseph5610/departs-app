@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, Hand, type LucideIcon } from 'lucide-react';
 import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { calculateTimeDifferenceSecs, addSecondsToTime } from '../../../utils/dateUtils';
 import { getDelayStatus } from '../../../config/transit';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import type { Continuation, StopConnection } from '../../../types/vehicles';
  * Extracted from VehicleDetail to reduce monolith size.
  * The timeline visually shows a vertical line with dots for each stop.
  */
-export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effectiveSequence, delay }) => {
+export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, routeName, effectiveSequence, delay }) => {
     const { t } = useTranslation();
     const [showPastStops, setShowPastStops] = useState(false);
 
@@ -94,6 +94,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                                     <StopItem
                                         key={`past-${stop.properties.stop_sequence || idx}`}
                                         stop={stop}
+                                        routeName={routeName}
                                         isPast={true}
                                         effectiveSequence={effectiveSequence}
                                         nextStopSequence={nextStopSequence}
@@ -112,6 +113,7 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
                                 <StopItem
                                     key={`future-${stop.properties.stop_sequence || idx}`}
                                     stop={stop}
+                                    routeName={routeName}
                                     isPast={false}
                                     effectiveSequence={effectiveSequence}
                                     nextStopSequence={nextStopSequence}
@@ -146,8 +148,9 @@ export const StopTimeline: React.FC<StopTimelineProps> = ({ stopTimes, effective
 
 StopTimeline.displayName = 'StopTimeline';
 
-const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop }: {
+const StopItem = React.memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop }: {
     stop: StopFeature,
+    routeName: string,
     isPast: boolean,
     effectiveSequence: number | null,
     nextStopSequence: number | null,
@@ -248,7 +251,7 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                             </Popover>
                         )}
                         <div className="flex gap-1 shrink-0 translate-y-px">
-                            <InterchangeBadges codes={forStop(stop.properties.stop_name)} />
+                            <InterchangeBadges codes={forStop(stop.properties.stop_name, routeName)} />
                         </div>
                     </div>
                 </div>
@@ -256,11 +259,13 @@ const StopItem = React.memo(({ stop, isPast, effectiveSequence, nextStopSequence
                     {(() => {
                         const { realtime_arrival_time, realtime_departure_time, arrival_time, departure_time } = stop.properties;
                     
-                        const rtTime = (isPast || isCurrent) 
-                            ? (realtime_departure_time || realtime_arrival_time) 
+                        // A terminus departure is the vehicle's layover until its next run (KORDIS trains: hours later).
+                        const showsDeparture = (isPast || isCurrent) && !isLastStop;
+                        const rtTime = showsDeparture
+                            ? (realtime_departure_time || realtime_arrival_time)
                             : (realtime_arrival_time || realtime_departure_time);
-                        
-                        const schTime = (isPast || isCurrent) 
+
+                        const schTime = showsDeparture
                             ? (departure_time || arrival_time) 
                             : (arrival_time || departure_time);
                         

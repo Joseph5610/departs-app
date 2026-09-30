@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Badge } from '@/components/ui/badge';
 import type { RSSItem } from '../../types/transit';
 import { LineBadge } from '../LineBadge';

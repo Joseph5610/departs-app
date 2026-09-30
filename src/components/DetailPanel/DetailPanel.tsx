@@ -23,10 +23,10 @@ interface DetailPanelProps {
     onClose: () => void;
     onBack?: () => void;
     title?: React.ReactNode;
-    id?: string;
     platformCode?: string;
+    id?: string;
     subHeader?: React.ReactNode;
-    /** Buttons shown left of the close button. */
+    /** Buttons shown left of the close button; a stop shows its own in the sub-header instead. */
     actions?: React.ReactNode;
     /** Each change collapses the mobile drawer to its lowest snap point. */
     collapseRequest?: number;
@@ -62,34 +62,40 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     );
 
     // A clamp on the title element itself clips a badge taller than one text line in Safari.
-    const clampedTitle = typeof title === 'string' ? <span className="line-clamp-2">{title}</span> : title;
+    const clampedTitle = typeof title === 'string' ? <span className="min-w-0 line-clamp-2">{title}</span> : title;
+
+    const titleElement = isMobile ? (
+        <DrawerTitle className="min-w-0 flex-1 text-xl font-semibold text-foreground tracking-tight leading-tight">
+            {clampedTitle}
+        </DrawerTitle>
+    ) : (
+        <SheetTitle className="min-w-0 flex-1 text-xl font-semibold text-foreground tracking-tight text-left leading-tight">
+            {clampedTitle}
+        </SheetTitle>
+    );
+
+    const closeButton = (
+        <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            aria-label={t('common.close')}
+            data-testid="detail-panel-close"
+            className="shrink-0 -mr-2 text-muted-foreground"
+        >
+            <X size={20} strokeWidth={1.5}  />
+        </Button>
+    );
 
     const headerContent = (
         <div className="flex w-full items-center justify-between pt-2">
             <div className="flex gap-1 min-w-0 flex-1 items-center">
                 {backButton}
                 {platformBadge}
-                {isMobile ? (
-                    <DrawerTitle className="min-w-0 text-xl font-semibold text-foreground tracking-tight leading-tight">
-                        {clampedTitle}
-                    </DrawerTitle>
-                ) : (
-                    <SheetTitle className="min-w-0 text-xl font-semibold text-foreground tracking-tight text-left leading-tight">
-                        {clampedTitle}
-                    </SheetTitle>
-                )}
+                {titleElement}
             </div>
             {actions}
-            <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={onClose}
-                aria-label={t('common.close')}
-                data-testid="detail-panel-close"
-                className="shrink-0 text-muted-foreground"
-            >
-                <X size={20} strokeWidth={1.5}  />
-            </Button>
+            {closeButton}
         </div>
     );
 
@@ -190,7 +196,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
                 variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
+                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 gap-2 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
                 aria-describedby={undefined}
                 data-testid="detail-panel"
             >

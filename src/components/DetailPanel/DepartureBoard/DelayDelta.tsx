@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 
 /**

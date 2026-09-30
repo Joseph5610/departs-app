@@ -31,6 +31,7 @@
   "settings": {
     "title": "Nastavenia",
     "sections": {
+      "data": "Živé dáta",
       "display": "Zobrazenie",
       "language": "Jazyk",
       "filters": "Filtre",
@@ -114,7 +115,7 @@
     },
     "refreshInterval": {
       "title": "Obnova živých dát",
-      "description": "Ako často sa aktualizujú vozidlá a odchody. Pomalšia šetrí dáta aj batériu."
+      "description": "Pomalšia šetrí dáta aj batériu."
     }
   },
   "welcome": {
@@ -231,23 +232,19 @@
     "appError": "Chyba API",
     "stale": "Živé dáta neaktuálne",
     "modalTitle": "Stav systému",
-    "explanationTitle": "O živých dátach",
     "explanationText": "Aplikácia Departs sleduje verejnú dopravu v reálnom čase sťahovaním súradníc vozidiel z oficiálnych otvorených dátových zdrojov každých {{seconds}} sekúnd. Tento panel ukazuje aktuálny stav týchto integrácií.",
     "connection": "Vaše pripojenie",
     "online": "Online",
-    "region": "Vybraná oblasť",
     "dataProvider": "Zdroj dát",
-    "dataProviderLink": "Web",
     "providerGolemio": "Praha PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
     "providerDpmp": "Prešov MHD (DPMP)",
-    "providerDuk": "Doprava Ústeckého kraje (Portabo)",
+    "providerDuk": "Ústecký kraj DÚK (Portabo)",
     "dataFreshness": "Vek dát",
-    "nextRefresh": "Ďalšie stiahnutie o",
+    "nextRefreshIn": "ďalšie za {{seconds}}s",
     "secondsAgo": "pred {{seconds}}s",
     "minutesAgo": "pred {{minutes}}m",
     "justNow": "práve teraz",
-    "status": "Stav",
     "statusOk": "V poriadku",
     "statusOkDesc": "Všetky integrácie sú v poriadku. Živé súradnice sa aktualizujú normálne.",
     "statusStaleDesc": "API server je online, ale v poslednom čase neprišli žiadne nové súradnice.",
@@ -304,6 +301,15 @@
     "funicular": "Lanovky",
     "other": "Ostatné",
     "airport": "Letisko"
+  },
+  "amenities": {
+    "airConditioned": "Klimatizácia",
+    "wheelchairAccessible": "Bezbariérový prístup",
+    "usbChargers": "USB nabíjačky"
+  },
+  "interchange": {
+    "transfer": "Prestup: {{mode}}",
+    "metroLine": "Metro {{line}}"
   },
   "errors": {
     "generic": "Niečo sa nepodarilo",

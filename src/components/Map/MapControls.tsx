@@ -8,7 +8,7 @@ import { usePreferencesStore } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../state/geolocationStore';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { useLocate } from '../../hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';

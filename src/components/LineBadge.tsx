@@ -1,5 +1,5 @@
-import { cn, getContrastColor } from '@/lib/utils';
-import { safeHexColor } from '@/lib/color';
+import { cn } from 'cn';
+import { getContrastColor, safeHexColor } from '@/lib/color';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 
 interface LineBadgeProps {

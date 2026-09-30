@@ -30,6 +30,7 @@
   "settings": {
     "title": "Settings",
     "sections": {
+      "data": "Live data",
       "display": "Display",
       "language": "Language",
       "filters": "Filters",
@@ -113,7 +114,7 @@
     },
     "refreshInterval": {
       "title": "Live data refresh",
-      "description": "How often vehicles and departures update. Slower saves data and battery."
+      "description": "Slower saves data and battery."
     }
   },
   "welcome": {
@@ -218,8 +219,7 @@
         "waitsFor": "Waits for {{line}} (up to {{minutes}} min)",
         "heldFor": "Held ~{{minutes}} min for {{line}}",
         "wontWait": "Won't wait for {{line}}",
-        "waitsForLines": "Waits for connections from {{lines}}",
-        "waitsForMany": "connections"
+        "waitsForLines": "Waits for connections from {{lines}}"
       },
       "continuesAs": "Continues as line {{line}} to {{headsign}}"
     }
@@ -242,23 +242,19 @@
     "appError": "API Error",
     "stale": "Live Data Stale",
     "modalTitle": "System Status",
-    "explanationTitle": "About Live Data",
     "explanationText": "Departs tracks public transit in real-time by fetching vehicle coordinates from official open data streams every {{seconds}} seconds. This panel shows the live health of those integrations.",
     "connection": "Your connection",
     "online": "Online",
-    "region": "Selected region",
     "dataProvider": "Data source",
-    "dataProviderLink": "Website",
     "providerGolemio": "Prague PID (Golemio)",
     "providerKordis": "Brno IDS JMK (Kordis)",
     "providerDpmp": "Prešov MHD (DPMP)",
-    "providerDuk": "Doprava Ústeckého kraje (Portabo)",
+    "providerDuk": "Ústecký kraj DÚK (Portabo)",
     "dataFreshness": "Data freshness",
-    "nextRefresh": "Next refresh in",
+    "nextRefreshIn": "next in {{seconds}}s",
     "secondsAgo": "{{seconds}}s ago",
     "minutesAgo": "{{minutes}}m ago",
     "justNow": "Just now",
-    "status": "Status",
     "statusOk": "Healthy",
     "statusOkDesc": "All integrations are healthy. Live coordinates are updating normally.",
     "statusStaleDesc": "The API server is online, but no new coordinates have been received recently.",
@@ -315,6 +311,15 @@
     "funicular": "Funiculars",
     "other": "Other",
     "airport": "Airport"
+  },
+  "amenities": {
+    "airConditioned": "Air conditioned",
+    "wheelchairAccessible": "Wheelchair accessible",
+    "usbChargers": "USB chargers"
+  },
+  "interchange": {
+    "transfer": "Transfer: {{mode}}",
+    "metroLine": "Metro {{line}}"
   },
   "errors": {
     "generic": "Something went wrong",

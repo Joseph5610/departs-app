@@ -4,6 +4,21 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.2] - 2026-09-29
+
+### Added
+
+- Transfer, amenity and platform icons in the stop timeline, vehicle detail and departures show tooltips.
+- Brno and Prešov route lines show the travelled part faded like Prague, estimated from the vehicle's position on its shape, and every city now cuts the line exactly at the vehicle.
+
+### Changed
+
+- Stop header gives long names more room: favourite and menu moved beside the Maps pill.
+- The system status modal and the refresh interval setting take much less space.
+- The travelled part of a route line is drawn as a clean muted shade of the line colour instead of a translucent smear over its outline.
+- City switcher cards show each city's line illustration in light mode too, in green on the selected city.
+- Favourite stop cards match the departure board rows, with scheduled time and delay per departure and a star to remove the stop.
+
 ## [0.79.1] - 2026-09-29
 
 ### Added

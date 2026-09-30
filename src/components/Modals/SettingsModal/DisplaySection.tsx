@@ -13,13 +13,14 @@ import {
     Monitor,
     Palette,
     Ticket,
+    Timer,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { IconToggle, type IconToggleProps } from '../../IconToggle';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useCityConfig } from '../../../hooks/data/useCities';
 import { DELAY_TIERS, ROUTE_TYPE_ORDER, type DelayTierKey } from '../../../config/transit';
@@ -257,13 +258,21 @@ export const DisplaySection: React.FC = () => {
 
             <div className="flex flex-col gap-3">
                 <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                    {t('settings.refreshInterval.title')}
+                    {t('settings.sections.data')}
                 </h3>
                 <Card variant="subtle" size="none">
-                    <div className="flex flex-col gap-3 p-3">
-                        <p className="text-xs text-muted-foreground px-1">{t('settings.refreshInterval.description')}</p>
-                        <RefreshIntervalPicker />
-                    </div>
+                    <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Timer size={20} strokeWidth={1.5} />
+                        </ItemMedia>
+                        <ItemContent className="min-w-0">
+                            <ItemTitle className="text-foreground">{t('settings.refreshInterval.title')}</ItemTitle>
+                            <ItemDescription className="text-xs">{t('settings.refreshInterval.description')}</ItemDescription>
+                        </ItemContent>
+                        <ItemActions>
+                            <RefreshIntervalPicker className="w-36" />
+                        </ItemActions>
+                    </Item>
                 </Card>
             </div>
 

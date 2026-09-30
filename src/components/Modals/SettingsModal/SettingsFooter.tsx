@@ -7,7 +7,7 @@ import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useUiStore } from '../../../state/uiStore';
 import { useStops } from '../../../hooks/data/useStops';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';

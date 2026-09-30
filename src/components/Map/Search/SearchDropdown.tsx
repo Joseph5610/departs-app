@@ -5,7 +5,7 @@ import { SearchItem } from './SearchItem';
 import { getLineMetadataFromMap } from '@/utils/transitUtils';
 import { searchHistoryKey } from '@/utils/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 
 import type { StopFeature, SearchHistoryItem, VehicleFeature } from '../../../types/transit';
 import { vehicleDisplayNumber } from '@/utils/vehicleSearch';

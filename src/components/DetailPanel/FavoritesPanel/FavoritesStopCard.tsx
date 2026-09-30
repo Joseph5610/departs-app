@@ -1,19 +1,21 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2, Loader2, Train, ArrowRight } from 'lucide-react';
+import { Star, Loader2, Train } from 'lucide-react';
 import { navigate } from '../../../lib/history';
 import { paths } from '../../../lib/routes';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useMapMetadataStore } from '../../../state/mapMetadataStore';
 import { useGeolocationStore } from '../../../state/geolocationStore';
 import { getStopDistanceInfo, formatStopDistance } from '../../../hooks/derived/useStopDistance';
+import { format, parseISO } from 'date-fns';
 import { formatDelay } from '../../../utils/dateUtils';
-import { cn } from '../../../lib/utils';
+import { cn } from 'cn';
 import { Countdown } from '../DepartureBoard/Countdown';
 import { LineBadge } from '../../LineBadge';
+import { IconTooltip } from '../../IconTooltip';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card';
+import { Card, CardTitle, CardContent } from '../../ui/card';
 import {
     MAP_CAMERA,
     FALLBACK_ROUTE_COLOR,
@@ -92,15 +94,15 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
             variant="subtle"
             size="none"
             className={cn(
-                "w-full cursor-pointer transition-colors relative group/favcard",
-                "bg-card border-border/50 hover:bg-muted/50 active:bg-muted/80 shadow-sm",
-                "focus-visible:outline-none"
+                "w-full cursor-pointer overflow-hidden transition-colors relative",
+                "border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm",
+                "hover:border-border dark:hover:border-white/20 focus-visible:outline-none"
             )}
         >
             {/* Header Area */}
-            <CardHeader className="flex items-center justify-between gap-2 border-b border-border/50 p-3 px-4">
+            <div className="flex items-center justify-between gap-2 border-b border-border/50 dark:border-white/10 bg-muted/40 dark:bg-white/[0.04] py-1.5 pl-4 pr-2">
                 <div className="min-w-0 flex-1">
-                    <CardTitle className="flex items-center gap-1.5 flex-wrap text-[15px] leading-tight truncate min-w-0">
+                    <CardTitle className="flex items-center gap-1.5 text-sm font-semibold leading-tight truncate min-w-0">
                         {platform_code && (
                             <Badge 
                                 variant="outline"
@@ -114,8 +116,8 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                     {/* Distance / Walking Time */}
                     {stopDistanceInfo && (
                         <div className={cn(
-                            "text-[11px] font-medium mt-1",
-                            stopDistanceInfo.isAtStop ? "text-emerald-400 font-semibold" : "text-muted-foreground/60"
+                            "text-xs font-medium mt-0.5",
+                            stopDistanceInfo.isAtStop ? "text-primary font-semibold" : "text-foreground/60"
                         )}>
                             {distanceLabel}
                         </div>
@@ -125,55 +127,71 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                 {/* Unpin Button */}
                 <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={handleUnpin}
                     title={t('map.departures.removeFromFavorites')}
-                    className="hover:bg-destructive/15 text-muted-foreground opacity-40 hover:opacity-100 hover:text-destructive active:bg-destructive/25 transition-[colors,opacity,transform] duration-150 shrink-0 group"
+                    className="shrink-0 text-amber-500 hover:text-amber-400"
                     aria-label={t('map.departures.removeFromFavorites')}
                 >
-                    <Trash2 size={16} strokeWidth={1.5} className="transition-transform duration-150 group-hover:scale-110" />
+                    <Star size={16} fill="currentColor" strokeWidth={1.5} />
                 </Button>
-            </CardHeader>
+            </div>
 
             {/* Departures Area */}
-            <CardContent className="p-3 px-4">
+            <CardContent className="p-0">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-2 gap-2 text-muted-foreground/40 text-xs">
+                    <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground text-xs">
                         <Loader2 size={14} className="animate-spin text-primary"  strokeWidth={1.5} />
                         <span>{t('common.loading')}</span>
                     </div>
                 ) : isError ? (
-                    <div className="text-[11.5px] text-destructive/80 py-2 text-center">
+                    <div className="text-xs text-destructive py-4 text-center">
                         {t('errors.generic')}
                     </div>
                 ) : next2Departures.length === 0 ? (
-                    <div className="text-[11.5px] text-muted-foreground/40 py-2 text-center">
+                    <div className="text-xs text-muted-foreground py-4 text-center">
                         {t('map.departures.noUpcoming')}
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
                         {next2Departures.map((dep, idx) => {
                             const isTrain = dep.type === 'train';
 
                             return (
                                 <div 
                                     key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx}
-                                    className="flex items-center justify-between gap-3 text-xs py-0.5"
+                                    className={cn(
+                                        "flex items-center gap-3 min-h-11 py-1.5 px-4",
+                                        idx % 2 === 1 && "bg-black/[0.015] dark:bg-white/[0.02]"
+                                    )}
                                 >
+                                    <div className="flex flex-col shrink-0 w-10 gap-0.5">
+                                        <span className={cn(
+                                            "text-muted-foreground text-[13px] font-medium leading-tight tabular-nums",
+                                            dep.isCanceled && "line-through opacity-60"
+                                        )}>
+                                            {format(parseISO(dep.scheduled), 'HH:mm')}
+                                        </span>
+                                        {!dep.isCanceled && typeof dep.delay === 'number' && dep.delay !== 0 && (
+                                            <span className={cn(
+                                                "text-[11px] font-bold leading-none tabular-nums",
+                                                dep.delay > 0 ? "text-destructive" : "text-sky-500"
+                                            )}>
+                                                {formatDelay(dep.delay)}
+                                            </span>
+                                        )}
+                                    </div>
+
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                         {/* Line badge */}
-                                        <div className="shrink-0 flex items-center">
-                                            <LineBadge 
-                                                name={String(dep.line)} 
-                                                routeColor={dep.route_color || FALLBACK_ROUTE_COLOR} 
-                                            />
-                                        </div>
-
-                                        <ArrowRight size={12} className="text-muted-foreground/30 shrink-0"  strokeWidth={1.5} />
+                                        <LineBadge
+                                            name={String(dep.line)}
+                                            routeColor={dep.route_color || FALLBACK_ROUTE_COLOR}
+                                        />
 
                                         {/* Headsign */}
                                         <span className={cn(
-                                            "text-foreground/80 font-medium truncate min-w-0 leading-tight",
+                                            "text-foreground text-[13px] font-medium truncate min-w-0 leading-tight",
                                             dep.isCanceled && "line-through text-muted-foreground"
                                         )}>
                                             {dep.headsign}
@@ -184,29 +202,21 @@ export const FavoritesStopCard: React.FC<FavoritesStopCardProps> = ({
                                     <div className="flex items-center gap-2 shrink-0">
                                         {/* Platform (Trains only) */}
                                         {dep.platform && isTrain && (
-                                            <div 
-                                                className="flex items-center justify-center shrink-0 min-w-5 gap-0.5 px-1 h-3.75 bg-muted/50 rounded border border-border/50 shadow-sm text-[8.5px] font-bold text-foreground/50 tabular-nums"
+                                            <IconTooltip
+                                                label={t('map.departures.platform')}
+                                                className="justify-center min-w-6 gap-1 px-1.5 py-0.5 bg-muted rounded-md border text-xs font-semibold text-muted-foreground leading-none tabular-nums"
                                             >
-                                                <Train size={12} strokeWidth={1.5} className="opacity-30"  />
+                                                <Train size={12} className="opacity-50" aria-hidden="true" />
                                                 <span>{dep.platform}</span>
-                                            </div>
-                                        )}
-
-                                        {!dep.isCanceled && typeof dep.delay === 'number' && dep.delay !== 0 && (
-                                            <span className={cn(
-                                                "text-[9px] font-bold tabular-nums",
-                                                dep.delay > 0 ? "text-destructive" : "text-sky-400"
-                                            )}>
-                                                {formatDelay(dep.delay)}
-                                            </span>
+                                            </IconTooltip>
                                         )}
 
                                         {dep.isCanceled ? (
-                                            <Badge variant="destructive" className="rounded-md h-4 px-1.5 text-[10px] font-semibold">
+                                            <Badge variant="destructive" className="rounded-md font-semibold">
                                                 {t('map.departures.canceled')}
                                             </Badge>
                                         ) : (
-                                            <span className="text-xs font-bold text-foreground/90 text-right min-w-10 tabular-nums">
+                                            <span className="text-sm font-bold leading-none text-right min-w-12 tabular-nums">
                                                 <Countdown timestamp={dep.timestamp} />
                                             </span>
                                         )}

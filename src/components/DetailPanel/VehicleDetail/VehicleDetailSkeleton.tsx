@@ -1,7 +1,7 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 
 /**
  * VehicleDetailSkeleton
@@ -21,7 +21,7 @@ VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
 const VehicleHeroSkeleton: React.FC = () => (
     <Card
         size="none"
-        className="border border-border/50 ring-0 shadow-xl relative flex flex-col bg-(--hero-base)"
+        className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm bg-(--hero-base)"
     >
         <div className="flex flex-col p-4 pb-3">
             <div className="flex justify-between items-start gap-3">

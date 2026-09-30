@@ -4,9 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import { Train, ArrowRight, ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { IconTooltip } from '@/components/IconTooltip';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import type { Departure, SelectedStop } from '../../../types/transit';
 import { useDepartures } from '../../../hooks/data/useDepartures';
 import { DepartureItem } from './DepartureItem';
@@ -201,22 +201,14 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
                                                 {/* Platform badge (metro only) */}
                                                 {isMetro && subFirstDep.platform && (
-                                                    <TooltipProvider delay={300}>
-                                                        <Tooltip>
-                                                            <TooltipTrigger>
-                                                                <div
-                                                                    className="flex items-center justify-center shrink-0 w-5 h-5 bg-foreground rounded-full shadow-sm cursor-default"
-                                                                >
-                                                                    <span className="text-background font-extrabold text-xs leading-none text-center inline-block">
-                                                                        {subFirstDep.platform}
-                                                                    </span>
-                                                                </div>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                <p>{t('map.departures.trackNumber', { track: subFirstDep.platform })}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
+                                                    <IconTooltip
+                                                        label={t('map.departures.trackNumber', { track: subFirstDep.platform })}
+                                                        className="justify-center w-5 h-5 bg-foreground rounded-full shadow-sm"
+                                                    >
+                                                        <span className="text-background font-extrabold text-xs leading-none text-center inline-block">
+                                                            {subFirstDep.platform}
+                                                        </span>
+                                                    </IconTooltip>
                                                 )}
                                                 </div>
                                             </CardHeader>

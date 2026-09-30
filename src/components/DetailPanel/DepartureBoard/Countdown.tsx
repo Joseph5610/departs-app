@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { CATCH_BUFFER } from '@/config/constants';
 import { useNow } from '@/hooks/useNow';
 

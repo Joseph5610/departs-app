@@ -13,8 +13,9 @@ import { useNavigate } from '../../../hooks/features/useNavigate';
 import { formatStopDistance } from '../../../hooks/derived/useStopDistance';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { LineBadge } from '../../LineBadge';
+import { PanelActions } from '../PanelActions';
 
 /**
  * DepartureBoardHeader
@@ -83,9 +84,9 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-0 shrink-0 flex flex-col gap-2">
-            {/* Row 1: Distance/Delay (Left) + Actions (Right) */}
-            <div className="flex w-full h-7 justify-between items-center">
-                <div className="flex gap-2 shrink-0 items-center">
+            {/* Distance/Delay pill + stop actions */}
+            <div className="flex w-full h-7 items-center">
+                <div className="flex gap-2 min-w-0 items-center">
                     <div className="flex items-center h-7 rounded-full bg-card border border-border/50 shadow-sm shrink-0 overflow-hidden">
                         {/* Distance & Walking Time segment */}
                         <div 
@@ -133,13 +134,14 @@ export const DepartureBoardHeader = React.memo(() => {
                             </>
                         )}
                     </div>
+                    <PanelActions chips />
                 </div>
             </div>
 
             {/* Row 2: Line badges and AC filter */}
             {(uniqueLines.length > 0 || hasAirConditioningData) && (
                 <div 
-                    className="w-full overflow-x-auto no-scrollbar py-2 px-2"
+                    className="-mx-2 overflow-x-auto no-scrollbar py-2 px-2"
                     style={{ 
                         maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
                         WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'

@@ -40,14 +40,16 @@ export const useInterchanges = () => {
         const forName = (name: string | undefined): readonly string[] =>
             name ? index.get(nameKey(name)) ?? NO_CODES : NO_CODES;
 
+        const withoutLine = (name: string | undefined, line: string): readonly string[] => {
+            const codes = forName(name);
+            return codes.some(c => metroLineOf(c) === line) ? codes.filter(c => metroLineOf(c) !== line) : codes;
+        };
+
         return {
             /** Interchanges at a departure's destination, without the departing metro line itself. */
-            forHeadsign: (headsign: string, line: string): readonly string[] => {
-                const codes = forName(headsign);
-                return codes.some(c => metroLineOf(c) === line) ? codes.filter(c => metroLineOf(c) !== line) : codes;
-            },
-            /** Interchanges at a timeline stop. */
-            forStop: (stopName: string | undefined): readonly string[] => forName(stopName),
+            forHeadsign: withoutLine,
+            /** Interchanges at a timeline stop, without the metro line the vehicle itself runs on. */
+            forStop: withoutLine,
         };
     }, [index]);
 };

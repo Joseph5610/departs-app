@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUiStore } from '../../../state/uiStore';
 import { Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '../../../i18n/config';

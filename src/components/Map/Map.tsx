@@ -13,6 +13,7 @@ import { MapPin } from 'lucide-react';
 import { DetailPanel } from '../DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
 import { PanelActions } from '../DetailPanel/PanelActions';
+import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
 import { PointOfSaleHeader } from '../DetailPanel/PointOfSaleHeader';
 import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
@@ -33,7 +34,6 @@ import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { MapControls } from './MapControls';
 import { PointsOfSaleLayer } from './PointsOfSaleLayer';
 import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
-import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
 import { VehicleTitle } from '../DetailPanel/VehicleDetail/VehicleTitle';
 import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
 import type { PointOfSale } from '../../types/pointsOfSale';
@@ -137,8 +137,8 @@ const MapInner: React.FC = () => {
         (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
 
-    const hasShareableSelection = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedStop || selectedVehicle);
-    const detailActions = useMemo(() => (hasShareableSelection ? <PanelActions /> : undefined), [hasShareableSelection]);
+    const hasVehicleActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedVehicle);
+    const detailActions = useMemo(() => (hasVehicleActions ? <PanelActions /> : undefined), [hasVehicleActions]);
 
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 
 /**
  * DepartureBoardSkeleton

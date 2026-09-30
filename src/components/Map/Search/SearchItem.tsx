@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from 'cn';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { LineBadge } from '../../LineBadge';
 import { Autocomplete } from '@base-ui/react/autocomplete';

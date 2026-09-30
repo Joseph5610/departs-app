@@ -5,6 +5,7 @@ import type {
     ExpressionSpecification
 } from 'maplibre-gl';
 import { DELAY_TIERS } from './transit';
+import { mixHex } from '../lib/color';
 
 /** GeoJSON source IDs, shared by the layers below, the <Source> elements and direct map updates. */
 export const MAP_SOURCES = {
@@ -86,7 +87,16 @@ const MAP_TOKENS = {
         vehicleLabelText: '#f8fafc',
         stopIconHalo: '#000000',
         platformText: '#cbd5e1'
-    }
+    },
+    route: {
+        /** How far a travelled segment's colour is blended toward `traversedTarget`; drawn opaque so streets and casing do not muddy it. */
+        traversedMix: { dark: 0.5, light: 0.6 },
+        /** Travelled segments are drawn at this fraction of the route line's width. */
+        traversedWidthScale: 0.85,
+        traversedCasingOpacity: 0.5,
+        /** Dark theme washes out toward mid grey, since fading toward its background would make dark feed colours vanish. */
+        traversedTarget: { dark: '#52525b', light: '#f4f4f5' },
+    },
 };
 
 // -----------------------------------------------------------------------------
@@ -468,6 +478,9 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 // ROUTES
 // -----------------------------------------------------------------------------
 
+const isTraversedSegment: ExpressionSpecification = ['==', ['get', 'status'], 'traversed'];
+
+/** Outlines both parts of the route line, so a feed colour close to the map background (Brno's black night lines) stays visible. */
 export const routeLineCasing: LineLayerSpecification = {
     id: MAP_LAYERS.ROUTE_LINE_CASING,
     type: 'line',
@@ -479,29 +492,37 @@ export const routeLineCasing: LineLayerSpecification = {
     },
     paint: {
         'line-color': '#71717a',
-        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 4, MAP_TOKENS.zoom.vehicles.max, 8],
-        'line-opacity': 0.8
+        'line-width': ['interpolate', ['linear'], ['zoom'],
+            MAP_TOKENS.zoom.vehicles.min, ['case', isTraversedSegment, 4 * MAP_TOKENS.route.traversedWidthScale, 4],
+            MAP_TOKENS.zoom.vehicles.max, ['case', isTraversedSegment, 8 * MAP_TOKENS.route.traversedWidthScale, 8],
+        ],
+        'line-opacity': ['case', isTraversedSegment, MAP_TOKENS.route.traversedCasingOpacity, 0.8]
     }
 };
 
-export const routeLine: LineLayerSpecification = {
-    id: MAP_LAYERS.ROUTE_LINE,
-    type: 'line',
-    source: MAP_SOURCES.ROUTE_SHAPE,
-    filter: ['==', ['geometry-type'], 'LineString'],
-    layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-    },
-    paint: {
-        'line-color': ['get', 'route_color'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 2.5, MAP_TOKENS.zoom.vehicles.max, 6],
-        'line-opacity': [
-            'case',
-            ['==', ['get', 'status'], 'traversed'], 0.4,
-            1.0
-        ]
-    }
+/** The route line; its travelled part is a flat washed-out shade of `routeColor` for `theme`. */
+export const createRouteLine = (routeColor: string | null, theme: 'dark' | 'light'): LineLayerSpecification => {
+    const traversedColor = routeColor ? mixHex(routeColor, MAP_TOKENS.route.traversedTarget[theme], MAP_TOKENS.route.traversedMix[theme]) : null;
+    return {
+        id: MAP_LAYERS.ROUTE_LINE,
+        type: 'line',
+        source: MAP_SOURCES.ROUTE_SHAPE,
+        filter: ['==', ['geometry-type'], 'LineString'],
+        layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        paint: {
+            'line-color': traversedColor
+                ? ['case', isTraversedSegment, traversedColor, ['get', 'route_color']]
+                : ['get', 'route_color'],
+            'line-width': ['interpolate', ['linear'], ['zoom'],
+                MAP_TOKENS.zoom.vehicles.min, ['case', isTraversedSegment, 2.5 * MAP_TOKENS.route.traversedWidthScale, 2.5],
+                MAP_TOKENS.zoom.vehicles.max, ['case', isTraversedSegment, 6 * MAP_TOKENS.route.traversedWidthScale, 6],
+            ],
+            'line-opacity': traversedColor ? 1 : ['case', isTraversedSegment, 0.4, 1.0]
+        }
+    };
 };
 
 const createRouteNodeLayer = (id: string, isTerminal: boolean): CircleLayerSpecification => {

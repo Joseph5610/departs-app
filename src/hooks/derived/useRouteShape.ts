@@ -5,6 +5,7 @@ import { useCityConfig } from '../data/useCities';
 import { useRouteParams } from '../useRouteParams';
 import { useSelectedVehicle } from './useSelectedVehicle';
 import type { VehicleDetail } from '../../types/vehicles';
+import { locateStops, measureLine, resolveProgress, splitLineAt } from '../../lib/routeProgress';
 import type { FeatureCollection, Feature, LineString, Point } from 'geojson';
 
 /**
@@ -49,58 +50,53 @@ export const useRouteShape = (): FeatureCollection | null => {
         [vehicleDetail, routeColor, hasTripShapes, tripShape, isShapeLoading],
     );
 
+    const lineFeature = useMemo(
+        () => geojson?.features.find(f => f.geometry?.type === 'LineString') as Feature<LineString> | undefined,
+        [geojson],
+    );
+    const shapeDistances = lineFeature?.properties?.shape_dist_traveled as number[] | undefined;
+
+    const stopTimes = vehicleDetail?.stop_times?.features;
+    const measured = useMemo(() => {
+        if (!lineFeature) return null;
+        const line = measureLine(lineFeature.geometry.coordinates as [number, number][]);
+        const stops = stopTimes ?? [];
+        const stopIndexBySequence = new Map(stops.map((st, i) => [st.properties.stop_sequence, i]));
+        return { line, stopAlong: locateStops(line, stops.map(st => st.geometry.coordinates)), stopIndexBySequence };
+    }, [lineFeature, stopTimes]);
+
     const hasSelection = !!selectedVehicle;
-    const vDist = vehicleDetail?.shape_dist_traveled;
+    const reportedDistance = vehicleDetail?.shape_dist_traveled;
     const statePos = vehicleDetail?.state_position ?? selectedVehicle?.state_position;
+    const lastSeq = selectedVehicle?.last_stop_sequence ?? vehicleDetail?.last_stop_sequence;
     const pos = vehicleDetail?.geometry?.coordinates ?? selectedVehicle?.geometry?.coordinates;
     const posLng = pos?.[0];
     const posLat = pos?.[1];
 
     return useMemo(() => {
         if (!hasSelection || !geojson) return null;
+        if (!lineFeature || !measured) return geojson;
+        if (statePos === 'before_track' || statePos === 'before_track_delayed') return geojson;
 
-        const lineFeature = geojson.features.find(f => f.geometry?.type === 'LineString') as Feature<LineString> | undefined;
-        if (!lineFeature) return geojson;
-
-        // Unstarted trip, missing distance, or before_track => render entire line as upcoming
-        if (vDist === undefined || vDist === 0 || statePos === 'before_track' || statePos === 'before_track_delayed') {
-            return geojson;
-        }
-
-        const coords = lineFeature.geometry.coordinates;
-        const shapeDists = lineFeature.properties?.shape_dist_traveled as number[] | undefined;
-
-        let splitIdx = -1;
-        if (shapeDists) {
-            const firstAhead = shapeDists.findIndex(d => d > vDist);
-            // No point ahead of the vehicle: it has passed the whole shape.
-            splitIdx = firstAhead === -1 ? coords.length - 1 : firstAhead - 1;
-        } else if (posLng !== undefined && posLat !== undefined) {
-            let minDist = Infinity;
-            coords.forEach(([lng, lat], i) => {
-                const dist = (lng - posLng) ** 2 + (lat - posLat) ** 2;
-                if (dist < minDist) { minDist = dist; splitIdx = i; }
-            });
-        }
-
-        if (splitIdx <= 0) return geojson;
+        const progress = resolveProgress(measured.line, measured.stopAlong, {
+            shapeDistances,
+            reportedDistance,
+            stopIndex: lastSeq != null ? measured.stopIndexBySequence.get(Number(lastSeq)) ?? null : null,
+            position: posLng !== undefined && posLat !== undefined ? [posLng, posLat] : null,
+        });
+        if (progress === null || progress <= 0) return geojson;
 
         const otherFeatures = geojson.features.filter(f => f !== lineFeature);
         const props = lineFeature.properties;
-        const traversed: Feature<LineString> = { type: 'Feature', geometry: { type: 'LineString', coordinates: coords.slice(0, splitIdx + 1) }, properties: { ...props, status: 'traversed' } };
+        const lineOf = (coordinates: LineString['coordinates'], status: 'traversed' | 'upcoming'): Feature<LineString> => (
+            { type: 'Feature', geometry: { type: 'LineString', coordinates }, properties: { ...props, status } }
+        );
 
         // A one-point "upcoming" line is invalid GeoJSON, so a finished shape is all traversed.
-        if (splitIdx >= coords.length - 1) {
-            return { type: 'FeatureCollection', features: [traversed, ...otherFeatures] };
-        }
+        const total = measured.line.along[measured.line.along.length - 1];
+        if (progress >= total) return { type: 'FeatureCollection', features: [lineOf(lineFeature.geometry.coordinates, 'traversed'), ...otherFeatures] };
 
-        return {
-            type: 'FeatureCollection',
-            features: [
-                traversed,
-                { type: 'Feature', geometry: { type: 'LineString', coordinates: coords.slice(splitIdx) }, properties: { ...props, status: 'upcoming' } },
-                ...otherFeatures
-            ]
-        };
-    }, [hasSelection, geojson, vDist, statePos, posLng, posLat]);
+        const { traversed, upcoming } = splitLineAt(measured.line, progress);
+        return { type: 'FeatureCollection', features: [lineOf(traversed, 'traversed'), lineOf(upcoming, 'upcoming'), ...otherFeatures] };
+    }, [hasSelection, geojson, lineFeature, measured, shapeDistances, reportedDistance, statePos, lastSeq, posLng, posLat]);
 };
