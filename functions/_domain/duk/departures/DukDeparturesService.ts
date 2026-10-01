@@ -16,6 +16,7 @@ import { DUK_CONFIG } from '../../../_feeds/duk/config';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
+const lineKey = (node: string, line: string) => `${node}|${line.toUpperCase()}`;
 
 /** A requested stop id resolved to its Portabo node and, for a platform, its post. */
 interface StopRequest {
@@ -73,9 +74,13 @@ export class DukDeparturesService implements DeparturesUseCase {
         }
 
         const links = new Map<string, TimetableLink[]>();
+        /** The mode of each line the timetable has at a station, for board entries that link to no trip and carry no traction. */
+        const lineTypes = new Map<string, string | number>();
         for (const { stopId: node, tuple } of tuples) {
             const route = routes[tuple[1]];
             if (!route) continue;
+            const ofLine = lineKey(node, String(route.name));
+            if (!lineTypes.has(ofLine)) lineTypes.set(ofLine, route.type);
             const key = linkKey(node, String(route.name), tuple[3]);
             const bucket = links.get(key);
             const link = toLink(tuple, route);
@@ -115,7 +120,7 @@ export class DukDeparturesService implements DeparturesUseCase {
                 const isTerminating = entry.direction === DUK_CONFIG.TERMINATING_DIRECTION;
                 if (isTerminating && !link) continue;
 
-                departures.push(this.mapEntry(entry, request.id, platform, isTerminating ? link?.headsign : undefined, link, link ? vehiclesByTrip.get(link.tripId) : undefined));
+                departures.push(this.mapEntry(entry, request.id, platform, isTerminating ? link?.headsign : undefined, link, link ? vehiclesByTrip.get(link.tripId) : undefined, lineTypes.get(lineKey(request.node, entry.line))));
             }
         }
 
@@ -179,11 +184,13 @@ export class DukDeparturesService implements DeparturesUseCase {
         platform: string | null,
         headsignOverride: string | undefined,
         link: TimetableLink | undefined,
-        vehicle: AppVehicleProperties | undefined
+        vehicle: AppVehicleProperties | undefined,
+        lineType: string | number | undefined
     ): AppDeparture {
         const type = normalizeRouteType(
             (entry.traction !== null ? DUK_CONFIG.TRACTION_ROUTE_TYPES[entry.traction] : undefined)
             ?? link?.routeType
+            ?? lineType
             ?? 'bus'
         );
         const isStepFree = entry.notes.some(note => note.includes(DUK_CONFIG.STEP_FREE_NOTE));
