@@ -3,7 +3,7 @@ import { createSource, type Snapshot } from '../../_core/feed/source';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL } from '../../_core/config';
 import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
-import { getGtfsRtFeed } from './gtfs-rt-feed';
+import { getGtfsRtAlertEntities } from './gtfs-rt-feed';
 
 type AlertEntities = GtfsRt.IFeedEntity[];
 
@@ -19,11 +19,10 @@ function sourceFor(city: CityConfig) {
         ttlMs: CACHE_TTL.RSS_INCIDENTS * 1000,
         read: async () => {
             try {
-                const feed = await getGtfsRtFeed(city);
                 // Decoded here, on the alerts window, so the vehicles path never pays for alert text.
-                return feed.alertEntities.map(decodeAlertEntity);
+                return (await getGtfsRtAlertEntities(city)).map(decodeAlertEntity);
             } catch (e) {
-                console.warn(`[GTFS Alerts] getGtfsRtFeed failed: ${e instanceof Error ? e.message : e}`);
+                console.warn(`[GTFS Alerts] getGtfsRtAlertEntities failed: ${e instanceof Error ? e.message : e}`);
                 return null;
             }
         },

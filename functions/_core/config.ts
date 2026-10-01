@@ -104,6 +104,17 @@ export const API_LIMITS = {
     FEEDBACK_MESSAGE_MAX_CHARS: 2000,
 };
 
+/**
+ * Every network's built fleet, edge-cached (`_core/feed/vehicle-cache.ts`) so a fresh isolate reads it
+ * instead of building its own. Younger than `FRESH_MS`: served as-is. Older: rebuilt, or re-stamped for
+ * an unchanged feed, within the request, so no answer lags the feed by more than this.
+ */
+export const FLEET_CACHE = {
+    FRESH_MS: 10_000,
+    /** How long a build is kept, and still served when a rebuild fails. */
+    STALE_MS: 60_000,
+} as const;
+
 /** In-memory feed caching (`CacheManager`). */
 export const CACHE_CONFIG = {
     /** While another request refreshes a key for up to this long, callers holding a stale value serve it instead of fetching too. */

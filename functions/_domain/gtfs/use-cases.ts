@@ -8,6 +8,7 @@ import { GtfsRtVehicleDetailEnricher } from './vehicles/GtfsRtVehicleDetailEnric
 import { VehiclesService } from './vehicles/VehiclesService';
 import type { VehicleSource } from './vehicles/vehicle-source';
 import { GtfsRtVehicleSource } from './vehicles/gtfs-rt-vehicle-source';
+import { EdgeFleetSource } from './vehicles/edge-fleet-source';
 import { createGtfsAlertsMapper, type AlertsMapper } from './alerts/alerts-mapper';
 import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
 import { getGtfsRtFeed } from '../../_feeds/gtfs/gtfs-rt-feed';
@@ -29,7 +30,8 @@ export interface GtfsOverrides {
 
 /** The use-cases of a city on the GTFS stack. */
 export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}): CityUseCases {
-    const vehicles = new VehiclesService(config, overrides.vehicleSource ?? new GtfsRtVehicleSource(config));
+    const source = overrides.vehicleSource ?? new GtfsRtVehicleSource(config);
+    const vehicles = new VehiclesService(config, source.sharesFleet ? source : new EdgeFleetSource(config.slug, source));
     const timetableDetail = new VehicleDetailService(config, new GtfsRtVehicleDetailEnricher(vehicles));
 
     return {

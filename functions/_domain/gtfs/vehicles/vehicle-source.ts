@@ -14,6 +14,11 @@ export interface SingleLiveVehicle {
  */
 export interface VehicleSource {
     /**
+     * True when the source keeps its own build in the edge fleet cache (`_core/feed/vehicle-cache.ts`).
+     * Any other source is wrapped in `EdgeFleetSource`, so no network rebuilds its fleet in every fresh isolate.
+     */
+    readonly sharesFleet?: boolean;
+    /**
      * Every vehicle in the network, as the source last gave them. `waitUntil`, when given, lets a
      * source that caches its own expensive build refresh that cache in the background instead of
      * blocking this call on it; omitted, a source falls back to building synchronously as before.

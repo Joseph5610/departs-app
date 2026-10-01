@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Prague's live vehicle map no longer occasionally fails to load: the fleet is now built once and shared at the edge instead of every fresh isolate redoing the work, which was tipping over the CPU limit.
+- Every API endpoint starts up on roughly a third of the CPU on a fresh isolate: the backend validates with zod/mini and builds each schema on first use.
+- Ústecký kraj and Prešov share their built vehicle fleet at the edge like Prague and Brno, so a fresh isolate no longer rebuilds it.
+- Brno alerts no longer decode every vehicle in the realtime feed to read its alerts.
 
 ## [0.79.3] - 2026-09-30
 

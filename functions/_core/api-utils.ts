@@ -1,6 +1,6 @@
 import { ApiError } from "./errors";
 import { CACHE_TTL, ERROR_MESSAGES } from "./config";
-import { ZodError } from "zod";
+import { $ZodError } from "zod/v4/core";
 import type { EventContext } from "@cloudflare/workers-types";
 import type { CityRequestContext, Env } from "./types";
 
@@ -38,7 +38,7 @@ export function createErrorResponse(message: string, status: number = 500): Resp
  * Converts thrown errors (like ApiError) into standardized JSON Responses.
  */
 export function handleError(error: unknown): Response {
-    if (error instanceof ZodError) {
+    if (error instanceof $ZodError) {
         return createErrorResponse("Invalid request parameters", 400);
     }
     if (error instanceof ApiError) {

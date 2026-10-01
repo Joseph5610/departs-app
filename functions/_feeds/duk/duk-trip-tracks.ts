@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
@@ -21,10 +21,10 @@ export interface TripTrack {
 }
 
 /** Shape check only: validating a thousand trips field by field costs more CPU than a request has. */
-const tracksFileSchema = z.object({
+const tracksFileSchema = z.lazy(() => z.object({
     stops: z.custom<unknown[]>((v) => Array.isArray(v) && v.length > 0),
     trips: z.custom<Fields>(isFields),
-});
+}));
 
 type RawTrack = [number, number[], number[], number[], number[]];
 

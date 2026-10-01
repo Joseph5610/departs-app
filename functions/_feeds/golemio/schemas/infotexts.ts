@@ -1,18 +1,18 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
-export const golemioInfotextSchema = z.object({
+export const golemioInfotextSchema = z.lazy(() => z.object({
     id: z.string(),
-    priority: z.enum(['low', 'normal', 'high']).catch('normal'),
-    display_type: z.enum(['inline', 'general']).catch('general'),
+    priority: z.catch(z.enum(['low', 'normal', 'high']), 'normal'),
+    display_type: z.catch(z.enum(['inline', 'general']), 'general'),
     text: z.string(),
-    text_en: z.string().nullable(),
-    related_stops: z.array(z.object({
+    text_en: z.nullable(z.string()),
+    related_stops: z.pipe(z.array(z.catch(z.nullable(z.object({
         id: z.string(),
         name: z.string(),
-        platform_code: z.string().nullable()
-    }).nullable().catch(null)).transform(arr => arr.filter((s): s is NonNullable<typeof s> => s !== null)),
+        platform_code: z.nullable(z.string())
+    })), null)), z.transform(arr => arr.filter((s): s is NonNullable<typeof s> => s !== null))),
     valid_from: z.string(),
-    valid_to: z.string().nullable()
-});
+    valid_to: z.nullable(z.string())
+}));
 
 export type GolemioInfotext = z.infer<typeof golemioInfotextSchema>;

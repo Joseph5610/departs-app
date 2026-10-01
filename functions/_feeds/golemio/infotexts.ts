@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { Env } from '../../_core/types';
 import { CACHE_TTL, ERROR_MESSAGES } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
@@ -17,7 +17,7 @@ export async function getGolemioInfotexts(env: Env): Promise<GolemioInfotext[]> 
 
     const rawData = await response.json();
 
-    const safeArraySchema = z.array(golemioInfotextSchema.nullable().catch(err => {
+    const safeArraySchema = z.array(z.catch(z.nullable(golemioInfotextSchema), err => {
         console.warn("Skipping invalid Infotext:", err);
         return null;
     }));

@@ -8,8 +8,9 @@ import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getTripStops, isLocated } from '../../../_feeds/gtfs/trip-stops';
-import { LruCache } from '../../../_core/feed/LruCache';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../_core/utils/geo';
+import { MovementBearings } from '../../../_core/utils/movement-bearing';
+import { OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_SECS, formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
 import { getDukStationNames, getDukTrafficFeed, getDukTrafficSnapshot, type DukVehicleReport } from '../../../_feeds/duk/duk-traffic-feed';
@@ -21,10 +22,9 @@ import { getRailCalls, type RailCall } from '../../../_feeds/duk/rail-history';
 
 const { VehicleStopStatus } = GtfsRt;
 
-/** Last position per vehicle, to derive a heading from movement where the feed has none. */
-const lastFixes = new LruCache<{ lat: number; lon: number; bearing: number | null }>({ maxEntries: DUK_CONFIG.BEARING_CACHE_MAX_ENTRIES });
+/** Headings from movement, where the feed has none. */
+const movementBearings = new MovementBearings(DUK_CONFIG.BEARING_MIN_MOVE_M, DUK_CONFIG.BEARING_CACHE_MAX_ENTRIES);
 
-const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** The mapped fleet per traffic snapshot: built once per feed read, however many requests read it. */
 const collections = new WeakMap<object, AppVehicleCollection>();
@@ -59,7 +59,7 @@ export class DukVehicleSource implements VehicleSource {
             console.error(`DUK feed error for ${this.city.slug}:`, err.message);
             return null;
         });
-        if (!snapshot) return OFFLINE;
+        if (!snapshot) return OFFLINE_VEHICLES;
         return deriveAsync(snapshot, collections, () => this.build(snapshot));
     }
 
@@ -280,16 +280,7 @@ export class DukVehicleSource implements VehicleSource {
     }
 
     private movementBearing(report: DukVehicleReport): number | null {
-        const key = `${this.city.slug}:${report.vehicleId}`;
-        const prev = lastFixes.get(key);
-        if (!prev) {
-            lastFixes.set(key, { lat: report.latitude, lon: report.longitude, bearing: null });
-            return null;
-        }
-        if (distanceMeters(prev.lat, prev.lon, report.latitude, report.longitude) < DUK_CONFIG.BEARING_MIN_MOVE_M) return prev.bearing;
-        const bearing = bearingDeg(prev.lat, prev.lon, report.latitude, report.longitude);
-        lastFixes.set(key, { lat: report.latitude, lon: report.longitude, bearing });
-        return bearing;
+        return movementBearings.bearing(`${this.city.slug}:${report.vehicleId}`, report.latitude, report.longitude);
     }
 
     /** Adds the timetable position of the vehicle's last reached stop, which the feed reports by node. */

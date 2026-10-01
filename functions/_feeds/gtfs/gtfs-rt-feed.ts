@@ -31,7 +31,19 @@ async function decodeResponse(city: CityConfig, res: Response): Promise<GtfsRtFe
 
 const sources = new Map<string, () => Promise<Snapshot<GtfsRtFeed> | null>>();
 
-function sourceFor(city: CityConfig, rtUrl: string) {
+/** The city's realtime feed URL; a city without one has no GTFS-RT feed to read. */
+function realtimeUrlOf(city: CityConfig): string {
+    const rtUrl = city.feed?.realtimeUrl;
+    if (!rtUrl) throw new ApiError(`No realtimeUrl configured for city: ${city.slug}`, 501);
+    return rtUrl;
+}
+
+/** Every read of the feed. Uncached: the stored fleet is the shared copy, and a cached feed (KORDIS sends max-age=86400) would be re-stamped as current. */
+function fetchFeed(city: CityConfig, headers?: HeadersInit): Promise<Response> {
+    return appClient.fetch(realtimeUrlOf(city), { cache: 'no-store', headers });
+}
+
+function sourceFor(city: CityConfig) {
     let source = sources.get(city.slug);
     if (source) return source;
 
@@ -42,8 +54,7 @@ function sourceFor(city: CityConfig, rtUrl: string) {
         ttlMs: CACHE_TTL.VEHICLES * 1000,
         isEmpty: (feed) => feed.entity.length === 0,
         read: async () => {
-            // Uncached: the stored fleet is the shared copy, and a cached feed (KORDIS sends max-age=86400) would be re-stamped as current.
-            const rtRes = await appClient.fetch(rtUrl, { cache: 'no-store' }).catch((err) => {
+            const rtRes = await fetchFeed(city).catch((err) => {
                 console.warn(`[GTFS-RT] Fetch error for ${city.slug}:`, err?.message || err);
                 return null;
             });
@@ -61,12 +72,9 @@ function sourceFor(city: CityConfig, rtUrl: string) {
 
 /** The city's realtime feed as a snapshot: the decoded message and when it was read. */
 export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<GtfsRtFeed>> {
-    const rtUrl = city.feed?.realtimeUrl;
-    if (!rtUrl) {
-        throw new ApiError(`No realtimeUrl configured for city: ${city.slug}`, 501);
-    }
-
-    const snapshot = await sourceFor(city, rtUrl)();
+    // Thrown here: inside the source a missing URL would read as a failed fetch.
+    realtimeUrlOf(city);
+    const snapshot = await sourceFor(city)();
     if (!snapshot) {
         throw new ApiError(`GTFS-RT fetch failed for city: ${city.slug}`, 502);
     }
@@ -78,9 +86,7 @@ export async function getGtfsRtSnapshot(city: CityConfig): Promise<Snapshot<Gtfs
  * is neither downloaded nor decoded (null), a changed one is read once and returned. Throws when unreadable.
  */
 export async function getGtfsRtSnapshotIfChanged(city: CityConfig, etag: string): Promise<Snapshot<GtfsRtFeed> | null> {
-    const rtUrl = city.feed?.realtimeUrl;
-    if (!rtUrl) throw new ApiError(`No realtimeUrl configured for city: ${city.slug}`, 501);
-    const res = await appClient.fetch(rtUrl, { cache: 'no-store', headers: { 'If-None-Match': etag } });
+    const res = await fetchFeed(city, { 'If-None-Match': etag });
     if (res.status === 304) return null;
     if (!res.ok) throw new ApiError(`GTFS-RT fetch failed for city: ${city.slug}`, 502);
     return { data: await decodeResponse(city, res), fetchedAt: Date.now() };
@@ -89,4 +95,18 @@ export async function getGtfsRtSnapshotIfChanged(city: CityConfig, etag: string)
 /** The decoded feed alone, for callers that do not care when it was read. */
 export async function getGtfsRtFeed(city: CityConfig): Promise<GtfsRtFeed> {
     return (await getGtfsRtSnapshot(city)).data;
+}
+
+/**
+ * The feed's alert entities, undecoded. Reuses this isolate's decoded feed when it is the current
+ * download, else reads the download for alerts alone rather than decoding every vehicle in it.
+ */
+export async function getGtfsRtAlertEntities(city: CityConfig): Promise<Uint8Array[]> {
+    const res = await fetchFeed(city);
+    if (!res.ok) throw new ApiError(`GTFS-RT fetch failed for city: ${city.slug}`, 502);
+
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    const previous = lastDecoded.get(city.slug);
+    if (previous && isSameFeed(previous, bytes, feedHeaderTimestamp(bytes))) return previous.feed.alertEntities;
+    return decodeGtfsRtFeed(bytes, { vehicles: false }).alertEntities;
 }

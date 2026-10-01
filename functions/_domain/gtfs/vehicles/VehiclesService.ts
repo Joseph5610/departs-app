@@ -2,7 +2,7 @@ import type { AppVehicleCollection, AppVehicleFeature, CityRequestContext } from
 import type { CityConfig } from '../../../_core/city-config';
 import { parseSearchParams, vehicleQuerySchema } from '../../../_core/schemas';
 import { filterVehicles, isUnfiltered } from '../../../_core/utils/vehicleFilter';
-import { withFeedAge } from '../../../_core/feed/freshness';
+import { OFFLINE_VEHICLES, withFeedAge } from '../../../_core/feed/freshness';
 import { vehiclesBody, vehiclesBodyFromJson, type VehiclesBody } from '../../../_core/feed/vehicles-body';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 import type { VehiclesUseCase } from '../../use-cases';
@@ -65,7 +65,7 @@ export class VehiclesService implements VehiclesUseCase {
             const fleet = await this.source.allJson(ctx.waitUntil);
             return fleet
                 ? vehiclesBodyFromJson(fleet.json, fleet.lastUpdated ? Date.parse(fleet.lastUpdated) : NaN, fleet.lastUpdated)
-                : vehiclesBody({ type: 'FeatureCollection', features: [], status: 'upstream_offline' });
+                : vehiclesBody(OFFLINE_VEHICLES);
         }
         return vehiclesBody(await this.source.all(ctx.waitUntil));
     }

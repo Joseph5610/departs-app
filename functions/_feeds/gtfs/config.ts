@@ -37,16 +37,6 @@ export const GTFS_CONFIG = {
     TRIP_BUCKETS_CACHE_MAX_ENTRIES: 2,
     /** Stops' departure rows kept per isolate; a busy stop's rows run to tens of KB. */
     DEPARTURE_ROWS_CACHE_MAX_ENTRIES: 128,
-
-    /**
-     * The built fleet, edge-cached (see `ApiClient.ts`'s `readEdgeCache`/`writeEdgeCache`) so a fresh
-     * isolate reads it instead of redecoding the feed and reassigning every vehicle. Younger than
-     * `FLEET_CACHE_FRESH_MS`: served as-is. Older: rebuilt, or re-stamped for an unchanged feed, within
-     * the request, so no answer lags the feed by more than this.
-     */
-    FLEET_CACHE_FRESH_MS: 10_000,
-    /** How long a build is kept, and still served when a rebuild fails. */
-    FLEET_CACHE_STALE_MS: 60_000,
 } as const;
 
 /*

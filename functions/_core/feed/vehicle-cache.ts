@@ -1,5 +1,6 @@
 import { readEdgeCache, writeEdgeCache } from '../ApiClient';
 import type { AppVehicleCollection } from '../types';
+import { FLEET_CACHE } from '../config';
 
 /**
  * A network's built fleet (every vehicle mapped and, for GTFS-RT networks, assigned to a trip), kept
@@ -81,12 +82,12 @@ async function readEdgeFleet(key: string): Promise<CachedFleet | null> {
 }
 
 /**
- * The newest build cached for `key`: this isolate's own while younger than `freshMs`, else whichever of
+ * The newest build cached for `key`: this isolate's own while younger than `FLEET_CACHE.FRESH_MS`, else whichever of
  * it and the edge copy (possibly rebuilt by another isolate) is newer. Null on a miss or with no Cache API.
  */
-export async function readCachedFleet(key: string, freshMs: number): Promise<CachedFleet | null> {
+async function readCachedFleet(key: string): Promise<CachedFleet | null> {
     const local = inMemory.get(key);
-    if (local && Date.now() - local.builtAt < freshMs) return local;
+    if (local && Date.now() - local.builtAt < FLEET_CACHE.FRESH_MS) return local;
 
     const edge = await readEdgeFleet(key);
     const newest = edge && (!local || edge.builtAt > local.builtAt) ? edge : local ?? null;
@@ -95,14 +96,26 @@ export async function readCachedFleet(key: string, freshMs: number): Promise<Cac
 }
 
 /**
+ * The fleet every network serves: the newest cached build while younger than `freshMs`, else a new
+ * one from `build` (handed the cached build, to re-stamp it when the feed is unchanged), else the
+ * cached build while younger than `staleMs`. Null when there is none to serve.
+ */
+export async function currentFleet(key: string, build: (stored: CachedFleet | null) => Promise<CachedFleet | null>): Promise<CachedFleet | null> {
+    const cached = await readCachedFleet(key);
+    if (cached && Date.now() - cached.builtAt < FLEET_CACHE.FRESH_MS) return cached;
+    const built = await build(cached);
+    if (built) return built;
+    return cached && Date.now() - cached.builtAt < FLEET_CACHE.STALE_MS ? cached : null;
+}
+
+/**
  * Stores a freshly built fleet, and its licence plates when given, in this isolate and at the edge for
- * `ttlS` seconds. Awaited by default; a caller with a `waitUntil` can instead let the edge write run
+ * `FLEET_CACHE.STALE_MS`. Awaited by default; a caller with a `waitUntil` can instead let the edge write run
  * past its response, so the build's own cost is the only one charged to this request.
  */
 export async function writeCachedFleet(
     key: string,
     collection: AppVehicleCollection,
-    ttlS: number,
     feedEtag?: string,
     plates?: Record<string, string>,
     waitUntil?: (promise: Promise<unknown>) => void
@@ -110,20 +123,21 @@ export async function writeCachedFleet(
     const base = { ...collection, last_updated: undefined, status: undefined };
     const entry = new CachedFleet(Date.now(), JSON.stringify(base), collection.last_updated, feedEtag, base);
     if (plates) entry.plates = plates;
-    const write = storeFleet(key, entry, ttlS, plates);
+    const write = storeFleet(key, entry, plates);
     if (waitUntil) waitUntil(write); else await write;
     return entry;
 }
 
 /** Stores `fleet` re-stamped as read now; its vehicles and plates are unchanged, so neither is serialized again. */
-export async function restampCachedFleet(key: string, fleet: CachedFleet, lastUpdated: string, ttlS: number, waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet> {
+export async function restampCachedFleet(key: string, fleet: CachedFleet, lastUpdated: string, waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet> {
     const entry = fleet.restamped(lastUpdated);
-    const write = storeFleet(key, entry, ttlS);
+    const write = storeFleet(key, entry);
     if (waitUntil) waitUntil(write); else await write;
     return entry;
 }
 
-async function storeFleet(key: string, entry: CachedFleet, ttlS: number, plates?: Record<string, string>): Promise<void> {
+async function storeFleet(key: string, entry: CachedFleet, plates?: Record<string, string>): Promise<void> {
+    const ttlS = FLEET_CACHE.STALE_MS / 1000;
     inMemory.set(key, entry);
     const headers = new Headers({ 'Content-Type': 'application/json', [BUILT_AT_HEADER]: String(entry.builtAt) });
     if (entry.lastUpdated) headers.set(LAST_UPDATED_HEADER, entry.lastUpdated);

@@ -1,19 +1,17 @@
 import type { AppVehicleCollection } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
-import { FEED_AGE_S } from '../../../_core/feed/freshness';
+import { FEED_AGE_S, OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
 import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot, getGtfsRtSnapshotIfChanged } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { Snapshot } from '../../../_core/feed/source';
-import { readCachedFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_core/feed/vehicle-cache';
+import { currentFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_core/feed/vehicle-cache';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
-import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
-const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** Old enough that the map has already dropped its positions; nothing else may serve them either. */
 const isTooOld = (fetchedAt: number): boolean => (Date.now() - fetchedAt) / 1000 > FEED_AGE_S.OFFLINE;
@@ -24,6 +22,8 @@ const isTooOld = (fetchedAt: number): boolean => (Date.now() - fetchedAt) / 1000
  * or vehicle they name; only `all()`, for the map, resolves the whole network.
  */
 export class GtfsRtVehicleSource implements VehicleSource {
+    readonly sharesFleet = true;
+
     constructor(
         private readonly city: CityConfig,
         private readonly mapping: VehicleMapping = new GtfsVehicleMapping()
@@ -56,7 +56,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
      * the feed and reassigning every vehicle.
      */
     async all(): Promise<AppVehicleCollection> {
-        return (await this.fleet())?.collection ?? OFFLINE;
+        return (await this.fleet())?.collection ?? OFFLINE_VEHICLES;
     }
 
     async allJson(): Promise<{ json: string; lastUpdated?: string } | null> {
@@ -68,12 +68,8 @@ export class GtfsRtVehicleSource implements VehicleSource {
      * The current build, or null when the feed or its static data cannot be read. A stale build is
      * refreshed in this request, not after it: served first, the refresh reached only the next request.
      */
-    private async fleet(): Promise<CachedFleet | null> {
-        const cached = await readCachedFleet(this.city.slug, GTFS_CONFIG.FLEET_CACHE_FRESH_MS);
-        if (cached && Date.now() - cached.builtAt < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
-        const built = await this.build(cached);
-        if (built) return built;
-        return cached && Date.now() - cached.builtAt < GTFS_CONFIG.FLEET_CACHE_STALE_MS ? cached : null;
+    private fleet(): Promise<CachedFleet | null> {
+        return currentFleet(this.city.slug, (stored) => this.build(stored));
     }
 
     /**
@@ -82,19 +78,18 @@ export class GtfsRtVehicleSource implements VehicleSource {
      * upstreams publish less often than the fleet goes stale, and a fresh isolate has no build of its own to reuse.
      */
     private async build(stored: CachedFleet | null): Promise<CachedFleet | null> {
-        const ttlS = GTFS_CONFIG.FLEET_CACHE_STALE_MS / 1000;
         let feed: Snapshot<GtfsRtFeed> | undefined;
         if (stored?.feedEtag) {
             // An unreadable feed falls through to `index()`, whose source keeps serving the last good read.
             const changed = await getGtfsRtSnapshotIfChanged(this.city, stored.feedEtag).catch(() => undefined);
-            if (changed === null) return restampCachedFleet(this.city.slug, stored, new Date().toISOString(), ttlS);
+            if (changed === null) return restampCachedFleet(this.city.slug, stored, new Date().toISOString());
             feed = changed;
         }
 
         const index = await this.index(feed);
         if (!index) return null;
         const { collection, plates } = await index.allWithPlates();
-        return writeCachedFleet(this.city.slug, collection, ttlS, index.feedEtag, plates);
+        return writeCachedFleet(this.city.slug, collection, index.feedEtag, plates);
     }
 
     async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {
@@ -103,13 +98,13 @@ export class GtfsRtVehicleSource implements VehicleSource {
             // so this is exactly as expensive as `all()` either way - share its cached build rather than
             // building a second, uncached copy.
             const all = await this.all();
-            if (all.status === 'upstream_offline') return OFFLINE;
+            if (all.status === 'upstream_offline') return OFFLINE_VEHICLES;
             if (isTooOld(Date.parse(all.last_updated ?? '') || 0)) return null;
             return { ...all, features: all.features.filter(f => tripIds.has(f.properties.gtfs_trip_id)) };
         }
 
         const index = await this.index();
-        if (!index) return OFFLINE;
+        if (!index) return OFFLINE_VEHICLES;
         return isTooOld(index.fetchedAt) ? null : index.forTrips(tripIds);
     }
 

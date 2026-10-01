@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { MCP_TOOLS } from './tools';
 import type { McpToolInputSchema } from './types';
 
@@ -19,22 +19,21 @@ import type { McpToolInputSchema } from './types';
  * a latitude outside ±90 is not a latitude, and a `limit` of -5 silently means "drop the last five"
  * once it reaches `Array.prototype.slice`.
  */
-const NUMERIC_CONSTRAINTS: Record<string, (schema: z.ZodNumber) => z.ZodNumber> = {
-    latitude: (schema) => schema.min(-90).max(90),
-    longitude: (schema) => schema.min(-180).max(180),
-    limit: (schema) => schema.int().min(1).max(200),
-    radius_meters: (schema) => schema.min(1).max(50_000),
+const NUMERIC_CONSTRAINTS: Record<string, (schema: z.ZodMiniNumber) => z.ZodMiniNumber> = {
+    latitude: (schema) => schema.check(z.gte(-90), z.lte(90)),
+    longitude: (schema) => schema.check(z.gte(-180), z.lte(180)),
+    limit: (schema) => schema.check(z.int(), z.gte(1), z.lte(200)),
+    radius_meters: (schema) => schema.check(z.gte(1), z.lte(50_000)),
 };
 
-function propertyToZod(name: string, property: { type: string; enum?: string[] }): z.ZodTypeAny {
+function propertyToZod(name: string, property: { type: string; enum?: string[] }): z.ZodMiniType {
     if (property.enum && property.enum.length > 0) {
         return z.enum(property.enum as [string, ...string[]]);
     }
 
     if (property.type === 'number') {
-        // `.finite()` is the point: NaN and Infinity are numbers as far as JSON and JS are concerned,
-        // and both survive every comparison downstream without ever matching anything.
-        const base = z.number().finite();
+        // `z.number()` rejects NaN and Infinity, which survive every comparison downstream without ever matching anything.
+        const base = z.number();
         const constrain = NUMERIC_CONSTRAINTS[name];
         return constrain ? constrain(base) : base;
     }
@@ -42,13 +41,13 @@ function propertyToZod(name: string, property: { type: string; enum?: string[] }
     return z.string();
 }
 
-function buildSchema(input: McpToolInputSchema): z.ZodTypeAny {
+function buildSchema(input: McpToolInputSchema): z.ZodMiniType {
     const required = new Set(input.required ?? []);
-    const shape: Record<string, z.ZodTypeAny> = {};
+    const shape: Record<string, z.ZodMiniType> = {};
 
     for (const [name, property] of Object.entries(input.properties)) {
         const field = propertyToZod(name, property);
-        shape[name] = required.has(name) ? field : field.optional();
+        shape[name] = required.has(name) ? field : z.optional(field);
     }
 
     // Unknown keys are stripped rather than rejected: MCP clients are free to send extra fields, and
@@ -56,9 +55,9 @@ function buildSchema(input: McpToolInputSchema): z.ZodTypeAny {
     return z.object(shape);
 }
 
-/** Built once per isolate — there are seven tools and their schemas are static. */
-const schemasByTool = new Map<string, z.ZodTypeAny>(
-    MCP_TOOLS.map(tool => [tool.name, buildSchema(tool.inputSchema)])
+/** Each built on its tool's first call, then kept for the isolate's life. */
+const schemasByTool = new Map<string, z.ZodMiniType>(
+    MCP_TOOLS.map(tool => [tool.name, z.lazy(() => buildSchema(tool.inputSchema))])
 );
 
 /**
@@ -100,7 +99,7 @@ export function validateToolArgs(toolName: string, args: Record<string, unknown>
     const parsed = schema.safeParse(applyAliases(toolName, args));
     if (!parsed.success) {
         const detail = parsed.error.issues
-            .map(issue => `${issue.path.join('.') || 'arguments'}: ${issue.message}`)
+            .map(issue => `${issue.path.join('.') || 'arguments'}: ${issue.code}`)
             .join('; ');
         throw new Error(`Invalid arguments for '${toolName}' — ${detail}`);
     }

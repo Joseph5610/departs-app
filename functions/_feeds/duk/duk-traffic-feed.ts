@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
@@ -9,10 +9,10 @@ import { bool, isFields, num, str, type Fields } from '../../_core/utils/fields'
 import { DUK_CONFIG } from './config';
 
 /** Shape check only: `toReport` type-checks each field it reads, at a fraction of a per-vehicle schema's cost. */
-const trafficSchema = z.object({ VehicleList: z.array(z.unknown()).nullish() });
+const trafficSchema = z.lazy(() => z.object({ VehicleList: z.nullish(z.array(z.unknown())) }));
 
 /** Shape check only: thousands of stations validated field by field cost several times the parse; the loop checks the two it reads. */
-const stationsSchema = z.object({ ItemList: z.array(z.unknown()).nullish() });
+const stationsSchema = z.lazy(() => z.object({ ItemList: z.nullish(z.array(z.unknown())) }));
 
 /** One vehicle report from the Portabo `GetTraffic` feed. */
 export interface DukVehicleReport {
@@ -146,7 +146,7 @@ export async function getDukTrafficFeed(city: CityConfig): Promise<DukVehicleRep
 }
 
 /** Shape check only: the loop type-checks each name it reads. */
-const stationNamesFileSchema = z.custom<Fields>(isFields);
+const stationNamesFileSchema = z.lazy(() => z.custom<Fields>(isFields));
 
 /** The names as departs-data publishes them, a fraction of the size of Portabo's stop list; null before that file is rolled out. */
 async function readPublishedStationNames(city: CityConfig): Promise<Map<number, string> | null> {

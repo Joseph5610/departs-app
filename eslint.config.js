@@ -72,11 +72,6 @@ export default defineConfig([
     files: ['functions/_domain/**/*.ts'],
     rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'CacheManager', 'LruCache'])] }] },
   },
-  {
-    // Bearing history across feed snapshots is state the mapping keeps, not an upstream cache.
-    files: ['functions/_domain/duk/vehicles/DukVehicleSource.ts', 'functions/_domain/dpmp/vehicles/DpmpVehicleSource.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'CacheManager'])] }] },
-  },
 ])
 
 function domainIoBan(modules) {

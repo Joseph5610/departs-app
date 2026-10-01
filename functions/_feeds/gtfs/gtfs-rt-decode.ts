@@ -85,9 +85,10 @@ export function feedHeaderTimestamp(bytes: Uint8Array): number | undefined {
 /**
  * Decodes the vehicle positions of a GTFS-RT FeedMessage, several times faster than the generated
  * decoder since it builds only the fields read downstream: every string it skips is an allocation a
- * cold isolate would otherwise pay for in GC. Alert entities are returned undecoded.
+ * cold isolate would otherwise pay for in GC. Alert entities are returned undecoded; with `vehicles: false`,
+ * for the alerts path, vehicle entities are skipped unread.
  */
-export function decodeGtfsRtFeed(bytes: Uint8Array): GtfsRtFeed {
+export function decodeGtfsRtFeed(bytes: Uint8Array, { vehicles = true }: { vehicles?: boolean } = {}): GtfsRtFeed {
     const feed: GtfsRtFeed = { entity: [], alertEntities: [] };
     const r = new Reader(bytes);
 
@@ -105,9 +106,9 @@ export function decodeGtfsRtFeed(bytes: Uint8Array): GtfsRtFeed {
         while (r.pos < entityEnd) {
             const entityTag = r.varint();
             const field = entityTag >>> 3;
-            if (field === 1) entity.id = r.string();
-            else if (field === 2) entity.isDeleted = r.varint() !== 0;
-            else if (field === 4) entity.vehicle = readVehicle(r, r.end());
+            if (vehicles && field === 1) entity.id = r.string();
+            else if (vehicles && field === 2) entity.isDeleted = r.varint() !== 0;
+            else if (vehicles && field === 4) entity.vehicle = readVehicle(r, r.end());
             else {
                 if (field === 5) isAlert = true;
                 r.skip(entityTag & 7);

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { CityConfig } from '../_core/city-config';
 import type { AppStopFeature } from '../_core/types';
 import { appClient } from '../_core/ApiClient';
@@ -12,7 +12,7 @@ import { distanceMeters } from '../_core/utils/geo';
 const foldName = (value: string): string => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
 /** Shape check only: `stopFeatures` type-checks the fields of the few stops it reads. */
-const stopDetailsBlockSchema = z.array(z.array(z.unknown()));
+const stopDetailsBlockSchema = z.lazy(() => z.array(z.array(z.unknown())));
 type StopDetailsBlock = z.infer<typeof stopDetailsBlockSchema>;
 
 type StopLine = NonNullable<AppStopFeature['properties']['lines']>[number];

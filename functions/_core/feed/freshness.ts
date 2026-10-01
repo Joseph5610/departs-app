@@ -12,6 +12,9 @@ export const FEED_AGE_S = {
     OFFLINE: 300,
 } as const;
 
+/** The answer for a network with nothing to read at all. Shared by every source: never mutate it. */
+export const OFFLINE_VEHICLES: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
+
 /**
  * Stamps a collection with the status the app reacts to. The one place that decides it.
  *

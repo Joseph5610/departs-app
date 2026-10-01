@@ -1,13 +1,13 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 /**
  * Shape check only for all vehicle positions: validating ~3,000 features per refresh costs more CPU than a
  * request has. `VehiclesMapper` type-checks every field it reads instead.
  */
-export const golemioVehiclePositionsSchema = z.object({
+export const golemioVehiclePositionsSchema = z.lazy(() => z.object({
     // `z.array(z.unknown())` would still visit every feature just to accept it.
-    features: z.custom<unknown[]>((v) => Array.isArray(v)).nullish(),
-});
+    features: z.nullish(z.custom<unknown[]>((v) => Array.isArray(v))),
+}));
 export type GolemioVehiclePositionsPayload = z.infer<typeof golemioVehiclePositionsSchema>;
 
 /**
@@ -15,5 +15,5 @@ export type GolemioVehiclePositionsPayload = z.infer<typeof golemioVehiclePositi
  * instead. Confirms only that the response is an object at all - it may be a bare vehicle-properties
  * object or a FeatureCollection, and the mapper reads either shape.
  */
-export const golemioVehicleDetailSchema = z.record(z.string(), z.unknown());
+export const golemioVehicleDetailSchema = z.lazy(() => z.record(z.string(), z.unknown()));
 export type GolemioVehicleDetailPayload = z.infer<typeof golemioVehicleDetailSchema>;

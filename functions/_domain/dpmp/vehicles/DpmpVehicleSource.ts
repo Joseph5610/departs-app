@@ -2,7 +2,6 @@ import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
-import { LruCache } from '../../../_core/feed/LruCache';
 import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, getGtfsTripRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
@@ -10,14 +9,15 @@ import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
-import { bearingDeg, distanceMeters } from '../../../_core/utils/geo';
+import { bearingDeg } from '../../../_core/utils/geo';
+import { MovementBearings } from '../../../_core/utils/movement-bearing';
+import { OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
 import { DpmpTripMatcher } from './DpmpTripMatcher';
 
 const { VehicleStopStatus } = GtfsRt;
 
-const OFFLINE: AppVehicleCollection = { type: 'FeatureCollection', features: [], status: 'upstream_offline' };
 
 /** The mapped fleet per CSV snapshot: built once per feed read, however many requests read it. */
 const collections = new WeakMap<object, AppVehicleCollection>();
@@ -25,12 +25,6 @@ const collections = new WeakMap<object, AppVehicleCollection>();
 interface Position {
     latitude: number;
     longitude: number;
-    bearing: number | null;
-}
-
-interface LastFix {
-    lat: number;
-    lon: number;
     bearing: number | null;
 }
 
@@ -44,8 +38,8 @@ interface SeenRow {
 /** Last CSV row per vehicle and city, to bridge the export's short per-vehicle dropouts. */
 const lastSeenRows = new Map<string, Map<string, SeenRow>>();
 
-/** Last position per vehicle, so a heading can be derived from movement - the CSV has none. */
-const lastFixes = new LruCache<LastFix>({ maxEntries: DPMP_CONFIG.BEARING_CACHE_MAX_ENTRIES });
+/** Headings from movement - the CSV has none. */
+const movementBearings = new MovementBearings(DPMP_CONFIG.BEARING_MIN_MOVE_M, DPMP_CONFIG.BEARING_CACHE_MAX_ENTRIES);
 
 /**
  * Epoch ms of a CSV `DATE_TIME`. Only its time of day is trusted: after midnight DPMP keeps
@@ -83,7 +77,7 @@ export class DpmpVehicleSource implements VehicleSource {
             console.error(`DPMP feed error for ${this.city.slug}:`, err.message);
             return null;
         });
-        if (!snapshot) return OFFLINE;
+        if (!snapshot) return OFFLINE_VEHICLES;
         return deriveAsync(snapshot, collections, () => this.build(snapshot));
     }
 
@@ -217,17 +211,6 @@ export class DpmpVehicleSource implements VehicleSource {
     }
 
     private resolveBearing(vehicleNumber: string, lat: number, lon: number): number | null {
-        const key = `${this.city.slug}:${vehicleNumber}`;
-        const prev = lastFixes.get(key);
-        if (!prev) {
-            lastFixes.set(key, { lat, lon, bearing: null });
-            return null;
-        }
-        if (distanceMeters(prev.lat, prev.lon, lat, lon) < DPMP_CONFIG.BEARING_MIN_MOVE_M) {
-            return prev.bearing;
-        }
-        const bearing = bearingDeg(prev.lat, prev.lon, lat, lon);
-        lastFixes.set(key, { lat, lon, bearing });
-        return bearing;
+        return movementBearings.bearing(`${this.city.slug}:${vehicleNumber}`, lat, lon);
     }
 }

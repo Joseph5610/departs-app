@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { bool, isFields, num, str, strOrNum } from '../../../_core/utils/fields';
 
 /** Shape check only: groups of items, each read field by field by `readDepartureItem`. */
-export const golemioDepartureBoardsSchema = z.array(z.array(z.unknown()));
+export const golemioDepartureBoardsSchema = z.lazy(() => z.array(z.array(z.unknown())));
 
 export interface GolemioDepartureItem {
     departure: { timestamp_predicted?: string | null; timestamp_scheduled: string; delay_seconds?: number | null; minutes?: number | null };

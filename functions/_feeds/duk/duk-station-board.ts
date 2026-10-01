@@ -1,22 +1,22 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { LruCache } from '../../_core/feed/LruCache';
 import { DUK_CONFIG } from './config';
 
-const departureSchema = z.object({
-    LineName: z.union([z.string(), z.number()]).transform(String),
-    Direction: z.string().nullish(),
-    StationPost: z.number().nullish(),
-    DepartureTimeOnlyByTO: z.boolean().nullish(),
+const departureSchema = z.lazy(() => z.object({
+    LineName: z.pipe(z.union([z.string(), z.number()]), z.transform(String)),
+    Direction: z.nullish(z.string()),
+    StationPost: z.nullish(z.number()),
+    DepartureTimeOnlyByTO: z.nullish(z.boolean()),
     TODepartureDT: z.string(),
-    DepartureDT: z.string().nullish(),
-    Delay: z.string().nullish(),
-    Traction: z.number().nullish(),
-    informations: z.array(z.string()).nullish(),
-});
+    DepartureDT: z.nullish(z.string()),
+    Delay: z.nullish(z.string()),
+    Traction: z.nullish(z.number()),
+    informations: z.nullish(z.array(z.string())),
+}));
 
-const boardSchema = z.object({ DeparturesList: z.array(z.unknown()).nullish() });
+const boardSchema = z.lazy(() => z.object({ DeparturesList: z.nullish(z.array(z.unknown())) }));
 
 /** One departure from a Portabo station board. */
 export interface DukBoardDeparture {

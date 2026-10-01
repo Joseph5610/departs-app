@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
@@ -25,7 +25,7 @@ export interface RailCall {
 }
 
 /** A `stophistory` row; times are local `YYYY-MM-DD HH:MM:SS`, empty when not applicable or not yet real. */
-const rowSchema = z.object({
+const rowSchema = z.lazy(() => z.object({
     tripstartdate: z.string(),
     stopid: z.string(),
     tripstopindex: z.coerce.number(),
@@ -34,11 +34,11 @@ const rowSchema = z.object({
     departedat: z.string(),
     shoulddepartat: z.string(),
     stopped: z.string(),
-});
+}));
 type Row = z.infer<typeof rowSchema>;
 
 /** Shape check only: `railStopOf` type-checks the one entry it reads. */
-const railStopsSchema = z.custom<Fields>(isFields);
+const railStopsSchema = z.lazy(() => z.custom<Fields>(isFields));
 
 const histories = new LruCache<{ calls: RailCall[] | null }>({ maxEntries: RAIL.CACHE_MAX_ENTRIES, ttlMs: RAIL.CACHE_TTL_MS });
 

@@ -1,6 +1,6 @@
 import type { AppVehicleDetail, CityRequestContext } from "../../../_core/types";
 import type { CityConfig } from '../../../_core/city-config';
-import { getGtfsRoutes, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
+import { getGtfsRoutes, getGtfsTripRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { getLocalClock } from '../../../_core/utils/time';
@@ -28,13 +28,12 @@ export class VehicleDetailService implements VehicleDetailUseCase {
         const { vehicleId: rawVehicleId, tripId } = parseSearchParams(ctx.url.searchParams, vehicleDetailQuerySchema);
         const vehicleId = rawVehicleId || null;
 
-        const [stations, { routes }, tripRoutes] = await Promise.all([
+        const [stations, { routes }, routeId] = await Promise.all([
             getTripStops(this.city, tripId),
             getGtfsRoutes(this.city),
-            getGtfsTripRoutes(this.city),
+            getGtfsTripRoute(this.city, tripId),
         ]);
 
-        const routeId = tripRoutes?.[tripId];
         const route = routeId ? routes[routeId] : null;
 
         if (stations.length === 0 && !route) {
