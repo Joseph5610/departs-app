@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useVehicleDetail } from '../data/useVehicleDetail';
 import { useTripShape, type TripShape } from '../data/useTripShape';
-import { useCityConfig } from '../data/useCities';
 import { useRouteParams } from '../useRouteParams';
 import { useSelectedVehicle } from './useSelectedVehicle';
 import type { VehicleDetail } from '../../types/vehicles';
@@ -40,14 +39,13 @@ function buildRoute(detail: VehicleDetail | undefined, routeColor: string, shape
 export const useRouteShape = (): FeatureCollection | null => {
     const { data: vehicleDetail } = useVehicleDetail();
     const selectedVehicle = useSelectedVehicle();
-    const hasTripShapes = Boolean(useCityConfig().hasTripShapes);
     const { tripId } = useRouteParams();
     const { shape: tripShape, isLoading: isShapeLoading } = useTripShape(tripId);
 
     const routeColor = vehicleDetail?.route_color || selectedVehicle?.route_color || '';
     const geojson = useMemo(
-        () => (hasTripShapes && (vehicleDetail || tripShape) ? buildRoute(vehicleDetail, routeColor, tripShape, isShapeLoading) : null),
-        [vehicleDetail, routeColor, hasTripShapes, tripShape, isShapeLoading],
+        () => (vehicleDetail || tripShape ? buildRoute(vehicleDetail, routeColor, tripShape, isShapeLoading) : null),
+        [vehicleDetail, routeColor, tripShape, isShapeLoading],
     );
 
     const lineFeature = useMemo(
@@ -62,7 +60,7 @@ export const useRouteShape = (): FeatureCollection | null => {
         const line = measureLine(lineFeature.geometry.coordinates as [number, number][]);
         const stops = stopTimes ?? [];
         const stopIndexBySequence = new Map(stops.map((st, i) => [st.properties.stop_sequence, i]));
-        return { line, stopAlong: locateStops(line, stops.map(st => st.geometry.coordinates)), stopIndexBySequence };
+        return { line, stopAlong: locateStops(line, stops.map(st => st.geometry?.coordinates ?? null)), stopIndexBySequence };
     }, [lineFeature, stopTimes]);
 
     const hasSelection = !!selectedVehicle;

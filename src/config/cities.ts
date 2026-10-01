@@ -25,7 +25,7 @@ export interface InitialCityConfig {
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
-    /** Route shapes are read by the app from the static data CDN; without them the detail shows no route on the map. */
+    /** Route shapes are read by the app from the static data CDN; without them the route is drawn straight from stop to stop. */
     hasTripShapes?: boolean;
     /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
     isHidden?: boolean;

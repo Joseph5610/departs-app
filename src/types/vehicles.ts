@@ -74,7 +74,8 @@ export interface VehicleDetail extends BaseVehicleProperties {
         type: "FeatureCollection";
         features: Array<{
             type: "Feature";
-            geometry: {
+            /** Absent for a stop the network has no position for. */
+            geometry?: {
                 type: "Point";
                 coordinates: [number, number];
             };

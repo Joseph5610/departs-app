@@ -66,13 +66,13 @@ function project(line: MeasuredLine, point: LngLat, from: number, to: number, pr
     return best;
 }
 
-/** Each stop's distance along the line, never behind the one before it, so loops and repeated stops keep their order. */
-export function locateStops(line: MeasuredLine, stops: LngLat[]): number[] {
+/** Each stop's distance along the line, never behind the one before it, so loops and repeated stops keep their order; an unlocated stop sits at the one before it. */
+export function locateStops(line: MeasuredLine, stops: Array<LngLat | null>): number[] {
     const total = line.along[line.along.length - 1];
     const result: number[] = [];
     let from = 0;
     for (const stop of stops) {
-        from = project(line, stop, from, total, true)?.along ?? from;
+        if (stop) from = project(line, stop, from, total, true)?.along ?? from;
         result.push(from);
     }
     return result;
