@@ -37,10 +37,12 @@ export const normalizeRouteType = (type: number | string | undefined | null): Ro
     }
 };
 
+export const ROUTE_JOIN_SEPARATOR = '|';
+
 /**
  * The key the frontend's route-metadata join uses: a line number alone can collide across modes
  * (e.g. DÚK's trolleybus 70 and bus 70 are different routes with different colors), so both sides of
  * the join normalize type first and key on `type|name` rather than name alone.
  */
 export const routeJoinKey = (type: string | number | undefined | null, name: string): string =>
-    `${normalizeRouteType(type)}|${name.toUpperCase()}`;
+    `${normalizeRouteType(type)}${ROUTE_JOIN_SEPARATOR}${name.toUpperCase()}`;

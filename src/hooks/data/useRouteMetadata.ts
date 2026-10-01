@@ -1,12 +1,12 @@
 import '../../lib/zod-config';
 import { z } from 'zod/mini';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../state/preferencesStore';
+import { useCityConfig } from './useCities';
 import { apiFetch } from '../../lib/api-client';
 import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
-import type { RouteInfo } from '../../types/vehicles';
-import { routeJoinKey } from '../../utils/routeTypes';
-import { memoizeLast } from '../../lib/memoize';
+import type { RouteInfo, RouteType } from '../../types/vehicles';
+import { ROUTE_JOIN_SEPARATOR, routeJoinKey } from '../../utils/routeTypes';
 import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 
 const routesFileSchema = z.record(z.string(), z.object({
@@ -38,16 +38,38 @@ export interface RouteMetadata {
     byKordisNumeric: Map<string, RouteInfo>;
 }
 
+type RouteTypeColors = Partial<Record<RouteType, string>>;
+
+/** The `type|name` join, answering a line the routes file does not list with its mode's colour where the city has one. */
+class RoutesByShortName extends Map<string, RouteInfo> {
+    private readonly typeColors: RouteTypeColors;
+
+    constructor(typeColors: RouteTypeColors) {
+        super();
+        this.typeColors = typeColors;
+    }
+
+    override get(key: string): RouteInfo | undefined {
+        const route = super.get(key);
+        if (route) return route;
+        const split = key.indexOf(ROUTE_JOIN_SEPARATOR);
+        const type = key.slice(0, split) as RouteType;
+        const route_color = this.typeColors[type];
+        return route_color ? { name: key.slice(split + 1), type, route_color } : undefined;
+    }
+}
+
+export const NO_TYPE_COLORS: RouteTypeColors = {};
+
 const routesPersister = createDevicePersister((data) => routesFileSchema.parse(data));
 
 const EMPTY: RouteMetadata = { byId: new Map(), byShortName: new Map(), byName: new Map(), byKordisNumeric: new Map() };
 
 const KORDIS_NUMERIC_ID = /^L([A-Z0-9]+)D/i;
 
-/** Module-level so every observer of the same cached file gets the same Map identities, which downstream `memoizeLast` pipelines key on. */
-const buildRouteMetadata = memoizeLast((data: Record<string, RouteInfo>): RouteMetadata => {
+const indexRoutes = (data: Record<string, RouteInfo>, typeColors: RouteTypeColors): RouteMetadata => {
     const byId = new Map(Object.entries(data));
-    const byShortName = new Map<string, RouteInfo>();
+    const byShortName = new RoutesByShortName(typeColors);
     const byName = new Map<string, RouteInfo>();
     const byKordisNumeric = new Map<string, RouteInfo>();
     for (const [id, route] of byId) {
@@ -57,24 +79,38 @@ const buildRouteMetadata = memoizeLast((data: Record<string, RouteInfo>): RouteM
         if (match) byKordisNumeric.set(match[1].toUpperCase(), route);
     }
     return { byId, byShortName, byName, byKordisNumeric };
+};
+
+/** Per routes file, so every observer of a city gets the same Map identities, which downstream `memoizeLast` pipelines key on. */
+const built = new WeakMap<Record<string, RouteInfo>, { typeColors: RouteTypeColors; metadata: RouteMetadata }>();
+
+export const buildRouteMetadata = (data: Record<string, RouteInfo>, typeColors: RouteTypeColors): RouteMetadata => {
+    const existing = built.get(data);
+    if (existing?.typeColors === typeColors) return existing.metadata;
+    const metadata = indexRoutes(data, typeColors);
+    built.set(data, { typeColors, metadata });
+    return metadata;
+};
+
+export const routesQueryOptions = (city: string) => queryOptions({
+    queryKey: ['route-metadata', city],
+    queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/routes.json`)),
+    staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
+    gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
+    persister: routesPersister,
 });
 
 /**
  * A city's route branding (name/color), read straight from the static data CDN - the same file the
  * backend's own `routesByName` lookup reads, fetched directly instead of embedded in API responses.
+ * For the selected city unless `city` names another; null reads nothing.
  */
-export function useRouteMetadata(): RouteMetadata {
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
+export function useRouteMetadata(city?: string | null): RouteMetadata {
+    const ownCity = usePreferencesStore(s => s.selectedCity);
+    const selectedCity = city === undefined ? ownCity : city;
+    const typeColors = useCityConfig(selectedCity ?? undefined).routeTypeColors ?? NO_TYPE_COLORS;
 
-    const { data } = useQuery({
-        queryKey: ['route-metadata', selectedCity],
-        queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/routes.json`)),
-        enabled: !!selectedCity,
-        select: buildRouteMetadata,
-        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
-        gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
-        persister: routesPersister,
-    });
+    const { data } = useQuery({ ...routesQueryOptions(selectedCity ?? ''), enabled: !!selectedCity });
 
-    return data ?? EMPTY;
+    return data ? buildRouteMetadata(data, typeColors) : EMPTY;
 }

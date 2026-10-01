@@ -3,6 +3,7 @@ import { z } from 'zod/mini';
 import type { EnrichmentChannelAdapter } from '../types/enrichment';
 import type { City } from '../types/cities';
 import type { DataAttribution, DataLicenseId } from './attributions';
+import type { RouteType } from '../types/vehicles';
 
 /** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
 const kordisMessageSchema = z.object({
@@ -51,6 +52,8 @@ export interface InitialCityConfig {
     debugFeedLabels: { vehicles: string; alerts: string };
     /** Local line conventions; cities without them get DEFAULT_LINE_RULES. */
     lineRules?: Partial<LineRules>;
+    /** Colour by mode for lines the city's routes.json does not list (DÚK: trains come from the live feed only). */
+    routeTypeColors?: Partial<Record<RouteType, string>>;
 }
 
 export interface LineRules {
@@ -183,6 +186,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             { creator: 'Ministerstvo dopravy ČR (CIS JŘ)', title: 'Jízdní řády veřejné linkové dopravy (JDF)', url: 'https://data.gov.cz/datová-sada?iri=https%3A%2F%2Fdata.gov.cz%2Fzdroj%2Fdatové-sady%2F66003008%2F1463646434', license: 'czOpenData' },
         ],
         lineChipsFromDepartures: true,
+        routeTypeColors: { train: '#004B90' },
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },
 };

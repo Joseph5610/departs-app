@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Line chips of a stop show line colours where they are taken from the departures (Ústecký kraj).
 - Vehicles keep loading for the visible map while it follows a selected vehicle.
+- Ústecký kraj trains are coloured instead of black.
 
 ## [0.79.2] - 2026-09-29
 
