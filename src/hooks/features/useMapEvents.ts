@@ -65,20 +65,19 @@ export const useMapEvents = () => {
     }, [bounds, isFollowing, getRoundedBounds, vpActions, selActions]);
 
     const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => {
+        // Filtering is client-side, so the view follows a followed vehicle too; only the URL stays put.
+        const currentBounds = getRoundedBounds(evt.target);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        vpActions.setBounds(currentBounds);
+        vpActions.setDebouncedBounds(currentBounds);
         if (isFollowing) return;
 
         const { latitude, longitude, zoom } = evt.viewState;
-        const currentBounds = getRoundedBounds(evt.target);
-
         const url = new URL(window.location.href);
         url.searchParams.set('lat', latitude.toFixed(5));
         url.searchParams.set('lng', longitude.toFixed(5));
         url.searchParams.set('z', zoom.toFixed(2));
         replaceUrl(url.toString());
-
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        vpActions.setBounds(currentBounds);
-        vpActions.setDebouncedBounds(currentBounds);
     }, [isFollowing, getRoundedBounds, vpActions]);
 
     const onDragStart = useCallback(() => {
