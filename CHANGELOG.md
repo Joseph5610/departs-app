@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ústecký kraj trains are coloured instead of black.
 - Ústecký kraj trolleybus departures without a linked trip are no longer shown as buses.
 
+### Changed
+
+- Ústecký kraj backend does about half the work on a fresh isolate: station names from static data, trips decoded on demand, stray trips read from their buckets.
+
 ## [0.79.2] - 2026-09-29
 
 ### Added

@@ -4,7 +4,8 @@ import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { ApiError } from '../../_core/errors';
-import { bool, isFields, num, str } from '../../_core/utils/fields';
+import { UPSTREAM_TTL_S } from '../../_core/config';
+import { bool, isFields, num, str, type Fields } from '../../_core/utils/fields';
 import { DUK_CONFIG } from './config';
 
 /** Shape check only: `toReport` type-checks each field it reads, at a fraction of a per-vehicle schema's cost. */
@@ -144,6 +145,47 @@ export async function getDukTrafficFeed(city: CityConfig): Promise<DukVehicleRep
     return snapshot.data;
 }
 
+/** Shape check only: the loop type-checks each name it reads. */
+const stationNamesFileSchema = z.custom<Fields>(isFields);
+
+/** The names as departs-data publishes them, a fraction of the size of Portabo's stop list; null before that file is rolled out. */
+async function readPublishedStationNames(city: CityConfig): Promise<Map<number, string> | null> {
+    const staticDataUrl = city.feed?.staticDataUrl;
+    if (!staticDataUrl) return null;
+    const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${DUK_CONFIG.STATION_NAMES_FILE}`, {
+        cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA }
+    }).catch(() => null);
+    if (!res || !res.ok) return null;
+    const parsed = stationNamesFileSchema.safeParse(await res.json().catch(() => null));
+    if (!parsed.success) return null;
+
+    const names = new Map<number, string>();
+    for (const node in parsed.data) {
+        const name = parsed.data[node];
+        if (typeof name === 'string' && name) names.set(Number(node), name);
+    }
+    return names.size > 0 ? names : null;
+}
+
+/** The names from Portabo's own stop list, for a data rollout that lags a deploy. */
+async function readPortaboStationNames(city: CityConfig, stationsUrl: string): Promise<Map<number, string>> {
+    const names = new Map<number, string>();
+    try {
+        const res = await appClient.fetch(stationsUrl, { headers: { Accept: 'application/json' } });
+        if (!res.ok) return names;
+        const parsed = stationsSchema.safeParse(await res.json());
+        if (!parsed.success) return names;
+        for (const item of parsed.data.ItemList ?? []) {
+            if (typeof item !== 'object' || item === null) continue;
+            const { Node, Name } = item as { Node?: unknown; Name?: unknown };
+            if (typeof Node === 'number' && typeof Name === 'string' && Name && !names.has(Node)) names.set(Node, Name);
+        }
+    } catch (e) {
+        console.warn(`[DUK] Station names fetch failed for ${city.slug}:`, e);
+    }
+    return names;
+}
+
 /** Portabo node id -> stop name, used for the headsign of vehicles. Empty when unavailable. */
 export async function getDukStationNames(city: CityConfig): Promise<Map<number, string>> {
     const baseUrl = city.feed?.baseUrl;
@@ -152,23 +194,7 @@ export async function getDukStationNames(city: CityConfig): Promise<Map<number, 
     return CacheManager.getOrFetch<Map<number, string>>(
         `duk_station_names_${city.slug}`,
         DUK_CONFIG.STATION_NAMES_TTL_MS,
-        async () => {
-            const names = new Map<number, string>();
-            try {
-                const res = await appClient.fetch(`${baseUrl}/GetStations`, { headers: { Accept: 'application/json' } });
-                if (!res.ok) return names;
-                const parsed = stationsSchema.safeParse(await res.json());
-                if (!parsed.success) return names;
-                for (const item of parsed.data.ItemList ?? []) {
-                    if (typeof item !== 'object' || item === null) continue;
-                    const { Node, Name } = item as { Node?: unknown; Name?: unknown };
-                    if (typeof Node === 'number' && typeof Name === 'string' && Name && !names.has(Node)) names.set(Node, Name);
-                }
-            } catch (e) {
-                console.warn(`[DUK] Station names fetch failed for ${city.slug}:`, e);
-            }
-            return names;
-        },
+        async () => await readPublishedStationNames(city) ?? readPortaboStationNames(city, `${baseUrl}/GetStations`),
         (names) => !names || names.size === 0
     );
 }

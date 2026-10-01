@@ -1,20 +1,8 @@
-import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { dayBit, operatesOnDay, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 import { DAY_MINS, type LocalClock } from '../../../_core/utils/time';
 
 const ANY_DAY = -1;
-
-interface Candidate {
-    tripId: string;
-    window: TripWindow;
-}
-
-interface MatchIndex {
-    /** `spoj-line` -> static trips carrying that CIS JŘ trip number. */
-    byNumber: Map<string, Candidate[]>;
-    /** line -> all its static trips. */
-    byLine: Map<string, Candidate[]>;
-}
 
 export interface TripMatch {
     tripId: string;
@@ -22,11 +10,14 @@ export interface TripMatch {
     offsetMins: number;
 }
 
-/** Built once per loaded windows file and collected with it. */
-const indexes = new WeakMap<TripWindows, MatchIndex>();
+/** line -> ids of all its static trips, built once per loaded windows file and collected with it. */
+const indexes = new WeakMap<TripWindows, Map<string, string[]>>();
 
-/** `<spoj>-<line>`: the leading part of a static trip id, so the index slices it instead of splitting every id. */
-const matchKey = (lineNumber: string, tripNumber: number | string) => `${tripNumber}-${lineNumber}`;
+const SEPARATOR = '-'.charCodeAt(0);
+
+/** Whether a static trip id starts with `<spoj>-<line>`, whole parts only. */
+const hasNumber = (tripId: string, numberAndLine: string) =>
+    tripId.startsWith(numberAndLine) && (tripId.length === numberAndLine.length || tripId.charCodeAt(numberAndLine.length) === SEPARATOR);
 
 /**
  * Resolves Portabo vehicles to static trips by CIS JŘ line and trip number.
@@ -38,33 +29,30 @@ const matchKey = (lineNumber: string, tripNumber: number | string) => `${tripNum
 export class DukTripMatcher {
     constructor(private readonly windows: TripWindows) {}
 
-    private getIndex(): MatchIndex {
-        const existing = indexes.get(this.windows);
-        if (existing) return existing;
-
-        const index: MatchIndex = { byNumber: new Map(), byLine: new Map() };
-        const add = (map: Map<string, Candidate[]>, key: string, candidate: Candidate) => {
-            const bucket = map.get(key);
-            if (bucket) bucket.push(candidate);
-            else map.set(key, [candidate]);
-        };
-        for (const tripId in this.windows.trips) {
-            const lineStart = tripId.indexOf('-') + 1;
-            const lineEnd = tripId.indexOf('-', lineStart);
-            const end = lineEnd === -1 ? tripId.length : lineEnd;
-            if (lineStart <= 1 || end <= lineStart) continue;
-            const candidate = { tripId, window: this.windows.trips[tripId] };
-            add(index.byNumber, tripId.slice(0, end), candidate);
-            add(index.byLine, tripId.slice(lineStart, end), candidate);
+    /** Indexed by line alone: a line has few enough trips to scan for a number, and one map is half the build. */
+    private tripsOf(lineNumber: string): string[] | undefined {
+        let index = indexes.get(this.windows);
+        if (!index) {
+            index = new Map();
+            for (const tripId in this.windows.trips) {
+                const lineStart = tripId.indexOf('-') + 1;
+                const lineEnd = tripId.indexOf('-', lineStart);
+                const end = lineEnd === -1 ? tripId.length : lineEnd;
+                if (lineStart <= 1 || end <= lineStart) continue;
+                const line = tripId.slice(lineStart, end);
+                const trips = index.get(line);
+                if (trips) trips.push(tripId);
+                else index.set(line, [tripId]);
+            }
+            indexes.set(this.windows, index);
         }
-
-        indexes.set(this.windows, index);
-        return index;
+        return index.get(lineNumber);
     }
 
     match(lineNumber: string, tripNumber: number, ctx: LocalClock): TripMatch | null {
-        const candidates = this.getIndex().byNumber.get(matchKey(lineNumber, tripNumber));
-        if (!candidates) return null;
+        const numberAndLine = `${tripNumber}-${lineNumber}`;
+        const candidates = this.tripsOf(lineNumber)?.filter(tripId => hasNumber(tripId, numberAndLine));
+        if (!candidates?.length) return null;
 
         // Yesterday's trips are shifted back a day, so one still running past midnight is placed correctly.
         // The last option trusts the feed over the timetable calendar: operators do run trips on days
@@ -78,12 +66,13 @@ export class DukTripMatcher {
 
         for (const option of options) {
             if (!option.bit) continue;
-            for (const c of candidates) {
-                if (option.bit !== ANY_DAY && !operatesOnDay(c.window, option.bit)) continue;
-                const start = c.window[0] + option.offsetMins;
-                const end = c.window[1] + option.offsetMins;
+            for (const tripId of candidates) {
+                const window = this.windows.trips[tripId];
+                if (option.bit !== ANY_DAY && !operatesOnDay(window, option.bit)) continue;
+                const start = window[0] + option.offsetMins;
+                const end = window[1] + option.offsetMins;
                 if (ctx.mins >= start - DUK_CONFIG.MAX_EARLY_START_MINS && ctx.mins <= end + DUK_CONFIG.MAX_LATE_END_MINS) {
-                    return { tripId: c.tripId, offsetMins: option.offsetMins };
+                    return { tripId, offsetMins: option.offsetMins };
                 }
             }
         }
@@ -98,11 +87,12 @@ export class DukTripMatcher {
             { bit: dayBit(this.windows, ctx.date), offsetMins: 0 },
             { bit: dayBit(this.windows, ctx.previousDate), offsetMins: -DAY_MINS },
         ];
-        for (const c of this.getIndex().byLine.get(lineNumber) ?? []) {
+        for (const tripId of this.tripsOf(lineNumber) ?? []) {
+            const window = this.windows.trips[tripId];
             for (const day of days) {
-                if (!day.bit || !operatesOnDay(c.window, day.bit)) continue;
-                if (ctx.mins >= c.window[0] + day.offsetMins - marginMins && ctx.mins <= c.window[1] + day.offsetMins + marginMins) {
-                    out.push({ tripId: c.tripId, offsetMins: day.offsetMins });
+                if (!day.bit || !operatesOnDay(window, day.bit)) continue;
+                if (ctx.mins >= window[0] + day.offsetMins - marginMins && ctx.mins <= window[1] + day.offsetMins + marginMins) {
+                    out.push({ tripId, offsetMins: day.offsetMins });
                 }
             }
         }

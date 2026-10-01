@@ -10,6 +10,8 @@ export const DUK_CONFIG = {
     TRACK_HOURS_CACHED: 4,
     /** Hour files one request may load: the hour it runs in, plus those its waiting vehicles start in. */
     TRACK_HOURS_PER_REQUEST: 3,
+    /** Trips of another hour read from their own buckets before that hour's file, forty times a bucket's size, is loaded instead. */
+    TRACK_STRAGGLERS_PER_HOUR: 8,
     /** How long an hour that failed to load is left alone, so one bad response is not retried per request. */
     TRACK_FAILURE_TTL_MS: 60_000,
     /** Trip buckets one request may read when the hour file is missing; the subrequest limit is 50. */
@@ -48,6 +50,8 @@ export const DUK_CONFIG = {
     /** Stops ahead of the reported one the feed may have missed. */
     MAX_SKIPPED_STOPS: 2,
 
+    /** Node id -> stop name file of the static data; mirrors STATION_NAMES_FILE in departs-data. */
+    STATION_NAMES_FILE: 'station_names.json',
     /** How long the Portabo station names used for headsigns are kept. */
     STATION_NAMES_TTL_MS: 3_600_000,
 

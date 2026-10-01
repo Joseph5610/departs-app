@@ -6,6 +6,7 @@ import { LruCache } from '../../_core/feed/LruCache';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import type { TripWindows } from '../gtfs/trip-windows';
 import { tripBucketId } from '../gtfs/config';
+import { isFields, type Fields } from '../../_core/utils/fields';
 import { DUK_CONFIG } from './config';
 
 /** Where a trip's timetable puts it: one entry per located stop, in travel order, absolute values. */
@@ -21,8 +22,8 @@ export interface TripTrack {
 
 /** Shape check only: validating a thousand trips field by field costs more CPU than a request has. */
 const tracksFileSchema = z.object({
-    stops: z.array(z.string()).min(1),
-    trips: z.record(z.string(), z.unknown()),
+    stops: z.custom<unknown[]>((v) => Array.isArray(v) && v.length > 0),
+    trips: z.custom<Fields>(isFields),
 });
 
 type RawTrack = [number, number[], number[], number[], number[]];
@@ -33,13 +34,13 @@ const isNumbers = (value: unknown): value is number[] => {
     return true;
 };
 
-/** `decode` type-checks each trip it reads, which Zod would do for the whole file at several times the cost. */
+/** `HourTracks` type-checks each trip it reads, which Zod would do for the whole file at several times the cost. */
 const isRawTrack = (value: unknown): value is RawTrack =>
     Array.isArray(value) && value.length === 5 && typeof value[0] === 'number'
     && isNumbers(value[1]) && isNumbers(value[2]) && isNumbers(value[3]) && isNumbers(value[4]);
 
 /** Hour files are large, so an isolate keeps only the few it is actually serving from. */
-const hourFiles = new LruCache<Map<string, TripTrack>>({
+const hourFiles = new LruCache<HourTracks>({
     maxEntries: DUK_CONFIG.TRACK_HOURS_CACHED,
     ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS,
 });
@@ -60,25 +61,45 @@ const fromDeltas = (values: number[], scale = 1): number[] => {
     return out;
 };
 
-function decode(file: z.infer<typeof tracksFileSchema>): Map<string, TripTrack> {
-    const tracks = new Map<string, TripTrack>();
-    for (const tripId in file.trips) {
-        const raw = file.trips[tripId];
-        if (!isRawTrack(raw)) continue;
-        const [lastArrivalSecs, stopIdx, secs, lat, lon] = raw;
-        // The four arrays describe the same stops, so a short one would silently produce NaN distances.
-        if (stopIdx.length === 0 || secs.length !== stopIdx.length || lat.length !== stopIdx.length || lon.length !== stopIdx.length) continue;
-        const stopIds = stopIdx.map(i => file.stops[i]);
-        if (stopIds.some(id => id === undefined)) continue;
-        tracks.set(tripId, {
-            stopIds,
-            lastArrivalSecs,
-            departureSecs: fromDeltas(secs),
-            lat: fromDeltas(lat, DUK_CONFIG.TRACK_COORD_SCALE),
-            lon: fromDeltas(lon, DUK_CONFIG.TRACK_COORD_SCALE),
-        });
+/** One hour's trips, decoded as they are asked for: a request reads a few hundred of the file's thousand. */
+class HourTracks {
+    private readonly decoded = new Map<string, TripTrack | null>();
+    readonly isEmpty: boolean;
+
+    constructor(private readonly file?: z.infer<typeof tracksFileSchema>) {
+        this.isEmpty = !file || Object.keys(file.trips).length === 0;
     }
-    return tracks;
+
+    get(tripId: string): TripTrack | undefined {
+        let track = this.decoded.get(tripId);
+        if (track === undefined) {
+            track = this.file ? decode(this.file.stops, this.file.trips[tripId]) : null;
+            this.decoded.set(tripId, track);
+        }
+        return track ?? undefined;
+    }
+}
+
+const NO_TRACKS = new HourTracks();
+
+function decode(stops: unknown[], raw: unknown): TripTrack | null {
+    if (!isRawTrack(raw)) return null;
+    const [lastArrivalSecs, stopIdx, secs, lat, lon] = raw;
+    // The four arrays describe the same stops, so a short one would silently produce NaN distances.
+    if (stopIdx.length === 0 || secs.length !== stopIdx.length || lat.length !== stopIdx.length || lon.length !== stopIdx.length) return null;
+    const stopIds: string[] = [];
+    for (const i of stopIdx) {
+        const id = stops[i];
+        if (typeof id !== 'string') return null;
+        stopIds.push(id);
+    }
+    return {
+        stopIds,
+        lastArrivalSecs,
+        departureSecs: fromDeltas(secs),
+        lat: fromDeltas(lat, DUK_CONFIG.TRACK_COORD_SCALE),
+        lon: fromDeltas(lon, DUK_CONFIG.TRACK_COORD_SCALE),
+    };
 }
 
 /**
@@ -87,15 +108,15 @@ function decode(file: z.infer<typeof tracksFileSchema>): Map<string, TripTrack> 
  * Read per trip this is one subrequest per candidate vehicle, which on a fresh isolate runs past the
  * Workers subrequest limit; an hour is a single request of a few hundred kilobytes.
  */
-async function loadHour(city: CityConfig, hour: number): Promise<Map<string, TripTrack>> {
+async function loadHour(city: CityConfig, hour: number): Promise<HourTracks> {
     const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) return new Map();
+    if (!staticDataUrl) return NO_TRACKS;
 
     const name = String(hour).padStart(2, '0');
     const cacheKey = `${city.slug}:${name}`;
     const cached = hourFiles.get(cacheKey);
     if (cached) return cached;
-    if (failedHours.get(cacheKey)) return new Map();
+    if (failedHours.get(cacheKey)) return NO_TRACKS;
 
     const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/tracks/${name}.json`, {
         cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA }
@@ -103,18 +124,18 @@ async function loadHour(city: CityConfig, hour: number): Promise<Map<string, Tri
     if (!res || !res.ok) {
         console.warn(`[DUK] No trip tracks for hour ${name}: ${res?.status ?? 'fetch failed'}`);
         failedHours.set(cacheKey, true);
-        return new Map();
+        return NO_TRACKS;
     }
 
     const parsed = tracksFileSchema.safeParse(await res.json().catch(() => null));
     if (!parsed.success) {
         console.error(`[DUK] Malformed trip tracks for hour ${name}`);
         failedHours.set(cacheKey, true);
-        return new Map();
+        return NO_TRACKS;
     }
 
-    const tracks = decode(parsed.data);
-    if (tracks.size > 0) hourFiles.set(cacheKey, tracks);
+    const tracks = new HourTracks(parsed.data);
+    if (!tracks.isEmpty) hourFiles.set(cacheKey, tracks);
     return tracks;
 }
 
@@ -122,19 +143,21 @@ async function loadHour(city: CityConfig, hour: number): Promise<Map<string, Tri
  * Reads trips out of the hour files, an hour at a time.
  *
  * A vehicle's trip is usually running now, but one waiting at a terminus belongs to an hour still to
- * come, so those hours are loaded too. Bounded twice over: a request only asks for the hours its own
- * vehicles are scheduled in, and never for more than `TRACK_HOURS_PER_REQUEST` of them.
+ * come. The first few such trips are left to their own small buckets; only an hour asked for more
+ * often is loaded whole, and never more than `TRACK_HOURS_PER_REQUEST` of them.
  */
 export class TripTrackLookup {
     /** In-flight loads are shared: every vehicle of a request asks at the same moment. */
-    private readonly hours = new Map<number, Promise<Map<string, TripTrack>>>();
+    private readonly hours = new Map<number, Promise<HourTracks>>();
     private readonly bucketsRead = new Set<string>();
+    /** Trips asked for from each hour not loaded yet. */
+    private readonly stragglers = new Map<number, Set<string>>();
 
     private constructor(
         private readonly city: CityConfig,
         private readonly windows: TripWindows | null,
         private readonly currentHour: number,
-        private readonly running: Map<string, TripTrack>
+        private readonly running: HourTracks
     ) {
         this.hours.set(currentHour, Promise.resolve(running));
     }
@@ -142,12 +165,12 @@ export class TripTrackLookup {
     /** Without trip windows nothing can be matched, so no hour is loaded either. */
     static async create(city: CityConfig, windows: TripWindows | null, minutesOfDay: number): Promise<TripTrackLookup> {
         const hour = Math.floor(minutesOfDay / 60);
-        return new TripTrackLookup(city, windows, hour, windows ? await loadHour(city, hour) : new Map());
+        return new TripTrackLookup(city, windows, hour, windows ? await loadHour(city, hour) : NO_TRACKS);
     }
 
     /** False means no track data at all, so callers may read trip buckets instead. */
     get isAvailable(): boolean {
-        return this.running.size > 0;
+        return !this.running.isEmpty;
     }
 
     /**
@@ -179,7 +202,10 @@ export class TripTrackLookup {
 
         let pending = this.hours.get(hour);
         if (!pending) {
-            if (this.hours.size >= DUK_CONFIG.TRACK_HOURS_PER_REQUEST) return null;
+            let waiting = this.stragglers.get(hour);
+            if (!waiting) this.stragglers.set(hour, waiting = new Set());
+            waiting.add(tripId);
+            if (waiting.size <= DUK_CONFIG.TRACK_STRAGGLERS_PER_HOUR || this.hours.size >= DUK_CONFIG.TRACK_HOURS_PER_REQUEST) return null;
             pending = loadHour(this.city, hour);
             this.hours.set(hour, pending);
         }
