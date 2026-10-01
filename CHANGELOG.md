@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.4] - 2026-10-01
+
+### Fixed
+
+- Prague's live vehicle map no longer occasionally fails to load: the fleet is now built once and shared at the edge instead of every fresh isolate redoing the work, which was tipping over the CPU limit.
+
 ## [0.79.3] - 2026-09-30
 
 ### Added

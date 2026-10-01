@@ -5,7 +5,7 @@ import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_
 import { getGtfsRtSnapshot, getGtfsRtSnapshotIfChanged } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { Snapshot } from '../../../_core/feed/source';
-import { readCachedFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_feeds/gtfs/fleet-cache';
+import { readCachedFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_core/feed/vehicle-cache';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
 import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
@@ -94,7 +94,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
         const index = await this.index(feed);
         if (!index) return null;
         const { collection, plates } = await index.allWithPlates();
-        return writeCachedFleet(this.city.slug, collection, plates, ttlS, index.feedEtag);
+        return writeCachedFleet(this.city.slug, collection, ttlS, index.feedEtag, plates);
     }
 
     async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection | null> {

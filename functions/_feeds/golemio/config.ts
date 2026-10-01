@@ -14,6 +14,14 @@ export const GOLEMIO_CONFIG = {
     CONNECTION_BUCKETS_CACHED: 128,
     /** How long mapped planned exclusions stay at the edge: rebuilt after `CACHE_TTL.RSS_EXCLUSIONS`, served past it while the feed is down. */
     EXCLUSIONS_STORE_S: 6 * 3600,
+    /**
+     * The built fleet, edge-cached (see `ApiClient.ts`'s `readEdgeCache`/`writeEdgeCache`) so a fresh
+     * isolate reads it instead of re-fetching, re-shape-checking and re-mapping ~2,200 vehicles itself.
+     * Younger than `VEHICLES_CACHE_FRESH_MS`: served as-is. Older: rebuilt within the request.
+     */
+    VEHICLES_CACHE_FRESH_MS: 10_000,
+    /** How long a build is kept, and still served when a rebuild fails. */
+    VEHICLES_CACHE_STALE_MS: 60_000,
     FEEDS: {
         exclusions: 'https://pid.cz/feed/rss-vyluky/',
     }
