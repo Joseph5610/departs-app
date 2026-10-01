@@ -1,0 +1,11 @@
+{
+  "404 unknown city": "/api/nowhere/vehicles",
+  "cities": "/api/cities",
+  "brno vehicles": "/api/brno/vehicles",
+  "brno vehicles bbox": "/api/brno/vehicles?bounds=49.18,16.55,49.22,16.65",
+  "brno detail": "/api/brno/vehicle-detail?tripId=35473&vehicleId=3677",
+  "brno departures": "/api/brno/departures?stopId=U1668Z4",
+  "brno alerts": "/api/brno/alerts",
+  "duk vehicles": "/api/duk/vehicles",
+  "duk detail": "/api/duk/vehicle-detail?tripId=144-582485-1&vehicleId=811"
+}
