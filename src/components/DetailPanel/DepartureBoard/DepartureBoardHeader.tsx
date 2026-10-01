@@ -43,7 +43,7 @@ export const DepartureBoardHeader = React.memo(() => {
     const selectedVehicle = useSelectedVehicle();
 
     const { handleNavigate, stopDistanceInfo } = useNavigate();
-    const { data: departuresData, delayStats, isError, hasAirConditioningData } = useDepartures();
+    const { liveDepartures, delayStats, isError, hasAirConditioningData } = useDepartures();
 
     const { lineChipsFromDepartures } = useCityConfig();
     const lineRules = useLineRules();
@@ -52,7 +52,7 @@ export const DepartureBoardHeader = React.memo(() => {
 
     const uniqueLines = React.useMemo(() => {
         const source = lineChipsFromDepartures
-            ? departuresData?.departures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
+            ? liveDepartures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
             : selectedStop?.lines;
         if (!source) return [];
         const seen = new Set<string>();
@@ -76,7 +76,7 @@ export const DepartureBoardHeader = React.memo(() => {
             if (groupA !== groupB) return groupA - groupB;
             return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
-    }, [selectedStop, lineRules, lineChipsFromDepartures, departuresData]);
+    }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures]);
 
     if (!showHeader) {
         return null;

@@ -256,6 +256,7 @@ export const useDepartures = () => {
 
     return useMemo(() => ({
         data,
+        liveDepartures,
         isLoading,
         isError,
         error,
@@ -266,5 +267,5 @@ export const useDepartures = () => {
         selectedLine,
         hasAirConditioningData,
         hasRequestStop,
-    }), [data, isLoading, isError, error, refetch, groupedDepartures, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasRequestStop]);
+    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasRequestStop]);
 };

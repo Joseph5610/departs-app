@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Vehicle details name the network as operator where the operator is unknown (PID, IDS JMK, DPMP, Doprava Ústeckého kraje); an operator from the feed or the fleet register still wins.
 - Cities without published route shapes (Ústecký kraj) draw a vehicle's route straight from stop to stop.
 
+### Fixed
+
+- Line chips of a stop show line colours where they are taken from the departures (Ústecký kraj).
+
 ## [0.79.2] - 2026-09-29
 
 ### Added
