@@ -69,7 +69,7 @@ export class GtfsRtVehicleSource implements VehicleSource {
      * refreshed in this request, not after it: served first, the refresh reached only the next request.
      */
     private async fleet(): Promise<CachedFleet | null> {
-        const cached = await readCachedFleet(this.city.slug);
+        const cached = await readCachedFleet(this.city.slug, GTFS_CONFIG.FLEET_CACHE_FRESH_MS);
         if (cached && Date.now() - cached.builtAt < GTFS_CONFIG.FLEET_CACHE_FRESH_MS) return cached;
         const built = await this.build(cached);
         if (built) return built;

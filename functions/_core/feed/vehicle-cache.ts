@@ -81,11 +81,13 @@ async function readEdgeFleet(key: string): Promise<CachedFleet | null> {
 }
 
 /**
- * The newest build cached for `key`: this isolate's own while fresh, else whichever of it and the edge
- * copy (possibly rebuilt by another isolate) is newer. Null on a miss or with no Cache API.
+ * The newest build cached for `key`: this isolate's own while younger than `freshMs`, else whichever of
+ * it and the edge copy (possibly rebuilt by another isolate) is newer. Null on a miss or with no Cache API.
  */
-export async function readCachedFleet(key: string): Promise<CachedFleet | null> {
+export async function readCachedFleet(key: string, freshMs: number): Promise<CachedFleet | null> {
     const local = inMemory.get(key);
+    if (local && Date.now() - local.builtAt < freshMs) return local;
+
     const edge = await readEdgeFleet(key);
     const newest = edge && (!local || edge.builtAt > local.builtAt) ? edge : local ?? null;
     if (newest) inMemory.set(key, newest);

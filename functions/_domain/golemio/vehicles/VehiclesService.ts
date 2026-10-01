@@ -28,7 +28,7 @@ const FLEET_KEY = 'golemio_prague';
 export class VehiclesService implements VehiclesUseCase {
     /** The current build, refreshed in this request when stale - served first, the refresh reaches only the next request. */
     private async fleet(env: Env, waitUntil?: (promise: Promise<unknown>) => void): Promise<CachedFleet | null> {
-        const cached = await readCachedFleet(FLEET_KEY);
+        const cached = await readCachedFleet(FLEET_KEY, GOLEMIO_CONFIG.VEHICLES_CACHE_FRESH_MS);
         if (cached && Date.now() - cached.builtAt < GOLEMIO_CONFIG.VEHICLES_CACHE_FRESH_MS) return cached;
 
         const built = await this.build(env, waitUntil);
