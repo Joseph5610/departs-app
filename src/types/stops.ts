@@ -8,6 +8,10 @@ export interface StopProperties {
     parent_station?: string;
     zone_id?: string;
     is_centroid?: boolean;
+    /** Set on a stop of a neighbouring network shown beside the selected city's. */
+    city_slug?: string;
+    /** The network's own stop colour (`stopColor`), where it has one. */
+    stop_color?: string;
     is_drop_off_only?: boolean;
     is_train?: number;
     metro_lines?: Array<{ name: string; route_color: string }>;

@@ -35,7 +35,7 @@ const fetchNetworkVehicles = async (selectedCity: string, client: QueryClient, q
  * One city-wide query shared by the map and the stats views. It carries no viewport or filter
  * parameters, so every client of a city requests the same URL and the edge cache answers most polls.
  */
-const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: number) => queryOptions<VehicleCollection | null, AppError>({
+export const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: number) => queryOptions<VehicleCollection | null, AppError>({
     queryKey: ['vehicles', selectedCity],
     queryFn: ({ client, queryKey }) => fetchNetworkVehicles(selectedCity, client, queryKey),
     refetchInterval: refreshMs,

@@ -42,6 +42,8 @@ interface BaseVehicleProperties {
     route_color: string;
     is_enriched?: boolean;
     shape_dist_traveled?: number;
+    /** Set on a vehicle of a neighbouring network shown beside the selected city's. */
+    city_slug?: string;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {

@@ -10,6 +10,12 @@ import { useGeolocationStore } from '../../state/geolocationStore';
 import { useRouteParams } from '../../hooks/useRouteParams';
 import { useVehicles } from '../../hooks/data/useVehicles';
 import { useStops } from '../../hooks/data/useStops';
+import { useOverlayNetworks } from '../../hooks/data/useOverlayNetworks';
+import { useNetworksInView } from '../../hooks/derived/useNetworksInView';
+import { useCityConfig } from '../../hooks/data/useCities';
+import { indexStops, withoutTwins, withStopColor } from '../../lib/sharedGround';
+import { memoizeLast } from '../../lib/memoize';
+import { SHARED_GROUND } from '../../config/constants';
 import { useRouteShape } from '../../hooks/derived/useRouteShape';
 import { useMapFilters } from '../../hooks/derived/useMapFilters';
 import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
@@ -48,6 +54,15 @@ interface MapLayersProps {
     mapLoaded: boolean;
 }
 
+const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
+const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
+
+/** A collection with a neighbouring network's features appended; the collection itself when there are none. */
+function withOverlay<T extends { features: unknown[] }>(own: T | null | undefined, overlay: T | null): T | null {
+    if (!overlay?.features.length) return own ?? null;
+    return own ? { ...own, features: [...own.features, ...overlay.features] } : overlay;
+}
+
 /**
  * MapLayers Component
  *
@@ -69,8 +84,19 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
     const userLocation = useGeolocationStore(s => s.userLocation);
 
     const { tripId, vehicleId } = useRouteParams();
-    const { vehicles: displayVehicles } = useVehicles();
-    const { stops: stopsData, centroids: labelData } = useStops();
+    const { vehicles: ownVehicles } = useVehicles();
+    const { stops: ownStops, centroids: ownCentroids } = useStops();
+    const overlay = useOverlayNetworks(useNetworksInView());
+    const { stopColor } = useCityConfig();
+    const displayVehicles = React.useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
+    const ownColoredStops = React.useMemo(() => withStopColor(ownStops, stopColor), [ownStops, stopColor]);
+    // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
+    const stopsData = React.useMemo(
+        () => withOverlay(ownColoredStops, withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false)),
+        [ownColoredStops, ownStops, overlay.stops]);
+    const labelData = React.useMemo(
+        () => withOverlay(ownCentroids, withoutTwins(overlay.centroids, stationGrid(ownCentroids ?? null), true)),
+        [ownCentroids, overlay.centroids]);
     const routeShapeData = useRouteShape();
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);

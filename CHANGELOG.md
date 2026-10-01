@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Vehicle details name the network as operator where the operator is unknown (PID, IDS JMK, DPMP, Doprava Ústeckého kraje); an operator from the feed or the fleet register still wins.
 - Cities without published route shapes (Ústecký kraj) draw a vehicle's route straight from stop to stop.
 - Ústecký kraj trains show their full route with timetable and real stop times, from JrUtil.
+- The map shows every network with stops in view (PID lines out to Karlovy Vary, DÚK around Kladno and Slaný) and keeps the selected city while it runs there; opening another network's vehicle or stop switches to it.
+- Ústecký kraj stops are drawn in DÚK green; where a PID and a DÚK stop stand on the same spot only the selected network's is drawn, and its panel links to the other network's departures there.
 
 ### Fixed
 

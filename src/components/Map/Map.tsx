@@ -238,14 +238,14 @@ const MapInner: React.FC = () => {
                             return;
                         }
                         setIsFollowing(true);
-                        navigate(paths.trip(selectedCity, props.gtfs_trip_id, props.vehicle_id));
+                        navigate(paths.trip(props.city_slug ?? selectedCity, props.gtfs_trip_id, props.vehicle_id));
                         return;
                     }
 
                     if (STOP_CLICK_LAYERS.includes(f.layer.id)) {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
-                            navigate(paths.stop(selectedCity, stopId));
+                            navigate(paths.stop(f.properties?.city_slug ?? selectedCity, stopId));
                         }
                         return;
                     }

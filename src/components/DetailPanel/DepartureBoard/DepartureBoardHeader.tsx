@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Activity, Footprints, Snowflake } from 'lucide-react';
+import { MapPin, Activity, Footprints, Snowflake, ArrowLeftRight } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
 import { useSelectionStore } from '../../../state/selectionStore';
 import { usePreferencesStore } from '../../../state/preferencesStore';
@@ -16,6 +16,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from 'cn';
 import { LineBadge } from '../../LineBadge';
 import { PanelActions } from '../PanelActions';
+import { useStopTwin } from '../../../hooks/derived/useStopTwin';
+import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
+import { navigate } from '../../../lib/history';
+import { paths } from '../../../lib/routes';
 
 /**
  * DepartureBoardHeader
@@ -46,6 +50,8 @@ export const DepartureBoardHeader = React.memo(() => {
     const { liveDepartures, delayStats, isError, hasAirConditioningData } = useDepartures();
 
     const { lineChipsFromDepartures } = useCityConfig();
+    const twin = useStopTwin();
+    const twinLabel = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
     const lineRules = useLineRules();
 
     const showHeader = !!selectedStop && !selectedVehicle && !isError;
@@ -135,6 +141,18 @@ export const DepartureBoardHeader = React.memo(() => {
                         )}
                     </div>
                     <PanelActions chips />
+                    {twin && twinLabel && (
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
+                            aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
+                            title={t('map.departures.otherNetworkBoard', { network: twinLabel })}
+                            className="h-7 px-3 gap-1.5 shrink-0 rounded-full border border-border/50 bg-card shadow-sm text-[11px] font-bold"
+                        >
+                            <ArrowLeftRight size={12} strokeWidth={1.5} className="text-muted-foreground" />
+                            {twinLabel}
+                        </Button>
+                    )}
                 </div>
             </div>
 

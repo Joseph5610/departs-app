@@ -121,6 +121,15 @@ export const MAP_CAMERA = {
     CLUSTER_EXPAND_MS: 500,
 };
 
+export const SHARED_GROUND = {
+    /** The selected network stays selected while it has at least this share of the busiest network's stops in view. */
+    KEEP_SELECTED_SHARE: 0.05,
+    /** Another network's platform this close to one of the selected network's is the same place: only one is drawn. */
+    TWIN_STOP_RADIUS_M: 15,
+    /** Another network's station of the same name this close has its label left out. */
+    TWIN_STATION_RADIUS_M: 250,
+} as const;
+
 export const VEHICLE_ANIMATION = {
     /** How long a vehicle slides from its previous to its new position. */
     DURATION_MS: 1000,

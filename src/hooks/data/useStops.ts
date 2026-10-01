@@ -1,6 +1,6 @@
 import '../../lib/zod-config';
 import { z } from 'zod/mini';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import type { StopCollection, StopFeature } from '../../types/transit';
 import { useMemo } from 'react';
 import { apiFetch } from '../../lib/api-client';
@@ -24,7 +24,8 @@ const stopsPersister = createDevicePersister((data): StopCollection => {
     return data as StopCollection;
 });
 
-const splitStops = memoizeLast((collection: StopCollection | undefined) => {
+/** The platforms and the station centroids of a stop list, as the map's two stop sources take them. */
+export const splitStopCollection = (collection: StopCollection | undefined) => {
     if (!collection || !Array.isArray(collection.features)) {
         return { stops: null, centroids: null };
     }
@@ -43,6 +44,16 @@ const splitStops = memoizeLast((collection: StopCollection | undefined) => {
     };
 
     return { stops, centroids };
+};
+
+const splitStops = memoizeLast(splitStopCollection);
+
+export const stopsQueryOptions = (city: string) => queryOptions<StopCollection, AppError>({
+    queryKey: ['stops', city, DEVICE_CACHE.VERSION],
+    queryFn: () => apiFetch<StopCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/map-stops.json?v=${DEVICE_CACHE.VERSION}`),
+    staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STOPS_STALE),
+    gcTime: Infinity,
+    persister: stopsPersister,
 });
 
 const buildStopIndex = memoizeLast((collection: StopCollection | undefined) => {
@@ -65,13 +76,7 @@ const buildStopIndex = memoizeLast((collection: StopCollection | undefined) => {
 export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    const query = useQuery<StopCollection, AppError>({
-        queryKey: ['stops', selectedCity, DEVICE_CACHE.VERSION],
-        queryFn: () => apiFetch<StopCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/map-stops.json?v=${DEVICE_CACHE.VERSION}`),
-        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STOPS_STALE),
-        gcTime: Infinity,
-        persister: stopsPersister,
-    });
+    const query = useQuery(stopsQueryOptions(selectedCity));
 
     const collection = query.data;
     const { stops, centroids } = splitStops(collection);

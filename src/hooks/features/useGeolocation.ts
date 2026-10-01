@@ -7,10 +7,11 @@ import { useGeolocationStore, type FocusRequest } from '../../state/geolocationS
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { useVisibleCities } from '../data/useCities';
+import { useNetworkCoverage } from '../data/useNetworkCoverage';
 import { navigate } from '../../lib/history';
 import { paths } from '../../lib/routes';
 import { findCityAt } from '../../utils/mapUtils';
-import type { City } from '../../types/cities';
+import type { City, NetworkCoverage } from '../../types/cities';
 
 const hasGeolocation = () => typeof navigator !== 'undefined' && !!navigator.geolocation;
 
@@ -90,11 +91,11 @@ const requestFocus = (request: FocusRequest) => {
  * Centres the map on the user. A locate tap goes anywhere, selecting the city it lands in so its data loads;
  * an automatic focus only moves within the selected city, so a city the user picked is never overridden.
  */
-const focusOnUser = (map: ReturnType<MapRef['getMap']>, location: [number, number], cities: City[], request: FocusRequest) => {
+const focusOnUser = (map: ReturnType<MapRef['getMap']>, location: [number, number], cities: City[], coverages: ReadonlyMap<string, NetworkCoverage>, request: FocusRequest) => {
     const camera = { center: location, zoom: MAP_CAMERA.VEHICLE_SELECT_ZOOM };
-    const city = findCityAt(cities, location);
-
     const { selectedCity, actions } = usePreferencesStore.getState();
+    const city = findCityAt(cities, coverages, location, selectedCity);
+
     if (request === 'auto') {
         if (city?.slug === selectedCity) map.jumpTo(camera);
         return;
@@ -123,6 +124,7 @@ export const useGeolocationWatcher = () => {
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const cities = useVisibleCities();
+    const coverages = useNetworkCoverage();
 
     useEffect(() => {
         let cancelled = false;
@@ -145,8 +147,8 @@ export const useGeolocationWatcher = () => {
         if (lastUpdatedAt < focusRequestedAt - GEOLOCATION_TIMING_MS.FRESH_FIX) return;
 
         useGeolocationStore.getState().actions.requestFocus(null);
-        focusOnUser(map, userLocation, cities, focusRequest);
-    }, [focusRequest, focusRequestedAt, userLocation, lastUpdatedAt, mapLoaded, mapRef, cities]);
+        focusOnUser(map, userLocation, cities, coverages, focusRequest);
+    }, [focusRequest, focusRequestedAt, userLocation, lastUpdatedAt, mapLoaded, mapRef, cities, coverages]);
 };
 
 /** Returns a handler that flies the map to the user once a fresh fix is available. */

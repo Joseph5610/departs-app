@@ -214,6 +214,7 @@
       "onTime": "Načas",
       "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
       "openInMaps": "Otevřít Mapy",
+      "otherNetworkBoard": "Odjezdy {{network}} zde",
       "officialBoard": "Virtuální tablo",
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",

@@ -7,19 +7,27 @@ import { useCityConfig, useVisibleCities } from '../data/useCities';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { useMapMetadataStore } from '../../state/mapMetadataStore';
 import { navigate } from '../../lib/history';
-import { cityOverviewCamera, findCityAt } from '../../utils/mapUtils';
+import { matchRoutePath } from '../../lib/routes';
+import { cityOverviewCamera, overlapsBounds, pickCity, stopsInBox, type Box } from '../../utils/mapUtils';
+import { useNetworkCoverage } from '../data/useNetworkCoverage';
+
+const viewBox = (map: { getBounds(): { getWest(): number; getSouth(): number; getEast(): number; getNorth(): number } }): Box => {
+    const b = map.getBounds();
+    return [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+};
 
 /**
  * useAutoCitySwitch
  * 
- * 1. Automatically switches the active city in preferencesStore if the map's viewport 
- *    center moves inside another city's bounding box.
+ * 1. Automatically switches the active city in preferencesStore when the selected network has
+ *    (almost) no stops left in view and another has; where networks share ground, the selected one stays.
  * 2. Automatically flies the map to the selected city's center if the selectedCity 
  *    changes (e.g. via URL) and the map is currently outside its bounds.
  */
 export const useAutoCitySwitch = () => {
     const { t } = useTranslation();
     const cities = useVisibleCities();
+    const coverages = useNetworkCoverage();
     const cityConfig = useCityConfig();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
@@ -28,6 +36,8 @@ export const useAutoCitySwitch = () => {
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
     const prevCity = React.useRef(selectedCity);
+    /** A city the map switched to itself, already in view: it must not be flown to. */
+    const autoSwitchedTo = React.useRef<string | null>(null);
     const initialWelcomeSeen = React.useRef(hasSeenWelcome);
     const isFirstChange = React.useRef(true);
 
@@ -62,11 +72,16 @@ export const useAutoCitySwitch = () => {
                 return;
             }
             
-            const center = map.getCenter();
-            
-            let newCity = findCityAt(cities, [center.lng, center.lat]);
+            // An open vehicle, stop or point of sale belongs to its city; switching would lose it.
+            const { tripId, stopId, posId } = matchRoutePath(window.location.pathname);
+            if (tripId || stopId || posId) return;
 
-            // If the map center is not strictly inside any city's bounding box,
+            const center = map.getCenter();
+            const currentSelectedCity = usePreferencesStore.getState().selectedCity;
+
+            let newCity = pickCity(cities, coverages, viewBox(map), currentSelectedCity);
+
+            // If no network has stops in view,
             // try to find a city whose center point is visible on the screen
             if (!newCity) {
                 const bounds = map.getBounds();
@@ -91,10 +106,8 @@ export const useAutoCitySwitch = () => {
             }
 
             // If we found a city and it's different from the currently selected one, switch to it
-            // State mutation uses zustand's getState to avoid missing state updates if closure goes stale,
-            // though we have selectedCity in dependency array.
-            const currentSelectedCity = usePreferencesStore.getState().selectedCity;
             if (newCity && newCity.slug !== currentSelectedCity) {
+                autoSwitchedTo.current = newCity.slug;
                 // Change state immediately
                 usePreferencesStore.getState().actions.setSelectedCity(newCity.slug);
                 
@@ -119,32 +132,33 @@ export const useAutoCitySwitch = () => {
         return () => {
             map.off('moveend', handleMoveEnd);
         };
-    }, [mapLoaded, mapRef, cities, t]);
+    }, [mapLoaded, mapRef, cities, coverages, t]);
 
-    // 2. State -> Map sync (fly to new city if selectedCity changes via URL)
+    // 2. State -> Map sync: fly to a city selected elsewhere (a link, the switcher) when the map shows none of it.
+    const coveragesRef = React.useRef(coverages);
     useEffect(() => {
-        if (!mapLoaded || !mapRef.current) {
+        coveragesRef.current = coverages;
+    }, [coverages]);
+    const citySlug = cityConfig.slug;
+    const cityRef = React.useRef(cityConfig);
+    useEffect(() => {
+        cityRef.current = cityConfig;
+    }, [cityConfig]);
+
+    useEffect(() => {
+        if (!mapLoaded || !mapRef.current) return;
+        if (autoSwitchedTo.current === citySlug) {
+            autoSwitchedTo.current = null;
             return;
         }
 
         const map = mapRef.current.getMap();
-        const center = map.getCenter();
-        const [minLng, minLat, maxLng, maxLat] = cityConfig.bounds;
-        
-        const isInsideStrict = (
-            center.lng >= minLng &&
-            center.lng <= maxLng &&
-            center.lat >= minLat &&
-            center.lat <= maxLat
-        );
-
-        const isCenterVisible = map.getBounds().contains(cityConfig.center);
-
-        // If selectedCity changed but we are outside its bounds and its center is not visible, fly there.
-        // This handles cases where user clicks a link to /brno while map is in Prague.
-        // If the center is already visible, the user probably just panned there, so don't aggressively fly.
-        if (!isInsideStrict && !isCenterVisible) {
-            map.flyTo(cityOverviewCamera(cityConfig.center));
+        const city = cityRef.current;
+        const coverage = coveragesRef.current.get(citySlug);
+        const hasStopsInView = coverage ? stopsInBox(coverage, viewBox(map)) > 0 : overlapsBounds(city, viewBox(map));
+        // Already showing the city, or its centre: the user got there themselves.
+        if (!hasStopsInView && !map.getBounds().contains(city.center)) {
+            map.flyTo(cityOverviewCamera(city.center));
         }
-    }, [cityConfig.center, cityConfig.bounds, mapLoaded, mapRef]);
+    }, [citySlug, mapLoaded, mapRef]);
 };

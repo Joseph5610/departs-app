@@ -54,6 +54,10 @@ export interface InitialCityConfig {
     lineRules?: Partial<LineRules>;
     /** Colour by mode for lines the city's routes.json does not list (DÚK: trains come from the live feed only). */
     routeTypeColors?: Partial<Record<RouteType, string>>;
+    /** Short network name, as riders know it (on the stop panel's link to the same stop in this network). */
+    networkLabel: string;
+    /** Map colour of this network's stops, where they must be told apart from a neighbour's on shared ground. */
+    stopColor?: string;
 }
 
 export interface LineRules {
@@ -74,6 +78,7 @@ export const DEFAULT_LINE_RULES: LineRules = {
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
         slug: 'prague',
+        networkLabel: 'PID',
         country: 'CZ',
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
@@ -102,6 +107,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     },
     brno: {
         slug: 'brno',
+        networkLabel: 'IDS JMK',
         country: 'CZ',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
@@ -152,6 +158,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     },
     presov: {
         slug: 'presov',
+        networkLabel: 'DPMP',
         country: 'SK',
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
@@ -171,6 +178,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     },
     duk: {
         slug: 'duk',
+        networkLabel: 'DÚK',
         country: 'CZ',
         center: [14.0322, 50.6607],
         bounds: [12.93, 50.11, 14.61, 51.05],
@@ -188,6 +196,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         ],
         lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },
+        stopColor: '#7BBA2E',
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },
 };

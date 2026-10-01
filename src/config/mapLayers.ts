@@ -164,7 +164,7 @@ export const stopPoints: CircleLayerSpecification = {
             MAP_TOKENS.zoom.stops.min, 5.7,
             MAP_TOKENS.zoom.stops.max, 20.9
         ],
-        'circle-color': metroColor(0, ['case', ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]),
+        'circle-color': metroColor(0, ['case', ['has', 'stop_color'], ['to-color', ['get', 'stop_color']], ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]),
         'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 1.0, MAP_TOKENS.zoom.stops.max, 2.0],
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
         'circle-opacity': [

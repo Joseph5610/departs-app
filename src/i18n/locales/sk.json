@@ -208,6 +208,7 @@
       "onTime": "Načas",
       "delayStatsTooltip": "Priemerné meškanie na základe {{count}} spojov",
       "openInMaps": "Otvoriť Mapy",
+      "otherNetworkBoard": "Odchody {{network}} tu",
       "officialBoard": "Virtuálna tabuľa",
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",

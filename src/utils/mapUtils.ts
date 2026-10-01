@@ -1,7 +1,8 @@
 import { FRONTEND_CITIES_CONFIG, FALLBACK_CITY_CONFIG } from '../config/cities';
 import { useGeolocationStore } from '../state/geolocationStore';
 import { usePreferencesStore } from '../state/preferencesStore';
-import { MAP_CAMERA } from '../config/constants';
+import { MAP_CAMERA, SHARED_GROUND } from '../config/constants';
+import type { NetworkCoverage } from '../types/cities';
 
 /**
  * Calculates the initial map view state based on URL parameters or stored user location.
@@ -88,9 +89,58 @@ export const snapBoundsToTiles = (
     return [tileYToLat(maxY, n), tileXToLon(minX, n), tileYToLat(minY, n), tileXToLon(maxX, n)];
 };
 
-/** The city whose bounds contain `[lng, lat]`, if any. */
-export const findCityAt = <T extends { bounds: [number, number, number, number] }>(cities: T[], [lng, lat]: [number, number]): T | undefined =>
-    cities.find(({ bounds: [minLng, minLat, maxLng, maxLat] }) => lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat);
+interface CityExtent {
+    slug: string;
+    bounds: [number, number, number, number];
+}
+
+/** `[west, south, east, north]` */
+export type Box = [number, number, number, number];
+
+/** Whether `box` overlaps a city's `bounds`, which frame the city itself rather than its whole network. */
+export const overlapsBounds = ({ bounds: [minLng, minLat, maxLng, maxLat] }: CityExtent, [west, south, east, north]: Box): boolean =>
+    west <= maxLng && east >= minLng && south <= maxLat && north >= minLat;
+
+/** How many stops a network has in `box`, from its coverage grid. */
+export const stopsInBox = ({ cell, cells }: NetworkCoverage, [west, south, east, north]: Box): number => {
+    let total = 0;
+    for (let x = Math.floor(west / cell); x <= Math.floor(east / cell); x++) {
+        for (let y = Math.floor(south / cell); y <= Math.floor(north / cell); y++) {
+            total += cells[`${x}|${y}`] ?? 0;
+        }
+    }
+    return total;
+};
+
+/**
+ * The network to select for a view: `preferredSlug` while it keeps a fair share of the stops in
+ * view, else the network with the most. A network whose coverage has not loaded is not picked, and
+ * keeps the selection if it holds it. Undefined where no network has stops.
+ */
+export const pickCity = <T extends CityExtent>(cities: T[], coverages: ReadonlyMap<string, NetworkCoverage>, box: Box | ((coverage: NetworkCoverage) => Box), preferredSlug?: string): T | undefined => {
+    let best: T | undefined;
+    let bestCount = 0;
+    let preferred: T | undefined;
+    let preferredCount = 0;
+    for (const city of cities) {
+        const coverage = coverages.get(city.slug);
+        if (!coverage) {
+            if (city.slug === preferredSlug) preferred = city;
+            continue;
+        }
+        const count = stopsInBox(coverage, typeof box === 'function' ? box(coverage) : box);
+        if (city.slug === preferredSlug) { preferred = city; preferredCount = count; }
+        if (count > bestCount) { best = city; bestCount = count; }
+    }
+    if (!preferred) return best;
+    // Unknown coverage keeps the selection until it loads.
+    if (!coverages.has(preferred.slug)) return preferred;
+    return preferredCount > 0 && preferredCount >= bestCount * SHARED_GROUND.KEEP_SELECTED_SHARE ? preferred : best;
+};
+
+/** The network `[lng, lat]` belongs to, if any; `preferredSlug` wherever it runs a fair share of the stops. */
+export const findCityAt = <T extends CityExtent>(cities: T[], coverages: ReadonlyMap<string, NetworkCoverage>, [lng, lat]: [number, number], preferredSlug?: string): T | undefined =>
+    pickCity(cities, coverages, ({ cell }) => [lng - cell, lat - cell, lng + cell, lat + cell], preferredSlug);
 
 /** Camera move to a city's overview, for opening or switching a city. */
 export const cityOverviewCamera = (center: [number, number]) => ({
