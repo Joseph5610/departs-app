@@ -1,5 +1,5 @@
 /** Terms upstream data is published under. */
-export type DataLicenseId = 'ccBy4' | 'odbl1' | 'czOpenData' | 'permission' | 'notStated';
+export type DataLicenseId = 'ccBy4' | 'odbl1' | 'czOpenData' | 'permission' | 'noRestrictions' | 'notStated';
 
 /**
  * One upstream data source, credited as its licence asks: who made it, what it is, where it is
@@ -22,6 +22,8 @@ export const DATA_LICENSE_URLS: Record<DataLicenseId, string | null> = {
     // Czech national open data terms: no copyrighted work and no protected database.
     czOpenData: 'https://data.gov.cz/podmínky-užití/neobsahuje-autorská-díla/',
     permission: null,
+    // Stated by the publisher itself, without a named licence.
+    noRestrictions: null,
     notStated: null,
 };
 

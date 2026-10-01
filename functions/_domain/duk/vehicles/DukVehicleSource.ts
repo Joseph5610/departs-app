@@ -11,12 +11,13 @@ import { getTripStops, isLocated } from '../../../_feeds/gtfs/trip-stops';
 import { LruCache } from '../../../_core/feed/LruCache';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../_core/utils/geo';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
+import { DAY_SECS, formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
 import { getDukStationNames, getDukTrafficFeed, getDukTrafficSnapshot, type DukVehicleReport } from '../../../_feeds/duk/duk-traffic-feed';
 import { TripTrackLookup, type TripTrack } from '../../../_feeds/duk/duk-trip-tracks';
 import { DUK_STATE_MAPPING } from '../dukConstants';
 import { DukTripMatcher, type TripMatch } from './DukTripMatcher';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
+import { getRailCalls, type RailCall } from '../../../_feeds/duk/rail-history';
 
 const { VehicleStopStatus } = GtfsRt;
 
@@ -311,9 +312,46 @@ export class DukVehicleSource implements VehicleSource {
     }
 }
 
+/** `HH:MM:SS` moved by `delaySecs`, wrapped onto the clock. */
+function shiftClockTime(time: string, delaySecs: number): string {
+    if (!time || delaySecs === 0) return time;
+    const secs = (((toSecs(time) + delaySecs) % DAY_SECS) + DAY_SECS) % DAY_SECS;
+    const part = (n: number) => String(Math.floor(n)).padStart(2, '0');
+    return `${part(secs / 3600)}:${part((secs % 3600) / 60)}:${part(secs % 60)}`;
+}
+
 /**
- * Detail for a DÚK vehicle the static data has no trip for: its live state plus the last reached and
- * final stop, with gaps marking the unknown rest of the route.
+ * A train's timeline from its calls: real times where it has been, the timetable shifted by its
+ * current delay ahead of it. A train does not leave early, so running ahead shifts nothing.
+ */
+function railStopTimes(calls: RailCall[], delay: number | null, stationNode: number | null): Pick<AppVehicleDetail, 'stop_times' | 'last_stop_sequence'> {
+    const late = Math.max(0, delay ?? 0);
+    // The history's real times lag by minutes; the feed's last station counts too where a call is tied to it.
+    const reported = stationNode !== null ? `${stationNode}-` : null;
+    let lastReached: number | undefined;
+    const features = calls.map((call, i) => {
+        if (call.actualArrival || call.actualDeparture || (reported && call.stopId?.startsWith(reported))) lastReached = i + 1;
+        return {
+            type: 'Feature' as const,
+            ...(call.coordinates ? { geometry: { type: 'Point', coordinates: call.coordinates } } : {}),
+            properties: {
+                stop_id: call.stopId ?? '',
+                stop_name: call.name,
+                stop_sequence: i + 1,
+                arrival_time: call.arrival,
+                departure_time: call.departure,
+                realtime_arrival_time: call.actualArrival || shiftClockTime(call.arrival, late),
+                realtime_departure_time: call.actualDeparture || shiftClockTime(call.departure, late),
+            },
+        };
+    });
+    return { stop_times: { features }, last_stop_sequence: lastReached };
+}
+
+/**
+ * Detail for a DÚK vehicle the static data has no trip for. A train gets its route and real stop
+ * times from the rail history; otherwise its live state plus the last reached and final stop, with
+ * gaps marking the unknown rest of the route.
  */
 export async function getDukLiveOnlyDetail(
     vehicles: VehiclesService,
@@ -332,6 +370,11 @@ export async function getDukLiveOnlyDetail(
         getDukStationNames(city),
     ]);
     const report = reports ? getReportIndex(reports).get(feature.properties.vehicle_id) : undefined;
+
+    const calls = report?.feedTripId ? await getRailCalls(city, report.feedTripId, getLocalClock(city.timezone)) : null;
+    if (calls) {
+        return { ...feature.properties, geometry: feature.geometry, ...railStopTimes(calls, report?.delay ?? null, report?.stationNode ?? null) };
+    }
 
     const features: NonNullable<AppVehicleDetail['stop_times']>['features'] = [];
     const localTime = (ms: number | null) => (ms === null ? '' : formatTime(new Date(ms), city.timezone));

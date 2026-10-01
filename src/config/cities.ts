@@ -184,6 +184,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         attributions: [
             { creator: 'Ústecký kraj (Portabo)', title: 'DÚK stops, departure boards and vehicle positions', url: 'https://lkod.portabo.cz/datasets', license: 'czOpenData' },
             { creator: 'Ministerstvo dopravy ČR (CIS JŘ)', title: 'Jízdní řády veřejné linkové dopravy (JDF)', url: 'https://data.gov.cz/datová-sada?iri=https%3A%2F%2Fdata.gov.cz%2Fzdroj%2Fdatové-sady%2F66003008%2F1463646434', license: 'czOpenData' },
+            { creator: 'JrUtil (RtView)', title: 'Train routes and real stop times', url: 'https://rt.jrutil.konarici.cz/api.html', license: 'noRestrictions' },
         ],
         lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },

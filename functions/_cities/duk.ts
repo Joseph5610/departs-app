@@ -16,7 +16,8 @@ const config: CityConfig = {
     bounds: [12.93, 50.11, 14.61, 51.05],
     feed: {
         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis',
-        staticDataUrl: 'https://data.departs.app'
+        staticDataUrl: 'https://data.departs.app',
+        railHistoryUrl: 'https://rt.jrutil.konarici.cz/api',
     },
     networkOperator: 'Doprava Ústeckého kraje',
     isBeta: true,
