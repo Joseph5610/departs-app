@@ -1,7 +1,6 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-index';
-import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
-import { dayBit, operatesOnDay, type TripWindow } from '../../../_feeds/gtfs/trip-windows';
+import { dayBit, isWithinMatchWindow, operatesOnDay, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MINS, DAY_SECS, wrapDaySeconds } from '../../../_core/utils/time';
 
@@ -21,8 +20,6 @@ interface TripClaim {
 export class KordisVehicleMapping implements VehicleMapping {
     /** Its vehicles appear under several trip ids, so only the network-wide assignment settles them. */
     readonly resolvesPerEntity = false;
-    readonly usesTripWindows = true;
-
 
     /** License plates starting with `dpmb` mark feed entries that are not real vehicles. */
     private isInvalidDpmbVehicle(entity: GtfsRt.IFeedEntity): boolean {
@@ -39,15 +36,19 @@ export class KordisVehicleMapping implements VehicleMapping {
      * to when the id comes from an older numbering. Ids are recycled across exports, so both can be
      * valid at once and the choice is left to `assignAll`. An alias of null marks a dropped trip.
      */
-    tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
+    tripCandidates(entity: GtfsRt.IFeedEntity, { schedule, tripAliases, clock }: MappingSchedule): string[] {
         const rawTripId = entity.vehicle?.trip?.tripId;
         if (!rawTripId) return [];
 
-        const alias = tripRoutes.tripAliases.get(rawTripId);
+        const alias = tripAliases.get(rawTripId);
         if (alias === null) return [];
+        const isCandidate = (tripId: string) => {
+            const trip = schedule.trips[tripId];
+            return !!trip && isWithinMatchWindow(trip, clock.mins);
+        };
         const candidates: string[] = [];
-        if (rawTripId in tripRoutes.tripRoutes) candidates.push(rawTripId);
-        if (alias && alias !== rawTripId && alias in tripRoutes.tripRoutes) candidates.push(alias);
+        if (isCandidate(rawTripId)) candidates.push(rawTripId);
+        if (alias && alias !== rawTripId && isCandidate(alias)) candidates.push(alias);
         return candidates;
     }
 
@@ -70,8 +71,8 @@ export class KordisVehicleMapping implements VehicleMapping {
     }
 
     /** At its origin, waiting for a departure that has not come yet. */
-    isBeforeTrack(tripId: string, { windows, clock }: MappingSchedule): boolean {
-        const window = windows?.trips[tripId];
+    isBeforeTrack(tripId: string, { schedule, clock }: MappingSchedule): boolean {
+        const window = schedule.trips[tripId];
         if (!window) return false;
 
         const currentMins = clock.mins;
@@ -88,9 +89,10 @@ export class KordisVehicleMapping implements VehicleMapping {
      * then the reading of the numbering the feed is currently on, then nearest window - and a
      * vehicle whose best reading is taken falls back to its next one.
      */
-    assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData, { windows, clock }: MappingSchedule) {
-        const todayBit = windows ? dayBit(windows, clock.date) : 0;
-        const currentMins = windows ? clock.mins : 0;
+    assignAll(entities: GtfsRt.IFeedEntity[], mappingSchedule: MappingSchedule) {
+        const { schedule, clock } = mappingSchedule;
+        const todayBit = dayBit(schedule, clock.date);
+        const currentMins = clock.mins;
 
         // Grouped by vehicle first, then by the order the feed lists them: equally strong claims are
         // decided by this order, so it has to be the same one every time.
@@ -116,25 +118,27 @@ export class KordisVehicleMapping implements VehicleMapping {
             for (const index of group) {
                 const entity = entities[index];
                 const rawTripId = entity.vehicle?.trip?.tripId;
-                for (const tripId of this.tripCandidates(entity, tripRoutes)) {
+                for (const tripId of this.tripCandidates(entity, mappingSchedule)) {
                     claims.push({
                         label,
                         index,
                         tripId,
                         isNative: tripId === rawTripId,
-                        gapMins: this.windowGap(windows?.trips[tripId], todayBit, currentMins),
+                        gapMins: this.windowGap(schedule.trips[tripId], todayBit, currentMins),
                     });
                 }
             }
         }
 
-        const order = claimOrder(claims, this.feedReadsNative(claims));
+        const preferNative = this.feedReadsNative(claims);
+        const eligible = this.withoutFallbacks(claims, entities, mappingSchedule, preferNative);
+        const order = claimOrder(eligible, preferNative);
 
         const tripOf: Array<string | undefined> = new Array(entities.length);
         const takenVehicles = new Set<string>();
         const takenTrips = new Set<string>();
         for (let k = 0; k < order.length; k++) {
-            const claim = claims[order[k]];
+            const claim = eligible[order[k]];
             if (takenVehicles.has(claim.label) || takenTrips.has(claim.tripId)) continue;
             takenVehicles.add(claim.label);
             takenTrips.add(claim.tripId);
@@ -172,8 +176,25 @@ export class KordisVehicleMapping implements VehicleMapping {
         return balance >= 0;
     }
 
+    /**
+     * Drops an entity's claims on its other reading when the reading the feed is on names a trip outside the
+     * match window: that vehicle is not in service, and moving it onto the other numbering's trip would show it on
+     * a trip it is not driving. A running other reading stays, as it always outranks a far one.
+     */
+    private withoutFallbacks(claims: TripClaim[], entities: GtfsRt.IFeedEntity[], { tripAliases }: MappingSchedule, preferNative: boolean): TripClaim[] {
+        const hasPreferred = new Set<number>();
+        for (const claim of claims) if (claim.isNative === preferNative) hasPreferred.add(claim.index);
+        return claims.filter((claim) => {
+            if (claim.isNative === preferNative || claim.gapMins === 0 || hasPreferred.has(claim.index)) return true;
+            const rawTripId = entities[claim.index].vehicle?.trip?.tripId;
+            const alias = rawTripId ? tripAliases.get(rawTripId) : undefined;
+            const namesPreferred = preferNative ? !!rawTripId : !!alias && alias !== rawTripId;
+            return !namesPreferred;
+        });
+    }
+
     /** Minutes between now and a trip's window today: 0 while running, Infinity if it does not run today. */
-    private windowGap(window: TripWindow | undefined, todayBit: number, currentMins: number): number {
+    private windowGap(window: ScheduleTrip | undefined, todayBit: number, currentMins: number): number {
         if (!window) return Infinity;
         if (todayBit && !operatesOnDay(window, todayBit)) return Infinity;
         if (currentMins < window[0]) return window[0] - currentMins;

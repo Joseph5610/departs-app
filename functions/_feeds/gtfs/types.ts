@@ -1,7 +1,7 @@
 import type { GtfsContinuation } from './continuations';
 
-/** `[to_trip_id, to_route_id, headsign, departure_time, min_transfer_s, max_wait_s]`; all calendar variants. */
-export type GtfsTripConnection = [string, string, string, string, number, number];
+/** `[to_trip_id, to_route_id, headsign, departure_time, min_transfer_s, max_wait_s, dayFlags?]`; all calendar variants, `dayFlags` over the bucket's `$days`. */
+export type GtfsTripConnection = [string, string, string, string, number, number] | [string, string, string, string, number, number, number];
 
 export interface Station {
     id: string;

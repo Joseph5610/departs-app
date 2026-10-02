@@ -6,7 +6,7 @@ import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
 import type { SingleLiveVehicle, VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
-import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { getSchedule } from '../../../_feeds/gtfs/schedule';
 import { getTripStops, isLocated } from '../../../_feeds/gtfs/trip-stops';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../_core/utils/geo';
 import { MovementBearings } from '../../../_core/utils/movement-bearing';
@@ -65,15 +65,15 @@ export class DukVehicleSource implements VehicleSource {
 
     private async build(snapshot: Snapshot<DukVehicleReport[]>): Promise<AppVehicleCollection> {
         const reports = snapshot.data;
-        const [routes, windows, stationNames] = await Promise.all([
+        const ctx = getLocalClock(this.city.timezone);
+        const [routes, schedule, stationNames] = await Promise.all([
             getGtfsRoutes(this.city),
-            getTripWindows(this.city),
+            getSchedule(this.city, ctx),
             getDukStationNames(this.city),
         ]);
 
-        const ctx = getLocalClock(this.city.timezone);
-        const tracks = await TripTrackLookup.create(this.city, windows, ctx.mins);
-        const matcher = windows ? new DukTripMatcher(windows) : null;
+        const tracks = await TripTrackLookup.create(this.city, schedule, ctx.mins);
+        const matcher = schedule ? new DukTripMatcher(schedule) : null;
         const nowMs = Date.now();
 
         const mapped = await Promise.all(reports.map(async (report) => {

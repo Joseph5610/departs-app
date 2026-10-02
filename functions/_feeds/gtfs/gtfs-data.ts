@@ -75,52 +75,11 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 }
 
 /**
- * Contains static mappings from GTFS trip IDs to route IDs, as well as alias resolution.
- */
-export interface GtfsTripRoutesData {
-    tripRoutes: Record<string, string>;
-    tripAliases: TripRuns;
-}
-
-/** `trip_routes.json` parsed, per city and per text read: a vehicle build reads thousands of its trips. */
-const parsedTripRoutes = new Map<string, { text: string; record: Record<string, string> }>();
-
-/** A city's trip id -> route id (`trip_routes.json`), for resolving every vehicle's line. */
-export async function getGtfsTripRoutes(city: CityConfig): Promise<Record<string, string> | null> {
-    const text = await getStaticFile(city, 'trip_routes.json', (raw) => raw);
-    if (text === null) return null;
-    const held = parsedTripRoutes.get(city.slug);
-    if (held?.text === text) return held.record;
-    const record = JSON.parse(text) as Record<string, string>;
-    parsedTripRoutes.set(city.slug, { text, record });
-    return record;
-}
-
-/**
- * One trip's route id, for a request that names a single trip: read straight from the file's text, which
- * on a fresh isolate is an order of magnitude cheaper than parsing the whole table. Any trip the text
- * read does not find is looked up in the parsed table, so the answer never differs from it.
- */
-export async function getGtfsTripRoute(city: CityConfig, tripId: string): Promise<string | undefined> {
-    const text = await getStaticFile(city, 'trip_routes.json', (raw) => raw);
-    if (text === null) return undefined;
-    const key = `${JSON.stringify(tripId)}:"`;
-    const at = text.indexOf(key);
-    if (at > 0 && (text[at - 1] === '{' || text[at - 1] === ',')) {
-        const start = at + key.length;
-        const end = text.indexOf('"', start);
-        const value = text.slice(start, end);
-        if (end > 0 && !value.includes('\\')) return value;
-    }
-    return (await getGtfsTripRoutes(city))?.[tripId];
-}
-
-/**
- * Trip ids of older timetable exports -> the current trip (`trip_alias_runs.json`), for networks whose
+ * Trip ids of older timetable exports -> the current trip (`feed_index/trip_alias_runs.json`), for networks whose
  * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
  */
 export async function getGtfsTripAliases(city: CityConfig): Promise<TripRuns> {
-    return (city.feed?.hasTripAliases ? await getStaticFile(city, 'trip_alias_runs.json', (text) => new TripRuns(JSON.parse(text) as TripRunsFile)) : null) ?? EMPTY_TRIP_RUNS;
+    return (city.feed?.hasTripAliases ? await getStaticFile(city, 'feed_index/trip_alias_runs.json', (text) => new TripRuns(JSON.parse(text) as TripRunsFile)) : null) ?? EMPTY_TRIP_RUNS;
 }
 
 /**

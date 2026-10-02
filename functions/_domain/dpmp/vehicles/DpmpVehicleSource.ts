@@ -4,8 +4,8 @@ import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
 import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
-import { getGtfsRoutes, getGtfsTripRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
-import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { getGtfsRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
+import { getSchedule } from '../../../_feeds/gtfs/schedule';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
@@ -83,15 +83,13 @@ export class DpmpVehicleSource implements VehicleSource {
 
     private async build(snapshot: Snapshot<DpmpVehicleRow[]>): Promise<AppVehicleCollection> {
         const rows = snapshot.data;
-        const [routes, tripRoutes, windows] = await Promise.all([
-            getGtfsRoutes(this.city),
-            getGtfsTripRoutes(this.city),
-            getTripWindows(this.city),
-        ]);
-
         const nowMs = Date.now();
         const ctx = getLocalClock(this.city.timezone, nowMs);
-        const matcher = windows ? new DpmpTripMatcher(this.city, windows, routes, tripRoutes ?? {}) : null;
+        const [routes, schedule] = await Promise.all([
+            getGtfsRoutes(this.city),
+            getSchedule(this.city, ctx),
+        ]);
+        const matcher = schedule ? new DpmpTripMatcher(this.city, schedule, routes) : null;
 
         const latestByVehicle = new Map<string, SeenRow>();
         for (const row of rows) {

@@ -1,20 +1,20 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
-import type { VehicleMapping } from './vehicle-index';
-import type { GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
+import type { MappingSchedule, VehicleMapping } from './vehicle-index';
+import { isWithinMatchWindow } from '../../../_feeds/gtfs/schedule';
 
 /** A plain GTFS-RT feed: the trip id it reports is the trip, and every entity counts. */
 export class GtfsVehicleMapping implements VehicleMapping {
     /** A plain feed names the trip outright, so no vehicle can be claimed by two of them. */
     readonly resolvesPerEntity = true;
-    readonly usesTripWindows = false;
 
     isRelevant(_entity: GtfsRt.IFeedEntity): boolean {
         return true;
     }
 
-    tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[] {
+    tripCandidates(entity: GtfsRt.IFeedEntity, { schedule, clock }: MappingSchedule): string[] {
         const tripId = entity.vehicle?.trip?.tripId;
-        return tripId && tripId in tripRoutes.tripRoutes ? [tripId] : [];
+        const trip = tripId ? schedule.trips[tripId] : undefined;
+        return tripId && trip && isWithinMatchWindow(trip, clock.mins) ? [tripId] : [];
     }
 
     label(_entity: GtfsRt.IFeedEntity): string | undefined {
@@ -30,10 +30,10 @@ export class GtfsVehicleMapping implements VehicleMapping {
         return false;
     }
 
-    assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData) {
+    assignAll(entities: GtfsRt.IFeedEntity[], schedule: MappingSchedule) {
         const assigned: Array<{ entity: GtfsRt.IFeedEntity; tripId: string }> = [];
         for (const entity of entities) {
-            const tripId = this.tripCandidates(entity, tripRoutes)[0];
+            const tripId = this.tripCandidates(entity, schedule)[0];
             if (tripId) assigned.push({ entity, tripId });
         }
         return assigned;

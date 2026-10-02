@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.5] - 2026-10-02
+
+### Changed
+
+- Brno, Ústecký kraj and Prešov match vehicles to trips from the current hour's schedule, so a fresh isolate parses a fraction of the timetable.
+- Vehicle details read a trip's route and service days from its own timetable file instead of whole-network tables.
+
+### Fixed
+
+- A vehicle reporting a trip more than four hours before its start or after its end is no longer shown on that trip.
+
 ## [0.79.4] - 2026-10-01
 
 ### Fixed

@@ -17,12 +17,6 @@ export const DPMP_CONFIG = {
     /** CSV `DIRECTION` to GTFS `direction_id`. D/Z/R (depot and positioning runs) have no GTFS trip. */
     DIRECTION_IDS: { T: 0, P: 1 } as Record<string, number>,
 
-    /** How far ahead of its planned start a vehicle may already report on a trip. */
-    MAX_EARLY_START_MINS: 60,
-    /** How long after its planned start a trip may still be running. */
-    MAX_TRIP_AGE_MINS: 720,
-
-
     /** Route type assumed for vehicles whose line is missing from routes.json. */
     FALLBACK_ROUTE_TYPE: '3',
 

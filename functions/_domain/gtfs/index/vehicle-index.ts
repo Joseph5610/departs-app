@@ -3,14 +3,18 @@ import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
-import type { GtfsRoutesData, GtfsTripRoutesData } from '../../../_feeds/gtfs/gtfs-data';
+import type { GtfsRoutesData } from '../../../_feeds/gtfs/gtfs-data';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import type { TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { routeIdOf, type Schedule } from '../../../_feeds/gtfs/schedule';
+import type { TripRuns } from '../../../_feeds/gtfs/trip-runs';
 import type { LocalClock } from '../../../_core/utils/time';
 
 /** The schedule a mapping reads, loaded once per request so the per-vehicle path stays synchronous. */
 export interface MappingSchedule {
-    windows: TripWindows | null;
+    /** The trips a vehicle may be matched to now. */
+    schedule: Schedule;
+    /** Trip ids of older timetable exports -> the current trip, for feeds that still use them. */
+    tripAliases: TripRuns;
     clock: LocalClock;
 }
 
@@ -21,15 +25,13 @@ export interface MappingSchedule {
 export interface VehicleMapping {
     isRelevant(entity: GtfsRt.IFeedEntity): boolean;
     /** The trips an entity's id may stand for, best first; empty when none is known. */
-    tripCandidates(entity: GtfsRt.IFeedEntity, tripRoutes: GtfsTripRoutesData): string[];
+    tripCandidates(entity: GtfsRt.IFeedEntity, schedule: MappingSchedule): string[];
     /** The id the network publishes this vehicle under; undefined keeps the feed's own. */
     label(entity: GtfsRt.IFeedEntity): string | undefined;
     /** The entity's last stop in the timetable's id form; undefined keeps the feed's own. */
     stopId?(entity: GtfsRt.IFeedEntity): string | undefined;
     /** Whether an entity refers to the given vehicle; networks differ in which descriptor field carries it. */
     matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean;
-    /** Whether `MappingSchedule.windows` must be loaded for this network. */
-    readonly usesTripWindows: boolean;
     isBeforeTrack(tripId: string, schedule: MappingSchedule): boolean;
     /**
      * Whether an entity's own trip id settles which trip it serves.
@@ -42,7 +44,7 @@ export interface VehicleMapping {
      * One trip per vehicle across the whole feed, for the map. Networks that repeat a vehicle under
      * several trip ids resolve the conflict here; the default takes each entity's first candidate.
      */
-    assignAll(entities: GtfsRt.IFeedEntity[], tripRoutes: GtfsTripRoutesData, schedule: MappingSchedule): Array<{ entity: GtfsRt.IFeedEntity; tripId: string }>;
+    assignAll(entities: GtfsRt.IFeedEntity[], schedule: MappingSchedule): Array<{ entity: GtfsRt.IFeedEntity; tripId: string }>;
 }
 
 const collections = new WeakMap<object, AppVehicleCollection>();
@@ -61,7 +63,6 @@ export class VehicleIndex {
     constructor(
         private readonly snapshot: Snapshot<GtfsRtFeed>,
         private readonly routes: GtfsRoutesData,
-        private readonly tripRoutes: GtfsTripRoutesData,
         private readonly mapping: VehicleMapping,
         private readonly schedule: MappingSchedule
     ) {}
@@ -96,7 +97,7 @@ export class VehicleIndex {
 
     private buildAll(): AppVehicleCollection {
         const relevant = this.entities.filter(entity => entity.vehicle && this.mapping.isRelevant(entity));
-        const assigned = this.mapping.assignAll(relevant, this.tripRoutes, this.schedule);
+        const assigned = this.mapping.assignAll(relevant, this.schedule);
 
         const features: AppVehicleFeature[] = [];
         const plates: Record<string, string> = {};
@@ -136,7 +137,7 @@ export class VehicleIndex {
                 const label = this.mapping.label(entity) ?? entity.id ?? '';
                 if (coveredVehicles.has(label)) continue;
 
-                const tripId = this.mapping.tripCandidates(entity, this.tripRoutes).find(id => tripIds.has(id) && !coveredTrips.has(id));
+                const tripId = this.mapping.tripCandidates(entity, this.schedule).find(id => tripIds.has(id) && !coveredTrips.has(id));
                 if (!tripId) continue;
                 const mapped = this.map(entity, tripId);
                 if (!mapped) continue;
@@ -161,7 +162,7 @@ export class VehicleIndex {
 
         for (const entity of this.entities) {
             if (!entity.vehicle || !this.mapping.isRelevant(entity)) continue;
-            const onTrip = !!gtfsTripId && this.mapping.tripCandidates(entity, this.tripRoutes).includes(gtfsTripId);
+            const onTrip = !!gtfsTripId && this.mapping.tripCandidates(entity, this.schedule).includes(gtfsTripId);
             const isVehicle = !vehicleId || this.mapping.matchesVehicle(entity, vehicleId);
             if (isVehicle) {
                 if (onTrip) { vehicleOnly = entity; break; }
@@ -174,7 +175,7 @@ export class VehicleIndex {
         const entity = vehicleOnly ?? tripOnly;
         if (!entity?.vehicle) return null;
 
-        const candidates = this.mapping.tripCandidates(entity, this.tripRoutes);
+        const candidates = this.mapping.tripCandidates(entity, this.schedule);
         // The client named the trip it opened, so an id recycled across exports resolves to that one.
         const tripId = gtfsTripId && candidates.includes(gtfsTripId) ? gtfsTripId : candidates[0];
         if (!tripId) return null;
@@ -192,7 +193,8 @@ export class VehicleIndex {
         const lastUpdate = vp.timestamp ? Number(vp.timestamp) * 1000 : nowMs;
         if (nowMs - lastUpdate > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) return null;
 
-        const route = this.routes.routes[this.tripRoutes.tripRoutes[tripId]];
+        const routeId = routeIdOf(this.schedule.schedule, tripId);
+        const route = routeId ? this.routes.routes[routeId] : undefined;
         if (!route) return null;
 
         const label = vp.vehicle ? this.mapping.label(entity) : undefined;

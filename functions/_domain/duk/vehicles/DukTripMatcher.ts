@@ -1,5 +1,4 @@
-import { dayBit, operatesOnDay, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
-import { DUK_CONFIG } from '../../../_feeds/duk/config';
+import { dayBit, isWithinMatchWindow, operatesOnDay, type Schedule } from '../../../_feeds/gtfs/schedule';
 import { DAY_MINS, type LocalClock } from '../../../_core/utils/time';
 
 const ANY_DAY = -1;
@@ -10,8 +9,8 @@ export interface TripMatch {
     offsetMins: number;
 }
 
-/** line -> ids of all its static trips, built once per loaded windows file and collected with it. */
-const indexes = new WeakMap<TripWindows, Map<string, string[]>>();
+/** line -> ids of its trips in the hour's schedule, built once per loaded schedule and collected with it. */
+const indexes = new WeakMap<Schedule, Map<string, string[]>>();
 
 const SEPARATOR = '-'.charCodeAt(0);
 
@@ -27,14 +26,14 @@ const hasNumber = (tripId: string, numberAndLine: string) =>
  * the candidate operating on the day whose window contains now wins.
  */
 export class DukTripMatcher {
-    constructor(private readonly windows: TripWindows) {}
+    constructor(private readonly schedule: Schedule) {}
 
     /** Indexed by line alone: a line has few enough trips to scan for a number, and one map is half the build. */
     private tripsOf(lineNumber: string): string[] | undefined {
-        let index = indexes.get(this.windows);
+        let index = indexes.get(this.schedule);
         if (!index) {
             index = new Map();
-            for (const tripId in this.windows.trips) {
+            for (const tripId in this.schedule.trips) {
                 const lineStart = tripId.indexOf('-') + 1;
                 const lineEnd = tripId.indexOf('-', lineStart);
                 const end = lineEnd === -1 ? tripId.length : lineEnd;
@@ -44,7 +43,7 @@ export class DukTripMatcher {
                 if (trips) trips.push(tripId);
                 else index.set(line, [tripId]);
             }
-            indexes.set(this.windows, index);
+            indexes.set(this.schedule, index);
         }
         return index.get(lineNumber);
     }
@@ -58,8 +57,8 @@ export class DukTripMatcher {
         // The last option trusts the feed over the timetable calendar: operators do run trips on days
         // their JDF codes exclude, and line, number and time together still identify the trip.
         const options = [
-            { bit: dayBit(this.windows, ctx.date), offsetMins: 0 },
-            { bit: dayBit(this.windows, ctx.previousDate), offsetMins: -DAY_MINS },
+            { bit: dayBit(this.schedule, ctx.date), offsetMins: 0 },
+            { bit: dayBit(this.schedule, ctx.previousDate), offsetMins: -DAY_MINS },
             { bit: ANY_DAY, offsetMins: 0 },
             { bit: ANY_DAY, offsetMins: -DAY_MINS },
         ];
@@ -67,11 +66,9 @@ export class DukTripMatcher {
         for (const option of options) {
             if (!option.bit) continue;
             for (const tripId of candidates) {
-                const window = this.windows.trips[tripId];
+                const window = this.schedule.trips[tripId];
                 if (option.bit !== ANY_DAY && !operatesOnDay(window, option.bit)) continue;
-                const start = window[0] + option.offsetMins;
-                const end = window[1] + option.offsetMins;
-                if (ctx.mins >= start - DUK_CONFIG.MAX_EARLY_START_MINS && ctx.mins <= end + DUK_CONFIG.MAX_LATE_END_MINS) {
+                if (isWithinMatchWindow(window, ctx.mins, option.offsetMins)) {
                     return { tripId, offsetMins: option.offsetMins };
                 }
             }
@@ -84,11 +81,11 @@ export class DukTripMatcher {
     runningNow(lineNumber: string, ctx: LocalClock, marginMins: number): TripMatch[] {
         const out: TripMatch[] = [];
         const days = [
-            { bit: dayBit(this.windows, ctx.date), offsetMins: 0 },
-            { bit: dayBit(this.windows, ctx.previousDate), offsetMins: -DAY_MINS },
+            { bit: dayBit(this.schedule, ctx.date), offsetMins: 0 },
+            { bit: dayBit(this.schedule, ctx.previousDate), offsetMins: -DAY_MINS },
         ];
         for (const tripId of this.tripsOf(lineNumber) ?? []) {
-            const window = this.windows.trips[tripId];
+            const window = this.schedule.trips[tripId];
             for (const day of days) {
                 if (!day.bit || !operatesOnDay(window, day.bit)) continue;
                 if (ctx.mins >= window[0] + day.offsetMins - marginMins && ctx.mins <= window[1] + day.offsetMins + marginMins) {

@@ -1,6 +1,6 @@
 import type { CityConfig } from '../../../_core/city-config';
 import type { GtfsRoutesData } from '../../../_feeds/gtfs/gtfs-data';
-import { dayBit, operatesOnDay, type TripWindow, type TripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { dayBit, isWithinMatchWindow, operatesOnDay, routeIdOf, type Schedule, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import type { DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
@@ -8,7 +8,7 @@ import { DAY_MINS, toSecs, type LocalClock } from '../../../_core/utils/time';
 
 interface Candidate {
     tripId: string;
-    window: TripWindow;
+    window: ScheduleTrip;
 }
 
 /** `route|start_mins|direction_id` -> trips sharing that planned start. */
@@ -20,8 +20,8 @@ export interface TripMatch {
     startRelMins: number;
 }
 
-/** Built once per loaded windows file and collected with it. */
-const indexes = new WeakMap<TripWindows, MatchIndex>();
+/** Built once per loaded schedule and collected with it. */
+const indexes = new WeakMap<Schedule, MatchIndex>();
 
 const matchKey = (route: string, startMins: number, directionId: number) => `${route}|${startMins}|${directionId}`;
 
@@ -38,20 +38,19 @@ const normalizeStopName = (name: string) =>
 export class DpmpTripMatcher {
     constructor(
         private readonly city: CityConfig,
-        private readonly windows: TripWindows,
-        private readonly routes: GtfsRoutesData,
-        private readonly tripRoutes: Record<string, string>
+        private readonly schedule: Schedule,
+        private readonly routes: GtfsRoutesData
     ) {}
 
     private getIndex(): MatchIndex {
-        const existing = indexes.get(this.windows);
+        const existing = indexes.get(this.schedule);
         if (existing) return existing;
 
         const index: MatchIndex = new Map();
-        for (const tripId in this.windows.trips) {
-            const window = this.windows.trips[tripId];
-            const directionId = window[3];
-            const routeId = this.tripRoutes[tripId];
+        for (const tripId in this.schedule.trips) {
+            const window = this.schedule.trips[tripId];
+            const directionId = window[4];
+            const routeId = routeIdOf(this.schedule, tripId);
             const route = routeId ? this.routes.routes[routeId] : undefined;
             if (directionId === undefined || !route) continue;
 
@@ -61,7 +60,7 @@ export class DpmpTripMatcher {
             else index.set(key, [{ tripId, window }]);
         }
 
-        indexes.set(this.windows, index);
+        indexes.set(this.schedule, index);
         return index;
     }
 
@@ -71,8 +70,8 @@ export class DpmpTripMatcher {
 
         const start = toSecs(row.plannedStart) / 60;
         const index = this.getIndex();
-        const todayBit = dayBit(this.windows, ctx.date);
-        const yesterdayBit = dayBit(this.windows, ctx.previousDate);
+        const todayBit = dayBit(this.schedule, ctx.date);
+        const yesterdayBit = dayBit(this.schedule, ctx.previousDate);
 
         // A clock time can belong to today's service, to yesterday's service past 24:00, or to a
         // trip yesterday's service started before midnight that is still running.
@@ -84,12 +83,10 @@ export class DpmpTripMatcher {
 
         for (const option of options) {
             if (!option.bit) continue;
-            const ageMins = ctx.mins - option.relMins;
-            if (ageMins < -DPMP_CONFIG.MAX_EARLY_START_MINS || ageMins > DPMP_CONFIG.MAX_TRIP_AGE_MINS) continue;
-
+            const offsetMins = option.relMins - option.startMins;
             const candidates: Candidate[] = [];
             for (const c of index.get(matchKey(row.routeNumber, option.startMins, directionId)) ?? []) {
-                if (operatesOnDay(c.window, option.bit)) candidates.push(c);
+                if (operatesOnDay(c.window, option.bit) && isWithinMatchWindow(c.window, ctx.mins, offsetMins)) candidates.push(c);
             }
             if (candidates.length === 0) continue;
 

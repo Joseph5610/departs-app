@@ -7,6 +7,7 @@ import { LruCache } from '../../_core/feed/LruCache';
 import { isFields, type Fields } from '../../_core/utils/fields';
 import type { LocalClock } from '../../_core/utils/time';
 import { DUK_CONFIG } from './config';
+import { GTFS_CONFIG } from '../gtfs/config';
 
 const { RAIL } = DUK_CONFIG;
 
@@ -119,7 +120,7 @@ function currentRun(rows: Row[], today: string, nowMs: number): Row[] {
     const todays = byDate.get(today);
     if (todays?.some(row => row.shoulddepartat && clockMs(row.shoulddepartat) <= nowMs)) return todays;
 
-    const lateLimitMs = nowMs - DUK_CONFIG.MAX_LATE_END_MINS * 60_000;
+    const lateLimitMs = nowMs - GTFS_CONFIG.SCHEDULE_MATCH_WINDOW.AFTER_MINS * 60_000;
     let earlier: Row[] | undefined;
     for (const [date, run] of byDate) {
         if (date === today) continue;

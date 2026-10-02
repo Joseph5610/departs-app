@@ -1,14 +1,14 @@
 import type { AppVehicleCollection } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { FEED_AGE_S, OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
-import { getGtfsRoutes, getGtfsTripAliases, getGtfsTripRoutes } from '../../../_feeds/gtfs/gtfs-data';
+import { getGtfsRoutes, getGtfsTripAliases } from '../../../_feeds/gtfs/gtfs-data';
 import { getGtfsRtSnapshot, getGtfsRtSnapshotIfChanged } from '../../../_feeds/gtfs/gtfs-rt-feed';
 import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
 import type { Snapshot } from '../../../_core/feed/source';
 import { currentFleet, readFleetPlates, restampCachedFleet, writeCachedFleet, type CachedFleet } from '../../../_core/feed/vehicle-cache';
 import { VehicleIndex, type VehicleMapping } from '../index/vehicle-index';
 import { GtfsVehicleMapping } from '../index/vehicle-mapping';
-import { getTripWindows } from '../../../_feeds/gtfs/trip-windows';
+import { getSchedule } from '../../../_feeds/gtfs/schedule';
 import { getLocalClock } from '../../../_core/utils/time';
 import type { SingleLiveVehicle, VehicleSource } from './vehicle-source';
 
@@ -35,16 +35,16 @@ export class GtfsRtVehicleSource implements VehicleSource {
      */
     private async index(feed?: Snapshot<GtfsRtFeed>): Promise<VehicleIndex | null> {
         try {
-            const [snapshot, routes, tripRoutes, tripAliases, windows] = await Promise.all([
+            const clock = getLocalClock(this.city.timezone);
+            const [snapshot, routes, schedule, tripAliases] = await Promise.all([
                 feed ?? getGtfsRtSnapshot(this.city),
                 getGtfsRoutes(this.city),
-                getGtfsTripRoutes(this.city),
+                getSchedule(this.city, clock),
                 getGtfsTripAliases(this.city),
-                this.mapping.usesTripWindows ? getTripWindows(this.city) : null,
             ]);
-            // A failed trip-routes fetch returns empty; mapping against it would blank the map.
-            if (!tripRoutes) return null;
-            return new VehicleIndex(snapshot, routes, { tripRoutes, tripAliases }, this.mapping, { windows, clock: getLocalClock(this.city.timezone) });
+            // Mapping against no schedule would blank the map.
+            if (!schedule) return null;
+            return new VehicleIndex(snapshot, routes, this.mapping, { schedule, tripAliases, clock });
         } catch (e) {
             console.error(`GTFS-RT index unavailable for ${this.city.slug}:`, e instanceof Error ? e.message : e);
             return null;

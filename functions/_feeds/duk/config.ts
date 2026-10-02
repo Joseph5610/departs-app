@@ -19,10 +19,6 @@ export const DUK_CONFIG = {
     /** Width of a CIS JŘ line number; the feed reports it as an unpadded integer. */
     LINE_NUMBER_LENGTH: 6,
 
-    /** How far ahead of its planned start a vehicle may already report on a trip. */
-    MAX_EARLY_START_MINS: 90,
-    /** How long after its planned end a delayed trip may still be running. */
-    MAX_LATE_END_MINS: 240,
     /** A vehicle this close to where its reported trip should be now is on that trip. */
     TRIP_FIT_M: 1_500,
     /** Otherwise it is on the line's trip running now towards its final stop that is at most this far off. */
@@ -51,7 +47,7 @@ export const DUK_CONFIG = {
     MAX_SKIPPED_STOPS: 2,
 
     /** Node id -> stop name file of the static data; mirrors STATION_NAMES_FILE in departs-data. */
-    STATION_NAMES_FILE: 'station_names.json',
+    STATION_NAMES_FILE: 'feed_index/station_names.json',
     /** How long the Portabo station names used for headsigns are kept. */
     STATION_NAMES_TTL_MS: 3_600_000,
 
@@ -93,7 +89,7 @@ export const DUK_CONFIG = {
         TRIP_PREFIX: '-CZTRAINT-',
         STOP_PREFIX: '-SR70ST-',
         /** Railway stops file of the static data; mirrors RAIL_STOPS_FILE in departs-data. */
-        STOPS_FILE: 'rail_stops.json',
+        STOPS_FILE: 'feed_index/rail_stops.json',
         /** `stopped` value of a row the train calls at; the others are points it only passes. */
         STOPPED: 't',
         /** Where `HH:MM:SS` sits in a `YYYY-MM-DD HH:MM:SS` time. */

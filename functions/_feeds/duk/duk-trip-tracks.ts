@@ -4,7 +4,7 @@ import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S } from '../../_core/config';
 import { LruCache } from '../../_core/feed/LruCache';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
-import type { TripWindows } from '../gtfs/trip-windows';
+import type { Schedule } from '../gtfs/schedule';
 import { tripBucketId } from '../gtfs/config';
 import { isFields, type Fields } from '../../_core/utils/fields';
 import { DUK_CONFIG } from './config';
@@ -155,17 +155,17 @@ export class TripTrackLookup {
 
     private constructor(
         private readonly city: CityConfig,
-        private readonly windows: TripWindows | null,
+        private readonly schedule: Schedule | null,
         private readonly currentHour: number,
         private readonly running: HourTracks
     ) {
         this.hours.set(currentHour, Promise.resolve(running));
     }
 
-    /** Without trip windows nothing can be matched, so no hour is loaded either. */
-    static async create(city: CityConfig, windows: TripWindows | null, minutesOfDay: number): Promise<TripTrackLookup> {
+    /** Without a schedule nothing can be matched, so no hour is loaded either. */
+    static async create(city: CityConfig, schedule: Schedule | null, minutesOfDay: number): Promise<TripTrackLookup> {
         const hour = Math.floor(minutesOfDay / 60);
-        return new TripTrackLookup(city, windows, hour, windows ? await loadHour(city, hour) : NO_TRACKS);
+        return new TripTrackLookup(city, schedule, hour, schedule ? await loadHour(city, hour) : NO_TRACKS);
     }
 
     /** False means no track data at all, so callers may read trip buckets instead. */
@@ -194,7 +194,7 @@ export class TripTrackLookup {
         if (now) return now;
         if (!this.isAvailable) return null;
 
-        const window = this.windows?.trips[tripId];
+        const window = this.schedule?.trips[tripId];
         if (!window) return null;
 
         const hour = Math.floor(window[0] / 60) % DUK_CONFIG.HOURS_PER_DAY;
