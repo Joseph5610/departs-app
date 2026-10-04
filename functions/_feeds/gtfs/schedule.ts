@@ -69,6 +69,15 @@ export function isWithinMatchWindow(trip: readonly number[], mins: number, offse
 }
 
 /**
+ * Whether a vehicle is waiting to start its trip: it has not passed the first stop (where the feed says
+ * which stop it reached) and the trip departs within `BEFORE_TRACK_WINDOW_MINS`, though not in the last minute.
+ */
+export function isWaitingToStart(minsToStart: number, reachedStopSequence?: number | null): boolean {
+    if (reachedStopSequence != null && reachedStopSequence > 1) return false;
+    return minsToStart > 1 && minsToStart <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
+}
+
+/**
  * Resolves the bit representing `dayStr` within a schedule's or a trip bucket's `days`, or 0 when they
  * do not cover that day - in which case no trip matches.
  */

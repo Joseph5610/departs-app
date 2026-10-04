@@ -1,6 +1,6 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/vehicle-index';
-import { dayBit, isWithinMatchWindow, operatesOnDay, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
+import { dayBit, isWaitingToStart, isWithinMatchWindow, operatesOnDay, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MINS, DAY_SECS, wrapDaySeconds } from '../../../_core/utils/time';
 
@@ -18,9 +18,6 @@ interface TripClaim {
  * feed carries entries for vehicles that are not in service.
  */
 export class KordisVehicleMapping implements VehicleMapping {
-    /** Its vehicles appear under several trip ids, so only the network-wide assignment settles them. */
-    readonly resolvesPerEntity = false;
-
     /** License plates starting with `dpmb` mark feed entries that are not real vehicles. */
     private isInvalidDpmbVehicle(entity: GtfsRt.IFeedEntity): boolean {
         const lp = entity.vehicle?.vehicle?.licensePlate;
@@ -62,22 +59,12 @@ export class KordisVehicleMapping implements VehicleMapping {
         return vp?.vehicle?.label || vp?.vehicle?.licensePlate || vp?.vehicle?.id || entity.id || undefined;
     }
 
-    matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean {
-        const descriptor = entity.vehicle?.vehicle;
-        return descriptor?.id === vehicleId
-            || descriptor?.label === vehicleId
-            || descriptor?.licensePlate === vehicleId
-            || entity.id === vehicleId;
-    }
-
     /** At its origin, waiting for a departure that has not come yet. */
     isBeforeTrack(tripId: string, { schedule, clock }: MappingSchedule): boolean {
         const window = schedule.trips[tripId];
         if (!window) return false;
 
-        const currentMins = clock.mins;
-        const diffMins = wrapDaySeconds(((window[0] % DAY_MINS) - (currentMins % DAY_MINS)) * 60) / 60;
-        return diffMins > 1 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
+        return isWaitingToStart(wrapDaySeconds(((window[0] % DAY_MINS) - (clock.mins % DAY_MINS)) * 60) / 60);
     }
 
     /**

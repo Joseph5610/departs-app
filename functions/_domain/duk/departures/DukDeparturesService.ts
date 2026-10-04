@@ -1,15 +1,15 @@
-import type { AppDeparture, AppDepartureResponse, AppVehicleProperties, CityRequestContext } from "../../../_core/types";
+import type { AppDeparture, AppDepartureResponse, AppVehicleCollection, AppVehicleProperties, CityRequestContext } from "../../../_core/types";
 import type { CityConfig } from '../../../_core/city-config';
 import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { normalizeRouteType } from '../../../_core/utils/routeTypes';
 import { getStopIndex } from '../../gtfs/index/stop-index';
-import { boardVehicles, collectDepartureTuples } from '../../gtfs/departures/DeparturesService';
+import { boardVehicles, collectDepartureTuples, collectTripIds } from '../../gtfs/departures/DeparturesService';
 import type { DeparturesUseCase } from '../../use-cases';
 import { DeparturesMapper } from '../../gtfs/departures/DeparturesMapper';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
-import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
+import type { VehiclesService } from '../../vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/duk-station-board';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
@@ -56,22 +56,25 @@ export class DukDeparturesService implements DeparturesUseCase {
         const requests = stopIds.map(parseStopId);
         const nodes = [...new Set(requests.map(r => r.node))];
 
-        const parentToChildMap = await stopIndex.parentToChildMap().catch(() => ({} as Record<string, string[]>));
-        const platformsOf = (node: string) => parentToChildMap[`${DUK_CONFIG.STATION_PREFIX}${node}`] ?? [];
-        const [boards, tuples, { routes }, vehiclesByTrip] = await Promise.all([
+        const platformsByStation = await stopIndex.childrenOf(nodes.map(n => `${DUK_CONFIG.STATION_PREFIX}${n}`)).catch(() => new Map<string, string[]>());
+        const platformsOf = (node: string) => platformsByStation.get(`${DUK_CONFIG.STATION_PREFIX}${node}`) ?? [];
+        // Timetable rows are filed under the bare node, which has no station of its own.
+        const tuplesRead = collectDepartureTuples(stopIndex, nodes, new Map(nodes.map(n => [n, n])), new Map()).catch((e) => {
+            console.warn('[DUK] Timetable unavailable for board linking:', e);
+            return [] as { stopId: string; tuple: GtfsDepartureTuple }[];
+        });
+        const [boards, tuples, { routes }, vehicles] = await Promise.all([
             Promise.all(requests.map(r => this.getBoard(r, platformsOf(r.node), ctx))),
-            collectDepartureTuples(stopIndex, nodes, new Map(nodes.map(n => [n, n]))).catch((e) => {
-                console.warn('[DUK] Timetable unavailable for board linking:', e);
-                return [] as { stopId: string; tuple: GtfsDepartureTuple }[];
-            }),
+            tuplesRead,
             getGtfsRoutes(this.city),
-            this.getVehiclesByTrip(),
+            tuplesRead.then(rows => boardVehicles(this.vehiclesService, collectTripIds(rows), ctx.waitUntil)),
         ]);
 
         const boardOf = new Map(requests.map((r, i) => [r.id, boards[i]]));
         if (boards.some(board => board === null)) {
-            return this.timetableOnly(requests, tuples, routes);
+            return this.timetableOnly(requests, tuples, routes, vehicles);
         }
+        const vehiclesByTrip = DeparturesMapper.vehiclesByTrip(vehicles);
 
         const links = new Map<string, TimetableLink[]>();
         /** The mode of each line the timetable has at a station, for board entries that link to no trip and carry no traction. */
@@ -155,27 +158,23 @@ export class DukDeparturesService implements DeparturesUseCase {
     }
 
     /** The timetable's departures for the requested stops, for when Portabo has no board. */
-    private async timetableOnly(
+    private timetableOnly(
         requests: StopRequest[],
         tuples: { stopId: string; tuple: GtfsDepartureTuple }[],
-        routes: Record<string, GtfsRoute>
-    ): Promise<AppDepartureResponse> {
+        routes: Record<string, GtfsRoute>,
+        vehicles: AppVehicleCollection | null
+    ): AppDepartureResponse {
+        const tuplesOf = new Map<string, GtfsDepartureTuple[]>();
+        for (const { stopId: node, tuple } of tuples) {
+            const list = tuplesOf.get(node);
+            if (list) list.push(tuple);
+            else tuplesOf.set(node, [tuple]);
+        }
         const deps: { stopId: string; tuple: GtfsDepartureTuple }[] = [];
         for (const request of requests) {
-            for (const { stopId: node, tuple } of tuples) {
-                if (node === request.node) deps.push({ stopId: request.id, tuple });
-            }
+            for (const tuple of tuplesOf.get(request.node) ?? []) deps.push({ stopId: request.id, tuple });
         }
-        return { departures: DeparturesMapper.mapDepartures(deps, routes, await boardVehicles(this.vehiclesService)) };
-    }
-
-    private async getVehiclesByTrip(): Promise<Map<string, AppVehicleProperties>> {
-        const collection = await boardVehicles(this.vehiclesService);
-        const byTrip = new Map<string, AppVehicleProperties>();
-        for (const f of collection?.features ?? []) {
-            if (f.properties.gtfs_trip_id && f.properties.vehicle_id) byTrip.set(f.properties.gtfs_trip_id, f.properties);
-        }
-        return byTrip;
+        return { departures: DeparturesMapper.mapDepartures(deps, routes, vehicles) };
     }
 
     private mapEntry(

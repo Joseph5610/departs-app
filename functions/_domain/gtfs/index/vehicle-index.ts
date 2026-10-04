@@ -1,5 +1,5 @@
 import type * as GtfsRt from '../../../_core/gtfsRtTypes';
-import type { GtfsRtFeed } from '../../../_feeds/gtfs/gtfs-rt-decode';
+import type { GtfsRtFeed } from '../../../_core/gtfsRtDecode';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
 import { VehiclesMapper } from '../vehicles/VehiclesMapper';
@@ -30,16 +30,7 @@ export interface VehicleMapping {
     label(entity: GtfsRt.IFeedEntity): string | undefined;
     /** The entity's last stop in the timetable's id form; undefined keeps the feed's own. */
     stopId?(entity: GtfsRt.IFeedEntity): string | undefined;
-    /** Whether an entity refers to the given vehicle; networks differ in which descriptor field carries it. */
-    matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean;
     isBeforeTrack(tripId: string, schedule: MappingSchedule): boolean;
-    /**
-     * Whether an entity's own trip id settles which trip it serves.
-     *
-     * False where vehicles compete for trips (KORDIS repeats them under recycled ids), and then a
-     * departure board has to read the same network-wide assignment the map does, or the two disagree.
-     */
-    resolvesPerEntity: boolean;
     /**
      * One trip per vehicle across the whole feed, for the map. Networks that repeat a vehicle under
      * several trip ids resolve the conflict here; the default takes each entity's first candidate.
@@ -52,13 +43,7 @@ const collections = new WeakMap<object, AppVehicleCollection>();
 /** Each build's licence plates by `vehicle_id`, where the plate differs from it: shown only on a detail, never in the fleet answer. */
 const platesByBuild = new WeakMap<AppVehicleCollection, Record<string, string>>();
 
-/**
- * Reads vehicles out of one feed snapshot.
- *
- * Every lookup maps only the entities it answers with: a detail request maps one vehicle, a
- * departure board maps the trips on it, and only the map itself pays for the whole fleet. The full
- * collection is built at most once per snapshot.
- */
+/** Reads the whole fleet out of one feed snapshot, built at most once per snapshot. */
 export class VehicleIndex {
     constructor(
         private readonly snapshot: Snapshot<GtfsRtFeed>,
@@ -81,17 +66,11 @@ export class VehicleIndex {
         return this.snapshot.data.entity;
     }
 
-    /** Every vehicle in the network, for the map. Built once per decoded feed and shared. */
-    async all(): Promise<AppVehicleCollection> {
+    /** Every vehicle in the network with its licence plates, built once per decoded feed and shared. */
+    async allWithPlates(): Promise<{ collection: AppVehicleCollection; plates: Record<string, string> }> {
         // Keyed by the decoded feed, which is reused while upstream bytes are unchanged: an unchanged feed is not rebuilt.
         const built = await deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
         // Stamped with this read, not the build: a reused fleet would otherwise age past the stale threshold.
-        return { ...built, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
-    }
-
-    /** `all()` with its licence plates, for a source that stores the build for details to read. */
-    async allWithPlates(): Promise<{ collection: AppVehicleCollection; plates: Record<string, string> }> {
-        const built = await deriveAsync(this.snapshot.data, collections, async () => this.buildAll());
         return { collection: { ...built, last_updated: new Date(this.snapshot.fetchedAt).toISOString() }, plates: platesByBuild.get(built) ?? {} };
     }
 
@@ -111,77 +90,6 @@ export class VehicleIndex {
         const collection: AppVehicleCollection = { type: 'FeatureCollection', features, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
         platesByBuild.set(collection, plates);
         return collection;
-    }
-
-    /**
-     * The vehicles serving the given trips, for departure boards.
-     *
-     * A board names a handful of trips, so resolving every vehicle in the network to a trip - which
-     * only the map needs - is skipped.
-     */
-    async forTrips(tripIds: Set<string>): Promise<AppVehicleCollection> {
-        if (!this.mapping.resolvesPerEntity) {
-            const all = await this.all();
-            return { ...all, features: all.features.filter(f => tripIds.has(f.properties.gtfs_trip_id)) };
-        }
-
-        const features: AppVehicleFeature[] = [];
-        const coveredTrips = new Set<string>();
-        const coveredVehicles = new Set<string>();
-
-        if (tripIds.size > 0) {
-            for (const entity of this.entities) {
-                if (!entity.vehicle || !this.mapping.isRelevant(entity)) continue;
-                // One vehicle serves one trip, as on the map: a feed that repeats a vehicle under a
-                // recycled id must not attach it to a second departure.
-                const label = this.mapping.label(entity) ?? entity.id ?? '';
-                if (coveredVehicles.has(label)) continue;
-
-                const tripId = this.mapping.tripCandidates(entity, this.schedule).find(id => tripIds.has(id) && !coveredTrips.has(id));
-                if (!tripId) continue;
-                const mapped = this.map(entity, tripId);
-                if (!mapped) continue;
-                coveredTrips.add(tripId);
-                if (label) coveredVehicles.add(label);
-                features.push(mapped);
-            }
-        }
-
-        return { type: 'FeatureCollection', features, last_updated: new Date(this.snapshot.fetchedAt).toISOString() };
-    }
-
-    /**
-     * One vehicle, for a detail request that already names its trip.
-     *
-     * The requested vehicle wins over its trip: a trip lookup can land on a different vehicle, which
-     * would move the selection. A trip-only match still serves a stale or unknown vehicle id.
-     */
-    async find(vehicleId: string, gtfsTripId?: string): Promise<{ feature: AppVehicleFeature; lastStopId?: string; registrationNumber?: string } | null> {
-        let vehicleOnly: GtfsRt.IFeedEntity | undefined;
-        let tripOnly: GtfsRt.IFeedEntity | undefined;
-
-        for (const entity of this.entities) {
-            if (!entity.vehicle || !this.mapping.isRelevant(entity)) continue;
-            const onTrip = !!gtfsTripId && this.mapping.tripCandidates(entity, this.schedule).includes(gtfsTripId);
-            const isVehicle = !vehicleId || this.mapping.matchesVehicle(entity, vehicleId);
-            if (isVehicle) {
-                if (onTrip) { vehicleOnly = entity; break; }
-                if (vehicleId && !vehicleOnly) vehicleOnly = entity;
-            } else if (onTrip && !tripOnly) {
-                tripOnly = entity;
-            }
-        }
-
-        const entity = vehicleOnly ?? tripOnly;
-        if (!entity?.vehicle) return null;
-
-        const candidates = this.mapping.tripCandidates(entity, this.schedule);
-        // The client named the trip it opened, so an id recycled across exports resolves to that one.
-        const tripId = gtfsTripId && candidates.includes(gtfsTripId) ? gtfsTripId : candidates[0];
-        if (!tripId) return null;
-
-        const feature = this.map(entity, tripId);
-        return feature ? { feature, lastStopId: this.stopIdOf(entity), registrationNumber: entity.vehicle.vehicle?.licensePlate || undefined } : null;
     }
 
     /** One entity as a vehicle feature; null when it is stale or its route is unknown. */

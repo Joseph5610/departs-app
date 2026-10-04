@@ -4,9 +4,6 @@ import { isWithinMatchWindow } from '../../../_feeds/gtfs/schedule';
 
 /** A plain GTFS-RT feed: the trip id it reports is the trip, and every entity counts. */
 export class GtfsVehicleMapping implements VehicleMapping {
-    /** A plain feed names the trip outright, so no vehicle can be claimed by two of them. */
-    readonly resolvesPerEntity = true;
-
     isRelevant(_entity: GtfsRt.IFeedEntity): boolean {
         return true;
     }
@@ -19,11 +16,6 @@ export class GtfsVehicleMapping implements VehicleMapping {
 
     label(_entity: GtfsRt.IFeedEntity): string | undefined {
         return undefined;
-    }
-
-    matchesVehicle(entity: GtfsRt.IFeedEntity, vehicleId: string): boolean {
-        const descriptor = entity.vehicle?.vehicle;
-        return descriptor?.id === vehicleId || descriptor?.label === vehicleId || entity.id === vehicleId;
     }
 
     isBeforeTrack(): boolean {

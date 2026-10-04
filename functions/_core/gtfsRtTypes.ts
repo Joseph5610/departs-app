@@ -1,7 +1,7 @@
 /**
  * GTFS-RT types this codebase actually reads or writes, hand-written to match
  * `gtfs-realtime-bindings`'s generated `.d.ts` field-for-field. Every decode in this codebase is our
- * own lean parser (`_core/protobufReader.ts`, `_core/gtfsRtAlerts.ts`, `_feeds/gtfs/gtfs-rt-decode.ts`);
+ * own lean parser (`_core/protobufReader.ts`, `_core/gtfsRtDecode.ts`);
  * this replaces the dependency's types (and its `VehicleStopStatus` enum) so nothing here still
  * depends on it.
  */

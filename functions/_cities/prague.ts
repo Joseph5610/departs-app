@@ -1,6 +1,8 @@
 import type { CityConfig } from '../_core/city-config';
 import type { City } from './types';
-import { VehiclesService } from '../_domain/golemio/vehicles/VehiclesService';
+import { VehiclesService } from '../_domain/vehicles/VehiclesService';
+import { EdgeFleetSource } from '../_domain/vehicles/edge-fleet-source';
+import { GolemioVehicles } from '../_domain/golemio/vehicles/GolemioVehicles';
 import { VehicleDetailService } from '../_domain/golemio/vehicles/VehicleDetailService';
 import { DeparturesService } from '../_domain/golemio/departures/DeparturesService';
 import { AlertsService } from '../_domain/golemio/alerts/AlertsService';
@@ -27,13 +29,14 @@ const config: CityConfig = {
 };
 
 /**
- * Prague (PID): every endpoint is served from Golemio's API rather than prebuilt GTFS files, so it
- * shares no use-cases with the GTFS cities - only their contract.
+ * Prague (PID): every endpoint is served from Golemio's API rather than prebuilt GTFS files. Vehicles go
+ * through the shared fleet cache and `VehiclesService` like every city's; the rest is Golemio's own.
  */
 export const city: City = {
     config,
-    create: () => {
-        const vehicles = new VehiclesService();
+    create: (env) => {
+        const network = new GolemioVehicles(env);
+        const vehicles = new VehiclesService(config, new EdgeFleetSource('golemio_prague', network));
         const alerts = new AlertsService();
         return {
             vehicles,
@@ -42,7 +45,7 @@ export const city: City = {
             alerts,
             infotexts: new InfotextsService(),
             debugFeed: {
-                getRawFeed: (ctx, type) => (type === 'alerts' ? alerts.getRawFeed(ctx.env) : vehicles.getRawVehicles(ctx.env)),
+                getRawFeed: (ctx, type) => (type === 'alerts' ? alerts.getRawFeed(ctx.env) : network.rawPayload()),
             },
         };
     },

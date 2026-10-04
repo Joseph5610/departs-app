@@ -1,7 +1,7 @@
 import type { AppVehicleDetail, CityRequestContext } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { ApiError } from '../../../_core/errors';
-import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
+import type { VehiclesService } from '../../vehicles/VehiclesService';
 import type { VehicleDetailUseCase } from '../../use-cases';
 import { getDukLiveOnlyDetail } from './DukVehicleSource';
 

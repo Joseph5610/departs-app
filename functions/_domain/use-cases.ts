@@ -50,3 +50,8 @@ export interface CityUseCases {
 export const noAlerts: AlertsUseCase = {
     getAlerts: async () => ({ alerts: [] }),
 };
+
+/** For networks that publish no stop notices. */
+export const noInfotexts: InfotextsUseCase = {
+    getInfotexts: async () => [],
+};

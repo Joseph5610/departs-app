@@ -1,16 +1,15 @@
 import type { CityConfig } from '../../_core/city-config';
-import type { AlertsUseCase, CityUseCases, DebugFeed, DeparturesUseCase, VehicleDetailUseCase } from '../use-cases';
+import { noInfotexts, type AlertsUseCase, type CityUseCases, type DebugFeed, type DeparturesUseCase, type VehicleDetailUseCase } from '../use-cases';
 import { DeparturesService } from './departures/DeparturesService';
 import { VehicleDetailService } from './vehicles/VehicleDetailService';
 import { AlertsService } from './alerts/AlertsService';
-import { InfotextsService } from './infotexts/InfotextsService';
 import { GtfsRtVehicleDetailEnricher } from './vehicles/GtfsRtVehicleDetailEnricher';
-import { VehiclesService } from './vehicles/VehiclesService';
-import type { VehicleSource } from './vehicles/vehicle-source';
+import { VehiclesService } from '../vehicles/VehiclesService';
+import type { NetworkVehicles } from '../vehicles/vehicle-source';
 import { GtfsRtVehicleSource } from './vehicles/gtfs-rt-vehicle-source';
-import { EdgeFleetSource } from './vehicles/edge-fleet-source';
+import { EdgeFleetSource } from '../vehicles/edge-fleet-source';
 import { createGtfsAlertsMapper, type AlertsMapper } from './alerts/alerts-mapper';
-import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
+import { decodeAlertEntity } from '../../_core/gtfsRtDecode';
 import { getGtfsRtFeed } from '../../_feeds/gtfs/gtfs-rt-feed';
 
 /**
@@ -19,7 +18,7 @@ import { getGtfsRtFeed } from '../../_feeds/gtfs/gtfs-rt-feed';
  */
 export interface GtfsOverrides {
     /** Where vehicles come from; the default reads the city's GTFS-RT feed. */
-    vehicleSource?: VehicleSource;
+    vehicleSource?: NetworkVehicles;
     alertsMapper?: AlertsMapper;
     departures?: (vehicles: VehiclesService) => DeparturesUseCase;
     /** Wraps the timetable detail, for vehicles the timetable does not cover. */
@@ -30,8 +29,7 @@ export interface GtfsOverrides {
 
 /** The use-cases of a city on the GTFS stack. */
 export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}): CityUseCases {
-    const source = overrides.vehicleSource ?? new GtfsRtVehicleSource(config);
-    const vehicles = new VehiclesService(config, source.sharesFleet ? source : new EdgeFleetSource(config.slug, source));
+    const vehicles = new VehiclesService(config, new EdgeFleetSource(config.slug, overrides.vehicleSource ?? new GtfsRtVehicleSource(config)));
     const timetableDetail = new VehicleDetailService(config, new GtfsRtVehicleDetailEnricher(vehicles));
 
     return {
@@ -39,7 +37,7 @@ export function gtfsUseCases(config: CityConfig, overrides: GtfsOverrides = {}):
         departures: overrides.departures?.(vehicles) ?? new DeparturesService(config, vehicles),
         detail: overrides.detail?.(timetableDetail, vehicles) ?? timetableDetail,
         alerts: overrides.alerts ?? new AlertsService(config, overrides.alertsMapper ?? createGtfsAlertsMapper()),
-        infotexts: new InfotextsService(config),
+        infotexts: noInfotexts,
         debugFeed: overrides.debugFeed ?? {
             async getRawFeed(_ctx, type) {
                 const feed = await getGtfsRtFeed(config);

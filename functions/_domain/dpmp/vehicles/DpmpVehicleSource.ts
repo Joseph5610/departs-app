@@ -2,16 +2,15 @@ import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
-import type { VehicleSource } from '../../gtfs/vehicles/vehicle-source';
+import type { FleetBuild, NetworkVehicles } from '../../vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
-import { getSchedule } from '../../../_feeds/gtfs/schedule';
+import { getSchedule, isWaitingToStart } from '../../../_feeds/gtfs/schedule';
 import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
 import { bearingDeg } from '../../../_core/utils/geo';
 import { MovementBearings } from '../../../_core/utils/movement-bearing';
-import { OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
 import { DpmpTripMatcher } from './DpmpTripMatcher';
@@ -64,7 +63,7 @@ function reportTimeMs(dateTime: string, nowMs: number, today: string, timezone: 
  * depot and positioning runs, or lines absent from the timetable - are still surfaced, as
  * `off_track` vehicles with an empty trip id.
  */
-export class DpmpVehicleSource implements VehicleSource {
+export class DpmpVehicleSource implements NetworkVehicles {
     /** `realtimeUrl` replaces the configured upstream (local dev's relay, via `env.DPMP_REALTIME_URL`). */
     constructor(
         private readonly city: CityConfig,
@@ -72,13 +71,13 @@ export class DpmpVehicleSource implements VehicleSource {
     ) {}
 
     /** The fleet of the latest CSV snapshot; a failed read keeps serving the last good one. */
-    async all(): Promise<AppVehicleCollection> {
+    async buildFleet(): Promise<FleetBuild | null> {
         const snapshot = await getDpmpCsvSnapshot(this.city, this.realtimeUrl).catch((err) => {
             console.error(`DPMP feed error for ${this.city.slug}:`, err.message);
             return null;
         });
-        if (!snapshot) return OFFLINE_VEHICLES;
-        return deriveAsync(snapshot, collections, () => this.build(snapshot));
+        if (!snapshot) return null;
+        return { collection: await deriveAsync(snapshot, collections, () => this.build(snapshot)) };
     }
 
     private async build(snapshot: Snapshot<DpmpVehicleRow[]>): Promise<AppVehicleCollection> {
@@ -154,8 +153,7 @@ export class DpmpVehicleSource implements VehicleSource {
             return feature;
         }
 
-        const minsToStart = match.startRelMins - ctx.mins;
-        const isBeforeTrack = row.stopOrder <= 1 && minsToStart > 1 && minsToStart <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
+        const isBeforeTrack = isWaitingToStart(match.startRelMins - ctx.mins, row.stopOrder);
 
         return VehiclesMapper.mapVehicle(vp, match.tripId, route, originTimestamp, -row.variation, isBeforeTrack);
     }

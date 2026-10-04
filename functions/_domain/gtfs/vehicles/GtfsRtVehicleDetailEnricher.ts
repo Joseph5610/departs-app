@@ -1,9 +1,10 @@
 import type { AppVehicleDetail, AppVehicleFeature, CityRequestContext } from "../../../_core/types";
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
-import type { VehiclesService } from "./VehiclesService";
+import type { VehiclesService } from "../../vehicles/VehiclesService";
 
 import { addSecondsToTime, getLocalClock, toSecs, wrapDaySeconds } from '../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+import { isWaitingToStart } from '../../../_feeds/gtfs/schedule';
 import { distanceToSegmentMeters } from '../../../_core/utils/geo';
 
 const isPoint = (c: number[] | number[][] | undefined): c is number[] => !!c && typeof c[0] === 'number' && typeof c[1] === 'number';
@@ -124,21 +125,13 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         const firstStop = detail.stop_times?.features?.[0];
         if (!firstStop) return;
 
-        const seq = detail.last_stop_sequence;
-        // If the vehicle has already proceeded past stop 1, it is no longer before track
-        if (seq !== undefined && seq !== null && seq > 1) {
-            return;
-        }
-
         // Deliberately the scheduled time: the realtime field is derived from the delay, which is
         // exactly what must not influence whether the vehicle has departed yet.
         const depTimeStr = firstStop.properties.departure_time;
         if (!depTimeStr) return;
 
-        const diffMins = wrapDaySeconds(toSecs(depTimeStr) - getLocalClock(this.vehiclesService.city.timezone).secs) / 60;
-
-        // If departure is in the future (within window) and vehicle is at origin terminal
-        if (diffMins > 0 && diffMins <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS) {
+        const minsToStart = wrapDaySeconds(toSecs(depTimeStr) - getLocalClock(this.vehiclesService.city.timezone).secs) / 60;
+        if (isWaitingToStart(minsToStart, detail.last_stop_sequence)) {
             const delaySecs = detail.delay ?? 0;
             detail.state_position = delaySecs > GTFS_CONFIG.BEFORE_TRACK_DELAY_THRESHOLD_SECS ? 'before_track_delayed' : 'before_track';
         }

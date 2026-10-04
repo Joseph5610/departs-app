@@ -2,7 +2,7 @@ import type * as GtfsRt from '../../_core/gtfsRtTypes';
 import { createSource, type Snapshot } from '../../_core/feed/source';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL } from '../../_core/config';
-import { decodeAlertEntity } from '../../_core/gtfsRtAlerts';
+import { decodeAlertEntity } from '../../_core/gtfsRtDecode';
 import { getGtfsRtAlertEntities } from './gtfs-rt-feed';
 
 type AlertEntities = GtfsRt.IFeedEntity[];

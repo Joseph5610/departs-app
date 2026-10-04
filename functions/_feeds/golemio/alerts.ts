@@ -4,7 +4,7 @@ import { CACHE_TTL, ERROR_MESSAGES } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { appClient } from '../../_core/ApiClient';
 import { createSource, type Snapshot } from '../../_core/feed/source';
-import { decodeAlertFeed } from '../../_core/gtfsRtAlerts';
+import { decodeAlertFeed } from '../../_core/gtfsRtDecode';
 import { GOLEMIO_CONFIG } from './config';
 import { golemioClient } from './GolemioClient';
 import { readRssItems, type PidRssItem } from './rss-exclusions';

@@ -79,7 +79,7 @@ const advanceTrack = (prev: Track, features: VehicleFeature[], collectionTime: n
         const dataTime = parseTime(f.properties.origin_timestamp) ?? collectionTime;
         next.lastSeen.set(id, now);
 
-        // Each map bounds is cached separately upstream, so a response can carry an older snapshot than what is already shown.
+        // A new collection can carry an older report of a vehicle than the one already shown.
         if (prevPos && prevTime !== undefined && dataTime !== undefined && dataTime < prevTime) {
             const target = prev.targets.get(id);
             if (target) next.targets.set(id, target);

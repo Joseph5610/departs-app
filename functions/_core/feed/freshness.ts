@@ -5,7 +5,7 @@ import type { AppVehicleCollection } from '../types';
  * an upstream fails or a request is killed mid-refresh, which is right for seconds and wrong for
  * minutes: positions from an hour ago look live on the map.
  */
-export const FEED_AGE_S = {
+const FEED_AGE_S = {
     /** Past this, the answer is flagged `stale` and the app says so. */
     STALE: 60,
     /** Past this, the positions are dropped: no map is better than a wrong one. */

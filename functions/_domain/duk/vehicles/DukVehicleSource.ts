@@ -2,15 +2,14 @@ import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleDetail, AppVehicleFeature } from '../../../_core/types';
 import type { CityConfig } from '../../../_core/city-config';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
-import type { VehiclesService } from '../../gtfs/vehicles/VehiclesService';
-import type { SingleLiveVehicle, VehicleSource } from '../../gtfs/vehicles/vehicle-source';
+import type { VehiclesService } from '../../vehicles/VehiclesService';
+import type { FleetBuild, NetworkVehicles, SingleLiveVehicle } from '../../vehicles/vehicle-source';
 import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
 import { getSchedule } from '../../../_feeds/gtfs/schedule';
 import { getTripStops, isLocated } from '../../../_feeds/gtfs/trip-stops';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../_core/utils/geo';
 import { MovementBearings } from '../../../_core/utils/movement-bearing';
-import { OFFLINE_VEHICLES } from '../../../_core/feed/freshness';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_SECS, formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
 import { getDukStationNames, getDukTrafficFeed, getDukTrafficSnapshot, type DukVehicleReport } from '../../../_feeds/duk/duk-traffic-feed';
@@ -50,17 +49,17 @@ function getReportIndex(reports: DukVehicleReport[]): Map<string, DukVehicleRepo
  * CIS JŘ line and trip number. Vehicles without a timetable (trains, trolleybuses, lines licensed
  * outside the kraj) are still shown, keeping the feed's own trip reference.
  */
-export class DukVehicleSource implements VehicleSource {
+export class DukVehicleSource implements NetworkVehicles {
     constructor(private readonly city: CityConfig) {}
 
     /** The fleet of the latest traffic snapshot; a failed read keeps serving the last good one. */
-    async all(): Promise<AppVehicleCollection> {
+    async buildFleet(): Promise<FleetBuild | null> {
         const snapshot = await getDukTrafficSnapshot(this.city).catch((err) => {
             console.error(`DUK feed error for ${this.city.slug}:`, err.message);
             return null;
         });
-        if (!snapshot) return OFFLINE_VEHICLES;
-        return deriveAsync(snapshot, collections, () => this.build(snapshot));
+        if (!snapshot) return null;
+        return { collection: await deriveAsync(snapshot, collections, () => this.build(snapshot)) };
     }
 
     private async build(snapshot: Snapshot<DukVehicleReport[]>): Promise<AppVehicleCollection> {

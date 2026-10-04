@@ -3,7 +3,7 @@ import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { CACHE_TTL } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
-import { decodeGtfsRtFeed, feedHeaderTimestamp, type GtfsRtFeed } from './gtfs-rt-decode';
+import { decodeGtfsRtFeed, feedHeaderTimestamp, type GtfsRtFeed } from '../../_core/gtfsRtDecode';
 
 /** The last decoded feed per city with its raw bytes, so an unchanged download is not decoded again. */
 const lastDecoded = new Map<string, { bytes: Uint8Array; headerTimestamp: number | undefined; feed: GtfsRtFeed }>();

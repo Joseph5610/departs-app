@@ -4,6 +4,18 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.6] - 2026-10-04
+
+### Changed
+
+- Every city's vehicles, including Prague's, are built once and shared through the same edge fleet cache.
+- Departures read only the requested stops' station relations instead of the whole network's stop map.
+
+### Fixed
+
+- Brno vehicle details no longer show a vehicle the map has on a different trip.
+- Selecting a vehicle no longer makes it jump back to an older position or restart the live refresh countdown.
+
 ## [0.79.5] - 2026-10-02
 
 ### Changed

@@ -1,4 +1,4 @@
-import type { AppDeparture, AppDepartureFeeder, AppVehicleCollection, AppVehicleFeature } from "../../../_core/types";
+import type { AppDeparture, AppDepartureFeeder, AppVehicleCollection, AppVehicleProperties } from "../../../_core/types";
 import type { GtfsDepartureTuple, GtfsFeederTuple } from "../../../_feeds/gtfs/types";
 import { mapContinuation } from "../../../_feeds/gtfs/continuations";
 import type { GtfsRoute } from "../../../_feeds/gtfs/gtfs-data";
@@ -22,6 +22,16 @@ export class DeparturesMapper {
      * @param rtVehicles The latest cached collection of real-time vehicles, used to inject live delays and metadata.
      * @returns A sorted, mapped array of AppDeparture objects ready for frontend consumption, capped at 150 entries.
      */
+    /** Live vehicles by the trip they serve, for joining them to departures. */
+    static vehiclesByTrip(rtVehicles: AppVehicleCollection | null): Map<string, AppVehicleProperties> {
+        const byTrip = new Map<string, AppVehicleProperties>();
+        for (const f of rtVehicles?.features ?? []) {
+            const props = f.properties;
+            if (props.gtfs_trip_id && props.vehicle_id) byTrip.set(props.gtfs_trip_id, props);
+        }
+        return byTrip;
+    }
+
     static mapDepartures(
         deps: Array<{ stopId: string, tuple: GtfsDepartureTuple }>, 
         routes: Record<string, GtfsRoute>, 
@@ -34,17 +44,7 @@ export class DeparturesMapper {
             return ts >= now - GTFS_CONFIG.DEPARTURES_PAST_WINDOW_MS && ts <= now + GTFS_CONFIG.DEPARTURES_FUTURE_WINDOW_MS;
         });
 
-        const tripIndex = new Map<string, NonNullable<AppVehicleFeature['properties']>>();
-
-        if (rtVehicles) {
-            for (const f of rtVehicles.features) {
-                const props = f.properties;
-                const tripId = props.gtfs_trip_id;
-                if (tripId && props.vehicle_id) {
-                    tripIndex.set(tripId, props);
-                }
-            }
-        }
+        const tripIndex = DeparturesMapper.vehiclesByTrip(rtVehicles);
 
         const sortableDeps = filtered.map(d => {
             const [trip_id, , , timestamp_ms] = d.tuple;
