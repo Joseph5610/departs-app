@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle } from '@/components/ui/item';
 import type { PointOfSale, PointOfSaleType } from '../../types/pointsOfSale';
+import { DAY_MS } from '../../config/constants';
 
 interface PointOfSaleDetailProps {
     pos: PointOfSale;
@@ -21,7 +22,6 @@ const TYPE_ICONS: Record<PointOfSaleType, React.ElementType> = {
 
 /** 1 January 2024 was a Monday, so adding 0–6 days yields Monday–Sunday. */
 const REFERENCE_MONDAY_MS = Date.UTC(2024, 0, 1);
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Short weekday names, Monday first, capitalized as on printed timetables. */
 function getWeekdayNames(lang: string): string[] {

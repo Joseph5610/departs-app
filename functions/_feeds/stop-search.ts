@@ -2,8 +2,8 @@ import * as z from 'zod/mini';
 import type { CityConfig } from '../_core/city-config';
 import type { AppStopFeature } from '../_core/types';
 import { appClient } from '../_core/ApiClient';
-import { ApiError, NotImplementedError } from '../_core/errors';
-import { ERROR_MESSAGES, STOP_SEARCH_CONFIG } from '../_core/config';
+import { ApiError } from '../_core/errors';
+import { ERROR_MESSAGES, STOP_SEARCH_CONFIG, STATIC_DATA_CONFIG } from '../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../_core/feed/CacheManager';
 import { LruCache } from '../_core/feed/LruCache';
 import { distanceMeters } from '../_core/utils/geo';
@@ -158,9 +158,7 @@ export class StopSearch {
 }
 
 function staticDataUrl(city: CityConfig): string {
-    const url = city.feed?.staticDataUrl;
-    if (!url) throw new NotImplementedError();
-    return `${url}/${city.slug}`;
+    return `${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}`;
 }
 
 async function fetchFile(url: string): Promise<Response> {

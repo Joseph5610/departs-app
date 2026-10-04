@@ -1,8 +1,45 @@
 import path from "path"
-import { defineConfig } from 'vite'
+import fs from "fs"
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { SITE, SITE_PLACEHOLDERS } from './src/config/site.ts'
+
+const SITE_PLACEHOLDER = /%(SITE_[A-Z_]+)%/g
+
+const fillSitePlaceholders = (text: string): string =>
+  text.replace(SITE_PLACEHOLDER, (_match, key: string) => {
+    const value = SITE_PLACEHOLDERS[key]
+    if (value === undefined) throw new Error(`Unknown placeholder %${key}%; add it to SITE_PLACEHOLDERS in src/config/site.ts`)
+    return value
+  })
+
+/** Text files under `dir`, relative to it. */
+const textFilesIn = (dir: string): string[] =>
+  fs.readdirSync(dir, { recursive: true, encoding: 'utf8' })
+    .filter((file) => /(\.(txt|json|html|xml)|_headers|_redirects)$/.test(file) && fs.statSync(path.join(dir, file)).isFile())
+
+/** Fills `src/config/site.ts` values into index.html and the copied public files. */
+const siteTemplate = (): Plugin => {
+  let outDir = 'dist'
+  let publicDir = 'public'
+  return {
+    name: 'site-template',
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir)
+      publicDir = config.publicDir
+    },
+    transformIndexHtml: { order: 'pre', handler: fillSitePlaceholders },
+    writeBundle() {
+      for (const file of textFilesIn(publicDir)) {
+        const target = path.join(outDir, file)
+        const text = fs.readFileSync(target, 'utf8')
+        if (text.includes('%SITE_')) fs.writeFileSync(target, fillSitePlaceholders(text))
+      }
+    },
+  }
+}
 
 export default defineConfig({
   server: {
@@ -17,12 +54,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   plugins: [
     react(),
     tailwindcss(),
+    siteTemplate(),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.png', 'icon.png', 'cities/*.webp'],
@@ -33,8 +71,8 @@ export default defineConfig({
       },
       manifest: {
         id: '/',
-        name: 'Departs.app',
-        short_name: 'Departs',
+        name: SITE.INSTALL_NAME,
+        short_name: SITE.INSTALL_SHORT_NAME,
         description: 'Real-time Public Transport Visualization',
         theme_color: '#000000',
         background_color: '#000000',

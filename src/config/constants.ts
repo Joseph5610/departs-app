@@ -1,8 +1,10 @@
 
-/** Default document title; `index.html` carries the same text for crawlers that don't run JS. */
-export const SITE_TITLE = 'departs.app — MHD Praha, Brno & Prešov LIVE';
+import { SITE } from './site';
 
-export const SITE_URL = 'https://departs.app';
+/** Default document title; `index.html` carries the same text for crawlers that don't run JS. */
+export const SITE_TITLE = SITE.TITLE;
+
+export const SITE_URL = SITE.URL;
 
 /**
  * UI and Layout constants
@@ -155,7 +157,7 @@ export const PULSE_OPACITY_DIVISOR = 65;
 export const API_BASE_URL = '/api';
 
 /** Public MCP endpoint shown in the AI-integration banner and setup instructions. */
-export const MCP_ENDPOINT_URL = `${SITE_URL}/mcp`;
+export const MCP_ENDPOINT_URL = SITE.MCP_URL;
 
 /** Third-party services and project links; hosts here must stay allowed by the CSP in public/_headers. */
 export const EXTERNAL_URLS = {
@@ -170,7 +172,7 @@ export const EXTERNAL_URLS = {
         },
     },
     GEOCODER_API: 'https://photon.komoot.io/api/',
-    STATIC_DATA: 'https://data.departs.app',
+    STATIC_DATA: SITE.STATIC_DATA_URL,
     SOURCE_REPO: 'https://github.com/joseph5610/departs-app',
     WALKING_DIRECTIONS: {
         apple: (lat: number, lon: number) => `maps://?daddr=${lat},${lon}&dirflg=w`,
@@ -209,7 +211,7 @@ export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
 
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
-const DAY_MS = 24 * HOUR_MS;
+export const DAY_MS = 24 * HOUR_MS;
 
 /** React Query timings for the data hooks (in milliseconds). Live polling itself runs on TRANSIT_REFRESH_MS. */
 export const QUERY_TIMING_MS = {
@@ -277,7 +279,7 @@ export const GEOCODING_CONFIG = {
 
 /** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
 export const DEVICE_CACHE = {
-    /** Bump to discard every device's cached static data; it is also sent as `?v=` to bust the CDN copy of the stops. */
+    /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
     VERSION: 'v50',
     /** Entries older than this are dropped instead of shown while refreshing. */
     MAX_AGE: 14 * DAY_MS,
@@ -298,6 +300,8 @@ export const DEPARTURES_CONFIG = {
     TREND_THRESHOLD_S: 30,
     /** How long a delay change stays visible next to a departure after an update. */
     DELAY_DELTA_VISIBLE_MS: 5000,
+    /** A previous fetch older than this many refresh intervals is not compared against for delay changes. */
+    DELAY_DELTA_MAX_AGE_REFRESHES: 2,
     /** Upcoming departures shown on each favourites card. */
     FAVORITE_CARD_COUNT: 2,
     /** Departures shown per direction before the board offers to expand it. */

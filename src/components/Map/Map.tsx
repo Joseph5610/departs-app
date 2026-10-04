@@ -19,6 +19,7 @@ import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
 import { getInitialViewState } from '../../utils/mapUtils';
 import { EXTERNAL_URLS, MAP_CAMERA, SITE_TITLE, SITE_URL } from '../../config/constants';
+import { SITE } from '../../config/site';
 import { MapLayers } from './MapLayers';
 import { MAP_LAYERS, MAP_SOURCES, STOP_CLICK_LAYERS, VEHICLE_CLICK_LAYERS, INTERACTIVE_LAYER_IDS } from '../../config/mapLayers';
 import { MapController } from './MapController';
@@ -144,7 +145,7 @@ const MapInner: React.FC = () => {
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
     ), [isStatsRoute, isFavoritesRoute]);
 
-    const displayTitle = panelTitle ? `${panelTitle} - departs.app` : SITE_TITLE;
+    const displayTitle = panelTitle ? `${panelTitle} - ${SITE.NAME}` : SITE_TITLE;
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE_URL}/`;
 
     const jsonLd = useMemo(() => {
@@ -164,7 +165,7 @@ const MapInner: React.FC = () => {
         return {
             "@context": "https://schema.org",
             "@type": "WebApplication",
-            "name": "departs.app",
+            "name": SITE.NAME,
             "url": SITE_URL,
             "description": "Real-time visualization of public transport for Prague, Brno and Prešov. Track buses, trams, and metro live.",
             "applicationCategory": "TransportApplication",
@@ -172,7 +173,7 @@ const MapInner: React.FC = () => {
             "image": `${SITE_URL}/icon.png`,
             "author": {
                 "@type": "Organization",
-                "name": "departs.app"
+                "name": SITE.NAME
             }
         };
     }, [selectedStop, canonicalUrl]);

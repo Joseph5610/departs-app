@@ -4,6 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import cs from './locales/cs.json';
 import sk from './locales/sk.json';
+import { SITE } from '../config/site';
 
 export const SUPPORTED_LANGUAGES = ['en', 'cs', 'sk'] as const;
 
@@ -27,6 +28,7 @@ i18n
     compatibilityJSON: 'v4',
     interpolation: {
       escapeValue: false,
+      defaultVariables: { appName: SITE.NAME, mcpUrl: SITE.MCP_URL },
     },
     detection: {
       order: ['localStorage', 'querystring', 'navigator'],

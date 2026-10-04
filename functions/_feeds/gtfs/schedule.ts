@@ -1,5 +1,5 @@
 import type { CityConfig } from '../../_core/city-config';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { appClient } from '../../_core/ApiClient';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { isFields } from '../../_core/utils/fields';
@@ -23,16 +23,13 @@ const isSchedule = (v: unknown): v is Schedule =>
 
 /** The trips a vehicle may be matched to at `clock`, from the hour's schedule file; null when it cannot be read. */
 export async function getSchedule(city: CityConfig, clock: LocalClock): Promise<Schedule | null> {
-    const staticUrl = city.feed?.staticDataUrl;
-    if (!staticUrl) return null;
-
     const hour = String(Math.floor(clock.mins / 60)).padStart(2, '0');
     return CacheManager.getOrFetch<Schedule | null>(
         `schedule_${city.slug}_${hour}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
             try {
-                const res = await appClient.fetch(`${staticUrl}/${city.slug}/schedule/${hour}.json`, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
+                const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/schedule/${hour}.json`, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
                 if (!res.ok) {
                     console.error(`Failed to fetch schedule/${hour}.json for ${city.slug}: ${res.status}`);
                     return null;

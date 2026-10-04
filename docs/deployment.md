@@ -42,17 +42,17 @@ Fork this repository; Cloudflare Pages builds from your fork in step 4. Our host
 
 | File | What |
 | ---- | ---- |
-| `src/config/constants.ts` | `SITE_URL` |
-| `public/robots.txt` | `Sitemap:` URL |
-| `functions/_core/api-utils.ts` | `ALLOWED_PATTERNS` (allowed origins): your domain and `<project>.pages.dev` |
+| `src/config/site.ts` | `URL` (and `NAME` to rename the app); the build fills both into `index.html`, `robots.txt`, `llms.txt`, `.well-known/` and the 404 page |
+| `functions/_core/config.ts` | `SITE_URL` (the MCP server's advertised endpoint) |
+
+The API accepts browser requests only from the host that serves it (plus `localhost`), so no origin list needs editing.
 
 Only if you self-host the data, also replace `https://data.departs.app` in:
 
 | File | What |
 | ---- | ---- |
-| `src/config/constants.ts` | `EXTERNAL_URLS.STATIC_DATA` |
-| `functions/_cities/<city>.ts` | `staticDataUrl` in each enabled city config |
-| `public/_headers` | `connect-src` in the Content-Security-Policy |
+| `src/config/site.ts` | `STATIC_DATA_URL`; the build fills it into the CSP in `_headers` and into `_redirects` |
+| `functions/_core/config.ts` | `STATIC_DATA_URL` |
 
 ## 3. Create Cloudflare resources
 

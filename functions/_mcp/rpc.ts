@@ -30,8 +30,8 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
             name: "departs-mcp",
             version: "1.0.0",
             description: "Remote Model Context Protocol (MCP) Server for real-time Czech public transit (Prague PID & Brno IDS JMK)",
-            documentation: "https://departs.app",
-            endpoint: "https://departs.app/mcp",
+            documentation: new URL(request.url).origin,
+            endpoint: `${new URL(request.url).origin}/mcp`,
             tools_count: MCP_TOOLS.length
         }, null, 2), {
             headers: {

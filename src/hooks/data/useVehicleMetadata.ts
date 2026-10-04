@@ -3,7 +3,7 @@ import { z } from 'zod/mini';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '../../state/preferencesStore';
 import { apiFetch } from '../../lib/api-client';
-import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
+import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
 import { memoizeLast } from '../../lib/memoize';
 import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
 import { useCityConfig } from './useCities';
@@ -64,7 +64,7 @@ export function useFleetLookup(): FleetLookup | undefined {
 
     const { data: ranges } = useQuery({
         queryKey: ['vehicle-metadata', selectedCity, source?.file],
-        queryFn: async () => fleetFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/${source!.file}`)),
+        queryFn: async () => fleetFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/${source!.file}?v=${DEVICE_CACHE.VERSION}`)),
         enabled: !!selectedCity && !!source,
         select: buildRanges,
         staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),

@@ -64,6 +64,8 @@ export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
 const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
 const METRO_LINE_COUNT: ExpressionSpecification = ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]];
+/** A parent station served by two or more metro lines, drawn as a transfer ring. */
+const IS_TRANSFER_STATION: ExpressionSpecification = ['all', ['==', LOCATION_TYPE, 1], ['>=', METRO_LINE_COUNT, 2]];
 const IS_RAIL_STATION: ExpressionSpecification = ['any', ['==', ['get', 'is_train'], 1], ['>', METRO_LINE_COUNT, 0]];
 /** Colour of the stop's n-th metro line, or `fallback` when it has fewer lines. */
 const metroColor = (index: number, fallback: ExpressionSpecification | string): ExpressionSpecification => ['case',
@@ -98,6 +100,10 @@ const MAP_TOKENS = {
         traversedTarget: { dark: '#52525b', light: '#f4f4f5' },
     },
 };
+
+/** A linear zoom ramp across the stop layers' zoom range. */
+const stopZoomRamp = (atMin: number, atMax: number): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, atMin, MAP_TOKENS.zoom.stops.max, atMax];
 
 // -----------------------------------------------------------------------------
 // STOPS & STATIONS
@@ -134,15 +140,9 @@ export const stopPointsGlow: CircleLayerSpecification = {
         ['!=', LOCATION_TYPE, 2]
     ],
     paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 9.5,
-            MAP_TOKENS.zoom.stops.max, 28.5
-        ],
+        'circle-radius': stopZoomRamp(9.5, 28.5),
         'circle-color': MAP_TOKENS.colors.glow, // Black glow for all ensures glass transparency works
-        'circle-opacity': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 0.1,
-            MAP_TOKENS.zoom.stops.max, 0.2
-        ],
+        'circle-opacity': stopZoomRamp(0.1, 0.2),
         'circle-blur': 1.0
     }
 };
@@ -154,18 +154,12 @@ export const stopPoints: CircleLayerSpecification = {
     filter: ['all',
         ['!', ['has', 'point_count']],
         ['!=', LOCATION_TYPE, 2],
-        ['!', ['all',
-            ['==', LOCATION_TYPE, 1],
-            ['>=', METRO_LINE_COUNT, 2]
-        ]]
+        ['!', IS_TRANSFER_STATION]
     ],
     paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 5.7,
-            MAP_TOKENS.zoom.stops.max, 20.9
-        ],
+        'circle-radius': stopZoomRamp(5.7, 20.9),
         'circle-color': metroColor(0, ['case', ['has', 'stop_color'], ['to-color', ['get', 'stop_color']], ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]),
-        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 1.0, MAP_TOKENS.zoom.stops.max, 2.0],
+        'circle-stroke-width': stopZoomRamp(1.0, 2.0),
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
         'circle-opacity': [
             'case',
@@ -181,19 +175,13 @@ export const transferOuterPoints: CircleLayerSpecification = {
     id: MAP_LAYERS.TRANSFER_OUTER,
     type: 'circle',
     source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['==', LOCATION_TYPE, 1],
-        ['>=', METRO_LINE_COUNT, 2]
-    ],
+    filter: IS_TRANSFER_STATION,
     minzoom: 10,
     paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 6.5,
-            MAP_TOKENS.zoom.stops.max, 24
-        ],
+        'circle-radius': stopZoomRamp(6.5, 24),
         'circle-color': metroColor(0, '#0f172a'),
         'circle-stroke-color': MAP_TOKENS.colors.stroke,
-        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 1, MAP_TOKENS.zoom.stops.max, 3],
+        'circle-stroke-width': stopZoomRamp(1, 3),
         'circle-opacity': 0.85
     }
 };
@@ -202,16 +190,10 @@ export const transferInnerPoints: CircleLayerSpecification = {
     id: MAP_LAYERS.TRANSFER_INNER,
     type: 'circle',
     source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['==', LOCATION_TYPE, 1],
-        ['>=', METRO_LINE_COUNT, 2]
-    ],
+    filter: IS_TRANSFER_STATION,
     minzoom: 10,
     paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 4.5,
-            MAP_TOKENS.zoom.stops.max, 16
-        ],
+        'circle-radius': stopZoomRamp(4.5, 16),
         'circle-color': metroColor(1, '#ffffff'),
         'circle-opacity': 0.85
     }
@@ -233,7 +215,7 @@ export const stopLabels: SymbolLayerSpecification = {
             16, ['match', LOCATION_TYPE, 1, 14, 11]
         ],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 2.2, MAP_TOKENS.zoom.stops.max, 4.2],
+        'text-radial-offset': stopZoomRamp(2.2, 4.2),
         'text-justify': 'auto',
         'text-max-width': 7,
         'text-letter-spacing': 0.15,
@@ -281,7 +263,7 @@ export const stopIcons: SymbolLayerSpecification = {
             ['>', ['length', ['to-string', ['coalesce', ['get', 'platform_code'], '']]], 0], '',
             MAP_ICONS.BUS_STOP
         ],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 0.09, MAP_TOKENS.zoom.stops.max, 0.28],
+        'icon-size': stopZoomRamp(0.09, 0.28),
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
         'symbol-sort-key': 5
@@ -333,10 +315,7 @@ export const stopFavorites: SymbolLayerSpecification = {
     source: MAP_SOURCES.STOPS,
     layout: {
         'icon-image': MAP_ICONS.FAVORITE_STAR,
-        'icon-size': ['interpolate', ['linear'], ['zoom'],
-            MAP_TOKENS.zoom.stops.min, 0.18,
-            MAP_TOKENS.zoom.stops.max, 0.36
-        ],
+        'icon-size': stopZoomRamp(0.18, 0.36),
         'icon-offset': ['case',
             ['>=', METRO_LINE_COUNT, 2], ['literal', [45, -55]],
             ['literal', [35, -35]]

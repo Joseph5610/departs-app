@@ -26,7 +26,7 @@ export interface Departure {
 /**
  * An arriving trip that a departure is scheduled to wait for. `trip_id`/`base_hold_s` come from
  * the backend; `hold_s`/`will_miss` are computed client-side from the feeder's live delay (see
- * `enrichFeederHold` in `lib/enrichment.ts`) - not present until that enrichment step has run.
+ * `withFeederHold` in `lib/enrichment/departures.ts`) - not present until that enrichment step has run.
  */
 export interface DepartureFeeder {
     line: string;

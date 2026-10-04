@@ -2,7 +2,7 @@ import { createErrorResponse, isAllowedOrigin } from "../_core/api-utils";
 
 export const onRequest: PagesFunction = async ({ request, next }) => {
     const origin = request.headers.get("Origin");
-    const allowed = isAllowedOrigin(origin);
+    const allowed = isAllowedOrigin(origin, request.url);
 
     // 1. Security check: Block disallowed origins explicitly
     if (origin && !allowed) {

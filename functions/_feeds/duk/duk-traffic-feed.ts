@@ -4,7 +4,7 @@ import { createSource, type Snapshot } from '../../_core/feed/source';
 import { appClient } from '../../_core/ApiClient';
 import type { CityConfig } from '../../_core/city-config';
 import { ApiError } from '../../_core/errors';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { bool, isFields, num, str, type Fields } from '../../_core/utils/fields';
 import { DUK_CONFIG } from './config';
 
@@ -150,9 +150,7 @@ const stationNamesFileSchema = z.lazy(() => z.custom<Fields>(isFields));
 
 /** The names as departs-data publishes them, a fraction of the size of Portabo's stop list; null before that file is rolled out. */
 async function readPublishedStationNames(city: CityConfig): Promise<Map<number, string> | null> {
-    const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) return null;
-    const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${DUK_CONFIG.STATION_NAMES_FILE}`, {
+    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/${DUK_CONFIG.STATION_NAMES_FILE}`, {
         cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA }
     }).catch(() => null);
     if (!res || !res.ok) return null;

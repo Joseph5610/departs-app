@@ -1,7 +1,6 @@
 import type { StopCollection, StopFeature } from '../types/transit';
+import { DEG, EARTH_RADIUS_M } from './geo';
 
-const EARTH_RADIUS_M = 6_371_000;
-const DEG = Math.PI / 180;
 /** Grid cell for the twin lookup: a latitude degree is about this many metres. */
 const METRES_PER_DEG_LAT = DEG * EARTH_RADIUS_M;
 

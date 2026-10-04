@@ -2,7 +2,7 @@
  * PID `stop_icons` codes, in PID's documented order: the modes a rider can change to at a stop.
  * `M*` codes are metro lines; the rest are modes.
  */
-export const INTERCHANGE_CODES = ['Ma', 'Mb', 'Mc', 'Md', 'Ra', 'Sb', 'Fu', 'Fe', 'Ap', 'Tw', 'Tb', 'Bu'] as const;
+const INTERCHANGE_CODES = ['Ma', 'Mb', 'Mc', 'Md', 'Ra', 'Sb', 'Fu', 'Fe', 'Ap', 'Tw', 'Tb', 'Bu'] as const;
 
 const RANK = new Map<string, number>(INTERCHANGE_CODES.map((code, i) => [code, i]));
 

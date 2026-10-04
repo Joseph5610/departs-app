@@ -15,7 +15,6 @@ const config: CityConfig = {
     bounds: [21.13, 48.93, 21.37, 49.08],
     feed: {
         realtimeUrl: 'https://egov.presov.sk/geodatakatalog/dpmp.csv',
-        staticDataUrl: 'https://data.departs.app'
     },
     isBeta: true,
     filters: {

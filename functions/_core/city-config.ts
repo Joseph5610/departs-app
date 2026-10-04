@@ -3,7 +3,6 @@ type CountryCode = 'CZ' | 'SK';
 
 interface FeedConfig {
     realtimeUrl?: string;
-    staticDataUrl?: string;
     hasTripAliases?: boolean;
     [key: string]: string | boolean | undefined;
 }

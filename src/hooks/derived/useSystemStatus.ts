@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNetworkStatus } from '../features/useNetworkStatus';
+import { useNetworkStatus } from '../useNetworkStatus';
 import { useVehicles } from '../data/useVehicles';
 import type { AppError } from '../../types/error';
 

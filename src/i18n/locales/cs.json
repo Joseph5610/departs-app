@@ -103,8 +103,8 @@
     "sourceBadge": "Zdroj",
     "attributions": {
       "shared": "Mapa a vyhledávání míst",
-      "processedTitle": "Jak departs.app data upravuje",
-      "notice": "Data jsou zobrazena upravená: převedená, filtrovaná, spárovaná se zastávkami a nástupišti a spojená s živými daty. Poskytovatelé departs.app nepodporují ani neschvalují. Zdroje a změny jsou zdokumentovány zde.",
+      "processedTitle": "Jak {{appName}} data upravuje",
+      "notice": "Data jsou zobrazena upravená: převedená, filtrovaná, spárovaná se zastávkami a nástupišti a spojená s živými daty. Poskytovatelé {{appName}} nepodporují ani neschvalují. Zdroje a změny jsou zdokumentovány zde.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
@@ -120,7 +120,7 @@
     }
   },
   "welcome": {
-    "title": "Vítejte v departs.app",
+    "title": "Vítejte v {{appName}}",
     "description": "Nejrychlejší způsob, jak sledovat odjezdy a polohu vašich spojů v reálném čase.",
     "chooseCity": "Vyberte region",
     "cta": "Začínáme"
@@ -175,7 +175,7 @@
       "hidePastStops": "Skrýt předchozí zastávky",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
-      "shareText": "Sledujte polohu spoje linky {{line}} živě na departs.app",
+      "shareText": "Sledujte polohu spoje linky {{line}} živě na {{appName}}",
       "requestStop": "Zastávka na znamení",
       "track": "Sledovat vozidlo",
       "connections": {
@@ -190,7 +190,7 @@
       "noUpcomingDescription": "Zkuste to později nebo se podívejte na oficiální jízdní řád.",
       "noUpcomingForLine": "Pro linku {{line}} nebyly nalezeny žádné odjezdy.",
       "shareTitle": "Zastávka: {{name}}",
-      "shareText": "Podívej se na odjezdy ze zastávky {{name}} na departs.app",
+      "shareText": "Podívej se na odjezdy ze zastávky {{name}} na {{appName}}",
       "metroNight": {
         "title": "Metro v noci nejezdí",
         "description": "Využijte noční tramvaje a autobusy, které zajišťují dopravu až do ranních hodin."
@@ -430,7 +430,7 @@
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Otevřete Nastavení → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Zadejte Název: departs",
-    "claudeDesktopStep3": "Zadejte Remote URL: https://departs.app/mcp",
+    "claudeDesktopStep3": "Zadejte Remote URL: {{mcpUrl}}",
     "cursorTitle": "AI IDE a editory",
     "dismissBanner": "Skrýt banner"
   },

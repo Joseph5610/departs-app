@@ -118,7 +118,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             stops: []
         },
         hasInfotexts: false,
-        vehicleMetadata: { file: 'vehicles.json?v=3' },
+        vehicleMetadata: { file: 'vehicles.json' },
         dataProvider: { nameKey: 'liveStatus.providerKordis', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
         attributions: [
             { creator: 'Statutární město Brno, KORDIS JMK', title: 'IDS JMK timetables (GTFS, GTFS-RT)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328', license: 'ccBy4' },
@@ -163,7 +163,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
         hasTripShapes: true,
-        vehicleMetadata: { file: 'dpmp-vehicles.json?v=2' },
+        vehicleMetadata: { file: 'dpmp-vehicles.json' },
         filters: {
             vehicles: ['bus', 'trolleybus'],
             stops: []

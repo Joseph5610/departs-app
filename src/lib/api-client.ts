@@ -8,7 +8,7 @@ export async function apiFetch<T>(
     url: string | URL,
     options: RequestInit & { timeout?: number } = {}
 ): Promise<T> {
-    const { timeout = QUERY_TIMING_MS.API_REQUEST_TIMEOUT, ...fetchOptions } = options;
+    const { timeout = QUERY_TIMING_MS.API_REQUEST_TIMEOUT, signal, ...fetchOptions } = options;
 
     let finalUrl = url.toString();
     if (finalUrl.startsWith('/')) {
@@ -20,8 +20,12 @@ export async function apiFetch<T>(
         }
     }
 
+    // Linked by hand: AbortSignal.any needs iOS 17.4+.
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
+    const abortFromCaller = () => controller.abort(signal?.reason);
+    if (signal?.aborted) abortFromCaller();
+    else signal?.addEventListener('abort', abortFromCaller, { once: true });
 
     try {
         const response = await fetch(finalUrl, {
@@ -29,15 +33,13 @@ export async function apiFetch<T>(
             signal: controller.signal
         });
 
-        clearTimeout(id);
-
         if (!response.ok) {
             throw await parseFetchError(response);
         }
 
         return await response.json();
     } catch (error: unknown) {
-        clearTimeout(id);
+        if (signal?.aborted) throw error;
 
         if (error instanceof Error && error.name === 'AbortError') {
             const timeoutError = new Error('Request timed out') as AppError;
@@ -53,5 +55,8 @@ export async function apiFetch<T>(
         }
 
         throw error;
+    } finally {
+        clearTimeout(id);
+        signal?.removeEventListener('abort', abortFromCaller);
     }
 }

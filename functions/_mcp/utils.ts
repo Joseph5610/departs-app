@@ -65,7 +65,7 @@ export async function readBoundedText(request: Request, maxBytes: number): Promi
  * `waitUntil` — no `Request` to fake, since nothing downstream reads anything but the query.
  */
 export function buildRequestContext(ctx: McpContext, searchParams?: Record<string, string> | URLSearchParams): CityRequestContext {
-    const url = new URL('https://departs.app/mcp');
+    const url = new URL('http://mcp.internal/mcp');
     if (searchParams) {
         if (searchParams instanceof URLSearchParams) {
             searchParams.forEach((v, k) => url.searchParams.append(k, v));

@@ -103,8 +103,8 @@
     "sourceBadge": "Zdroj",
     "attributions": {
       "shared": "Mapa a vyhľadávanie miest",
-      "processedTitle": "Ako departs.app dáta upravuje",
-      "notice": "Dáta sú zobrazené upravené: prevedené, filtrované, spárované so zastávkami a nástupišťami a spojené so živými dátami. Poskytovatelia departs.app nepodporujú ani neschvaľujú. Zdroje a zmeny sú zdokumentované tu.",
+      "processedTitle": "Ako {{appName}} dáta upravuje",
+      "notice": "Dáta sú zobrazené upravené: prevedené, filtrované, spárované so zastávkami a nástupišťami a spojené so živými dátami. Poskytovatelia {{appName}} nepodporujú ani neschvaľujú. Zdroje a zmeny sú zdokumentované tu.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
@@ -120,7 +120,7 @@
     }
   },
   "welcome": {
-    "title": "Vitajte v departs.app",
+    "title": "Vitajte v {{appName}}",
     "description": "Najrýchlejší spôsob, ako sledovať odchody a polohu vašich spojov v reálnom čase.",
     "chooseCity": "Vyberte región",
     "cta": "Začíname"
@@ -175,16 +175,22 @@
       "hidePastStops": "Skryť prejdené",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
-      "shareText": "Sledujte polohu spoja linky {{line}} naživo na departs.app",
+      "shareText": "Sledujte polohu spoja linky {{line}} naživo na {{appName}}",
       "requestStop": "Zastávka na znamenie",
-      "track": "Sledovať vozidlo"
+      "track": "Sledovať vozidlo",
+      "connections": {
+        "title": "Prestupy",
+        "waitsUpTo": "počká až {{minutes}} min",
+        "mayNotWait": "Nemusí počkať"
+      },
+      "continuesAs": "Pokračuje ako linka"
     },
     "departures": {
       "noUpcoming": "Nenašli sa žiadne najbližšie odchody.",
       "noUpcomingDescription": "Skúste to neskôr alebo si pozrite oficiálny cestovný poriadok.",
       "noUpcomingForLine": "Pre linku {{line}} sa nenašli žiadne odchody.",
       "shareTitle": "Zastávka: {{name}}",
-      "shareText": "Pozri si odchody zo zastávky {{name}} na departs.app",
+      "shareText": "Pozri si odchody zo zastávky {{name}} na {{appName}}",
       "metroNight": {
         "title": "Metro v noci nepremáva",
         "description": "Využite nočné električky a autobusy, ktoré zabezpečujú dopravu až do ranných hodín."
@@ -213,7 +219,14 @@
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",
       "removeFromFavorites": "Odobrať z obľúbených",
-      "canceled": "Zrušený"
+      "canceled": "Zrušený",
+      "feeder": {
+        "waitsFor": "Čaká na {{line}} (max. {{minutes}} min)",
+        "heldFor": "Čaká ~{{minutes}} min na {{line}}",
+        "wontWait": "Nepočká na {{line}}",
+        "waitsForLines": "Čaká na prípoje: {{lines}}"
+      },
+      "continuesAs": "Pokračuje ako linka {{line}} smer {{headsign}}"
     }
   },
   "update": {
@@ -417,7 +430,7 @@
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Otvorte Nastavenia → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Zadajte Názov: departs",
-    "claudeDesktopStep3": "Zadajte Remote URL: https://departs.app/mcp",
+    "claudeDesktopStep3": "Zadajte Remote URL: {{mcpUrl}}",
     "cursorTitle": "AI IDE a editory",
     "dismissBanner": "Skryť banner"
   },

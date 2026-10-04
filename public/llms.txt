@@ -1,6 +1,6 @@
-# departs.app
+# %SITE_NAME%
 
-**departs.app** is a lightning-fast, real-time public transit tracker for Prague (PID), Brno (IDS JMK) and Prešov (DPMP). It provides users with live departures, vehicle locations, and dynamic route tracking on an interactive map.
+**%SITE_NAME%** is a lightning-fast, real-time public transit tracker for Prague (PID), Brno (IDS JMK) and Prešov (DPMP). It provides users with live departures, vehicle locations, and dynamic route tracking on an interactive map.
 
 ## Core Features
 
@@ -11,7 +11,7 @@
 
 ## AI Capabilities & Remote MCP Server
 
-This application hosts a native **Remote Model Context Protocol (MCP) Server** at `https://departs.app/mcp`. AI assistants (Claude Code, Claude Desktop, Cursor, Windsurf, ChatGPT) can connect directly to real-time transit data over Server-Sent Events (SSE) or Streamable HTTP POST.
+This application hosts a native **Remote Model Context Protocol (MCP) Server** at `%SITE_MCP_URL%`. AI assistants (Claude Code, Claude Desktop, Cursor, Windsurf, ChatGPT) can connect directly to real-time transit data over Server-Sent Events (SSE) or Streamable HTTP POST.
 
 Exposed MCP Tools:
 
@@ -24,15 +24,15 @@ Exposed MCP Tools:
 - **`get_vehicle_detail`**: Trip itinerary, stop schedule progress, and vehicle specs.
 
 ### MCP Integration URLs
-- **Remote MCP Endpoint**: `https://departs.app/mcp` (SSE / Streamable HTTP)
-- **MCP Metadata Specification**: `https://departs.app/.well-known/mcp.json`
+- **Remote MCP Endpoint**: `%SITE_MCP_URL%` (SSE / Streamable HTTP)
+- **MCP Metadata Specification**: `%SITE_URL%/.well-known/mcp.json`
 
 ## URL Structure
 
 For direct navigation or linking, the app uses the following routing structures:
-- **Map Home**: `https://departs.app/{city}` (e.g., `https://departs.app/prague`)
-- **Stop Detail**: `https://departs.app/{city}/stop/{stopId}` (e.g., `https://departs.app/prague/stop/U850Z1P`)
-- **Vehicle/Trip Tracking**: `https://departs.app/{city}/trip/{tripId}` (e.g., `https://departs.app/brno/trip/12345`)
+- **Map Home**: `%SITE_URL%/{city}` (e.g., `%SITE_URL%/prague`)
+- **Stop Detail**: `%SITE_URL%/{city}/stop/{stopId}` (e.g., `%SITE_URL%/prague/stop/U850Z1P`)
+- **Vehicle/Trip Tracking**: `%SITE_URL%/{city}/trip/{tripId}` (e.g., `%SITE_URL%/brno/trip/12345`)
 
 ## Tech Stack
 

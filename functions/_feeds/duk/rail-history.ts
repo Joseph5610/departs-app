@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
 import { isFields, type Fields } from '../../_core/utils/fields';
@@ -70,13 +70,11 @@ function parseRows(csv: string): Row[] {
 
 /** Railway stops by SR70 number, as departs-data publishes them; null before that file is rolled out. */
 async function getRailStops(city: CityConfig): Promise<Fields | null> {
-    const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) return null;
     return CacheManager.getOrFetch<Fields | null>(
         `duk_rail_stops_${city.slug}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${RAIL.STOPS_FILE}`, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } }).catch(() => null);
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/${RAIL.STOPS_FILE}`, { cf: { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA } }).catch(() => null);
             if (!res || !res.ok) return null;
             const parsed = railStopsSchema.safeParse(await res.json().catch(() => null));
             return parsed.success ? parsed.data : null;

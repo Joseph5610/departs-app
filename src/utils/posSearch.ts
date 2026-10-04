@@ -1,5 +1,5 @@
 import { normalizeString } from './stringUtils';
-import { calculateDistance } from './transitUtils';
+import { calculateDistance } from '../lib/geo';
 import { POS_SEARCH } from '../config/constants';
 import type { PointOfSale, PointOfSaleType } from '../types/pointsOfSale';
 

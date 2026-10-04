@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { TFunction } from 'i18next';
 import { useGeolocationStore } from '../../state/geolocationStore';
 import { useSelectedStop } from './useSelectedStop';
-import { calculateDistance } from '../../utils/transitUtils';
+import { calculateDistance } from '../../lib/geo';
 import {
     WALKING_SPEED,
     AT_STOP_THRESHOLD_METERS,

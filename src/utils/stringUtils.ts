@@ -8,3 +8,7 @@ export const normalizeString = (str: string): string => {
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
 };
+
+/** `list` with `item` added, or removed when already present. */
+export const toggled = (list: string[], item: string): string[] =>
+    list.includes(item) ? list.filter(i => i !== item) : [...list, item];

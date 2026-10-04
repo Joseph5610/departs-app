@@ -42,37 +42,41 @@ export interface DeparturesResponse {
     departures: Departure[];
 }
 
-type DelayHistory = Map<string, { delay: number | null; timestamp: number }>;
-
-/** Each stop's previous delays, keyed by trip and scheduled time; replaced on every fetch so it only holds current departures. */
-const delayHistoryByStop = new Map<string, DelayHistory>();
-
-/** Adds how much each departure's delay changed since the previous fetch of the same stop. */
-const withDelayDeltas = (stopKey: string, departures: Departure[]): Departure[] => {
-    const previous = delayHistoryByStop.get(stopKey);
-    const next: DelayHistory = new Map();
+/** Adds how much each departure's delay changed since the stop's previous (recent) fetch. */
+const withDelayDeltas = (departures: Departure[], previous: Departure[] | undefined, previousFetchedAt: number): Departure[] => {
+    const previousByKey = new Map<string, Departure>();
+    for (const dep of previous ?? []) previousByKey.set(`${dep.tripId}-${dep.scheduled}`, dep);
     const now = Date.now();
 
-    const result = departures.map((dep) => {
-        const key = `${dep.tripId}-${dep.scheduled}`;
-        const prev = previous?.get(key);
+    return departures.map((dep) => {
+        const prev = previousByKey.get(`${dep.tripId}-${dep.scheduled}`);
+        if (!prev) return { ...dep, delayDelta: undefined, lastDelayUpdate: undefined };
 
-        let delta: number | undefined = undefined;
-        let lastUpdate: number | undefined = undefined;
-
-        if (prev && prev.delay !== dep.delay && prev.delay !== null && dep.delay !== null) {
-            delta = dep.delay - prev.delay;
-            lastUpdate = now;
-        } else if (prev) {
-            lastUpdate = prev.timestamp;
+        if (prev.delay !== dep.delay && prev.delay !== null && dep.delay !== null) {
+            return { ...dep, delayDelta: dep.delay - prev.delay, lastDelayUpdate: now };
         }
-
-        next.set(key, { delay: dep.delay, timestamp: lastUpdate || now });
-        return { ...dep, delayDelta: delta, lastDelayUpdate: lastUpdate };
+        return { ...dep, delayDelta: undefined, lastDelayUpdate: prev.lastDelayUpdate ?? previousFetchedAt };
     });
+};
 
-    delayHistoryByStop.set(stopKey, next);
-    return result;
+/** Departures of one or more stops; `stopId` repeats per stop. */
+export const fetchDepartures = (city: string, stopIds: string[], signal?: AbortSignal): Promise<DeparturesResponse> => {
+    const params = new URLSearchParams();
+    for (const id of stopIds) params.append('stopId', id);
+    return apiFetch<DeparturesResponse>(`/${city}/departures?${params.toString()}`, { ...LIVE_FETCH_OPTIONS, signal });
+};
+
+/**
+ * Fetched departures run through the live pipeline against the current fleet, push patches, route
+ * branding and fleet register. `enrich` must be a module-level `memoizeLast` owned by the caller.
+ */
+export const useLiveDepartures = (departures: Departure[], dataUpdatedAt: number, enrich: typeof enrichLiveDepartures): Departure[] => {
+    const byTripId = useEnrichmentStore(s => s.byTripId);
+    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+    const { tripIndex } = useVehicles();
+    const { byShortName, byId } = useRouteMetadata();
+    const fleet = useFleetLookup();
+    return enrich(departures, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt, fleet);
 };
 
 const enrichStopDepartures = memoizeLast(enrichLiveDepartures);
@@ -225,13 +229,15 @@ export const useDepartures = () => {
 
     const query = useQuery<DeparturesResponse | null, AppError>({
         queryKey: ['departures', selectedCity, stopId],
-        queryFn: async () => {
+        queryFn: async ({ client, queryKey, signal }) => {
             if (!stopId || !selectedCity) {
                 return null;
             }
-            const data = await apiFetch<DeparturesResponse>(`/${selectedCity}/departures?stopId=${encodeURIComponent(stopId)}`, LIVE_FETCH_OPTIONS);
+            const data = await fetchDepartures(selectedCity, [stopId], signal);
             if (!data?.departures) return data;
-            return { ...data, departures: withDelayDeltas(`${selectedCity}:${stopId}`, data.departures) };
+            const previous = client.getQueryState<DeparturesResponse | null>(queryKey);
+            const isRecent = !!previous && Date.now() - previous.dataUpdatedAt <= refreshMs * DEPARTURES_CONFIG.DELAY_DELTA_MAX_AGE_REFRESHES;
+            return { ...data, departures: withDelayDeltas(data.departures, isRecent ? previous.data?.departures : undefined, previous?.dataUpdatedAt ?? Date.now()) };
         },
         enabled: !!stopId,
         refetchInterval: refreshMs,
@@ -239,14 +245,8 @@ export const useDepartures = () => {
         retry: false,
     });
 
-    const byTripId = useEnrichmentStore(s => s.byTripId);
-    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
-    const { tripIndex } = useVehicles();
-    const { byShortName, byId } = useRouteMetadata();
-    const fleet = useFleetLookup();
-
     const dataUpdatedAt = query.dataUpdatedAt || 0;
-    const liveDepartures = enrichStopDepartures(query.data?.departures ?? NO_DEPARTURES, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt, fleet);
+    const liveDepartures = useLiveDepartures(query.data?.departures ?? NO_DEPARTURES, dataUpdatedAt, enrichStopDepartures);
     const { filtered, hasAirConditioningData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned);
     const groupedDepartures = groupDepartures(filtered, departureSort);
     const delayStats = computeDelayStats(filtered, dataUpdatedAt);

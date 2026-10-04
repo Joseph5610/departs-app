@@ -84,14 +84,13 @@ export function createJsonBodyResponse(body: BodyInit, maxAge: number = 10): Res
     });
 }
 
-const ALLOWED_PATTERNS = [
-    /^https:\/\/(www\.)?departs\.app$/,      // Main domain (with or without www)
-    /^https:\/\/.*departs-app\.pages\.dev$/, // Cloudflare Pages (all environments)
-    /^http:\/\/localhost:\d+$/,              // Localhost
-    /^http:\/\/127\.0\.0\.1:\d+$/            // Local IP
+const LOCAL_ORIGIN_PATTERNS = [
+    /^http:\/\/localhost:\d+$/,
+    /^http:\/\/127\.0\.0\.1:\d+$/
 ];
 
-export const isAllowedOrigin = (origin: string | null): boolean => {
+/** The app's own host (whatever domain serves this deployment) or a local dev server. */
+export const isAllowedOrigin = (origin: string | null, requestUrl: string): boolean => {
     if (!origin) return false;
-    return ALLOWED_PATTERNS.some(pattern => pattern.test(origin));
+    return origin === new URL(requestUrl).origin || LOCAL_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
 };

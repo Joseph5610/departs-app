@@ -17,160 +17,34 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { IconToggle, type IconToggleProps } from '../../IconToggle';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
 import { cn } from 'cn';
 import { usePreferencesStore } from '../../../state/preferencesStore';
 import { useCityConfig } from '../../../hooks/data/useCities';
-import { DELAY_TIERS, ROUTE_TYPE_ORDER, type DelayTierKey } from '../../../config/transit';
+import { ROUTE_TYPE_ORDER } from '../../../config/transit';
 import { ROUTE_TYPE_ICONS } from '../../routeTypeIcons';
 import { RefreshIntervalPicker } from '../../RefreshIntervalPicker';
+import { toggled } from '../../../utils/stringUtils';
+import { FilterButton, FilterHeading, SectionHeading, ToggleSection } from './SettingsControls';
+import { DelayFilter } from './DelayFilter';
 
 const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));
 
-const DELAY_TIER_STYLES: Record<DelayTierKey, Pick<DelayFilterCardProps, 'accentClass' | 'activeBg' | 'activeBorder' | 'activeText'>> = {
-    aheadOfTime: {
-        accentClass: 'bg-sky-500 dark:bg-sky-400',
-        activeBg: 'bg-sky-500/10 dark:bg-sky-500/20',
-        activeBorder: 'border-sky-500/40 dark:border-sky-500/50',
-        activeText: 'text-sky-950 dark:text-sky-300',
-    },
-    onTime: {
-        accentClass: 'bg-emerald-600 dark:bg-emerald-400',
-        activeBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
-        activeBorder: 'border-emerald-500/40 dark:border-emerald-500/50',
-        activeText: 'text-emerald-950 dark:text-emerald-300',
-    },
-    moderate: {
-        accentClass: 'bg-amber-600 dark:bg-amber-400',
-        activeBg: 'bg-amber-500/10 dark:bg-amber-500/20',
-        activeBorder: 'border-amber-500/40 dark:border-amber-500/50',
-        activeText: 'text-amber-950 dark:text-amber-300',
-    },
-    high: {
-        accentClass: 'bg-rose-600 dark:bg-rose-400',
-        activeBg: 'bg-rose-500/10 dark:bg-rose-500/20',
-        activeBorder: 'border-rose-500/40 dark:border-rose-500/50',
-        activeText: 'text-rose-950 dark:text-rose-300',
-    },
-    severe: {
-        accentClass: 'bg-purple-700 dark:bg-purple-400',
-        activeBg: 'bg-purple-500/10 dark:bg-purple-950/40',
-        activeBorder: 'border-purple-500/40 dark:border-purple-500/50',
-        activeText: 'text-purple-950 dark:text-purple-200',
-    },
-};
+const THEMES = [
+    { id: 'light', icon: Sun },
+    { id: 'dark', icon: Moon },
+    { id: 'system', icon: Monitor },
+] as const;
 
-const FilterButton: React.FC<Omit<IconToggleProps, 'className' | 'labelClassName'>> = (props) => (
-    <IconToggle {...props} className="py-2.5 rounded-2xl text-sm" labelClassName="text-[10px] font-bold uppercase tracking-wider" />
-);
+/** Stop types a city may offer as a stop filter, in display order. */
+const STOP_FILTER_TYPES = ['metro', 'train'] as const;
 
-interface DelayFilterCardProps {
-    label: string;
-    isActive: boolean;
-    onClick: () => void;
-    accentClass: string;
-    activeBg: string;
-    activeBorder: string;
-    activeText: string;
-}
-
-const DelayFilterCard: React.FC<DelayFilterCardProps> = ({
-    label,
-    isActive,
-    onClick,
-    accentClass,
-    activeBg,
-    activeBorder,
-    activeText
-}) => (
-    <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-            "relative flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all cursor-pointer text-left select-none outline-none group active:scale-[0.98]",
-            isActive
-                ? cn("shadow-2xs", activeBg, activeBorder, activeText)
-                : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-        )}
-    >
-        <div
-            className={cn(
-                "w-1 h-5 rounded-full transition-all shrink-0",
-                accentClass,
-                isActive ? "opacity-100 scale-100" : "opacity-30 group-hover:opacity-60"
-            )}
-        />
-        <span className="text-xs font-semibold tracking-tight truncate">
-            {label}
-        </span>
-    </button>
-);
-
-interface ToggleSectionProps {
-    title: string;
-    description: string;
-    icon: React.ElementType;
-    isChecked: boolean;
-    onToggle: (val: boolean) => void;
-    children?: React.ReactNode;
-    className?: string;
-}
-
-const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon: Icon, isChecked, onToggle, children, className }) => (
-    <Card variant="subtle" size="none" className={className}>
-        <Item
-            variant="settings"
-            size="none"
-            className={cn(
-                "w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset border-0",
-                !isChecked && "rounded-xl",
-                isChecked && "rounded-t-xl"
-            )}
-            render={<button onClick={() => onToggle(!isChecked)} />}
-        >
-            <ItemMedia variant="icon" className={cn(isChecked ? "text-primary" : "text-muted-foreground")}>
-                <Icon size={20} strokeWidth={1.5} />
-            </ItemMedia>
-            <ItemContent>
-                <ItemTitle className="text-foreground">{title}</ItemTitle>
-                <ItemDescription className="text-xs">{description}</ItemDescription>
-            </ItemContent>
-            <ItemActions>
-                <Switch
-                    checked={isChecked}
-                    onCheckedChange={onToggle}
-                    className="ml-3 sm:ml-4"
-                />
-            </ItemActions>
-        </Item>
-
-        {children && (
-            <div 
-                className={cn(
-                    "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out border-t border-border/50",
-                    isChecked ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none border-t-0"
-                )}
-            >
-                <div className="overflow-hidden flex flex-col">
-                    {children}
-                </div>
-            </div>
-        )}
-    </Card>
-);
-
-/**
- * DisplaySection
- *
- * Renders vehicle/stop visibility toggles and the vehicle type filter grid.
- */
+/** Theme, refresh interval and the map's layer toggles and filters. */
 export const DisplaySection: React.FC = () => {
     const { t } = useTranslation();
     const { theme, setTheme } = useTheme();
 
-    // Preferences
     const showVehicles = usePreferencesStore(s => s.showVehicles);
     const showStops = usePreferencesStore(s => s.showStops);
     const routeTypeFilter = usePreferencesStore(s => s.routeTypeFilter);
@@ -179,7 +53,6 @@ export const DisplaySection: React.FC = () => {
     const showPointsOfSale = usePreferencesStore(s => s.showPointsOfSale);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
-    const delayFilter = usePreferencesStore(s => s.delayFilter);
 
     const {
         setShowVehicles,
@@ -190,7 +63,6 @@ export const DisplaySection: React.FC = () => {
         setShowStopLabels,
         setMapBaseStyle,
         setColorVehiclesByDelay,
-        setDelayFilter,
     } = usePreferencesStore(s => s.actions);
 
     const cityConfig = useCityConfig();
@@ -199,67 +71,30 @@ export const DisplaySection: React.FC = () => {
     const allowedStops = cityConfig.filters?.stops || [];
     const isStopsFilterEnabled = allowedStops.length > 0;
 
-    const toggleFilter = (filter: string[], setFilter: (val: string[]) => void, type: string) => {
-        if (filter.includes(type)) {
-            setFilter(filter.filter(t => t !== type));
-        } else {
-            setFilter([...filter, type]);
-        }
-    };
-
-    const toggleDelayTier = (tierKey: string) => {
-        if (delayFilter.includes(tierKey)) {
-            const next = delayFilter.filter(k => k !== tierKey);
-            setDelayFilter(next);
-        } else {
-            setDelayFilter([...delayFilter, tierKey]);
-        }
-    };
-
-    const isDelayTierActive = (tierKey: string) => {
-        return delayFilter.length === 0 || delayFilter.includes(tierKey);
-    };
-
     return (
         <div className="flex flex-col gap-6">
-            {/* Theme / Appearance Selection */}
             <div className="flex flex-col gap-3">
-                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                    {t('settings.theme.title')}
-                </h3>
+                <SectionHeading>{t('settings.theme.title')}</SectionHeading>
                 <Card variant="subtle" size="none">
                     <div className="p-3">
                         <div className="grid grid-cols-3 gap-2">
-                            <FilterButton
-                                icon={Sun}
-                                label={t('settings.theme.light')}
-                                isActive={theme === 'light'}
-                                onClick={() => setTheme('light')}
-                                testId="theme-light"
-                            />
-                            <FilterButton
-                                icon={Moon}
-                                label={t('settings.theme.dark')}
-                                isActive={theme === 'dark'}
-                                onClick={() => setTheme('dark')}
-                                testId="theme-dark"
-                            />
-                            <FilterButton
-                                icon={Monitor}
-                                label={t('settings.theme.system')}
-                                isActive={theme === 'system'}
-                                onClick={() => setTheme('system')}
-                                testId="theme-system"
-                            />
+                            {THEMES.map(({ id, icon }) => (
+                                <FilterButton
+                                    key={id}
+                                    icon={icon}
+                                    label={t(`settings.theme.${id}`)}
+                                    isActive={theme === id}
+                                    onClick={() => setTheme(id)}
+                                    testId={`theme-${id}`}
+                                />
+                            ))}
                         </div>
                     </div>
                 </Card>
             </div>
 
             <div className="flex flex-col gap-3">
-                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                    {t('settings.sections.data')}
-                </h3>
+                <SectionHeading>{t('settings.sections.data')}</SectionHeading>
                 <Card variant="subtle" size="none">
                     <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
                         <ItemMedia variant="icon" className="text-muted-foreground">
@@ -277,227 +112,130 @@ export const DisplaySection: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-3">
-                <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                    {t('settings.sections.display')}
-                </h3>
-            <ToggleSection
-                title={t('settings.liveVehicles.title')}
-                description={t('settings.liveVehicles.description')}
-                icon={showVehicles ? Eye : EyeOff}
-                isChecked={showVehicles}
-                onToggle={setShowVehicles}
-            >
-                <div className="flex flex-col gap-5 px-4 py-3">
-                    {/* Vehicle Type Filters */}
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-primary" />
-                            <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
-                                {t('settings.sections.filters')}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
-                            {vehicleTypes
-                                .filter(({ id }) => allowedVehicles.includes(id))
-                                .map(({ id, icon }) => (
-                                <FilterButton
-                                    key={id}
-                                    icon={icon}
-                                    label={t(`settings.vehicleTypes.${id}`)}
-                                    isActive={routeTypeFilter.includes(id)}
-                                    onClick={() => toggleFilter(routeTypeFilter, setRouteTypeFilter, id)}
-                                    testId={`vehicle-type-${id}`}
-                                />
-                            ))}
-
-                            <FilterButton
-                                icon={CircleSlash}
-                                label={t('common.all')}
-                                isActive={routeTypeFilter.length === 0}
-                                onClick={() => setRouteTypeFilter([])}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Delay Range Filters */}
-                    <div className="flex flex-col gap-3 border-t border-border/40 pt-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-1 h-1 rounded-full bg-primary" />
-                                <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
-                                    {t('settings.colorVehiclesByDelay.filterTitle')}
-                                </div>
-                            </div>
-                            {delayFilter.length > 0 && (
-                                <button
-                                    onClick={() => setDelayFilter([])}
-                                    className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
-                                >
-                                    {t('common.all')}
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            {DELAY_TIERS.map(({ key }) => (
-                                <DelayFilterCard
-                                    key={key}
-                                    label={t(`settings.colorVehiclesByDelay.${key}`)}
-                                    isActive={isDelayTierActive(key)}
-                                    onClick={() => toggleDelayTier(key)}
-                                    {...DELAY_TIER_STYLES[key]}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </ToggleSection>
-
-            <Card variant="subtle" size="none" className="mt-3">
-                <Item
-                    variant="settings"
-                    size="none"
-                    className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-xl border-0"
-                    render={<button onClick={() => setColorVehiclesByDelay(!colorVehiclesByDelay)} />}
+                <SectionHeading>{t('settings.sections.display')}</SectionHeading>
+                <ToggleSection
+                    title={t('settings.liveVehicles.title')}
+                    description={t('settings.liveVehicles.description')}
+                    icon={showVehicles ? Eye : EyeOff}
+                    isChecked={showVehicles}
+                    onToggle={setShowVehicles}
                 >
-                    <ItemMedia variant="icon" className={cn(colorVehiclesByDelay ? "text-primary" : "text-muted-foreground")}>
-                        <Palette size={20} strokeWidth={1.5} />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle className="text-foreground">{t('settings.colorVehiclesByDelay.title')}</ItemTitle>
-                        <ItemDescription className="text-xs">{t('settings.colorVehiclesByDelay.description')}</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        <Switch
-                            checked={colorVehiclesByDelay}
-                            onCheckedChange={setColorVehiclesByDelay}
-                            className="ml-3 sm:ml-4"
-                        />
-                    </ItemActions>
-                </Item>
-            </Card>
+                    <div className="flex flex-col gap-5 px-4 py-3">
+                        <div className="flex flex-col gap-3">
+                            <FilterHeading>{t('settings.sections.filters')}</FilterHeading>
+                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                                {vehicleTypes
+                                    .filter(({ id }) => allowedVehicles.includes(id))
+                                    .map(({ id, icon }) => (
+                                        <FilterButton
+                                            key={id}
+                                            icon={icon}
+                                            label={t(`settings.vehicleTypes.${id}`)}
+                                            isActive={routeTypeFilter.includes(id)}
+                                            onClick={() => setRouteTypeFilter(toggled(routeTypeFilter, id))}
+                                            testId={`vehicle-type-${id}`}
+                                        />
+                                    ))}
 
-            <ToggleSection
-                title={t('settings.showStops.title')}
-                description={t('settings.showStops.description')}
-                icon={MapPin}
-                isChecked={showStops}
-                onToggle={setShowStops}
-                className="mt-3"
-            >
-                <Item
-                    variant="settings"
-                    size="none"
-                    className={cn("w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none", isStopsFilterEnabled ? "border-b border-border/50" : "border-0")}
-                    render={<button onClick={() => setShowStopLabels(!showStopLabels)} />}
-                >
-                    <ItemMedia variant="icon" className={cn(showStopLabels ? "text-primary" : "text-muted-foreground")}>
-                        <Type size={20} strokeWidth={1.5} />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle className="text-foreground">{t('settings.showStops.labels')}</ItemTitle>
-                        <ItemDescription className="text-[10px] font-normal">{t('settings.showStops.labelsDescription')}</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        <Switch
-                            checked={showStopLabels}
-                            onCheckedChange={setShowStopLabels}
-                        />
-                    </ItemActions>
-                </Item>
-
-                {isStopsFilterEnabled && (
-                    <div className="flex flex-col gap-3 px-4 py-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-primary" />
-                            <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
-                                {t('settings.sections.filters')}
+                                <FilterButton
+                                    icon={CircleSlash}
+                                    label={t('common.all')}
+                                    isActive={routeTypeFilter.length === 0}
+                                    onClick={() => setRouteTypeFilter([])}
+                                />
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
-                            {allowedStops.includes('metro') && (
-                                <FilterButton
-                                    icon={ROUTE_TYPE_ICONS.metro}
-                                    label={t('settings.vehicleTypes.metro')}
-                                    isActive={stopTypeFilter.includes('metro')}
-                                    onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'metro')}
-                                />
-                            )}
 
-                            {allowedStops.includes('train') && (
-                                <FilterButton
-                                    icon={ROUTE_TYPE_ICONS.train}
-                                    label={t('settings.vehicleTypes.train')}
-                                    isActive={stopTypeFilter.includes('train')}
-                                    onClick={() => toggleFilter(stopTypeFilter, setStopTypeFilter, 'train')}
-                                />
-                            )}
-
-                            <FilterButton
-                                icon={CircleSlash}
-                                label={t('common.all')}
-                                isActive={stopTypeFilter.length === 0}
-                                onClick={() => setStopTypeFilter([])}
-                            />
-                            <div className="hidden sm:block" />
-                        </div>
+                        <DelayFilter />
                     </div>
-                )}
-            </ToggleSection>
+                </ToggleSection>
 
-            {cityConfig.hasPointsOfSale && (
-                <Card variant="subtle" size="none" className="mt-3">
+                <ToggleSection
+                    title={t('settings.colorVehiclesByDelay.title')}
+                    description={t('settings.colorVehiclesByDelay.description')}
+                    icon={Palette}
+                    isChecked={colorVehiclesByDelay}
+                    onToggle={setColorVehiclesByDelay}
+                    className="mt-3"
+                />
+
+                <ToggleSection
+                    title={t('settings.showStops.title')}
+                    description={t('settings.showStops.description')}
+                    icon={MapPin}
+                    isChecked={showStops}
+                    onToggle={setShowStops}
+                    className="mt-3"
+                >
                     <Item
                         variant="settings"
                         size="none"
-                        className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-xl border-0"
-                        render={<button onClick={() => setShowPointsOfSale(!showPointsOfSale)} />}
+                        className={cn("w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-none", isStopsFilterEnabled ? "border-b border-border/50" : "border-0")}
+                        render={<button onClick={() => setShowStopLabels(!showStopLabels)} />}
                     >
-                        <ItemMedia variant="icon" className={cn(showPointsOfSale ? "text-primary" : "text-muted-foreground")}>
-                            <Ticket size={20} strokeWidth={1.5} />
+                        <ItemMedia variant="icon" className={cn(showStopLabels ? "text-primary" : "text-muted-foreground")}>
+                            <Type size={20} strokeWidth={1.5} />
                         </ItemMedia>
                         <ItemContent>
-                            <ItemTitle className="text-foreground">{t('settings.showPointsOfSale.title')}</ItemTitle>
-                            <ItemDescription className="text-xs">{t('settings.showPointsOfSale.description')}</ItemDescription>
+                            <ItemTitle className="text-foreground">{t('settings.showStops.labels')}</ItemTitle>
+                            <ItemDescription className="text-[10px] font-normal">{t('settings.showStops.labelsDescription')}</ItemDescription>
                         </ItemContent>
                         <ItemActions>
                             <Switch
-                                checked={showPointsOfSale}
-                                onCheckedChange={setShowPointsOfSale}
-                                className="ml-3 sm:ml-4"
+                                checked={showStopLabels}
+                                onCheckedChange={setShowStopLabels}
                             />
                         </ItemActions>
                     </Item>
-                </Card>
-            )}
 
-            <Card variant="subtle" size="none" className="mt-3">
-                <Item
-                    variant="settings"
-                    size="none"
-                    className="w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-xl border-0"
-                    render={<button onClick={() => setMapBaseStyle(mapBaseStyle === 'labels' ? 'nolabels' : 'labels')} />}
-                >
-                    <ItemMedia variant="icon" className={cn(mapBaseStyle === 'labels' ? "text-primary" : "text-muted-foreground")}>
-                        <MapIcon size={20} strokeWidth={1.5} />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle className="text-foreground">{t('settings.mapStyle.title')}</ItemTitle>
-                        <ItemDescription className="text-xs">{t('settings.mapStyle.description')}</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        <Switch
-                            checked={mapBaseStyle === 'labels'}
-                            onCheckedChange={(c) => setMapBaseStyle(c ? 'labels' : 'nolabels')}
-                            className="ml-3 sm:ml-4"
-                        />
-                    </ItemActions>
-                </Item>
-            </Card>
+                    {isStopsFilterEnabled && (
+                        <div className="flex flex-col gap-3 px-4 py-3">
+                            <FilterHeading>{t('settings.sections.filters')}</FilterHeading>
+                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-2">
+                                {STOP_FILTER_TYPES.filter(type => allowedStops.includes(type)).map(type => (
+                                    <FilterButton
+                                        key={type}
+                                        icon={ROUTE_TYPE_ICONS[type]}
+                                        label={t(`settings.vehicleTypes.${type}`)}
+                                        isActive={stopTypeFilter.includes(type)}
+                                        onClick={() => setStopTypeFilter(toggled(stopTypeFilter, type))}
+                                    />
+                                ))}
+
+                                <FilterButton
+                                    icon={CircleSlash}
+                                    label={t('common.all')}
+                                    isActive={stopTypeFilter.length === 0}
+                                    onClick={() => setStopTypeFilter([])}
+                                />
+                                <div className="hidden sm:block" />
+                            </div>
+                        </div>
+                    )}
+                </ToggleSection>
+
+                {cityConfig.hasPointsOfSale && (
+                    <ToggleSection
+                        title={t('settings.showPointsOfSale.title')}
+                        description={t('settings.showPointsOfSale.description')}
+                        icon={Ticket}
+                        isChecked={showPointsOfSale}
+                        onToggle={setShowPointsOfSale}
+                        className="mt-3"
+                    />
+                )}
+
+                <ToggleSection
+                    title={t('settings.mapStyle.title')}
+                    description={t('settings.mapStyle.description')}
+                    icon={MapIcon}
+                    isChecked={mapBaseStyle === 'labels'}
+                    onToggle={(c) => setMapBaseStyle(c ? 'labels' : 'nolabels')}
+                    className="mt-3"
+                />
             </div>
         </div>
     );
 };
 
 DisplaySection.displayName = 'DisplaySection';
-

@@ -6,6 +6,11 @@
  * purpose, so any module - including `_core/schemas.ts` - can read it without pulling in the feeds.
  */
 
+/** Where the departs-data static files live (per-city folders). */
+export const STATIC_DATA_CONFIG = {
+    BASE_URL: 'https://data.departs.app',
+};
+
 /**
  * Centralized Cache TTL Configuration (in seconds).
  */

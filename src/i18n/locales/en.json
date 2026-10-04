@@ -102,8 +102,8 @@
     "sourceBadge": "Source",
     "attributions": {
       "shared": "Map & place search",
-      "processedTitle": "How departs.app changes the data",
-      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse departs.app. Sources and changes are documented here.",
+      "processedTitle": "How {{appName}} changes the data",
+      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse {{appName}}. Sources and changes are documented here.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
@@ -119,7 +119,7 @@
     }
   },
   "welcome": {
-    "title": "Welcome to departs.app",
+    "title": "Welcome to {{appName}}",
     "description": "The fastest way to track departures and real-time locations of your transport.",
     "chooseCity": "Select Region",
     "cta": "Get Started"
@@ -174,7 +174,7 @@
       "hidePastStops": "Hide past stops",
       "scheduledTime": "sched.",
       "shareTitle": "Line {{line}}",
-      "shareText": "Track line {{line}} live on departs.app",
+      "shareText": "Track line {{line}} live on {{appName}}",
       "requestStop": "Request Stop",
       "track": "Follow vehicle",
       "connections": {
@@ -189,7 +189,7 @@
       "noUpcomingDescription": "Check back later or view the official schedule.",
       "noUpcomingForLine": "No upcoming departures for line {{line}}.",
       "shareTitle": "Stop: {{name}}",
-      "shareText": "Check out departures for {{name}} on departs.app",
+      "shareText": "Check out departures for {{name}} on {{appName}}",
       "metroNight": {
         "title": "The metro does not run at night",
         "description": "Please use night trams and buses which provide transportation until the early morning hours."
@@ -427,7 +427,7 @@
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Open Settings → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Set Name to departs",
-    "claudeDesktopStep3": "Set Remote URL to https://departs.app/mcp",
+    "claudeDesktopStep3": "Set Remote URL to {{mcpUrl}}",
     "cursorTitle": "AI IDEs & Editors",
     "dismissBanner": "Dismiss banner"
   },

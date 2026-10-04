@@ -1,6 +1,6 @@
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
-import { ERROR_MESSAGES, UPSTREAM_TTL_S } from '../../_core/config';
+import { ERROR_MESSAGES, UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { ApiError } from '../../_core/errors';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
@@ -28,20 +28,13 @@ const stopShards = new LruCache<Record<string, StopRelation>>({
     ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
 
-function staticDataUrl(city: CityConfig): string {
-    const url = city.feed?.staticDataUrl;
-    if (!url) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
-    return url;
-}
-
 /** Which platforms each station has, network-wide; read only when a request names stops across many shards. */
 function getParentChildMap(city: CityConfig): Promise<Record<string, string[]>> {
-    const baseUrl = staticDataUrl(city);
     return CacheManager.getOrFetch(
         `parent_child_map_${city.slug}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${baseUrl}/${city.slug}/parent_child_map.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/parent_child_map.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
             if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
             return await res.json() as Record<string, string[]>;
         }
@@ -52,7 +45,7 @@ async function getStopShard(city: CityConfig, shardId: string): Promise<Record<s
     const key = `${city.slug}:${shardId}`;
     const held = stopShards.get(key);
     if (held) return held;
-    const res = await appClient.fetch(`${staticDataUrl(city)}/${city.slug}/stop_index/${shardId}.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/stop_index/${shardId}.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
     if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
     const shard = await res.json() as Record<string, StopRelation>;
     stopShards.set(key, shard);
@@ -92,7 +85,6 @@ export async function getStopRelations(city: CityConfig, stopIds: string[]): Pro
  * each platform among them, whose bucket holds its rows.
  */
 export async function getDepartureRows(city: CityConfig, stopIds: string[], parentOf: ReadonlyMap<string, string>): Promise<Map<string, GtfsDepartureTuple[]>> {
-    const baseUrl = staticDataUrl(city);
     const rows = new Map<string, GtfsDepartureTuple[]>();
     const missing: string[] = [];
 
@@ -113,7 +105,7 @@ export async function getDepartureRows(city: CityConfig, stopIds: string[], pare
 
     await Promise.all(Array.from(byBucket, async ([bucketId, ids]) => {
         try {
-            const res = await appClient.fetch(`${baseUrl}/${city.slug}/departure_buckets/${bucketId}.json`, {
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/departure_buckets/${bucketId}.json`, {
                 cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS,
                 cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS }
             });

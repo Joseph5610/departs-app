@@ -4,6 +4,22 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.79.7] - 2026-10-04
+
+### Added
+
+- Slovak translations for transfers, feeder holds and through-running.
+
+### Changed
+
+- Switching stops or vehicles quickly cancels the requests for the ones left behind.
+- The frontend's name and hosts come from one config file and are filled into every page and public file at build.
+- The API accepts requests from whichever domain serves the app, so new deployments need no origin list.
+
+### Fixed
+
+- Returning to a stop after a while no longer shows delay arrows compared against long-outdated delays.
+
 ## [0.79.6] - 2026-10-04
 
 ### Changed

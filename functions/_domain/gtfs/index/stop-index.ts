@@ -1,5 +1,4 @@
 import type { CityConfig } from '../../../_core/city-config';
-import { ERROR_MESSAGES } from '../../../_core/config';
 import { ApiError } from '../../../_core/errors';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { getDepartureRows, getStopRelations } from '../../../_feeds/gtfs/departure-rows';
@@ -76,8 +75,7 @@ export class StopIndex {
     }
 }
 
-/** A city's stop index; throws when the city has no static data to build one from. */
+/** A city's stop index, read from its static data. */
 export function getStopIndex(city: CityConfig): StopIndex {
-    if (!city.feed?.staticDataUrl) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
     return new StopIndex(city);
 }

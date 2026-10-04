@@ -1,9 +1,7 @@
 import { ROUTE_PROGRESS_CONFIG } from '../config/constants';
+import { DEG, EARTH_RADIUS_M } from './geo';
 
 type LngLat = [number, number];
-
-const EARTH_RADIUS_M = 6_371_000;
-const DEG = Math.PI / 180;
 
 /** A route line flattened to local metres, with each point's distance along it. */
 export interface MeasuredLine {

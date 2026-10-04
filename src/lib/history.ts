@@ -13,7 +13,7 @@ interface AppHistoryState {
 const readState = (): Partial<AppHistoryState> | null =>
     (typeof window === 'undefined' ? null : window.history.state) as Partial<AppHistoryState> | null;
 
-export const getHistoryDepth = (): number => {
+const getHistoryDepth = (): number => {
     const depth = readState()?.depth;
     return typeof depth === 'number' ? depth : 0;
 };

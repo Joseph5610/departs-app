@@ -1,6 +1,6 @@
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { EMPTY_TRIP_RUNS, TripRuns, type TripRunsFile } from './trip-runs';
 
@@ -47,15 +47,11 @@ export function getRoutesByName(routes: Record<string, GtfsRoute>): Record<strin
  */
 export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
     const citySlug = city.slug;
-    const staticDataUrl = city.feed?.staticDataUrl;
-
-    if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
-
     const cacheKey = `gtfs_data_${citySlug}`;
 
     return CacheManager.getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const rRes = await appClient.fetch(`${staticDataUrl}/${citySlug}/routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const rRes = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${citySlug}/routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
 
             if (!rRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}`);
@@ -88,12 +84,9 @@ export async function getGtfsTripAliases(city: CityConfig): Promise<TripRuns> {
  * whether it has any costs as much as listing them all.
  */
 async function getStaticFile<T>(city: CityConfig, file: string, parse: (text: string) => T): Promise<T | null> {
-    const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
-
     return CacheManager.getOrFetch(`gtfs_${file}_${city.slug}`, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/${file}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/${file}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
             if (!res.ok) {
                 console.error(`Error fetching ${file} for ${city.slug}: ${res.status}`);
                 return null;

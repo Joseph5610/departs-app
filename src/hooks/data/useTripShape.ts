@@ -40,7 +40,7 @@ export function useTripShape(tripId: string | null | undefined): TripShapeResult
 
     const { data: shapeId, isLoading: isLoadingId } = useQuery({
         queryKey: ['trip-shape-ids', selectedCity, tripBucket],
-        queryFn: async () => tripShapeBucketSchema.parse(await apiFetch<unknown>(`${baseUrl}/trip_shape_buckets/${tripBucket}.json`)),
+        queryFn: async ({ signal }) => tripShapeBucketSchema.parse(await apiFetch<unknown>(`${baseUrl}/trip_shape_buckets/${tripBucket}.json`, { signal })),
         enabled: hasTripShapes && !!tripBucket,
         select: selectShapeId,
         staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
@@ -61,7 +61,7 @@ export function useTripShape(tripId: string | null | undefined): TripShapeResult
 
     const { data: shape, isLoading: isLoadingShape } = useQuery({
         queryKey: ['trip-shape-geometry', selectedCity, shapeBucket],
-        queryFn: () => apiFetch<Record<string, unknown>>(`${baseUrl}/shape_buckets/${shapeBucket}.json`),
+        queryFn: ({ signal }) => apiFetch<Record<string, unknown>>(`${baseUrl}/shape_buckets/${shapeBucket}.json`, { signal }),
         enabled: hasTripShapes && !!shapeBucket,
         select: selectShape,
         staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,

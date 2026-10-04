@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import type { CityConfig } from '../../_core/city-config';
 import { appClient } from '../../_core/ApiClient';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { LruCache } from '../../_core/feed/LruCache';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import type { Schedule } from '../gtfs/schedule';
@@ -109,16 +109,13 @@ function decode(stops: unknown[], raw: unknown): TripTrack | null {
  * Workers subrequest limit; an hour is a single request of a few hundred kilobytes.
  */
 async function loadHour(city: CityConfig, hour: number): Promise<HourTracks> {
-    const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) return NO_TRACKS;
-
     const name = String(hour).padStart(2, '0');
     const cacheKey = `${city.slug}:${name}`;
     const cached = hourFiles.get(cacheKey);
     if (cached) return cached;
     if (failedHours.get(cacheKey)) return NO_TRACKS;
 
-    const res = await appClient.fetch(`${staticDataUrl}/${city.slug}/tracks/${name}.json`, {
+    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/tracks/${name}.json`, {
         cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA }
     }).catch(() => null);
     if (!res || !res.ok) {

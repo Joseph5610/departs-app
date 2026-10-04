@@ -1,5 +1,5 @@
 import type { CityConfig } from '../../_core/city-config';
-import { UPSTREAM_TTL_S } from '../../_core/config';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { appClient } from '../../_core/ApiClient';
 import { MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
@@ -47,12 +47,12 @@ async function fetchTripBucket(url: string): Promise<RawTripBucket | null> {
 }
 
 /** A bucket's parsed JSON; null when the file cannot be read. */
-async function getTripBucket(city: CityConfig, staticDataUrl: string, bucketId: string): Promise<RawTripBucket | null> {
+async function getTripBucket(city: CityConfig, bucketId: string): Promise<RawTripBucket | null> {
     const key = `${city.slug}:${bucketId}`;
     const held = rawBucketCache.get(key);
     if (held) return held;
 
-    const bucket = await fetchTripBucket(`${staticDataUrl}/${city.slug}/trip_buckets/${bucketId}.json`);
+    const bucket = await fetchTripBucket(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/trip_buckets/${bucketId}.json`);
     if (bucket) rawBucketCache.set(key, bucket);
     return bucket;
 }
@@ -99,15 +99,12 @@ function readService(bucket: RawTripBucket, tripId: string): TripService | null 
 
 /** A trip's ordered stops and service from its `trip_buckets/<bucket>.json` file, read once for both. */
 export async function getTrip(city: CityConfig, tripId: string): Promise<Trip> {
-    const staticDataUrl = city.feed?.staticDataUrl;
-    if (!staticDataUrl) throw new Error('Missing staticDataUrl in city config');
-
     const cacheKey = `${city.slug}:${tripId}`;
     const cached = tripStopsCache.get(cacheKey);
     if (cached !== undefined) return cached;
 
     try {
-        const bucket = await getTripBucket(city, staticDataUrl, tripBucketId(tripId));
+        const bucket = await getTripBucket(city, tripBucketId(tripId));
         if (!bucket) return NO_TRIP;
 
         const raw = bucket[tripId];

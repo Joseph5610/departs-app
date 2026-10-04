@@ -15,7 +15,6 @@ const config: CityConfig = {
     bounds: [16.44, 49.11, 16.77, 49.28],
     feed: {
         realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
-        staticDataUrl: 'https://data.departs.app',
         hasTripAliases: true
     },
     hasAlerts: true,

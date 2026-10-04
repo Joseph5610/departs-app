@@ -15,9 +15,6 @@ const config: CityConfig = {
     timezone: 'Europe/Prague',
     center: [14.4212, 50.0875],
     bounds: [14.22, 49.94, 14.71, 50.18],
-    feed: {
-        staticDataUrl: 'https://data.departs.app'
-    },
     networkOperator: 'PID',
     hasPointsOfSale: true,
     hasAlerts: true,
