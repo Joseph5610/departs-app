@@ -1,12 +1,13 @@
-import '../../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import { useQueries } from '@tanstack/react-query';
-import { apiFetch } from '../../lib/api-client';
-import { memoizeLast } from '../../lib/memoize';
-import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
-import { EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
-import type { NetworkCoverage } from '../../types/cities';
+import { apiFetch } from '@/lib/apiClient';
+import { memoizeLast } from '@/lib/memoize';
+import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
+import { EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import type { NetworkCoverage } from '@/types';
 import { useVisibleCities } from './useCities';
+import { queryKeys } from '@/lib/queryKeys';
 
 const coverageSchema = z.object({
     cell: z.number().check(z.positive()),
@@ -30,7 +31,7 @@ export function useNetworkCoverage(): ReadonlyMap<string, NetworkCoverage> {
     const cities = useVisibleCities();
     const results = useQueries({
         queries: cities.map(city => ({
-            queryKey: ['coverage', city.slug],
+            queryKey: queryKeys.coverage(city.slug),
             queryFn: async () => coverageSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${city.slug}/coverage.json`)),
             staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
             gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,

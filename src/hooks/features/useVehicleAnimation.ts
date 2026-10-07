@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
-import type { VehicleCollection, VehicleFeature } from '../../types/vehicles';
-import { VEHICLE_ANIMATION } from '../../config/constants';
-import { MAP_SOURCES } from '../../config/mapLayers';
-import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
+import type { VehicleCollection, VehicleFeature } from '@/types';
+import { VEHICLE_ANIMATION } from '@/config/constants';
+import { MAP_SOURCES } from '@/config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 
 interface TrackedPosition {
     coords: [number, number];
@@ -161,7 +161,7 @@ const useAnimatedSource = (
 
     // Stable reference for react-map-gl to initialize the source; it never changes, so react-map-gl
     // never calls setData itself and the requestAnimationFrame loop has exclusive control over updates.
-    const geojson = React.useMemo<VehicleCollection>(() => ({ type: 'FeatureCollection', features: [] }), []);
+    const geojson = useMemo<VehicleCollection>(() => ({ type: 'FeatureCollection', features: [] }), []);
 
     useEffect(() => {
         if (!mapLoaded) return;

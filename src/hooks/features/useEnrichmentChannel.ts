@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useEnrichmentStore } from '../../state/enrichmentStore';
-import { ENRICHMENT_CONFIG } from '../../config/constants';
-import type { EnrichmentChannelAdapter, EnrichmentPatch } from '../../types/enrichment';
+import { useEnrichmentStore } from '@/state/enrichmentStore';
+import { ENRICHMENT_CONFIG } from '@/config/constants';
+import type { EnrichmentChannelAdapter, EnrichmentPatch } from '@/types';
 
 /**
  * Subscribes to a city's push channel (e.g. the Brno KORDIS stream) and applies its patches in batches.

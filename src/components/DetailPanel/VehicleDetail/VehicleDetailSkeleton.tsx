@@ -1,4 +1,3 @@
-import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { cn } from 'cn';
@@ -7,7 +6,7 @@ import { cn } from 'cn';
  * VehicleDetailSkeleton
  * Mirrors the layout of VehicleHero and StopTimeline.
  */
-export const VehicleDetailSkeleton: React.FC = () => {
+export const VehicleDetailSkeleton = () => {
     return (
         <div className="flex flex-col gap-4 animate-in fade-in duration-500">
             <VehicleHeroSkeleton />
@@ -16,9 +15,7 @@ export const VehicleDetailSkeleton: React.FC = () => {
     );
 };
 
-VehicleDetailSkeleton.displayName = 'VehicleDetailSkeleton';
-
-const VehicleHeroSkeleton: React.FC = () => (
+const VehicleHeroSkeleton = () => (
     <Card
         size="none"
         className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm bg-(--hero-base)"
@@ -55,7 +52,7 @@ const VehicleHeroSkeleton: React.FC = () => (
     </Card>
 );
 
-export const StopTimelineSkeleton: React.FC = () => (
+export const StopTimelineSkeleton = () => (
     <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center px-1">
             <Skeleton className="h-2.5 w-28" />

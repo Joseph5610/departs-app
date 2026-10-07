@@ -7,7 +7,7 @@ import { createSource, type Snapshot } from '../../_core/feed/source';
 import { decodeAlertFeed } from '../../_core/gtfsRtDecode';
 import { GOLEMIO_CONFIG } from './config';
 import { golemioClient } from './GolemioClient';
-import { readRssItems, type PidRssItem } from './rss-exclusions';
+import { readRssItems, type PidRssItem } from './rssExclusions';
 
 /** The planned exclusions RSS as items; throws when it cannot be read. */
 export async function fetchPidExclusions(): Promise<PidRssItem[]> {

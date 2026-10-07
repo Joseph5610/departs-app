@@ -1,7 +1,8 @@
+import { useRideStore } from '@/state/rideStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { useMemo } from 'react';
-import { useNetworkStatus } from '../useNetworkStatus';
-import { useVehicles } from '../data/useVehicles';
-import type { AppError } from '../../types/error';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useVehicles } from '@/hooks/data/useVehicles';
 
 type SystemStatusType = 'offline' | 'app_error' | 'upstream_offline' | 'stale' | 'refreshing' | 'healthy';
 
@@ -9,8 +10,6 @@ export interface SystemStatus {
     type: SystemStatusType;
     isOnline: boolean;
     isFetching: boolean;
-    isError: boolean;
-    error: AppError | null;
     dataUpdatedAt: number;
 }
 
@@ -45,9 +44,17 @@ export const useSystemStatus = (): SystemStatus => {
             type,
             isOnline,
             isFetching,
-            isError,
-            error,
             dataUpdatedAt
         };
     }, [isOnline, vehicles, isFetching, isError, error, dataUpdatedAt]);
+};
+
+/** Whether the live pill steps aside for the ride cards: a ride is shown and there is nothing to warn about. */
+export const useLiveStatusYieldsToRides = (): boolean => {
+    const status = useSystemStatus();
+    const hasRide = useRideStore(s => s.ride !== null || s.followed !== null);
+    const isFiltered = usePreferencesStore(
+        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
+    );
+    return hasRide && !isFiltered && (status.type === 'healthy' || status.type === 'refreshing');
 };

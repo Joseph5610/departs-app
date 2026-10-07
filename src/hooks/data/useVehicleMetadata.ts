@@ -1,13 +1,15 @@
-import '../../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import { useQuery } from '@tanstack/react-query';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { apiFetch } from '../../lib/api-client';
-import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '../../config/constants';
-import { memoizeLast } from '../../lib/memoize';
-import { createDevicePersister, deviceCacheStaleTime } from '../../lib/deviceCache';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { apiFetch } from '@/lib/apiClient';
+import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import { memoizeLast } from '@/lib/memoize';
+import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { useCityConfig } from './useCities';
-import type { FleetLookup, VehicleMetadata } from '../../types/vehicles';
+import type { FleetLookup } from '@/types';
+import { fleetLookup, fleetRanges, type FleetRange } from '@/domain/vehicles';
+import { queryKeys } from '@/lib/queryKeys';
 
 /** The register groups contiguous vehicle-number ranges under the operator that runs them. */
 const fleetFileSchema = z.record(z.string(), z.array(z.object({
@@ -20,37 +22,11 @@ const fleetFileSchema = z.record(z.string(), z.array(z.object({
 
 const fleetPersister = createDevicePersister((data) => fleetFileSchema.parse(data));
 
-interface FleetRange extends VehicleMetadata {
-    min: number;
-    max: number;
-}
-
-/** Ranges sorted by `min`, for a binary search by vehicle number. */
-const buildRanges = memoizeLast((file: z.infer<typeof fleetFileSchema>): FleetRange[] =>
-    Object.entries(file)
-        .flatMap(([operator, ranges]) => ranges.map(range => ({ ...range, operator })))
-        .sort((a, b) => a.min - b.min));
-
-/** The range holding `vehicleNumber`, if any. */
-function findRange(ranges: FleetRange[], vehicleNumber: number): FleetRange | undefined {
-    let low = 0;
-    let high = ranges.length - 1;
-    while (low <= high) {
-        const mid = (low + high) >> 1;
-        const range = ranges[mid];
-        if (vehicleNumber < range.min) high = mid - 1;
-        else if (vehicleNumber > range.max) low = mid + 1;
-        else return range;
-    }
-    return undefined;
-}
+/** Ranges sorted once per loaded register. */
+const buildRanges = memoizeLast(fleetRanges);
 
 /** One lookup per loaded register, so memoized consumers see a stable function. */
-const buildLookup = memoizeLast((ranges: FleetRange[]): FleetLookup => (vehicleId) => {
-    if (!vehicleId) return undefined;
-    const vehicleNumber = Number(vehicleId);
-    return Number.isFinite(vehicleNumber) ? findRange(ranges, vehicleNumber) : undefined;
-});
+const buildLookup = memoizeLast(fleetLookup);
 
 const NO_RANGES: FleetRange[] = [];
 
@@ -63,7 +39,7 @@ export function useFleetLookup(): FleetLookup | undefined {
     const source = useCityConfig().vehicleMetadata;
 
     const { data: ranges } = useQuery({
-        queryKey: ['vehicle-metadata', selectedCity, source?.file],
+        queryKey: queryKeys.vehicleMetadata(selectedCity, source?.file),
         queryFn: async () => fleetFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/${source!.file}?v=${DEVICE_CACHE.VERSION}`)),
         enabled: !!selectedCity && !!source,
         select: buildRanges,

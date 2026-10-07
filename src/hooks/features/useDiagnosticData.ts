@@ -1,10 +1,10 @@
-import type { DiagnosticData } from '../../types/feedback';
-import { useViewportStore } from '../../state/viewportStore';
-import { useSelectionStore } from '../../state/selectionStore';
-import { useGeolocationStore } from '../../state/geolocationStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import type { DiagnosticData } from '@/types';
+import { useViewportStore } from '@/state/viewportStore';
+import { useSelectionStore } from '@/state/selectionStore';
+import { useGeolocationStore } from '@/state/geolocationStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { version } from '../../../package.json';
-import { matchRoutePath } from '../../lib/routes';
+import { matchRoutePath } from '@/lib/routes';
 
 const START_TIME = Date.now();
 
@@ -41,7 +41,6 @@ export function getDiagnosticSnapshot(): DiagnosticData {
         deviceMemory: navigator.deviceMemory,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 
-        // mapCenter/Zoom not easily available from ViewportStore since it uses bounds
         activeLayers: viewport.routeFilter || undefined,
         
         selectedVehicleId: route.vehicleId,

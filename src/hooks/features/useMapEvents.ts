@@ -1,16 +1,12 @@
 import type { Map, SymbolLayerSpecification } from 'maplibre-gl';
-import { replaceUrl } from '../../lib/history';
+import { replaceUrl } from '@/lib/history';
 import { useCallback, useRef } from 'react';
-import { useSelectionStore } from '../../state/selectionStore';
-import { useViewportStore } from '../../state/viewportStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { addAllIcons } from '../../utils/mapIcons';
-import { snapBoundsToTiles } from '../../utils/mapUtils';
-import {
-    MAP_MIN_ZOOM_FOR_DATA,
-    MAP_BOUNDS_DEBOUNCE,
-    VEHICLE_BOUNDS_GRID,
-} from '../../config/constants';
+import { useSelectionStore } from '@/state/selectionStore';
+import { useViewportStore } from '@/state/viewportStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { addAllIcons } from '@/lib/map/icons';
+import { snapBoundsToTiles } from '@/lib/map/view';
+import { VEHICLE_BOUNDS_GRID, MAP_DATA } from '@/config/constants';
 
 /**
  * Hook to manage MapLibre events and sync them with global stores.
@@ -29,7 +25,7 @@ export const useMapEvents = () => {
     const getRoundedBounds = useCallback((map: Map) => {
         const b = map.getBounds();
         const zoom = map.getZoom();
-        if (!b || zoom < MAP_MIN_ZOOM_FOR_DATA) return null;
+        if (!b || zoom < MAP_DATA.MIN_ZOOM) return null;
 
         if (VEHICLE_BOUNDS_GRID.ENABLED) {
             const tileZoom = Math.max(0, Math.floor(zoom) - VEHICLE_BOUNDS_GRID.TILE_ZOOM_OFFSET);
@@ -57,9 +53,9 @@ export const useMapEvents = () => {
         debounceRef.current = setTimeout(() => {
             vpActions.setDebouncedBounds(currentBounds);
             vpActions.setBounds(currentBounds);
-        }, MAP_BOUNDS_DEBOUNCE);
+        }, MAP_DATA.BOUNDS_DEBOUNCE_MS);
 
-        if (zoom < MAP_MIN_ZOOM_FOR_DATA && bounds !== null) {
+        if (zoom < MAP_DATA.MIN_ZOOM && bounds !== null) {
             vpActions.setBounds(null);
         }
     }, [bounds, isFollowing, getRoundedBounds, vpActions, selActions]);

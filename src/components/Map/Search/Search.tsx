@@ -1,73 +1,65 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
-import { navigate } from '../../../lib/history';
-import { paths } from '../../../lib/routes';
-import { useStopSearch } from '../../../hooks/features/useStopSearch';
-import { usePosSearch } from '../../../hooks/features/usePosSearch';
-import { useGeocoding, useRememberedPlace, rememberPlace } from '../../../hooks/data/useGeocoding';
-import { useRouteParams } from '../../../hooks/useRouteParams';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useViewportStore } from '../../../state/viewportStore';
-import { useMapMetadataStore } from '../../../state/mapMetadataStore';
-import { useGeolocationStore } from '../../../state/geolocationStore';
-import { MAP_CAMERA } from '../../../config/constants';
-import { useStops } from '../../../hooks/data/useStops';
-import { useVehicles } from '../../../hooks/data/useVehicles';
-import { useRouteMetadata } from '../../../hooks/data/useRouteMetadata';
-import type { StopFeature, SearchHistoryItem } from '../../../types/transit';
-import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
-import type { PosSearchResult } from '../../../utils/posSearch';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { useStopSearch } from '@/hooks/derived/useStopSearch';
+import { usePosSearch } from '@/hooks/derived/usePosSearch';
+import { useGeocoding, useRememberedPlace, rememberPlace, type GeocodingResult } from '@/hooks/data/useGeocoding';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useViewportStore } from '@/state/viewportStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { useGeolocationStore } from '@/state/geolocationStore';
+import { MAP_CAMERA } from '@/config/constants';
+import { useStops } from '@/hooks/data/useStops';
+import { useVehicles } from '@/hooks/data/useVehicles';
+import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
+import type { StopFeature, SearchHistoryItem, VehicleFeature } from '@/types';
+import type { PosSearchResult } from '@/domain/pointsOfSale';
 import { cn } from 'cn';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { SearchDropdown } from './SearchDropdown';
-import { CitySwitcher } from '../CitySwitcher';
-import { getLineMetadataMap } from '@/utils/transitUtils';
-import { parseLineQuery } from '@/utils/lineSearch';
-import { searchVehicles } from '@/utils/vehicleSearch';
-import { useSelectionStore } from '../../../state/selectionStore';
-import type { VehicleFeature } from '../../../types/transit';
+import { CitySwitcher } from '@/components/Map/CitySwitcher';
+import { knownLineMetadata, parseLineQuery } from '@/domain/routes';
+import { stopHistoryEntry, stopsByIds } from '@/domain/stops';
+import { searchVehicles } from '@/domain/vehicles';
+import { useSelectionStore } from '@/state/selectionStore';
 
 /**
- * Search Component
- *
  * Container that manages search state, keyboard shortcuts, and click-outside behavior.
  * Visual rendering of results is delegated to SearchDropdown and SearchItem.
  */
-export const Search: React.FC = React.memo(() => {
+export const Search = memo(() => {
     const { t } = useTranslation();
 
-    // Zustand state
     const { stopId: selectedStopId, vehicleId: selectedVehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
 
-    // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const searchHistory = usePreferencesStore(s => s.searchHistory);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { addToHistory } = usePreferencesStore(s => s.actions);
 
-    // Viewport
     const activeFilter = useViewportStore(s => s.routeFilter);
     const setSelectedPlaceId = useViewportStore(s => s.actions.setSelectedPlaceId);
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
     const selectedPlace = useRememberedPlace(selectedPlaceId);
     const { setRouteFilter: onLineSelect } = useViewportStore(s => s.actions);
 
-    // Metadata & Geolocation
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
     const userLocation = useGeolocationStore(s => s.userLocation);
 
     const stops = useStops();
 
     const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const { query, setQuery, results: searchResults } = useStopSearch(stops?.allFeatures || null);
-    const { results: geocodingResults } = useGeocoding(query, userLocation);
+    const geocodingResults = useGeocoding(query, userLocation);
     const posResults = usePosSearch(query, isOpen);
 
 
@@ -88,26 +80,20 @@ export const Search: React.FC = React.memo(() => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const favoriteStopFeatures = React.useMemo(() => {
+    const favoriteStopFeatures = useMemo(() => {
         if (!stops?.stopIndex || favoriteStops.length === 0) return [];
-        return favoriteStops.map(id => stops.stopIndex.get(id)).filter((s): s is StopFeature => s !== undefined);
+        return stopsByIds(stops.stopIndex, favoriteStops);
     }, [stops, favoriteStops]);
 
     const results = query === '' && !activeFilter ? favoriteStopFeatures : searchResults;
 
     const { byName: routesByName } = useRouteMetadata();
-    const lineMetadataMap = React.useMemo(() => {
-        const map = getLineMetadataMap(stops.allFeatures?.features || []);
-        for (const [name, route] of routesByName) {
-            if (!map.has(name)) map.set(name, { route_color: route.route_color, type: route.type });
-        }
-        return map;
-    }, [stops.allFeatures, routesByName]);
+    const lineMetadataMap = useMemo(() => knownLineMetadata(stops.allFeatures?.features || [], routesByName), [stops.allFeatures, routesByName]);
 
-    const queryLines = React.useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
+    const queryLines = useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
 
     const { networkVehicles } = useVehicles();
-    const vehicleResults = React.useMemo(() => searchVehicles(query, networkVehicles), [query, networkVehicles]);
+    const vehicleResults = useMemo(() => searchVehicles(query, networkVehicles), [query, networkVehicles]);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
 
     const showDropdown = (results.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
@@ -130,97 +116,55 @@ export const Search: React.FC = React.memo(() => {
         setQuery('');
     };
 
-    const handleStopSelect = (stop: StopFeature) => {
-        const [lng, lat] = stop.geometry.coordinates;
-        flyTo({
-            center: [lng, lat],
-            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-            duration: MAP_CAMERA.FLY_MS
-        });
-        const selectedStop = {
-            stop_id: stop.properties.stop_id,
-            stop_name: stop.properties.stop_name,
-            platform_code: stop.properties.platform_code,
-            is_train: stop.properties.is_train === 1 ? 1 : 0,
-            metro_lines: stop.properties.metro_lines,
-            lines: stop.properties.lines,
-            coordinates: stop.geometry.coordinates as [number, number]
-        };
+    const flyToResult = (center: [number, number]) => flyTo({ center, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
 
-        navigate(paths.stop(selectedCity, selectedStop.stop_id));
-        addToHistory({
-            type: 'stop',
-            city_slug: selectedCity,
-            ...selectedStop
-        });
-        setQuery('');
+    const closeWithQuery = (value = '') => {
+        setQuery(value);
         setIsOpen(false);
+    };
+
+    const handleStopSelect = (stop: StopFeature) => {
+        flyToResult(stop.geometry.coordinates as [number, number]);
+        navigate(paths.stop(selectedCity, stop.properties.stop_id));
+        addToHistory(stopHistoryEntry(stop, selectedCity));
+        closeWithQuery();
     };
 
     const handleHistorySelect = (item: SearchHistoryItem) => {
         const targetCity = item.city_slug || selectedCity;
-        if (item.type === 'stop') {
-            flyTo({
-                center: item.coordinates,
-                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-                duration: MAP_CAMERA.FLY_MS
-            });
-            navigate(paths.stop(targetCity, item.stop_id));
-            addToHistory(item);
-        } else if (item.type === 'pos') {
-            flyTo({
-                center: item.coordinates,
-                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-                duration: MAP_CAMERA.FLY_MS
-            });
-            navigate(paths.pos(targetCity, item.pos_id));
-            addToHistory(item);
-        } else if (item.type === 'place') {
+        if (item.type === 'place') {
             navigate(paths.city(targetCity));
-            flyTo({
-                center: item.coordinates,
-                zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-                duration: MAP_CAMERA.FLY_MS
-            });
-            rememberPlace({
-                id: item.place_id,
-                name: item.name,
-                subtitle: item.subtitle || '',
-                coordinates: item.coordinates
-            });
+            flyToResult(item.coordinates);
+            rememberPlace({ id: item.place_id, name: item.name, subtitle: item.subtitle || '', coordinates: item.coordinates });
             setSelectedPlaceId(item.place_id);
-            setQuery(item.name);
-        } else {
-            onLineSelect(item.lines);
-            addToHistory(item);
-            setQuery('');
+            closeWithQuery(item.name);
+            return;
         }
-        if (item.type !== 'place') setQuery('');
-        setIsOpen(false);
+        if (item.type === 'line') {
+            onLineSelect(item.lines);
+        } else {
+            flyToResult(item.coordinates);
+            navigate(item.type === 'stop' ? paths.stop(targetCity, item.stop_id) : paths.pos(targetCity, item.pos_id));
+        }
+        addToHistory(item);
+        closeWithQuery();
     };
 
     const handleLineSelect = (lines: string[]) => {
         onLineSelect(lines);
         addToHistory({ type: 'line', city_slug: selectedCity, lines });
-        setQuery('');
-        setIsOpen(false);
+        closeWithQuery();
     };
 
     const handleVehicleSelect = (vehicle: VehicleFeature) => {
         const { gtfs_trip_id, vehicle_id } = vehicle.properties;
         setIsFollowing(true);
         navigate(paths.trip(selectedCity, gtfs_trip_id, vehicle_id));
-        setQuery('');
-        setIsOpen(false);
+        closeWithQuery();
     };
 
-    const handlePosSelect = (result: PosSearchResult) => {
-        const { pos } = result;
-        flyTo({
-            center: [pos.lon, pos.lat],
-            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-            duration: MAP_CAMERA.FLY_MS
-        });
+    const handlePosSelect = ({ pos }: PosSearchResult) => {
+        flyToResult([pos.lon, pos.lat]);
         navigate(paths.pos(selectedCity, pos.id));
         addToHistory({
             type: 'pos',
@@ -228,19 +172,14 @@ export const Search: React.FC = React.memo(() => {
             pos_id: pos.id,
             name: pos.name,
             subtitle: t(`pos.types.${pos.type}`, pos.type),
-            coordinates: [pos.lon, pos.lat]
+            coordinates: [pos.lon, pos.lat],
         });
-        setQuery('');
-        setIsOpen(false);
+        closeWithQuery();
     };
 
     const handlePlaceSelect = (result: GeocodingResult) => {
         navigate(paths.city(selectedCity));
-        flyTo({
-            center: result.coordinates,
-            zoom: MAP_CAMERA.STOP_SELECT_ZOOM,
-            duration: MAP_CAMERA.FLY_MS
-        });
+        flyToResult(result.coordinates);
         setSelectedPlaceId(result.id);
         addToHistory({
             type: 'place',
@@ -248,10 +187,9 @@ export const Search: React.FC = React.memo(() => {
             place_id: result.id,
             name: result.name,
             subtitle: result.subtitle,
-            coordinates: result.coordinates
+            coordinates: result.coordinates,
         });
-        setQuery(result.name);
-        setIsOpen(false);
+        closeWithQuery(result.name);
     };
 
     return (

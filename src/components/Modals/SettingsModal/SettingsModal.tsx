@@ -1,4 +1,4 @@
-import React from 'react';
+import { useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -10,13 +10,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useUiStore } from '../../../state/uiStore';
+import { useUiStore } from '@/state/uiStore';
 import { Sparkles } from 'lucide-react';
 import { cn } from 'cn';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
-import { SUPPORTED_LANGUAGES } from '../../../i18n/config';
-import { UI_TIMING_MS } from '../../../config/constants';
+import { SUPPORTED_LANGUAGES } from '@/i18n/config';
+import { UI_TIMING_MS } from '@/config/constants';
 
 const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
     en: '🇬🇧',
@@ -24,14 +24,13 @@ const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
     sk: '🇸🇰',
 };
 
-export const SettingsModal: React.FC = React.memo(() => {
+export const SettingsModal = memo(() => {
     const { t, i18n } = useTranslation();
 
-    // Preferences
     const isOpen = useUiStore(s => s.isSettingsOpen);
     const { setIsSettingsOpen, setIsMcpModalOpen } = useUiStore(s => s.actions);
 
-    const onClose = React.useCallback(() => {
+    const onClose = useCallback(() => {
         setIsSettingsOpen(false);
     }, [setIsSettingsOpen]);
 
@@ -45,7 +44,6 @@ export const SettingsModal: React.FC = React.memo(() => {
                 </DialogHeader>
                 <ScrollArea className="flex-1 min-h-0 px-6">
                     <div className="flex flex-col gap-8 py-2 pb-8">
-                        {/* AI Copilot & Remote MCP (Top Highlight) */}
                         <div className="flex flex-col gap-3">
                             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.ai')}
@@ -69,10 +67,8 @@ export const SettingsModal: React.FC = React.memo(() => {
                             </Button>
                         </div>
 
-                        {/* Display Toggles & Vehicle Type Filters */}
                         <DisplaySection />
 
-                        {/* Language Selection */}
                         <div className="flex flex-col gap-3">
                             <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
                                 {t('settings.sections.language')}
@@ -80,7 +76,7 @@ export const SettingsModal: React.FC = React.memo(() => {
                             <Card variant="subtle" size="none">
                                 <div className="p-3">
                                     <ToggleGroup
-                                        value={[(i18n.resolvedLanguage || i18n.language).split('-')[0]]}
+                                        value={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
                                         onValueChange={(val: string[]) => {
                                             if (val && val.length > 0) {
                                                 i18n.changeLanguage(val[0]);
@@ -111,7 +107,6 @@ export const SettingsModal: React.FC = React.memo(() => {
                         </div>
 
 
-                        {/* Footer: Clear History, Update Check, External Links */}
                         <SettingsFooter />
                     </div>
                 </ScrollArea>

@@ -1,7 +1,7 @@
 import { Env } from "../../_core/types";
 import { withCityResponseRoute } from "../../_cities/route";
 import { CACHE_TTL } from "../../_core/config";
-import { createJsonBodyResponse, createSuccessResponse } from "../../_core/api-utils";
+import { createJsonBodyResponse, createSuccessResponse } from "../../_core/apiUtils";
 
 // An offline answer must not be held by the edge: every client polls this one URL per city.
 const ttl = (offline: boolean) => (offline ? 0 : CACHE_TTL.VEHICLES);

@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
-import { useRouteParams } from '../useRouteParams';
-import { useStops } from '../data/useStops';
-import type { SelectedStop } from '../../types/transit';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useStops } from '@/hooks/data/useStops';
+import type { SelectedStop } from '@/types';
+import { toSelectedStop } from '@/domain/stops';
 
 /**
- * useSelectedStop
- *
  * A derived data hook that resolves the currently selected stop ID
  * into a full SelectedStop object using the local GeoJSON cache.
  */
@@ -24,16 +23,6 @@ export const useSelectedStop = () => {
             return { stop_id: stopId };
         }
 
-        const { stop_name, platform_code, all_ids, is_train, metro_lines, lines } = feature.properties;
-        return {
-            stop_id: feature.properties.stop_id,
-            stop_name,
-            platform_code,
-            all_ids,
-            is_train: Number(is_train) === 1 ? 1 : 0,
-            metro_lines,
-            lines,
-            coordinates: feature.geometry.coordinates as [number, number]
-        };
+        return toSelectedStop(feature);
     }, [stopId, stopIndex]);
 };

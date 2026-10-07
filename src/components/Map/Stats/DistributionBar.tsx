@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -18,9 +17,9 @@ interface DistributionBarProps {
 }
 
 /** Stacked bar of vehicle shares with a count popover per segment and a percentage legend. */
-export const DistributionBar: React.FC<DistributionBarProps> = ({ segments, total }) => {
+export const DistributionBar = ({ segments, total }: DistributionBarProps) => {
     const { t, i18n } = useTranslation();
-    const percent = new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 0 });
+    const percent = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'percent', maximumFractionDigits: 0 });
 
     return (
         <div className="flex flex-col gap-2">

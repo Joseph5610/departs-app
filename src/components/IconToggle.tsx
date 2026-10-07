@@ -12,7 +12,7 @@ export interface IconToggleProps {
 }
 
 /** Outlined tile with an icon over a label, used for filter and category pickers. */
-export const IconToggle: React.FC<IconToggleProps> = ({ icon: Icon, label, isActive, onClick, testId, className, labelClassName }) => (
+export const IconToggle = ({ icon: Icon, label, isActive, onClick, testId, className, labelClassName }: IconToggleProps) => (
     <Toggle
         pressed={isActive}
         onPressedChange={onClick}

@@ -1,25 +1,25 @@
 
-import React from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FilterSpecification, SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
-import type { StopCollection, StopProperties } from '../../types/transit';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useGeolocationStore } from '../../state/geolocationStore';
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { useVehicles } from '../../hooks/data/useVehicles';
-import { useStops } from '../../hooks/data/useStops';
-import { useOverlayNetworks } from '../../hooks/data/useOverlayNetworks';
-import { useNetworksInView } from '../../hooks/derived/useNetworksInView';
-import { useCityConfig } from '../../hooks/data/useCities';
-import { indexStops, withoutTwins, withStopColor } from '../../lib/sharedGround';
-import { memoizeLast } from '../../lib/memoize';
-import { SHARED_GROUND } from '../../config/constants';
-import { useRouteShape } from '../../hooks/derived/useRouteShape';
-import { useMapFilters } from '../../hooks/derived/useMapFilters';
-import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
-import { useVehicleAnimation } from '../../hooks/features/useVehicleAnimation';
+import type { StopCollection, StopProperties } from '@/types';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useGeolocationStore } from '@/state/geolocationStore';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useVehicles } from '@/hooks/data/useVehicles';
+import { useStops } from '@/hooks/data/useStops';
+import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
+import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { indexStops, matchesStopTypeFilter, withoutTwins, withStopColor } from '@/domain/stops';
+import { memoizeLast } from '@/lib/memoize';
+import { SHARED_GROUND } from '@/config/constants';
+import { useRouteShape } from '@/hooks/derived/useRouteShape';
+import { useMapFilters } from '@/hooks/derived/useMapFilters';
+import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
+import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
     stopClusters,
     stopPointsGlow,
@@ -45,9 +45,9 @@ import {
     userLocationPoint,
     getVehicleColorExpression,
     MAP_SOURCES
-} from '../../config/mapLayers';
-import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
-import { safeHexColor } from '../../lib/color';
+} from '@/config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
+import { safeHexColor } from '@/lib/color';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */
@@ -64,16 +64,14 @@ function withOverlay<T extends { features: unknown[] }>(own: T | null | undefine
 }
 
 /**
- * MapLayers Component
- *
  * This component is responsible for rendering all MapLibre sources and layers.
  * It is isolated from the main Map UI to ensure that map style updates are decoupled
  * from UI state changes (like opening sidebars or settings).
  *
  * PERFORMANCE: It subscribes to the map data itself, so live data updates re-render only this subtree,
- * and React.memo keeps parent re-renders out.
+ * and memo keeps parent re-renders out.
  */
-export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) => {
+export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const showVehicles = usePreferencesStore(s => s.showVehicles);
     const showStops = usePreferencesStore(s => s.showStops);
     const showStopLabels = usePreferencesStore(s => s.showStopLabels);
@@ -86,39 +84,30 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
     const { stops: ownStops, centroids: ownCentroids } = useStops();
-    const overlay = useOverlayNetworks(useNetworksInView());
+    const networksInView = useNetworksInView();
+    const overlay = useOverlayNetworks(networksInView);
     const { stopColor } = useCityConfig();
-    const displayVehicles = React.useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
-    const ownColoredStops = React.useMemo(() => withStopColor(ownStops, stopColor), [ownStops, stopColor]);
+    const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
+    const ownColoredStops = useMemo(() => withStopColor(ownStops, stopColor), [ownStops, stopColor]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
-    const stopsData = React.useMemo(
+    const stopsData = useMemo(
         () => withOverlay(ownColoredStops, withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false)),
         [ownColoredStops, ownStops, overlay.stops]);
-    const labelData = React.useMemo(
+    const labelData = useMemo(
         () => withOverlay(ownCentroids, withoutTwins(overlay.centroids, stationGrid(ownCentroids ?? null), true)),
         [ownCentroids, overlay.centroids]);
     const routeShapeData = useRouteShape();
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
 
-    // Helper: does this feature pass the stop type filter?
-    // Empty filter = show all. Otherwise include only matching types.
-    const passesStopFilter = React.useCallback((props: StopProperties | null) => {
-        if (!props || stopTypeFilter.length === 0) return true;
-        const hasMetro = (props.metro_lines?.length ?? 0) > 0;
-        const hasTrain = props.is_train === 1;
-        if (stopTypeFilter.includes('metro') && hasMetro) return true;
-        if (stopTypeFilter.includes('train') && hasTrain) return true;
-        // Stop doesn't match any active filter
-        return false;
-    }, [stopTypeFilter]);
+    const passesStopFilter = useCallback((props: StopProperties | null) => matchesStopTypeFilter(props, stopTypeFilter), [stopTypeFilter]);
 
     const { resolvedTheme } = useTheme();
     const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
 
     const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
-    const routeLine = React.useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
+    const routeLine = useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
 
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
@@ -129,14 +118,12 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
         showVehicles
     );
 
-    // Dynamic vehicle color expression based on user preferences
-    const vehicleColorExpr = React.useMemo(
+    const vehicleColorExpr = useMemo(
         () => getVehicleColorExpression(colorVehiclesByDelay),
         [colorVehiclesByDelay]
     );
 
-    // Filter GeoJSON based on stop type filters
-    const filterGeoJSON = React.useCallback((data: StopCollection | null, isEnabled: boolean) => {
+    const filterGeoJSON = useCallback((data: StopCollection | null, isEnabled: boolean) => {
         if (!isEnabled || !data) return EMPTY_FEATURE_COLLECTION;
         if (stopTypeFilter.length === 0) return data;
         return {
@@ -145,18 +132,18 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
         };
     }, [stopTypeFilter, passesStopFilter]);
 
-    const filteredLabelData = React.useMemo(() => 
+    const filteredLabelData = useMemo(() => 
         filterGeoJSON(labelData, showStops && showStopLabels), 
         [labelData, showStops, showStopLabels, filterGeoJSON]
     );
 
-    const filteredStopsData = React.useMemo(() => 
+    const filteredStopsData = useMemo(() => 
         filterGeoJSON(stopsData, showStops), 
         [stopsData, showStops, filterGeoJSON]
     );
 
     // Memoized: react-map-gl re-sends a source to the map worker whenever its `data` identity changes.
-    const userLocationData = React.useMemo(() => userLocation ? {
+    const userLocationData = useMemo(() => userLocation ? {
         type: 'FeatureCollection' as const,
         features: [{
             type: 'Feature' as const,
@@ -221,7 +208,6 @@ export const MapLayers: React.FC<MapLayersProps> = React.memo(({ mapLoaded }) =>
                 <Layer {...transferOuterPoints} />
                 <Layer {...transferInnerPoints} />
                 <Layer {...stopIcons} paint={{ ...(stopIcons.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
-                {/* Favorite Star Badge - Drawn last to be on top of everything */}
                 {favoriteStops.length > 0 && (
                     <Layer
                         {...stopFavorites}

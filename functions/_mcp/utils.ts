@@ -1,9 +1,9 @@
-import { getStopSearch, stopFeatures, type StopSearch } from "../_feeds/stop-search";
+import { getStopSearch, stopFeatures, type StopSearch } from "../_feeds/stopSearch";
 import type { AppInfotext, AppDeparture, AppStopFeature, CityRequestContext, Env } from "../_core/types";
-import type { CityConfig } from "../_core/city-config";
+import type { CityConfig } from "../_core/cityConfig";
 import type { McpContext } from "./types";
 import { CITY_REGISTRY, getCityConfig, getCityUseCases } from "../_cities";
-import type { CityUseCases } from "../_domain/use-cases";
+import type { CityUseCases } from "../_domain/useCases";
 import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";

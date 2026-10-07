@@ -1,20 +1,20 @@
-import React, { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
-import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { pointsOfSaleIcons, MAP_SOURCES } from '../../config/mapLayers';
-import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
+import { usePointsOfSale } from '@/hooks/data/usePointsOfSale';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { pointsOfSaleIcons, MAP_SOURCES } from '@/config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 
 interface PointsOfSaleLayerProps {
     mapLoaded: boolean;
 }
 
 
-export const PointsOfSaleLayer: React.FC<PointsOfSaleLayerProps> = React.memo(({ mapLoaded }) => {
+export const PointsOfSaleLayer = memo(({ mapLoaded }: PointsOfSaleLayerProps) => {
     const { data: posList } = usePointsOfSale();
     const showPointsOfSale = usePreferencesStore((s) => s.showPointsOfSale);
     const { posId } = useRouteParams();

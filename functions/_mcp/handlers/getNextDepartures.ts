@@ -1,4 +1,4 @@
-import type { CityUseCases } from "../../_domain/use-cases";
+import type { CityUseCases } from "../../_domain/useCases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { resolveStationByName, nearestStops, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
@@ -24,7 +24,7 @@ export async function handleGetNextDepartures(
     let stopNameResolved: string | undefined;
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
 
-    // 1. If stop_id is missing but stop_name is provided, search stops
+    // Without a stop id, resolve it from the stop name, else from the nearest stop to the coordinates.
     if (!stopId && args.stop_name) {
         const station = await resolveStationByName(resolvedCity, String(args.stop_name));
         if (station) {
@@ -35,7 +35,6 @@ export async function handleGetNextDepartures(
         }
     }
 
-    // 2. If stop_id & stop_name are missing but latitude & longitude are provided, find closest stop
     if (!stopId && args.latitude !== undefined && args.longitude !== undefined) {
         const lat = Number(args.latitude);
         const lon = Number(args.longitude);

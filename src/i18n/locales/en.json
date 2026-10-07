@@ -20,7 +20,7 @@
     "lineFilter_other": "Filter lines {{line}}",
     "filterByLine": "Filter by line:",
     "clearFilter": "Clear filter",
-    "favorites": "Favorite Stops",
+    "favorites": "Favorites",
     "recent": "Recent",
     "places": "Places & Addresses",
     "pointsOfSale": "Points of Sale",
@@ -110,6 +110,7 @@
         "czOpenData": "Open data",
         "permission": "Used with permission",
         "noRestrictions": "No restrictions on use",
+        "nonCommercial": "Non-commercial use only",
         "notStated": "No licence stated"
       }
     },
@@ -164,7 +165,6 @@
       "notAvailable": "N/A",
       "lineLabel": "Line {{line}}",
       "lineTitle": "Line <badge/>",
-      "ac": "AC",
       "runNumber": "Run",
       "enrichedTooltip": "This data is updated in real-time directly from the vehicle (Live Stream).",
       "connectingTooltip": "Waiting for connection with the vehicle (Live Stream). Showing standard dispatch data in the meantime.",
@@ -174,7 +174,6 @@
       "hidePastStops": "Hide past stops",
       "scheduledTime": "sched.",
       "shareTitle": "Line {{line}}",
-      "shareText": "Track line {{line}} live on {{appName}}",
       "requestStop": "Request Stop",
       "track": "Follow vehicle",
       "connections": {
@@ -182,7 +181,14 @@
         "waitsUpTo": "waits up to {{minutes}} min",
         "mayNotWait": "May not wait"
       },
-      "continuesAs": "Continues as line"
+      "continuesAs": "Continues as line",
+      "ended": {
+        "title": "This trip has ended",
+        "body": "It reached {{stop}} at {{time}}.",
+        "bodyNoTime": "It reached its last stop, {{stop}}.",
+        "nextTrip": "Follow the vehicle, now line {{line}}",
+        "close": "Close"
+      }
     },
     "departures": {
       "noUpcoming": "No upcoming departures found.",
@@ -212,18 +218,21 @@
       "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
       "otherNetworkBoard": "{{network}} departures here",
-      "officialBoard": "Virtual Board",
       "atStop": "You are at the stop",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
       "canceled": "Canceled",
       "feeder": {
-        "waitsFor": "Waits for {{line}} (up to {{minutes}} min)",
         "heldFor": "Held ~{{minutes}} min for {{line}}",
         "wontWait": "Won't wait for {{line}}",
         "waitsForLines": "Waits for connections from {{lines}}"
       },
-      "continuesAs": "Continues as line {{line}} to {{headsign}}"
+      "continuesAs": "Continues as line {{line}} to {{headsign}}",
+      "vehicleFilters": "Vehicle filters",
+      "lineFilters": "Line filters",
+      "viewedTrip": "Viewed trip",
+      "yourTrip": "Your trip",
+      "watchedTrip": "Followed trip"
     }
   },
   "update": {
@@ -235,6 +244,66 @@
     "title": "Install Departs",
     "description": "Add the app to your home screen for quick access.",
     "button": "Install"
+  },
+  "ride": {
+    "pick": "Alert me before my stop",
+    "pickHint": "Tap the stop where you get off",
+    "cancel": "Cancel",
+    "end": "End ride",
+    "yourStop": "Your stop",
+    "stopsLeft_one": "{{count}} stop",
+    "stopsLeft_other": "{{count}} stops",
+    "nextStop": "Get off at the next stop",
+    "arrived": "You've arrived at {{stop}}",
+    "waiting": "Waiting for departure",
+    "started": "We'll tell you before {{stop}}",
+    "open": "Open your ride",
+    "pickStop": "Get off at {{stop}}",
+    "arrivesAtLabel": "arr.",
+    "unavailable": "Trip data unavailable",
+    "kickerRiding": "Getting off at",
+    "kickerArrived": "You're there",
+    "kickerNext": "Next stop",
+    "expandRides": "Show both rides",
+    "collapseRides": "Stack the rides",
+    "pickSub": "Pick your stop and we'll alert you one stop before"
+  },
+  "board": {
+    "open": "Full-screen board",
+    "noWalk": "Without walking time",
+    "leaveIn": "leave in {{count}} min",
+    "leaveNow": "leave now",
+    "withWalk": "With a {{count}} min walk",
+    "unavailable": "Departures can't be loaded right now",
+    "unavailableDescription": "The board retries on its own with the next refresh.",
+    "unknownStop": "Unknown stop",
+    "unknownStopDescription": "Check the board's address."
+  },
+  "share": {
+    "ride": "I'm on line {{line}} to {{headsign}} and will be at {{stop}} around {{time}}.",
+    "rideNoTime": "I'm on line {{line}} to {{headsign}}, getting off at {{stop}}.",
+    "trip": "Line {{line}} to {{headsign}}, live on the map.",
+    "tripDelayed_one": "Line {{line}} to {{headsign}}, {{count}} min late, live on the map.",
+    "tripDelayed_other": "Line {{line}} to {{headsign}}, {{count}} min late, live on the map.",
+    "stop": "Next from {{name}}: {{list}}",
+    "stopNow": "{{line}} now",
+    "stopIn": "{{line}} in {{count}} min",
+    "shareRide": "Share your ride",
+    "sharedExit": "Getting off here",
+    "friendExit": "Shared ride: getting off at {{stop}} around {{time}}",
+    "friendExitNoTime": "Shared ride: getting off at {{stop}}",
+    "watch": "Follow",
+    "watchStarted": "We'll tell you when it reaches {{stop}}",
+    "stopWatching": "Stop following",
+    "watchNext": "Arriving at the next stop",
+    "watchArrived": "The trip reached {{stop}}",
+    "notifyMe": "Notify me",
+    "openFollowed": "Open the followed ride",
+    "kickerRiding": "Following",
+    "kickerArrived": "Arrived",
+    "notificationsOn": "Notifications are on",
+    "notificationsBlocked": "Notifications are blocked for this site in your browser settings",
+    "notificationsNotShown": "Your browser didn't show the request. Allow notifications for this site in its settings."
   },
   "liveStatus": {
     "refreshing": "Refreshing",
@@ -341,9 +410,15 @@
     }
   },
   "favorites": {
-    "title": "Favorite Stops",
+    "title": "Favorites",
     "empty": "No favorite stops yet",
-    "emptySub": "Tap the star icon on any stop's departure board to pin it here."
+    "emptySub": "Tap the star icon on any stop's departure board to pin it here.",
+    "pinLine": "Add {{line}} to {{headsign}} to favourites",
+    "unpinLine": "Remove {{line}} to {{headsign}} from favourites",
+    "linesTitle": "Favourite lines",
+    "stopsTitle": "Stops",
+    "fromStop": "from {{stop}}",
+    "linesLimit": "You can add up to {{count}} favourite lines."
   },
   "feedback": {
     "title": "Send Feedback",

@@ -1,5 +1,5 @@
 import { useRoute } from 'wouter';
-import { ROUTE_PATTERNS, decodeRouteParam } from '../lib/routes';
+import { ROUTE_PATTERNS, decodeRouteParam } from '@/lib/routes';
 
 /**
  * Parses the transit route params from the URL. Side-effect free, so any component may call it;

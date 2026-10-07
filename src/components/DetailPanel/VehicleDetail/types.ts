@@ -1,12 +1,6 @@
-import type { VehicleDetail } from '../../../types/transit';
+import type { VehicleDetail } from '@/types';
 
-/**
- * DisplayVehicle
- *
- * The merged and enriched vehicle object used by VehicleDetail sub-components.
- * Created by merging `selectedVehicle` (from map stream) with `vehicleDetail` (from API),
- * then adding derived fields like `routeName`, `effectiveSequence`, etc.
- */
+/** The selected vehicle plus the fields the panel derives from it once. */
 export interface DisplayVehicle extends VehicleDetail {
     routeName: string;
     isStaticFallback: boolean;
@@ -20,6 +14,10 @@ export interface StopTimelineProps {
     routeName: DisplayVehicle['routeName'];
     effectiveSequence: DisplayVehicle['effectiveSequence'];
     delay?: number | null;
+    tripId: string;
+    /** The live vehicle on the trip; a ride needs one to follow. */
+    vehicleId: string | null;
+    hasEnded: boolean;
 }
 
 export interface VehicleHeroProps {
@@ -28,4 +26,5 @@ export interface VehicleHeroProps {
     onToggleFollow: () => void;
     isDetailLoading?: boolean;
     hasEnrichment: boolean;
+    hasEnded: boolean;
 }

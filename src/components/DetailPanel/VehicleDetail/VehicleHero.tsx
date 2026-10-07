@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap } from 'lucide-react';
 import { cn } from 'cn';
@@ -9,19 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IconTooltip } from '@/components/IconTooltip';
 import type { VehicleHeroProps } from './types';
-import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
-import { getDelayStatus } from '../../../config/transit';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { getDelayStatus } from '@/domain/delay';
 import { safeHexColor } from '@/lib/color';
-import { getRouteTypeI18nKey } from '../../../utils/transitUtils';
-import { useNow } from '../../../hooks/useNow';
+import { getRouteTypeI18nKey } from '@/domain/routes';
+import { vehicleNotice } from '@/domain/vehicles';
+import { useNow } from '@/hooks/useNow';
 
-export const VehicleHero: React.FC<VehicleHeroProps> = ({
+export const VehicleHero = ({
     displayVehicle,
     isFollowing,
     onToggleFollow,
     isDetailLoading,
-    hasEnrichment
-}) => {
+    hasEnrichment,
+    hasEnded,
+}: VehicleHeroProps) => {
     const { t } = useTranslation();
 
     if (!displayVehicle) return null;
@@ -29,6 +30,9 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     const isEnriched = !!displayVehicle.is_enriched;
 
     const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
+    const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
+    const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-amber-500';
+    const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-amber-500/80';
 
     return (
         <Card 
@@ -88,40 +92,7 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
 
                 {!displayVehicle.isStaticFallback && (
                     <div className="flex gap-2 flex-wrap items-center">
-                        {(() => {
-                            if (displayVehicle.delay === null) {
-                                return (
-                                    <Badge
-                                        variant="outline"
-                                        className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
-                                    >
-                                        {t('map.vehicleDetails.unknownDelay')}
-                                    </Badge>
-                                );
-                            }
-
-                            const delayVal = Number(displayVehicle.delay || 0);
-                            const delayMinutes = Math.round(Math.abs(delayVal) / 60);
-                            const delayStatus = getDelayStatus(delayVal);
-                            const isLate = delayStatus === 'late';
-                            const isEarly = delayStatus === 'early';
-                            return (
-                                <Badge
-                                    variant="outline"
-                                    className={cn(
-                                        "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
-                                        isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
-                                    )}
-                                >
-                                    {(!isEnriched && hasEnrichment) && `${t('map.vehicleDetails.estimatedPrefix')} `}
-                                    {isLate
-                                        ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
-                                        : isEarly
-                                            ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
-                                            : t('map.vehicleDetails.onTime')}
-                                </Badge>
-                            );
-                        })()}
+                        <DelayBadge delay={displayVehicle.delay} isEstimate={!isEnriched && hasEnrichment} />
 
                         {displayVehicle.origin_timestamp && (
                             <LiveDataAgeBadge
@@ -133,61 +104,21 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                     </div>
                 )}
 
-                {/* Warning Banner & Metadata Footer */}
-                {(() => {
-                    const state = displayVehicle.state_position;
-                    const isCanceled = state === 'canceled';
-                    const isBeforeTrack = state === 'before_track';
-                    const isBeforeTrackDelayed = state === 'before_track_delayed';
-                    const isOffTrack = state === 'off_track';
-                    const isShowBanner = isCanceled || isBeforeTrack || isBeforeTrackDelayed || isOffTrack || displayVehicle.isStaticFallback;
-
-                    let title = '';
-                    let description = '';
-                    let iconColor = 'text-amber-500';
-                    let textColor = 'text-amber-500/80';
-
-                    if (isCanceled) {
-                        title = t('map.vehicleDetails.canceled');
-                        description = t('map.vehicleDetails.canceledDescription');
-                        iconColor = 'text-destructive';
-                        textColor = 'text-destructive/80';
-                    } else if (displayVehicle.isStaticFallback) {
-                        title = t('map.vehicleDetails.staticFallback');
-                        description = t('map.vehicleDetails.staticFallbackDescription');
-                    } else if (isBeforeTrackDelayed) {
-                        title = t('map.vehicleDetails.beforeTrackDelayed');
-                        description = t('map.vehicleDetails.beforeTrackDelayedDescription');
-                    } else if (isBeforeTrack) {
-                        title = t('map.vehicleDetails.previousTrip');
-                        description = t('map.vehicleDetails.previousTripDescription');
-                    } else if (isOffTrack) {
-                        title = t('map.vehicleDetails.offTrack');
-                        description = t('map.vehicleDetails.offTrackDescription');
-                    }
-
-                    return (
-                        <>
-                            {isShowBanner && (
-                                <div className="mt-1 flex items-start gap-2.5">
-                                    <Info size={16} className={cn("mt-0.5 shrink-0", iconColor)} strokeWidth={2} />
-                                    <div className="flex flex-col gap-1">
-                                        <span className={cn("micro-label leading-none", iconColor)}>
-                                            {title}
-                                        </span>
-                                        <span className={cn("text-[11px] leading-snug font-medium", textColor)}>
-                                            {description}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                        </>
-                    );
-                })()}
+                {notice && (
+                    <div className="mt-1 flex items-start gap-2.5">
+                        <Info size={16} className={cn("mt-0.5 shrink-0", noticeIconColor)} strokeWidth={2} />
+                        <div className="flex flex-col gap-1">
+                            <span className={cn("micro-label leading-none", noticeIconColor)}>
+                                {t(`map.vehicleDetails.${notice}`)}
+                            </span>
+                            <span className={cn("text-[11px] leading-snug font-medium", noticeTextColor)}>
+                                {t(`map.vehicleDetails.${notice}Description`)}
+                            </span>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Render Footer outside CardContent if data exists */}
             {displayVehicle.vehicle_descriptor && (
                 <div className="relative z-10 flex gap-3 p-3 px-4 bg-foreground/3 border-t border-border/50 justify-between items-center mt-auto">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -203,9 +134,11 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
                                     return typeKey ? t(typeKey) : '---';
                                 })()}
                             </span>
-                            <span className="text-muted-foreground text-xs font-medium shrink-0">
-                                #{displayVehicle.vehicle_descriptor?.vehicle_registration_number}
-                            </span>
+                            {displayVehicle.vehicle_descriptor?.vehicle_registration_number && (
+                                <span className="text-muted-foreground text-xs font-medium shrink-0">
+                                    #{displayVehicle.vehicle_descriptor.vehicle_registration_number}
+                                </span>
+                            )}
                         </div>
                         {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
                             <div className="flex items-center gap-2 mt-0.5 min-w-0">
@@ -250,8 +183,41 @@ export const VehicleHero: React.FC<VehicleHeroProps> = ({
     );
 };
 
-VehicleHero.displayName = 'VehicleHero';
+/** The trip's delay as a badge; `isEstimate` marks a delay not yet confirmed by the push channel. */
+const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: boolean }) => {
+    const { t } = useTranslation();
+    if (delay === null) {
+        return (
+            <Badge
+                variant="outline"
+                className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
+            >
+                {t('map.vehicleDetails.unknownDelay')}
+            </Badge>
+        );
+    }
 
+    const delayMinutes = Math.round(Math.abs(delay) / 60);
+    const delayStatus = getDelayStatus(delay);
+    const isLate = delayStatus === 'late';
+    const isEarly = delayStatus === 'early';
+    return (
+        <Badge
+            variant="outline"
+            className={cn(
+                "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
+                isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
+            )}
+        >
+            {isEstimate && `${t('map.vehicleDetails.estimatedPrefix')} `}
+            {isLate
+                ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
+                : isEarly
+                    ? t('map.vehicleDetails.earlyLabel', { minutes: delayMinutes || 1 })
+                    : t('map.vehicleDetails.onTime')}
+        </Badge>
+    );
+};
 
 /** Age of the vehicle's position fix; ticks on its own so the rest of the panel doesn't re-render every second. */
 const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { originTimestamp: string; isEnriched: boolean; hasEnrichment: boolean }) => {

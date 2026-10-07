@@ -97,7 +97,6 @@ export class ApiClient {
         // Apply Golemio-specific bracket replacements which are generally safe
         const finalUrl = url.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
 
-        // Merge headers
         const headers = new Headers(this.defaultHeaders);
         if (options.headers) {
             const extraHeaders = new Headers(options.headers);
@@ -108,7 +107,6 @@ export class ApiClient {
         const timeoutMs = options.timeoutMs ?? this.defaultTimeout;
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-        // Strip custom options out of fetchInit
         const fetchInit = { ...options };
         const cacheTtl = fetchInit.cacheTtl;
         delete fetchInit.cacheTtl;
@@ -162,5 +160,4 @@ export function getResponseGeneratedAt(response: Response): string | undefined {
     return new Date(date - ageSecs * 1000).toISOString();
 }
 
-// Export a singleton for generic use cases (GTFS, Kordis)
 export const appClient = new ApiClient();

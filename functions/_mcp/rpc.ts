@@ -11,7 +11,6 @@ import { handleToolCall } from "./handlers";
 export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
     const { request } = ctx;
 
-    // Handle preflight CORS requests
     if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: MCP_HEADERS });
     }
@@ -24,7 +23,6 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
             return new Response("SSE stream not offered", { status: 405, headers: { ...MCP_HEADERS, Allow: "POST, OPTIONS" } });
         }
 
-        // Standard GET health & server metadata
         return new Response(JSON.stringify({
             status: "ok",
             name: "departs-mcp",
@@ -41,7 +39,6 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
         });
     }
 
-    // Handle POST requests (MCP JSON-RPC 2.0 protocol)
     if (request.method === "POST") {
         try {
             const raw = await readBoundedText(request, MAX_MCP_BODY_BYTES);
@@ -64,7 +61,6 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 }), { status: 400, headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
-            // Method 1: initialize
             if (method === "initialize") {
                 return new Response(JSON.stringify({
                     jsonrpc: "2.0",
@@ -85,21 +81,18 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
-            // Method 2: notifications/initialized
             if (method === "notifications/initialized") {
                 return new Response(JSON.stringify({ jsonrpc: "2.0", result: {} }), {
                     headers: { ...MCP_HEADERS, "Content-Type": "application/json" }
                 });
             }
 
-            // Method 3: ping
             if (method === "ping") {
                 return new Response(JSON.stringify({ jsonrpc: "2.0", id, result: {} }), {
                     headers: { ...MCP_HEADERS, "Content-Type": "application/json" }
                 });
             }
 
-            // Method 4: tools/list
             if (method === "tools/list") {
                 return new Response(JSON.stringify({
                     jsonrpc: "2.0",
@@ -110,7 +103,6 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 }), { headers: { ...MCP_HEADERS, "Content-Type": "application/json" } });
             }
 
-            // Method 5: tools/call
             if (method === "tools/call") {
                 const toolName = (params?.name as string) || "";
                 const toolArgs = (params?.arguments as Record<string, unknown>) || {};
@@ -146,7 +138,6 @@ export const handleMcpRequest: PagesFunction<Env> = async (ctx) => {
                 }
             }
 
-            // Unknown JSON-RPC method
             return new Response(JSON.stringify({
                 jsonrpc: "2.0",
                 id,

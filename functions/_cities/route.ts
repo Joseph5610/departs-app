@@ -1,7 +1,7 @@
 import type { EventContext } from "@cloudflare/workers-types";
 import type { CityRequestContext, Env } from "../_core/types";
-import { createErrorResponse, createSuccessResponse, handleError, toCityRequestContext } from "../_core/api-utils";
-import type { CityUseCases } from "../_domain/use-cases";
+import { createErrorResponse, createSuccessResponse, handleError, toCityRequestContext } from "../_core/apiUtils";
+import type { CityUseCases } from "../_domain/useCases";
 import type { City } from "./types";
 import { getCity, useCasesOf } from "./index";
 

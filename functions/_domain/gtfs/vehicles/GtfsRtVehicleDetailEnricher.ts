@@ -35,9 +35,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         }
 
         if (liveMatch) {
-            // Check if the live vehicle is actually on the requested trip.
-            // When we fallback to matching by vehicleId, the vehicle might have started a new trip.
-            // If the trip IDs don't match, we treat it as an ended trip (static fallback).
+            // Matched by vehicle id, the vehicle may already run its next trip; this one then counts as ended.
             const liveTripId = liveMatch.properties.gtfs_trip_id;
             if (detail.gtfs_trip_id && liveTripId && liveTripId !== detail.gtfs_trip_id) {
                 detail.is_static_fallback = true;
@@ -50,7 +48,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
     }
 
     protected enrichVehicleDetail(detail: AppVehicleDetail, liveMatch: AppVehicleFeature, lastStopId?: string) {
-        // 1. Transfer Core Live Properties
         detail.vehicle_id = liveMatch.properties.vehicle_id || detail.vehicle_id;
         detail.delay = liveMatch.properties.delay;
         detail.state_position = liveMatch.properties.state_position;
@@ -62,7 +59,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             detail.geometry = liveMatch.geometry;
         }
         
-        // 2. Transfer Descriptor
         if (liveMatch.properties.vehicle_descriptor) {
             detail.vehicle_descriptor = {
                 ...detail.vehicle_descriptor,
@@ -72,7 +68,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             };
         }
 
-        // 3. Resolve Last Stop Sequence (Base generic implementation)
         let resolvedSequence: number | null = null;
         if (lastStopId && detail.stop_times?.features) {
             const stopMatch = this.findMatchingStop(detail.stop_times.features, lastStopId);
@@ -91,13 +86,9 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             ?? this.sequenceFromPosition(detail.stop_times?.features, liveMatch.geometry?.coordinates)
             ?? undefined;
 
-        // 3.5. Evaluate Before-Track Status.
-        // This MUST run before the delay is estimated or propagated. A vehicle still waiting at its
-        // origin has no meaningful delay, and estimateLocalDelay() below explicitly declines to
-        // invent one once this state is set - a guard that never fired while this ran last.
+        // Must run before the delay is estimated: a vehicle still at its origin has none, and estimateLocalDelay() relies on this state.
         this.evaluateBeforeTrack(detail);
 
-        // 4. Estimate Delay if missing
         if (detail.delay == null) {
             const estimatedDelay = this.estimateLocalDelay(detail);
             if (estimatedDelay !== null) {
@@ -105,7 +96,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             }
         }
 
-        // 5. Propagate Delays to Subsequent Stops
         const delay = detail.delay;
         if (typeof delay === 'number' && detail.stop_times?.features) {
             detail.stop_times.features.forEach(f => {
@@ -187,7 +177,6 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
 
         const currentSeq = detail.last_stop_sequence;
         
-        // Find the relevant stop in the static schedule
         const currentTargetStopIndex = detail.stop_times.features.findIndex(f => f.properties.stop_sequence === currentSeq);
         if (currentTargetStopIndex === -1) return null;
         
@@ -204,9 +193,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             return this.calculateDelaySeconds(realSecs, targetSecs, detail.state_position);
         }
 
-        // --- on_track logic (Time Bounding Box) ---
-        // For vehicles between stops, we establish a window based on the departure of the stop it just left (Stop A)
-        // and the arrival of the next stop it is approaching (Stop B).
+        // Between stops, the delay is bounded by the departure from the stop just left (A) and the arrival at the next (B).
         const timeAStr = targetStop.properties.departure_time || targetStop.properties.arrival_time;
         if (!timeAStr) return null;
         const delayA = this.calculateDelaySeconds(realSecs, toSecs(timeAStr)); // Delay relative to leaving Stop A
@@ -216,19 +203,12 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
             const timeBStr = nextTargetStop.properties.arrival_time || nextTargetStop.properties.departure_time;
             if (timeBStr) {
                 const delayB = this.calculateDelaySeconds(realSecs, toSecs(timeBStr)); // Delay relative to arriving at Stop B
-
-                // If real time is between Stop A departure and Stop B arrival, the bus is within its scheduled transit window.
                 if (delayA > 0 && delayB < 0) return 0; // Assume perfectly on time
-                
-                // If real time is past Stop B arrival, it is definitively late. We return the conservative lower bound.
                 if (delayB >= 0) return delayB;
-
-                // If real time is before Stop A departure, it is definitively early. We return the conservative lower bound.
                 if (delayA <= 0) return delayA;
             }
         }
 
-        // Fallback if there is no Stop B (e.g. end of line)
         return delayA > 0 ? 0 : delayA;
     }
 

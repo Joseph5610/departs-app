@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
-import type { StoredFeedback } from '../../../types/feedback';
-import { apiFetch } from '@/lib/api-client';
+import type { StoredFeedback } from '@/types';
+import { apiFetch } from '@/lib/apiClient';
 
 import { Badge } from '@/components/ui/badge';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -15,11 +15,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AdminLayout } from '../AdminLayout';
+import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { buildAgentPrompt } from './agentPrompt';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
-export const AdminFeedback: React.FC = () => {
+export const AdminFeedback = () => {
     const [filterText, setFilterText] = useState('');
     const [filterType, setFilterType] = useState<'all' | 'feedback' | 'crash'>('all');
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -157,7 +157,6 @@ export const AdminFeedback: React.FC = () => {
             )}
 
             <div className="flex gap-4 flex-1 min-h-0 relative">
-                {/* Left Column: List */}
                 <div className={`w-full lg:w-87.5 shrink-0 flex flex-col gap-2.5 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {filteredItems?.length === 0 && data?.items?.length !== 0 && (
                         <div className="text-center py-8 text-muted-foreground/70 font-mono text-xs">
@@ -204,12 +203,10 @@ export const AdminFeedback: React.FC = () => {
                     })}
                 </div>
 
-                {/* Right Column: Detail */}
                 <div className={`flex-1 min-w-0 bg-card/80 backdrop-blur-md rounded-2xl border border-border/40 overflow-hidden flex flex-col shadow-xs ${!showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
                     {selectedItem ? (
                         <ScrollArea className={`h-full w-full ${selectedItem.type === 'crash' ? 'bg-red-500/2' : ''}`}>
                             <div className="p-4 sm:p-6 flex flex-col gap-5">
-                                {/* Mobile back button */}
                                 <div className="lg:hidden flex items-center mb-1">
                                     <Button variant="ghost" size="sm" onClick={() => setShowMobileDetail(false)} className="-ml-2 h-8 text-xs font-semibold gap-1 rounded-lg">
                                         <ArrowLeft className="w-4 h-4" />
@@ -217,7 +214,6 @@ export const AdminFeedback: React.FC = () => {
                                     </Button>
                                 </div>
 
-                                {/* Header Bar */}
                                 <div className="flex justify-between items-start gap-4 flex-col sm:flex-row sm:items-center border-b border-border/40 pb-4">
                                     <div className="flex flex-wrap items-center gap-2.5">
                                         {getIcon(selectedItem.type)}
@@ -256,12 +252,10 @@ export const AdminFeedback: React.FC = () => {
                                     </div>
                                 )}
                                 
-                                {/* Message */}
                                 <div className="bg-foreground/3 rounded-xl p-4.5 border border-border/40 shadow-2xs">
                                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground font-medium">{selectedItem.message}</p>
                                 </div>
 
-                                {/* Crash Stack Traces */}
                                 {selectedItem.type === 'crash' && selectedItem.diagnostics?.crashInfo && (
                                     <div className="flex flex-col gap-3">
                                         {selectedItem.diagnostics.crashInfo.errorStack && (
@@ -289,7 +283,6 @@ export const AdminFeedback: React.FC = () => {
                                     </div>
                                 )}
                                 
-                                {/* Meta Information */}
                                 <div className="flex flex-col gap-2 text-xs font-mono text-muted-foreground/80 bg-foreground/2 p-4 rounded-xl border border-border/40">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
                                         <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Feedback ID:</span>
@@ -305,7 +298,6 @@ export const AdminFeedback: React.FC = () => {
                                     </div>
                                 </div>
                                 
-                                {/* Diagnostics Collapsible */}
                                 {selectedItem.diagnostics && (
                                     <Collapsible className="bg-foreground/2 rounded-xl border border-border/40 overflow-hidden">
                                         <CollapsibleTrigger className="w-full flex justify-between items-center p-3.5 hover:bg-foreground/5 transition-colors cursor-pointer data-[state=open]:[&>svg]:rotate-180">

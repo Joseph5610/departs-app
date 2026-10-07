@@ -1,7 +1,7 @@
-import type { CityConfig } from '../../_core/city-config';
+import type { CityConfig } from '../../_core/cityConfig';
 import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { appClient } from '../../_core/ApiClient';
-import { CacheManager, MEMORY_CACHE_TTL } from '../../_core/feed/CacheManager';
+import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
 import { isFields } from '../../_core/utils/fields';
 import { DAY_MINS, type LocalClock } from '../../_core/utils/time';
 import { GTFS_CONFIG } from './config';
@@ -24,7 +24,7 @@ const isSchedule = (v: unknown): v is Schedule =>
 /** The trips a vehicle may be matched to at `clock`, from the hour's schedule file; null when it cannot be read. */
 export async function getSchedule(city: CityConfig, clock: LocalClock): Promise<Schedule | null> {
     const hour = String(Math.floor(clock.mins / 60)).padStart(2, '0');
-    return CacheManager.getOrFetch<Schedule | null>(
+    return getOrFetch<Schedule | null>(
         `schedule_${city.slug}_${hour}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {

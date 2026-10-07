@@ -1,31 +1,31 @@
-
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState, memo } from 'react';
 import { cn } from 'cn';
-import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
+import { useAlerts } from '@/hooks/data/useAlerts';
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../../state/uiStore';
-import { useCityConfig } from '../../../hooks/data/useCities';
+import { useUiStore } from '@/state/uiStore';
+import { useCityConfig } from '@/hooks/data/useCities';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { CondensedAlertItem } from '../../Alerts/CondensedAlertItem';
+import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
 import { Card } from '@/components/ui/card';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { VEHICLE_ALERTS_MIN_OVERFLOW, VEHICLE_ALERTS_PREVIEW_COUNT } from '../../../config/constants';
-import { isHighPriorityAlert } from '../../../utils/transitUtils';
-import type { RSSItem } from '../../../types/alerts';
+import { TRIP_CONFIG, VEHICLE_ALERTS } from '@/config/constants';
+import { alertsForLine, isHighPriorityAlert } from '@/domain/alerts';
+import type { RSSItem, VehicleDetail as VehicleDetailType, AppError } from '@/types';
 
 import { VehicleDetailSkeleton, StopTimelineSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
 import { StopTimeline } from './StopTimeline';
+import { TripEndedNotice } from './TripEndedNotice';
 
-import type { VehicleDetail as VehicleDetailType } from '../../../types/transit';
 import type { DisplayVehicle } from './types';
 
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
-import type { AppError } from '../../../types/error';
+import { isTripEnded, liveStopSequence } from '@/domain/vehicles';
+import { useNowEvery } from '@/hooks/useNow';
 
 interface VehicleDetailProps {
     selectedVehicle: VehicleDetailType | null;
@@ -38,14 +38,8 @@ interface VehicleDetailProps {
     onToggleFollow: () => void;
 }
 
-/**
- * VehicleDetail
- *
- * Container component that composes VehicleHero and StopTimeline.
- * Manages vehicle data merging, live data age tracking, and alert filtering.
- * The visual rendering is delegated to focused sub-components.
- */
-export const VehicleDetail = React.memo<VehicleDetailProps>(({
+/** The vehicle panel: hero, the line's alerts and the stop timeline, sharing one view of the vehicle and whether its trip has ended. */
+export const VehicleDetail = memo<VehicleDetailProps>(({
     selectedVehicle,
     vehicleDetail,
     loadingDetail,
@@ -56,43 +50,25 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
     onToggleFollow
 }) => {
     const { t } = useTranslation();
-    const { rss } = useGlobalAlerts();
-    const rssData = rss.data;
+    const { alerts } = useAlerts();
     const cityConfig = useCityConfig();
 
-    const displayVehicle = useMemo<DisplayVehicle | null>(() => {
-        if (!selectedVehicle) return null;
-        // The selectedVehicle is already fully merged and enriched by the useSelectedVehicle hook.
-        // DO NOT spread vehicleDetail over it again, as it will overwrite real-time WS data with stale HTTP data!
-        const merged = { ...selectedVehicle };
-        const routeName = String(merged.route_short_name || '');
-        const isStaticFallback = !!merged.is_static_fallback;
-
-        // Effective sequence: suppress highlight if static fallback or before_track
-        const rawSeq = merged.last_stop_sequence;
-        const isBeforeTrack = ['before_track', 'before_track_delayed'].includes(merged.state_position || '');
-        const effectiveSequence = (isStaticFallback || isBeforeTrack || rawSeq === null || rawSeq === undefined) ? null : Number(rawSeq);
-
-        return {
-            ...merged,
-            routeName,
-            isStaticFallback,
-            effectiveSequence
-        };
+    // Already merged by useSelectedVehicle; spreading the detail over it again would overwrite push data.
+    const displayVehicle = useMemo<DisplayVehicle | null>(() => selectedVehicle && {
+        ...selectedVehicle,
+        routeName: String(selectedVehicle.route_short_name || ''),
+        isStaticFallback: !!selectedVehicle.is_static_fallback,
+        effectiveSequence: liveStopSequence(selectedVehicle),
     }, [selectedVehicle]);
 
-    const relevantAlerts = useMemo(() => {
-        const allItems = rssData?.alerts || [];
-        const routeName = displayVehicle?.routeName;
-        if (!routeName) return [];
-        const upperRouteName = routeName.toUpperCase();
-        return allItems
-            .filter(item => {
-                const matchesMetadata = item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName);
-                return matchesMetadata && item.isActive;
-            })
-            .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
-    }, [rssData, displayVehicle?.routeName]);
+    const now = useNowEvery(TRIP_CONFIG.ENDED_CHECK_MS);
+    const hasEnded = !!displayVehicle && isTripEnded(displayVehicle.stop_times?.features ?? [], displayVehicle.delay, displayVehicle.effectiveSequence, now, cityConfig.timezone);
+
+    const routeName = displayVehicle?.routeName;
+    const relevantAlerts = useMemo(
+        () => (routeName && alerts ? alertsForLine(alerts, routeName) : []),
+        [alerts, routeName],
+    );
 
     if (!displayVehicle) return null;
 
@@ -102,28 +78,26 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* Loading State */}
             {showSkeleton && (
                 <VehicleDetailSkeleton />
             )}
 
-            {/* Error State */}
             {isError && !vehicleDetail && (
                 <ErrorState error={error || null} onRetry={onRetry} />
             )}
 
-            {/* Main Content */}
             {showContent && (
                 <>
+                    <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
                     <VehicleHero
                         displayVehicle={displayVehicle}
+                        hasEnded={hasEnded}
                         isFollowing={isFollowing}
                         onToggleFollow={onToggleFollow}
                         isDetailLoading={loadingDetail && !vehicleDetail}
                         hasEnrichment={!!cityConfig.enrichmentChannel}
                     />
 
-                    {/* Alerts */}
                     {relevantAlerts.length > 0 && (
                         <div className="flex flex-col gap-3 mt-2">
                             <span className="micro-label-widest text-muted-foreground px-1">
@@ -134,13 +108,15 @@ export const VehicleDetail = React.memo<VehicleDetailProps>(({
                         </div>
                     )}
 
-                    {/* Schedule / Stop List */}
                     {displayVehicle.stop_times?.features && displayVehicle.stop_times.features.length > 0 ? (
                         <StopTimeline
                             stopTimes={displayVehicle.stop_times.features}
+                            hasEnded={hasEnded}
                             routeName={displayVehicle.routeName}
                             effectiveSequence={displayVehicle.effectiveSequence}
                             delay={displayVehicle.delay}
+                            tripId={displayVehicle.gtfs_trip_id}
+                            vehicleId={displayVehicle.vehicle_id ?? null}
                         />
                     ) : (
                         loadingDetail && <StopTimelineSkeleton />
@@ -160,9 +136,9 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
     const [showAll, setShowAll] = useState(false);
     const { openAlert } = useUiStore(s => s.actions);
 
-    const previewCount = alerts.length - VEHICLE_ALERTS_PREVIEW_COUNT < VEHICLE_ALERTS_MIN_OVERFLOW
+    const previewCount = alerts.length - VEHICLE_ALERTS.PREVIEW_COUNT < VEHICLE_ALERTS.MIN_OVERFLOW
         ? alerts.length
-        : VEHICLE_ALERTS_PREVIEW_COUNT;
+        : VEHICLE_ALERTS.PREVIEW_COUNT;
     const preview = alerts.slice(0, previewCount);
     const overflow = alerts.slice(previewCount);
 

@@ -11,6 +11,8 @@ const cardVariants = cva(
       variant: {
         default: "bg-card text-card-foreground border border-border/50",
         subtle: "bg-card text-foreground border border-border/50 shadow-sm",
+        /** Departure-board and favourites cards: a darker surface than `card` in dark mode. */
+        panel: "bg-card text-foreground border border-border/50 shadow-sm ring-0 dark:border-white/10 dark:bg-[#161616]",
       },
     },
     defaultVariants: {

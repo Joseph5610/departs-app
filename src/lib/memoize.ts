@@ -17,3 +17,17 @@ export function memoizeLast<A extends unknown[], R>(fn: (...args: A) => R): (...
         return lastResult;
     };
 }
+
+/**
+ * `items.map(fn)`, but `items` itself when `fn` returns every item unchanged, so memoized consumers
+ * keyed on the array's identity don't recompute.
+ */
+export function mapStable<T>(items: T[], fn: (item: T) => T): T[] {
+    let changed = false;
+    const result = items.map((item) => {
+        const next = fn(item);
+        if (next !== item) changed = true;
+        return next;
+    });
+    return changed ? result : items;
+}

@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import type { Departure } from '../../types/transit';
-import type { AppError } from '../../types/error';
+import type { Departure, AppError } from '@/types';
 import { fetchDepartures, useLiveDepartures, type DeparturesResponse } from './useDepartures';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { enrichLiveDepartures } from '../../lib/enrichment';
-import { memoizeLast } from '../../lib/memoize';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { departuresByStop, enrichLiveDepartures } from '@/domain/departures';
+import { memoizeLast } from '@/lib/memoize';
+import { queryKeys } from '@/lib/queryKeys';
 
 const enrichFavoriteDepartures = memoizeLast(enrichLiveDepartures);
 
@@ -19,7 +19,7 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
 
     const query = useQuery<DeparturesResponse | null, AppError>({
-        queryKey: ['departures', 'bulk', selectedCity, stopIds.join(',')],
+        queryKey: queryKeys.favoriteDepartures(selectedCity, stopIds),
         queryFn: async ({ signal }) => {
             if (stopIds.length === 0 || !selectedCity) return null;
             return fetchDepartures(selectedCity, stopIds, signal);
@@ -33,16 +33,7 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
 
     const live = useLiveDepartures(query.data?.departures ?? NO_DEPARTURES, query.dataUpdatedAt || 0, enrichFavoriteDepartures);
 
-    const departuresByStop = useMemo(() => {
-        const byStop = new Map<string, Departure[]>();
-        for (const dep of live) {
-            if (!dep.stopId) continue;
-            const list = byStop.get(dep.stopId);
-            if (list) list.push(dep);
-            else byStop.set(dep.stopId, [dep]);
-        }
-        return byStop;
-    }, [live]);
+    const byStop = useMemo(() => departuresByStop(live), [live]);
 
-    return { departuresByStop, isLoading: query.isLoading, isError: query.isError };
+    return { departuresByStop: byStop, isLoading: query.isLoading, isError: query.isError };
 };

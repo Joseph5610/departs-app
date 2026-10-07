@@ -4,10 +4,3 @@ export class ApiError extends Error {
         this.name = 'ApiError';
     }
 }
-
-export class NotImplementedError extends ApiError {
-    constructor(message: string = 'Not implemented for this city') {
-        super(message, 501);
-        this.name = 'NotImplementedError';
-    }
-}

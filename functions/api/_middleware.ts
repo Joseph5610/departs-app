@@ -1,15 +1,13 @@
-import { createErrorResponse, isAllowedOrigin } from "../_core/api-utils";
+import { createErrorResponse, isAllowedOrigin } from "../_core/apiUtils";
 
 export const onRequest: PagesFunction = async ({ request, next }) => {
     const origin = request.headers.get("Origin");
     const allowed = isAllowedOrigin(origin, request.url);
 
-    // 1. Security check: Block disallowed origins explicitly
     if (origin && !allowed) {
         return createErrorResponse("Origin not allowed.", 403);
     }
 
-    // 2. Handle Preflight (OPTIONS)
     if (request.method === "OPTIONS") {
         return new Response(null, {
             status: 204,
@@ -26,7 +24,6 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
         });
     }
 
-    // 3. Block disallowed methods
     if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
         return createErrorResponse("Method not allowed.", 405);
     }

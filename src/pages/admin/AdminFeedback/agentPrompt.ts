@@ -1,5 +1,5 @@
-import type { StoredFeedback } from '../../../types/feedback';
-import { SITE } from '../../../config/site';
+import type { StoredFeedback } from '@/types';
+import { SITE } from '@/config/site';
 
 /** A backtick fence longer than any backtick run in `text`, so the text cannot close it early. */
 function fenceFor(text: string): string {

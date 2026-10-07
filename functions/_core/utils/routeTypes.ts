@@ -8,7 +8,6 @@ export const normalizeRouteType = (type: number | string | undefined | null): Ap
     if (type === undefined || type === null) return 'unknown';
     const strType = String(type).toLowerCase();
     
-    // If it's already a valid slug, return it
     if (['tram', 'metro', 'train', 'bus', 'ferry', 'funicular', 'trolleybus'].includes(strType)) {
         return strType as AppRouteType;
     }

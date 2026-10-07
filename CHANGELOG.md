@@ -4,6 +4,47 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.80.2] - 2026-10-07
+
+### Added
+
+- The build ships `THIRD_PARTY_LICENSES.txt` with the licence of every bundled dependency and fails on a dependency outside the allowed licences.
+
+### Changed
+
+- Transit logic moved out of components and hooks into a tested `src/domain/` layer, with unit tests (Vitest) in CI and ESLint-enforced import and layering rules.
+
+### Fixed
+
+- Departure times, the wall-board clock and the metro night notice follow the city's own time zone instead of a fixed Prague zone.
+- A trip ending just after midnight no longer counts as ended before midnight, and a ride to a stop past midnight shows the right minutes to arrival.
+- Ride alerts are no longer lost when the user's and a followed ride swap places, and a followed ride that has arrived is not followed again from its link.
+- Reopening the app long after a ride's trip ended no longer shows "you have arrived"; the ride is cleared at once.
+
+## [0.80.1] - 2026-10-06
+
+### Fixed
+
+- Ústecký kraj trains show their route and stop times again, from Spojenka's national timetable instead of the JrUtil history that stopped on 30 September; more of their stations open a departure board, and trips running past midnight no longer show as ended.
+
+## [0.80.0] - 2026-10-04
+
+### Added
+
+- Ride mode: pick the stop you get off at on a trip's timeline, follow stops left and arrival in a bar above the map, and get alerted one stop before; the screen stays on while riding. A ride can be planned on an upcoming trip before a vehicle runs it.
+- Prague vehicle timelines link each stop to its departures (metro stops open the whole station), with stop ids from Golemio's GTFS trip data.
+- A stop opened from a trip's timeline highlights that trip on its departure board.
+- Full-screen departure board for a wall screen, opened from the stop menu with an optional walking time that shows only departures you can still catch; it replaces the link to PID's virtual board.
+- Departure boards can show only wheelchair-accessible departures, like the air-conditioning filter.
+- Favourite a line and direction at a stop with the star on its departure group; favourite lines lead that stop's board and the favourites panel, and open the stop filtered to that line.
+- Sharing a trip or stop sends a live summary (next departures, delay); sharing a ride tells when you arrive and marks your stop for whoever opens the link, who follows it automatically, alongside any ride of their own, and is told when it gets there.
+- The full-screen board shows the stop's current notices in its footer.
+
+### Fixed
+
+- A trip that has reached its last stop says so and stops being followed, offering the vehicle's next trip; a ride on it ends too.
+- The air-conditioning filter of a departure board no longer marks the map as filtered.
+
 ## [0.79.7] - 2026-10-04
 
 ### Added

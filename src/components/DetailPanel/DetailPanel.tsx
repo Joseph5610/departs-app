@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, memo } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,7 +13,7 @@ import {
     type DialogRootChangeEventDetails
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DRAWER_SNAP } from '@/config/constants';
@@ -39,7 +39,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop and a bottom drawer (Base UI) on mobile.
  */
-export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, children }) => {
+export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, children }: DetailPanelProps) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -104,7 +104,6 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
     const swipeCloseFromRef = useRef<number | string | null>(null);
     const swipeCollapseRef = useRef(false);
 
-    // Reset snap point when selection changes (id change) during render
     const [prevId, setPrevId] = useState(id);
     if (id !== prevId) {
         setPrevId(id);
@@ -182,8 +181,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = React.memo(({ isOpen, onC
         <Sheet
             open={isOpen}
             onOpenChange={(open: boolean, details: DialogRootChangeEventDetails) => {
-                // If it's closed internally (e.g. escape key), we call onClose.
-                // We ignore outside-press and focus-out because pointer dismissal is disabled.
+                // Only Escape closes from here: pointer dismissal is disabled, so outside-press and focus-out are ignored.
                 if (!open && details.reason !== 'outside-press' && details.reason !== 'focus-out') {
                     onClose();
                 }

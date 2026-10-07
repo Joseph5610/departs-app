@@ -101,6 +101,9 @@ export interface VehicleDetail extends BaseVehicleProperties {
     is_static_fallback?: boolean;
 }
 
+/** One stop of a trip's `stop_times`. */
+export type StopTimeFeature = NonNullable<VehicleDetail['stop_times']>['features'][number];
+
 /** An onward trip scheduled to wait at a stop for the trip being viewed. */
 export interface StopConnection {
     trip_id: string;

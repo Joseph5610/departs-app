@@ -21,7 +21,7 @@
     "lineFilter_other": "Filtrovat linky {{line}}",
     "filterByLine": "Filtrovat podle linky:",
     "clearFilter": "Zrušit filtr",
-    "favorites": "Oblíbené zastávky",
+    "favorites": "Oblíbené",
     "recent": "Nedávné",
     "places": "Místa a adresy",
     "pointsOfSale": "Prodejní místa",
@@ -111,6 +111,7 @@
         "czOpenData": "Otevřená data",
         "permission": "Použito se svolením",
         "noRestrictions": "Bez omezení užití",
+        "nonCommercial": "Pouze pro nekomerční užití",
         "notStated": "Licence neuvedena"
       }
     },
@@ -165,7 +166,6 @@
       "notAvailable": "N/A",
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
-      "ac": "Klima",
       "runNumber": "Oběh",
       "enrichedTooltip": "Tato data jsou aktualizována v reálném čase přímo z vozidla (Live Stream).",
       "connectingTooltip": "Čekáme na spojení s vozidlem (Live Stream). Zatím zobrazujeme standardní data z dispečinku.",
@@ -175,7 +175,6 @@
       "hidePastStops": "Skrýt předchozí zastávky",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
-      "shareText": "Sledujte polohu spoje linky {{line}} živě na {{appName}}",
       "requestStop": "Zastávka na znamení",
       "track": "Sledovat vozidlo",
       "connections": {
@@ -183,7 +182,14 @@
         "waitsUpTo": "počká až {{minutes}} min",
         "mayNotWait": "Nemusí počkat"
       },
-      "continuesAs": "Pokračuje jako linka"
+      "continuesAs": "Pokračuje jako linka",
+      "ended": {
+        "title": "Tento spoj už dojel",
+        "body": "Do zastávky {{stop}} přijel v {{time}}.",
+        "bodyNoTime": "Dojel do konečné zastávky {{stop}}.",
+        "nextTrip": "Sledovat vozidlo, nyní linka {{line}}",
+        "close": "Zavřít"
+      }
     },
     "departures": {
       "noUpcoming": "Nebyly nalezeny žádné nejbližší odjezdy.",
@@ -215,18 +221,21 @@
       "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
       "openInMaps": "Otevřít Mapy",
       "otherNetworkBoard": "Odjezdy {{network}} zde",
-      "officialBoard": "Virtuální tablo",
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",
       "removeFromFavorites": "Odebrat z oblíbených",
       "canceled": "Zrušen",
       "feeder": {
-        "waitsFor": "Čeká na {{line}} (max. {{minutes}} min)",
         "heldFor": "Čeká ~{{minutes}} min na {{line}}",
         "wontWait": "Nepočká na {{line}}",
         "waitsForLines": "Čeká na přípoje: {{lines}}"
       },
-      "continuesAs": "Pokračuje jako linka {{line}} směr {{headsign}}"
+      "continuesAs": "Pokračuje jako linka {{line}} směr {{headsign}}",
+      "vehicleFilters": "Filtry vozidel",
+      "lineFilters": "Filtry linek",
+      "viewedTrip": "Prohlížený spoj",
+      "yourTrip": "Váš spoj",
+      "watchedTrip": "Sledovaný spoj"
     }
   },
   "update": {
@@ -238,6 +247,68 @@
     "title": "Nainstalujte Departs",
     "description": "Přidejte si aplikaci na plochu pro rychlý přístup.",
     "button": "Instalovat"
+  },
+  "ride": {
+    "pick": "Upozornit před výstupem",
+    "pickHint": "Klepněte na zastávku, kde vystupujete",
+    "cancel": "Zrušit",
+    "end": "Ukončit jízdu",
+    "yourStop": "Vaše zastávka",
+    "stopsLeft_one": "{{count}} zastávka",
+    "stopsLeft_few": "{{count}} zastávky",
+    "stopsLeft_other": "{{count}} zastávek",
+    "nextStop": "Na příští zastávce vystupujete",
+    "arrived": "Jste na místě: {{stop}}",
+    "waiting": "Čeká na odjezd",
+    "started": "Upozorníme vás před zastávkou {{stop}}",
+    "open": "Otevřít jízdu",
+    "pickStop": "Vystoupit na zastávce {{stop}}",
+    "arrivesAtLabel": "příj.",
+    "unavailable": "Data spoje nejsou k dispozici",
+    "kickerRiding": "Vystupujete",
+    "kickerArrived": "Jste na místě",
+    "kickerNext": "Příští zastávka",
+    "expandRides": "Zobrazit obě jízdy",
+    "collapseRides": "Sbalit jízdy",
+    "pickSub": "Vyberte zastávku a o zastávku dřív vás upozorníme"
+  },
+  "board": {
+    "open": "Tabule na celou obrazovku",
+    "noWalk": "Bez času chůze",
+    "leaveIn": "vyrazte za {{count}} min",
+    "leaveNow": "vyrazte hned",
+    "withWalk": "S {{count}} min chůze",
+    "unavailable": "Odjezdy teď nelze načíst",
+    "unavailableDescription": "Tabule to sama zkusí znovu při dalším obnovení.",
+    "unknownStop": "Neznámá zastávka",
+    "unknownStopDescription": "Zkontrolujte adresu tabule."
+  },
+  "share": {
+    "ride": "Jedu linkou {{line}} směr {{headsign}}, na zastávce {{stop}} budu kolem {{time}}.",
+    "rideNoTime": "Jedu linkou {{line}} směr {{headsign}}, vystupuji na zastávce {{stop}}.",
+    "trip": "Linka {{line}} směr {{headsign}} živě na mapě.",
+    "tripDelayed_one": "Linka {{line}} směr {{headsign}}, zpoždění {{count}} min, živě na mapě.",
+    "tripDelayed_few": "Linka {{line}} směr {{headsign}}, zpoždění {{count}} min, živě na mapě.",
+    "tripDelayed_other": "Linka {{line}} směr {{headsign}}, zpoždění {{count}} min, živě na mapě.",
+    "stop": "Nejbližší odjezdy ze zastávky {{name}}: {{list}}",
+    "stopNow": "{{line}} teď",
+    "stopIn": "{{line}} za {{count}} min",
+    "shareRide": "Sdílet jízdu",
+    "sharedExit": "Tady vystupuje",
+    "friendExit": "Sdílená jízda: vystupuje na zastávce {{stop}} kolem {{time}}",
+    "friendExitNoTime": "Sdílená jízda: vystupuje na zastávce {{stop}}",
+    "watch": "Sledovat",
+    "watchStarted": "Dáme vědět, až spoj dorazí na zastávku {{stop}}",
+    "stopWatching": "Přestat sledovat",
+    "watchNext": "Dorazí na příští zastávce",
+    "watchArrived": "Spoj dorazil na zastávku {{stop}}",
+    "notifyMe": "Upozornit mě",
+    "openFollowed": "Otevřít sledovanou jízdu",
+    "kickerRiding": "Sledujete jízdu",
+    "kickerArrived": "Dorazil",
+    "notificationsOn": "Oznámení zapnuta",
+    "notificationsBlocked": "Oznámení jsou pro tento web zakázaná v nastavení prohlížeče",
+    "notificationsNotShown": "Prohlížeč žádost nezobrazil. Povolte oznámení pro tento web v jeho nastavení."
   },
   "liveStatus": {
     "refreshing": "Aktualizace",
@@ -344,9 +415,15 @@
     }
   },
   "favorites": {
-    "title": "Oblíbené zastávky",
+    "title": "Oblíbené",
     "empty": "Žádné oblíbené zastávky",
-    "emptySub": "Klepnutím na hvězdičku v detailu zastávky si ji uložíte sem."
+    "emptySub": "Klepnutím na hvězdičku v detailu zastávky si ji uložíte sem.",
+    "pinLine": "Přidat linku {{line}} směr {{headsign}} do oblíbených",
+    "unpinLine": "Odebrat linku {{line}} směr {{headsign}} z oblíbených",
+    "linesTitle": "Oblíbené linky",
+    "stopsTitle": "Zastávky",
+    "fromStop": "ze zastávky {{stop}}",
+    "linesLimit": "Oblíbených linek může být nejvýše {{count}}."
   },
   "feedback": {
     "title": "Odeslat zpětnou vazbu",

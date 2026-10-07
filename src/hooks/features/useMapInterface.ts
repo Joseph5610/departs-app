@@ -1,38 +1,26 @@
 import { useEffect, useRef } from 'react';
-import { useRouteParams } from '../useRouteParams';
-import { useSelectionStore } from '../../state/selectionStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { useIsMobile } from '../useIsMobile';
-import { MAP_LAYERS } from '../../config/mapLayers';
-import { useSelectedStop } from '../derived/useSelectedStop';
-import { useSelectedVehicle } from '../derived/useSelectedVehicle';
-import {
-    MAP_CAMERA,
-    MOBILE_BOTTOM_SHEET_RATIO,
-    PULSE_SPEED_DIVISOR,
-    PULSE_BASE_RADIUS,
-    PULSE_RADIUS_AMPLITUDE,
-    PULSE_BASE_OPACITY,
-    PULSE_OPACITY_DIVISOR
-} from '../../config/constants';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useSelectionStore } from '@/state/selectionStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { MAP_LAYERS } from '@/config/mapLayers';
+import { hasPosition } from '@/lib/geo';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
+import { MAP_CAMERA, LAYOUT, SELECTED_VEHICLE_PULSE } from '@/config/constants';
 
 /** Sidebar geometry lives in index.css; the camera padding must match it. */
 const readRootCssPx = (name: string): number =>
     parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 
 /**
- * useMapInterface
- *
  * The "User Experience Layer" hook.
  */
 export const useMapInterface = () => {
-    // Route Params
     const { stopId: selectedStopId, tripId: selectedTripId, vehicleId: selectedVehicleId } = useRouteParams();
-    
-    // Selection Store
+
     const isFollowing = useSelectionStore(s => s.isFollowing);
 
-    // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { flyTo, easeTo } = useMapMetadataStore(s => s.actions);
@@ -44,23 +32,22 @@ export const useMapInterface = () => {
     const lastFlownId = useRef<string | null>(null);
     const lastFlownStopId = useRef<string | null>(null);
 
-    // --- 3. CAMERA FOLLOW ---
+    // Camera: fly to a newly followed vehicle, keep easing after it, or ease to a newly opened stop.
     useEffect(() => {
         if (!mapLoaded || !mapRef.current) {
             return;
         }
 
         const padding = isMobile
-            ? { bottom: window.innerHeight / MOBILE_BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+            ? { bottom: window.innerHeight / LAYOUT.BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
             : { bottom: 0, top: 0, left: readRootCssPx('--sidebar-width') + readRootCssPx('--sidebar-inset'), right: 0 };
 
         const currentMap = mapRef.current;
         const currentId = selectedVehicleId || selectedTripId;
         const coords = selectedVehicle?.geometry?.coordinates;
-        const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
+        const hasCoords = hasPosition(coords);
 
-        // If we are following a vehicle or just have one selected,
-        // we reset the last flown stop ID so that returning to the stop triggers a re-center.
+        // Returning to the stop after a trip must re-centre on it.
         if (selectedTripId) {
             lastFlownStopId.current = null;
         }
@@ -68,7 +55,7 @@ export const useMapInterface = () => {
         if (isFollowing && hasCoords && lastFlownId.current !== currentId) {
             lastFlownId.current = currentId || null;
             flyTo({
-                center: coords as [number, number],
+                center: coords,
                 zoom: MAP_CAMERA.VEHICLE_SELECT_ZOOM,
                 duration: MAP_CAMERA.ANIMATION_MS,
                 essential: true,
@@ -79,7 +66,7 @@ export const useMapInterface = () => {
 
         if (isFollowing && hasCoords) {
             easeTo({
-                center: coords as [number, number],
+                center: coords,
                 duration: MAP_CAMERA.EASE_MS,
                 essential: true,
                 padding
@@ -98,7 +85,7 @@ export const useMapInterface = () => {
         }
     }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
 
-    // --- 4. PERFORMANCE VISUALS ---
+    // Selected vehicle pulse, animated on the map layer directly to stay off React renders.
     const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);
     useEffect(() => {
         selectedCoordsRef.current = selectedVehicle?.geometry?.coordinates;
@@ -112,12 +99,10 @@ export const useMapInterface = () => {
         const animate = () => {
             const map = mapRef.current?.getMap();
             const coords = selectedCoordsRef.current;
-            const hasCoords = coords && (coords[0] !== 0 || coords[1] !== 0);
-
-            if (map && hasCoords) {
-                const time = Date.now() / PULSE_SPEED_DIVISOR;
-                const radius = PULSE_BASE_RADIUS + Math.sin(time) * PULSE_RADIUS_AMPLITUDE;
-                const opacity = PULSE_BASE_OPACITY - ((radius - 5) / PULSE_OPACITY_DIVISOR);
+            if (map && hasPosition(coords)) {
+                const time = Date.now() / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR;
+                const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(time) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
+                const opacity = SELECTED_VEHICLE_PULSE.BASE_OPACITY - ((radius - 5) / SELECTED_VEHICLE_PULSE.OPACITY_DIVISOR);
 
                 try {
                     if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {

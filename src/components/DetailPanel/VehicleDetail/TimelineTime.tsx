@@ -1,16 +1,15 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from 'cn';
-import { calculateTimeDifferenceSecs } from '../../../utils/dateUtils';
-import { getDelayStatus } from '../../../config/transit';
+import { calculateTimeDifferenceSecs, formatClock } from '@/domain/time';
+import { getDelayStatus } from '@/domain/delay';
 
 /** Right-aligned time column: the expected time, coloured by delay, over the scheduled one when they differ. */
-export const TimelineTime: React.FC<{
+export const TimelineTime = ({ realtimeTime, scheduledTime, hasRealtime, isPast = false }: {
     realtimeTime?: string;
     scheduledTime?: string;
     hasRealtime: boolean;
     isPast?: boolean;
-}> = ({ realtimeTime, scheduledTime, hasRealtime, isPast = false }) => {
+}) => {
     const { t } = useTranslation();
     const isLate = hasRealtime && !!realtimeTime && !!scheduledTime
         && getDelayStatus(calculateTimeDifferenceSecs(realtimeTime, scheduledTime)) === 'late';
@@ -21,11 +20,11 @@ export const TimelineTime: React.FC<{
                 "text-xs tabular-nums",
                 isPast ? "text-muted-foreground" : hasRealtime ? (isLate ? "text-destructive" : "text-primary") : "text-muted-foreground"
             )}>
-                {(realtimeTime ?? '').slice(0, 8)}
+                {formatClock(realtimeTime, true)}
             </span>
             {hasRealtime && (
                 <span className="text-[9px] text-muted-foreground tabular-nums">
-                    {t('map.vehicleDetails.scheduledTime')} {(scheduledTime ?? '').slice(0, 8)}
+                    {t('map.vehicleDetails.scheduledTime')} {formatClock(scheduledTime, true)}
                 </span>
             )}
         </span>

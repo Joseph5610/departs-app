@@ -1,5 +1,5 @@
 import type * as GtfsRt from './gtfsRtTypes';
-import { ProtobufReader as Reader, WIRE_BYTES, WIRE_VARINT } from './protobufReader';
+import { ProtobufReader as Reader, WIRE_BYTES, WIRE_VARINT } from './ProtobufReader';
 
 /**
  * GTFS-RT FeedMessage decoding for every network, several times faster than the generated decoder since
@@ -184,9 +184,7 @@ function readAlert(r: Reader, end: number): GtfsRt.IAlert {
         const field = tag >>> 3;
         if (field === 1) activePeriod.push(readTimeRange(r, r.end()));
         else if (field === 5) informedEntity.push(readEntitySelector(r, r.end()));
-        // Plain `.decode()` (what production calls, confirmed by direct property access - NOT
-        // JSON.stringify, which silently runs protobufjs's own toJSON()/toObject() and converts
-        // these to their enum names) gives the raw number; do not "fix" this to a name again.
+        // Plain `.decode()` yields the raw number (only toJSON() converts to enum names); do not "fix" this to a name.
         else if (field === 6) alert.cause = r.varint();
         else if (field === 7) alert.effect = r.varint();
         else if (field === 8) alert.url = readTranslatedString(r, r.end());

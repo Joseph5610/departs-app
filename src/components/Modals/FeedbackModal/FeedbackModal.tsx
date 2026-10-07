@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { Bug, Lightbulb, MessageSquare, Loader2, Send, MessageSquareHeart } from 'lucide-react';
 import { z } from 'zod';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch } from '@/lib/apiClient';
 
 import {
     Dialog,
@@ -21,32 +21,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { IconToggle, type IconToggleProps } from '../../IconToggle';
+import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
-import { useUiStore } from '../../../state/uiStore';
-import { feedbackPayloadSchema, type FeedbackPayload } from '../../../types/feedback';
-import { getDiagnosticSnapshot } from '../../../hooks/features/useDiagnosticData';
-import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '../../../config/constants';
+import { useUiStore } from '@/state/uiStore';
+import { feedbackPayloadSchema, type FeedbackPayload } from '@/types';
+import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
+import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '@/config/constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
 type FormValues = z.infer<typeof baseFormSchema>;
 
-const TypeButton: React.FC<Omit<IconToggleProps, 'className' | 'labelClassName'>> = (props) => (
+const TypeButton = (props: Omit<IconToggleProps, 'className' | 'labelClassName'>) => (
     <IconToggle {...props} className="py-3 rounded-xl text-xs cursor-pointer" labelClassName="text-xs font-bold" />
 );
 
-export const FeedbackModal: React.FC = React.memo(() => {
+export const FeedbackModal = memo(() => {
     const { t } = useTranslation();
     const isOpen = useUiStore(s => s.isFeedbackOpen);
     const { setIsFeedbackOpen } = useUiStore(s => s.actions);
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
     const turnstileRef = useRef<TurnstileInstance>(null);
 
-    const formSchema = React.useMemo(() => baseFormSchema.extend({
+    const formSchema = useMemo(() => baseFormSchema.extend({
         message: z.string()
             .min(FEEDBACK_LIMITS.MESSAGE_MIN_CHARS, t('feedback.validation.messageTooShort', { count: FEEDBACK_LIMITS.MESSAGE_MIN_CHARS }))
             .max(FEEDBACK_LIMITS.MESSAGE_MAX_CHARS, t('feedback.validation.messageTooLong', { count: FEEDBACK_LIMITS.MESSAGE_MAX_CHARS })),
@@ -66,7 +66,7 @@ export const FeedbackModal: React.FC = React.memo(() => {
 
     const includeDiagnostics = useWatch({ control: form.control, name: 'includeDiagnostics' });
     
-    const diagnosticSnapshot = React.useMemo(() => {
+    const diagnosticSnapshot = useMemo(() => {
         return isOpen ? getDiagnosticSnapshot() : undefined;
     }, [isOpen]);
 
@@ -110,7 +110,7 @@ export const FeedbackModal: React.FC = React.memo(() => {
         submitMutation.mutate(payload);
     };
 
-    const onClose = React.useCallback(() => {
+    const onClose = useCallback(() => {
         setIsFeedbackOpen(false);
     }, [setIsFeedbackOpen]);
 
@@ -130,7 +130,6 @@ export const FeedbackModal: React.FC = React.memo(() => {
                 <ScrollArea className="flex-1 min-h-0 px-6">
                     <form id="feedback-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2 pb-6">
                         
-                        {/* Type Selection */}
                         <Controller
                             control={form.control}
                             name="type"
@@ -168,7 +167,6 @@ export const FeedbackModal: React.FC = React.memo(() => {
                             )}
                         />
 
-                        {/* Message */}
                         <Controller
                             control={form.control}
                             name="message"
@@ -189,7 +187,6 @@ export const FeedbackModal: React.FC = React.memo(() => {
                             )}
                         />
 
-                        {/* Email */}
                         <Controller
                             control={form.control}
                             name="email"
@@ -212,7 +209,6 @@ export const FeedbackModal: React.FC = React.memo(() => {
                             )}
                         />
 
-                        {/* Diagnostics Switch */}
                         <Controller
                             control={form.control}
                             name="includeDiagnostics"

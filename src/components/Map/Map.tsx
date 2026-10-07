@@ -1,82 +1,77 @@
-import React, { lazy, Suspense, useMemo, useCallback, useState } from 'react';
+import { lazy, Suspense, useMemo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
-import { closeDetail, goBack, navigate, useBackTarget } from '../../lib/history';
-import { paths } from '../../lib/routes';
+import { closeDetail, goBack, navigate, useBackTarget } from '@/lib/history';
+import { paths } from '@/lib/routes';
 
 import MapGL, { Marker } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '../../lib/maplibre-worker';
+import '@/lib/maplibreWorker';
 import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
-import { DetailPanel } from '../DetailPanel/DetailPanel';
-import { DepartureBoardHeader } from '../DetailPanel/DepartureBoard/DepartureBoardHeader';
-import { PanelActions } from '../DetailPanel/PanelActions';
-import { StopTitle } from '../DetailPanel/DepartureBoard/StopTitle';
-import { PointOfSaleHeader } from '../DetailPanel/PointOfSaleHeader';
-import { FavoritesPanel } from '../DetailPanel/FavoritesPanel/FavoritesPanel';
+import { DetailPanel } from '@/components/DetailPanel/DetailPanel';
+import { DepartureBoardHeader } from '@/components/DetailPanel/DepartureBoard/DepartureBoardHeader';
+import { PanelActions } from '@/components/DetailPanel/PanelActions';
+import { StopTitle } from '@/components/DetailPanel/DepartureBoard/StopTitle';
+import { PointOfSaleHeader } from '@/components/DetailPanel/PointOfSaleHeader';
+import { FavoritesPanel } from '@/components/DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
-import { getInitialViewState } from '../../utils/mapUtils';
-import { EXTERNAL_URLS, MAP_CAMERA, SITE_TITLE, SITE_URL } from '../../config/constants';
-import { SITE } from '../../config/site';
+import { RideBar } from './RideBar';
+import { getInitialViewState } from '@/lib/map/view';
+import { EXTERNAL_URLS, MAP_CAMERA } from '@/config/constants';
+import { SITE } from '@/config/site';
 import { MapLayers } from './MapLayers';
-import { MAP_LAYERS, MAP_SOURCES, STOP_CLICK_LAYERS, VEHICLE_CLICK_LAYERS, INTERACTIVE_LAYER_IDS } from '../../config/mapLayers';
+import { MAP_LAYERS, MAP_SOURCES, STOP_CLICK_LAYERS, VEHICLE_CLICK_LAYERS, INTERACTIVE_LAYER_IDS } from '@/config/mapLayers';
 import { MapController } from './MapController';
-import { useMapEvents } from '../../hooks/features/useMapEvents';
-import { useViewportStore } from '../../state/viewportStore';
-import { useSelectionStore } from '../../state/selectionStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useUiStore } from '../../state/uiStore';
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { useIsMobile } from '../../hooks/useIsMobile';
-import { useRememberedPlace } from '../../hooks/data/useGeocoding';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useMapEvents } from '@/hooks/features/useMapEvents';
+import { useViewportStore } from '@/state/viewportStore';
+import { useSelectionStore } from '@/state/selectionStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useUiStore } from '@/state/uiStore';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useRememberedPlace } from '@/hooks/data/useGeocoding';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { MapControls } from './MapControls';
 import { PointsOfSaleLayer } from './PointsOfSaleLayer';
-import { DetailPanelContent } from '../DetailPanel/DetailPanelContent';
-import { VehicleTitle } from '../DetailPanel/VehicleDetail/VehicleTitle';
-import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
-import type { PointOfSale } from '../../types/pointsOfSale';
-import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
-import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { DetailPanelContent } from '@/components/DetailPanel/DetailPanelContent';
+import { VehicleTitle } from '@/components/DetailPanel/VehicleDetail/VehicleTitle';
+import { usePointsOfSale } from '@/hooks/data/usePointsOfSale';
+import type { PointOfSale } from '@/types';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
-import { MountWhenOpened } from '../MountWhenOpened';
-import { McpPromoBanner } from '../McpPromo/McpPromoBanner';
+import { MountWhenOpened } from '@/components/MountWhenOpened';
+import { McpPromoBanner } from '@/components/McpPromo/McpPromoBanner';
 
-const SettingsModal = lazy(() => import('../Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
-const WelcomeModal = lazy(() => import('../Modals/WelcomeModal').then(m => ({ default: m.WelcomeModal })));
-const AlertsModal = lazy(() => import('../Modals/AlertsModal').then(m => ({ default: m.AlertsModal })));
-const FeedbackModal = lazy(() => import('../Modals/FeedbackModal/FeedbackModal').then(m => ({ default: m.FeedbackModal })));
+const SettingsModal = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const WelcomeModal = lazy(() => import('@/components/Modals/WelcomeModal').then(m => ({ default: m.WelcomeModal })));
+const AlertsModal = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsModal })));
+const FeedbackModal = lazy(() => import('@/components/Modals/FeedbackModal/FeedbackModal').then(m => ({ default: m.FeedbackModal })));
 const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default: m.StatsPanel })));
-const McpModal = lazy(() => import('../Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
+const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
 
 /**
- * MapInner Component
- *
  * Manages the layout of the map and its overlays.
  */
-const MapInner: React.FC = () => {
+const MapInner = () => {
     const { t } = useTranslation();
     const mapEvents = useMapEvents();
     const isMobile = useIsMobile();
     const [drawerCollapseRequest, setDrawerCollapseRequest] = useState(0);
 
-    // Store Actions
     const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedId = tripId || vehicleId;
     const isPanelRoute = Boolean(selectedStopId || selectedId || posId || isStatsRoute || isFavoritesRoute);
 
-    // Viewport Store
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
     const selectedPlace = useRememberedPlace(selectedPlaceId);
 
-    // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
-    // Preferences Store
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
@@ -88,11 +83,9 @@ const MapInner: React.FC = () => {
     const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
     const { resolvedTheme } = useTheme();
 
-    // Derived State
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
-    // PoS Data
     const { data: posList } = usePointsOfSale();
     const selectedPos = useMemo(() => posId ? posList?.find((p: PointOfSale) => p.id === posId) : null, [posId, posList]);
 
@@ -145,8 +138,8 @@ const MapInner: React.FC = () => {
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
     ), [isStatsRoute, isFavoritesRoute]);
 
-    const displayTitle = panelTitle ? `${panelTitle} - ${SITE.NAME}` : SITE_TITLE;
-    const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE_URL}/`;
+    const displayTitle = panelTitle ? `${panelTitle} - ${SITE.NAME}` : SITE.TITLE;
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE.URL}/`;
 
     const jsonLd = useMemo(() => {
         if (selectedStop) {
@@ -166,11 +159,11 @@ const MapInner: React.FC = () => {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": SITE.NAME,
-            "url": SITE_URL,
+            "url": SITE.URL,
             "description": "Real-time visualization of public transport for Prague, Brno and Prešov. Track buses, trams, and metro live.",
             "applicationCategory": "TransportApplication",
             "operatingSystem": "All",
-            "image": `${SITE_URL}/icon.png`,
+            "image": `${SITE.URL}/icon.png`,
             "author": {
                 "@type": "Organization",
                 "name": SITE.NAME
@@ -283,6 +276,7 @@ const MapInner: React.FC = () => {
             </MapGL>
 
             <LiveStatus />
+            <RideBar />
             <Search />
             <MapControls />
 
@@ -322,7 +316,7 @@ const MapInner: React.FC = () => {
 /**
  * Map Component (Entry Point)
  */
-export const Map: React.FC = () => {
+export const Map = () => {
     return (
         <MapController>
             <MapInner />

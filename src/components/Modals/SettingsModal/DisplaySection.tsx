@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import {
@@ -20,12 +19,12 @@ import { Card } from '@/components/ui/card';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
 import { cn } from 'cn';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useCityConfig } from '../../../hooks/data/useCities';
-import { ROUTE_TYPE_ORDER } from '../../../config/transit';
-import { ROUTE_TYPE_ICONS } from '../../routeTypeIcons';
-import { RefreshIntervalPicker } from '../../RefreshIntervalPicker';
-import { toggled } from '../../../utils/stringUtils';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { ROUTE_TYPE_ORDER } from '@/config/transit';
+import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
+import { RefreshIntervalPicker } from '@/components/RefreshIntervalPicker';
+import { toggled } from '@/lib/strings';
 import { FilterButton, FilterHeading, SectionHeading, ToggleSection } from './SettingsControls';
 import { DelayFilter } from './DelayFilter';
 
@@ -41,7 +40,7 @@ const THEMES = [
 const STOP_FILTER_TYPES = ['metro', 'train'] as const;
 
 /** Theme, refresh interval and the map's layer toggles and filters. */
-export const DisplaySection: React.FC = () => {
+export const DisplaySection = () => {
     const { t } = useTranslation();
     const { theme, setTheme } = useTheme();
 
@@ -237,5 +236,3 @@ export const DisplaySection: React.FC = () => {
         </div>
     );
 };
-
-DisplaySection.displayName = 'DisplaySection';

@@ -1,15 +1,14 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Navigation2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { CityStats } from '../../../../types/transit';
-import { DistributionBar } from '../DistributionBar';
+import type { CityStats } from '@/types';
+import { DistributionBar } from '@/components/Map/Stats/DistributionBar';
 
 interface MovementStateCardProps {
     stats: CityStats;
 }
 
-export const MovementStateCard: React.FC<MovementStateCardProps> = ({ stats }) => {
+export const MovementStateCard = ({ stats }: MovementStateCardProps) => {
     const { t } = useTranslation();
 
     const total = stats.total_vehicles;

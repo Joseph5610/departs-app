@@ -1,9 +1,9 @@
-import type { CityConfig } from '../../../_core/city-config';
-import type { GtfsRoutesData } from '../../../_feeds/gtfs/gtfs-data';
+import type { CityConfig } from '../../../_core/cityConfig';
+import type { GtfsRoutesData } from '../../../_feeds/gtfs/gtfsData';
 import { dayBit, isWithinMatchWindow, operatesOnDay, routeIdOf, type Schedule, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
-import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
+import { getTripStops } from '../../../_feeds/gtfs/tripStops';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
-import type { DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
+import type { DpmpVehicleRow } from '../../../_feeds/dpmp/dpmpCsvFeed';
 import { DAY_MINS, toSecs, type LocalClock } from '../../../_core/utils/time';
 
 interface Candidate {

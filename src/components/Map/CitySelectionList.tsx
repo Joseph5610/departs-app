@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from 'cn';
 import { Badge } from '@/components/ui/badge';
-import type { City } from '../../types/transit';
-import { groupCitiesByCountry } from '../../utils/viewerCountry';
+import type { City } from '@/types';
+import { groupCitiesByCountry } from '@/domain/cities';
 
 interface CitySelectionListProps {
     cities: City[];
@@ -12,20 +12,20 @@ interface CitySelectionListProps {
     onSelect: (city: City) => void;
 }
 
-export const CitySelectionList: React.FC<CitySelectionListProps> = ({
+export const CitySelectionList = ({
     cities,
     selectedCitySlug,
     onSelect,
-}) => {
+}: CitySelectionListProps) => {
     const { t, i18n } = useTranslation();
     const groups = useMemo(() => groupCitiesByCountry(cities), [cities]);
     const countryNames = useMemo(() => {
         try {
-            return new Intl.DisplayNames([i18n.resolvedLanguage || i18n.language], { type: 'region' });
+            return new Intl.DisplayNames(i18n.resolvedLanguage, { type: 'region' });
         } catch {
             return null;
         }
-    }, [i18n.resolvedLanguage, i18n.language]);
+    }, [i18n.resolvedLanguage]);
 
     if (cities.length <= 1) {
         return null;
@@ -73,7 +73,6 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                     }}
                 />
 
-                {/* Checkbox Layer */}
                 <div className={cn(
                     "relative z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 transition-[border-color,background-color,color] duration-300 shrink-0",
                     isSelected 
@@ -83,7 +82,6 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
                     <Check size={14} strokeWidth={3} className={cn("transition-transform duration-300", isSelected ? "scale-100" : "scale-50 opacity-0")} />
                 </div>
 
-                {/* Text Layer */}
                 <div className="relative flex flex-col items-start z-10">
                     <div className="flex items-center gap-2">
                         <span className={cn(
@@ -122,5 +120,3 @@ export const CitySelectionList: React.FC<CitySelectionListProps> = ({
         </div>
     );
 };
-
-CitySelectionList.displayName = 'CitySelectionList';

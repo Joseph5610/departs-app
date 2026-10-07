@@ -1,34 +1,27 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from 'cn';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertIcon } from '../../Alerts/AlertIcon';
-import { useGlobalAlerts } from '../../../hooks/data/useGlobalAlerts';
-import type { SelectedStop } from '../../../types/transit';
-import type { Infotext } from '../../../types/alerts';
-import { formatDateTime } from '../../../utils/dateUtils';
+import { AlertIcon } from '@/components/Alerts/AlertIcon';
+import { useInfotexts } from '@/hooks/data/useInfotexts';
+import type { SelectedStop, Infotext } from '@/types';
+import { formatDateTime } from '@/domain/time';
+import { noticesForStops, noticeText } from '@/domain/alerts';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
 }
 
-/**
- * InfoTexts
- *
- * Renders stop-specific alert messages (infotexts) retrieved from the global alerts feed.
- * Filtered by the current stop's IDs.
- */
-export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
-    const { infotexts } = useGlobalAlerts();
-    const allInfotexts = infotexts.data;
+/** The stop's notices (PID infotexts) posted for any of its platform ids. */
+export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
+    const allInfotexts = useInfotexts();
 
     const relevantInfotexts = useMemo(() => {
         if (!selectedStop || !allInfotexts) {
             return [];
         }
 
-        const stopIds = new Set([selectedStop.stop_id, ...(selectedStop.all_ids || [])]);
-        return allInfotexts.filter(info => info.relatedStopIds.some((id: string) => stopIds.has(id)));
+        return noticesForStops(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])]);
     }, [selectedStop, allInfotexts]);
 
     if (relevantInfotexts.length === 0) return null;
@@ -42,13 +35,11 @@ export const InfoTexts: React.FC<InfoTextsProps> = ({ selectedStop }) => {
     );
 };
 
-InfoTexts.displayName = 'InfoTexts';
-
-const InfoTextCard: React.FC<{ info: Infotext }> = ({ info }) => {
+const InfoTextCard = ({ info }: { info: Infotext }) => {
     const { t, i18n } = useTranslation();
     const isHigh = info.priority === 'high';
     const isNormal = info.priority === 'normal';
-    const text = i18n.resolvedLanguage === 'en' && info.textEn ? info.textEn : info.text;
+    const text = noticeText(info, i18n.resolvedLanguage);
 
     return (
         <Alert
@@ -69,12 +60,10 @@ const InfoTextCard: React.FC<{ info: Infotext }> = ({ info }) => {
             <AlertDescription className="grid gap-2">
                 <div className="text-[10px] font-semibold text-foreground/60 mt-0.5">
                     {info.valid_to
-                        ? `${formatDateTime(info.valid_from, i18n.language)} – ${formatDateTime(info.valid_to, i18n.language)}`
-                        : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.language) })}
+                        ? `${formatDateTime(info.valid_from, i18n.resolvedLanguage)} – ${formatDateTime(info.valid_to, i18n.resolvedLanguage)}`
+                        : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.resolvedLanguage) })}
                 </div>
             </AlertDescription>
         </Alert>
     );
 };
-
-InfoTextCard.displayName = 'InfoTextCard';

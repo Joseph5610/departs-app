@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { UI_TIMING_MS } from '../config/constants';
+import { UI_TIMING_MS } from '@/config/constants';
 
 /**
  * Copies text; `copiedKey` names the last successful copy for the button's short "copied" state,

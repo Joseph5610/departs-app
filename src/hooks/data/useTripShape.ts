@@ -1,18 +1,16 @@
-import '../../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
-import { apiFetch } from '../../lib/api-client';
-import { bucketOf } from '../../lib/staticBuckets';
-import { EXTERNAL_URLS, QUERY_TIMING_MS, TRIP_SHAPES_CONFIG } from '../../config/constants';
+import { apiFetch } from '@/lib/apiClient';
+import { bucketOf } from '@/lib/staticBuckets';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, TRIP_SHAPES_CONFIG } from '@/config/constants';
+import type { TripShape } from '@/domain/routes';
+import { queryKeys } from '@/lib/queryKeys';
 
 /** A trip's route line, with each point's distance along it where the network publishes one (Prague). */
-export interface TripShape {
-    coordinates: [number, number][];
-    distances: number[] | null;
-}
 
 const tripShapeBucketSchema = z.record(z.string(), z.string());
 const shapePointSchema = z.union([z.tuple([z.number(), z.number()]), z.tuple([z.number(), z.number(), z.number()])]);
@@ -32,14 +30,15 @@ export interface TripShapeResult {
  */
 export function useTripShape(tripId: string | null | undefined): TripShapeResult {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const hasTripShapes = Boolean(useCityConfig().hasTripShapes);
+    const cityConfig = useCityConfig();
+    const hasTripShapes = Boolean(cityConfig.hasTripShapes);
     const baseUrl = `${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}`;
 
     const tripBucket = tripId ? bucketOf(tripId, TRIP_SHAPES_CONFIG.TRIP_BUCKET_COUNT) : undefined;
     const selectShapeId = useCallback((bucket: Record<string, string>) => (tripId ? bucket[tripId] ?? null : null), [tripId]);
 
     const { data: shapeId, isLoading: isLoadingId } = useQuery({
-        queryKey: ['trip-shape-ids', selectedCity, tripBucket],
+        queryKey: queryKeys.tripShapeIds(selectedCity, tripBucket),
         queryFn: async ({ signal }) => tripShapeBucketSchema.parse(await apiFetch<unknown>(`${baseUrl}/trip_shape_buckets/${tripBucket}.json`, { signal })),
         enabled: hasTripShapes && !!tripBucket,
         select: selectShapeId,
@@ -60,7 +59,7 @@ export function useTripShape(tripId: string | null | undefined): TripShapeResult
     }, [shapeId]);
 
     const { data: shape, isLoading: isLoadingShape } = useQuery({
-        queryKey: ['trip-shape-geometry', selectedCity, shapeBucket],
+        queryKey: queryKeys.tripShapeGeometry(selectedCity, shapeBucket),
         queryFn: ({ signal }) => apiFetch<Record<string, unknown>>(`${baseUrl}/shape_buckets/${shapeBucket}.json`, { signal }),
         enabled: hasTripShapes && !!shapeBucket,
         select: selectShape,

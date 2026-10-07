@@ -1,16 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getRouteTypeI18nKey } from '../../../../utils/transitUtils';
-import { FALLBACK_ROUTE_COLOR } from '../../../../config/constants';
-import { STATS_AGGREGATION } from '../../../../config/transit';
-import { VehicleMonitorRow } from '../VehicleMonitor/VehicleMonitorRow';
-import type { EnrichedVehicleItem } from '../../../../hooks/derived/useVehicleMonitor';
+import { getRouteTypeI18nKey } from '@/domain/routes';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { STATS_AGGREGATION } from '@/config/transit';
+import { VehicleMonitorRow } from '@/components/Map/Stats/VehicleMonitor/VehicleMonitorRow';
+import type { EnrichedVehicleItem } from '@/domain/vehicles';
 
-import type { CityStats } from '../../../../types/transit';
+import type { CityStats } from '@/types';
 
 const knownId = (id: string) => (id && id !== STATS_AGGREGATION.MISSING_ID ? id : undefined);
 
@@ -28,7 +28,7 @@ interface MostDelayedCardProps {
     stats: CityStats;
 }
 
-export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats }) => {
+export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
     const { t } = useTranslation();
     const [isDelayedExpanded, setIsDelayedExpanded] = useState(false);
     const [delayFilterType, setDelayFilterType] = useState<string | 'all'>('all');
@@ -63,7 +63,6 @@ export const MostDelayedCard: React.FC<MostDelayedCardProps> = ({ stats }) => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 pt-0 flex flex-col gap-3">
-                {/* Mode Filter Pills */}
                 {delayTypes.length > 1 && (
                     <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
                         <Badge

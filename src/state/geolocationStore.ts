@@ -1,27 +1,22 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { LOCATION_PRIVACY } from '../config/constants';
+import { LOCATION_PRIVACY } from '@/config/constants';
 
 /** Why the map should move to the next fresh fix: a locate tap, or a silent automatic focus (launch, welcome). */
 export type FocusRequest = 'locate' | 'auto';
 
 export interface GeolocationState {
     userLocation: [number, number] | null;
-    userSpeed: number | null;
     focusRequest: FocusRequest | null;
     focusRequestedAt: number;
-    watchId: number | null;
     lastUpdatedAt: number;
     lastLocation: { lat: number; lng: number } | null;
 }
 
 interface GeolocationActions {
-    setUserLocation: (location: [number, number] | null) => void;
-    setUserSpeed: (speed: number | null) => void;
+    /** A new position fix: the live location, its time, and the coarse copy kept on the device. */
+    applyFix: (location: [number, number], at: number) => void;
     requestFocus: (request: FocusRequest | null) => void;
-    setWatchId: (id: number | null) => void;
-    setLastUpdatedAt: (time: number) => void;
-    setLastLocation: (location: { lat: number; lng: number } | null) => void;
 }
 
 export interface GeolocationStore extends GeolocationState {
@@ -44,23 +39,15 @@ const coarsenLocation = (location: SavedLocation): SavedLocation => {
 export const useGeolocationStore = create<GeolocationStore>()(
     persist(
         (set) => ({
-            // State
             userLocation: null,
-            userSpeed: null,
             focusRequest: null,
             focusRequestedAt: 0,
-            watchId: null,
             lastUpdatedAt: 0,
             lastLocation: null,
 
-            // Actions
             actions: {
-                setUserLocation: (userLocation) => set({ userLocation }),
-                setUserSpeed: (userSpeed) => set({ userSpeed }),
+                applyFix: ([lng, lat], at) => set({ userLocation: [lng, lat], lastUpdatedAt: at, lastLocation: coarsenLocation({ lat, lng }) }),
                 requestFocus: (focusRequest) => set({ focusRequest, focusRequestedAt: Date.now() }),
-                setWatchId: (watchId) => set({ watchId }),
-                setLastUpdatedAt: (lastUpdatedAt) => set({ lastUpdatedAt }),
-                setLastLocation: (lastLocation) => set({ lastLocation: coarsenLocation(lastLocation) }),
             },
         }),
         {

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useCities, useCityConfig } from '../../../hooks/data/useCities';
-import { DEFAULT_CITY_SLUG } from '../../../config/cities';
-import { apiFetch } from '../../../lib/api-client';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useCities, useCityConfig } from '@/hooks/data/useCities';
+import { DEFAULT_CITY_SLUG } from '@/config/cities';
+import { apiFetch } from '@/lib/apiClient';
 import { RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { JsonView, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import { AdminLayout } from '../AdminLayout';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { AdminLayout } from '@/pages/admin/AdminLayout';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
-export const FeedExplorer: React.FC = () => {
+export const FeedExplorer = () => {
     // Local, so browsing feeds here doesn't switch the city the map opens with.
     const [selectedCity, setSelectedCity] = useState(() => usePreferencesStore.getState().selectedCity);
     const { data: citiesData } = useCities();
@@ -179,7 +179,6 @@ export const FeedExplorer: React.FC = () => {
                             }} 
                         />
                     </div>
-                    {/* Floating refresh button for mobile */}
                     <Button 
                         onClick={handleRefresh}
                         disabled={isLoading || isRefreshing}

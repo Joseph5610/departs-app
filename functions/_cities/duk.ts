@@ -1,11 +1,11 @@
-import type { CityConfig } from '../_core/city-config';
+import type { CityConfig } from '../_core/cityConfig';
 import type { City } from './types';
-import { gtfsUseCases } from '../_domain/gtfs/use-cases';
-import { noAlerts } from '../_domain/use-cases';
+import { gtfsUseCases } from '../_domain/gtfs/useCases';
+import { noAlerts } from '../_domain/useCases';
 import { DukVehicleSource } from '../_domain/duk/vehicles/DukVehicleSource';
 import { DukVehicleDetail } from '../_domain/duk/vehicles/DukVehicleDetail';
 import { DukDeparturesService } from '../_domain/duk/departures/DukDeparturesService';
-import { getDukTrafficFeed } from '../_feeds/duk/duk-traffic-feed';
+import { getDukTrafficFeed } from '../_feeds/duk/dukTrafficFeed';
 
 const config: CityConfig = {
     slug: 'duk',
@@ -16,7 +16,6 @@ const config: CityConfig = {
     bounds: [12.93, 50.11, 14.61, 51.05],
     feed: {
         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis',
-        railHistoryUrl: 'https://rt.jrutil.konarici.cz/api',
     },
     networkOperator: 'Doprava Ústeckého kraje',
     isBeta: true,

@@ -7,15 +7,12 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 interface PWAState {
-    offlineReady: boolean;
     needRefresh: boolean;
     /** The browser offered an install prompt that has not been used yet. */
     canInstall: boolean;
 }
 
 interface PWAActions {
-    setOfflineReady: (ready: boolean) => void;
-    setNeedRefresh: (refresh: boolean) => void;
     promptInstall: () => Promise<void>;
 }
 
@@ -26,15 +23,10 @@ export interface PWAStore extends PWAState {
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 
 export const usePWAStore = create<PWAStore>((set) => ({
-    // State
-    offlineReady: false,
     needRefresh: false,
     canInstall: false,
 
-    // Actions
     actions: {
-        setOfflineReady: (offlineReady) => set({ offlineReady }),
-        setNeedRefresh: (needRefresh) => set({ needRefresh }),
         promptInstall: async () => {
             const event = deferredInstallPrompt;
             if (!event) return;

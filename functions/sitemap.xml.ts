@@ -1,14 +1,13 @@
 import { Env } from "./_core/types";
 import { getCityConfig, CITY_REGISTRY } from "./_cities";
 import { CACHE_TTL } from "./_core/config";
-import { getSitemapStopIds } from "./_feeds/stop-search";
+import { getSitemapStopIds } from "./_feeds/stopSearch";
 
 export const onRequest: PagesFunction<Env> = async (context) => {
     const domain = new URL(context.request.url).origin;
     
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
-    // Add homepage
     xml += `
     <url>
         <loc>${domain}/</loc>
@@ -16,13 +15,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         <priority>1.0</priority>
     </url>`;
 
-    // Generate sitemap for each city
     for (const citySlug of Object.keys(CITY_REGISTRY)) {
         const city = getCityConfig(citySlug);
         // Hidden regions stay out of search engines until they launch.
         if (!city || city.isHidden) continue;
 
-        // Add city home
         xml += `
     <url>
         <loc>${domain}/${citySlug}</loc>

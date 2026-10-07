@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
-import { getLineMetadataFromMap } from '@/utils/transitUtils';
-import { searchHistoryKey } from '@/utils/searchHistory';
+import { getLineMetadataFromMap, type LineMetadata } from '@/domain/routes';
+import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from 'cn';
 
-import type { StopFeature, SearchHistoryItem, VehicleFeature } from '../../../types/transit';
-import { vehicleDisplayNumber } from '@/utils/vehicleSearch';
-import type { GeocodingResult } from '../../../hooks/data/useGeocoding';
-import type { PosSearchResult } from '../../../utils/posSearch';
+import type { StopFeature, SearchHistoryItem, VehicleFeature } from '@/types';
+import { vehicleDisplayNumber } from '@/domain/vehicles';
+import type { GeocodingResult } from '@/hooks/data/useGeocoding';
+import type { PosSearchResult } from '@/domain/pointsOfSale';
 
 interface SearchDropdownProps {
     results: StopFeature[];
@@ -28,10 +28,10 @@ interface SearchDropdownProps {
     onPlaceSelect: (result: GeocodingResult) => void;
     onPosSelect: (result: PosSearchResult) => void;
     onVehicleSelect: (vehicle: VehicleFeature) => void;
-    lineMetadataMap: Map<string, { route_color: string; type: string }>;
+    lineMetadataMap: Map<string, LineMetadata>;
 }
 
-const SearchGroup: React.FC<{ heading?: React.ReactNode; className?: string; children: React.ReactNode }> = ({ heading, className, children }) => (
+const SearchGroup = ({ heading, className, children }: { heading?: React.ReactNode; className?: string; children: React.ReactNode }) => (
     <Autocomplete.Group className={cn('overflow-hidden text-foreground p-0', className)}>
         {heading && (
             <Autocomplete.GroupLabel className="px-3 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -42,7 +42,7 @@ const SearchGroup: React.FC<{ heading?: React.ReactNode; className?: string; chi
     </Autocomplete.Group>
 );
 
-const GroupHeading: React.FC<{ icon: React.ReactNode; label: string; count: number }> = ({ icon, label, count }) => (
+const GroupHeading = ({ icon, label, count }: { icon: React.ReactNode; label: string; count: number }) => (
     <div className="flex items-center justify-between w-full">
         <div className="flex gap-2 items-center">
             {icon}
@@ -60,7 +60,7 @@ const GroupHeading: React.FC<{ icon: React.ReactNode; label: string; count: numb
  * Renders the dropdown panel below the search input as the Base UI Autocomplete list owned by Search.
  * Shows recent searches, favorites, line filter suggestions, and stop results.
  */
-export const SearchDropdown: React.FC<SearchDropdownProps> = ({
+export const SearchDropdown = ({
     results,
     searchHistory,
     favoriteStops,
@@ -77,9 +77,9 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
     onPosSelect,
     onVehicleSelect,
     lineMetadataMap
-}) => {
+}: SearchDropdownProps) => {
     const { t } = useTranslation();
-    const favoriteStopIds = React.useMemo(() => new Set(favoriteStops), [favoriteStops]);
+    const favoriteStopIds = useMemo(() => new Set(favoriteStops), [favoriteStops]);
 
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
@@ -135,16 +135,14 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     </SearchGroup>
                 )}
 
-                {/* Favorites heading */}
                 {query === '' && results.length > 0 && (
                     <SearchGroup
-                        heading={<GroupHeading icon={<Star size={14} className="text-amber-500 fill-amber-500/20" strokeWidth={2} />} label={t('search.favorites')} count={results.length} />}
+                        heading={<GroupHeading icon={<Star size={14} className="text-favorite fill-favorite/20" strokeWidth={2} />} label={t('search.favorites')} count={results.length} />}
                     >
                         {renderStopResults('fav')}
                     </SearchGroup>
                 )}
 
-                {/* Live vehicles by number */}
                 {vehicleResults.length > 0 && (
                     <SearchGroup
                         heading={<GroupHeading icon={<BusFront size={14} className="text-primary" strokeWidth={2} />} label={t('search.vehicles')} count={vehicleResults.length} />}
@@ -167,7 +165,6 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     </SearchGroup>
                 )}
 
-                {/* Line filter suggestion */}
                 {queryLines && (
                     <SearchGroup>
                         <SearchItem
@@ -188,14 +185,12 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     </SearchGroup>
                 )}
 
-                {/* Search results */}
                 {query !== '' && results.length > 0 && (
                     <SearchGroup>
                         {renderStopResults('res')}
                     </SearchGroup>
                 )}
 
-                {/* Points of sale */}
                 {posResults.length > 0 && (
                     <SearchGroup
                         heading={<GroupHeading icon={<Ticket size={14} className="text-emerald-500" strokeWidth={2} />} label={t('search.pointsOfSale')} count={posResults.length} />}
@@ -213,7 +208,6 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     </SearchGroup>
                 )}
 
-                {/* Geocoding / places */}
                 {geocodingResults.length > 0 && (
                     <SearchGroup
                         heading={<GroupHeading icon={<Building2 size={14} className="text-primary" strokeWidth={2} />} label={t('search.places')} count={geocodingResults.length} />}
@@ -234,5 +228,3 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
         </div>
     );
 };
-
-SearchDropdown.displayName = 'SearchDropdown';

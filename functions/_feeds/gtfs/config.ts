@@ -2,11 +2,11 @@
  * Configuration constants for the GTFS stack (Brno, Prešov, DÚK).
  */
 export const GTFS_CONFIG = {
-    // Time windows for filtering departures
+    /** Time windows for filtering departures */
     DEPARTURES_PAST_WINDOW_MS: 120 * 60 * 1000, // 2 hours
     DEPARTURES_FUTURE_WINDOW_MS: 3 * 60 * 60 * 1000, // 3 hours
     
-    // Window to resurrect departed vehicles if backend cache missed
+    /** Window to resurrect departed vehicles if backend cache missed */
     DEPARTURES_RESURRECT_WINDOW_MS: 15 * 60 * 1000, // 15 mins
 
     /**
@@ -16,10 +16,10 @@ export const GTFS_CONFIG = {
      */
     MAX_DEPARTURE_TARGET_STOPS: 200,
 
-    // Stale threshold for live vehicles
+    /** Stale threshold for live vehicles */
     VEHICLES_STALE_THRESHOLD_MS: 10 * 60 * 1000, // 10 minutes
 
-    // Time window before scheduled departure when vehicle is considered "before_track"
+    /** Time window before scheduled departure when vehicle is considered "before_track" */
     BEFORE_TRACK_WINDOW_MINS: 60,
 
     /**
@@ -29,7 +29,7 @@ export const GTFS_CONFIG = {
      */
     SCHEDULE_MATCH_WINDOW: { BEFORE_MINS: 240, AFTER_MINS: 240 },
 
-    // Delay threshold for a "before_track" vehicle to become "before_track_delayed"
+    /** Delay threshold for a "before_track" vehicle to become "before_track_delayed" */
     BEFORE_TRACK_DELAY_THRESHOLD_SECS: 60,
 
     /** Files a stop's departures are hashed across (`departure_buckets/`). */

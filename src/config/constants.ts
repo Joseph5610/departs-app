@@ -1,25 +1,28 @@
 
 import { SITE } from './site';
 
-/** Default document title; `index.html` carries the same text for crawlers that don't run JS. */
-export const SITE_TITLE = SITE.TITLE;
-
-export const SITE_URL = SITE.URL;
-
 /**
  * UI and Layout constants
  */
 export const FALLBACK_ROUTE_COLOR = '#5A5A5A';
-/** Must equal Tailwind's `md` breakpoint (48rem), which switches the CSS layout at the same width. */
-export const MOBILE_BREAKPOINT = 768;
-export const MOBILE_BOTTOM_SHEET_RATIO = 2.2;
-export const VEHICLE_ALERTS_PREVIEW_COUNT = 2;
-/** A "show more" row is only worth it when it hides at least this many alerts. */
-export const VEHICLE_ALERTS_MIN_OVERFLOW = 2;
+export const LAYOUT = {
+    /** Must equal Tailwind's `md` breakpoint (48rem), which switches the CSS layout at the same width. */
+    MOBILE_BREAKPOINT_PX: 768,
+    /** The map camera pads the bottom by the viewport height divided by this, clearing the mobile sheet. */
+    BOTTOM_SHEET_RATIO: 2.2,
+};
+
+/** Line alerts listed in the vehicle panel. */
+export const VEHICLE_ALERTS = {
+    PREVIEW_COUNT: 2,
+    /** A "show more" row is only worth it when it hides at least this many alerts. */
+    MIN_OVERFLOW: 2,
+};
 
 export const PREFERENCES_LIMITS = {
     SEARCH_HISTORY: 5,
     FAVORITE_STOPS: 20,
+    FAVORITE_LINES: 20,
 };
 
 export const UI_TIMING_MS = {
@@ -92,8 +95,11 @@ export const POS_SEARCH = {
     },
 };
 
-export const MAP_BOUNDS_DEBOUNCE = 800;
-export const MAP_MIN_ZOOM_FOR_DATA = 9;
+/** When the map asks for data for its view. */
+export const MAP_DATA = {
+    BOUNDS_DEBOUNCE_MS: 800,
+    MIN_ZOOM: 9,
+};
 
 /**
  * Snaps the vehicles request to XYZ map tiles so nearby viewports share edge-cached responses.
@@ -141,23 +147,19 @@ export const VEHICLE_ANIMATION = {
     ABSENT_MEMORY_MS: 2 * 60 * 1000,
 };
 
-/**
- * Pulse animation constants for the selected vehicle indicator.
- * Controls the pulsing ring effect around the selected vehicle on the map.
- */
-export const PULSE_SPEED_DIVISOR = 350;
-export const PULSE_BASE_RADIUS = 28;
-export const PULSE_RADIUS_AMPLITUDE = 20;
-export const PULSE_BASE_OPACITY = 0.85;
-export const PULSE_OPACITY_DIVISOR = 65;
+/** The pulsing ring around the selected vehicle on the map. */
+export const SELECTED_VEHICLE_PULSE = {
+    SPEED_DIVISOR: 350,
+    BASE_RADIUS: 28,
+    RADIUS_AMPLITUDE: 20,
+    BASE_OPACITY: 0.85,
+    OPACITY_DIVISOR: 65,
+};
 
 /**
  * API and Transit constants
  */
 export const API_BASE_URL = '/api';
-
-/** Public MCP endpoint shown in the AI-integration banner and setup instructions. */
-export const MCP_ENDPOINT_URL = SITE.MCP_URL;
 
 /** Third-party services and project links; hosts here must stay allowed by the CSP in public/_headers. */
 export const EXTERNAL_URLS = {
@@ -180,26 +182,17 @@ export const EXTERNAL_URLS = {
     },
 };
 
-/**
- * Average walking speed in m/s (3.6 km/h)
- * Adjusted for urban environments.
- */
-export const WALKING_SPEED = 1.0;
-
-/**
- * Distance in meters under which a user is considered to be at a transit stop.
- */
-export const AT_STOP_THRESHOLD_METERS = 30;
-
-/**
- * Maximum reasonable walking distance in meters (approx. 10-12 mins walk).
- */
-export const MAX_REASONABLE_WALKING_DISTANCE = 750;
-
-/**
- * Buffer time in seconds to account for platform navigation, ticket validation, etc.
- */
-export const CATCH_BUFFER = 120;
+/** Walking to a stop and catching a departure. */
+export const WALKING = {
+    /** Average urban walking speed in m/s (3.6 km/h). */
+    SPEED_MPS: 1.0,
+    /** Closer than this, the user is at the stop. */
+    AT_STOP_M: 30,
+    /** Beyond this (about 12 minutes), the distance is shown without a walking time. */
+    MAX_REASONABLE_M: 750,
+    /** Extra seconds for finding the platform and validating a ticket. */
+    CATCH_BUFFER_S: 120,
+};
 
 /**
  * Live data refresh intervals the user can pick, in seconds. Nothing below the backend's CACHE_TTL.VEHICLES (10s), which would only re-fetch the cached response.
@@ -291,7 +284,38 @@ export const DEVICE_CACHE = {
     LEGACY_STORE_NAMES: ['stops_cache'],
 };
 
+/** The full-screen departure board. */
+export const BOARD_CONFIG = {
+    /** Walking times offered, in minutes; 0 turns the walk column off. */
+    WALK_OPTIONS_MIN: [0, 3, 5, 10, 15] as const,
+    /** Departures listed at most; the board shows what fits. */
+    MAX_ROWS: 16,
+    /** How long each of a stop's notices stays in the board's footer before the next one. */
+    NOTICE_ROTATE_MS: 8000,
+};
+
+/** A trip whose last stop is this far in the past is shown as ended. */
+export const TRIP_CONFIG = {
+    ENDED_GRACE_S: 120,
+    /** How often views re-check whether a trip has ended. */
+    ENDED_CHECK_MS: 15_000,
+};
+
+/** "I'm on this vehicle" mode. */
+export const RIDE_CONFIG = {
+    /** A stored ride older than this is dropped instead of resumed. */
+    MAX_AGE_MS: 4 * HOUR_MS,
+    /** How long the arrival stays shown before the ride ends itself. */
+    ARRIVED_CLEAR_MS: MINUTE_MS,
+    /** An arrived ride whose trip ended longer ago than this (seen on reopening the app) is dropped instead of shown as arrived. */
+    ARRIVED_STALE_MS: 10 * MINUTE_MS,
+    /** Vibration when the next stop is the rider's (Android; iOS ignores it). */
+    VIBRATE_PATTERN: [200, 100, 200],
+};
+
 export const DEPARTURES_CONFIG = {
+    /** Only departures expected within this window count towards the board's delay statistics. */
+    DELAY_STATS_WINDOW_MS: 30 * MINUTE_MS,
     /** Distinct feeder lines shown as badges on a departure row; beyond this a short label replaces them. */
     MAX_FEEDER_BADGES: 2,
     /** Departures stay listed this long after their expected time, while the vehicle may still be at the stop. */
@@ -302,6 +326,8 @@ export const DEPARTURES_CONFIG = {
     DELAY_DELTA_VISIBLE_MS: 5000,
     /** A previous fetch older than this many refresh intervals is not compared against for delay changes. */
     DELAY_DELTA_MAX_AGE_REFRESHES: 2,
+    /** Next departures listed in a shared stop's message. */
+    SHARE_SUMMARY_COUNT: 3,
     /** Upcoming departures shown on each favourites card. */
     FAVORITE_CARD_COUNT: 2,
     /** Departures shown per direction before the board offers to expand it. */
@@ -340,21 +366,18 @@ export const FEEDBACK_LIMITS = {
     MESSAGE_MAX_CHARS: 2000,
 };
 
-/** Only departures expected within this window count towards the board's delay statistics. */
-export const DELAY_STATS_WINDOW_MS = 30 * MINUTE_MS;
-
 /**
  * Fetch options for polled realtime endpoints. The API's `stale-while-revalidate` would otherwise
  * let the browser answer each poll with the previous response, keeping the UI one poll behind.
  */
 export const LIVE_FETCH_OPTIONS: RequestInit = { cache: 'no-store' };
 
-export const ENRICHMENT_SILENCE_TTL_MS = 90_000; // Gate 2: Prune WS patches silent for 90s
-
 export const ENRICHMENT_CONFIG = {
+    /** A push patch older than this no longer overrides the fetched data, and is pruned. */
+    SILENCE_TTL_MS: 90_000,
     /** Incoming patches are applied to the store in batches at this interval. */
     FLUSH_INTERVAL_MS: 500,
-    /** How often patches older than ENRICHMENT_SILENCE_TTL_MS are dropped. */
+    /** How often patches older than SILENCE_TTL_MS are dropped. */
     PRUNE_INTERVAL_MS: 15_000,
     RECONNECT_BASE_MS: 1000,
     RECONNECT_MAX_MS: 30_000,

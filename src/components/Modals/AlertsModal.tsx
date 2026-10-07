@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Search as SearchIcon,
@@ -7,9 +6,8 @@ import {
     AlertTriangle as AlertIcon,
     CheckCircle2,
 } from 'lucide-react';
-import { useUiStore } from '../../state/uiStore';
-import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
-import type { RSSItem } from '../../types/transit';
+import { useUiStore } from '@/state/uiStore';
+import { useAlerts } from '@/hooks/data/useAlerts';
 import {
     Dialog,
     DialogContent,
@@ -18,11 +16,10 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupedVirtuoso } from 'react-virtuoso';
-import { CondensedAlertItem } from '../Alerts/CondensedAlertItem';
+import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
 import { cn } from 'cn';
-import { routeTypeRank } from '../../config/transit';
-import { ROUTE_TYPE_ICONS } from '../routeTypeIcons';
-import { normalizeString } from '../../utils/stringUtils';
+import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
+import { alertSections, type AlertFilterMode } from '@/domain/alerts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,39 +31,20 @@ import {
     EmptyDescription,
 } from '@/components/ui/empty';
 
-// Helper to determine the primary transport mode of an alert
-const getTransportMode = (item: RSSItem): string => {
-    if (!item.line_metadata || item.line_metadata.length === 0) return 'other';
-
-    for (const meta of item.line_metadata) {
-        const type = meta.type;
-        
-        if (type === 'trolleybus') return 'bus';
-        if (!type || type === 'unknown') continue;
-
-        return type;
-    }
-
-    return 'other';
-};
-
-const ModeIcon: React.FC<{ mode: string; className?: string }> = ({ mode, className }) => {
+const ModeIcon = ({ mode, className }: { mode: string; className?: string }) => {
     const Icon = ROUTE_TYPE_ICONS[mode as keyof typeof ROUTE_TYPE_ICONS] ?? AlertIcon;
     return <Icon className={className} size={16} strokeWidth={2} />;
 };
 
-/**
- * AlertsModal Component
- */
-export const AlertsModal: React.FC = React.memo(() => {
+/** All of the city's alerts, grouped by mode, filterable by type and searchable. */
+export const AlertsModal = memo(() => {
     const { t } = useTranslation();
 
-    // Preferences
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const focusedAlertGuid = useUiStore(s => s.focusedAlertGuid);
     const { setIsAlertsOpen } = useUiStore(s => s.actions);
 
-    const [filterMode, setFilterMode] = useState<'all' | 'incident' | 'exclusion'>('all');
+    const [filterMode, setFilterMode] = useState<AlertFilterMode>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const [prevFocusedGuid, setPrevFocusedGuid] = useState(focusedAlertGuid);
@@ -78,56 +56,9 @@ export const AlertsModal: React.FC = React.memo(() => {
         }
     }
 
-    const { rss, hasAlerts } = useGlobalAlerts();
-    const { data: rssData, isLoading: loadingRSS } = rss;
+    const { alerts, isLoading: loadingRSS, hasAlerts } = useAlerts();
 
-    // Grouping and Filtering logic
-    const sections = useMemo(() => {
-        const rawItems = rssData?.alerts || [];
-
-        // 1. Filter
-        const filtered = rawItems.filter(item => {
-            if (filterMode === 'incident' && item.type !== 'incident') return false;
-            if (filterMode === 'exclusion' && item.type !== 'exclusion') return false;
-
-            if (searchQuery.trim()) {
-                const q = normalizeString(searchQuery.trim());
-                const matchesTitle = normalizeString(item.title).includes(q);
-                const matchesDesc = item.description ? normalizeString(item.description).includes(q) : false;
-                const matchesLine = item.line_metadata?.some((m) => m.name && normalizeString(m.name).includes(q));
-                if (!matchesTitle && !matchesDesc && !matchesLine) return false;
-            }
-            return true;
-        });
-
-        // 2. Group
-        const groupedMap = new Map<string, RSSItem[]>();
-        filtered.forEach(item => {
-            const mode = getTransportMode(item);
-            if (!groupedMap.has(mode)) groupedMap.set(mode, []);
-            groupedMap.get(mode)!.push(item);
-        });
-
-        // 3. Sort groups and items
-        const sortedModes = Array.from(groupedMap.keys()).sort((a, b) => routeTypeRank(a) - routeTypeRank(b));
-
-        // 4. Create mode sections
-        return sortedModes.map(mode => {
-            const groupItems = groupedMap.get(mode)!;
-            groupItems.sort((a, b) => {
-                if (a.type === 'incident' && b.type !== 'incident') return -1;
-                if (a.type !== 'incident' && b.type === 'incident') return 1;
-
-                if (a.isActive && !b.isActive) return -1;
-                if (!a.isActive && b.isActive) return 1;
-
-                const priorityA = a.priority === '1' || a.priority === 'high' ? 1 : 0;
-                const priorityB = b.priority === '1' || b.priority === 'high' ? 1 : 0;
-                return priorityB - priorityA;
-            });
-            return { mode, items: groupItems };
-        });
-    }, [rssData, filterMode, searchQuery]);
+    const sections = useMemo(() => alertSections(alerts ?? [], filterMode, searchQuery), [alerts, filterMode, searchQuery]);
 
     const groupCounts = useMemo(() => sections.map(s => s.items.length), [sections]);
     const groupModes = useMemo(() => sections.map(s => s.mode), [sections]);
@@ -160,10 +91,9 @@ export const AlertsModal: React.FC = React.memo(() => {
                 </DialogHeader>
                 
                 <div className="flex-1 flex flex-col min-h-0">
-                    {/* Header Section */}
                     <div className="pt-1 pb-3 px-6 shrink-0 border-b border-border/50 bg-transparent">
                         <div className="flex flex-col gap-3">
-                            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as 'all' | 'incident' | 'exclusion')}>
+                            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as AlertFilterMode)}>
                                 <TabsList variant="pill" className="w-full grid grid-cols-3">
                                     <TabsTrigger value="all" className="cursor-pointer">{t('alerts.all')}</TabsTrigger>
                                     <TabsTrigger value="incident" className="cursor-pointer">{t('alerts.incidents')}</TabsTrigger>
@@ -194,7 +124,6 @@ export const AlertsModal: React.FC = React.memo(() => {
                         </div>
                     </div>
 
-                    {/* Virtualized Scroll Container */}
                     <div className="flex-1 min-h-0 px-6 py-2">
                         {sections.length === 0 && !loadingRSS ? (
                             <div className="flex flex-1 items-center justify-center py-12 h-full">

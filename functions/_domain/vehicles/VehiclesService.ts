@@ -1,12 +1,12 @@
 import type { AppVehicleCollection, CityRequestContext } from "../../_core/types";
-import type { CityConfig } from '../../_core/city-config';
+import type { CityConfig } from '../../_core/cityConfig';
 import { parseSearchParams, vehicleQuerySchema } from '../../_core/schemas';
 import { filterVehicles, isUnfiltered } from '../../_core/utils/vehicleFilter';
 import { OFFLINE_VEHICLES } from '../../_core/feed/freshness';
-import { vehiclesBody, vehiclesBodyFromJson, type VehiclesBody } from '../../_core/feed/vehicles-body';
-import type { SingleLiveVehicle } from './vehicle-source';
-import type { EdgeFleetSource } from './edge-fleet-source';
-import type { VehiclesUseCase } from '../use-cases';
+import { vehiclesBody, vehiclesBodyFromJson, type VehiclesBody } from '../../_core/feed/vehiclesBody';
+import type { SingleLiveVehicle } from './vehicleSource';
+import type { EdgeFleetSource } from './EdgeFleetSource';
+import type { VehiclesUseCase } from '../useCases';
 
 /**
  * Vehicles of every city. Where they come from is the network behind the `EdgeFleetSource`; filtering,

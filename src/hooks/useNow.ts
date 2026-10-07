@@ -39,3 +39,15 @@ const getSnapshot = () => (timer === undefined ? currentSecond() : now);
  * Every subscriber shares a single timer, which runs only while at least one component is mounted.
  */
 export const useNow = (): number => useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+const coarseSnapshots = new Map<number, () => number>();
+
+/** The current time floored to `stepMs`; a component using it re-renders only when the step changes. */
+export const useNowEvery = (stepMs: number): number => {
+    let snapshot = coarseSnapshots.get(stepMs);
+    if (!snapshot) {
+        snapshot = () => Math.floor(getSnapshot() / stepMs) * stepMs;
+        coarseSnapshots.set(stepMs, snapshot);
+    }
+    return useSyncExternalStore(subscribe, snapshot, snapshot);
+};

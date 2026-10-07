@@ -1,13 +1,7 @@
-import type { RouteType } from '../types/transit';
+import type { RouteType } from '@/types';
 
 /** Display order of transport modes wherever they are listed or sorted. */
 export const ROUTE_TYPE_ORDER: RouteType[] = ['metro', 'train', 'tram', 'trolleybus', 'bus', 'ferry', 'funicular'];
-
-const ROUTE_TYPE_RANK = new Map<string, number>(ROUTE_TYPE_ORDER.map((type, i) => [type, i]));
-
-/** Position of a mode in ROUTE_TYPE_ORDER; unknown modes sort last. */
-export const routeTypeRank = (type: string | number | null | undefined): number =>
-    ROUTE_TYPE_RANK.get(String(type ?? '')) ?? ROUTE_TYPE_ORDER.length;
 
 /*
  * Delay definitions. Each screen deliberately uses its own window for "on time":
@@ -43,9 +37,4 @@ export const STATS_AGGREGATION = {
 };
 
 /** Vehicle badges and stop times read as late or early only beyond this many seconds. */
-const DELAY_BADGE_TOLERANCE_S = 30;
-
-export type DelayStatus = 'late' | 'early' | 'onTime';
-
-export const getDelayStatus = (delaySec: number): DelayStatus =>
-    delaySec > DELAY_BADGE_TOLERANCE_S ? 'late' : delaySec < -DELAY_BADGE_TOLERANCE_S ? 'early' : 'onTime';
+export const DELAY_BADGE_TOLERANCE_S = 30;

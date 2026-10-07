@@ -8,9 +8,9 @@ import {
     EmptyTitle,
     EmptyDescription,
     EmptyContent,
-} from '../ui/empty';
-import { Button } from '../ui/button';
-import { AppErrorCode, type AppError } from '../../types/error';
+} from '@/components/ui/empty';
+import { Button } from '@/components/ui/button';
+import { AppErrorCode, type AppError } from '@/types';
 
 interface ErrorStateProps {
     error: AppError | null;

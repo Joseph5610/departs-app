@@ -1,14 +1,14 @@
-import React from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Hand } from 'lucide-react';
-import { useDepartures } from '../../../hooks/data/useDepartures';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { useDepartures } from '@/hooks/data/useDepartures';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface StopTitleProps {
     title: string | undefined;
 }
 
-export const StopTitle: React.FC<StopTitleProps> = React.memo(({ title }) => {
+export const StopTitle = memo(({ title }: StopTitleProps) => {
     const { hasRequestStop } = useDepartures();
     const { t } = useTranslation();
 

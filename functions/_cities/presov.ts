@@ -1,9 +1,9 @@
-import type { CityConfig } from '../_core/city-config';
+import type { CityConfig } from '../_core/cityConfig';
 import type { City } from './types';
-import { gtfsUseCases } from '../_domain/gtfs/use-cases';
-import { noAlerts } from '../_domain/use-cases';
+import { gtfsUseCases } from '../_domain/gtfs/useCases';
+import { noAlerts } from '../_domain/useCases';
 import { DpmpVehicleSource } from '../_domain/dpmp/vehicles/DpmpVehicleSource';
-import { getDpmpCsvFeed } from '../_feeds/dpmp/dpmp-csv-feed';
+import { getDpmpCsvFeed } from '../_feeds/dpmp/dpmpCsvFeed';
 
 const config: CityConfig = {
     slug: 'presov',

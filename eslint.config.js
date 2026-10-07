@@ -11,6 +11,12 @@ const noUnusedVars = ['error', {
   caughtErrorsIgnorePattern: '^_',
 }]
 
+const parentImportBan = { regex: String.raw`^\.\./(?!.*package\.json$)`, message: 'Import across folders with the `@/` alias; `./` is for files in the same folder (package.json, outside src, excepted).' }
+
+const typesDeepImportBan = { group: ['@/types/*'], message: 'Import types from `@/types`, not its files.' }
+
+const domainDeepImportBan = { group: ['@/domain/*/*', '!@/domain/*/index'], message: 'Import a domain area through its index (`@/domain/vehicles`), not its files.' }
+
 export default defineConfig([
   globalIgnores(['dist', 'scratch', 'ds-bundle', '.ds-sync']),
 
@@ -29,6 +35,7 @@ export default defineConfig([
     },
     rules: {
       '@typescript-eslint/no-unused-vars': noUnusedVars,
+      '@typescript-eslint/no-extraneous-class': 'error',
     },
   },
   {
@@ -56,7 +63,28 @@ export default defineConfig([
     },
     rules: {
       '@typescript-eslint/no-unused-vars': noUnusedVars,
+      '@typescript-eslint/no-extraneous-class': 'error',
     },
+  },
+
+  // Frontend imports: `@/` across folders, `./` within one. domain/ is pure and reached through its area's index.ts;
+  // hooks flow data -> derived -> features.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/domain/**'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [parentImportBan, typesDeepImportBan, domainDeepImportBan] }] },
+  },
+  {
+    files: ['src/domain/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { paths: [{ name: 'react', message: 'domain is plain TypeScript; React belongs in hooks and components.' }], patterns: [parentImportBan, typesDeepImportBan, ...frontendLayerBan('domain', ['hooks', 'state', 'components', 'pages'])] }] },
+  },
+  {
+    files: ['src/hooks/data/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [parentImportBan, typesDeepImportBan, domainDeepImportBan, ...frontendLayerBan('hooks/data', ['hooks/derived', 'hooks/features'])] }] },
+  },
+  {
+    files: ['src/hooks/derived/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: [parentImportBan, typesDeepImportBan, domainDeepImportBan, ...frontendLayerBan('hooks/derived', ['hooks/features'])] }] },
   },
 
   // Backend layering: _core -> _feeds -> _domain -> _cities -> api/, _mcp/. A layer imports only from layers to its left.
@@ -70,7 +98,7 @@ export default defineConfig([
   },
   {
     files: ['functions/_domain/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'CacheManager', 'LruCache'])] }] },
+    rules: { 'no-restricted-imports': ['error', { patterns: [...layerBan('_domain', ['_cities', '_mcp']), ...domainIoBan(['ApiClient', 'GolemioClient', 'cacheManager', 'LruCache'])] }] },
   },
 ])
 
@@ -85,5 +113,12 @@ function layerBan(layer, banned) {
   return banned.map((target) => ({
     group: [`**/${target}`, `**/${target}/**`],
     message: `${layer} may not depend on ${target}; dependencies flow _core -> _feeds -> _domain -> _cities.`,
+  }))
+}
+
+function frontendLayerBan(layer, banned) {
+  return banned.map((target) => ({
+    group: [`@/${target}`, `@/${target}/**`],
+    message: `${layer} may not depend on ${target}; domain stays pure and hooks flow data -> derived -> features.`,
   }))
 }

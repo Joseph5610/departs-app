@@ -1,6 +1,6 @@
-import React from 'react';
+import { memo } from 'react';
 import { Trans } from 'react-i18next';
-import { LineBadge } from '../../LineBadge';
+import { LineBadge } from '@/components/LineBadge';
 
 interface VehicleTitleProps {
     line: string;
@@ -8,7 +8,7 @@ interface VehicleTitleProps {
 }
 
 /** "Line <badge>" as the panel title; the locale decides where the badge sits. */
-export const VehicleTitle: React.FC<VehicleTitleProps> = React.memo(({ line, routeColor }) => (
+export const VehicleTitle = memo(({ line, routeColor }: VehicleTitleProps) => (
     <span className="flex items-center gap-2">
         <Trans
             i18nKey="map.vehicleDetails.lineTitle"

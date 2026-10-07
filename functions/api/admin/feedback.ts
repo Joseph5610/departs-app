@@ -1,5 +1,5 @@
-import { storedFeedbackSchema, type StoredFeedback } from "../../_core/feedback-schemas";
-import { createErrorResponse } from "../../_core/api-utils";
+import { storedFeedbackSchema, type StoredFeedback } from "../../_core/feedbackSchemas";
+import { createErrorResponse } from "../../_core/apiUtils";
 import { ERROR_MESSAGES } from "../../_core/config";
 import type { Env } from "../../_core/types";
 
@@ -9,7 +9,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     
     const items: StoredFeedback[] = [];
     
-    // Fetch all values in parallel
     const getPromises = listResult.keys.map(async (keyObj) => {
       const value = await context.env.FEEDBACK_STORE.get(keyObj.name);
       if (value) {

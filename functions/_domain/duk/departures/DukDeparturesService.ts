@@ -1,17 +1,17 @@
 import type { AppDeparture, AppDepartureResponse, AppVehicleCollection, AppVehicleProperties, CityRequestContext } from "../../../_core/types";
-import type { CityConfig } from '../../../_core/city-config';
+import type { CityConfig } from '../../../_core/cityConfig';
 import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { normalizeRouteType } from '../../../_core/utils/routeTypes';
-import { getStopIndex } from '../../gtfs/index/stop-index';
+import { getStopIndex } from '../../gtfs/index/StopIndex';
 import { boardVehicles, collectDepartureTuples, collectTripIds } from '../../gtfs/departures/DeparturesService';
-import type { DeparturesUseCase } from '../../use-cases';
-import { DeparturesMapper } from '../../gtfs/departures/DeparturesMapper';
+import type { DeparturesUseCase } from '../../useCases';
+import { indexVehiclesByTrip, mapDepartures } from '../../gtfs/departures/departuresMapper';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
-import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
-import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/duk-station-board';
+import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
+import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/dukStationBoard';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
@@ -74,7 +74,7 @@ export class DukDeparturesService implements DeparturesUseCase {
         if (boards.some(board => board === null)) {
             return this.timetableOnly(requests, tuples, routes, vehicles);
         }
-        const vehiclesByTrip = DeparturesMapper.vehiclesByTrip(vehicles);
+        const vehiclesByTrip = indexVehiclesByTrip(vehicles);
 
         const links = new Map<string, TimetableLink[]>();
         /** The mode of each line the timetable has at a station, for board entries that link to no trip and carry no traction. */
@@ -174,7 +174,7 @@ export class DukDeparturesService implements DeparturesUseCase {
         for (const request of requests) {
             for (const tuple of tuplesOf.get(request.node) ?? []) deps.push({ stopId: request.id, tuple });
         }
-        return { departures: DeparturesMapper.mapDepartures(deps, routes, vehicles) };
+        return { departures: mapDepartures(deps, routes, vehicles) };
     }
 
     private mapEntry(

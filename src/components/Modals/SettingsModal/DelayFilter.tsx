@@ -1,9 +1,8 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from 'cn';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { DELAY_TIERS, type DelayTierKey } from '../../../config/transit';
-import { toggled } from '../../../utils/stringUtils';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { DELAY_TIERS, type DelayTierKey } from '@/config/transit';
+import { toggled } from '@/lib/strings';
 import { FilterHeading } from './SettingsControls';
 
 interface DelayTierStyle {
@@ -46,7 +45,7 @@ const DELAY_TIER_STYLES: Record<DelayTierKey, DelayTierStyle> = {
     },
 };
 
-const DelayFilterCard: React.FC<DelayTierStyle & { label: string; isActive: boolean; onClick: () => void }> = ({
+const DelayFilterCard = ({
     label,
     isActive,
     onClick,
@@ -54,7 +53,7 @@ const DelayFilterCard: React.FC<DelayTierStyle & { label: string; isActive: bool
     activeBg,
     activeBorder,
     activeText
-}) => (
+}: DelayTierStyle & { label: string; isActive: boolean; onClick: () => void }) => (
     <button
         type="button"
         onClick={onClick}
@@ -79,7 +78,7 @@ const DelayFilterCard: React.FC<DelayTierStyle & { label: string; isActive: bool
 );
 
 /** Which delay tiers the map shows; an empty filter shows them all. */
-export const DelayFilter: React.FC = () => {
+export const DelayFilter = () => {
     const { t } = useTranslation();
     const delayFilter = usePreferencesStore(s => s.delayFilter);
     const { setDelayFilter } = usePreferencesStore(s => s.actions);

@@ -1,39 +1,8 @@
 import { useMemo } from 'react';
 import type { TFunction } from 'i18next';
-import { useGeolocationStore } from '../../state/geolocationStore';
+import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectedStop } from './useSelectedStop';
-import { calculateDistance } from '../../lib/geo';
-import {
-    WALKING_SPEED,
-    AT_STOP_THRESHOLD_METERS,
-    MAX_REASONABLE_WALKING_DISTANCE
-} from '../../config/constants';
-
-export interface StopDistanceInfo {
-    distance: number;
-    time: number;
-    isAtStop: boolean;
-    isReasonableWalkingDistance: boolean;
-}
-
-export const getStopDistanceInfo = (
-    userLocation: [number, number] | null,
-    coords: [number, number] | null | undefined
-): StopDistanceInfo | null => {
-    if (!coords || !userLocation) {
-        return null;
-    }
-    const distance = calculateDistance(userLocation, coords);
-    const isAtStop = distance < AT_STOP_THRESHOLD_METERS;
-    const walkingTimeSec = distance / WALKING_SPEED;
-
-    return {
-        distance: Math.round(distance),
-        time: Math.ceil(walkingTimeSec / 60),
-        isAtStop,
-        isReasonableWalkingDistance: distance < MAX_REASONABLE_WALKING_DISTANCE
-    };
-};
+import { getStopDistanceInfo, type StopDistanceInfo } from '@/domain/stops';
 
 /** "At the stop", walking distance with minutes when nearby, otherwise the plain distance. */
 export const formatStopDistance = (info: StopDistanceInfo, t: TFunction): string => {
@@ -44,8 +13,6 @@ export const formatStopDistance = (info: StopDistanceInfo, t: TFunction): string
 };
 
 /**
- * useStopDistance
- * 
  * Calculates the current distance and walking time from the user's location 
  * to the selected stop. Also determines if the user is currently at the stop 
  * or if they should see an indicator for "catching" the departure.

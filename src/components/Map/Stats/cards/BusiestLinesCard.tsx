@@ -1,16 +1,15 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LineBadge } from '../../../LineBadge';
-import type { CityStats } from '../../../../types/transit';
-import { FALLBACK_ROUTE_COLOR } from '../../../../config/constants';
+import { LineBadge } from '@/components/LineBadge';
+import type { CityStats } from '@/types';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 
 interface BusiestLinesCardProps {
     stats: CityStats;
 }
 
-export const BusiestLinesCard: React.FC<BusiestLinesCardProps> = ({ stats }) => {
+export const BusiestLinesCard = ({ stats }: BusiestLinesCardProps) => {
     const { t } = useTranslation();
 
     if (!stats.busiest_lines || stats.busiest_lines.length === 0) {
@@ -27,8 +26,8 @@ export const BusiestLinesCard: React.FC<BusiestLinesCardProps> = ({ stats }) => 
             </CardHeader>
             <CardContent className="p-3.5 pt-0">
                 <div className="flex flex-wrap gap-2">
-                    {stats.busiest_lines.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2 py-1 rounded-md">
+                    {stats.busiest_lines.map((item) => (
+                        <div key={item.line} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2 py-1 rounded-md">
                             <LineBadge 
                                 name={item.line} 
                                 routeColor={item.route_color || FALLBACK_ROUTE_COLOR}

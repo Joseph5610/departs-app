@@ -1,7 +1,10 @@
-import { feedbackPayloadSchema } from "../_core/feedback-schemas";
-import { createErrorResponse } from "../_core/api-utils";
+import * as z from 'zod/mini';
+import { feedbackPayloadSchema } from "../_core/feedbackSchemas";
+import { createErrorResponse } from "../_core/apiUtils";
 import { ERROR_MESSAGES } from "../_core/config";
 import type { Env } from "../_core/types";
+
+const turnstileOutcomeSchema = z.object({ success: z.boolean(), 'error-codes': z.optional(z.array(z.string())) });
 
 /**
  * Verifies the Cloudflare Turnstile token to ensure the request is from a human.
@@ -23,11 +26,12 @@ async function verifyTurnstile(token: string, secret: string, ip: string) {
     method: 'POST',
   });
 
-  const outcome = await result.json() as { success: boolean; "error-codes"?: string[] };
-  if (!outcome.success) {
-    console.error('Turnstile verification failed:', outcome);
+  const outcome = turnstileOutcomeSchema.safeParse(await result.json().catch(() => null));
+  if (!outcome.success || !outcome.data.success) {
+    console.error('Turnstile verification failed:', outcome.success ? outcome.data : outcome.error);
+    return false;
   }
-  return outcome.success;
+  return true;
 }
 
 /**
@@ -48,7 +52,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const rawBody = await context.request.json();
     
-    // 1. Validate payload using Zod
     const parsed = feedbackPayloadSchema.safeParse(rawBody);
     if (!parsed.success) {
       return createErrorResponse('Invalid payload.', 400);
@@ -72,11 +75,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return createErrorResponse('Turnstile verification failed. Please try again.', 403);
     }
 
-    // 2. Prepare data for KV
     const id = crypto.randomUUID();
     const timestamp = new Date().toISOString();
     
-    // We omit the turnstileToken since we don't need to store it
     const feedbackData = {
       type: data.type,
       message: data.message,
@@ -92,7 +93,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       ...feedbackData
     };
 
-    // 3. Store in KV
     // Key format: feedback:<reverse-timestamp>:<id> so it's chronologically sortable (newest first)
     const reverseTimestamp = Number.MAX_SAFE_INTEGER - Date.now();
     const key = `feedback:${reverseTimestamp}:${id}`;

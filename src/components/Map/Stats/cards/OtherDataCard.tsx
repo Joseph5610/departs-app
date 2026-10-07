@@ -2,14 +2,14 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { CityStats } from '../../../../types/transit';
+import type { CityStats } from '@/types';
 
 interface OtherDataCardProps {
     activeStats: CityStats;
     networkStats?: CityStats | null;
 }
 
-export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, networkStats }) => {
+export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps) => {
     const { t, i18n } = useTranslation();
 
     const renderStatRow = (label: string, value: React.ReactNode) => (
@@ -23,7 +23,7 @@ export const OtherDataCard: React.FC<OtherDataCardProps> = ({ activeStats, netwo
 
     const formatPercentage = (count: number, total: number) => {
         if (total === 0) return '-';
-        const percent = new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 0 }).format(count / total);
+        const percent = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'percent', maximumFractionDigits: 0 }).format(count / total);
         return `${count} (${percent})`;
     };
 

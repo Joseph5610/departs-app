@@ -1,15 +1,14 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getRouteTypeI18nKey } from '../../../../utils/transitUtils';
-import type { CityStats } from '../../../../types/transit';
+import { getRouteTypeI18nKey } from '@/domain/routes';
+import type { CityStats } from '@/types';
 
 interface VehicleMixCardProps {
     stats: CityStats;
 }
 
-export const VehicleMixCard: React.FC<VehicleMixCardProps> = ({ stats }) => {
+export const VehicleMixCard = ({ stats }: VehicleMixCardProps) => {
     const { t } = useTranslation();
 
     if (!stats.vehicle_types || Object.keys(stats.vehicle_types).length === 0) {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { cn } from 'cn';
@@ -7,12 +6,13 @@ import { cn } from 'cn';
  * DepartureBoardSkeleton
  * Mirrors the line-group cards and DepartureItem rows in DepartureBoard.
  */
-export const DepartureBoardSkeleton: React.FC = () => {
+export const DepartureBoardSkeleton = () => {
     return (
         <div className="flex flex-col gap-3 animate-in fade-in duration-500">
             <Card
                 size="none"
-                className="border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm mb-3 overflow-hidden"
+                variant="panel"
+                className="mb-3 overflow-hidden"
             >
                 <GroupHeaderSkeleton headsignWidth="w-36" />
                 <DepartureRowsSkeleton count={3} />
@@ -30,7 +30,8 @@ export const DepartureBoardSkeleton: React.FC = () => {
 
             <Card
                 size="none"
-                className="border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm mb-3 overflow-hidden"
+                variant="panel"
+                className="mb-3 overflow-hidden"
             >
                 <GroupHeaderSkeleton headsignWidth="w-28" />
                 <DepartureRowsSkeleton count={2} />
@@ -39,9 +40,7 @@ export const DepartureBoardSkeleton: React.FC = () => {
     );
 };
 
-DepartureBoardSkeleton.displayName = 'DepartureBoardSkeleton';
-
-const GroupHeaderSkeleton: React.FC<{ headsignWidth: string }> = ({ headsignWidth }) => (
+const GroupHeaderSkeleton = ({ headsignWidth }: { headsignWidth: string }) => (
     <div className="flex items-center gap-2 p-3 px-4 bg-foreground/5 border-b-2 border-border/50">
         <Skeleton className="h-6 w-10 rounded-md shrink-0" />
         <Skeleton className="h-3.5 w-3.5 rounded-full shrink-0" />
@@ -49,7 +48,7 @@ const GroupHeaderSkeleton: React.FC<{ headsignWidth: string }> = ({ headsignWidt
     </div>
 );
 
-const DepartureRowsSkeleton: React.FC<{ count: number }> = ({ count }) => (
+const DepartureRowsSkeleton = ({ count }: { count: number }) => (
     <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
         {Array.from({ length: count }, (_, idx) => (
             <div

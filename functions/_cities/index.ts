@@ -1,6 +1,6 @@
 import type { Env } from '../_core/types';
-import type { CityConfig } from '../_core/city-config';
-import type { CityUseCases, VehicleDetailUseCase } from '../_domain/use-cases';
+import type { CityConfig } from '../_core/cityConfig';
+import type { CityUseCases, VehicleDetailUseCase } from '../_domain/useCases';
 import type { City } from './types';
 import { city as prague } from './prague';
 import { city as brno } from './brno';

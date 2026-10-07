@@ -1,14 +1,13 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Copy, Check, X, Info } from 'lucide-react';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useUiStore } from '../../state/uiStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useUiStore } from '@/state/uiStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
-import { MCP_ENDPOINT_URL } from '../../config/constants';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { SITE } from '@/config/site';
 
-export const McpPromoBanner: React.FC = () => {
+export const McpPromoBanner = () => {
     const { t } = useTranslation();
     const isDismissed = usePreferencesStore(s => s.isMcpBannerDismissed);
     const { setIsMcpBannerDismissed } = usePreferencesStore(s => s.actions);
@@ -19,7 +18,7 @@ export const McpPromoBanner: React.FC = () => {
 
     if (isDismissed) return null;
 
-    const handleCopy = () => copy(MCP_ENDPOINT_URL, 'endpoint');
+    const handleCopy = () => copy(SITE.MCP_URL, 'endpoint');
 
     return (
         <div className="hidden md:block fixed bottom-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-2rem)] px-4 py-3 rounded-2xl bg-background/90 backdrop-blur-xl border border-primary/30 shadow-2xl shadow-primary/10 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
@@ -77,5 +76,3 @@ export const McpPromoBanner: React.FC = () => {
         </div>
     );
 };
-
-McpPromoBanner.displayName = 'McpPromoBanner';

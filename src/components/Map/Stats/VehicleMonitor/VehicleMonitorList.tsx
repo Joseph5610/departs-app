@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, X, Activity } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
-import { useVehicles } from '../../../../hooks/data/useVehicles';
-import { useVehicleMonitor } from '../../../../hooks/derived/useVehicleMonitor';
-import type { SearchField } from '../../../../hooks/derived/useVehicleMonitor';
+import { useVehicles } from '@/hooks/data/useVehicles';
+import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
+import type { SearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
-import { SegmentedControl } from '../../../SegmentedControl';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { cn } from 'cn';
-import { useCityConfig } from '../../../../hooks/data/useCities';
-import { routeTypeRank } from '../../../../config/transit';
-import { ROUTE_TYPE_ICONS } from '../../../routeTypeIcons';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { routeTypeRank } from '@/domain/routes';
+import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 
 const modePillClass = (isActive: boolean) => cn(
     "text-xs font-semibold px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 border shadow-2xs",
     isActive ? "bg-foreground text-background border-foreground" : "bg-card hover:bg-muted/60 text-foreground border-border/80"
 );
 
-export const VehicleMonitorList: React.FC = () => {
+export const VehicleMonitorList = () => {
     const { t } = useTranslation();
     const cityConfig = useCityConfig();
-    const allowedVehicleTypes = React.useMemo(
+    const allowedVehicleTypes = useMemo(
         () => [...(cityConfig.filters?.vehicles ?? [])].sort((a, b) => routeTypeRank(a) - routeTypeRank(b)),
         [cityConfig.filters?.vehicles],
     );
@@ -44,7 +44,6 @@ export const VehicleMonitorList: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-2.5 pt-1 pb-2">
-            {/* Search Bar with inline field selector */}
             <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-border/60 bg-card/60 transition-all">
                 <Search size={14} className="text-muted-foreground/50 shrink-0" />
 
@@ -58,7 +57,6 @@ export const VehicleMonitorList: React.FC = () => {
                     ]}
                 />
 
-                {/* Text Input — no browser chrome */}
                 <input
                     type="text"
                     value={searchQuery}
@@ -81,9 +79,7 @@ export const VehicleMonitorList: React.FC = () => {
                 )}
             </div>
 
-            {/* Mode Filter Pills — ordered by cityConfig.filters.vehicles */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                {/* "Vše" always first */}
                 <button
                     type="button"
                     onClick={() => setModeFilter('all')}
@@ -114,14 +110,12 @@ export const VehicleMonitorList: React.FC = () => {
                 })}
             </div>
 
-            {/* Results Counter */}
             <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
                 <span>
                     {t('stats.monitor.showingCount', { count: items.length, total: totalCount })}
                 </span>
             </div>
 
-            {/* Virtuoso Virtualized High-Density Tabular List */}
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground opacity-60">
                     <Activity className="animate-pulse" size={24} />
@@ -149,5 +143,3 @@ export const VehicleMonitorList: React.FC = () => {
         </div>
     );
 };
-
-VehicleMonitorList.displayName = 'VehicleMonitorList';

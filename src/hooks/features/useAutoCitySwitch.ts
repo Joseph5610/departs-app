@@ -1,15 +1,15 @@
-import { useEffect } from 'react';
+import { createElement, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
-import React from 'react';
-import { useCityConfig, useVisibleCities } from '../data/useCities';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { navigate } from '../../lib/history';
-import { matchRoutePath } from '../../lib/routes';
-import { cityOverviewCamera, overlapsBounds, pickCity, stopsInBox, type Box } from '../../utils/mapUtils';
-import { useNetworkCoverage } from '../data/useNetworkCoverage';
+import { useCityConfig, useVisibleCities } from '@/hooks/data/useCities';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { navigate } from '@/lib/history';
+import { matchRoutePath, withCitySegment } from '@/lib/routes';
+import { cityOverviewCamera } from '@/lib/map/view';
+import { nearestCityCentreIn, overlapsBounds, pickCity, stopsInBox, type Box } from '@/domain/cities';
+import { useNetworkCoverage } from '@/hooks/data/useNetworkCoverage';
 
 const viewBox = (map: { getBounds(): { getWest(): number; getSouth(): number; getEast(): number; getNorth(): number } }): Box => {
     const b = map.getBounds();
@@ -17,8 +17,6 @@ const viewBox = (map: { getBounds(): { getWest(): number; getSouth(): number; ge
 };
 
 /**
- * useAutoCitySwitch
- * 
  * 1. Automatically switches the active city in preferencesStore when the selected network has
  *    (almost) no stops left in view and another has; where networks share ground, the selected one stays.
  * 2. Automatically flies the map to the selected city's center if the selectedCity 
@@ -35,11 +33,11 @@ export const useAutoCitySwitch = () => {
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
 
-    const prevCity = React.useRef(selectedCity);
+    const prevCity = useRef(selectedCity);
     /** A city the map switched to itself, already in view: it must not be flown to. */
-    const autoSwitchedTo = React.useRef<string | null>(null);
-    const initialWelcomeSeen = React.useRef(hasSeenWelcome);
-    const isFirstChange = React.useRef(true);
+    const autoSwitchedTo = useRef<string | null>(null);
+    const initialWelcomeSeen = useRef(hasSeenWelcome);
+    const isFirstChange = useRef(true);
 
     useEffect(() => {
         if (prevCity.current !== selectedCity) {
@@ -48,11 +46,10 @@ export const useAutoCitySwitch = () => {
             
             const initiallyNotSeen = !initialWelcomeSeen.current;
             
-            // Skip toast if this is the very first city change for a new user
             if (!(initiallyNotSeen && wasFirstChange)) {
                 if (cityConfig.name) {
                     toast(t('map.controls.switchedCity', { city: cityConfig.name }), {
-                        icon: React.createElement(Building2, { className: "w-4 h-4 text-primary" })
+                        icon: createElement(Building2, { className: "w-4 h-4 text-primary" })
                     });
                 }
             }
@@ -79,50 +76,16 @@ export const useAutoCitySwitch = () => {
             const center = map.getCenter();
             const currentSelectedCity = usePreferencesStore.getState().selectedCity;
 
-            let newCity = pickCity(cities, coverages, viewBox(map), currentSelectedCity);
+            const box = viewBox(map);
+            const newCity = pickCity(cities, coverages, box, currentSelectedCity) ?? nearestCityCentreIn(cities, box, [center.lng, center.lat]);
 
-            // If no network has stops in view,
-            // try to find a city whose center point is visible on the screen
-            if (!newCity) {
-                const bounds = map.getBounds();
-                const visibleCities = cities.filter(city => {
-                    if (!city.center) return false;
-                    const [lng, lat] = city.center as [number, number];
-                    // check if the city center is within the viewport
-                    return bounds.contains([lng, lat]);
-                });
-
-                if (visibleCities.length > 0) {
-                    let minDistance = Infinity;
-                    for (const city of visibleCities) {
-                        const [lng, lat] = city.center as [number, number];
-                        const dist = Math.pow(lng - center.lng, 2) + Math.pow(lat - center.lat, 2);
-                        if (dist < minDistance) {
-                            minDistance = dist;
-                            newCity = city;
-                        }
-                    }
-                }
-            }
-
-            // If we found a city and it's different from the currently selected one, switch to it
             if (newCity && newCity.slug !== currentSelectedCity) {
                 autoSwitchedTo.current = newCity.slug;
-                // Change state immediately
                 usePreferencesStore.getState().actions.setSelectedCity(newCity.slug);
                 
-                // Also update the URL so useRouteParams doesn't revert it
-                // Preserve the rest of the path (like /stop/123) and search params (lat, lng, z)
-                const currentPath = window.location.pathname;
-                const pathParts = currentPath.split('/').filter(Boolean);
-                if (pathParts.length > 0) {
-                    pathParts[0] = newCity.slug;
-                } else {
-                    pathParts.push(newCity.slug);
-                }
-                const newUrl = `/${pathParts.join('/')}${window.location.search}`;
+                // The URL follows too, so useRouteParams doesn't revert it; camera params (lat, lng, z) are kept.
+                const newUrl = `${withCitySegment(window.location.pathname, newCity.slug)}${window.location.search}`;
 
-                // Replace rather than push, so panning doesn't add history entries
                 navigate(newUrl, { replace: true });
             }
         };
@@ -134,13 +97,13 @@ export const useAutoCitySwitch = () => {
         };
     }, [mapLoaded, mapRef, cities, coverages, t]);
 
-    // 2. State -> Map sync: fly to a city selected elsewhere (a link, the switcher) when the map shows none of it.
-    const coveragesRef = React.useRef(coverages);
+    // State -> map sync: fly to a city selected elsewhere (a link, the switcher) when the map shows none of it.
+    const coveragesRef = useRef(coverages);
     useEffect(() => {
         coveragesRef.current = coverages;
     }, [coverages]);
     const citySlug = cityConfig.slug;
-    const cityRef = React.useRef(cityConfig);
+    const cityRef = useRef(cityConfig);
     useEffect(() => {
         cityRef.current = cityConfig;
     }, [cityConfig]);

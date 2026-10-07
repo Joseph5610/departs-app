@@ -1,24 +1,23 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { CityStats } from '../../../../types/transit';
-import { DistributionBar } from '../DistributionBar';
+import type { CityStats } from '@/types';
+import { DistributionBar } from '@/components/Map/Stats/DistributionBar';
 
 interface PunctualityCardProps {
     stats: CityStats;
 }
 
-export const PunctualityCard: React.FC<PunctualityCardProps> = ({ stats }) => {
+export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
     const { t, i18n } = useTranslation();
 
     const { on_time, delayed_1_to_5, delayed_5_plus } = stats.delay_distribution;
     // Only vehicles reporting a delay are bucketed, so shares are of those, not of all vehicles.
     const withDelay = on_time + delayed_1_to_5 + delayed_5_plus;
 
-    const formatDelay = (delaySec: number | null) => {
+    const formatMinutes = (delaySec: number | null) => {
         if (delaySec === null) return '-';
-        const value = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(delaySec / 60);
+        const value = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(delaySec / 60);
         return t('stats.minutesValue', { value });
     };
 
@@ -34,7 +33,7 @@ export const PunctualityCard: React.FC<PunctualityCardProps> = ({ stats }) => {
                 <div className="flex justify-between items-end mb-2.5">
                     <div>
                         <div className="text-3xl font-black tracking-tighter leading-none">
-                            {formatDelay(stats.average_delay)}
+                            {formatMinutes(stats.average_delay)}
                         </div>
                         <div className="text-[11px] font-medium text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
                     </div>

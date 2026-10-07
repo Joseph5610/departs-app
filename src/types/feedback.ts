@@ -1,6 +1,6 @@
-import '../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod';
-import { FEEDBACK_LIMITS } from '../config/constants';
+import { FEEDBACK_LIMITS } from '@/config/constants';
 
 const feedbackTypeEnum = z.enum(['bug', 'feature_request', 'other', 'crash']);
 

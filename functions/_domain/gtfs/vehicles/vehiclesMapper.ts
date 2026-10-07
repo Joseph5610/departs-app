@@ -1,0 +1,54 @@
+import type { AppVehicleFeature, AppVehicleProperties } from '../../../_core/types';
+import type * as GtfsRt from '../../../_core/gtfsRtTypes';
+import type { GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
+import { normalizeRouteType } from '../../../_core/utils/routeTypes';
+import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+
+export function mapVehicle(
+    vehicleObj: GtfsRt.IVehiclePosition,
+    tripId: string,
+    route: GtfsRoute,
+    originTimestamp: string,
+    delay: number | null,
+    isBeforeTrack: boolean = false,
+    /** Replaces the descriptor's own id, for networks that publish their vehicles under another one. */
+    vehicleIdOverride?: string
+): AppVehicleFeature {
+    const vp = vehicleObj;
+    
+    let statePosition: AppVehicleProperties['state_position'] = 'on_track';
+    
+    if (isBeforeTrack) {
+        const delaySecs = delay ?? 0;
+        statePosition = delaySecs > GTFS_CONFIG.BEFORE_TRACK_DELAY_THRESHOLD_SECS ? 'before_track_delayed' : 'before_track';
+    } else if (vp.currentStatus === 1) { // 1 = STOPPED_AT
+        statePosition = 'at_stop';
+    }
+
+    // Deliberate: 0 means "no fix" far more often than due north here, so not `?? null`.
+    const bearing = vp.position?.bearing ? Number(vp.position.bearing) : undefined;
+    const vehicleId = vehicleIdOverride || vp.vehicle?.id || '';
+    const vehicleLabel = vp.vehicle?.label || vehicleId;
+    
+    const feature: AppVehicleFeature = {
+        type: 'Feature',
+        geometry: {
+            type: 'Point',
+            coordinates: [Number(vp.position?.longitude || 0), Number(vp.position?.latitude || 0)]
+        },
+        properties: {
+            gtfs_trip_id: tripId,
+            vehicle_id: vehicleLabel.toString(),
+            
+            route_short_name: route.short_name || route.name || '',
+            route_type: normalizeRouteType(route.type),
+            
+            delay: delay ?? null,
+            state_position: statePosition,
+            origin_timestamp: originTimestamp,
+            bearing: bearing ?? null,
+        }
+    };
+    if (vp.currentStopSequence && vp.currentStopSequence > 0) feature.properties.last_stop_sequence = vp.currentStopSequence;
+    return feature;
+}

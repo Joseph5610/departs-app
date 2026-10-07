@@ -3,6 +3,8 @@ export interface City {
     name: string;
     /** ISO 3166-1 alpha-2 code, used to group cities in the switcher. */
     country: string;
+    /** IANA zone the city's timetables are written in. */
+    timezone?: string;
     center: [number, number];
     bounds: [number, number, number, number];
     isBeta?: boolean;
@@ -10,7 +12,6 @@ export interface City {
     isHidden?: boolean;
     hasPointsOfSale?: boolean;
     hasAlerts?: boolean;
-    virtualTableUrl?: string;
     filters?: {
         vehicles: string[];
         stops: string[];

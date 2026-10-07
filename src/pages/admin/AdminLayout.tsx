@@ -11,16 +11,15 @@ export interface AdminLayoutProps {
   contentClassName?: string;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
+export const AdminLayout = ({ 
   children, 
   title, 
   backUrl = '/admin',
   headerActions,
   contentClassName = 'p-4 sm:p-6'
-}) => {
+}: AdminLayoutProps) => {
   return (
     <div className="flex flex-col h-dvh bg-background text-foreground overflow-hidden">
-      {/* Header Area */}
       <div className="flex-none border-b border-border/40 bg-card/80 backdrop-blur-md px-4 py-3 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href={backUrl}>
@@ -36,7 +35,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
         </div>
 
-        {/* Dynamic header actions (tabs, buttons, etc) */}
         {headerActions && (
           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2">
             {headerActions}
@@ -44,7 +42,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         )}
       </div>
 
-      {/* Content Area */}
       <div className={`flex-1 overflow-auto bg-muted/10 ${contentClassName}`}>
         {children}
       </div>

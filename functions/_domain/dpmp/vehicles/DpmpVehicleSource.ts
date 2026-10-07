@@ -1,21 +1,20 @@
-import * as GtfsRt from '../../../_core/gtfsRtTypes';
+import { VehicleStopStatus, type IVehiclePosition } from '../../../_core/gtfsRtTypes';
 import type { AppVehicleCollection, AppVehicleFeature } from '../../../_core/types';
-import type { CityConfig } from '../../../_core/city-config';
+import type { CityConfig } from '../../../_core/cityConfig';
 import { deriveAsync, type Snapshot } from '../../../_core/feed/source';
-import type { FleetBuild, NetworkVehicles } from '../../vehicles/vehicle-source';
-import { VehiclesMapper } from '../../gtfs/vehicles/VehiclesMapper';
-import { getGtfsRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfs-data';
+import type { FleetBuild, NetworkVehicles } from '../../vehicles/vehicleSource';
+import { mapVehicle } from '../../gtfs/vehicles/vehiclesMapper';
+import { getGtfsRoutes, getRoutesByName, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
 import { getSchedule, isWaitingToStart } from '../../../_feeds/gtfs/schedule';
-import { getTripStops } from '../../../_feeds/gtfs/trip-stops';
+import { getTripStops } from '../../../_feeds/gtfs/tripStops';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
 import { bearingDeg } from '../../../_core/utils/geo';
-import { MovementBearings } from '../../../_core/utils/movement-bearing';
+import { MovementBearings } from '../../../_core/utils/MovementBearings';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
-import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmp-csv-feed';
+import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmpCsvFeed';
 import { DpmpTripMatcher } from './DpmpTripMatcher';
 
-const { VehicleStopStatus } = GtfsRt;
 
 
 /** The mapped fleet per CSV snapshot: built once per feed read, however many requests read it. */
@@ -133,7 +132,7 @@ export class DpmpVehicleSource implements NetworkVehicles {
         const route: GtfsRoute = routesByName[row.routeNumber]
             ?? { name: row.routeNumber, type: DPMP_CONFIG.FALLBACK_ROUTE_TYPE };
 
-        const vp: GtfsRt.IVehiclePosition = {
+        const vp: IVehiclePosition = {
             position: {
                 latitude: position.latitude,
                 longitude: position.longitude,
@@ -148,14 +147,14 @@ export class DpmpVehicleSource implements NetworkVehicles {
         const originTimestamp = new Date(timestampMs).toISOString();
 
         if (!match) {
-            const feature = VehiclesMapper.mapVehicle(vp, '', route, originTimestamp, null);
+            const feature = mapVehicle(vp, '', route, originTimestamp, null);
             feature.properties.state_position = 'off_track';
             return feature;
         }
 
         const isBeforeTrack = isWaitingToStart(match.startRelMins - ctx.mins, row.stopOrder);
 
-        return VehiclesMapper.mapVehicle(vp, match.tripId, route, originTimestamp, -row.variation, isBeforeTrack);
+        return mapVehicle(vp, match.tripId, route, originTimestamp, -row.variation, isBeforeTrack);
     }
 
     /**

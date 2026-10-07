@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { navigate } from '../../lib/history';
-import { useRouteParams } from '../useRouteParams';
-import { useCities } from '../data/useCities';
-import { getUrlUnlockedCity, usePreferencesStore } from '../../state/preferencesStore';
-import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG } from '../../config/cities';
-import { paths } from '../../lib/routes';
+import { navigate } from '@/lib/history';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useCities } from '@/hooks/data/useCities';
+import { getUrlUnlockedCity, usePreferencesStore } from '@/state/preferencesStore';
+import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { paths } from '@/lib/routes';
 
 /**
  * Keeps the selected city in step with the URL. Mount exactly once (MapController).
@@ -28,7 +28,6 @@ export const useRouteCitySync = () => {
         if (unlocked) unlockCity(unlocked);
     }, [unlockCity]);
 
-    // Sync static city configuration to store immediately on mount to prevent map fly-to race conditions
     useEffect(() => {
         if (city && FRONTEND_CITIES_CONFIG[city] && selectedCity !== city) {
             setSelectedCity(city);
@@ -42,12 +41,10 @@ export const useRouteCitySync = () => {
         const defaultCity = citiesData.cities[0]?.slug || FALLBACK_CITY_CONFIG.slug;
         const safeCity = validCities.has(selectedCity) ? selectedCity : defaultCity;
 
-        // 1. Fix persisted store if it holds an invalid city
         if (safeCity !== selectedCity) {
             setSelectedCity(safeCity);
         }
 
-        // 2. Handle URL city validation
         if (!city) return;
 
         if (city === defaultCity && isCityBase) {
@@ -58,10 +55,8 @@ export const useRouteCitySync = () => {
         }
 
         if (validCities.has(city)) {
-            // Valid city in URL: sync store if needed
             if (city !== safeCity) setSelectedCity(city);
         } else {
-            // Invalid city in URL: redirect to safe city
             const redirectPath = safeCity === defaultCity ? '/' : paths.city(safeCity);
             navigate(redirectPath, { replace: true });
         }

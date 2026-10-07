@@ -1,25 +1,26 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Download, Clock, Database, Scale, MessageSquareHeart, GitBranch } from 'lucide-react';
 import { version } from '../../../../package.json';
-import { usePWAStore } from '../../../state/pwaStore';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useUiStore } from '../../../state/uiStore';
-import { useStops } from '../../../hooks/data/useStops';
+import { usePWAStore } from '@/state/pwaStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useUiStore } from '@/state/uiStore';
+import { useStops } from '@/hooks/data/useStops';
 import { toast } from 'sonner';
 import { cn } from 'cn';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
-import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
-import { DATA_LICENSE_URLS, PROCESSED_DATA_URL, SHARED_DATA_ATTRIBUTIONS, type DataAttribution, type DataLicenseId } from '../../../config/attributions';
-import { EXTERNAL_URLS, UI_TIMING_MS } from '../../../config/constants';
-import { formatDateTime } from '../../../utils/dateUtils';
+import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { DATA_LICENSE_URLS, PROCESSED_DATA_URL, SHARED_DATA_ATTRIBUTIONS, type DataAttribution, type DataLicenseId } from '@/config/attributions';
+import { EXTERNAL_URLS, UI_TIMING_MS } from '@/config/constants';
+import { formatDateTime } from '@/domain/time';
+import { isCityVisible } from '@/domain/cities';
 
 /** `processedDataLicense` is set only for city groups: departs.app processes a city's own data, not the shared OSM/Photon sources. */
 const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[]; processedDataLicense?: DataLicenseId }> => [
     ...Object.values(FRONTEND_CITIES_CONFIG)
-        .filter(city => !city.isHidden || unlockedCities.includes(city.slug))
+        .filter(city => isCityVisible(city, unlockedCities))
         .map(city => ({ labelKey: `map.regions.${city.slug}`, sources: city.attributions, processedDataLicense: city.processedDataLicense ?? 'ccBy4' as DataLicenseId })),
     { labelKey: 'settings.attributions.shared', sources: SHARED_DATA_ATTRIBUTIONS },
 ];
@@ -27,7 +28,7 @@ const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; 
 const badgeClassName = 'text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider';
 
 /** A source credited as its licence asks: creator, the linked dataset and the linked licence. */
-const AttributionItem: React.FC<{ source: DataAttribution }> = ({ source }) => {
+const AttributionItem = ({ source }: { source: DataAttribution }) => {
     const { t } = useTranslation();
     const licenseUrl = DATA_LICENSE_URLS[source.license];
     const licenseLabel = t(`settings.attributions.licenses.${source.license}`);
@@ -60,7 +61,7 @@ const AttributionItem: React.FC<{ source: DataAttribution }> = ({ source }) => {
  * itself links to the source doc, so - unlike `AttributionItem` - the badge stays a plain label:
  * an anchor can't nest inside the row's own anchor.
  */
-const ProcessedDataItem: React.FC<{ license: DataLicenseId }> = ({ license }) => {
+const ProcessedDataItem = ({ license }: { license: DataLicenseId }) => {
     const { t } = useTranslation();
     const licenseLabel = t(`settings.attributions.licenses.${license}`);
     return (
@@ -79,10 +80,9 @@ const ProcessedDataItem: React.FC<{ license: DataLicenseId }> = ({ license }) =>
     );
 };
 
-export const SettingsFooter: React.FC = () => {
+export const SettingsFooter = () => {
     const { t, i18n } = useTranslation();
 
-    // Preferences
     const searchHistory = usePreferencesStore(s => s.searchHistory);
     const unlockedCities = usePreferencesStore(s => s.unlockedCities);
     const { clearHistory } = usePreferencesStore(s => s.actions);
@@ -91,13 +91,11 @@ export const SettingsFooter: React.FC = () => {
     const { updatedAt } = useStops();
     const [isChecking, setIsChecking] = useState(false);
 
-    // PWA
     const needRefresh = usePWAStore(s => s.needRefresh);
     const canInstall = usePWAStore(s => s.canInstall);
     const { promptInstall } = usePWAStore(s => s.actions);
 
-    // Reset checking state if update is found
-    React.useEffect(() => {
+    useEffect(() => {
         if (needRefresh && isChecking) {
             const timer = setTimeout(() => setIsChecking(false), 0);
             return () => clearTimeout(timer);
@@ -107,7 +105,6 @@ export const SettingsFooter: React.FC = () => {
     const handleCheckUpdate = async () => {
         if (isChecking) return;
 
-        // If already need refresh, don't show another check
         if (needRefresh) {
             return;
         }
@@ -247,11 +244,9 @@ export const SettingsFooter: React.FC = () => {
 
             {updatedAt && (
                 <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
-                    {t('settings.lastStopUpdate', { date: formatDateTime(updatedAt, i18n.language) })}
+                    {t('settings.lastStopUpdate', { date: formatDateTime(updatedAt, i18n.resolvedLanguage) })}
                 </div>
             )}
         </div>
     );
 };
-
-SettingsFooter.displayName = 'SettingsFooter';

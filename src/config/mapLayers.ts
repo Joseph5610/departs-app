@@ -5,7 +5,7 @@ import type {
     ExpressionSpecification
 } from 'maplibre-gl';
 import { DELAY_TIERS } from './transit';
-import { mixHex } from '../lib/color';
+import { mixHex } from '@/lib/color';
 
 /** GeoJSON source IDs, shared by the layers below, the <Source> elements and direct map updates. */
 export const MAP_SOURCES = {
@@ -18,7 +18,7 @@ export const MAP_SOURCES = {
     POINTS_OF_SALE: 'points-of-sale-source',
 } as const;
 
-/** Canvas-drawn images registered by utils/mapIcons.ts. */
+/** Canvas-drawn images registered by lib/map/icons.ts. */
 export const MAP_ICONS = {
     VEHICLE_ARROW: 'v-arrow-centered',
     TRAIN_STATION: 'train-icon',

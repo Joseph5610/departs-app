@@ -3,15 +3,15 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 import { cn } from 'cn';
-import { IconToggle, type IconToggleProps } from '../../IconToggle';
+import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
 
-export const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const SectionHeading = ({ children }: { children: React.ReactNode }) => (
     <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
         {children}
     </h3>
 );
 
-export const FilterHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const FilterHeading = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-center gap-2">
         <div className="w-1 h-1 rounded-full bg-primary" />
         <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-[0.2em]">
@@ -20,7 +20,7 @@ export const FilterHeading: React.FC<{ children: React.ReactNode }> = ({ childre
     </div>
 );
 
-export const FilterButton: React.FC<Omit<IconToggleProps, 'className' | 'labelClassName'>> = (props) => (
+export const FilterButton = (props: Omit<IconToggleProps, 'className' | 'labelClassName'>) => (
     <IconToggle {...props} className="py-2.5 rounded-2xl text-sm" labelClassName="text-[10px] font-bold uppercase tracking-wider" />
 );
 
@@ -36,7 +36,7 @@ interface ToggleSectionProps {
 }
 
 /** A settings card with a switch; its children expand underneath while the switch is on. */
-export const ToggleSection: React.FC<ToggleSectionProps> = ({ title, description, icon: Icon, isChecked, onToggle, children, className }) => (
+export const ToggleSection = ({ title, description, icon: Icon, isChecked, onToggle, children, className }: ToggleSectionProps) => (
     <Card variant="subtle" size="none" className={className}>
         <Item
             variant="settings"

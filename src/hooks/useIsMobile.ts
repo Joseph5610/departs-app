@@ -1,15 +1,13 @@
 import { useSyncExternalStore } from 'react';
-import { MOBILE_BREAKPOINT } from '../config/constants';
+import { LAYOUT } from '@/config/constants';
 
 /**
- * useIsMobile
- * 
  * Standardized hook for mobile breakpoint detection using useSyncExternalStore.
  * This pattern ensures consistent state between the browser's matchMedia and React,
  * avoiding hydration mismatches and unnecessary effect-based updates.
  */
 export const useIsMobile = () => {
-    const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
+    const query = `(max-width: ${LAYOUT.MOBILE_BREAKPOINT_PX - 1}px)`;
 
     return useSyncExternalStore(
         (callback) => {

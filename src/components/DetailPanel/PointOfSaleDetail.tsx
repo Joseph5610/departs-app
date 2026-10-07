@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Ticket, MapPin, CreditCard, CheckCircle2, Building2, Landmark, HelpCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle } from '@/components/ui/item';
-import type { PointOfSale, PointOfSaleType } from '../../types/pointsOfSale';
-import { DAY_MS } from '../../config/constants';
+import type { PointOfSale, PointOfSaleType } from '@/types';
+import { DAY_MS } from '@/config/constants';
 
 interface PointOfSaleDetailProps {
     pos: PointOfSale;
@@ -24,7 +24,7 @@ const TYPE_ICONS: Record<PointOfSaleType, React.ElementType> = {
 const REFERENCE_MONDAY_MS = Date.UTC(2024, 0, 1);
 
 /** Short weekday names, Monday first, capitalized as on printed timetables. */
-function getWeekdayNames(lang: string): string[] {
+function getWeekdayNames(lang: string | undefined): string[] {
     const format = new Intl.DateTimeFormat(lang, { weekday: 'short', timeZone: 'UTC' });
     return Array.from({ length: 7 }, (_, i) => {
         const name = format.format(REFERENCE_MONDAY_MS + i * DAY_MS);
@@ -37,16 +37,14 @@ function formatDayRange(from: number, to: number, days: string[]): string {
     return `${days[from]}–${days[to]}`;
 }
 
-export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => {
+export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
     const { t, i18n } = useTranslation();
-    const lang = (i18n.resolvedLanguage || i18n.language).split('-')[0];
-    const weekdayNames = React.useMemo(() => getWeekdayNames(lang), [lang]);
+    const weekdayNames = useMemo(() => getWeekdayNames(i18n.resolvedLanguage), [i18n.resolvedLanguage]);
 
     const Icon = TYPE_ICONS[pos.type] || HelpCircle;
 
     return (
         <div className="flex flex-col gap-3 px-0 pt-3 pb-4">
-            {/* Hero Card inspired by VehicleHero */}
             <Card 
                 size="none" 
                 className="border border-emerald-500/30 ring-0 shadow-xl relative flex flex-col transition-colors overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent"
@@ -72,7 +70,6 @@ export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => 
                 </div>
             </Card>
 
-            {/* Opening Hours Section */}
             {pos.openingHours && pos.openingHours.length > 0 && (
                 <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2">
                     <CardHeader className="p-0 pb-1">
@@ -91,7 +88,6 @@ export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => 
                 </Card>
             )}
 
-            {/* Payment Methods Section */}
             {pos.payMethods && pos.payMethods.length > 0 && (
                 <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2.5">
                     <CardHeader className="p-0">
@@ -110,7 +106,6 @@ export const PointOfSaleDetail: React.FC<PointOfSaleDetailProps> = ({ pos }) => 
                 </Card>
             )}
 
-            {/* Provided Services Section */}
             {pos.services && pos.services.length > 0 && (
                 <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2.5">
                     <CardHeader className="p-0">

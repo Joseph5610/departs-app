@@ -8,7 +8,7 @@ import { API_LIMITS } from './config';
 // Sanitizer function to prevent path traversal
 const sanitizeId = (id: string) => id.replace(/[^a-zA-Z0-9_,-]/g, '');
 
-// Helper to coerce a single string or an array of strings into an array
+/** A query param given once or repeated, always as an array. */
 const arrayParam = () => z._default(
     z.pipe(
         z.pipe(z.union([z.string(), z.array(z.string())]), z.transform((val) => (Array.isArray(val) ? val : [val]))),
@@ -60,8 +60,6 @@ export function parseSearchParams<T extends z.ZodMiniType>(
     const obj: Record<string, string | string[]> = {};
     for (const key of searchParams.keys()) {
         const values = searchParams.getAll(key);
-        // If there's only one value, keep it as a string.
-        // The arrayParam Zod helper will transform it to an array if needed.
         obj[key] = values.length === 1 ? values[0] : values;
     }
     return schema.parse(obj);

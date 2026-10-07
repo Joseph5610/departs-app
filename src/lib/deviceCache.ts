@@ -1,8 +1,8 @@
-import './zod-config';
+import './zodConfig';
 import { z } from 'zod/mini';
 import localforage from 'localforage';
 import { experimental_createQueryPersister, type AsyncStorage, type PersistedQuery } from '@tanstack/query-persist-client-core';
-import { DEVICE_CACHE } from '../config/constants';
+import { DEVICE_CACHE } from '@/config/constants';
 import type { QueryClient } from '@tanstack/react-query';
 import { isMeteredConnection, onConnectionChange } from './network';
 

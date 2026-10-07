@@ -1,12 +1,14 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import '../../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 
 import { useCityConfig } from './useCities';
-import { EXTERNAL_URLS, GEOCODING_CONFIG, QUERY_TIMING_MS } from '../../config/constants';
-import { useDebouncedValue } from '../useDebouncedValue';
+import { EXTERNAL_URLS, GEOCODING_CONFIG, QUERY_TIMING_MS } from '@/config/constants';
+import { apiFetch } from '@/lib/apiClient';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { queryKeys } from '@/lib/queryKeys';
 
 export interface GeocodingResult {
     id: string;
@@ -15,10 +17,9 @@ export interface GeocodingResult {
     coordinates: [number, number];
 }
 
-const buildPhotonUrl = (query: string, userLocation: [number, number] | null, lang: string, bbox: string): string => {
-    // Build base params — bbox must be appended raw (commas must not be %2C-encoded)
-    // Photon supports: default, de, en, fr
-    const photonLang = lang.startsWith('en') ? 'en' : 'default';
+const buildPhotonUrl = (query: string, userLocation: [number, number] | null, lang: string | undefined, bbox: string): string => {
+    // Photon supports only default, de, en and fr; `bbox` is appended raw so its commas stay unencoded.
+    const photonLang = lang?.startsWith('en') ? 'en' : 'default';
 
     const params = new URLSearchParams({
         q: query,
@@ -32,7 +33,6 @@ const buildPhotonUrl = (query: string, userLocation: [number, number] | null, la
         params.set('lat', String(Math.round(userLocation[1] * 100) / 100));
     }
 
-    // Append bbox directly to avoid URLSearchParams encoding commas as %2C
     return `${EXTERNAL_URLS.GEOCODER_API}?${params.toString()}&bbox=${bbox}`;
 };
 
@@ -105,9 +105,9 @@ const subscribeToPlaces = (listener: () => void) => {
 export const useRememberedPlace = (id: string | null): GeocodingResult | null =>
     useSyncExternalStore(subscribeToPlaces, () => (id ? geocodingCache.get(id) ?? null : null));
 
+const NO_RESULTS: GeocodingResult[] = [];
+
 /**
- * useGeocoding
- *
  * Queries the Photon geocoding API (powered by OSM) for address/POI results in the selected city.
  *
  * - Hard-bounded to the city region via the `bbox` parameter.
@@ -117,25 +117,22 @@ export const useRememberedPlace = (id: string | null): GeocodingResult | null =>
 export const useGeocoding = (
     query: string,
     userLocation: [number, number] | null
-): { results: GeocodingResult[]; isLoading: boolean } => {
+): GeocodingResult[] => {
     const { i18n } = useTranslation();
     const debouncedQuery = useDebouncedValue(query.trim(), GEOCODING_CONFIG.DEBOUNCE_MS);
     const cityBounds = useCityConfig().bounds.join(',');
 
     const url = useMemo(() => {
         if (debouncedQuery.length < GEOCODING_CONFIG.MIN_QUERY_LENGTH) return null;
-        return buildPhotonUrl(debouncedQuery, userLocation, i18n.language, cityBounds);
-    }, [debouncedQuery, userLocation, i18n.language, cityBounds]);
+        return buildPhotonUrl(debouncedQuery, userLocation, i18n.resolvedLanguage, cityBounds);
+    }, [debouncedQuery, userLocation, i18n.resolvedLanguage, cityBounds]);
 
-    const { data, isFetching } = useQuery({
-        queryKey: ['geocoding', url],
+    const { data } = useQuery({
+        queryKey: queryKeys.geocoding(url),
         queryFn: async ({ signal }) => {
             if (!url) return [];
             
-            const res = await fetch(url, { signal });
-            if (!res.ok) throw new Error(`Photon HTTP ${res.status}`);
-            
-            const json = photonResponseSchema.parse(await res.json());
+            const json = photonResponseSchema.parse(await apiFetch<unknown>(url, { signal }));
 
             const seen = new Set<string>();
             const results: GeocodingResult[] = [];
@@ -156,11 +153,8 @@ export const useGeocoding = (
 
     // Clear at once when the query gets too short instead of waiting for the debounce.
     if (query.trim().length < GEOCODING_CONFIG.MIN_QUERY_LENGTH) {
-        return { results: [], isLoading: false };
+        return NO_RESULTS;
     }
 
-    return { 
-        results: data ?? [], 
-        isLoading: isFetching 
-    };
+    return data ?? NO_RESULTS;
 };

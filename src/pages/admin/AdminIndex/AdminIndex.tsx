@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { AdminLayout } from "../AdminLayout";
+import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { Database, MessageSquare } from "lucide-react";
 
 export const AdminIndex = () => {

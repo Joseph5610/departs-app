@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Ambulance,
     CloudLightning,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 
 const renderAlertIcon = (cause?: string, effect?: string, type?: string, props?: { className?: string, size?: number, strokeWidth?: number }) => {
-    // If effect is present and we want to prioritize or fallback to it
     // Effect values: 1=NO_SERVICE, 2=REDUCED_SERVICE, 3=SIGNIFICANT_DELAYS, 4=DETOUR, 5=ADDITIONAL_SERVICE, 6=MODIFIED_SERVICE, 7=OTHER_EFFECT, 8=UNKNOWN_EFFECT, 9=STOP_MOVED
     switch (effect) {
         case '1': return <Ban {...props} />;
@@ -62,6 +60,6 @@ interface AlertIconProps {
     strokeWidth?: number;
 }
 
-export const AlertIcon: React.FC<AlertIconProps> = ({ cause, effect, type, className, size = 16, strokeWidth = 1.5 }) => {
+export const AlertIcon = ({ cause, effect, type, className, size = 16, strokeWidth = 1.5 }: AlertIconProps) => {
     return renderAlertIcon(cause, effect, type, { className, size, strokeWidth });
 };

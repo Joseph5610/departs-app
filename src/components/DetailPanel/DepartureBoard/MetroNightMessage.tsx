@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { MoonStar } from 'lucide-react';
 import {
@@ -7,7 +6,7 @@ import {
     EmptyMedia,
     EmptyTitle,
     EmptyDescription,
-} from '../../ui/empty';
+} from '@/components/ui/empty';
 
 /**
  * MetroNightMessage
@@ -15,7 +14,7 @@ import {
  * Displays a friendly message when a metro station is visited during night hours
  * and no departures are scheduled.
  */
-export const MetroNightMessage: React.FC = () => {
+export const MetroNightMessage = () => {
     const { t } = useTranslation();
 
     return (
@@ -37,5 +36,3 @@ export const MetroNightMessage: React.FC = () => {
         </Empty>
     );
 };
-
-MetroNightMessage.displayName = 'MetroNightMessage';

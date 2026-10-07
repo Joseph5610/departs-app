@@ -1,14 +1,14 @@
 import type { AppDepartureResponse, AppVehicleCollection, CityRequestContext } from "../../../_core/types";
-import type { CityConfig } from '../../../_core/city-config';
-import { getGtfsRoutes } from '../../../_feeds/gtfs/gtfs-data';
-import { DeparturesMapper } from './DeparturesMapper';
+import type { CityConfig } from '../../../_core/cityConfig';
+import { getGtfsRoutes } from '../../../_feeds/gtfs/gtfsData';
+import { mapDepartures } from './departuresMapper';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
-import { getStopIndex, type StopIndex } from '../index/stop-index';
+import { getStopIndex, type StopIndex } from '../index/StopIndex';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
-import type { DeparturesUseCase } from '../../use-cases';
+import type { DeparturesUseCase } from '../../useCases';
 
 /** Trip ids a board refers to: its own departures, the arrivals they wait for, and their through-running. */
 export function collectTripIds(deps: { tuple: GtfsDepartureTuple }[]): Set<string> {
@@ -83,7 +83,7 @@ export class DeparturesService implements DeparturesUseCase {
             const { routes } = await getGtfsRoutes(this.city);
             const rtVehicles = await boardVehicles(this.vehiclesService, collectTripIds(allDeps), ctx.waitUntil);
 
-            return { departures: DeparturesMapper.mapDepartures(allDeps, routes, rtVehicles) };
+            return { departures: mapDepartures(allDeps, routes, rtVehicles) };
         } catch (e) {
             if (e instanceof ApiError) throw e;
             console.error('Error loading static departures:', e);

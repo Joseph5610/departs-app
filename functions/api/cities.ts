@@ -1,6 +1,6 @@
 import type { AppCitiesResponse } from "../_core/types";
 import { CITY_REGISTRY } from "../_cities";
-import { createSuccessResponse } from "../_core/api-utils";
+import { createSuccessResponse } from "../_core/apiUtils";
 import { CACHE_TTL } from "../_core/config";
 
 export async function onRequest() {
@@ -9,13 +9,13 @@ export async function onRequest() {
             slug: city.slug,
             name: city.name,
             country: city.country,
+            timezone: city.timezone,
             center: city.center,
             bounds: city.bounds,
             isBeta: city.isBeta,
             isHidden: city.isHidden,
             hasPointsOfSale: city.hasPointsOfSale,
             hasAlerts: city.hasAlerts,
-            virtualTableUrl: city.virtualTableUrl,
             filters: city.filters,
         }))
     };

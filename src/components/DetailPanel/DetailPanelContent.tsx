@@ -1,21 +1,21 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { VehicleDetail } from './VehicleDetail/VehicleDetail';
-import { useSelectionStore } from '../../state/selectionStore';
-import { useVehicleDetail } from '../../hooks/data/useVehicleDetail';
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { useSelectedStop } from '../../hooks/derived/useSelectedStop';
-import { useSelectedVehicle } from '../../hooks/derived/useSelectedVehicle';
+import { useSelectionStore } from '@/state/selectionStore';
+import { useVehicleDetail } from '@/hooks/data/useVehicleDetail';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { DepartureBoard } from './DepartureBoard/DepartureBoard';
-import { closeDetail, navigate } from '../../lib/history';
-import { paths } from '../../lib/routes';
-import type { AppError } from '@/types/error';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { closeDetail, navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import type { AppError } from '@/types';
+import { usePreferencesStore } from '@/state/preferencesStore';
 
 
 import { PointOfSaleDetail } from './PointOfSaleDetail';
-import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
+import { usePointsOfSale } from '@/hooks/data/usePointsOfSale';
 
 /**
  * DetailPanelContent
@@ -23,23 +23,19 @@ import { usePointsOfSale } from '../../hooks/data/usePointsOfSale';
  * Orchestrator for the content area of the DetailPanel.
  * Switches between VehicleDetail, DepartureBoard, and PointOfSaleDetail based on selection.
  */
-export const DetailPanelContent: React.FC = memo(() => {
-    // Stores
+export const DetailPanelContent = memo(() => {
     const isFollowing = useSelectionStore(s => s.isFollowing);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
-    const clearLineFilter = useSelectionStore(s => s.actions.clearLineFilter);
+    const resetStopSelection = useSelectionStore(s => s.actions.resetStopSelection);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { tripId, stopId, posId } = useRouteParams();
 
-    // Derived State
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
 
-    // PoS Data
     const { data: posList } = usePointsOfSale();
     const selectedPos = posId ? posList?.find((p) => p.id === posId) : null;
 
-    // Data Hooks
     const { 
         data: vehicleDetail, 
         isFetching: loadingDetail,
@@ -51,7 +47,6 @@ export const DetailPanelContent: React.FC = memo(() => {
     const showDepartureBoard = selectedStop && !selectedVehicle;
     const { t } = useTranslation();
 
-    // Auto-close panel and show error toast if vehicle API fails
     useEffect(() => {
         if (selectedVehicle && isVehicleError && !loadingDetail && !vehicleDetail) {
             toast.error(t('toasts.vehicleNotFound'));
@@ -59,7 +54,6 @@ export const DetailPanelContent: React.FC = memo(() => {
         }
     }, [selectedVehicle, isVehicleError, loadingDetail, vehicleDetail, t, selectedCity]);
 
-    // Auto-enable tracking when opening a trip
     useEffect(() => {
         if (tripId) {
             setIsFollowing(true);
@@ -68,10 +62,12 @@ export const DetailPanelContent: React.FC = memo(() => {
         }
     }, [tripId, setIsFollowing]);
 
-    // Reset line filter when changing stops
+    const filterResetForStop = useRef<string | null | undefined>(undefined);
     useEffect(() => {
-        clearLineFilter();
-    }, [stopId, clearLineFilter]);
+        if (filterResetForStop.current === stopId) return;
+        filterResetForStop.current = stopId;
+        resetStopSelection();
+    }, [stopId, resetStopSelection]);
 
     return (
         <div className="flex flex-col gap-0 pt-0">

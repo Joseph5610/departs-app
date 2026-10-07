@@ -21,7 +21,12 @@ export const paths = {
             : `/${city}/trip/${enc(tripId)}`,
     stats: (city: string) => `/${city}/stats`,
     favorites: (city: string) => `/${city}/favorites`,
+    board: (city: string, stopId: string, walkMins?: number) =>
+        `/${city}/board/${enc(stopId)}${walkMins ? `?walk=${walkMins}` : ''}`,
 };
+
+/** The full-screen departure board; outside the map, so not in ROUTE_PATTERNS. */
+export const BOARD_ROUTE = '/:city/board/:stopId';
 
 type RouteParams = Partial<Record<'city' | 'stopId' | 'posId' | 'tripId' | 'vehicleId', string>>;
 
@@ -60,4 +65,12 @@ export function decodeRouteParam(value: string): string {
     } catch {
         return value;
     }
+}
+
+/** `pathname` moved to another city: its first segment replaced, the rest (`/stop/123`) kept. */
+export function withCitySegment(pathname: string, citySlug: string): string {
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts.length > 0) parts[0] = citySlug;
+    else parts.push(citySlug);
+    return `/${parts.join('/')}`;
 }

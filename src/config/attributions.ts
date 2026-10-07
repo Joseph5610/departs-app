@@ -1,5 +1,5 @@
 /** Terms upstream data is published under. */
-export type DataLicenseId = 'ccBy4' | 'odbl1' | 'czOpenData' | 'permission' | 'noRestrictions' | 'notStated';
+export type DataLicenseId = 'ccBy4' | 'odbl1' | 'czOpenData' | 'permission' | 'noRestrictions' | 'nonCommercial' | 'notStated';
 
 /**
  * One upstream data source, credited as its licence asks: who made it, what it is, where it is
@@ -24,6 +24,8 @@ export const DATA_LICENSE_URLS: Record<DataLicenseId, string | null> = {
     permission: null,
     // Stated by the publisher itself, without a named licence.
     noRestrictions: null,
+    // Free for any non-commercial use, as the publisher states; no named licence.
+    nonCommercial: null,
     notStated: null,
 };
 

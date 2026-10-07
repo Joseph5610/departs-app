@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIcon } from 'lucide-react';
-import { navigate } from '../../../lib/history';
-import { paths } from '../../../lib/routes';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 import { cn } from 'cn';
-import { addSecondsToTime } from '../../../utils/dateUtils';
+import { addSecondsToTime } from '@/domain/time';
+import { distinctLines } from '@/domain/departures';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { LineBadge } from '../../LineBadge';
-import { usePreferencesStore } from '../../../state/preferencesStore';
+import { LineBadge } from '@/components/LineBadge';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { TimelineTime } from './TimelineTime';
-import type { Continuation, StopConnection } from '../../../types/vehicles';
+import type { Continuation, StopConnection } from '@/types';
 
 /** A collapsible, labelled block under a stop listing trips a passenger can change to there. */
 const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, children }: {
@@ -103,18 +104,14 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
 };
 
 /** Onward trips that wait at this stop for the viewed trip. */
-export const StopConnections = React.memo(({ connections, isPast, defaultOpen }: {
+export const StopConnections = memo(({ connections, isPast, defaultOpen }: {
     connections: StopConnection[],
     isPast: boolean,
     defaultOpen: boolean
 }) => {
     const { t } = useTranslation();
 
-    const previewLines = useMemo(() => {
-        const byName = new Map<string, string>();
-        for (const c of connections) if (!byName.has(c.line)) byName.set(c.line, c.route_color ?? '');
-        return [...byName];
-    }, [connections]);
+    const previewLines = useMemo(() => distinctLines(connections), [connections]);
 
     const preview = previewLines.map(([line, color]) => (
         <LineBadge key={line} name={line} routeColor={color} size="sm" />
@@ -154,14 +151,20 @@ export const StopConnections = React.memo(({ connections, isPast, defaultOpen }:
 StopConnections.displayName = 'StopConnections';
 
 /** The trip the vehicle continues as after its last stop. */
-export const StopContinuation = React.memo(({ continuation, isPast }: {
+export const StopContinuation = memo(({ continuation, isPast }: {
     continuation: Continuation,
     isPast: boolean
 }) => {
     const { t } = useTranslation();
 
     return (
-        <StopTransferBlock icon={CornerDownRight} title={t('map.vehicleDetails.continuesAs')} isPast={isPast} defaultOpen>
+        <StopTransferBlock
+            icon={CornerDownRight}
+            title={t('map.vehicleDetails.continuesAs')}
+            isPast={isPast}
+            defaultOpen
+            preview={<LineBadge name={continuation.line} routeColor={continuation.route_color ?? ''} size="sm" />}
+        >
             <ConnectionRow
                 tripId={continuation.trip_id}
                 vehicleId={continuation.vehicle_id}

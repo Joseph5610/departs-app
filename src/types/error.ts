@@ -37,7 +37,6 @@ export async function parseFetchError(response: Response): Promise<AppError> {
             message = body.message || message;
             // If the backend explicitly marked it as an error
             if (body.error) {
-                // Check if it's an upstream error based on message or status
                 // The backend uses ERROR_MESSAGES.UPSTREAM_ERROR
                 if (message.includes('data provider') || response.status >= 502) {
                     code = AppErrorCode.UPSTREAM_ERROR;

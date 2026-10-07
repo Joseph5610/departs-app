@@ -23,12 +23,10 @@ export interface MapMetadataStore extends MapMetadataState {
 }
 
 export const useMapMetadataStore = create<MapMetadataStore>((set, get) => ({
-    // State
     mapLoaded: false,
     labelLayerId: undefined,
     mapRef: React.createRef<MapRef>(),
 
-    // Actions
     actions: {
         setMapLoaded: (mapLoaded) => set({ mapLoaded }),
         setLabelLayerId: (labelLayerId) => set({ labelLayerId }),

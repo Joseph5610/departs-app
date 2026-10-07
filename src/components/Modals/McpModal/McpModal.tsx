@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Copy, Check, Terminal, Laptop, Code2 } from 'lucide-react';
 import {
@@ -10,12 +9,11 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useUiStore } from '../../../state/uiStore';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
-import { MCP_ENDPOINT_URL } from '../../../config/constants';
+import { useUiStore } from '@/state/uiStore';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { SITE } from '@/config/site';
 
-
-export const McpModal: React.FC = () => {
+export const McpModal = () => {
     const { t } = useTranslation();
     const isOpen = useUiStore(s => s.isMcpModalOpen);
     const { setIsMcpModalOpen } = useUiStore(s => s.actions);
@@ -37,7 +35,6 @@ export const McpModal: React.FC = () => {
                             {t('mcp.subtitle')}
                         </p>
 
-                        {/* Endpoint URL Box */}
                         <Card variant="subtle" size="none">
                             <div className="p-4 flex flex-col gap-2">
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
@@ -45,13 +42,13 @@ export const McpModal: React.FC = () => {
                                 </span>
                                 <div className="flex items-center justify-between gap-2">
                                     <code className="text-xs font-mono text-primary font-semibold select-all break-all">
-                                        {MCP_ENDPOINT_URL}
+                                        {SITE.MCP_URL}
                                     </code>
                                     <Button
                                         size="sm"
                                         variant="outline"
                                         className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                        onClick={() => copy(MCP_ENDPOINT_URL, 'endpoint')}
+                                        onClick={() => copy(SITE.MCP_URL, 'endpoint')}
                                     >
                                         {copiedKey === 'endpoint' ? (
                                             <>
@@ -69,9 +66,7 @@ export const McpModal: React.FC = () => {
                             </div>
                         </Card>
 
-                        {/* Guides List */}
                         <div className="flex flex-col gap-4">
-                            {/* 1. Claude Desktop GUI */}
                             <Card variant="subtle" size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
@@ -88,7 +83,6 @@ export const McpModal: React.FC = () => {
                                 </div>
                             </Card>
 
-                            {/* 2. Claude Code CLI */}
                             <Card variant="subtle" size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center justify-between gap-2">
@@ -102,7 +96,7 @@ export const McpModal: React.FC = () => {
                                             size="sm"
                                             variant="outline"
                                             className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => copy(`claude mcp add --transport sse departs ${MCP_ENDPOINT_URL}`, 'claudeCode')}
+                                            onClick={() => copy(`claude mcp add --transport sse departs ${SITE.MCP_URL}`, 'claudeCode')}
                                         >
                                             {copiedKey === 'claudeCode' ? (
                                                 <>
@@ -118,12 +112,11 @@ export const McpModal: React.FC = () => {
                                         </Button>
                                     </div>
                                     <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
-                                        claude mcp add --transport sse departs {MCP_ENDPOINT_URL}
+                                        claude mcp add --transport sse departs {SITE.MCP_URL}
                                     </pre>
                                 </div>
                             </Card>
 
-                            {/* 3. Cursor & Windsurf */}
                             <Card variant="subtle" size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center justify-between gap-2">
@@ -137,7 +130,7 @@ export const McpModal: React.FC = () => {
                                             size="sm"
                                             variant="outline"
                                             className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => copy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", MCP_ENDPOINT_URL] } } }, null, 2), 'cursor')}
+                                            onClick={() => copy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2), 'cursor')}
                                         >
                                             {copiedKey === 'cursor' ? (
                                                 <>
@@ -157,7 +150,7 @@ export const McpModal: React.FC = () => {
                                             mcpServers: {
                                                 departs: {
                                                     command: "npx",
-                                                    args: ["-y", "mcp-remote", MCP_ENDPOINT_URL]
+                                                    args: ["-y", "mcp-remote", SITE.MCP_URL]
                                                 }
                                             }
                                         }, null, 2)}
@@ -171,5 +164,3 @@ export const McpModal: React.FC = () => {
         </Dialog>
     );
 };
-
-McpModal.displayName = 'McpModal';

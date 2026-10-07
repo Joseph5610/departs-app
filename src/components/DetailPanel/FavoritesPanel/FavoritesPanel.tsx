@@ -1,51 +1,58 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useStops } from '../../../hooks/data/useStops';
-import { useFavoriteDepartures } from '../../../hooks/data/useFavoriteDepartures';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useStops } from '@/hooks/data/useStops';
+import { useFavoriteDepartures } from '@/hooks/data/useFavoriteDepartures';
 import { FavoritesStopCard } from './FavoritesStopCard';
+import { FavoriteLineCard } from './FavoriteLineCard';
 import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
 import { Star } from 'lucide-react';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '../../ui/empty';
-import type { StopFeature } from '../../../types/stops';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
+import { stopsByIds } from '@/domain/stops';
 
-export const FavoritesPanel: React.FC = () => {
+export const FavoritesPanel = () => {
     const { t } = useTranslation();
 
-    // Preferences
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
+    const allFavoriteLines = usePreferencesStore(s => s.favoriteLines);
 
     const { isLoading: stopsLoading, stopIndex } = useStops();
+
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const favoriteLines = useMemo(
+        () => allFavoriteLines.filter(fav => fav.city === selectedCity),
+        [allFavoriteLines, selectedCity]
+    );
 
     const favoriteStopFeatures = useMemo(() => {
         if (!stopIndex || favoriteStops.length === 0) return [];
 
-        return favoriteStops
-            .map(id => stopIndex.get(id))
-            .filter((f): f is StopFeature => f !== undefined);
+        return stopsByIds(stopIndex, favoriteStops);
     }, [stopIndex, favoriteStops]);
 
-    // Extract all stop_ids for departures bulk fetching
     const stopIds = useMemo(() => {
-        return favoriteStopFeatures.map(f => f.properties.stop_id);
-    }, [favoriteStopFeatures]);
+        const ids = new Set(favoriteStopFeatures.map(f => f.properties.stop_id));
+        for (const fav of favoriteLines) ids.add(fav.stopId);
+        return [...ids];
+    }, [favoriteStopFeatures, favoriteLines]);
 
     const { departuresByStop, isLoading: departuresLoading, isError } = useFavoriteDepartures(stopIds);
 
-    const isLoading = stopsLoading || (departuresLoading && favoriteStops.length > 0);
+    const hasFavorites = favoriteStops.length > 0 || favoriteLines.length > 0;
+    const isLoading = stopsLoading || (departuresLoading && hasFavorites);
 
-    if (isLoading && favoriteStops.length > 0) {
+    if (isLoading && hasFavorites) {
         return (
             <div className="flex flex-col gap-3 pt-2">
-                {Array.from({ length: favoriteStops.length }).map((_, idx) => (
+                {Array.from({ length: favoriteStops.length + favoriteLines.length }).map((_, idx) => (
                     <FavoritesStopCardSkeleton key={idx} />
                 ))}
             </div>
         );
     }
 
-    if (favoriteStopFeatures.length === 0) {
+    if (favoriteStopFeatures.length === 0 && favoriteLines.length === 0) {
         return (
             <Empty className="py-16 animate-in fade-in duration-500">
                 <EmptyHeader>
@@ -68,6 +75,22 @@ export const FavoritesPanel: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-3 pt-2">
+            {favoriteLines.length > 0 && favoriteStopFeatures.length > 0 && (
+                <span className="micro-label-widest text-muted-foreground px-1">{t('favorites.linesTitle')}</span>
+            )}
+            {favoriteLines.map((fav) => (
+                <div key={`${fav.stopId}|${fav.line}|${fav.headsign}`} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
+                    <FavoriteLineCard
+                        favorite={fav}
+                        stopFeature={stopIndex.get(fav.stopId)}
+                        departures={departuresByStop.get(fav.stopId) ?? []}
+                        isLoading={departuresLoading}
+                    />
+                </div>
+            ))}
+            {favoriteLines.length > 0 && favoriteStopFeatures.length > 0 && (
+                <span className="micro-label-widest text-muted-foreground px-1 mt-2">{t('favorites.stopsTitle')}</span>
+            )}
             {favoriteStopFeatures.map((feature) => {
                 const stopId = feature.properties.stop_id;
                 const stopDepartures = departuresByStop.get(stopId) || [];
@@ -88,5 +111,3 @@ export const FavoritesPanel: React.FC = () => {
         </div>
     );
 };
-
-FavoritesPanel.displayName = 'FavoritesPanel';

@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { EnrichmentPatch, StoredEnrichmentPatch } from '../types/enrichment';
-import { ENRICHMENT_SILENCE_TTL_MS } from '../config/constants';
+import type { EnrichmentPatch, StoredEnrichmentPatch } from '@/types';
+import { ENRICHMENT_CONFIG } from '@/config/constants';
 
 interface EnrichmentState {
     byTripId: Map<string, StoredEnrichmentPatch>;
     byVehicleId: Map<string, StoredEnrichmentPatch>;
     applyBatchedPatches: (patches: EnrichmentPatch[]) => void;
     clearAll: () => void;
-    /** Drops patches older than ENRICHMENT_SILENCE_TTL_MS; run periodically by useEnrichmentChannel. */
+    /** Drops patches older than ENRICHMENT_CONFIG.SILENCE_TTL_MS; run periodically by useEnrichmentChannel. */
     pruneExpired: () => void;
 }
 
@@ -62,14 +62,14 @@ export const useEnrichmentStore = create<EnrichmentState>((set) => {
                 let changed = false;
 
                 for (const [tripId, patch] of nextByTripId.entries()) {
-                    if (now - patch.receivedAt > ENRICHMENT_SILENCE_TTL_MS) {
+                    if (now - patch.receivedAt > ENRICHMENT_CONFIG.SILENCE_TTL_MS) {
                         nextByTripId.delete(tripId);
                         changed = true;
                     }
                 }
 
                 for (const [vehicleId, patch] of nextByVehicleId.entries()) {
-                    if (now - patch.receivedAt > ENRICHMENT_SILENCE_TTL_MS) {
+                    if (now - patch.receivedAt > ENRICHMENT_CONFIG.SILENCE_TTL_MS) {
                         nextByVehicleId.delete(vehicleId);
                         changed = true;
                     }

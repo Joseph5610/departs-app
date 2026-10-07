@@ -1,9 +1,7 @@
-import '../lib/zod-config';
+import '@/lib/zodConfig';
 import { z } from 'zod/mini';
-import type { EnrichmentChannelAdapter } from '../types/enrichment';
-import type { City } from '../types/cities';
+import type { EnrichmentChannelAdapter, City, RouteType } from '@/types';
 import type { DataAttribution, DataLicenseId } from './attributions';
-import type { RouteType } from '../types/vehicles';
 
 /** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
 const kordisMessageSchema = z.object({
@@ -23,6 +21,8 @@ export interface InitialCityConfig {
     slug: string;
     /** ISO 3166-1 alpha-2 code; must match the backend `CITY_REGISTRY`. */
     country: string;
+    /** IANA zone the city's timetables are written in; must match the backend `CITY_REGISTRY`. */
+    timezone: string;
     center: [number, number];
     bounds: [number, number, number, number];
     hasPointsOfSale?: boolean;
@@ -80,6 +80,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         slug: 'prague',
         networkLabel: 'PID',
         country: 'CZ',
+        timezone: 'Europe/Prague',
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         hasPointsOfSale: true,
@@ -109,6 +110,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         slug: 'brno',
         networkLabel: 'IDS JMK',
         country: 'CZ',
+        timezone: 'Europe/Prague',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
         hasAlerts: true,
@@ -160,6 +162,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         slug: 'presov',
         networkLabel: 'DPMP',
         country: 'SK',
+        timezone: 'Europe/Bratislava',
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
         hasTripShapes: true,
@@ -180,6 +183,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         slug: 'duk',
         networkLabel: 'DÚK',
         country: 'CZ',
+        timezone: 'Europe/Prague',
         center: [14.0322, 50.6607],
         bounds: [12.93, 50.11, 14.61, 51.05],
         isHidden: true,
@@ -192,7 +196,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         attributions: [
             { creator: 'Ústecký kraj (Portabo)', title: 'DÚK stops, departure boards and vehicle positions', url: 'https://lkod.portabo.cz/datasets', license: 'czOpenData' },
             { creator: 'Ministerstvo dopravy ČR (CIS JŘ)', title: 'Jízdní řády veřejné linkové dopravy (JDF)', url: 'https://data.gov.cz/datová-sada?iri=https%3A%2F%2Fdata.gov.cz%2Fzdroj%2Fdatové-sady%2F66003008%2F1463646434', license: 'czOpenData' },
-            { creator: 'JrUtil (RtView)', title: 'Train routes and real stop times', url: 'https://rt.jrutil.konarici.cz/api.html', license: 'noRestrictions' },
+            { creator: 'Spojenka', title: 'Train timetables (Data jízdních řádů, GTFS)', url: 'https://www.spojenka.cz/jrdata', license: 'nonCommercial' },
         ],
         lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },

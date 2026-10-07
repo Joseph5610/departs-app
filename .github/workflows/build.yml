@@ -33,6 +33,9 @@ jobs:
       - name: Run Type Check (tsc)
         run: npx tsc -b
 
+      - name: Run Unit Tests
+        run: npm run test:unit
+
   test:
     name: Run Playwright Tests
     timeout-minutes: 15

@@ -1,21 +1,21 @@
-import React from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { navigate } from '../../../../lib/history';
-import { paths } from '../../../../lib/routes';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 import { ChevronRight } from 'lucide-react';
-import { LineBadge } from '../../../LineBadge';
+import { LineBadge } from '@/components/LineBadge';
 import { Badge } from '@/components/ui/badge';
-import { usePreferencesStore } from '../../../../state/preferencesStore';
-import { useSelectionStore } from '../../../../state/selectionStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useSelectionStore } from '@/state/selectionStore';
 import { cn } from 'cn';
-import { getDelayStatus } from '../../../../config/transit';
-import type { EnrichedVehicleItem } from '../../../../hooks/derived/useVehicleMonitor';
+import { getDelayStatus } from '@/domain/delay';
+import type { EnrichedVehicleItem } from '@/domain/vehicles';
 
 interface VehicleMonitorRowProps {
     item: EnrichedVehicleItem;
 }
 
-export const VehicleMonitorRow: React.FC<VehicleMonitorRowProps> = React.memo(({ item }) => {
+export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
@@ -43,7 +43,6 @@ export const VehicleMonitorRow: React.FC<VehicleMonitorRowProps> = React.memo(({
             tabIndex={0}
             className="group flex items-center justify-between gap-3 px-3 py-2 border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer select-none"
         >
-            {/* Left: Line Badge & Vehicle ID */}
             <div className="flex items-center gap-2.5 shrink-0 min-w-36">
                 <LineBadge
                     name={item.line}
@@ -57,10 +56,8 @@ export const VehicleMonitorRow: React.FC<VehicleMonitorRowProps> = React.memo(({
                 </span>
             </div>
 
-            {/* Middle Spacer */}
             <div className="flex items-center min-w-0 flex-1" />
 
-            {/* Right: Delay badge & Chevron */}
             <div className="flex items-center gap-2 shrink-0">
                 {delaySeconds === null ? (
                     <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground bg-muted/20 border-transparent px-1.5 py-0.5">

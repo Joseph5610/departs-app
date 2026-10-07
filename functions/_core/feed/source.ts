@@ -1,4 +1,4 @@
-import { CacheManager } from './CacheManager';
+import { getOrFetch } from './cacheManager';
 
 /** What a source returns: the data and when it was read, so age is never guessed. */
 export interface Snapshot<T> {
@@ -24,7 +24,7 @@ export interface SourceOptions<T, C = void> {
  * the size of the network.
  */
 export function createSource<T, C = void>({ key, ttlMs, read, isEmpty }: SourceOptions<T, C>): (context: C) => Promise<Snapshot<T> | null> {
-    return (context: C) => CacheManager.getOrFetch<Snapshot<T> | null>(
+    return (context: C) => getOrFetch<Snapshot<T> | null>(
         key,
         ttlMs,
         async () => {

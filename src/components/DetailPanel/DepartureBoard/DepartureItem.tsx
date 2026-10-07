@@ -1,27 +1,31 @@
 import { memo, useMemo, useRef } from 'react';
-import { format, parseISO } from 'date-fns';
 import { Countdown } from './Countdown';
 import { DelayDelta } from './DelayDelta';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatDelay } from '../../../utils/dateUtils';
-import type { Departure } from '../../../types/transit';
-import type { DepartureFeeder } from '../../../types/departures';
-import type { Continuation } from '../../../types/vehicles';
+import { DelayText } from '@/components/DelayText';
+import { distinctLines, summarizeFeeders } from '@/domain/departures';
+import type { Departure, DepartureFeeder, Continuation } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { Accessibility, CornerDownRight, Hourglass, Snowflake, Train } from 'lucide-react';
-import { LineBadge } from '../../LineBadge';
+import { LineBadge } from '@/components/LineBadge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
-import { InterchangeBadges } from '../../InterchangeBadges';
-import { IconTooltip } from '../../IconTooltip';
+import { InterchangeBadges } from '@/components/InterchangeBadges';
+import { IconTooltip } from '@/components/IconTooltip';
+import { useRideStore } from '@/state/rideStore';
+import { formatTimetableClock } from '@/domain/time';
 
 interface DepartureItemProps {
     departure: Departure;
+    /** The board's city zone, for the scheduled time. */
+    timeZone: string;
     onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => void;
     /** When true, the headsign is already displayed in the group header, so we hide it here */
     hideHeadsign?: boolean;
+    /** The trip the board was opened from; marked like the ridden trip. */
+    isHighlighted?: boolean;
 }
 
 /**
@@ -32,12 +36,18 @@ interface DepartureItemProps {
  */
 export const DepartureItem = memo(({
     departure: dep,
+    timeZone,
     onDepartureClick,
-    hideHeadsign
+    hideHeadsign,
+    isHighlighted = false
 }: DepartureItemProps) => {
     const { t } = useTranslation();
     const { forHeadsign } = useInterchanges();
     const clickStartPos = useRef<{ x: number, y: number } | null>(null);
+    const isRiding = useRideStore(s => !!dep.tripId && s.ride?.tripId === dep.tripId);
+    const isWatched = useRideStore(s => !!dep.tripId && s.followed?.tripId === dep.tripId);
+
+    const isMarked = isHighlighted || isRiding || isWatched;
 
     const handlePointerDown = (e: React.PointerEvent) => {
         clickStartPos.current = { x: e.clientX, y: e.clientY };
@@ -74,7 +84,8 @@ export const DepartureItem = memo(({
                 dep.tripId
                     ? "hover:bg-muted/50 cursor-pointer"
                     : "cursor-default",
-                "focus-visible:outline-none focus-visible:bg-muted/50"
+                "focus-visible:outline-none focus-visible:bg-muted/50",
+                isMarked && "bg-primary/10 hover:bg-primary/15 shadow-[inset_3px_0_0_var(--color-primary)]"
             )}
         >
             <div className="flex flex-col shrink-0 w-12 gap-0.5">
@@ -82,16 +93,11 @@ export const DepartureItem = memo(({
                     "text-muted-foreground text-sm font-medium leading-tight tabular-nums",
                     isCanceled && "line-through opacity-60"
                 )}>
-                    {format(parseISO(dep.scheduled), 'HH:mm')}
+                    {formatTimetableClock(dep.scheduled, timeZone)}
                 </span>
                 {!isCanceled && hasDelay && (
                     <span className="flex gap-1 items-center">
-                        <span className={cn(
-                            "text-xs font-bold leading-none tabular-nums",
-                            (dep.delay ?? 0) > 0 ? "text-destructive" : "text-sky-500"
-                        )}>
-                            {formatDelay(dep.delay ?? 0)}
-                        </span>
+                        <DelayText delay={dep.delay} className="text-xs leading-none" />
                         <DelayDelta
                             delta={dep.delayDelta || 0}
                             lastUpdate={dep.lastDelayUpdate}
@@ -102,6 +108,9 @@ export const DepartureItem = memo(({
             </div>
 
             <div className="flex flex-col flex-1 min-w-0 gap-1">
+                {isMarked && (
+                    <span className="micro-label text-primary leading-none">{t(isRiding ? 'map.departures.yourTrip' : isWatched ? 'map.departures.watchedTrip' : 'map.departures.viewedTrip')}</span>
+                )}
                 {!hideHeadsign && (
                     <span className="flex items-center gap-2 min-w-0">
                         <span className={cn(
@@ -136,9 +145,7 @@ export const DepartureItem = memo(({
                 </span>}
             </div>
 
-            {/* Right Side Info Block */}
             <div className="flex gap-2 shrink-0 items-center">
-                {/* Platform Badge (trains only, metro is handled in group header) */}
                 {dep.platform && isTrain && (
                     <IconTooltip
                         label={t('map.departures.platform')}
@@ -182,19 +189,8 @@ const ContinuationHint = ({ continuation }: { continuation: Continuation }) => {
 const FeederHint = ({ feeders }: { feeders: DepartureFeeder[] }) => {
     const { t } = useTranslation();
 
-    const lines = useMemo(() => {
-        const byName = new Map<string, string>();
-        for (const f of feeders) if (!byName.has(f.line)) byName.set(f.line, f.route_color ?? '');
-        return [...byName].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
-    }, [feeders]);
-
-    let missed: string[] = [];
-    let held: DepartureFeeder | null = null;
-    for (const f of feeders) {
-        if (f.will_miss) missed = [...missed, f.line];
-        else if (f.hold_s !== null && f.hold_s >= 60 && (!held || f.hold_s > (held.hold_s ?? 0))) held = f;
-    }
-    const heldMinutes = held ? Math.round((held.hold_s ?? 0) / 60) : 0;
+    const lines = useMemo(() => distinctLines(feeders).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })), [feeders]);
+    const { missed, held, heldMinutes } = summarizeFeeders(feeders);
     const label = missed.length > 0
         ? t('map.departures.feeder.wontWait', { line: missed.join(', ') })
         : held

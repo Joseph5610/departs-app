@@ -1,76 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3 } from 'lucide-react';
-import { closeDetail, navigate } from '../../lib/history';
-import { paths } from '../../lib/routes';
-import { useGlobalAlerts } from '../../hooks/data/useGlobalAlerts';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useUiStore } from '../../state/uiStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { useGeolocationStore } from '../../state/geolocationStore';
+import { closeDetail, navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { useAlerts } from '@/hooks/data/useAlerts';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useUiStore } from '@/state/uiStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { useGeolocationStore } from '@/state/geolocationStore';
 import { cn } from 'cn';
-import { useLocate } from '../../hooks/features/useGeolocation';
+import { useLocate } from '@/hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { MAP_CAMERA } from '../../config/constants';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { MAP_CAMERA } from '@/config/constants';
 
-export const MapControls = React.memo(() => {
+export const MapControls = memo(() => {
     const { t } = useTranslation();
 
-    // Preferences Actions
     const { setIsSettingsOpen, setIsAlertsOpen } = useUiStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const isFiltered = usePreferencesStore(
-        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
+        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
     );
 
-    // Routes
     const { isStatsRoute, isFavoritesRoute } = useRouteParams();
 
-    const { rss, hasAlerts } = useGlobalAlerts();
-    const incidentsCount = React.useMemo(() => rss.data?.alerts?.filter(a => a.type === 'incident').length || 0, [rss.data]);
+    const { alerts, hasAlerts } = useAlerts();
+    const incidentsCount = useMemo(() => alerts?.filter(a => a.type === 'incident').length ?? 0, [alerts]);
 
-    // Geolocation Store
     const isGeoPending = useGeolocationStore(s => s.focusRequest === 'locate');
     const onLocate = useLocate();
 
-    // Metadata Store
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { easeTo, zoomIn, zoomOut } = useMapMetadataStore(s => s.actions);
 
-    const onSettings = React.useCallback(() => {
+    const onSettings = useCallback(() => {
         setIsSettingsOpen(true);
     }, [setIsSettingsOpen]);
 
-    const onAlerts = React.useCallback(() => {
+    const onAlerts = useCallback(() => {
         setIsAlertsOpen(true);
     }, [setIsAlertsOpen]);
 
-    const onStats = React.useCallback(() => {
+    const onStats = useCallback(() => {
         if (isStatsRoute) closeDetail(paths.city(selectedCity));
         else navigate(paths.stats(selectedCity));
     }, [isStatsRoute, selectedCity]);
 
-    const onToggleFavorites = React.useCallback(() => {
+    const onToggleFavorites = useCallback(() => {
         if (isFavoritesRoute) closeDetail(paths.city(selectedCity));
         else navigate(paths.favorites(selectedCity));
     }, [isFavoritesRoute, selectedCity]);
 
-
-
-    const onZoomIn = React.useCallback(() => {
+    const onZoomIn = useCallback(() => {
         zoomIn();
     }, [zoomIn]);
 
-    const onZoomOut = React.useCallback(() => {
+    const onZoomOut = useCallback(() => {
         zoomOut();
     }, [zoomOut]);
 
-    const onResetBearing = React.useCallback(() => {
+    const onResetBearing = useCallback(() => {
         easeTo({
             bearing: 0,
             duration: MAP_CAMERA.EASE_MS,
@@ -103,7 +97,6 @@ export const MapControls = React.memo(() => {
     return (
         <div className="fixed top-0 md:top-5 right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
             <div className="flex flex-col gap-2 items-end pointer-events-auto">
-                {/* Locate Button */}
                 <ControlButton
                     onClick={(e) => onLocate(e)}
                     title={t('map.controls.myLocation')}
@@ -119,7 +112,6 @@ export const MapControls = React.memo(() => {
                      />
                 </ControlButton>
 
-                {/* Settings / Favorites Pill */}
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
                     <ControlButton
                         inPill
@@ -182,7 +174,6 @@ export const MapControls = React.memo(() => {
                     </ControlButton>
                 </ButtonGroup>
 
-                {/* Zoom Pill */}
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
                     <ControlButton
                         inPill
@@ -201,7 +192,6 @@ export const MapControls = React.memo(() => {
                     </ControlButton>
                 </ButtonGroup>
 
-                {/* Compass Button */}
                 {showCompass && (
                     <ControlButton
                         onClick={onResetBearing}
@@ -243,8 +233,5 @@ const ControlButton = ({ children, onClick, title, testId, inPill = false }: Con
         </TooltipContent>
     </Tooltip>
 );
-
-ControlButton.displayName = 'ControlButton';
-
 
 MapControls.displayName = 'MapControls';

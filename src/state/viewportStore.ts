@@ -19,13 +19,11 @@ export interface ViewportStore extends ViewportState {
 }
 
 export const useViewportStore = create<ViewportStore>((set) => ({
-    // State
     bounds: null,
     debouncedBounds: null,
     routeFilter: null,
     selectedPlaceId: null,
 
-    // Actions
     actions: {
         setBounds: (bounds) => set({ bounds }),
         setDebouncedBounds: (debouncedBounds) => set({ debouncedBounds }),

@@ -4,7 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import cs from './locales/cs.json';
 import sk from './locales/sk.json';
-import { SITE } from '../config/site';
+import { SITE } from '@/config/site';
 
 export const SUPPORTED_LANGUAGES = ['en', 'cs', 'sk'] as const;
 

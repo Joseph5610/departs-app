@@ -1,28 +1,27 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRouteParams } from '../../hooks/useRouteParams';
-import { useViewportStore } from '../../state/viewportStore';
-import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
-import { useNow } from '../../hooks/useNow';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useViewportStore } from '@/state/viewportStore';
+import { secondsUntilRefresh, useLiveStatusYieldsToRides, useSystemStatus } from '@/hooks/derived/useSystemStatus';
+import { useNow } from '@/hooks/useNow';
 import { cn } from 'cn';
-import { SystemStatusModal } from '../Modals/SystemStatusModal';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { SystemStatusModal } from '@/components/Modals/SystemStatusModal';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { Filter } from 'lucide-react';
 
 /**
- * LiveStatus Component
- *
  * Displays the real-time system connection status pill.
  */
-export const LiveStatus: React.FC = () => {
+export const LiveStatus = () => {
     const { t } = useTranslation();
     const { stopId: selectedStopId, vehicleId: selectedVehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
     const bounds = useViewportStore(s => s.bounds);
     const status = useSystemStatus();
+    const yieldsToRides = useLiveStatusYieldsToRides();
 
     const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
     const isFiltered = usePreferencesStore(
-        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0 || s.requireAirConditioned
+        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
     );
     const [isModalOpen, setIsModalOpen] = useState(false);
     const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -30,7 +29,7 @@ export const LiveStatus: React.FC = () => {
     const refreshIntervalS = usePreferencesStore(s => s.refreshIntervalS);
     const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now, refreshIntervalS);
 
-    if (!bounds) return null;
+    if (!bounds || yieldsToRides) return null;
 
     const getConfig = () => {
         if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', dot: 'bg-neutral-500' };
@@ -92,5 +91,3 @@ export const LiveStatus: React.FC = () => {
         </div>
     );
 };
-
-LiveStatus.displayName = 'LiveStatus';

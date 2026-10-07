@@ -4,9 +4,30 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import license from 'rollup-plugin-license'
 import { SITE, SITE_PLACEHOLDERS } from './src/config/site.ts'
 
 const SITE_PLACEHOLDER = /%(SITE_[A-Z_]+)%/g
+
+/** Licences a bundled dependency may carry; anything else fails the build. */
+const ALLOWED_LICENSES = '(MIT OR ISC OR BSD-2-Clause OR BSD-3-Clause OR Apache-2.0 OR 0BSD OR Unlicense OR OFL-1.1)'
+
+/** Packages bundled through CSS, which the licence plugin does not see. */
+const CSS_PACKAGES = ['@fontsource-variable/geist', '@fontsource-variable/fira-code']
+
+interface LicenseNotice { name: string | null; version: string | null; license: string | null; licenseText: string | null }
+
+const cssPackageNotice = (name: string): LicenseNotice => {
+  const dir = path.resolve(import.meta.dirname, 'node_modules', name)
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')) as { version: string; license: string }
+  return { name, version: pkg.version, license: pkg.license, licenseText: fs.readFileSync(path.join(dir, 'LICENSE'), 'utf8') }
+}
+
+/** THIRD_PARTY_LICENSES.txt: every bundled package with its full licence text. */
+const thirdPartyNotices = (bundled: LicenseNotice[]): string =>
+  [...bundled, ...CSS_PACKAGES.map(cssPackageNotice)]
+    .map((dep) => `${dep.name} ${dep.version} (${dep.license})\n\n${dep.licenseText?.trim() ?? ''}`)
+    .join('\n\n---\n\n')
 
 const fillSitePlaceholders = (text: string): string =>
   text.replace(SITE_PLACEHOLDER, (_match, key: string) => {
@@ -61,6 +82,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     siteTemplate(),
+    license({
+      thirdParty: {
+        includePrivate: false,
+        allow: { test: ALLOWED_LICENSES, failOnUnlicensed: true, failOnViolation: true },
+        output: { file: path.resolve(import.meta.dirname, 'dist/THIRD_PARTY_LICENSES.txt'), template: thirdPartyNotices },
+      },
+    }),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.png', 'icon.png', 'cities/*.webp'],

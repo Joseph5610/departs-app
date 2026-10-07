@@ -1,11 +1,11 @@
-import type { CityConfig } from '../_core/city-config';
+import type { CityConfig } from '../_core/cityConfig';
 import type { City } from './types';
 import { VehiclesService } from '../_domain/vehicles/VehiclesService';
-import { EdgeFleetSource } from '../_domain/vehicles/edge-fleet-source';
+import { EdgeFleetSource } from '../_domain/vehicles/EdgeFleetSource';
 import { GolemioVehicles } from '../_domain/golemio/vehicles/GolemioVehicles';
-import { VehicleDetailService } from '../_domain/golemio/vehicles/VehicleDetailService';
-import { DeparturesService } from '../_domain/golemio/departures/DeparturesService';
-import { AlertsService } from '../_domain/golemio/alerts/AlertsService';
+import { GolemioVehicleDetailService } from '../_domain/golemio/vehicles/GolemioVehicleDetailService';
+import { GolemioDeparturesService } from '../_domain/golemio/departures/GolemioDeparturesService';
+import { GolemioAlertsService } from '../_domain/golemio/alerts/GolemioAlertsService';
 import { InfotextsService } from '../_domain/golemio/infotexts/InfotextsService';
 
 const config: CityConfig = {
@@ -18,7 +18,6 @@ const config: CityConfig = {
     networkOperator: 'PID',
     hasPointsOfSale: true,
     hasAlerts: true,
-    virtualTableUrl: 'https://data.pid.cz/departures/?ids=',
     filters: {
         vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
         stops: ['metro', 'train']
@@ -34,11 +33,11 @@ export const city: City = {
     create: (env) => {
         const network = new GolemioVehicles(env);
         const vehicles = new VehiclesService(config, new EdgeFleetSource('golemio_prague', network));
-        const alerts = new AlertsService();
+        const alerts = new GolemioAlertsService();
         return {
             vehicles,
-            departures: new DeparturesService(),
-            detail: new VehicleDetailService(),
+            departures: new GolemioDeparturesService(),
+            detail: new GolemioVehicleDetailService(),
             alerts,
             infotexts: new InfotextsService(),
             debugFeed: {

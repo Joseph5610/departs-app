@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import type { FilterSpecification } from 'maplibre-gl';
-import type { VehicleDetail, VehicleCollection, VehicleFeature } from '../../types/transit';
-import { getDelayFilterExpression } from '../../config/mapLayers';
-import { EMPTY_FEATURE_COLLECTION } from '../../lib/geojson';
+import type { VehicleDetail, VehicleCollection, VehicleFeature } from '@/types';
+import { getDelayFilterExpression } from '@/config/mapLayers';
+import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 
 /**
  * Provides memoized GeoJSON and filter expressions for map layers.
@@ -15,15 +15,10 @@ export const useMapFilters = (
     selectedId: string | null | undefined,
     delayFilter: string[] = []
 ) => {
-    // 1. Create a standalone GeoJSON for the selected vehicle
     const selectedVehicleFeature = useMemo((): VehicleCollection => {
         if (!selectedVehicle || !selectedVehicle.geometry) {
             return EMPTY_FEATURE_COLLECTION;
         }
-
-        const coords = selectedVehicle.geometry.coordinates;
-        const [lng, lat] = coords;
-        const hasValidLocation = lng !== 0 || lat !== 0;
 
         return {
             type: 'FeatureCollection',
@@ -32,7 +27,7 @@ export const useMapFilters = (
                     type: 'Feature',
                     geometry: {
                         type: 'Point',
-                        coordinates: hasValidLocation ? coords : [0, 0]
+                        coordinates: selectedVehicle.geometry.coordinates
                     },
                     // Only fields the layers and animation read: this feature is re-sent to the map worker every frame.
                     properties: {
@@ -51,8 +46,6 @@ export const useMapFilters = (
         };
     }, [selectedVehicle]);
 
-    // 2. Create a filter to hide the selected vehicle from the main stream layer
-    // and filter by delay range when delayFilter is active.
     const vehiclesFilter = useMemo<FilterSpecification>(() => {
         const baseExcludeFilter = ['!', ['any',
             ['==', ['to-string', ['coalesce', ['get', 'vehicle_id'], '']], selectedId || 'NOMATCH'],

@@ -1,14 +1,13 @@
-import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
 /** Mirrors FavoritesStopCard: stop header with distance and unpin action, then the next departures. */
-export const FavoritesStopCardSkeleton: React.FC = () => {
+export const FavoritesStopCardSkeleton = () => {
     return (
         <Card
-            variant="subtle"
+            variant="panel"
             size="none"
-            className="w-full relative overflow-hidden animate-in fade-in duration-500 border border-border/50 dark:border-white/10 ring-0 bg-card dark:bg-[#161616] shadow-sm"
+            className="w-full relative overflow-hidden animate-in fade-in duration-500"
         >
             <div className="flex items-center justify-between gap-2 border-b border-border/50 dark:border-white/10 bg-muted/40 dark:bg-white/[0.04] py-1.5 pl-4 pr-2">
                 <div className="min-w-0 flex-1 flex flex-col gap-1.5">
@@ -36,5 +35,3 @@ export const FavoritesStopCardSkeleton: React.FC = () => {
         </Card>
     );
 };
-
-FavoritesStopCardSkeleton.displayName = 'FavoritesStopCardSkeleton';

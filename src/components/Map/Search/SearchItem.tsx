@@ -1,9 +1,8 @@
 import React from 'react';
 import { cn } from 'cn';
-import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { LineBadge } from '../../LineBadge';
+import { FALLBACK_ROUTE_COLOR, STOP_SEARCH } from '@/config/constants';
+import { LineBadge } from '@/components/LineBadge';
 import { Autocomplete } from '@base-ui/react/autocomplete';
-import { STOP_SEARCH } from '@/config/constants';
 
 interface SearchItemProps {
     icon: React.ReactNode;
@@ -26,7 +25,6 @@ interface SearchItemProps {
 const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
     if (!lines || lines.length === 0) return null;
 
-    // Deduplicate lines by name
     const uniqueLines: NonNullable<SearchItemProps['lines']> = [];
     const seen = new Set();
     for (const line of lines) {
@@ -83,7 +81,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
             <div className={cn(
                 'rounded-lg shrink-0 w-7 h-7 flex items-center justify-center transition-colors',
                 variant === 'primary' ? 'bg-primary/15 text-primary' :
-                highlight ? 'bg-amber-500/15 text-amber-500' : 'bg-foreground/5 text-muted-foreground/80 group-data-highlighted/search-item:text-foreground'
+                highlight ? 'bg-favorite/15 text-favorite' : 'bg-foreground/5 text-muted-foreground/80 group-data-highlighted/search-item:text-foreground'
             )}>
                 {icon}
             </div>
@@ -105,5 +103,3 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
         </Autocomplete.Item>
     );
 };
-
-SearchItem.displayName = 'SearchItem';

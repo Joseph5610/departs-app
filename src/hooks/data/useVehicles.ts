@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 import { useQuery, keepPreviousData, queryOptions, type QueryClient, type QueryKey } from '@tanstack/react-query';
-import type { VehicleCollection, VehicleFeature } from '../../types/transit';
-import { useViewportStore } from '../../state/viewportStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useEnrichmentStore } from '../../state/enrichmentStore';
-import { enrichVehicleCollection, enrichVehicleRouteMetadata } from '../../lib/enrichment';
-import { memoizeLast } from '../../lib/memoize';
+import { type VehicleCollection, AppErrorCode, type AppError } from '@/types';
+import { useViewportStore } from '@/state/viewportStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useEnrichmentStore } from '@/state/enrichmentStore';
+import { enrichVehicleCollection } from '@/domain/realtime';
+import { enrichVehicleRouteMetadata, indexVehicles, filterVehiclesToView } from '@/domain/vehicles';
+import { memoizeLast } from '@/lib/memoize';
 import { useRouteMetadata } from './useRouteMetadata';
-import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '../../config/constants';
-import { apiFetch } from '../../lib/api-client';
-import { AppErrorCode, type AppError } from '../../types/error';
-import { filterVehiclesToView } from '../../lib/vehicle-filter';
+import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '@/config/constants';
+import { apiFetch } from '@/lib/apiClient';
+import { queryKeys } from '@/lib/queryKeys';
 
 /**
  * The city's whole fleet. An `upstream_offline` answer is thrown while recent positions are held, so it
@@ -36,7 +36,7 @@ const fetchNetworkVehicles = async (selectedCity: string, client: QueryClient, q
  * parameters, so every client of a city requests the same URL and the edge cache answers most polls.
  */
 export const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: number) => queryOptions<VehicleCollection | null, AppError>({
-    queryKey: ['vehicles', selectedCity],
+    queryKey: queryKeys.vehicles(selectedCity),
     queryFn: ({ client, queryKey }) => fetchNetworkVehicles(selectedCity, client, queryKey),
     refetchInterval: refreshMs,
     staleTime: QUERY_TIMING_MS.LIVE_STALE,
@@ -49,20 +49,10 @@ export const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: num
 const brandNetworkVehicles = memoizeLast(enrichVehicleRouteMetadata);
 const enrichNetworkVehicles = memoizeLast(enrichVehicleCollection);
 const selectScreenVehicles = memoizeLast(filterVehiclesToView);
+const buildVehicleIndexes = memoizeLast(indexVehicles);
 
-const buildVehicleIndexes = memoizeLast((collection: VehicleCollection | null) => {
-    const vehicleIndex = new Map<string, VehicleFeature>();
-    const tripIndex = new Map<string, VehicleFeature>();
-    for (const f of collection?.features ?? []) {
-        if (f.properties.vehicle_id) vehicleIndex.set(f.properties.vehicle_id, f);
-        if (f.properties.gtfs_trip_id) tripIndex.set(f.properties.gtfs_trip_id, f);
-    }
-    return { vehicleIndex, tripIndex };
-});
 
 /**
- * useVehicles
- * 
  * The city's live fleet with push patches applied, as `networkVehicles`, and the part of it in the
  * current map view and filters, as `vehicles`. One query serves the map and the stats views.
  */

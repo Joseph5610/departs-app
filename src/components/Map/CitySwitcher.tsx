@@ -1,33 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Earth } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useVisibleCities } from '../../hooks/data/useCities';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
+import { useVisibleCities } from '@/hooks/data/useCities';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { navigate } from '../../lib/history';
-import { paths } from '../../lib/routes';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 import { CitySelectionList } from './CitySelectionList';
 import { cn } from 'cn';
-import { cityOverviewCamera } from '../../utils/mapUtils';
-import { UI_TIMING_MS } from '../../config/constants';
+import { cityOverviewCamera } from '@/lib/map/view';
+import { UI_TIMING_MS } from '@/config/constants';
 
 interface CitySwitcherProps {
     className?: string;
     variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "tinted";
 }
 
-export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant = "tinted" }) => {
+export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProps) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const [open, setOpen] = useState(false);
     
-    // Animation state for when city changes
     const [isHighlighting, setIsHighlighting] = useState(false);
     const prevCityRef = useRef(selectedCity);
 
@@ -42,7 +41,6 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
 
     const cities = useVisibleCities();
 
-    // Only render if we have more than 1 city
     if (cities.length <= 1) {
         return null;
     }
@@ -53,13 +51,10 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
             return;
         }
 
-        // 1. Change city
         setSelectedCity(city.slug);
         
-        // 2. Clear current selection and navigate to the new city map
         navigate(paths.city(city.slug));
 
-        // 3. Move map camera
         const map = mapRef.current?.getMap();
         if (map && city.center) {
             map.flyTo(cityOverviewCamera(city.center as [number, number]));
@@ -108,5 +103,3 @@ export const CitySwitcher: React.FC<CitySwitcherProps> = ({ className, variant =
         </Dialog>
     );
 };
-
-CitySwitcher.displayName = 'CitySwitcher';

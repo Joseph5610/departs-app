@@ -1,4 +1,4 @@
-import type { CityUseCases } from "../../_domain/use-cases";
+import type { CityUseCases } from "../../_domain/useCases";
 import type { McpContext } from "../types";
 import { buildRequestContext, getMcpTimeContext } from "../utils";
 

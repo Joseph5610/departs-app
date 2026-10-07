@@ -1,87 +1,55 @@
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Activity, Footprints, Snowflake, ArrowLeftRight } from 'lucide-react';
-import { FALLBACK_ROUTE_COLOR } from '../../../config/constants';
-import { useSelectionStore } from '../../../state/selectionStore';
-import { usePreferencesStore } from '../../../state/preferencesStore';
-import { useSelectedStop } from '../../../hooks/derived/useSelectedStop';
-import { useSelectedVehicle } from '../../../hooks/derived/useSelectedVehicle';
-import { useDepartures } from '../../../hooks/data/useDepartures';
-import { useCityConfig, useLineRules } from '../../../hooks/data/useCities';
-import { ROUTE_TYPE_ORDER, routeTypeRank } from '../../../config/transit';
-import { useNavigate } from '../../../hooks/features/useNavigate';
-import { formatStopDistance } from '../../../hooks/derived/useStopDistance';
+import { MapPin, Activity, Footprints, Snowflake, ArrowLeftRight, Accessibility } from 'lucide-react';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { useSelectionStore } from '@/state/selectionStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { useRouteParams } from '@/hooks/useRouteParams';
+import { useDepartures } from '@/hooks/data/useDepartures';
+import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
+import { lineChips } from '@/domain/departures';
+import { useNavigate } from '@/hooks/features/useNavigate';
+import { formatStopDistance } from '@/hooks/derived/useStopDistance';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from 'cn';
-import { LineBadge } from '../../LineBadge';
-import { PanelActions } from '../PanelActions';
-import { useStopTwin } from '../../../hooks/derived/useStopTwin';
-import { FRONTEND_CITIES_CONFIG } from '../../../config/cities';
-import { navigate } from '../../../lib/history';
-import { paths } from '../../../lib/routes';
+import { LineBadge } from '@/components/LineBadge';
+import { PanelActions } from '@/components/DetailPanel/PanelActions';
+import { useStopTwin } from '@/hooks/derived/useStopTwin';
+import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 
-/**
- * DepartureBoardHeader
- * 
- * Sticky subheader for the departure board.
- * Compact 2-row layout:
- *   Row 1: [Distance pill] [Delay indicator] [PID link]
- *   Row 2: [Line badges ...]
- */
-export const DepartureBoardHeader = React.memo(() => {
+/** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
+export const DepartureBoardHeader = memo(() => {
     const { t } = useTranslation();
 
-    // Preferences
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
-    const { toggleRequireAirConditioned } = usePreferencesStore(s => s.actions);
+    const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
+    const { toggleRequireAirConditioned, toggleRequireWheelchairAccessible } = usePreferencesStore(s => s.actions);
 
     const selectedLine = useSelectionStore(s => s.selectedLine);
     const { toggleLineFilter } = useSelectionStore(s => s.actions);
 
-
-    // Selection
-    
-    // Derived state
     const selectedStop = useSelectedStop();
-    const selectedVehicle = useSelectedVehicle();
+    const { tripId } = useRouteParams();
 
     const { handleNavigate, stopDistanceInfo } = useNavigate();
-    const { liveDepartures, delayStats, isError, hasAirConditioningData } = useDepartures();
+    const { liveDepartures, delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
 
     const { lineChipsFromDepartures } = useCityConfig();
     const twin = useStopTwin();
     const twinLabel = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
     const lineRules = useLineRules();
 
-    const showHeader = !!selectedStop && !selectedVehicle && !isError;
+    const showHeader = !!selectedStop && !tripId && !isError;
 
-    const uniqueLines = React.useMemo(() => {
+    const uniqueLines = useMemo(() => {
         const source = lineChipsFromDepartures
             ? liveDepartures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
             : selectedStop?.lines;
-        if (!source) return [];
-        const seen = new Set<string>();
-        const lines = source.filter(line => {
-            if (seen.has(line.name)) return false;
-            seen.add(line.name);
-            return true;
-        });
-
-        const getLineGroup = (line: { name: string, type: string }) => {
-            const name = line.name.toUpperCase();
-            if (line.type === 'metro') return routeTypeRank('metro');
-            if (line.type === 'train' || lineRules.trainLinePrefixes.some(prefix => name.startsWith(prefix))) return routeTypeRank('train');
-            const rank = routeTypeRank(line.type);
-            return lineRules.isNightLine(line.type, name) ? rank + ROUTE_TYPE_ORDER.length + 1 : rank;
-        };
-
-        return lines.sort((a, b) => {
-            const groupA = getLineGroup(a);
-            const groupB = getLineGroup(b);
-            if (groupA !== groupB) return groupA - groupB;
-            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-        });
+        return source ? lineChips(source, lineRules) : [];
     }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures]);
 
     if (!showHeader) {
@@ -90,11 +58,9 @@ export const DepartureBoardHeader = React.memo(() => {
 
     return (
         <div className="px-6 pb-0 shrink-0 flex flex-col gap-2">
-            {/* Distance/Delay pill + stop actions */}
             <div className="flex w-full h-7 items-center">
                 <div className="flex gap-2 min-w-0 items-center">
                     <div className="flex items-center h-7 rounded-full bg-card border border-border/50 shadow-sm shrink-0 overflow-hidden">
-                        {/* Distance & Walking Time segment */}
                         <div 
                             className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer"
                             onClick={() => handleNavigate()}
@@ -114,7 +80,6 @@ export const DepartureBoardHeader = React.memo(() => {
                              </span>
                         </div>
 
-                        {/* Delay Statistics segment */}
                         {delayStats && delayStats.sampleSize >= 2 && (
                             <>
                                 <div className="w-px h-3 bg-border shrink-0" />
@@ -156,52 +121,74 @@ export const DepartureBoardHeader = React.memo(() => {
                 </div>
             </div>
 
-            {/* Row 2: Line badges and AC filter */}
-            {(uniqueLines.length > 0 || hasAirConditioningData) && (
-                <div 
-                    className="-mx-2 overflow-x-auto no-scrollbar py-2 px-2"
-                    style={{ 
-                        maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
-                    }}
-                >
-                    <div className="flex gap-1.5 justify-start">
-                        {hasAirConditioningData && (
-                            <button
-                                onClick={toggleRequireAirConditioned}
-                                className={cn(
-                                    "flex items-center justify-center h-6 px-2 transition-[transform,colors] active:scale-95 select-none shadow-sm cursor-pointer hover:brightness-110 rounded-md border border-border/50 text-[11px] font-bold gap-1 shrink-0",
-                                    requireAirConditioned ? "bg-sky-500 text-white z-10 shadow-lg border-transparent" : "bg-secondary text-secondary-foreground"
+            {(uniqueLines.length > 0 || hasAirConditioningData || hasAccessibilityData) && (
+                <div className="flex items-center gap-2 py-2">
+                    {(hasAirConditioningData || hasAccessibilityData) && (
+                        <>
+                            <div role="group" aria-label={t('map.departures.vehicleFilters')} className="flex shrink-0 items-center gap-1.5">
+                                {hasAirConditioningData && (
+                                    <PropertyToggle
+                                        isActive={requireAirConditioned}
+                                        onToggle={toggleRequireAirConditioned}
+                                        activeClassName="bg-sky-500 text-white"
+                                        label={t('amenities.airConditioned')}
+                                        testId="filter-ac"
+                                    >
+                                        <Snowflake size={14} strokeWidth={2} />
+                                    </PropertyToggle>
                                 )}
-                            >
-                                <Snowflake size={12} strokeWidth={2.5} className={cn(!requireAirConditioned && "opacity-70")} />
-                                <span>{t('map.vehicleDetails.ac')}</span>
-                            </button>
-                        )}
-                        
-                        {uniqueLines.map((line) => {
-                            const name = String(line.name || '');
-                            if (!name) return null;
+                                {hasAccessibilityData && (
+                                    <PropertyToggle
+                                        isActive={requireWheelchairAccessible}
+                                        onToggle={toggleRequireWheelchairAccessible}
+                                        activeClassName="bg-blue-600 text-white"
+                                        label={t('amenities.wheelchairAccessible')}
+                                        testId="filter-accessible"
+                                    >
+                                        <Accessibility size={14} strokeWidth={2} />
+                                    </PropertyToggle>
+                                )}
+                            </div>
+                            {uniqueLines.length > 0 && <div className="w-px h-5 shrink-0 bg-border" aria-hidden="true" />}
+                        </>
+                    )}
 
-                            const isActive = selectedLine === name;
-                            const isDimmed = !!selectedLine && !isActive;
+                    {uniqueLines.length > 0 && (
+                        <div
+                            role="group"
+                            aria-label={t('map.departures.lineFilters')}
+                            className="flex-1 min-w-0 -my-2 -mr-2 py-2 pr-2 pl-0.5 overflow-x-auto no-scrollbar"
+                            style={{
+                                maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
+                                WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
+                            }}
+                        >
+                            <div className="flex gap-1.5 justify-start">
+                                {uniqueLines.map((line) => {
+                                    const name = String(line.name || '');
+                                    if (!name) return null;
 
-                            return (
-                                <button 
-                                    key={name}
-                                    onClick={() => toggleLineFilter(name)}
-                                    className={cn(
-                                        "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-md",
-                                        isDimmed ? "opacity-30" : "opacity-100",
-                                        isActive && "z-10 ring-2 ring-primary/40"
-                                    )}
-                                >
-                                    <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
-                                </button>
-                            );
-                        })}
-                        <div className="shrink-0 w-8 h-1" />
-                    </div>
+                                    const isActive = selectedLine === name;
+                                    const isDimmed = !!selectedLine && !isActive;
+
+                                    return (
+                                        <button
+                                            key={name}
+                                            onClick={() => toggleLineFilter(name)}
+                                            className={cn(
+                                                "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-md",
+                                                isDimmed ? "opacity-30" : "opacity-100",
+                                                isActive && "z-10 ring-2 ring-primary/40"
+                                            )}
+                                        >
+                                            <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
+                                        </button>
+                                    );
+                                })}
+                                <div className="shrink-0 w-8 h-1" />
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -209,3 +196,28 @@ export const DepartureBoardHeader = React.memo(() => {
 });
 
 DepartureBoardHeader.displayName = 'DepartureBoardHeader';
+
+/** One vehicle-property filter in the toggle group; the line badges filter by line instead. */
+const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, children }: {
+    isActive: boolean;
+    onToggle: () => void;
+    activeClassName: string;
+    label: string;
+    testId: string;
+    children: React.ReactNode;
+}) => (
+    <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={isActive}
+        aria-label={label}
+        title={label}
+        data-testid={testId}
+        className={cn(
+            "flex items-center justify-center size-6 rounded-md border transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+            isActive ? cn(activeClassName, "border-transparent shadow-sm") : "bg-secondary border-border/50 text-secondary-foreground/60 hover:text-secondary-foreground"
+        )}
+    >
+        {children}
+    </button>
+);

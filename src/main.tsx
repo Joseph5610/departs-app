@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       const appError = error as AppError;
-      // Do not show toast for 404 (Not Found) or upstream errors to avoid double notifications (UI component renders inline error state)
+      // 404s and upstream errors already render an inline error state.
       if (appError.status === 404) return;
       if (appError.isUpstream === false || appError.code === 'NETWORK_ERROR') {
         toast.error(i18n.t(appError.code === AppErrorCode.NETWORK_ERROR ? 'errors.network' : 'errors.generic'));

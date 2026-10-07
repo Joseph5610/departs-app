@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from 'cn';
 import { Badge } from '@/components/ui/badge';
-import type { RSSItem } from '../../types/transit';
-import { LineBadge } from '../LineBadge';
+import type { RSSItem } from '@/types';
+import { LineBadge } from '@/components/LineBadge';
 import { AlertIcon } from './AlertIcon';
-import { FALLBACK_ROUTE_COLOR } from '../../config/constants';
-import { isHighPriorityAlert } from '../../utils/transitUtils';
-import { formatDateTime } from '../../utils/dateUtils';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { isHighPriorityAlert } from '@/domain/alerts';
+import { formatDateTime } from '@/domain/time';
 import {
     Collapsible,
     CollapsibleContent,
@@ -30,7 +30,7 @@ interface CondensedAlertItemProps {
  *
  * An accordion-style list item for alerts, using Shadcn Collapsible.
  */
-export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, compact = false, defaultExpanded = false, onOpenFull, className }) => {
+export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = false, onOpenFull, className }: CondensedAlertItemProps) => {
     const { t, i18n } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -43,8 +43,8 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
 
     const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
 
-    const validFromText = item.valid_from ? formatDateTime(item.valid_from, i18n.language) : null;
-    const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to && formatDateTime(item.valid_to, i18n.language);
+    const validFromText = item.valid_from ? formatDateTime(item.valid_from, i18n.resolvedLanguage) : null;
+    const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to && formatDateTime(item.valid_to, i18n.resolvedLanguage);
 
     return (
         <Collapsible
@@ -60,16 +60,13 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
             <CollapsibleTrigger
                 className="w-full text-left px-4 py-3 flex items-start gap-3 outline-none cursor-pointer"
             >
-                {/* Icon Column */}
                 <div className="shrink-0 pt-0.5">
                     <AlertIcon cause={item.cause} effect={item.effect} type={item.type} size={16} strokeWidth={1.5} className={iconColorClass} />
                 </div>
 
-                {/* Content Column */}
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
                     {((lines && lines.length > 0) || isFuture) && (
                         <div className="flex gap-2 flex-wrap items-center">
-                            {/* Lines Badges */}
                             {lines && lines.length > 0 && (
                                 <div className="flex gap-1 flex-wrap">
                                     {lines.map((line, idx) => (
@@ -83,7 +80,6 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
                                 </div>
                             )}
 
-                            {/* Status Badge */}
                             {isFuture ? (
                                 <Badge variant="outline" className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
@@ -93,7 +89,6 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
                         </div>
                     )}
 
-                    {/* Title */}
                     <div className={cn(
                         "text-sm font-semibold leading-tight text-foreground/95 whitespace-pre-line",
                         !isExpanded && "line-clamp-2"
@@ -102,13 +97,11 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
                     </div>
                 </div>
 
-                {/* Chevron */}
                 <div className="shrink-0 pt-1 text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
                     <ChevronDown size={16} strokeWidth={1.5} />
                 </div>
             </CollapsibleTrigger>
 
-            {/* Expandable Content */}
             <CollapsibleContent>
                 <div className="px-4 pb-4 pt-1 ml-7">
                     <div className="flex flex-col gap-3">
@@ -166,5 +159,3 @@ export const CondensedAlertItem: React.FC<CondensedAlertItemProps> = ({ item, co
         </Collapsible>
     );
 };
-
-CondensedAlertItem.displayName = 'CondensedAlertItem';

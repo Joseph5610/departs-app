@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { differenceInSeconds, parseISO } from 'date-fns';
 import { cn } from 'cn';
-import { CATCH_BUFFER } from '@/config/constants';
+import { WALKING } from '@/config/constants';
 import { useNow } from '@/hooks/useNow';
 
 interface CountdownProps {
@@ -14,10 +14,9 @@ interface CountdownProps {
  *
  * Time left until a departure, ticking on the app-wide clock so every row updates together.
  */
-export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
+export const Countdown = ({ timestamp }: CountdownProps) => {
     const { t } = useTranslation();
     
-    // Memoize the target date so we don't re-parse the ISO string every second
     const targetDate = useMemo(() => parseISO(timestamp), [timestamp]);
 
     const now = useNow();
@@ -36,10 +35,8 @@ export const Countdown: React.FC<CountdownProps> = ({ timestamp }) => {
         : `${mins}:${secs.toString().padStart(2, '0')}`;
 
     return (
-        <span className={cn(secondsLeft < CATCH_BUFFER ? 'text-emerald-400' : 'text-foreground')}>
+        <span className={cn(secondsLeft < WALKING.CATCH_BUFFER_S ? 'text-emerald-400' : 'text-foreground')}>
             {formatted}
         </span>
     );
 };
-
-Countdown.displayName = 'Countdown';

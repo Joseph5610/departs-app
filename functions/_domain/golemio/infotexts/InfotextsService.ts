@@ -1,11 +1,11 @@
 import type { AppInfotext, CityRequestContext } from "../../../_core/types";
-import type { InfotextsUseCase } from "../../use-cases";
+import type { InfotextsUseCase } from "../../useCases";
 import { getGolemioInfotexts } from "../../../_feeds/golemio/infotexts";
-import { InfotextsMapper } from "./InfotextsMapper";
+import { mapInfotexts } from "./infotextsMapper";
 
 /** PID stop notice banners, filtered and normalized. */
 export class InfotextsService implements InfotextsUseCase {
     async getInfotexts(ctx: CityRequestContext): Promise<AppInfotext[]> {
-        return InfotextsMapper.map(await getGolemioInfotexts(ctx.env));
+        return mapInfotexts(await getGolemioInfotexts(ctx.env));
     }
 }

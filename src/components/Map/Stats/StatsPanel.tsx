@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { Activity, AlertTriangle } from 'lucide-react';
-import { useVehicles } from '../../../hooks/data/useVehicles';
-import { usePreferencesStore } from '../../../state/preferencesStore';
+import { useVehicles } from '@/hooks/data/useVehicles';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
-import { useCityConfig } from '../../../hooks/data/useCities';
-import { aggregateCityStats } from '../../../utils/statsAggregator';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { aggregateCityStats } from '@/domain/vehicles';
 import { VehicleMonitorList } from './VehicleMonitor/VehicleMonitorList';
-import { SegmentedControl } from '../../SegmentedControl';
+import { SegmentedControl } from '@/components/SegmentedControl';
 
 import { PunctualityCard } from './cards/PunctualityCard';
 import { MovementStateCard } from './cards/MovementStateCard';
@@ -17,7 +17,7 @@ import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
 import { OtherDataCard } from './cards/OtherDataCard';
 
-export const StatsPanel = React.memo(() => {
+export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
     const { t } = useTranslation();
     
@@ -49,7 +49,6 @@ export const StatsPanel = React.memo(() => {
 
     return (
         <div className="flex flex-col gap-0 pt-0">
-            {/* Scope Switcher Header (Clean Segmented Control matching design system) */}
             <div className="flex items-center justify-between px-1 pb-3">
                 <span className="text-xs font-semibold text-muted-foreground">
                     {t('stats.scopeLabel')}
@@ -72,7 +71,6 @@ export const StatsPanel = React.memo(() => {
                 </div>
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
-                    {/* Top Level Totals */}
                     <div className="grid grid-cols-2 gap-3">
                         <Card variant="subtle" size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
@@ -88,7 +86,6 @@ export const StatsPanel = React.memo(() => {
                         </Card>
                     </div>
 
-                    {/* Network Delay Notice */}
                     {!hasNetworkDelayData && tab === 'network' && (
                         <Alert variant="warning">
                             <AlertTriangle size={16} />
@@ -98,7 +95,6 @@ export const StatsPanel = React.memo(() => {
                         </Alert>
                     )}
 
-                    {/* Delay Dependent Charts */}
                     {(tab === 'screen' || hasNetworkDelayData) && (
                         <>
                             <PunctualityCard stats={activeStats} />

@@ -1,5 +1,5 @@
 import type { AppVehicleCollection } from "../../_core/types";
-import type { CityUseCases } from "../../_domain/use-cases";
+import type { CityUseCases } from "../../_domain/useCases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { buildRequestContext } from "../utils";

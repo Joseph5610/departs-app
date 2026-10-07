@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { usePWAStore } from '../../state/pwaStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
+import { usePWAStore } from '@/state/pwaStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 
 /**
  * Headless hook to manage the PWA lifecycle.
@@ -16,7 +16,6 @@ export const usePWALifecycle = () => {
     const { setHasSeenInstallPrompt } = usePreferencesStore(s => s.actions);
 
     const {
-        offlineReady: [offlineReady],
         needRefresh: [needRefresh],
         updateServiceWorker,
     } = useRegisterSW({
@@ -25,22 +24,11 @@ export const usePWALifecycle = () => {
         },
     });
 
-    // Sync SW state to Zustand store
+    // Settings reads the update state from the store; the service worker hook lives here only.
     useEffect(() => {
-        usePWAStore.setState((state) => {
-            if (
-                state.offlineReady === offlineReady &&
-                state.needRefresh === needRefresh
-            ) return state;
+        usePWAStore.setState({ needRefresh });
+    }, [needRefresh]);
 
-            return {
-                offlineReady,
-                needRefresh,
-            };
-        });
-    }, [offlineReady, needRefresh]);
-
-    // Show update notification when a new version is available
     useEffect(() => {
         if (needRefresh) {
             toast.info(t('update.newVersion'), {

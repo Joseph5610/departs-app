@@ -1,10 +1,10 @@
 import type { AppAlert, AppAlertsResponse } from "../../_core/types";
-import type { CityUseCases } from "../../_domain/use-cases";
-import type { GtfsRoute } from "../../_feeds/gtfs/gtfs-data";
+import type { CityUseCases } from "../../_domain/useCases";
+import type { GtfsRoute } from "../../_feeds/gtfs/gtfsData";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { getCityConfig } from "../../_cities";
-import { getGtfsRoutes } from "../../_feeds/gtfs/gtfs-data";
+import { getGtfsRoutes } from "../../_feeds/gtfs/gtfsData";
 import { buildRequestContext, getMcpTimeContext, loadInfotexts } from "../utils";
 
 /**

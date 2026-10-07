@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { LineBadge } from './LineBadge';
 import { IconTooltip } from './IconTooltip';
 import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
-import { routeJoinKey } from '@/utils/routeTypes';
-import { metroLineOf } from '@/utils/interchanges';
+import { routeJoinKey } from '@/domain/routes';
+import { metroLineOf } from '@/domain/stops';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 
 /** Mode icon and its `transportModes` label key for each non-metro code; codes sharing an icon render once. */

@@ -1,10 +1,9 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePreferencesStore } from '../../../state/preferencesStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Bus } from 'lucide-react';
 
-export const StatsTabs: React.FC = () => {
+export const StatsTabs = () => {
     const { t } = useTranslation();
     const viewMode = usePreferencesStore(s => s.statsViewMode);
     const setViewMode = usePreferencesStore(s => s.actions.setStatsViewMode);
@@ -26,5 +25,3 @@ export const StatsTabs: React.FC = () => {
         </div>
     );
 };
-
-StatsTabs.displayName = 'StatsTabs';

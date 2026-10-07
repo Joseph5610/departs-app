@@ -109,6 +109,9 @@
 }
 
 @theme inline {
+  /* Favourite stops and lines: stars and pins. */
+  --color-favorite: oklch(76.9% 0.188 70.08);
+  --color-favorite-hover: oklch(82.8% 0.189 84.429);
   --font-sans: 'Geist Variable', ui-sans-serif, sans-serif, system-ui;
   --font-mono: 'Fira Code Variable', ui-monospace, monospace;
   --tracking-normal: -0.015em;
@@ -296,19 +299,9 @@
   padding-top: calc(1rem + env(safe-area-inset-top, 0px));
 }
 
-@utility safe-left {
-  padding-left: 1rem;
-  padding-left: calc(1rem + env(safe-area-inset-left, 0px));
-}
-
 @utility safe-right {
   padding-right: 1rem;
   padding-right: calc(1rem + env(safe-area-inset-right, 0px));
-}
-
-@utility safe-bottom {
-  padding-bottom: 1rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* MapLibre Controls Overrides */

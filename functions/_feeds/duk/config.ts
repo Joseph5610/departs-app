@@ -82,26 +82,15 @@ export const DUK_CONFIG = {
     TERMINATING_DIRECTION: 'konečná zastávka',
     /** Board note marking a trip run with a step-free vehicle. */
     STEP_FREE_NOTE: 'bezbariérově přístupným vozidlem',
-    /** Train routes from JrUtil's stop history, for trains the timetable data does not cover. */
+    /** Train routes from the static rail timetable (departs-data `rail_trips/`), by train number. */
     RAIL: {
         /** The feed's train reference: kind and train number, then the feed's own serial (`Os-6414-1073`). */
         FEED_TRIP_PATTERN: /^([A-Za-z]+)-(\d+)(?:-|$)/,
-        TRIP_PREFIX: '-CZTRAINT-',
-        STOP_PREFIX: '-SR70ST-',
-        /** Railway stops file of the static data; mirrors RAIL_STOPS_FILE in departs-data. */
-        STOPS_FILE: 'feed_index/rail_stops.json',
-        /** `stopped` value of a row the train calls at; the others are points it only passes. */
-        STOPPED: 't',
-        /** Where `HH:MM:SS` sits in a `YYYY-MM-DD HH:MM:SS` time. */
-        TIME_OFFSET: 11,
-        TIME_LENGTH: 8,
-        /** It answers in about 50ms; past this the detail is served without the route. */
-        TIMEOUT_MS: 2_500,
-        /** Real times arrive by the minute. */
-        CACHE_TTL_MS: 20_000,
-        CACHE_MAX_ENTRIES: 64,
-        /** How long it is left alone after a failed answer. */
-        OUTAGE_TTL_MS: 60_000,
+        /** Mirrors RAIL_TRIPS_DIR and RAIL_TRIP_BUCKETS in departs-data. */
+        TRIPS_DIR: 'rail_trips',
+        TRIP_BUCKETS: 32,
+        /** How long before its first or after its last stop a run still counts as the one under way. */
+        RUN_MARGIN_S: 1_800,
     },
     /** Portabo `Traction` codes; 0 means unknown and defers to the timetable. */
     TRACTION_ROUTE_TYPES: { 1: 'tram', 2: 'trolleybus', 3: 'bus', 5: 'train', 6: 'ferry' } as Record<number, string>,

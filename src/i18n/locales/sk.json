@@ -21,7 +21,7 @@
     "lineFilter_other": "Filtrovať linky {{line}}",
     "filterByLine": "Filtrovať podľa linky:",
     "clearFilter": "Zrušiť filter",
-    "favorites": "Obľúbené zastávky",
+    "favorites": "Obľúbené",
     "recent": "Nedávne",
     "places": "Miesta a adresy",
     "pointsOfSale": "Predajné miesta",
@@ -111,6 +111,7 @@
         "czOpenData": "Otvorené dáta",
         "permission": "Použité so súhlasom",
         "noRestrictions": "Bez obmedzenia použitia",
+        "nonCommercial": "Len na nekomerčné použitie",
         "notStated": "Licencia neuvedená"
       }
     },
@@ -165,7 +166,6 @@
       "notAvailable": "N/A",
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
-      "ac": "Klíma",
       "runNumber": "Obeh",
       "enrichedTooltip": "Tieto dáta sa aktualizujú v reálnom čase priamo z vozidla (Live Stream).",
       "connectingTooltip": "Čakáme na spojenie s vozidlom (Live Stream). Zatiaľ zobrazujeme štandardné dáta z dispečingu.",
@@ -175,7 +175,6 @@
       "hidePastStops": "Skryť prejdené",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
-      "shareText": "Sledujte polohu spoja linky {{line}} naživo na {{appName}}",
       "requestStop": "Zastávka na znamenie",
       "track": "Sledovať vozidlo",
       "connections": {
@@ -183,7 +182,14 @@
         "waitsUpTo": "počká až {{minutes}} min",
         "mayNotWait": "Nemusí počkať"
       },
-      "continuesAs": "Pokračuje ako linka"
+      "continuesAs": "Pokračuje ako linka",
+      "ended": {
+        "title": "Tento spoj už dojazdil",
+        "body": "Na zastávku {{stop}} prišiel o {{time}}.",
+        "bodyNoTime": "Dorazil na konečnú zastávku {{stop}}.",
+        "nextTrip": "Sledovať vozidlo, teraz linka {{line}}",
+        "close": "Zavrieť"
+      }
     },
     "departures": {
       "noUpcoming": "Nenašli sa žiadne najbližšie odchody.",
@@ -215,18 +221,21 @@
       "delayStatsTooltip": "Priemerné meškanie na základe {{count}} spojov",
       "openInMaps": "Otvoriť Mapy",
       "otherNetworkBoard": "Odchody {{network}} tu",
-      "officialBoard": "Virtuálna tabuľa",
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",
       "removeFromFavorites": "Odobrať z obľúbených",
       "canceled": "Zrušený",
       "feeder": {
-        "waitsFor": "Čaká na {{line}} (max. {{minutes}} min)",
         "heldFor": "Čaká ~{{minutes}} min na {{line}}",
         "wontWait": "Nepočká na {{line}}",
         "waitsForLines": "Čaká na prípoje: {{lines}}"
       },
-      "continuesAs": "Pokračuje ako linka {{line}} smer {{headsign}}"
+      "continuesAs": "Pokračuje ako linka {{line}} smer {{headsign}}",
+      "vehicleFilters": "Filtre vozidiel",
+      "lineFilters": "Filtre liniek",
+      "viewedTrip": "Prezeraný spoj",
+      "yourTrip": "Váš spoj",
+      "watchedTrip": "Sledovaný spoj"
     }
   },
   "update": {
@@ -238,6 +247,68 @@
     "title": "Nainštalujte Departs",
     "description": "Pridajte si aplikáciu na plochu pre rýchly prístup.",
     "button": "Inštalovať"
+  },
+  "ride": {
+    "pick": "Upozorniť pred výstupom",
+    "pickHint": "Ťuknite na zastávku, kde vystupujete",
+    "cancel": "Zrušiť",
+    "end": "Ukončiť jazdu",
+    "yourStop": "Vaša zastávka",
+    "stopsLeft_one": "{{count}} zastávka",
+    "stopsLeft_few": "{{count}} zastávky",
+    "stopsLeft_other": "{{count}} zastávok",
+    "nextStop": "Na nasledujúcej zastávke vystupujete",
+    "arrived": "Ste na mieste: {{stop}}",
+    "waiting": "Čaká na odchod",
+    "started": "Upozorníme vás pred zastávkou {{stop}}",
+    "open": "Otvoriť jazdu",
+    "pickStop": "Vystúpiť na zastávke {{stop}}",
+    "arrivesAtLabel": "príj.",
+    "unavailable": "Údaje spoja nie sú k dispozícii",
+    "kickerRiding": "Vystupujete",
+    "kickerArrived": "Ste na mieste",
+    "kickerNext": "Nasledujúca zastávka",
+    "expandRides": "Zobraziť obe jazdy",
+    "collapseRides": "Zbaliť jazdy",
+    "pickSub": "Vyberte zastávku a o zastávku skôr vás upozorníme"
+  },
+  "board": {
+    "open": "Tabuľa na celú obrazovku",
+    "noWalk": "Bez času chôdze",
+    "leaveIn": "vyrazte o {{count}} min",
+    "leaveNow": "vyrazte hneď",
+    "withWalk": "S {{count}} min chôdze",
+    "unavailable": "Odchody sa teraz nedajú načítať",
+    "unavailableDescription": "Tabuľa to sama skúsi znova pri ďalšom obnovení.",
+    "unknownStop": "Neznáma zastávka",
+    "unknownStopDescription": "Skontrolujte adresu tabule."
+  },
+  "share": {
+    "ride": "Idem linkou {{line}} smer {{headsign}}, na zastávke {{stop}} budem okolo {{time}}.",
+    "rideNoTime": "Idem linkou {{line}} smer {{headsign}}, vystupujem na zastávke {{stop}}.",
+    "trip": "Linka {{line}} smer {{headsign}} naživo na mape.",
+    "tripDelayed_one": "Linka {{line}} smer {{headsign}}, meškanie {{count}} min, naživo na mape.",
+    "tripDelayed_few": "Linka {{line}} smer {{headsign}}, meškanie {{count}} min, naživo na mape.",
+    "tripDelayed_other": "Linka {{line}} smer {{headsign}}, meškanie {{count}} min, naživo na mape.",
+    "stop": "Najbližšie odchody zo zastávky {{name}}: {{list}}",
+    "stopNow": "{{line}} teraz",
+    "stopIn": "{{line}} o {{count}} min",
+    "shareRide": "Zdieľať jazdu",
+    "sharedExit": "Tu vystupuje",
+    "friendExit": "Zdieľaná jazda: vystupuje na zastávke {{stop}} okolo {{time}}",
+    "friendExitNoTime": "Zdieľaná jazda: vystupuje na zastávke {{stop}}",
+    "watch": "Sledovať",
+    "watchStarted": "Dáme vedieť, keď spoj dorazí na zastávku {{stop}}",
+    "stopWatching": "Prestať sledovať",
+    "watchNext": "Dorazí na nasledujúcej zastávke",
+    "watchArrived": "Spoj dorazil na zastávku {{stop}}",
+    "notifyMe": "Upozorniť ma",
+    "openFollowed": "Otvoriť sledovanú jazdu",
+    "kickerRiding": "Sledujete jazdu",
+    "kickerArrived": "Dorazil",
+    "notificationsOn": "Oznámenia zapnuté",
+    "notificationsBlocked": "Oznámenia sú pre tento web zakázané v nastaveniach prehliadača",
+    "notificationsNotShown": "Prehliadač žiadosť nezobrazil. Povoľte oznámenia pre tento web v jeho nastaveniach."
   },
   "liveStatus": {
     "refreshing": "Aktualizácia",
@@ -344,9 +415,15 @@
     }
   },
   "favorites": {
-    "title": "Obľúbené zastávky",
+    "title": "Obľúbené",
     "empty": "Žiadne obľúbené zastávky",
-    "emptySub": "Ťuknutím na hviezdičku v detaile zastávky si ju uložíte sem."
+    "emptySub": "Ťuknutím na hviezdičku v detaile zastávky si ju uložíte sem.",
+    "pinLine": "Pridať linku {{line}} smer {{headsign}} do obľúbených",
+    "unpinLine": "Odobrať linku {{line}} smer {{headsign}} z obľúbených",
+    "linesTitle": "Obľúbené linky",
+    "stopsTitle": "Zastávky",
+    "fromStop": "zo zastávky {{stop}}",
+    "linesLimit": "Obľúbených liniek môže byť najviac {{count}}."
   },
   "feedback": {
     "title": "Odoslať spätnú väzbu",

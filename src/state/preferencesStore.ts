@@ -1,11 +1,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { SearchHistoryItem, SearchHistoryBase } from '../types/transit';
-import { getDefaultCitySlug } from '../utils/viewerCountry';
-import { matchRoutePath } from '../lib/routes';
-import { FRONTEND_CITIES_CONFIG } from '../config/cities';
-import { PREFERENCES_LIMITS, REFRESH_INTERVAL_OPTIONS_S, TRANSIT_REFRESH_S, type RefreshIntervalS } from '../config/constants';
-import { searchHistoryKey } from '../utils/searchHistory';
+import type { SearchHistoryItem, SearchHistoryBase, FavoriteLine } from '@/types';
+import { getDefaultCitySlug } from '@/domain/cities';
+import { matchRoutePath } from '@/lib/routes';
+import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { PREFERENCES_LIMITS, REFRESH_INTERVAL_OPTIONS_S, TRANSIT_REFRESH_S, type RefreshIntervalS } from '@/config/constants';
+import '@/lib/zodConfig';
+import { z } from 'zod/mini';
+import { searchHistoryKey } from '@/lib/searchHistory';
+import { firstUnique } from '@/lib/search';
+import { isSameFavoriteLine } from '@/domain/departures';
+
 
 interface PreferencesState {
     showVehicles: boolean;
@@ -16,10 +21,12 @@ interface PreferencesState {
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
     favoriteStops: string[];
+    favoriteLines: FavoriteLine[];
     searchHistory: SearchHistoryItem[];
     mapBaseStyle: 'nolabels' | 'labels';
     selectedCity: string;
     requireAirConditioned: boolean;
+    requireWheelchairAccessible: boolean;
     colorVehiclesByDelay: boolean;
     delayFilter: string[];
     statsTab: 'screen' | 'network';
@@ -48,9 +55,11 @@ interface PreferencesActions {
     setSelectedCity: (city: string) => void;
     unlockCity: (city: string) => void;
     toggleFavorite: (stopId: string) => void;
+    toggleFavoriteLine: (line: FavoriteLine) => void;
     addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
+    toggleRequireWheelchairAccessible: () => void;
     setColorVehiclesByDelay: (enabled: boolean) => void;
     setDelayFilter: (filter: string[]) => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
@@ -71,10 +80,12 @@ const PERSISTED_KEYS = [
     'departureSort',
     'mapBaseStyle',
     'favoriteStops',
+    'favoriteLines',
     'searchHistory',
     'selectedCity',
     'routeTypeFilter',
     'requireAirConditioned',
+    'requireWheelchairAccessible',
     'colorVehiclesByDelay',
     'delayFilter',
     'isMcpBannerDismissed',
@@ -91,34 +102,23 @@ const ALLOWED_VALUES: Partial<Record<keyof PersistedPreferences, readonly string
     mapBaseStyle: ['nolabels', 'labels'],
 };
 
-const isStringArray = (value: unknown): value is string[] =>
-    Array.isArray(value) && value.every(item => typeof item === 'string');
+const coordinatesSchema = z.tuple([z.number(), z.number()]);
 
-const isCoordinates = (value: unknown): boolean =>
-    Array.isArray(value) && value.length === 2 && value.every(n => typeof n === 'number' && Number.isFinite(n));
+/** Each stored entry is checked on its own, so one corrupt entry is dropped instead of the whole list. */
+const searchHistoryItemSchema = z.discriminatedUnion('type', [
+    z.looseObject({ type: z.literal('stop'), timestamp: z.number(), stop_id: z.string(), stop_name: z.string(), coordinates: coordinatesSchema }),
+    z.looseObject({ type: z.literal('line'), timestamp: z.number(), lines: z.array(z.string()) }),
+    z.looseObject({ type: z.literal('place'), timestamp: z.number(), place_id: z.string(), name: z.string(), coordinates: coordinatesSchema }),
+    z.looseObject({ type: z.literal('pos'), timestamp: z.number(), pos_id: z.string(), name: z.string(), coordinates: coordinatesSchema }),
+]);
 
-const isSearchHistoryItem = (value: unknown): value is SearchHistoryItem => {
-    if (!value || typeof value !== 'object') return false;
-    const item = value as Record<string, unknown>;
-    if (typeof item.timestamp !== 'number') return false;
-    switch (item.type) {
-        case 'stop': return typeof item.stop_id === 'string' && typeof item.stop_name === 'string' && isCoordinates(item.coordinates);
-        case 'line': return isStringArray(item.lines);
-        case 'place': return typeof item.place_id === 'string' && typeof item.name === 'string' && isCoordinates(item.coordinates);
-        case 'pos': return typeof item.pos_id === 'string' && typeof item.name === 'string' && isCoordinates(item.coordinates);
-        default: return false;
-    }
-};
+const favoriteLineSchema = z.looseObject({ city: z.string(), stopId: z.string(), line: z.string(), headsign: z.string() });
 
-const uniqueHistory = (items: SearchHistoryItem[]): SearchHistoryItem[] => {
-    const seen = new Set<string>();
-    return items.filter(item => {
-        const key = searchHistoryKey(item);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
-};
+const stringArraySchema = z.array(z.string());
+
+/** The entries of a stored list that pass `schema`; null when the stored value is not a list at all. */
+const validEntries = <T,>(value: unknown, schema: { safeParse: (v: unknown) => { success: boolean } }): T[] | null =>
+    Array.isArray(value) ? value.filter((entry) => schema.safeParse(entry).success) as T[] : null;
 
 /** The hidden region `?beta=<slug>` in the page URL unlocks, so testers can switch to it from the city list. */
 export const getUrlUnlockedCity = (): string | null => {
@@ -135,7 +135,7 @@ const getUrlCitySlug = (): string | null => {
 };
 
 /** Takes each stored value only if it has the default's shape, so a corrupt or outdated entry falls back instead of crashing. */
-const mergePersisted = (persisted: unknown, current: PreferencesStore): PreferencesStore => {
+export const mergePersisted = (persisted: unknown, current: PreferencesStore): PreferencesStore => {
     if (!persisted || typeof persisted !== 'object') return current;
     const stored = persisted as Record<string, unknown>;
     const merged: Record<string, unknown> = { ...current };
@@ -147,9 +147,13 @@ const mergePersisted = (persisted: unknown, current: PreferencesStore): Preferen
         if (key === 'refreshIntervalS') {
             if ((REFRESH_INTERVAL_OPTIONS_S as readonly unknown[]).includes(value)) merged[key] = value;
         } else if (key === 'searchHistory') {
-            if (Array.isArray(value)) merged[key] = uniqueHistory(value.filter(isSearchHistoryItem));
+            const history = validEntries<SearchHistoryItem>(value, searchHistoryItemSchema);
+            if (history) merged[key] = firstUnique(history, searchHistoryKey, Infinity);
+        } else if (key === 'favoriteLines') {
+            const favorites = validEntries<FavoriteLine>(value, favoriteLineSchema);
+            if (favorites) merged[key] = favorites;
         } else if (Array.isArray(fallback)) {
-            if (isStringArray(value)) merged[key] = value;
+            if (stringArraySchema.safeParse(value).success) merged[key] = value;
         } else if (typeof value === typeof fallback && (!ALLOWED_VALUES[key] || ALLOWED_VALUES[key].includes(value as string))) {
             merged[key] = value;
         }
@@ -161,7 +165,6 @@ const mergePersisted = (persisted: unknown, current: PreferencesStore): Preferen
 export const usePreferencesStore = create<PreferencesStore>()(
     persist(
         (set) => ({
-            // State
             showVehicles: true,
             showStops: true,
             showStopLabels: true,
@@ -170,10 +173,12 @@ export const usePreferencesStore = create<PreferencesStore>()(
             departureSort: 'departure',
             routeTypeFilter: [],
             favoriteStops: [],
+            favoriteLines: [],
             searchHistory: [],
             mapBaseStyle: 'labels',
             selectedCity: getUrlCitySlug() ?? getDefaultCitySlug(),
             requireAirConditioned: false,
+            requireWheelchairAccessible: false,
             colorVehiclesByDelay: false,
             delayFilter: [],
             statsTab: 'screen',
@@ -184,7 +189,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
             hasSeenInstallPrompt: false,
             refreshIntervalS: TRANSIT_REFRESH_S,
 
-            // Actions
             actions: {
                 setShowVehicles: (show) => set({ showVehicles: show }),
                 setShowStops: (show) => set({ showStops: show }),
@@ -199,6 +203,15 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setMapBaseStyle: (style) => set({ mapBaseStyle: style }),
                 setSelectedCity: (city) => set({ selectedCity: city }),
                 unlockCity: (city) => set((state) => (state.unlockedCities.includes(city) ? state : { unlockedCities: [...state.unlockedCities, city] })),
+                toggleFavoriteLine: (line) =>
+                    set((state) => {
+                        const exists = state.favoriteLines.some(f => isSameFavoriteLine(f, line));
+                        return {
+                            favoriteLines: exists
+                                ? state.favoriteLines.filter(f => !isSameFavoriteLine(f, line))
+                                : [...state.favoriteLines, line],
+                        };
+                    }),
                 toggleFavorite: (stopId) =>
                     set((state) => {
                         const exists = state.favoriteStops.includes(stopId);
@@ -216,6 +229,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                     }),
                 clearHistory: () => set({ searchHistory: [] }),
                 toggleRequireAirConditioned: () => set((state) => ({ requireAirConditioned: !state.requireAirConditioned })),
+                toggleRequireWheelchairAccessible: () => set((state) => ({ requireWheelchairAccessible: !state.requireWheelchairAccessible })),
                 setColorVehiclesByDelay: (enabled) => set({ colorVehiclesByDelay: enabled }),
                 setDelayFilter: (filter) => set({ delayFilter: filter }),
                 setStatsTab: (tab) => set({ statsTab: tab }),

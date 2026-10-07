@@ -19,7 +19,7 @@ export interface RSSItem {
      * up `route_color` from that same enrichment step.
      */
     line_metadata?: Array<{ route_id?: string; name?: string; route_color?: string; type?: RouteType }>;
-    /** Derived in `useGlobalAlerts` from the validity window as of the fetch; not sent by the API. */
+    /** Derived in `useAlerts` from the validity window as of the fetch; not sent by the API. */
     isActive?: boolean;
     isFuture?: boolean;
     cause?: string;

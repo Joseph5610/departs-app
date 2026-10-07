@@ -1,6 +1,10 @@
 export const EARTH_RADIUS_M = 6_371_000;
 export const DEG = Math.PI / 180;
 
+/** A real position: present and not the feeds' `[0, 0]` placeholder. */
+export const hasPosition = (coords: readonly number[] | null | undefined): coords is [number, number] =>
+    !!coords && (coords[0] !== 0 || coords[1] !== 0);
+
 /**
  * Calculates the Haversine distance between two points in meters.
  */

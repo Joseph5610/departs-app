@@ -1,9 +1,9 @@
-import type { CityConfig } from '../_core/city-config';
+import type { CityConfig } from '../_core/cityConfig';
 import type { City } from './types';
-import { gtfsUseCases } from '../_domain/gtfs/use-cases';
-import { GtfsRtVehicleSource } from '../_domain/gtfs/vehicles/gtfs-rt-vehicle-source';
-import { KordisVehicleMapping } from '../_domain/kordis/index/vehicle-mapping';
-import { createKordisAlertsMapper } from '../_domain/kordis/alerts/kordis-alerts-mapper';
+import { gtfsUseCases } from '../_domain/gtfs/useCases';
+import { GtfsRtVehicleSource } from '../_domain/gtfs/vehicles/GtfsRtVehicleSource';
+import { KordisVehicleMapping } from '../_domain/kordis/index/KordisVehicleMapping';
+import { createKordisAlertsMapper } from '../_domain/kordis/alerts/kordisAlertsMapper';
 
 const config: CityConfig = {
     slug: 'brno',

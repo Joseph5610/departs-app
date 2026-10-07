@@ -3,8 +3,8 @@ import { ERROR_MESSAGES } from '../../../_core/config';
 import { ApiError } from '../../../_core/errors';
 import { derive, type Snapshot } from '../../../_core/feed/source';
 import { getGolemioVehiclePositions, type GolemioVehiclePositions } from '../../../_feeds/golemio/vehicles';
-import type { FleetBuild, NetworkVehicles } from '../../vehicles/vehicle-source';
-import { VehiclesMapper } from './VehiclesMapper';
+import type { FleetBuild, NetworkVehicles } from '../../vehicles/vehicleSource';
+import { mapGolemioVehicles } from './golemioVehiclesMapper';
 
 /** The mapped fleet per vehicle positions snapshot, so the map, stats and every pan read one mapping. */
 const collections = new WeakMap<object, AppVehicleCollection>();
@@ -32,5 +32,5 @@ export class GolemioVehicles implements NetworkVehicles {
 }
 
 function mappedFleet(snapshot: Snapshot<GolemioVehiclePositions>): AppVehicleCollection {
-    return derive(snapshot, collections, () => VehiclesMapper.map(snapshot.data.data, snapshot.data.generatedAt));
+    return derive(snapshot, collections, () => mapGolemioVehicles(snapshot.data.data, snapshot.data.generatedAt));
 }

@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight } from 'lucide-react';
-import { useLocate, locateAfterWelcome } from '../../hooks/features/useGeolocation';
+import { useLocate, locateAfterWelcome } from '@/hooks/features/useGeolocation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useVisibleCities } from '../../hooks/data/useCities';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { navigate, replaceUrl } from '../../lib/history';
-import { paths } from '../../lib/routes';
-import { DEFAULT_CITY_SLUG } from '../../config/cities';
-import { CitySelectionList } from '../Map/CitySelectionList';
-import { cityOverviewCamera } from '../../utils/mapUtils';
+import { useVisibleCities } from '@/hooks/data/useCities';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { navigate, replaceUrl } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { DEFAULT_CITY_SLUG } from '@/config/cities';
+import { CitySelectionList } from '@/components/Map/CitySelectionList';
+import { cityOverviewCamera } from '@/lib/map/view';
 
 /**
  * WelcomeModal
  *
  * Re-architected with semantic layout components.
  */
-export const WelcomeModal: React.FC = React.memo(() => {
+export const WelcomeModal = memo(() => {
     const { t } = useTranslation();
     const handleLocate = useLocate();
     const cities = useVisibleCities();
@@ -43,7 +43,6 @@ export const WelcomeModal: React.FC = React.memo(() => {
     const isHomepage = typeof window !== 'undefined' && window.location.pathname === '/';
     const isSkipTutorial = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('skipTutorial');
     
-    // Auto-mark as seen if navigating on deep links or if skipTutorial param is present
     useEffect(() => {
         if (typeof window === 'undefined') return;
 

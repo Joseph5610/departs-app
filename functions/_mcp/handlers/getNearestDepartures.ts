@@ -1,4 +1,4 @@
-import type { CityUseCases } from "../../_domain/use-cases";
+import type { CityUseCases } from "../../_domain/useCases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { nearestStops, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";

@@ -1,11 +1,9 @@
 import { useCallback } from 'react';
-import { useSelectedStop } from '../derived/useSelectedStop';
-import { useStopDistance } from '../derived/useStopDistance';
-import { EXTERNAL_URLS } from '../../config/constants';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { useStopDistance } from '@/hooks/derived/useStopDistance';
+import { EXTERNAL_URLS } from '@/config/constants';
 
 /**
- * useNavigate
- *
  * Walking directions to the selected stop via platform-specific map deep links,
  * plus the user's distance to it.
  */

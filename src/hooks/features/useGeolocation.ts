@@ -1,17 +1,17 @@
 import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { MapRef } from 'react-map-gl/maplibre';
-import i18n from '../../i18n/config';
-import { MAP_CAMERA, GEOLOCATION_TIMING_MS } from '../../config/constants';
-import { useGeolocationStore, type FocusRequest } from '../../state/geolocationStore';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { useMapMetadataStore } from '../../state/mapMetadataStore';
-import { useVisibleCities } from '../data/useCities';
-import { useNetworkCoverage } from '../data/useNetworkCoverage';
-import { navigate } from '../../lib/history';
-import { paths } from '../../lib/routes';
-import { findCityAt } from '../../utils/mapUtils';
-import type { City, NetworkCoverage } from '../../types/cities';
+import i18n from '@/i18n/config';
+import { MAP_CAMERA, GEOLOCATION_TIMING_MS } from '@/config/constants';
+import { useGeolocationStore, type FocusRequest } from '@/state/geolocationStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { useVisibleCities } from '@/hooks/data/useCities';
+import { useNetworkCoverage } from '@/hooks/data/useNetworkCoverage';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { findCityAt } from '@/domain/cities';
+import type { City, NetworkCoverage } from '@/types';
 
 const hasGeolocation = () => typeof navigator !== 'undefined' && !!navigator.geolocation;
 
@@ -30,13 +30,11 @@ const hasExplicitLocationInUrl = () => {
     return p.has('lat') || p.has('lng') || p.has('stopId') || p.has('tripId') || path.includes('/stop/') || path.includes('/trip/');
 };
 
-const applyPosition = (pos: GeolocationPosition) => {
-    const actions = useGeolocationStore.getState().actions;
-    actions.setUserLocation([pos.coords.longitude, pos.coords.latitude]);
-    actions.setUserSpeed(pos.coords.speed);
-    actions.setLastUpdatedAt(Date.now());
-    actions.setLastLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-};
+const applyPosition = (pos: GeolocationPosition) =>
+    useGeolocationStore.getState().actions.applyFix([pos.coords.longitude, pos.coords.latitude], Date.now());
+
+/** The app-wide `watchPosition` handle; null while not watching. */
+let watchId: number | null = null;
 
 /** Ends a pending focus request; a failed locate tap is reported and falls back to the last saved location. */
 const failFocusRequest = () => {
@@ -53,18 +51,16 @@ const failFocusRequest = () => {
 };
 
 const stopLocationWatch = () => {
-    const { watchId, actions } = useGeolocationStore.getState();
     if (watchId === null || !hasGeolocation()) return;
     navigator.geolocation.clearWatch(watchId);
-    actions.setWatchId(null);
+    watchId = null;
 };
 
 /** Starts the app-wide position watch unless one is already running. It is the only place that asks for location. */
 const startLocationWatch = () => {
-    const { watchId, actions } = useGeolocationStore.getState();
     if (watchId !== null || !hasGeolocation()) return;
 
-    const id = navigator.geolocation.watchPosition(
+    watchId = navigator.geolocation.watchPosition(
         applyPosition,
         (err) => {
             if (err.code !== err.PERMISSION_DENIED) return;
@@ -73,7 +69,6 @@ const startLocationWatch = () => {
         },
         { enableHighAccuracy: true, timeout: GEOLOCATION_TIMING_MS.WATCH_TIMEOUT, maximumAge: GEOLOCATION_TIMING_MS.WATCH_MAX_AGE }
     );
-    actions.setWatchId(id);
 };
 
 /** Moves the map to the next fresh fix, starting the watch if needed. */

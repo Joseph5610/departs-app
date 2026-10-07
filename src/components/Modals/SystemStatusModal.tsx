@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Dialog,
@@ -8,11 +8,11 @@ import {
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item';
-import { secondsUntilRefresh, useSystemStatus } from '../../hooks/derived/useSystemStatus';
-import { useCityConfig } from '../../hooks/data/useCities';
-import { useNow } from '../../hooks/useNow';
-import { usePreferencesStore } from '../../state/preferencesStore';
-import { RefreshIntervalPicker } from '../RefreshIntervalPicker';
+import { secondsUntilRefresh, useSystemStatus } from '@/hooks/derived/useSystemStatus';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { useNow } from '@/hooks/useNow';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { RefreshIntervalPicker } from '@/components/RefreshIntervalPicker';
 import { cn } from 'cn';
 import { 
     Wifi, 
@@ -34,7 +34,7 @@ interface SystemStatusModalProps {
 }
 
 /** The modal's body; mounted only while the dialog is open, so its clock and subscriptions stop when closed. */
-const SystemStatusDetails: React.FC = () => {
+const SystemStatusDetails = () => {
     const { t } = useTranslation();
     const cityConfig = useCityConfig();
     const status = useSystemStatus();
@@ -42,7 +42,6 @@ const SystemStatusDetails: React.FC = () => {
     const refreshIntervalS = usePreferencesStore(s => s.refreshIntervalS);
     const nextRefreshIn = secondsUntilRefresh(status.dataUpdatedAt, now, refreshIntervalS);
 
-    // Format data freshness
     const freshnessText = (() => {
         if (!status.dataUpdatedAt) return '-';
         const diffSeconds = Math.max(0, Math.floor((now - status.dataUpdatedAt) / 1000));
@@ -57,7 +56,6 @@ const SystemStatusDetails: React.FC = () => {
         }
     })();
 
-    // Determine status badge/color based on unified status type
     const getStatusDetails = () => {
         switch (status.type) {
             case 'offline':
@@ -195,7 +193,7 @@ const SystemStatusDetails: React.FC = () => {
     );
 };
 
-export const SystemStatusModal: React.FC<SystemStatusModalProps> = React.memo(({ isOpen, onClose }) => (
+export const SystemStatusModal = memo(({ isOpen, onClose }: SystemStatusModalProps) => (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-105 p-5 gap-4!">
             <SystemStatusDetails />

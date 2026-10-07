@@ -5,9 +5,11 @@ import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
 import { useCityConfig } from './hooks/data/useCities';
-import { SITE_TITLE } from './config/constants';
+import { SITE } from './config/site';
+import { BOARD_ROUTE, decodeRouteParam } from './lib/routes';
 
 const AdminRoutes = lazy(() => import('./pages/admin/AdminRoutes'));
+const BoardPage = lazy(() => import('./pages/board/BoardPage'));
 
 function App() {
   usePWALifecycle();
@@ -18,7 +20,7 @@ function App() {
     <>
       {/* Visually hidden SEO content */}
       <div className="sr-only">
-        <h1>{SITE_TITLE}</h1>
+        <h1>{SITE.TITLE}</h1>
         <p>
           Sledujte polohu vozidel MHD v reálném čase.
           Aktuální odjezdy ze všech zastávek, informace o zpoždění a interaktivní mapa spojů pro Prahu (PID), Brno (IDS JMK) a Prešov (DPMP).
@@ -34,6 +36,13 @@ function App() {
           <Suspense fallback={null}>
             <AdminRoutes />
           </Suspense>
+        </Route>
+        <Route path={BOARD_ROUTE}>
+          {(params) => (
+            <Suspense fallback={null}>
+              <BoardPage city={params.city.toLowerCase()} stopId={decodeRouteParam(params.stopId)} />
+            </Suspense>
+          )}
         </Route>
         <Route>
           <Map />

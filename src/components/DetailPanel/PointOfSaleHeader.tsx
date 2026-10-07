@@ -1,14 +1,13 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin } from 'lucide-react';
-import { useNavigate } from '../../hooks/features/useNavigate';
-import type { PointOfSale } from '../../types/pointsOfSale';
+import { useNavigate } from '@/hooks/features/useNavigate';
+import type { PointOfSale } from '@/types';
 
 interface PointOfSaleHeaderProps {
     pos: PointOfSale;
 }
 
-export const PointOfSaleHeader: React.FC<PointOfSaleHeaderProps> = ({ pos }) => {
+export const PointOfSaleHeader = ({ pos }: PointOfSaleHeaderProps) => {
     const { t } = useTranslation();
     const { handleNavigate } = useNavigate();
 

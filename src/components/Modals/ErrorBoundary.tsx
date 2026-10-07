@@ -2,7 +2,7 @@ import { Component, useState, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useTranslation } from 'react-i18next';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch } from '@/lib/apiClient';
 import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { Button } from '@/components/ui/button';
 import { TURNSTILE_SITE_KEY } from '@/config/constants';
@@ -167,7 +167,6 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             </>
                         )}
 
-                        {/* Enhanced debug info */}
                         <div className="mt-4 pt-4 border-t border-border/50 text-left w-full flex flex-col gap-2">
                             <p className="text-destructive text-xs font-mono leading-relaxed break-all font-semibold">
                                 {error?.toString()}
