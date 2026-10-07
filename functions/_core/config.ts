@@ -107,6 +107,8 @@ export const API_LIMITS = {
     DEPARTURE_STOP_IDS: 50,
     FEEDBACK_MESSAGE_MIN_CHARS: 5,
     FEEDBACK_MESSAGE_MAX_CHARS: 2000,
+    /** Feedback and crash reports expire from KV after this; the privacy policy states the same period. */
+    FEEDBACK_RETENTION_S: 365 * 24 * 60 * 60,
 };
 
 /**

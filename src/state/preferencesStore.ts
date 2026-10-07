@@ -31,7 +31,6 @@ interface PreferencesState {
     delayFilter: string[];
     statsTab: 'screen' | 'network';
     statsViewMode: 'overview' | 'vehicles';
-    isMcpBannerDismissed: boolean;
     hasSeenWelcome: boolean;
     hasSeenInstallPrompt: boolean;
     /** How often live vehicles and departures refresh. */
@@ -46,7 +45,6 @@ interface PreferencesActions {
     setShowStopLabels: (show: boolean) => void;
     setShowPointsOfSale: (show: boolean) => void;
     setStopTypeFilter: (filter: string[]) => void;
-    setIsMcpBannerDismissed: (dismissed: boolean) => void;
     setHasSeenWelcome: (seen: boolean) => void;
     setHasSeenInstallPrompt: (seen: boolean) => void;
     setDepartureSort: (sort: 'line' | 'departure') => void;
@@ -88,7 +86,6 @@ const PERSISTED_KEYS = [
     'requireWheelchairAccessible',
     'colorVehiclesByDelay',
     'delayFilter',
-    'isMcpBannerDismissed',
     'hasSeenWelcome',
     'hasSeenInstallPrompt',
     'unlockedCities',
@@ -183,7 +180,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
             delayFilter: [],
             statsTab: 'screen',
             statsViewMode: 'overview',
-            isMcpBannerDismissed: false,
             unlockedCities: [getUrlUnlockedCity()].filter((slug): slug is string => slug !== null),
             hasSeenWelcome: false,
             hasSeenInstallPrompt: false,
@@ -195,7 +191,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setShowStopLabels: (show) => set({ showStopLabels: show }),
                 setShowPointsOfSale: (show) => set({ showPointsOfSale: show }),
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
-                setIsMcpBannerDismissed: (dismissed) => set({ isMcpBannerDismissed: dismissed }),
                 setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
                 setHasSeenInstallPrompt: (seen) => set({ hasSeenInstallPrompt: seen }),
                 setDepartureSort: (sort) => set({ departureSort: sort }),

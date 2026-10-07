@@ -3,7 +3,7 @@ export type DataLicenseId = 'ccBy4' | 'odbl1' | 'czOpenData' | 'permission' | 'n
 
 /**
  * One upstream data source, credited as its licence asks: who made it, what it is, where it is
- * published and under which terms. Shown in Settings together with the note that departs.app
+ * published and under which terms. Shown on the licences page together with the note that departs.app
  * changes the data (CC BY 4.0 §3(a)).
  */
 export interface DataAttribution {
@@ -34,10 +34,5 @@ export const SHARED_DATA_ATTRIBUTIONS: DataAttribution[] = [
     { creator: 'OpenStreetMap contributors', title: 'Map data (CARTO basemaps) and place search (Photon by komoot)', url: 'https://www.openstreetmap.org/copyright', license: 'odbl1' },
 ];
 
-/**
- * Where departs.app documents its processed static data: sources, changes and, per city, the
- * licence it republishes under (`InitialCityConfig.processedDataLicense`, CC BY 4.0 by default;
- * a city built from an ODbL source stays ODbL, since ODbL's share-alike clause forbids relicensing
- * a derivative database).
- */
+/** Where departs.app documents its processed static data: sources, changes and the licence each city's data is republished under. */
 export const PROCESSED_DATA_URL = 'https://github.com/Joseph5610/departs-data#-license';

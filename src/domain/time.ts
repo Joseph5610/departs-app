@@ -63,6 +63,10 @@ export const formatTimetableClock = (iso: string, timeZone: string): string => {
     return format.format(Date.parse(iso));
 };
 
+/** A calendar date (`2026-10-08`) in the locale's long form, e.g. (cs) "8. října 2026". */
+export const formatDate = (isoDate: string, locale: string | undefined): string =>
+    new Date(`${isoDate}T12:00:00Z`).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
 /**
  * Formats a timestamp (ISO string or ms number) into a locale-aware date+time string.
  * Example (cs): "12. 7. 2026, 00:30". A value that is not a timestamp is returned as given.

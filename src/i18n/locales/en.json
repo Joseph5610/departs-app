@@ -34,8 +34,7 @@
       "display": "Display",
       "language": "Language",
       "filters": "Filters",
-      "ai": "AI Integrations",
-      "attributions": "Data sources & licences"
+      "ai": "AI Integrations"
     },
     "theme": {
       "title": "Appearance",
@@ -86,7 +85,6 @@
       "cs": "Čeština",
       "sk": "Slovenčina"
     },
-    "viewSource": "View source on GitHub",
     "versionBadge": "v{{version}}",
     "install": "Install app",
     "updates": {
@@ -99,11 +97,9 @@
       "success": "History cleared"
     },
     "lastStopUpdate": "Stop database updated: {{date}}",
-    "sourceBadge": "Source",
     "attributions": {
       "shared": "Map & place search",
-      "processedTitle": "How {{appName}} changes the data",
-      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The providers do not endorse {{appName}}. Sources and changes are documented here.",
+      "notice": "Data are shown modified: converted, filtered, matched to stops and platforms, and combined with live feeds. The data providers do not endorse {{appName}}. Sources and changes are <docs>documented here</docs>.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
@@ -442,7 +438,8 @@
       "messageTooLong": "Keep it under {{count}} characters.",
       "invalidEmail": "Enter a valid email address."
     },
-    "unavailable": "Feedback is temporarily unavailable. Please try again later."
+    "unavailable": "Feedback is temporarily unavailable. Please try again later.",
+    "privacyNote": "Reports are kept for 12 months."
   },
   "stats": {
     "movementState": "Movement State",
@@ -490,21 +487,16 @@
   "mcp": {
     "title": "AI Integration",
     "subtitle": "Connect AI tools and assistants directly to real-time transit data.",
-    "bannerTitle": "AI Integration",
-    "bannerDesc": "Query live departures & vehicle tracking directly in your AI tools.",
-    "newBadge": "New",
     "copy": "Copy",
     "copied": "Copied!",
     "copyUrl": "Copy Endpoint URL",
-    "learnMore": "Setup Instructions",
     "endpointLabel": "Remote MCP Endpoint URL:",
     "claudeCodeTitle": "Claude Code CLI",
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Open Settings → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Set Name to departs",
     "claudeDesktopStep3": "Set Remote URL to {{mcpUrl}}",
-    "cursorTitle": "AI IDEs & Editors",
-    "dismissBanner": "Dismiss banner"
+    "cursorTitle": "AI IDEs & Editors"
   },
   "pos": {
     "title": "Point of Sale",
@@ -533,5 +525,151 @@
     "openingHours": "Opening Hours",
     "servicesTitle": "Available Services",
     "payMethodsTitle": "Payment Methods"
+  },
+  "legal": {
+    "updated": "Last updated {{date}}",
+    "backToMap": "Back to the map",
+    "links": {
+      "privacy": "Privacy policy",
+      "terms": "Terms of use",
+      "licenses": "Data sources & licences"
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "departs.app shows live public transport in Czech and Slovak cities. It has no accounts, no ads and no advertising or tracking cookies, and it builds no profile of you. This policy explains what little personal data is processed, by whom and why.",
+      "whoHeading": "Who is responsible",
+      "operator": "departs.app is run by {{operator}}, the controller of your personal data.",
+      "contact": "For any question about this policy or your data, write to {{email}}.",
+      "sections": [
+        {
+          "heading": "What stays on your device",
+          "paragraphs": [
+            "Your settings, favourite stops and lines, recent searches and an active ride are saved in your browser's storage on your device. They are not sent to us, except the few settings listed below if you choose to send a report.",
+            "If you allow location, the app keeps your last position rounded to about 100 m, so the map reopens nearby. Timetable data is cached on the device to load faster and save mobile data. The app stores only what it needs to work and uses no advertising or tracking cookies.",
+            "You can delete all of it by clearing the site's data in your browser or uninstalling the app; recent searches can also be cleared in Settings."
+          ]
+        },
+        {
+          "heading": "Your location",
+          "paragraphs": [
+            "The app uses your location only after you allow it in your browser, to show where you are, the stops near you and how far you have to walk. The app never sends your exact position to our servers. You can revoke the permission at any time in your browser or system settings.",
+            "When you search for an address, what you type and, if location is on, your position rounded to about 1 km are sent to Photon, an address search run by komoot GmbH (Germany), so nearby results come first."
+          ]
+        },
+        {
+          "heading": "What our servers see",
+          "paragraphs": [
+            "To show departures, vehicles and service alerts, the app asks our servers for the city, stops and vehicles you open. These requests carry no account or identifier, and we keep no history of what you viewed.",
+            "departs.app runs on Cloudflare, which processes your IP address and technical request data to deliver the site and protect it from abuse; technical logs are kept for a few days. We measure visits with Cloudflare Web Analytics, which uses no cookies and does not identify you."
+          ]
+        },
+        {
+          "heading": "API and MCP server",
+          "paragraphs": [
+            "Our public API and MCP server let other apps and AI assistants ask for departures, including those near a given point. Coordinates sent in such a request are used only to answer it: they are not written to logs, and the answer is kept in a cache for at most one hour so identical requests can be answered again. Your conversation with an AI assistant is handled by its provider under its own policy."
+          ]
+        },
+        {
+          "heading": "Feedback and crash reports",
+          "paragraphs": [
+            "If you send feedback or a crash report, we receive your message and, if you give one, your e-mail address. Diagnostics, which you can add to feedback and which every crash report includes, attach technical details: browser and device type, screen size, time zone, app version and settings, the screen, stop or vehicle that was open and, for a crash, the error. Your location and the map position are never included.",
+            "To fight spam we store your IP address with the report, and Cloudflare Turnstile checks that you are not a bot. Reports are deleted automatically after 12 months; write to {{email}} to have yours deleted sooner."
+          ]
+        },
+        {
+          "heading": "Notifications",
+          "paragraphs": [
+            "If you start a ride and allow notifications, the alert before your stop is created by the app on your device. We send no push messages from our servers and store no notification token. If that changes, this policy will say so before it does."
+          ]
+        },
+        {
+          "heading": "Other services the app uses",
+          "paragraphs": [
+            "Map tiles come from CARTO, built on OpenStreetMap data. Your browser loads them directly, so CARTO sees your IP address and the map area shown.",
+            "Timetable data is loaded from data.departs.app, hosted on GitHub Pages, which also sees your IP address.",
+            "In Brno, live vehicle positions stream straight from the City of Brno's server (gis.brno.cz), which sees your IP address.",
+            "Walking directions open Apple Maps (on Apple devices) or Google Maps only when you tap them; that company's own policy applies there.",
+            "Live data from transport operators (such as Golemio for Prague) is fetched by our servers, not by your device.",
+            "Some of these providers, including Cloudflare, GitHub and CARTO, may process data in the United States; such transfers rely on the EU–US Data Privacy Framework or the European Commission's standard contractual clauses."
+          ]
+        },
+        {
+          "heading": "Legal basis",
+          "paragraphs": [
+            "We process personal data on the basis of our legitimate interest (Art. 6(1)(f) GDPR) in running the service securely, protecting it from abuse, measuring its use in aggregate and handling the reports you send us. Location and notifications are used only with the permission you grant in your browser, which you can withdraw at any time.",
+            "Giving any personal data is voluntary: the app works without location, and feedback can be sent without an e-mail address. We make no automated decisions about you and do no profiling."
+          ]
+        },
+        {
+          "heading": "Your rights",
+          "paragraphs": [
+            "Under the GDPR you have the right to access your data, to have it corrected or erased, to restrict its processing, to data portability where it applies, and to object to processing based on legitimate interest. Write to {{email}}; we will reply within one month. As there are no accounts, tell us something that helps us find your data, such as the e-mail address you used or when you sent a report.",
+            "You can also lodge a complaint with a data protection authority: in the Czech Republic the Office for Personal Data Protection (uoou.gov.cz), in Slovakia the Office for Personal Data Protection of the Slovak Republic (dataprotection.gov.sk), or the authority in your EU country."
+          ]
+        },
+        {
+          "heading": "Changes",
+          "paragraphs": [
+            "If this policy changes, the date at the top changes with it. Significant changes, such as adding push notifications, will also be announced in the app."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of use",
+      "intro": "These terms apply to the use of departs.app, its API and its MCP server; by using them you agree to these terms. They are short because the service is simple and free.",
+      "sections": [
+        {
+          "heading": "The service",
+          "paragraphs": [
+            "departs.app is a free, independent service that shows public transport departures, vehicle positions and service alerts without registration. It is not run by, or affiliated with, PID, IDS JMK, DPMP, DÚK, any transport operator or any public authority."
+          ]
+        },
+        {
+          "heading": "Data accuracy",
+          "paragraphs": [
+            "Times, delays and positions come from the operators' public data and may be late, incomplete or wrong. For anything that matters, such as the last connection of the night, check the operator's official information. The app is provided as is, with no guarantee of availability or accuracy."
+          ]
+        },
+        {
+          "heading": "Liability",
+          "paragraphs": [
+            "To the extent the law allows, we are not liable for missed connections, delays or any other loss arising from use of the app or from the data shown in it. This does not limit liability for damage caused intentionally or through gross negligence, nor any rights you have as a consumer that cannot be limited by agreement."
+          ]
+        },
+        {
+          "heading": "Fair use",
+          "paragraphs": [
+            "You may use the app, its API and its MCP server for personal purposes and for reasonable automated access. Do not overload, disrupt or abuse them; we may limit or block traffic that does."
+          ]
+        },
+        {
+          "heading": "Data and source code",
+          "paragraphs": [
+            "Transit data belongs to its providers and is used under their licences, listed on the Data sources & licences page; map data © OpenStreetMap contributors. Names of transport systems and operators belong to their owners. The app's source code is published under the MIT licence."
+          ]
+        },
+        {
+          "heading": "Personal data",
+          "paragraphs": [
+            "How the app handles personal data is described in the privacy policy."
+          ]
+        },
+        {
+          "heading": "Changes and contact",
+          "paragraphs": [
+            "We may change, suspend or end the service and update these terms; the date at the top shows the current version. Questions: {{email}}."
+          ]
+        }
+      ]
+    },
+    "licenses": {
+      "intro": "departs.app is built on open data from transport authorities, cities and the OpenStreetMap community. Each source is credited below as its licence requires.",
+      "softwareHeading": "Software",
+      "sourceTitle": "departs.app source code",
+      "sourceDescription": "Published on GitHub",
+      "librariesTitle": "Open-source libraries",
+      "librariesDescription": "Every bundled package with its full licence text"
+    }
   }
 }

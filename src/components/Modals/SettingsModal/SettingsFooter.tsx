@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Download, Clock, Database, Scale, MessageSquareHeart, GitBranch } from 'lucide-react';
+import { RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -10,81 +10,15 @@ import { toast } from 'sonner';
 import { cn } from 'cn';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
-import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
-import { DATA_LICENSE_URLS, PROCESSED_DATA_URL, SHARED_DATA_ATTRIBUTIONS, type DataAttribution, type DataLicenseId } from '@/config/attributions';
-import { EXTERNAL_URLS, UI_TIMING_MS } from '@/config/constants';
+import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
+import { UI_TIMING_MS } from '@/config/constants';
 import { formatDateTime } from '@/domain/time';
-import { isCityVisible } from '@/domain/cities';
-
-/** `processedDataLicense` is set only for city groups: departs.app processes a city's own data, not the shared OSM/Photon sources. */
-const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[]; processedDataLicense?: DataLicenseId }> => [
-    ...Object.values(FRONTEND_CITIES_CONFIG)
-        .filter(city => isCityVisible(city, unlockedCities))
-        .map(city => ({ labelKey: `map.regions.${city.slug}`, sources: city.attributions, processedDataLicense: city.processedDataLicense ?? 'ccBy4' as DataLicenseId })),
-    { labelKey: 'settings.attributions.shared', sources: SHARED_DATA_ATTRIBUTIONS },
-];
-
-const badgeClassName = 'text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider';
-
-/** A source credited as its licence asks: creator, the linked dataset and the linked licence. */
-const AttributionItem = ({ source }: { source: DataAttribution }) => {
-    const { t } = useTranslation();
-    const licenseUrl = DATA_LICENSE_URLS[source.license];
-    const licenseLabel = t(`settings.attributions.licenses.${source.license}`);
-    return (
-        <Item variant="settings" size="none">
-            <ItemMedia variant="icon" className="text-muted-foreground">
-                <Database size={18} strokeWidth={2} />
-            </ItemMedia>
-            <ItemContent>
-                <ItemTitle className="text-foreground">{source.creator}</ItemTitle>
-                <ItemDescription className="text-xs">
-                    <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
-                </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-                {licenseUrl ? (
-                    <Badge variant="outline" className={badgeClassName} render={<a href={licenseUrl} target="_blank" rel="noopener noreferrer" />}>
-                        {licenseLabel}
-                    </Badge>
-                ) : (
-                    <Badge variant="outline" className={badgeClassName}>{licenseLabel}</Badge>
-                )}
-            </ItemActions>
-        </Item>
-    );
-};
-
-/**
- * How departs.app republishes one city's processed data, under that city's own licence. The row
- * itself links to the source doc, so - unlike `AttributionItem` - the badge stays a plain label:
- * an anchor can't nest inside the row's own anchor.
- */
-const ProcessedDataItem = ({ license }: { license: DataLicenseId }) => {
-    const { t } = useTranslation();
-    const licenseLabel = t(`settings.attributions.licenses.${license}`);
-    return (
-        <Item variant="settings" size="none" render={<a href={PROCESSED_DATA_URL} target="_blank" rel="noopener noreferrer" />}>
-            <ItemMedia variant="icon" className="text-muted-foreground">
-                <Scale size={18} strokeWidth={2} />
-            </ItemMedia>
-            <ItemContent>
-                <ItemTitle className="text-foreground">{t('settings.attributions.processedTitle')}</ItemTitle>
-                <ItemDescription className="text-xs line-clamp-none">{t('settings.attributions.notice')}</ItemDescription>
-            </ItemContent>
-            <ItemActions>
-                <Badge variant="outline" className={badgeClassName}>{licenseLabel}</Badge>
-            </ItemActions>
-        </Item>
-    );
-};
+import { paths } from '@/lib/routes';
 
 export const SettingsFooter = () => {
     const { t, i18n } = useTranslation();
 
     const searchHistory = usePreferencesStore(s => s.searchHistory);
-    const unlockedCities = usePreferencesStore(s => s.unlockedCities);
     const { clearHistory } = usePreferencesStore(s => s.actions);
     const { setIsFeedbackOpen, setIsSettingsOpen } = useUiStore(s => s.actions);
 
@@ -199,48 +133,42 @@ export const SettingsFooter = () => {
                             </ItemTitle>
                         </ItemContent>
                         <ItemActions>
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
+                            <Badge variant="label">
                                 {t('settings.versionBadge', { version })}
-                            </Badge>
-                        </ItemActions>
-                    </Item>
-
-                    <Item
-                        variant="settings"
-                        size="none"
-                        render={<a href={EXTERNAL_URLS.SOURCE_REPO} target="_blank" rel="noopener noreferrer" />}
-                    >
-                        <ItemMedia variant="icon" className="text-muted-foreground">
-                            <GitBranch size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">{t('settings.viewSource')}</ItemTitle>
-                        </ItemContent>
-                        <ItemActions>
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border/40 bg-foreground/5 uppercase font-semibold tracking-wider">
-                                {t('settings.sourceBadge')}
                             </Badge>
                         </ItemActions>
                     </Item>
                 </ItemGroup>
             </Card>
 
-            <div className="flex flex-col gap-2">
-                <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
-                    {t('settings.sections.attributions')}
-                </div>
-                {attributionGroups(unlockedCities).map(group => (
-                    <div key={group.labelKey} className="flex flex-col gap-1.5">
-                        <div className="text-[11px] text-muted-foreground font-semibold px-1">{t(group.labelKey)}</div>
-                        <Card variant="subtle" size="none" className="overflow-hidden gap-0">
-                            <ItemGroup className="gap-0">
-                                {group.sources.map(source => <AttributionItem key={`${source.url}|${source.title}`} source={source} />)}
-                                {group.processedDataLicense && <ProcessedDataItem license={group.processedDataLicense} />}
-                            </ItemGroup>
-                        </Card>
-                    </div>
-                ))}
-            </div>
+            <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                <ItemGroup className="gap-0">
+                    <Item variant="settings" size="none" render={<a href={paths.privacy} target="_blank" rel="noopener" />}>
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <ShieldCheck size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('legal.links.privacy')}</ItemTitle>
+                        </ItemContent>
+                    </Item>
+                    <Item variant="settings" size="none" render={<a href={paths.terms} target="_blank" rel="noopener" />}>
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <FileText size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('legal.links.terms')}</ItemTitle>
+                        </ItemContent>
+                    </Item>
+                    <Item variant="settings" size="none" render={<a href={paths.licenses} target="_blank" rel="noopener" />}>
+                        <ItemMedia variant="icon" className="text-muted-foreground">
+                            <Scale size={18} strokeWidth={2} />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle className="text-foreground">{t('legal.links.licenses')}</ItemTitle>
+                        </ItemContent>
+                    </Item>
+                </ItemGroup>
+            </Card>
 
             {updatedAt && (
                 <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">

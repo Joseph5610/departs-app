@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 import { feedbackPayloadSchema } from "../_core/feedbackSchemas";
 import { createErrorResponse } from "../_core/apiUtils";
-import { ERROR_MESSAGES } from "../_core/config";
+import { API_LIMITS, ERROR_MESSAGES } from "../_core/config";
 import type { Env } from "../_core/types";
 
 const turnstileOutcomeSchema = z.object({ success: z.boolean(), 'error-codes': z.optional(z.array(z.string())) });
@@ -97,7 +97,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const reverseTimestamp = Number.MAX_SAFE_INTEGER - Date.now();
     const key = `feedback:${reverseTimestamp}:${id}`;
     
-    await context.env.FEEDBACK_STORE.put(key, JSON.stringify(kvPayload));
+    await context.env.FEEDBACK_STORE.put(key, JSON.stringify(kvPayload), { expirationTtl: API_LIMITS.FEEDBACK_RETENTION_S });
 
     return new Response(JSON.stringify({ success: true, id }), {
       status: 200,

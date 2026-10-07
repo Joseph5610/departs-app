@@ -31,6 +31,7 @@ import { feedbackPayloadSchema, type FeedbackPayload } from '@/types';
 import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '@/config/constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PrivacyNote } from './PrivacyNote';
 
 const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
 type FormValues = z.infer<typeof baseFormSchema>;
@@ -263,6 +264,7 @@ export const FeedbackModal = memo(() => {
                             </Alert>
                         )}
 
+                        <PrivacyNote />
                     </form>
                 </ScrollArea>
                 

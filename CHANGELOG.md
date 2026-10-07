@@ -4,6 +4,21 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.81.0] - 2026-10-08
+
+### Added
+
+- Privacy policy and terms of use pages (`/privacy`, `/terms`), linked from Settings and the feedback form.
+- Data sources and licences moved from Settings to their own page (`/licenses`), which also links the bundled libraries' licences.
+
+### Changed
+
+- Feedback and crash reports are deleted automatically after 12 months.
+
+### Removed
+
+- The AI integration promo banner on the map; setup instructions stay in Settings.
+
 ## [0.80.2] - 2026-10-07
 
 ### Added

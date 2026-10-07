@@ -23,6 +23,9 @@ export const paths = {
     favorites: (city: string) => `/${city}/favorites`,
     board: (city: string, stopId: string, walkMins?: number) =>
         `/${city}/board/${enc(stopId)}${walkMins ? `?walk=${walkMins}` : ''}`,
+    privacy: '/privacy',
+    terms: '/terms',
+    licenses: '/licenses',
 };
 
 /** The full-screen departure board; outside the map, so not in ROUTE_PATTERNS. */

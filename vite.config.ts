@@ -86,7 +86,7 @@ export default defineConfig({
       thirdParty: {
         includePrivate: false,
         allow: { test: ALLOWED_LICENSES, failOnUnlicensed: true, failOnViolation: true },
-        output: { file: path.resolve(import.meta.dirname, 'dist/THIRD_PARTY_LICENSES.txt'), template: thirdPartyNotices },
+        output: { file: path.resolve(import.meta.dirname, 'dist', SITE.THIRD_PARTY_LICENSES_FILE), template: thirdPartyNotices },
       },
     }),
     VitePWA({
@@ -112,7 +112,7 @@ export default defineConfig({
         // Generated icons aren't picked up by includeManifestIcons; #boot-splash needs pwa-192x192.png offline.
         globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico'],
         navigateFallback: '/',
-        navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/],
+        navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/, /\.txt$/],
         manifestTransforms: [
           (manifestEntries) => {
             const manifest = manifestEntries.map((entry) => {

@@ -14,6 +14,13 @@ export const SITE = {
     TITLE: `${NAME} — MHD Praha, Brno & Prešov LIVE`,
     MCP_URL: `${URL}/mcp`,
     STATIC_DATA_URL: 'https://data.departs.app',
+    CONTACT_EMAIL: 'info@departs.app',
+    /** Written to the build output root: every bundled package with its full licence text. */
+    THIRD_PARTY_LICENSES_FILE: 'THIRD_PARTY_LICENSES.txt',
+    /** The data controller named in the privacy policy; its line is left out while unset. */
+    OPERATOR: null as string | null,
+    /** Date the privacy policy and terms last changed; bump it with any change to their texts. */
+    LEGAL_UPDATED: '2026-10-08',
 } as const;
 
 /** `%KEY%` placeholders and their values for the build-time template step. */

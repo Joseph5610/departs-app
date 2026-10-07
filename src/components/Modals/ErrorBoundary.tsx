@@ -3,6 +3,7 @@ import { AlertCircle, RefreshCcw, Send, CheckCircle2, Loader2 } from 'lucide-rea
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/apiClient';
+import { PrivacyNote } from './FeedbackModal/PrivacyNote';
 import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { Button } from '@/components/ui/button';
 import { TURNSTILE_SITE_KEY } from '@/config/constants';
@@ -164,6 +165,7 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                                     onExpire={() => setTurnstileToken(null)}
                                 />
                             </div>
+                            <PrivacyNote />
                             </>
                         )}
 

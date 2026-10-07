@@ -35,8 +35,7 @@
       "display": "Zobrazenie",
       "language": "Jazyk",
       "filters": "Filtre",
-      "ai": "AI integrácie",
-      "attributions": "Zdroje dát a licencie"
+      "ai": "AI integrácie"
     },
     "theme": {
       "title": "Vzhľad",
@@ -87,7 +86,6 @@
       "cs": "Čeština",
       "sk": "Slovenčina"
     },
-    "viewSource": "Zdrojový kód na GitHube",
     "versionBadge": "v{{version}}",
     "install": "Nainštalovať aplikáciu",
     "updates": {
@@ -100,11 +98,9 @@
       "success": "História vymazaná"
     },
     "lastStopUpdate": "Databáza zastávok aktualizovaná: {{date}}",
-    "sourceBadge": "Zdroj",
     "attributions": {
       "shared": "Mapa a vyhľadávanie miest",
-      "processedTitle": "Ako {{appName}} dáta upravuje",
-      "notice": "Dáta sú zobrazené upravené: prevedené, filtrované, spárované so zastávkami a nástupišťami a spojené so živými dátami. Poskytovatelia {{appName}} nepodporujú ani neschvaľujú. Zdroje a zmeny sú zdokumentované tu.",
+      "notice": "Údaje sú zobrazené upravené: prevedené, filtrované, spárované so zastávkami a nástupišťami a spojené so živými údajmi. Poskytovatelia údajov {{appName}} nijako nepodporujú ani neschvaľujú. Zdroje a zmeny sú <docs>zdokumentované tu</docs>.",
       "licenses": {
         "ccBy4": "CC BY 4.0",
         "odbl1": "ODbL 1.0",
@@ -447,7 +443,8 @@
       "messageTooLong": "Skráťte správu pod {{count}} znakov.",
       "invalidEmail": "Zadajte platnú e-mailovú adresu."
     },
-    "unavailable": "Spätnú väzbu teraz nie je možné odoslať. Skúste to prosím neskôr."
+    "unavailable": "Spätnú väzbu teraz nie je možné odoslať. Skúste to prosím neskôr.",
+    "privacyNote": "Hlásenia uchovávame 12 mesiacov."
   },
   "stats": {
     "movementState": "Stav pohybu",
@@ -495,21 +492,16 @@
   "mcp": {
     "title": "AI Integrácie",
     "subtitle": "Pripojte AI asistentov a vývojové nástroje priamo k živým dátam MHD.",
-    "bannerTitle": "AI Integrácie",
-    "bannerDesc": "Pýtajte sa AI na aktuálne odchody a polohu spojov priamo vo svojom nástroji.",
-    "newBadge": "Nové",
     "copy": "Kopírovať",
     "copied": "Skopírované!",
     "copyUrl": "Kopírovať URL MCP",
-    "learnMore": "Návod na nastavenie",
     "endpointLabel": "URL adresa Remote MCP endpointu:",
     "claudeCodeTitle": "Claude Code CLI",
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Otvorte Nastavenia → Connectors → Add → Add custom connector.",
     "claudeDesktopStep2": "Zadajte Názov: departs",
     "claudeDesktopStep3": "Zadajte Remote URL: {{mcpUrl}}",
-    "cursorTitle": "AI IDE a editory",
-    "dismissBanner": "Skryť banner"
+    "cursorTitle": "AI IDE a editory"
   },
   "pos": {
     "title": "Predajné miesto",
@@ -538,5 +530,151 @@
     "openingHours": "Otváracie hodiny",
     "servicesTitle": "Poskytované služby",
     "payMethodsTitle": "Spôsoby platby"
+  },
+  "legal": {
+    "updated": "Naposledy aktualizované {{date}}",
+    "backToMap": "Späť na mapu",
+    "links": {
+      "privacy": "Zásady ochrany súkromia",
+      "terms": "Podmienky používania",
+      "licenses": "Zdroje údajov a licencie"
+    },
+    "privacy": {
+      "title": "Zásady ochrany súkromia",
+      "intro": "departs.app zobrazuje živú verejnú dopravu v českých a slovenských mestách. Nemá používateľské účty, reklamy ani reklamné či sledovacie cookies a nevytvára o vás žiadny profil. Tieto zásady vysvetľujú, ktoré osobné údaje sa spracúvajú, kto ich spracúva a prečo. Je ich málo.",
+      "whoHeading": "Kto zodpovedá za vaše údaje",
+      "operator": "Službu departs.app prevádzkuje a prevádzkovateľom vašich osobných údajov je {{operator}}.",
+      "contact": "S akoukoľvek otázkou k týmto zásadám alebo k svojim údajom píšte na {{email}}.",
+      "sections": [
+        {
+          "heading": "Čo zostáva vo vašom zariadení",
+          "paragraphs": [
+            "Nastavenia, obľúbené zastávky a linky, nedávne vyhľadávania a prebiehajúca jazda sa ukladajú do úložiska prehliadača vo vašom zariadení. Nám sa neposielajú, okrem niekoľkých nastavení uvedených nižšie, ak sa rozhodnete odoslať hlásenie.",
+            "Ak povolíte polohu, aplikácia si uloží vašu poslednú polohu zaokrúhlenú približne na 100 m, aby sa mapa nabudúce otvorila v okolí. Údaje cestovných poriadkov sa ukladajú do zariadenia, aby sa načítavali rýchlejšie a šetrili mobilné dáta. Aplikácia ukladá len to, čo potrebuje na svoje fungovanie, a nepoužíva reklamné ani sledovacie cookies.",
+            "Všetko vymažete vymazaním údajov stránky v prehliadači alebo odinštalovaním aplikácie; nedávne vyhľadávania sa dajú vymazať aj v Nastaveniach."
+          ]
+        },
+        {
+          "heading": "Vaša poloha",
+          "paragraphs": [
+            "Polohu aplikácia používa, len ak ju povolíte v prehliadači, aby ukázala, kde ste, zastávky v okolí a ako ďaleko to máte pešo. Aplikácia vašu presnú polohu nikdy neodosiela na naše servery. Povolenie môžete kedykoľvek odvolať v nastaveniach prehliadača alebo systému.",
+            "Keď hľadáte adresu, odošle sa to, čo napíšete, a pri zapnutej polohe aj vaša poloha zaokrúhlená približne na 1 km službe Photon, ktorú prevádzkuje spoločnosť komoot GmbH (Nemecko), aby boli blízke výsledky prvé."
+          ]
+        },
+        {
+          "heading": "Čo vidia naše servery",
+          "paragraphs": [
+            "Na zobrazenie odchodov, vozidiel a mimoriadností sa aplikácia pýta našich serverov na mesto, zastávky a vozidlá, ktoré otvoríte. Tieto požiadavky nenesú žiadny účet ani identifikátor a nevedieme históriu toho, čo ste si prezerali.",
+            "departs.app beží na infraštruktúre spoločnosti Cloudflare, ktorá spracúva vašu IP adresu a technické údaje o požiadavkách, aby stránku doručila a chránila pred zneužitím; technické záznamy sa uchovávajú niekoľko dní. Návštevnosť meriame pomocou Cloudflare Web Analytics, ktorá nepoužíva cookies a neidentifikuje vás."
+          ]
+        },
+        {
+          "heading": "API a MCP server",
+          "paragraphs": [
+            "Naše verejné API a MCP server umožňujú iným aplikáciám a AI asistentom pýtať sa na odchody, aj v okolí zadaného miesta. Súradnice poslané v takej požiadavke slúžia len na jej vybavenie: nezapisujú sa do záznamov a odpoveď sa najviac hodinu drží vo vyrovnávacej pamäti, aby sa rovnaká požiadavka dala vybaviť znova. Vašu konverzáciu s AI asistentom spracúva jeho poskytovateľ podľa vlastných zásad."
+          ]
+        },
+        {
+          "heading": "Spätná väzba a hlásenia chýb",
+          "paragraphs": [
+            "Ak pošlete spätnú väzbu alebo hlásenie pádu, dostaneme vašu správu a e-mail, ak ho uvediete. Diagnostika, ktorú môžete k spätnej väzbe pridať a ktorú obsahuje každé hlásenie pádu, pripojí technické údaje: typ prehliadača a zariadenia, veľkosť obrazovky, časové pásmo, verziu a nastavenia aplikácie, otvorenú obrazovku, zastávku či vozidlo a pri páde popis chyby. Vaša poloha ani poloha mapy v nej nikdy nie sú.",
+            "Kvôli ochrane pred spamom ukladáme k hláseniu aj vašu IP adresu a Cloudflare Turnstile overuje, že nie ste robot. Hlásenia sa automaticky mažú po 12 mesiacoch; o skoršie vymazanie požiadajte na {{email}}."
+          ]
+        },
+        {
+          "heading": "Upozornenia",
+          "paragraphs": [
+            "Keď spustíte jazdu a povolíte upozornenia, upozornenie pred vašou zastávkou vytvorí aplikácia priamo vo vašom zariadení. Z našich serverov neposielame žiadne push správy a neukladáme žiadny token pre upozornenia. Ak sa to zmení, uvedú to tieto zásady skôr, než sa tak stane."
+          ]
+        },
+        {
+          "heading": "Ďalšie služby, ktoré aplikácia používa",
+          "paragraphs": [
+            "Mapové podklady poskytuje CARTO z údajov OpenStreetMap. Prehliadač ich načítava priamo, takže CARTO vidí vašu IP adresu a zobrazenú oblasť mapy.",
+            "Údaje cestovných poriadkov sa načítavajú z data.departs.app, prevádzkovaného na GitHub Pages, ktoré tiež vidí vašu IP adresu.",
+            "V Brne sa živé polohy vozidiel prenášajú priamo zo servera mesta Brno (gis.brno.cz), ktorý vidí vašu IP adresu.",
+            "Navigácia pešo otvorí Apple Mapy (na zariadeniach Apple) alebo Mapy Google, len keď na ňu ťuknete; tam platia zásady danej spoločnosti.",
+            "Živé údaje dopravcov (napríklad Golemio pre Prahu) sťahujú naše servery, nie vaše zariadenie.",
+            "Niektorí z týchto poskytovateľov, okrem iného Cloudflare, GitHub a CARTO, môžu údaje spracúvať v Spojených štátoch; takýto prenos sa opiera o rámec EÚ – USA na ochranu osobných údajov (Data Privacy Framework) alebo o štandardné zmluvné doložky Európskej komisie."
+          ]
+        },
+        {
+          "heading": "Právny základ",
+          "paragraphs": [
+            "Osobné údaje spracúvame na základe oprávneného záujmu (čl. 6 ods. 1 písm. f) GDPR) na bezpečnej prevádzke služby, jej ochrane pred zneužitím, súhrnnom meraní návštevnosti a vybavení hlásení, ktoré nám pošlete. Polohu a upozornenia aplikácia používa len s povolením, ktoré udelíte v prehliadači a ktoré môžete kedykoľvek odvolať.",
+            "Poskytnutie akýchkoľvek osobných údajov je dobrovoľné: aplikácia funguje aj bez polohy a spätnú väzbu môžete poslať aj bez e-mailu. Nevykonávame žiadne automatizované rozhodovanie ani profilovanie."
+          ]
+        },
+        {
+          "heading": "Vaše práva",
+          "paragraphs": [
+            "Podľa GDPR máte právo na prístup k svojim údajom, na ich opravu, vymazanie a obmedzenie spracúvania, na prenosnosť tam, kde sa uplatní, a právo namietať proti spracúvaniu na základe oprávneného záujmu. Píšte na {{email}}; odpovieme do jedného mesiaca. Keďže aplikácia nemá účty, uveďte, prosím, niečo, podľa čoho vaše údaje nájdeme, napríklad e-mail, ktorý ste použili, alebo kedy ste hlásenie poslali.",
+            "Môžete tiež podať sťažnosť dozornému orgánu: na Slovensku Úradu na ochranu osobných údajov SR (dataprotection.gov.sk), v Česku Úřadu pro ochranu osobních údajů (uoou.gov.cz), prípadne úradu vo svojej krajine EÚ."
+          ]
+        },
+        {
+          "heading": "Zmeny",
+          "paragraphs": [
+            "Keď sa tieto zásady zmenia, zmení sa aj dátum hore. Podstatné zmeny, napríklad zavedenie push upozornení, oznámime aj v aplikácii."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "title": "Podmienky používania",
+      "intro": "Tieto podmienky platia pre používanie departs.app, jej API a MCP servera; ich používaním s nimi súhlasíte. Sú krátke, pretože služba je jednoduchá a bezplatná.",
+      "sections": [
+        {
+          "heading": "Služba",
+          "paragraphs": [
+            "departs.app je bezplatná nezávislá služba, ktorá bez registrácie zobrazuje odchody verejnej dopravy, polohy vozidiel a mimoriadnosti. Neprevádzkuje ju PID, IDS JMK, DPMP, DÚK, žiadny dopravca ani orgán verejnej správy a nie je s nimi nijako spojená."
+          ]
+        },
+        {
+          "heading": "Presnosť údajov",
+          "paragraphs": [
+            "Časy, meškania a polohy pochádzajú z verejných údajov dopravcov a môžu byť oneskorené, neúplné alebo chybné. Pri všetkom dôležitom, napríklad poslednom nočnom spoji, si overte oficiálne informácie dopravcu. Aplikácia sa poskytuje tak, ako je, bez záruky dostupnosti či správnosti."
+          ]
+        },
+        {
+          "heading": "Zodpovednosť",
+          "paragraphs": [
+            "V rozsahu, ktorý zákon dovoľuje, nezodpovedáme za zmeškané spoje, meškania ani inú ujmu vzniknutú používaním aplikácie alebo z údajov v nej zobrazených. Tým nie je obmedzená zodpovednosť za škodu spôsobenú úmyselne alebo z hrubej nedbanlivosti ani vaše práva spotrebiteľa, ktoré nemožno zmluvne obmedziť."
+          ]
+        },
+        {
+          "heading": "Primerané používanie",
+          "paragraphs": [
+            "Aplikáciu, jej API a MCP server môžete používať na osobné účely aj na primeraný automatizovaný prístup. Nepreťažujte ich, nenarúšajte ich prevádzku a nezneužívajte ich; takú prevádzku môžeme obmedziť alebo zablokovať."
+          ]
+        },
+        {
+          "heading": "Údaje a zdrojový kód",
+          "paragraphs": [
+            "Údaje o doprave patria ich poskytovateľom a používajú sa podľa ich licencií uvedených na stránke Zdroje údajov a licencie; mapové údaje © prispievatelia OpenStreetMap. Názvy dopravných systémov a dopravcov patria ich vlastníkom. Zdrojový kód aplikácie je zverejnený pod licenciou MIT."
+          ]
+        },
+        {
+          "heading": "Osobné údaje",
+          "paragraphs": [
+            "Ako aplikácia zaobchádza s osobnými údajmi, opisujú Zásady ochrany súkromia."
+          ]
+        },
+        {
+          "heading": "Zmeny a kontakt",
+          "paragraphs": [
+            "Službu môžeme zmeniť, prerušiť alebo ukončiť a tieto podmienky aktualizovať; dátum hore ukazuje platnú verziu. Otázky: {{email}}."
+          ]
+        }
+      ]
+    },
+    "licenses": {
+      "intro": "departs.app stojí na otvorených údajoch organizátorov dopravy, miest a komunity OpenStreetMap. Každý zdroj je nižšie uvedený tak, ako to vyžaduje jeho licencia.",
+      "softwareHeading": "Softvér",
+      "sourceTitle": "Zdrojový kód departs.app",
+      "sourceDescription": "Zverejnený na GitHube",
+      "librariesTitle": "Open-source knižnice",
+      "librariesDescription": "Všetky pribalené balíčky s plným znením licencií"
+    }
   }
 }

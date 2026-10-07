@@ -1,7 +1,7 @@
 import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import type { EnrichmentChannelAdapter, City, RouteType } from '@/types';
-import type { DataAttribution, DataLicenseId } from './attributions';
+import type { DataAttribution } from './attributions';
 
 /** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
 const kordisMessageSchema = z.object({
@@ -42,10 +42,8 @@ export interface InitialCityConfig {
     vehicleMetadata?: { file: string };
     /** Realtime data provider shown in the system status modal. */
     dataProvider: { nameKey: string; url: string };
-    /** Data sources credited in Settings, in display order. */
+    /** Data sources credited on the licences page, in display order. */
     attributions: DataAttribution[];
-    /** Licence departs.app republishes this city's processed data under; ODbL sources stay ODbL (share-alike). Defaults to CC BY 4.0. */
-    processedDataLicense?: DataLicenseId;
     /** Line chips list the lines of the loaded departures, not the stop's timetable lines (DÚK: the platform comes from the live board). */
     lineChipsFromDepartures?: boolean;
     /** Upstream feed descriptions shown in the admin Feed Explorer. */

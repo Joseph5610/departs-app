@@ -6,10 +6,12 @@ import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
 import { useCityConfig } from './hooks/data/useCities';
 import { SITE } from './config/site';
-import { BOARD_ROUTE, decodeRouteParam } from './lib/routes';
+import { BOARD_ROUTE, decodeRouteParam, paths } from './lib/routes';
 
 const AdminRoutes = lazy(() => import('./pages/admin/AdminRoutes'));
 const BoardPage = lazy(() => import('./pages/board/BoardPage'));
+const LegalPage = lazy(() => import('./pages/legal/LegalPage'));
+const LicensesPage = lazy(() => import('./pages/legal/LicensesPage'));
 
 function App() {
   usePWALifecycle();
@@ -43,6 +45,21 @@ function App() {
               <BoardPage city={params.city.toLowerCase()} stopId={decodeRouteParam(params.stopId)} />
             </Suspense>
           )}
+        </Route>
+        <Route path={paths.privacy}>
+          <Suspense fallback={null}>
+            <LegalPage doc="privacy" />
+          </Suspense>
+        </Route>
+        <Route path={paths.terms}>
+          <Suspense fallback={null}>
+            <LegalPage doc="terms" />
+          </Suspense>
+        </Route>
+        <Route path={paths.licenses}>
+          <Suspense fallback={null}>
+            <LicensesPage />
+          </Suspense>
         </Route>
         <Route>
           <Map />

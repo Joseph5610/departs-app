@@ -43,7 +43,6 @@ import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
 import { MountWhenOpened } from '@/components/MountWhenOpened';
-import { McpPromoBanner } from '@/components/McpPromo/McpPromoBanner';
 
 const SettingsModal = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
 const WelcomeModal = lazy(() => import('@/components/Modals/WelcomeModal').then(m => ({ default: m.WelcomeModal })));
@@ -75,8 +74,6 @@ const MapInner = () => {
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasSeenWelcome = usePreferencesStore(s => s.hasSeenWelcome);
-    // Read once: a first-time visitor gets the welcome modal, and the MCP promo only from the next visit.
-    const [isReturningVisitor] = useState(() => usePreferencesStore.getState().hasSeenWelcome);
     const isSettingsOpen = useUiStore(s => s.isSettingsOpen);
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const isFeedbackOpen = useUiStore(s => s.isFeedbackOpen);
@@ -295,7 +292,6 @@ const MapInner = () => {
             <MountWhenOpened when={isMcpModalOpen}>
                 <McpModal />
             </MountWhenOpened>
-            {isReturningVisitor && <McpPromoBanner />}
             <DetailPanel
                 isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
                 id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined)}
