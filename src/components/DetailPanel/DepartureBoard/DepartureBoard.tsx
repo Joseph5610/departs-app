@@ -10,17 +10,19 @@ import { cn } from 'cn';
 import type { Departure, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { DepartureItem } from './DepartureItem';
+import { DepartureList } from './DepartureList';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { LineBadge } from '@/components/LineBadge';
+import { LineGradient } from '@/components/LineGradient';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { groupsHidingTrips, isMetroClosed, visibleInGroup } from '@/domain/departures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { InterchangeBadges } from '@/components/InterchangeBadges';
-import { safeHexColor } from '@/lib/color';
+import { lineRuleColor, safeHexColor } from '@/lib/color';
 import { PinLineButton } from './PinLineButton';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useRideStore } from '@/state/rideStore';
@@ -177,28 +179,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                             <CardHeader 
                                                 className="p-0 pb-0! bg-transparent relative border-b-0"
                                             >
-                                                <div 
-                                                    className="absolute inset-0 pointer-events-none dark:hidden opacity-[0.15] rounded-t-2xl"
-                                                    style={{
-                                                        background: routeColor
-                                                            ? `linear-gradient(90deg, ${routeColor} 0%, transparent 100%)`
-                                                            : 'none'
-                                                    }}
-                                                />
-                                                <div 
-                                                    className="absolute inset-0 pointer-events-none hidden dark:block rounded-t-2xl"
-                                                    style={{
-                                                        background: routeColor
-                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 70%) 100%)`
-                                                            : 'rgba(255,255,255,0.1)'
-                                                    }}
-                                                />
+                                                <LineGradient routeColor={routeColor} className="rounded-t-2xl" />
                                                 <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full min-w-0 border-b-2"
-                                                     style={{
-                                                         borderBottomColor: routeColor
-                                                             ? `color-mix(in srgb, ${routeColor} 60%, transparent)`
-                                                             : 'rgba(255,255,255,0.15)'
-                                                     }}
+                                                     style={{ borderBottomColor: lineRuleColor(routeColor) }}
                                                 >
                                                 <LineBadge 
                                                     name={String(lineGroup.line)} 
@@ -232,22 +215,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         ) : (
                                             /* Secondary Variant Header - Vibrant Glow Style */
                                             <div className="relative overflow-hidden border-t border-border/50 dark:border-white/5">
-                                                <div 
-                                                    className="absolute inset-0 pointer-events-none dark:hidden opacity-[0.10]"
-                                                    style={{
-                                                        background: routeColor
-                                                            ? `linear-gradient(90deg, ${routeColor} 0%, transparent 100%)`
-                                                            : 'none'
-                                                    }}
-                                                />
-                                                <div 
-                                                    className="absolute inset-0 pointer-events-none hidden dark:block"
-                                                    style={{
-                                                        background: routeColor
-                                                            ? `linear-gradient(90deg, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 50%) 0%, color-mix(in srgb, color-mix(in srgb, ${routeColor}, white 15%), black 70%) 100%)`
-                                                            : 'rgba(255,255,255,0.1)'
-                                                    }}
-                                                />
+                                                <LineGradient routeColor={routeColor} subtle />
                                                 <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full min-w-0">
                                                     <div 
                                                         className="w-1 h-4 rounded-r-sm shrink-0" 
@@ -265,25 +233,17 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                         )}
 
                                         <CardContent className="p-0">
-                                            <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
-                                                {visibleDepartures.map((dep: Departure, idx: number) => (
-                                                    <div 
-                                                        key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx}
-                                                        className={cn(
-                                                            "transition-colors hover:bg-black/[0.025] dark:hover:bg-white/[0.04]",
-                                                            idx % 2 === 1 ? "bg-black/[0.015] dark:bg-white/[0.02]" : "bg-transparent"
-                                                        )}
-                                                    >
-                                                        <DepartureItem
-                                                            departure={dep}
-                                                            timeZone={timezone}
-                                                            onDepartureClick={onDepartureClick}
-                                                            hideHeadsign={true}
-                                                            isHighlighted={!!dep.tripId && dep.tripId === highlightedTripId}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            <DepartureList departures={visibleDepartures}>
+                                                {(dep) => (
+                                                    <DepartureItem
+                                                        departure={dep}
+                                                        timeZone={timezone}
+                                                        onDepartureClick={onDepartureClick}
+                                                        hideHeadsign={true}
+                                                        isHighlighted={!!dep.tripId && dep.tripId === highlightedTripId}
+                                                    />
+                                                )}
+                                            </DepartureList>
                                         </CardContent>
 
                                         {hasMore && (

@@ -10,10 +10,11 @@ import { formatStopDistance } from '@/hooks/derived/useStopDistance';
 import { getStopDistanceInfo } from '@/domain/stops';
 import { nextDepartures } from '@/domain/departures';
 import { cn } from 'cn';
-import { FavoriteDepartureRow } from './FavoriteDepartureRow';
 import { Badge } from '@/components/ui/badge';
 import { CardTitle } from '@/components/ui/card';
-import { FavoriteCard } from './FavoriteCard';
+import { FavoriteCard, type FavoriteDragHandle } from './FavoriteCard';
+import { FavoriteDepartureRow } from './FavoriteDepartureRow';
+import { DepartureList } from '@/components/DetailPanel/DepartureBoard/DepartureList';
 import {
     MAP_CAMERA,
     DEPARTURES_CONFIG
@@ -22,17 +23,22 @@ import type { StopFeature, Departure } from '@/types';
 import { useCityConfig } from '@/hooks/data/useCities';
 
 interface FavoritesStopCardProps {
+    /** The ids the stop was pinned under, all of which unpinning removes. */
+    pinnedIds: string[];
     stopFeature: StopFeature;
     departures: Departure[];
     isLoading: boolean;
     isError: boolean;
+    dragHandle?: FavoriteDragHandle;
 }
 
 export const FavoritesStopCard = ({ 
+    pinnedIds,
     stopFeature, 
     departures, 
     isLoading, 
-    isError
+    isError,
+    dragHandle
 }: FavoritesStopCardProps) => {
     const { t } = useTranslation();
     const { timezone } = useCityConfig();
@@ -41,7 +47,7 @@ export const FavoritesStopCard = ({
 
     const userLocation = useGeolocationStore(s => s.userLocation);
 
-    const { toggleFavorite } = usePreferencesStore(s => s.actions);
+    const { removeFavoriteStops } = usePreferencesStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const { stop_id, stop_name, platform_code } = stopFeature.properties;
@@ -69,7 +75,8 @@ export const FavoritesStopCard = ({
     return (
         <FavoriteCard
             onOpen={handleCardClick}
-            onUnpin={() => toggleFavorite(stop_id)}
+            dragHandle={dragHandle}
+            onUnpin={() => removeFavoriteStops(pinnedIds)}
             unpinLabel={t('map.departures.removeFromFavorites')}
             header={
                 <div className="min-w-0 flex-1">
@@ -109,11 +116,9 @@ export const FavoritesStopCard = ({
                         {t('map.departures.noUpcoming')}
                     </div>
                 ) : (
-                    <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
-                        {next2Departures.map((dep, idx) => (
-                            <FavoriteDepartureRow key={dep.tripId ? `${dep.tripId}-${dep.scheduled}` : idx} dep={dep} timeZone={timezone} isOdd={idx % 2 === 1} showLine />
-                        ))}
-                    </div>
+                    <DepartureList departures={next2Departures}>
+                        {(dep) => <FavoriteDepartureRow dep={dep} timeZone={timezone} />}
+                    </DepartureList>
                 )}
         </FavoriteCard>
     );

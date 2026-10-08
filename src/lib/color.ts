@@ -7,6 +7,10 @@ const HEX_COLOR = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 export const safeHexColor = (value: string | null | undefined): string | null =>
     value && HEX_COLOR.test(value) ? value : null;
 
+/** The coloured rule under a line's main header, from a `safeHexColor` result. */
+export const lineRuleColor = (routeColor: string | null) =>
+    routeColor ? `color-mix(in srgb, ${routeColor} 60%, transparent)` : 'rgba(255,255,255,0.15)';
+
 const parseHex6 = (hex: string): number[] | null =>
     /^#[0-9a-f]{6}$/i.test(hex) ? [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)) : null;
 

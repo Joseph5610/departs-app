@@ -51,6 +51,7 @@ const FeedbackModal = lazy(() => import('@/components/Modals/FeedbackModal/Feedb
 const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default: m.StatsPanel })));
 const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
+import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
 
 /**
  * Manages the layout of the map and its overlays.
@@ -125,7 +126,7 @@ const MapInner = () => {
     const detailSubHeader = useMemo(() => (
         isStatsRoute ? <StatsTabs /> :
         selectedPos ? <PointOfSaleHeader pos={selectedPos} /> :
-        (!isFavoritesRoute ? <DepartureBoardHeader /> : undefined)
+        (isFavoritesRoute ? <FavoritesTabs /> : <DepartureBoardHeader />)
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
 
     const hasVehicleActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedVehicle);

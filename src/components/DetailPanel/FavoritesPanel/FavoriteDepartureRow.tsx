@@ -6,45 +6,50 @@ import { Countdown } from '@/components/DetailPanel/DepartureBoard/Countdown';
 import { LineBadge } from '@/components/LineBadge';
 import { IconTooltip } from '@/components/IconTooltip';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import type { Departure } from '@/types';
 import { formatTimetableClock } from '@/domain/time';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { usePreferencesStore } from '@/state/preferencesStore';
 
-/** One departure in a favourites card; a pinned line's card leaves out the line and headsign it already shows. */
-export const FavoriteDepartureRow = ({ dep, timeZone, isOdd, showLine = false }: { dep: Departure; timeZone: string; isOdd: boolean; showLine?: boolean }) => {
+/** One departure in a favourite stop's card, opening its trip. */
+export const FavoriteDepartureRow = ({ dep, timeZone }: { dep: Departure; timeZone: string }) => {
     const { t } = useTranslation();
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const isTrain = dep.type === 'train';
+    const { tripId } = dep;
 
     return (
-        <div className={cn(
-            "flex items-center gap-3 min-h-11 py-1.5 px-4",
-            isOdd && "bg-black/[0.015] dark:bg-white/[0.02]"
-        )}>
-            <div className="flex flex-col shrink-0 w-10 gap-0.5">
+        <Button
+            variant="ghost"
+            size="row"
+            onClick={tripId ? () => navigate(paths.trip(selectedCity, tripId, dep.vehicleId)) : undefined}
+            data-testid={`favorite-departure-${tripId}`}
+            className={cn("text-foreground hover:text-foreground", tripId ? "hover:bg-muted/50" : "cursor-default")}
+        >
+            <div className="flex flex-col shrink-0 w-12 gap-0.5">
                 <span className={cn(
-                    "text-muted-foreground text-[13px] font-medium leading-tight tabular-nums",
+                    "text-muted-foreground text-sm font-medium leading-tight tabular-nums",
                     dep.isCanceled && "line-through opacity-60"
                 )}>
                     {formatTimetableClock(dep.scheduled, timeZone)}
                 </span>
-                {!dep.isCanceled && <DelayText delay={dep.delay} className="text-[11px] leading-none" />}
+                {!dep.isCanceled && <DelayText delay={dep.delay} className="text-xs leading-none" />}
             </div>
 
             <div className="flex items-center gap-2 min-w-0 flex-1">
-                {showLine && (
-                    <>
-                        <LineBadge
-                            name={String(dep.line)}
-                            routeColor={dep.route_color || FALLBACK_ROUTE_COLOR}
-                        />
-                        <span className={cn(
-                            "text-foreground text-[13px] font-medium truncate min-w-0 leading-tight",
-                            dep.isCanceled && "line-through text-muted-foreground"
-                        )}>
-                            {dep.headsign}
-                        </span>
-                    </>
-                )}
+                <LineBadge
+                    name={String(dep.line)}
+                    routeColor={dep.route_color || FALLBACK_ROUTE_COLOR}
+                />
+                <span className={cn(
+                    "text-foreground text-sm font-medium truncate min-w-0 leading-tight",
+                    dep.isCanceled && "line-through text-muted-foreground"
+                )}>
+                    {dep.headsign}
+                </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -53,7 +58,7 @@ export const FavoriteDepartureRow = ({ dep, timeZone, isOdd, showLine = false }:
                         label={t('map.departures.platform')}
                         className="justify-center min-w-6 gap-1 px-1.5 py-0.5 bg-muted rounded-md border text-xs font-semibold text-muted-foreground leading-none tabular-nums"
                     >
-                        <Train size={12} className="opacity-50" aria-hidden="true" />
+                        <Train size={12} className="size-3 opacity-50" aria-hidden="true" />
                         <span>{dep.platform}</span>
                     </IconTooltip>
                 )}
@@ -63,11 +68,11 @@ export const FavoriteDepartureRow = ({ dep, timeZone, isOdd, showLine = false }:
                         {t('map.departures.canceled')}
                     </Badge>
                 ) : (
-                    <span className="text-sm font-bold leading-none text-right min-w-12 tabular-nums">
+                    <span className="text-sm font-bold leading-none shrink-0 min-w-12 text-right tabular-nums">
                         <Countdown timestamp={dep.timestamp} />
                     </span>
                 )}
             </div>
-        </div>
+        </Button>
     );
 };

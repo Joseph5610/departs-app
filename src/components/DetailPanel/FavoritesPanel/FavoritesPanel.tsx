@@ -1,58 +1,58 @@
-import { useMemo } from 'react';
-
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Reorder } from 'framer-motion';
+import { Star } from 'lucide-react';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { useStops } from '@/hooks/data/useStops';
+import { useFavorites } from '@/hooks/derived/useFavorites';
 import { useFavoriteDepartures } from '@/hooks/data/useFavoriteDepartures';
+import { moveShown } from '@/domain/departures';
 import { FavoritesStopCard } from './FavoritesStopCard';
 import { FavoriteLineCard } from './FavoriteLineCard';
 import { FavoritesStopCardSkeleton } from './FavoritesStopCardSkeleton';
-import { Star } from 'lucide-react';
+import { SortableFavorite } from './SortableFavorite';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import { stopsByIds } from '@/domain/stops';
+import type { FavoriteLine, PinnedStop } from '@/types';
 
 export const FavoritesPanel = () => {
     const { t } = useTranslation();
 
-    const favoriteStops = usePreferencesStore(s => s.favoriteStops);
-    const allFavoriteLines = usePreferencesStore(s => s.favoriteLines);
-
-    const { isLoading: stopsLoading, stopIndex } = useStops();
-
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const favoriteLines = useMemo(
-        () => allFavoriteLines.filter(fav => fav.city === selectedCity),
-        [allFavoriteLines, selectedCity]
-    );
-
-    const favoriteStopFeatures = useMemo(() => {
-        if (!stopIndex || favoriteStops.length === 0) return [];
-
-        return stopsByIds(stopIndex, favoriteStops);
-    }, [stopIndex, favoriteStops]);
+    const { allLines: favoriteLines, allStops: favoriteStops, lines, stops, stopIndex, isLoading: stopsLoading, pinnedStopCount, hasTabs } = useFavorites();
+    const { reorderFavoriteLines, reorderFavoriteStops } = usePreferencesStore(s => s.actions);
 
     const stopIds = useMemo(() => {
-        const ids = new Set(favoriteStopFeatures.map(f => f.properties.stop_id));
+        const ids = new Set(favoriteStops.map(pin => pin.feature.properties.stop_id));
         for (const fav of favoriteLines) ids.add(fav.stopId);
         return [...ids];
-    }, [favoriteStopFeatures, favoriteLines]);
+    }, [favoriteStops, favoriteLines]);
 
     const { departuresByStop, isLoading: departuresLoading, isError } = useFavoriteDepartures(stopIds);
 
-    const hasFavorites = favoriteStops.length > 0 || favoriteLines.length > 0;
-    const isLoading = stopsLoading || (departuresLoading && hasFavorites);
+    const reorderStops = useCallback(
+        (pins: PinnedStop[]) => reorderFavoriteStops(pins.map(pin => pin.id)),
+        [reorderFavoriteStops]
+    );
+    const moveLine = useCallback(
+        (fav: FavoriteLine, delta: number) => reorderFavoriteLines([...moveShown(favoriteLines, fav, delta)]),
+        [favoriteLines, reorderFavoriteLines]
+    );
+    const moveStop = useCallback(
+        (pin: PinnedStop, delta: number) => reorderStops([...moveShown(favoriteStops, pin, delta)]),
+        [favoriteStops, reorderStops]
+    );
 
-    if (isLoading && hasFavorites) {
+    const hasFavorites = pinnedStopCount > 0 || favoriteLines.length > 0;
+
+    if ((stopsLoading || departuresLoading) && hasFavorites) {
         return (
             <div className="flex flex-col gap-3 pt-2">
-                {Array.from({ length: favoriteStops.length + favoriteLines.length }).map((_, idx) => (
+                {Array.from({ length: hasTabs ? lines.length + stops.length : pinnedStopCount + favoriteLines.length }).map((_, idx) => (
                     <FavoritesStopCardSkeleton key={idx} />
                 ))}
             </div>
         );
     }
 
-    if (favoriteStopFeatures.length === 0 && favoriteLines.length === 0) {
+    if (favoriteStops.length === 0 && favoriteLines.length === 0) {
         return (
             <Empty className="py-16 animate-in fade-in duration-500">
                 <EmptyHeader>
@@ -75,39 +75,41 @@ export const FavoritesPanel = () => {
 
     return (
         <div className="flex flex-col gap-3 pt-2">
-            {favoriteLines.length > 0 && favoriteStopFeatures.length > 0 && (
-                <span className="micro-label-widest text-muted-foreground px-1">{t('favorites.linesTitle')}</span>
+            {lines.length > 0 && (
+                <Reorder.Group as="div" axis="y" values={lines} onReorder={reorderFavoriteLines} className="flex flex-col gap-3">
+                    {lines.map((fav) => (
+                        <SortableFavorite key={`${fav.stopId}|${fav.line}|${fav.headsign}`} value={fav} sortable={lines.length > 1} onMove={moveLine}>
+                            {(handle) => (
+                                <FavoriteLineCard
+                                    favorite={fav}
+                                    stopFeature={stopIndex.get(fav.stopId)}
+                                    departures={departuresByStop.get(fav.stopId) ?? []}
+                                    isLoading={departuresLoading}
+                                    dragHandle={handle}
+                                />
+                            )}
+                        </SortableFavorite>
+                    ))}
+                </Reorder.Group>
             )}
-            {favoriteLines.map((fav) => (
-                <div key={`${fav.stopId}|${fav.line}|${fav.headsign}`} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-                    <FavoriteLineCard
-                        favorite={fav}
-                        stopFeature={stopIndex.get(fav.stopId)}
-                        departures={departuresByStop.get(fav.stopId) ?? []}
-                        isLoading={departuresLoading}
-                    />
-                </div>
-            ))}
-            {favoriteLines.length > 0 && favoriteStopFeatures.length > 0 && (
-                <span className="micro-label-widest text-muted-foreground px-1 mt-2">{t('favorites.stopsTitle')}</span>
+            {stops.length > 0 && (
+                <Reorder.Group as="div" axis="y" values={stops} onReorder={reorderStops} className="flex flex-col gap-3">
+                    {stops.map((pin) => (
+                        <SortableFavorite key={pin.id} value={pin} sortable={stops.length > 1} onMove={moveStop}>
+                            {(handle) => (
+                                <FavoritesStopCard
+                                    pinnedIds={pin.ids}
+                                    stopFeature={pin.feature}
+                                    departures={departuresByStop.get(pin.feature.properties.stop_id) ?? []}
+                                    isLoading={departuresLoading}
+                                    isError={isError}
+                                    dragHandle={handle}
+                                />
+                            )}
+                        </SortableFavorite>
+                    ))}
+                </Reorder.Group>
             )}
-            {favoriteStopFeatures.map((feature) => {
-                const stopId = feature.properties.stop_id;
-                const stopDepartures = departuresByStop.get(stopId) || [];
-                return (
-                    <div 
-                        key={stopId}
-                        className="animate-in fade-in slide-in-from-bottom-1 duration-200"
-                    >
-                        <FavoritesStopCard 
-                            stopFeature={feature} 
-                            departures={stopDepartures}
-                            isLoading={departuresLoading}
-                            isError={isError}
-                        />
-                    </div>
-                );
-            })}
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import type { Departure, FavoriteLine } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
+import { mapStable } from '@/lib/memoize';
 
 interface DepartureSubGroup {
     groupId: string;
@@ -110,6 +111,43 @@ export const favoritesFirst = (groups: DepartureLineGroup[], favorites: Readonly
 
 export const isSameFavoriteLine = (a: FavoriteLine, b: FavoriteLine): boolean =>
     a.city === b.city && a.stopId === b.stopId && a.line === b.line && a.headsign === b.headsign;
+
+/**
+ * `all` with the pins in `shown` put in `shown`'s order, each into a slot one of them held, so pins the
+ * panel does not show (another city's) keep their places; `all` itself when the order is unchanged.
+ */
+export const reorderShown = <T>(all: T[], shown: readonly T[]): T[] => {
+    const shownSet = new Set(shown);
+    let next = 0;
+    return mapStable(all, item => (shownSet.has(item) && next < shown.length ? shown[next++] : item));
+};
+
+/** `shown` with `item` moved `delta` places, kept within the list; `shown` itself when it cannot move. */
+export const moveShown = <T>(shown: readonly T[], item: T, delta: number): readonly T[] => {
+    const from = shown.indexOf(item);
+    const to = Math.min(Math.max(from + delta, 0), shown.length - 1);
+    if (from === -1 || to === from) return shown;
+    const next = shown.filter(other => other !== item);
+    next.splice(to, 0, item);
+    return next;
+};
+
+/** The lines pinned in one city, in pin order. */
+export const favoriteLinesIn = (favorites: FavoriteLine[], city: string): FavoriteLine[] =>
+    favorites.filter(fav => fav.city === city);
+
+/**
+ * What the favourites panel lists: with both lines and stops pinned it shows tabs and only the open
+ * tab's pins, otherwise everything pinned.
+ */
+export const favoritesView = <S>(lines: FavoriteLine[], stops: S[], tab: 'lines' | 'stops') => {
+    const hasTabs = lines.length > 0 && stops.length > 0;
+    return {
+        hasTabs,
+        lines: !hasTabs || tab === 'lines' ? lines : [],
+        stops: !hasTabs || tab === 'stops' ? stops : [],
+    };
+};
 
 /** `favoriteKey`s of the lines pinned at one stop of one city. */
 export const favoriteKeysAt = (favorites: FavoriteLine[], city: string, stopId: string | null): string[] =>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PanelTabs } from '@/components/PanelTabs';
 import { BarChart3, Bus } from 'lucide-react';
 
 export const StatsTabs = () => {
@@ -9,19 +9,13 @@ export const StatsTabs = () => {
     const setViewMode = usePreferencesStore(s => s.actions.setStatsViewMode);
 
     return (
-        <div className="pt-1 pb-2 px-4 shrink-0">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'vehicles')}>
-                <TabsList variant="pill" className="w-full grid grid-cols-2">
-                    <TabsTrigger value="overview" className="cursor-pointer gap-1.5 text-xs font-semibold">
-                        <BarChart3 size={14} />
-                        <span>{t('stats.monitor.overview')}</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="vehicles" className="cursor-pointer gap-1.5 text-xs font-semibold">
-                        <Bus size={14} />
-                        <span>{t('stats.monitor.vehicles')}</span>
-                    </TabsTrigger>
-                </TabsList>
-            </Tabs>
-        </div>
+        <PanelTabs
+            value={viewMode}
+            onChange={setViewMode}
+            tabs={[
+                { value: 'overview', icon: <BarChart3 size={14} />, label: t('stats.monitor.overview') },
+                { value: 'vehicles', icon: <Bus size={14} />, label: t('stats.monitor.vehicles') },
+            ]}
+        />
     );
 };

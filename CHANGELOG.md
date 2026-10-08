@@ -4,6 +4,19 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.82.0] - 2026-10-08
+
+### Changed
+
+- Tapping a departure in a favourites card opens that trip; the card header still opens the stop's board.
+- Pinned lines in favourites get the departure board's line-coloured header.
+- With both lines and stops pinned, the favourites panel splits them into tabs and remembers the last one.
+- Favourites can be reordered by dragging a card's handle, or with its arrow keys.
+
+### Fixed
+
+- Unpinning a favourite stop saved under one of its platform ids now removes it.
+
 ## [0.81.0] - 2026-10-08
 
 ### Added

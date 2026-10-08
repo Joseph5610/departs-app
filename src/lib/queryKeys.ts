@@ -13,7 +13,8 @@ export const queryKeys = {
     vehicleDetail: (city: string, vehicleId: string | null, tripId: string | null, fleetUpdatedAt: number) => ['vehicle-detail', city, vehicleId, tripId, fleetUpdatedAt] as const,
     departures: (city: string, stopId: string | null) => ['departures', city, stopId] as const,
     boardDepartures: (city: string, stopId: string) => ['departures', 'board', city, stopId] as const,
-    favoriteDepartures: (city: string, stopIds: string[]) => ['departures', 'bulk', city, stopIds.join(',')] as const,
+    /** Sorted, so reordering favourites does not refetch. */
+    favoriteDepartures: (city: string, stopIds: string[]) => ['departures', 'bulk', city, [...stopIds].sort().join(',')] as const,
     alerts: (city: string) => ['alerts', city] as const,
     infotexts: (city: string) => ['infotexts', city] as const,
     geocoding: (url: string | null) => ['geocoding', url] as const,

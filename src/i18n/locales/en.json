@@ -407,12 +407,13 @@
   },
   "favorites": {
     "title": "Favorites",
-    "empty": "No favorite stops yet",
-    "emptySub": "Tap the star icon on any stop's departure board to pin it here.",
+    "empty": "No favorites yet",
+    "emptySub": "Tap the star on a stop, or on a line's direction in a departure board, to pin it here.",
     "pinLine": "Add {{line}} to {{headsign}} to favourites",
     "unpinLine": "Remove {{line}} to {{headsign}} from favourites",
-    "linesTitle": "Favourite lines",
-    "stopsTitle": "Stops",
+    "tabLines": "Lines",
+    "tabStops": "Stops",
+    "reorder": "Reorder",
     "fromStop": "from {{stop}}",
     "linesLimit": "You can add up to {{count}} favourite lines."
   },

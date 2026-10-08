@@ -412,12 +412,13 @@
   },
   "favorites": {
     "title": "Obľúbené",
-    "empty": "Žiadne obľúbené zastávky",
-    "emptySub": "Ťuknutím na hviezdičku v detaile zastávky si ju uložíte sem.",
+    "empty": "Zatiaľ žiadne obľúbené",
+    "emptySub": "Ťuknutím na hviezdičku pri zastávke alebo pri smere linky na tabuli odchodov si ich uložíte sem.",
     "pinLine": "Pridať linku {{line}} smer {{headsign}} do obľúbených",
     "unpinLine": "Odobrať linku {{line}} smer {{headsign}} z obľúbených",
-    "linesTitle": "Obľúbené linky",
-    "stopsTitle": "Zastávky",
+    "tabLines": "Linky",
+    "tabStops": "Zastávky",
+    "reorder": "Presunúť",
     "fromStop": "zo zastávky {{stop}}",
     "linesLimit": "Obľúbených liniek môže byť najviac {{count}}."
   },

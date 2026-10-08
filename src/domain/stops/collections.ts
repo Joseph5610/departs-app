@@ -1,4 +1,4 @@
-import type { SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
+import type { PinnedStop, SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
 
 /** The platforms and the station centroids of a stop list, as the map's two stop sources take them. */
 export const splitStopCollection = (collection: StopCollection | undefined) => {
@@ -32,6 +32,26 @@ export const matchesStopTypeFilter = (props: StopProperties | null, stopTypeFilt
 /** The stops for `ids` that the stop list knows, in the order given. */
 export const stopsByIds = (stopIndex: ReadonlyMap<string, StopFeature>, ids: readonly string[]): StopFeature[] =>
     ids.map(id => stopIndex.get(id)).filter((s): s is StopFeature => s !== undefined);
+
+/**
+ * The pinned stops the stop list knows, in pin order, each kept with its pinned ids so unpinning and
+ * reordering write those ids back; a stop pinned under several ids is listed once, at its first pin.
+ */
+export const pinnedStops = (stopIndex: ReadonlyMap<string, StopFeature>, ids: readonly string[]): PinnedStop[] => {
+    const byFeature = new Map<StopFeature, PinnedStop>();
+    for (const id of ids) {
+        const feature = stopIndex.get(id);
+        if (!feature) continue;
+        const pin = byFeature.get(feature);
+        if (pin) pin.ids.push(id);
+        else byFeature.set(feature, { id, ids: [id], feature });
+    }
+    return [...byFeature.values()];
+};
+
+/** The colour of `line` as the stop list records it for this stop, or undefined when the stop does not list it. */
+export const lineColorAt = (stop: StopFeature | undefined, line: string): string | undefined =>
+    stop?.properties.lines?.find(l => l.name === line)?.route_color;
 
 const stopSummary = (feature: StopFeature) => {
     const { stop_id, stop_name, platform_code, is_train, metro_lines, lines } = feature.properties;

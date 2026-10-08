@@ -9,7 +9,7 @@ import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { firstUnique } from '@/lib/search';
-import { isSameFavoriteLine } from '@/domain/departures';
+import { isSameFavoriteLine, reorderShown } from '@/domain/departures';
 
 
 interface PreferencesState {
@@ -31,6 +31,8 @@ interface PreferencesState {
     delayFilter: string[];
     statsTab: 'screen' | 'network';
     statsViewMode: 'overview' | 'vehicles';
+    /** The favourites panel's tab, shown when both lines and stops are pinned. */
+    favoritesTab: 'lines' | 'stops';
     hasSeenWelcome: boolean;
     hasSeenInstallPrompt: boolean;
     /** How often live vehicles and departures refresh. */
@@ -54,6 +56,12 @@ interface PreferencesActions {
     unlockCity: (city: string) => void;
     toggleFavorite: (stopId: string) => void;
     toggleFavoriteLine: (line: FavoriteLine) => void;
+    /** Puts the pinned lines the panel shows in this order. */
+    reorderFavoriteLines: (shown: FavoriteLine[]) => void;
+    /** Puts the pinned stops the panel shows in this order. */
+    reorderFavoriteStops: (shownIds: string[]) => void;
+    /** Unpins a stop pinned under any of these ids. */
+    removeFavoriteStops: (ids: string[]) => void;
     addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
@@ -62,6 +70,7 @@ interface PreferencesActions {
     setDelayFilter: (filter: string[]) => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
     setStatsViewMode: (mode: 'overview' | 'vehicles') => void;
+    setFavoritesTab: (tab: 'lines' | 'stops') => void;
     setRefreshIntervalS: (seconds: RefreshIntervalS) => void;
 }
 
@@ -90,6 +99,7 @@ const PERSISTED_KEYS = [
     'hasSeenInstallPrompt',
     'unlockedCities',
     'refreshIntervalS',
+    'favoritesTab',
 ] as const satisfies ReadonlyArray<keyof PreferencesState>;
 
 type PersistedPreferences = Pick<PreferencesState, typeof PERSISTED_KEYS[number]>;
@@ -97,6 +107,7 @@ type PersistedPreferences = Pick<PreferencesState, typeof PERSISTED_KEYS[number]
 const ALLOWED_VALUES: Partial<Record<keyof PersistedPreferences, readonly string[]>> = {
     departureSort: ['line', 'departure'],
     mapBaseStyle: ['nolabels', 'labels'],
+    favoritesTab: ['lines', 'stops'],
 };
 
 const coordinatesSchema = z.tuple([z.number(), z.number()]);
@@ -180,6 +191,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             delayFilter: [],
             statsTab: 'screen',
             statsViewMode: 'overview',
+            favoritesTab: 'lines',
             unlockedCities: [getUrlUnlockedCity()].filter((slug): slug is string => slug !== null),
             hasSeenWelcome: false,
             hasSeenInstallPrompt: false,
@@ -207,6 +219,15 @@ export const usePreferencesStore = create<PreferencesStore>()(
                                 : [...state.favoriteLines, line],
                         };
                     }),
+                reorderFavoriteLines: (shown) => set((state) => {
+                    const favoriteLines = reorderShown(state.favoriteLines, shown);
+                    return favoriteLines === state.favoriteLines ? state : { favoriteLines };
+                }),
+                reorderFavoriteStops: (shownIds) => set((state) => {
+                    const favoriteStops = reorderShown(state.favoriteStops, shownIds);
+                    return favoriteStops === state.favoriteStops ? state : { favoriteStops };
+                }),
+                removeFavoriteStops: (ids) => set((state) => ({ favoriteStops: state.favoriteStops.filter(id => !ids.includes(id)) })),
                 toggleFavorite: (stopId) =>
                     set((state) => {
                         const exists = state.favoriteStops.includes(stopId);
@@ -229,6 +250,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setDelayFilter: (filter) => set({ delayFilter: filter }),
                 setStatsTab: (tab) => set({ statsTab: tab }),
                 setStatsViewMode: (mode) => set({ statsViewMode: mode }),
+                setFavoritesTab: (tab) => set({ favoritesTab: tab }),
                 setRefreshIntervalS: (refreshIntervalS) => set({ refreshIntervalS }),
             },
         }),

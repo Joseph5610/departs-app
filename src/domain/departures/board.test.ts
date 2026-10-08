@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, nextDeparturesOf, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, favoriteLinesIn, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -118,6 +118,37 @@ describe('pinned lines', () => {
         { city: 'brno', stopId: 'U1', line: '9', headsign: 'Lesná' },
         { city: 'prague', stopId: 'U2', line: '9', headsign: 'Spojovací' },
     ];
+
+    // The panel shows one city's pins; reordering them must not move another city's.
+    it('reorders the shown pins into their own slots, leaving the hidden ones in place', () => {
+        const [bilaHora, lesna, spojovaci] = favorites;
+        expect(reorderShown(favorites, [spojovaci, bilaHora])).toEqual([spojovaci, lesna, bilaHora]);
+    });
+
+    it('moves a pin one place with the keyboard, stopping at either end', () => {
+        const [a, b, c] = favorites;
+        expect(moveShown(favorites, c, -1)).toEqual([a, c, b]);
+        expect(moveShown(favorites, a, -1)).toBe(favorites);
+    });
+
+    // A stored list can repeat an id; reordering must never write an empty slot, which would void the whole list.
+    it('keeps a repeated pin in place rather than leaving a slot empty', () => {
+        expect(reorderShown(['S1', 'S2', 'S1'], ['S2', 'S1'])).toEqual(['S2', 'S1', 'S1']);
+    });
+
+    it('lists only this city\'s pinned lines', () => {
+        expect(favoriteLinesIn(favorites, 'brno')).toEqual([favorites[1]]);
+    });
+
+    it('splits lines and stops into tabs only when both are pinned', () => {
+        const lines = [favorites[0]];
+        expect(favoritesView(lines, ['S1'], 'stops')).toEqual({ hasTabs: true, lines: [], stops: ['S1'] });
+        expect(favoritesView(lines, [], 'stops')).toEqual({ hasTabs: false, lines, stops: [] });
+    });
+
+    it('returns the same list when the order is unchanged', () => {
+        expect(reorderShown(favorites, [favorites[0], favorites[2]])).toBe(favorites);
+    });
 
     // Stop ids repeat across networks, so a pin only counts in the city it was made in.
     it('keys only the pins of this stop in this city', () => {

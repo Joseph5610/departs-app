@@ -55,7 +55,13 @@ export const DepartureItem = memo(({
 
     const handleClick = (e: React.MouseEvent) => {
         if (!dep.tripId) return;
-        
+
+        // Enter or Space on a focused row clicks without a pointer.
+        if (e.detail === 0) {
+            onDepartureClick(dep.tripId, dep.vehicleId, dep);
+            return;
+        }
+
         if (clickStartPos.current) {
             const dx = e.clientX - clickStartPos.current.x;
             const dy = e.clientY - clickStartPos.current.y;
@@ -76,15 +82,12 @@ export const DepartureItem = memo(({
     return (
         <Button
             variant="ghost"
+            size="row"
             onPointerDown={handlePointerDown}
             onClick={handleClick}
             data-testid={`departure-item-${dep.tripId}`}
             className={cn(
-                "w-full h-auto min-h-13 flex items-center justify-start gap-3 py-2.5 px-4 rounded-none font-normal text-left transition-colors",
-                dep.tripId
-                    ? "hover:bg-muted/50 cursor-pointer"
-                    : "cursor-default",
-                "focus-visible:outline-none focus-visible:bg-muted/50",
+                dep.tripId ? "hover:bg-muted/50" : "cursor-default",
                 isMarked && "bg-primary/10 hover:bg-primary/15 shadow-[inset_3px_0_0_var(--color-primary)]"
             )}
         >
