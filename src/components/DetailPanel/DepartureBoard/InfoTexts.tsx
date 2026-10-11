@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertIcon } from '@/components/Alerts/AlertIcon';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
@@ -58,7 +58,7 @@ const InfoTextCard = ({ info }: { info: Infotext }) => {
             </AlertTitle>
 
             <AlertDescription className="grid gap-2">
-                <div className="text-[10px] font-semibold text-foreground/60 mt-0.5">
+                <div className="text-label font-semibold text-foreground/60 mt-0.5">
                     {info.valid_to
                         ? `${formatDateTime(info.valid_from, i18n.resolvedLanguage)} – ${formatDateTime(info.valid_to, i18n.resolvedLanguage)}`
                         : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.resolvedLanguage) })}

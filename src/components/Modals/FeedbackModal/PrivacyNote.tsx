@@ -5,7 +5,7 @@ import { paths } from '@/lib/routes';
 export const PrivacyNote = () => {
     const { t } = useTranslation();
     return (
-        <p className="text-[11px] text-muted-foreground text-center px-2">
+        <p className="text-caption text-muted-foreground text-center px-2">
             {t('feedback.privacyNote')}{' '}
             <a href={paths.privacy} target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.links.privacy')}</a>
         </p>

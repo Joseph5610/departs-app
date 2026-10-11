@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Hand } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { stopDisplayTimes } from '@/domain/vehicles';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
@@ -99,7 +99,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
 
                 <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-1.5 min-w-0 pr-2 flex-1">
                     {showZone ? (
-                        <span className="text-[9px] text-muted-foreground/80 font-semibold bg-foreground/5 px-1 py-0.5 rounded-[3px] border border-border/40 leading-none tabular-nums flex-shrink-0 transition-colors duration-700">
+                        <span className="text-micro text-muted-foreground/80 font-semibold bg-foreground/5 px-1 py-0.5 rounded-[3px] border border-border/40 leading-none tabular-nums flex-shrink-0 transition-colors duration-700">
                             {stop.properties.zone_id}
                         </span>
                     ) : <span />}
@@ -136,7 +136,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                         </div>
                     </div>
                     {isExit ? (
-                        <span className="col-start-2 text-[9px] font-bold uppercase tracking-wider text-primary leading-none mt-0.5">{exitKind === 'shared' ? t('share.sharedExit') : t('ride.yourStop')}</span>
+                        <span className="col-start-2 text-micro font-bold uppercase tracking-wider text-primary leading-none mt-0.5">{exitKind === 'shared' ? t('share.sharedExit') : t('ride.yourStop')}</span>
                     ) : null}
                 </div>
                 <TimelineTime {...time} isPast={isPast} />

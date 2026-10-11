@@ -182,11 +182,11 @@ export const AdminFeedback = () => {
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5">
                                         {getIcon(item.type)}
-                                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-foreground/5 border-border/40 text-muted-foreground">
+                                        <Badge variant="outline" className="micro-label px-2 py-0.5 rounded-md bg-foreground/5 border-border/40 text-muted-foreground">
                                             {item.type.replace('_', ' ')}
                                         </Badge>
                                     </div>
-                                    <span className="text-[11px] font-mono text-muted-foreground/70 whitespace-nowrap">
+                                    <span className="text-caption font-mono text-muted-foreground/70 whitespace-nowrap">
                                         {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
                                     </span>
                                 </div>
@@ -194,7 +194,7 @@ export const AdminFeedback = () => {
                                     {item.message}
                                 </p>
                                 {item.email && (
-                                    <div className="text-[11px] font-mono text-primary/90 truncate flex items-center gap-1 mt-0.5">
+                                    <div className="text-caption font-mono text-primary/90 truncate flex items-center gap-1 mt-0.5">
                                         <span className="opacity-60">@</span> {item.email}
                                     </div>
                                 )}
@@ -264,7 +264,7 @@ export const AdminFeedback = () => {
                                                     <AlertOctagon className="w-3.5 h-3.5" />
                                                     Error Stack
                                                 </p>
-                                                <pre className="text-[11px] text-red-400 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-red-500/20">
+                                                <pre className="text-caption text-red-400 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-red-500/20">
                                                     {selectedItem.diagnostics.crashInfo.errorStack}
                                                 </pre>
                                             </div>
@@ -275,7 +275,7 @@ export const AdminFeedback = () => {
                                                     <AlertOctagon className="w-3.5 h-3.5" />
                                                     Component Stack
                                                 </p>
-                                                <pre className="text-[11px] text-orange-300 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-orange-500/20">
+                                                <pre className="text-caption text-orange-300 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-orange-500/20">
                                                     {selectedItem.diagnostics.crashInfo.componentStack}
                                                 </pre>
                                             </div>
@@ -285,15 +285,15 @@ export const AdminFeedback = () => {
                                 
                                 <div className="flex flex-col gap-2 text-xs font-mono text-muted-foreground/80 bg-foreground/2 p-4 rounded-xl border border-border/40">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Feedback ID:</span>
+                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Feedback ID:</span>
                                         <span className="text-foreground/90 font-mono break-all">{selectedItem.id}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Client IP:</span>
+                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Client IP:</span>
                                         <span className="text-foreground/90 font-mono">{selectedItem.ipAddress}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-[10px] font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Exact Time:</span>
+                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Exact Time:</span>
                                         <span className="text-foreground/90 font-mono">{new Date(selectedItem.timestamp).toLocaleString()}</span>
                                     </div>
                                 </div>

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "cn"
+import { cn } from "@/lib/cn"
 
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -13,6 +13,8 @@ const cardVariants = cva(
         subtle: "bg-card text-foreground border border-border/50 shadow-sm",
         /** Departure-board and favourites cards: a darker surface than `card` in dark mode. */
         panel: "bg-card text-foreground border border-border/50 shadow-sm ring-0 dark:border-white/10 dark:bg-[#161616]",
+        /** Rows and groups on a glassy surface such as the mobile sheet: translucent, so the glass still reads. */
+        inset: "bg-foreground/[0.045] text-foreground border border-border/40 dark:border-white/[0.07]",
       },
     },
     defaultVariants: {

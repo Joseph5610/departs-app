@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BellRing, Check, ChevronUp, Share2, UserRound, X } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { useNow } from '@/hooks/useNow';
@@ -79,10 +79,10 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                         )}
                     </span>
                     <span className="flex flex-col min-w-0 flex-1 leading-tight">
-                        <span className={cn("text-[10px] font-bold uppercase tracking-wider truncate", isAccent ? "text-primary-foreground/80" : "text-primary")}>{kicker}</span>
+                        <span className={cn("micro-label truncate", isAccent ? "text-primary-foreground/80" : "text-primary")}>{kicker}</span>
                         <span className="text-sm font-bold truncate">{exitStopName}</span>
                         {(showStopsLeft || showArrival) && (
-                            <span className={cn("text-[11px] tabular-nums truncate", subtle)}>
+                            <span className={cn("text-caption tabular-nums truncate", subtle)}>
                                 {showStopsLeft && t('ride.stopsLeft', { count: stopsLeft })}
                                 {showStopsLeft && showArrival && ' · '}
                                 {showArrival && (
@@ -102,7 +102,7 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                         ) : (
                             <>
                                 <span className="text-xl font-black">{minutesToArrival}</span>
-                                <span className={cn("block text-[10px] font-semibold mt-0.5", subtle)}>min</span>
+                                <span className={cn("block text-label font-semibold mt-0.5", subtle)}>min</span>
                             </>
                         )}
                     </span>
@@ -190,12 +190,12 @@ export const RideBar = () => {
     return (
         <div
             className={cn(
-                // On phones the bars keep clear of the map controls on the right; from md they centre over the map.
-                "absolute z-50 pointer-events-none top-0 left-4 right-[4.75rem] flex flex-col items-center md:right-auto md:left-1/2 md:-translate-x-1/2 md:w-max",
+                // On phones the bars span the top of the map; from md they centre over the map.
+                "absolute z-50 pointer-events-none top-0 left-4 right-4 flex flex-col items-center md:right-auto md:left-1/2 md:-translate-x-1/2 md:w-max",
                 "transition-all duration-300 ease-in-out md:pt-0",
                 liveStatusHidden
-                    ? "pt-[calc(4.75rem+env(safe-area-inset-top,0))] md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
-                    : "pt-[calc(7rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]",
+                    ? "pt-[calc(0.75rem+env(safe-area-inset-top,0))] md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
+                    : "pt-[calc(3rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]",
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}
         >

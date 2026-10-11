@@ -7,6 +7,8 @@ interface UiState {
     /** Alert to scroll to and expand when the alerts modal opens. */
     focusedAlertGuid: string | null;
     isMcpModalOpen: boolean;
+    /** The phone's city picker, a card in the map sheet. */
+    isCityPickerOpen: boolean;
 }
 
 interface UiActions {
@@ -15,6 +17,7 @@ interface UiActions {
     setIsAlertsOpen: (open: boolean) => void;
     openAlert: (guid: string) => void;
     setIsMcpModalOpen: (open: boolean) => void;
+    setIsCityPickerOpen: (open: boolean) => void;
 }
 
 export interface UiStore extends UiState {
@@ -28,6 +31,7 @@ export const useUiStore = create<UiStore>()((set) => ({
     isAlertsOpen: false,
     focusedAlertGuid: null,
     isMcpModalOpen: false,
+    isCityPickerOpen: false,
 
     actions: {
         setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
@@ -35,5 +39,6 @@ export const useUiStore = create<UiStore>()((set) => ({
         setIsAlertsOpen: (open) => set(open ? { isAlertsOpen: true } : { isAlertsOpen: false, focusedAlertGuid: null }),
         openAlert: (guid) => set({ isAlertsOpen: true, focusedAlertGuid: guid }),
         setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
+        setIsCityPickerOpen: (open) => set({ isCityPickerOpen: open }),
     },
 }));

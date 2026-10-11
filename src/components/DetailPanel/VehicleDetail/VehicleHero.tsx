@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ export const VehicleHero = ({
             <div className="relative z-10 flex flex-col p-4 pb-3">
                 <div className="flex justify-between items-start gap-3">
                     <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        <span className="micro-label-widest text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
                         <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
@@ -111,7 +111,7 @@ export const VehicleHero = ({
                             <span className={cn("micro-label leading-none", noticeIconColor)}>
                                 {t(`map.vehicleDetails.${notice}`)}
                             </span>
-                            <span className={cn("text-[11px] leading-snug font-medium", noticeTextColor)}>
+                            <span className={cn("text-caption leading-snug font-medium", noticeTextColor)}>
                                 {t(`map.vehicleDetails.${notice}Description`)}
                             </span>
                         </div>
@@ -148,7 +148,7 @@ export const VehicleHero = ({
                                     </span>
                                 )}
                                 {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number) && (
-                                    <span className="text-muted-foreground/50 text-[9px] font-mono uppercase tracking-widest truncate">
+                                    <span className="text-muted-foreground/50 text-micro font-mono uppercase tracking-widest truncate">
                                         {displayVehicle.vehicle_id}
                                     </span>
                                 )}
@@ -190,7 +190,7 @@ const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: b
         return (
             <Badge
                 variant="outline"
-                className="h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
+                className="h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
             >
                 {t('map.vehicleDetails.unknownDelay')}
             </Badge>
@@ -205,7 +205,7 @@ const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: b
         <Badge
             variant="outline"
             className={cn(
-                "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
+                "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
                 isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
             )}
         >
@@ -231,7 +231,7 @@ const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { orig
         <Popover>
             <PopoverTrigger render={<button type="button" className="outline-none" />}>
                 <Badge variant="muted" className={cn(
-                    "h-6 px-2.5 rounded-md text-[9px] font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
+                    "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
                     isEnriched ? "text-emerald-500" :
                     (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
                 )}>
@@ -245,7 +245,7 @@ const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { orig
                 </Badge>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-62.5">
-                <span className="text-[13px] font-medium text-foreground/90 leading-tight block">
+                <span className="text-body-sm font-medium text-foreground/90 leading-tight block">
                     {isEnriched
                         ? t('map.vehicleDetails.enrichedTooltip')
                         : hasEnrichment

@@ -147,7 +147,7 @@ export const FeedExplorer = () => {
                             <span className="font-semibold">{debugFeedLabels[feedType]}</span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-auto">
-                            <Badge variant="outline" className="text-[10px] font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">
+                            <Badge variant="outline" className="text-label font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">
                                 {getItemsCount()} {feedType === 'vehicles' ? 'vehicles' : 'alerts'}
                             </Badge>
                             <Button

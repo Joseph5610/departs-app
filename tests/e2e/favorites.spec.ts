@@ -190,6 +190,8 @@ test.describe('Favorites Tests', () => {
 
         await page.goto('/prague/favorites');
 
+        // Handles appear only in reorder mode.
+        await page.getByTestId('favorites-reorder-toggle').click();
         const handles = page.getByTestId('favorite-drag-handle');
         await expect(handles).toHaveCount(3);
         const from = (await handles.nth(2).boundingBox())!;
@@ -199,18 +201,20 @@ test.describe('Favorites Tests', () => {
         await page.mouse.move(from.x + from.width / 2, to.y - 10, { steps: 25 });
         await page.mouse.up();
 
+        const reorderTitles = page.getByTestId('favorite-reorder-title');
+        await expect(reorderTitles).toHaveText(['Gama', 'Alfa', 'Beta']);
+
+        await page.reload();
         const titles = page.getByTestId('detail-panel').getByRole('button', { name: /^(Alfa|Beta|Gama)$/ });
         await expect(titles).toHaveText(['Gama', 'Alfa', 'Beta']);
 
-        await page.reload();
-        await expect(titles).toHaveText(['Gama', 'Alfa', 'Beta']);
-
-        // The handle also moves its card with the arrow keys, keeping focus for the next press.
+        // The handle also moves its row with the arrow keys, keeping focus for the next press.
+        await page.getByTestId('favorites-reorder-toggle').click();
         await handles.nth(2).focus();
         await page.keyboard.press('ArrowUp');
-        await expect(titles).toHaveText(['Gama', 'Beta', 'Alfa']);
+        await expect(reorderTitles).toHaveText(['Gama', 'Beta', 'Alfa']);
         await page.keyboard.press('ArrowUp');
-        await expect(titles).toHaveText(['Beta', 'Gama', 'Alfa']);
+        await expect(reorderTitles).toHaveText(['Beta', 'Gama', 'Alfa']);
     });
 
     // The sheet's swipe must not take over a reorder drag started on the handle.
@@ -241,6 +245,7 @@ test.describe('Favorites Tests', () => {
         });
 
         await page.goto('/prague/favorites');
+        await page.getByTestId('favorites-reorder-toggle').tap();
         const handle = page.getByTestId('favorite-drag-handle').first();
         await expect(handle).toBeVisible({ timeout: 30000 });
         const sheet = page.getByTestId('detail-panel');
@@ -259,7 +264,7 @@ test.describe('Favorites Tests', () => {
         expect(await sheetTop()).toBe(before);
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 
-        await expect(page.getByTestId('detail-panel').getByRole('button', { name: /^(Alfa|Beta)$/ })).toHaveText(['Beta', 'Alfa']);
+        await expect(page.getByTestId('favorite-reorder-title')).toHaveText(['Beta', 'Alfa']);
         expect(await sheetTop()).toBe(before);
         await context.close();
     });

@@ -8,7 +8,7 @@ import type { SearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
@@ -104,13 +104,13 @@ export const VehicleMonitorList = () => {
                         >
                             <Icon size={14} strokeWidth={1.75} />
                             <span>{t(`settings.vehicleTypes.${slug}`)}</span>
-                            <span className="text-[10px] opacity-75">({count})</span>
+                            <span className="text-label opacity-75">({count})</span>
                         </button>
                     );
                 })}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
+            <div className="flex items-center justify-between text-caption text-muted-foreground px-1">
                 <span>
                     {t('stats.monitor.showingCount', { count: items.length, total: totalCount })}
                 </span>

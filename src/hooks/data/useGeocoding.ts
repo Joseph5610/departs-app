@@ -139,8 +139,11 @@ export const useGeocoding = (
             for (const raw of json.features) {
                 const feature = photonFeatureSchema.safeParse(raw);
                 const place = feature.success ? parsePhotonFeature(feature.data) : null;
-                if (!place || seen.has(place.id)) continue;
+                // OSM splits a street into several ways; they list as one place.
+                const label = place && `${place.name}|${place.subtitle}`;
+                if (!place || !label || seen.has(place.id) || seen.has(label)) continue;
                 seen.add(place.id);
+                seen.add(label);
                 results.push(place);
                 rememberPlace(place);
             }

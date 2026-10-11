@@ -9,6 +9,8 @@
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
 :root {
+  /* The app's full height; an installed PWA uses 100vh, as its 100dvh stops short of the bottom of the screen. */
+  --app-height: 100dvh;
   --sidebar-width: 420px;
   /* Gap between the desktop sidebar and the viewport edges; the map camera reads both values. */
   --sidebar-inset: 20px;
@@ -108,7 +110,29 @@
   --letter-spacing: -0.015em;
 }
 
+/* `.standalone` comes from index.html: iOS home-screen apps do not match display-mode: standalone. */
+:root.standalone {
+  --app-height: 100vh;
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --app-height: 100vh;
+  }
+}
+
 @theme inline {
+  /* Type scale for the sizes between Tailwind's steps (xs 12, sm 14, base 16, lg 18). Only the size: line
+     height inherits unless a leading-* class sets it. Use these, never text-[13px]. */
+  --text-nano: 0.5rem;        /*  8px  long names in the smallest line badges */
+  --text-micro: 0.5625rem;    /*  9px  tiny badges and zone codes */
+  --text-label: 0.625rem;     /* 10px  micro labels, compact badges */
+  --text-badge: 0.65625rem;   /* 10.5px  platform codes in circles */
+  --text-caption: 0.6875rem;  /* 11px  captions and small print */
+  --text-body-sm: 0.8125rem;  /* 13px  secondary text: departure times, chips, notes */
+  --text-title: 0.9375rem;    /* 15px  row and item titles, e.g. a headsign */
+  --text-heading: 1.0625rem;  /* 17px  section headings, the live countdown */
+
   /* Favourite stops and lines: stars and pins. */
   --color-favorite: oklch(76.9% 0.188 70.08);
   --color-favorite-hover: oklch(82.8% 0.189 84.429);
@@ -191,21 +215,13 @@
     margin: 0;
     padding: 0;
     width: 100vw;
-    height: 100dvh;
+    height: var(--app-height);
     overflow: hidden;
     overscroll-behavior: none;
     pointer-events: auto !important;
     @apply bg-background text-foreground font-sans selection:bg-primary/20;
   }
 
-  /* Keep 100vh for PWA to ensure it fills the physical screen behind the home indicator */
-  @media (display-mode: standalone) {
-
-    html,
-    body {
-      height: 100vh;
-    }
-  }
 
   /* Rely matches the backdrop behavior in dialog.tsx - modal backdrops naturally block interaction */
 
@@ -223,15 +239,9 @@
 
   #root {
     width: 100vw;
-    height: 100dvh;
+    height: var(--app-height);
     overflow: hidden;
     pointer-events: auto !important;
-  }
-
-  @media (display-mode: standalone) {
-    #root {
-      height: 100vh;
-    }
   }
 
   /* Make all Lucide icons crisp and prevent blurry antialiasing */
@@ -254,14 +264,14 @@
 
 
 @utility micro-label {
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 @utility micro-label-widest {
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -338,7 +348,7 @@
   line-height: 30px !important;
   padding: 0 12px !important;
   border-radius: 15px !important;
-  font-size: 11px !important;
+  font-size: var(--text-caption) !important;
   font-weight: 500 !important;
 }
 

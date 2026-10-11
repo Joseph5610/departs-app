@@ -51,7 +51,7 @@ export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
             >
                 <div className="flex flex-col p-4 gap-3">
                     <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-[11px] font-bold tracking-wide px-2.5 py-0.5 rounded-lg">
+                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-caption font-bold tracking-wide px-2.5 py-0.5 rounded-lg">
                             <Icon size={13} className="mr-1.5 shrink-0 inline" />
                             {t(`pos.types.${pos.type}`, pos.type)}
                         </Badge>
@@ -81,7 +81,7 @@ export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
                         {pos.openingHours.map((oh) => (
                             <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-b-0 last:py-0">
                                 <span className="font-semibold text-foreground">{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
-                                <span className="font-mono text-[12px] text-muted-foreground">{oh.hours}</span>
+                                <span className="font-mono text-xs text-muted-foreground">{oh.hours}</span>
                             </div>
                         ))}
                     </CardContent>

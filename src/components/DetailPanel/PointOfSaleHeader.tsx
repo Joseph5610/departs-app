@@ -21,7 +21,7 @@ export const PointOfSaleHeader = ({ pos }: PointOfSaleHeaderProps) => {
                         onClick={() => handleNavigate([pos.lon, pos.lat])}
                     >
                         <MapPin size={12} className="text-muted-foreground/80 mr-1.5" strokeWidth={1.5} />
-                        <span className="font-bold text-foreground text-[11px] tracking-tight whitespace-nowrap">
+                        <span className="font-bold text-foreground text-caption tracking-tight whitespace-nowrap">
                             {t('map.departures.openInMaps')}
                         </span>
                     </button>

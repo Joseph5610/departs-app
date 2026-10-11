@@ -7,9 +7,9 @@ import { LineBadge } from '@/components/LineBadge';
 import { Badge } from '@/components/ui/badge';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useSelectionStore } from '@/state/selectionStore';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { getDelayStatus } from '@/domain/delay';
-import type { EnrichedVehicleItem } from '@/domain/vehicles';
+import { vehicleDisplayNumber, type EnrichedVehicleItem } from '@/domain/vehicles';
 
 interface VehicleMonitorRowProps {
     item: EnrichedVehicleItem;
@@ -33,7 +33,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const isLate = delayStatus === 'late';
     const isEarly = delayStatus === 'early';
 
-    const displayId = item.vehicleId ? `#${item.vehicleId}` : '—';
+    const displayId = item.vehicleId ? `#${vehicleDisplayNumber(item.vehicleId)}` : '—';
 
     return (
         <div
@@ -60,14 +60,14 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
 
             <div className="flex items-center gap-2 shrink-0">
                 {delaySeconds === null ? (
-                    <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground bg-muted/20 border-transparent px-1.5 py-0.5">
+                    <Badge variant="outline" className="text-label font-medium text-muted-foreground bg-muted/20 border-transparent px-1.5 py-0.5">
                         {t('map.vehicleDetails.notAvailable')}
                     </Badge>
                 ) : (
                     <Badge
                         variant="outline"
                         className={cn(
-                            "text-[10px] font-bold tabular-nums px-2 py-0.5 border-transparent shadow-2xs",
+                            "text-label font-bold tabular-nums px-2 py-0.5 border-transparent shadow-2xs",
                             isLate ? "bg-destructive/10 text-destructive border-destructive/20" :
                             isEarly ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
                             "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"

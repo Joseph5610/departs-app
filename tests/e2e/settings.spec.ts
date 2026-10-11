@@ -15,11 +15,11 @@ test.describe('Settings tests', () => {
         await expect(settingsPage.container).toBeVisible();
 
         // Toggle Live Vehicles switch by clicking the row
-        await settingsPage.showVehiclesRow.click({ force: true });
+        await settingsPage.showVehiclesRow.click();
         await page.waitForTimeout(300);
         
         // Toggle it back
-        await settingsPage.showVehiclesRow.click({ force: true });
+        await settingsPage.showVehiclesRow.click();
         await page.waitForTimeout(300);
         
         // Ensure "metro" button exists (it should be visible when Live Vehicles is ON)
@@ -27,7 +27,7 @@ test.describe('Settings tests', () => {
         await expect(metroBtn).toBeVisible();
 
         // Toggle Show Stops
-        await settingsPage.showStopsRow.click({ force: true });
+        await settingsPage.showStopsRow.click();
         await page.waitForTimeout(300);
 
         // Close the modal using the Page Object method

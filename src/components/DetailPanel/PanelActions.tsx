@@ -14,7 +14,8 @@ import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { useUiStore } from '@/state/uiStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { BOARD_CONFIG, DEPARTURES_CONFIG, PREFERENCES_LIMITS } from '@/config/constants';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
+import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -111,6 +112,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
     return (
         <>
             {stopId ? (
+                <ButtonTooltip label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}>
                 <Button
                     variant="ghost"
                     size="icon-sm"
@@ -122,7 +124,9 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                 >
                     <Star size={chips ? 14 : 18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
                 </Button>
+                </ButtonTooltip>
             ) : (
+                <ButtonTooltip label={t('common.share')}>
                 <Button
                     variant="ghost"
                     size="icon-sm"
@@ -133,8 +137,10 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                 >
                     <Share2 size={18} strokeWidth={1.5} />
                 </Button>
+                </ButtonTooltip>
             )}
             <DropdownMenu>
+                <ButtonTooltip label={t('common.moreOptions')}>
                 <DropdownMenuTrigger render={
                     <Button
                         variant="ghost"
@@ -146,6 +152,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                         <MoreHorizontal size={chips ? 16 : 20} strokeWidth={1.5} />
                     </Button>
                 } />
+                </ButtonTooltip>
                 <DropdownMenuContent align="end" className="w-56">
                     {stopId && (
                         <>

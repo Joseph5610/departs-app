@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, favoriteLinesIn, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -186,3 +186,17 @@ describe('isMetroClosed', () => {
         expect(isMetroClosed(at, 'Europe/Prague', null)).toBe(false);
     });
 });
+
+describe('favoriteLineNames', () => {
+    // A disruption matters to a rider on a pinned line or on any line serving a pinned stop.
+    it('collects pinned lines and the lines of pinned stops', () => {
+        const stop = (lines: string[]) => ({
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [14.42, 50.08] as [number, number] },
+            properties: { stop_id: 's', stop_name: 's', location_type: 0, lines: lines.map(name => ({ name, type: 'tram' as const, route_color: '#000' })) },
+        });
+        const names = favoriteLineNames([{ city: 'prague', stopId: 'x', line: '17', headsign: 'Libuš' }], [stop(['9', '22']), stop(['22'])]);
+        expect([...names].sort()).toEqual(['17', '22', '9']);
+    });
+});
+

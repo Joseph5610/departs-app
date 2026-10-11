@@ -1,4 +1,4 @@
-import type { Departure, FavoriteLine } from '@/types';
+import type { StopFeature, Departure, FavoriteLine } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
 import { mapStable } from '@/lib/memoize';
@@ -178,4 +178,12 @@ export const groupsHidingTrips = (groups: DepartureLineGroup[], tripIds: Readonl
         }
     }
     return result;
+};
+
+/** Every line a rider follows: the pinned lines and all lines serving the pinned stops. */
+export const favoriteLineNames = (lines: readonly FavoriteLine[], stops: readonly StopFeature[]): Set<string> => {
+    const names = new Set<string>();
+    for (const fav of lines) names.add(fav.line);
+    for (const stop of stops) for (const line of stop.properties.lines ?? []) names.add(line.name);
+    return names;
 };

@@ -4,7 +4,7 @@ import { useRouteParams } from '@/hooks/useRouteParams';
 import { useViewportStore } from '@/state/viewportStore';
 import { secondsUntilRefresh, useLiveStatusYieldsToRides, useSystemStatus } from '@/hooks/derived/useSystemStatus';
 import { useNow } from '@/hooks/useNow';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { SystemStatusModal } from '@/components/Modals/SystemStatusModal';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { Filter } from 'lucide-react';
@@ -59,7 +59,7 @@ export const LiveStatus = () => {
             data-testid="live-status"
             className={cn(
                 "absolute z-50 pointer-events-none -translate-x-1/2 left-1/2 top-0",
-                "pt-[calc(4.75rem+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]",
+                "pt-[calc(0.75rem+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]",
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}
         >
@@ -74,11 +74,11 @@ export const LiveStatus = () => {
                         {config.icon}
                         
                         <div className="flex items-center gap-1.5 pt-px">
-                            <span className={cn("text-[9px] font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
+                            <span className={cn("text-micro font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
                                 {config.text}
                             </span>
                             {config.showCountdown && (
-                                <span className="text-[9px] font-bold text-muted-foreground/60 tabular-nums leading-none">
+                                <span className="text-micro font-bold text-muted-foreground/60 tabular-nums leading-none">
                                     {nextRefreshIn}s
                                 </span>
                             )}

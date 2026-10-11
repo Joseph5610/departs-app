@@ -14,8 +14,8 @@ export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps)
 
     const renderStatRow = (label: string, value: React.ReactNode) => (
         <div className="flex justify-between items-center py-2.5 border-b border-border/50 last:border-0">
-            <span className="text-[15px] font-medium text-foreground/80">{label}</span>
-            <span className="text-[15px] font-bold text-foreground tracking-tight tabular-nums">
+            <span className="text-title font-medium text-foreground/80">{label}</span>
+            <span className="text-title font-bold text-foreground tracking-tight tabular-nums">
                 {value}
             </span>
         </div>

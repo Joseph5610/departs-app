@@ -1,5 +1,5 @@
 import { Toggle } from '@/components/ui/toggle';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 
 export interface IconToggleProps {
     icon: React.ElementType;

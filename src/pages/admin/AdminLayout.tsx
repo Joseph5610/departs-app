@@ -29,7 +29,7 @@ export const AdminLayout = ({
           </Link>
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground">{title}</h1>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-md hidden sm:inline-block">
+            <span className="text-label font-extrabold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-md hidden sm:inline-block">
               Admin
             </span>
           </div>

@@ -58,7 +58,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
                 <EmptyTitle className="text-base font-bold text-foreground/90">
                     {displayTitle}
                 </EmptyTitle>
-                <EmptyDescription className="text-[13px] max-w-55">
+                <EmptyDescription className="text-body-sm max-w-55">
                     {message}
                 </EmptyDescription>
             </EmptyHeader>

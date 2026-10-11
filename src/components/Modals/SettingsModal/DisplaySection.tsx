@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
@@ -177,7 +177,7 @@ export const DisplaySection = () => {
                         </ItemMedia>
                         <ItemContent>
                             <ItemTitle className="text-foreground">{t('settings.showStops.labels')}</ItemTitle>
-                            <ItemDescription className="text-[10px] font-normal">{t('settings.showStops.labelsDescription')}</ItemDescription>
+                            <ItemDescription className="text-label font-normal">{t('settings.showStops.labelsDescription')}</ItemDescription>
                         </ItemContent>
                         <ItemActions>
                             <Switch

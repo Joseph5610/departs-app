@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 
 interface IconTooltipProps {
     label: string;

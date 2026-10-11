@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
+import { HistoryItemIcon } from './HistoryItemIcon';
+import { historyItemSubtitle, historyItemTitle } from './historyItemText';
 import { getLineMetadataFromMap, type LineMetadata } from '@/domain/routes';
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 
 import type { StopFeature, SearchHistoryItem, VehicleFeature } from '@/types';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
@@ -34,7 +36,7 @@ interface SearchDropdownProps {
 const SearchGroup = ({ heading, className, children }: { heading?: React.ReactNode; className?: string; children: React.ReactNode }) => (
     <Autocomplete.Group className={cn('overflow-hidden text-foreground p-0', className)}>
         {heading && (
-            <Autocomplete.GroupLabel className="px-3 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <Autocomplete.GroupLabel className="px-3 pt-3 pb-1.5 micro-label-widest text-muted-foreground">
                 {heading}
             </Autocomplete.GroupLabel>
         )}
@@ -48,7 +50,7 @@ const GroupHeading = ({ icon, label, count }: { icon: React.ReactNode; label: st
             {icon}
             <span>{label}</span>
         </div>
-        <span className="text-[10px] font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+        <span className="text-label font-semibold text-muted-foreground/80 bg-foreground/5 border border-border/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
             {count}
         </span>
     </div>
@@ -110,22 +112,9 @@ export const SearchDropdown = ({
                         {searchHistory.map((item) => (
                             <SearchItem
                                 key={searchHistoryKey(item)}
-                                icon={
-                                    item.type === 'stop' ? <MapPin size={16} strokeWidth={1.5} /> :
-                                    item.type === 'place' ? <Building2 size={16} strokeWidth={1.5} /> :
-                                    item.type === 'pos' ? <Ticket size={16} strokeWidth={1.5} /> :
-                                    <SearchIcon size={16} strokeWidth={1.5} />
-                                }
-                                title={
-                                    item.type === 'stop' ? item.stop_name :
-                                    item.type === 'place' || item.type === 'pos' ? item.name :
-                                    t('search.lineFilter', { line: item.lines.join(', '), count: item.lines.length })
-                                }
-                                subtitle={
-                                    item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) :
-                                    item.type === 'place' || item.type === 'pos' ? item.subtitle :
-                                    undefined
-                                }
+                                icon={<HistoryItemIcon type={item.type} />}
+                                title={historyItemTitle(item, t)}
+                                subtitle={historyItemSubtitle(item, t)}
                                 metroLines={item.type === 'stop' ? item.metro_lines : undefined}
                                 lines={item.type === 'stop' ? item.lines : undefined}
                                 testId={`search-item-hist-${searchHistoryKey(item)}`}

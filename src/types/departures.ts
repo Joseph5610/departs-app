@@ -1,5 +1,8 @@
 import type { Continuation, RouteType } from './vehicles';
 
+/** Opens a departure's trip; the departure itself seeds the trip view while its detail loads. */
+export type DepartureClickHandler = (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => void;
+
 export interface Departure {
     timestamp: string;
     scheduled: string;

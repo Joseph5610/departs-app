@@ -14,6 +14,15 @@
     "back": "Back"
   },
   "search": {
+    "emptyHint": "Search for a stop, a line number, an address or a vehicle number.",
+    "lines": "Lines",
+    "lineOnMap_one": "on the map",
+    "lineOnMap_other": "on the map",
+    "clearRecent": "Clear",
+    "stops": "Stops",
+    "showOnMap": "Show on map",
+    "noResults": "No results",
+    "noResultsHint": "Try a stop name, a line number or an address.",
     "placeholder": "Search stops, addresses, lines...",
     "platform": "Platform {{code}}",
     "lineFilter_one": "Filter line {{line}}",
@@ -200,16 +209,21 @@
       "moreConnections_other": "{{count}} more connections",
       "showLess": "Show less",
       "now": "Now",
-      "minutes": "{{count}} min",
+      "minutes": "{{count}} min",
+      "departs": "Departs",
+      "departsAt": "Departs {{time}}",
+      "platformCode": "platform {{code}}",
+      "hours": "{{hours}} h",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Platform / Track",
-      "trackNumber": "Track {{track}}",
+      "trackNumber": "Track {{track}}",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
       "sort": "Sort",
       "distance_one": "{{distance}}m • {{count}} minute walk",
       "distance_other": "{{distance}}m • {{count}} minutes walk",
-      "meters": "{{distance}} m",
-      "kilometers": "{{distance}} km",
+      "meters": "{{distance}} m",
+      "kilometers": "{{distance}} km",
       "onTime": "On time",
       "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
@@ -219,16 +233,22 @@
       "removeFromFavorites": "Remove from favorites",
       "canceled": "Canceled",
       "feeder": {
-        "heldFor": "Held ~{{minutes}} min for {{line}}",
-        "wontWait": "Won't wait for {{line}}",
-        "waitsForLines": "Waits for connections from {{lines}}"
+        "heldFor": "Held ~{{minutes}} min for <lines/>",
+        "wontWait": "Won’t wait for <lines/>",
+        "waitsForLines": "Waits for connections from <lines/>"
       },
-      "continuesAs": "Continues as line {{line}} to {{headsign}}",
+      "continuesAs": "Continues as <line/> to {{headsign}}",
       "vehicleFilters": "Vehicle filters",
       "lineFilters": "Line filters",
       "viewedTrip": "Viewed trip",
       "yourTrip": "Your trip",
-      "watchedTrip": "Followed trip"
+      "watchedTrip": "Followed trip",
+      "liveStatus": {
+        "late": "Late by {{delay}}",
+        "early": "Early by {{delay}}",
+        "timetable": "No live data"
+      },
+      "atStopShort": "At the stop"
     }
   },
   "update": {
@@ -269,11 +289,11 @@
     "noWalk": "Without walking time",
     "leaveIn": "leave in {{count}} min",
     "leaveNow": "leave now",
-    "withWalk": "With a {{count}} min walk",
     "unavailable": "Departures can't be loaded right now",
     "unavailableDescription": "The board retries on its own with the next refresh.",
     "unknownStop": "Unknown stop",
-    "unknownStopDescription": "Check the board's address."
+    "unknownStopDescription": "Check the board's address.",
+    "withWalk": "With a {{count}} min walk"
   },
   "share": {
     "ride": "I'm on line {{line}} to {{headsign}} and will be at {{stop}} around {{time}}.",
@@ -366,7 +386,8 @@
       "10": "Construction",
       "11": "Police Activity",
       "12": "Medical Emergency"
-    }
+    },
+    "searchPlaceholder": "Search a line or stop…"
   },
   "transportModes": {
     "metro": "Metro",
@@ -409,13 +430,28 @@
     "title": "Favorites",
     "empty": "No favorites yet",
     "emptySub": "Tap the star on a stop, or on a line's direction in a departure board, to pin it here.",
-    "pinLine": "Add {{line}} to {{headsign}} to favourites",
-    "unpinLine": "Remove {{line}} to {{headsign}} from favourites",
+    "pinLine": "Add line {{line}} towards {{headsign}} to favorites",
+    "unpinLine": "Remove line {{line}} towards {{headsign}} from favorites",
     "tabLines": "Lines",
     "tabStops": "Stops",
     "reorder": "Reorder",
-    "fromStop": "from {{stop}}",
-    "linesLimit": "You can add up to {{count}} favourite lines."
+    "fromStop": "From {{stop}}",
+    "openBoard": "Open the stop board",
+    "linesLimit": "You can add up to {{count}} favorite lines.",
+    "reorderStart": "Reorder",
+    "reorderDone": "Done"
+  },
+  "home": {
+    "then": "then",
+    "disruptionsOnYourLines_one": "Disruption on your lines",
+    "disruptionsOnYourLines_other": "{{count}} disruptions on your lines",
+    "useLocationShort": "Use location",
+    "nearby": "Nearby",
+    "seeAll": "See all",
+    "network": "Network",
+    "locationNeeded": "Share your location to see the stops around you.",
+    "noNearby": "No stops within walking distance.",
+    "resizeSheet": "Expand or collapse the panel"
   },
   "feedback": {
     "title": "Send Feedback",
@@ -545,7 +581,7 @@
         {
           "heading": "What stays on your device",
           "paragraphs": [
-            "Your settings, favourite stops and lines, recent searches and an active ride are saved in your browser's storage on your device. They are not sent to us, except the few settings listed below if you choose to send a report.",
+            "Your settings, favorite stops and lines, recent searches and an active ride are saved in your browser's storage on your device. They are not sent to us, except the few settings listed below if you choose to send a report.",
             "If you allow location, the app keeps your last position rounded to about 100 m, so the map reopens nearby. Timetable data is cached on the device to load faster and save mobile data. The app stores only what it needs to work and uses no advertising or tracking cookies.",
             "You can delete all of it by clearing the site's data in your browser or uninstalling the app; recent searches can also be cleared in Settings."
           ]

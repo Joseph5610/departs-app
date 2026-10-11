@@ -1,11 +1,10 @@
 import type { Map, SymbolLayerSpecification } from 'maplibre-gl';
-import { replaceUrl } from '@/lib/history';
 import { useCallback, useRef } from 'react';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useViewportStore } from '@/state/viewportStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { addAllIcons } from '@/lib/map/icons';
-import { snapBoundsToTiles } from '@/lib/map/view';
+import { snapBoundsToTiles, stripUrlCamera } from '@/lib/map/view';
 import { VEHICLE_BOUNDS_GRID, MAP_DATA } from '@/config/constants';
 
 /**
@@ -39,6 +38,7 @@ export const useMapEvents = () => {
     }, []);
 
     const onMove = useCallback((evt: { viewState: { zoom: number }; target: Map; originalEvent?: unknown }) => {
+        if (evt.originalEvent) vpActions.markUserMoved(Date.now());
         if (evt.originalEvent && isFollowing) {
             selActions.setIsFollowing(false);
         }
@@ -61,7 +61,7 @@ export const useMapEvents = () => {
     }, [bounds, isFollowing, getRoundedBounds, vpActions, selActions]);
 
     const onMoveEnd = useCallback((evt: { viewState: { latitude: number; longitude: number; zoom: number }; target: Map; originalEvent?: unknown }) => {
-        // Filtering is client-side, so the view follows a followed vehicle too; only the URL stays put.
+        // Filtering is client-side, so the view follows a followed vehicle too; only the saved view stays put.
         const currentBounds = getRoundedBounds(evt.target);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         vpActions.setBounds(currentBounds);
@@ -69,11 +69,7 @@ export const useMapEvents = () => {
         if (isFollowing) return;
 
         const { latitude, longitude, zoom } = evt.viewState;
-        const url = new URL(window.location.href);
-        url.searchParams.set('lat', latitude.toFixed(5));
-        url.searchParams.set('lng', longitude.toFixed(5));
-        url.searchParams.set('z', zoom.toFixed(2));
-        replaceUrl(url.toString());
+        vpActions.saveCamera({ lat: latitude, lng: longitude, zoom }, Date.now());
     }, [isFollowing, getRoundedBounds, vpActions]);
 
     const onDragStart = useCallback(() => {
@@ -82,6 +78,8 @@ export const useMapEvents = () => {
 
     const onLoad = useCallback((evt: { target: Map }) => {
         const map = evt.target;
+        // The opening camera has been applied; a camera in the URL from an old link is no longer needed there.
+        stripUrlCamera();
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {

@@ -95,7 +95,7 @@ export const WelcomeModal = memo(() => {
                     <DialogTitle className="text-center flex flex-col items-center justify-center gap-1.5 text-2xl">
                         <div className="flex items-center gap-2">
                             {t('welcome.title')}
-                            <Badge variant="soft" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider mt-0.5">
+                            <Badge variant="soft" className="px-2 py-0.5 micro-label mt-0.5">
                                 {t('common.beta')}
                             </Badge>
                         </div>
@@ -109,7 +109,7 @@ export const WelcomeModal = memo(() => {
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-4 px-2">
                             <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                            <span className="micro-label-widest text-muted-foreground/60">
                                 {t('welcome.chooseCity')}
                             </span>
                             <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>

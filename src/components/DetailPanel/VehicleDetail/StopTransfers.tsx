@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIcon } from 'lucide-react';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { addSecondsToTime } from '@/domain/time';
 import { distinctLines } from '@/domain/departures';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -74,7 +74,7 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
                 <span className="text-sm font-medium truncate">{headsign}</span>
                 {note && (
                     <span className={cn(
-                        "text-[10px] leading-tight",
+                        "text-label leading-tight",
                         isWarning ? "text-destructive font-semibold" : "text-muted-foreground"
                     )}>
                         {note}

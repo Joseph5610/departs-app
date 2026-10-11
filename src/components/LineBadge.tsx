@@ -1,21 +1,15 @@
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { getContrastColor, safeHexColor } from '@/lib/color';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import { LINE_BADGE_SIZES, lineBadgeWidth, type LineBadgeSize } from '@/lib/lineBadge';
 
 interface LineBadgeProps {
     name: string;
     routeColor: string;
     /** Size variant — defaults to 'md' */
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: LineBadgeSize;
     className?: string;
 }
-
-const SIZE_CONFIGS = {
-    sm: { baseWidth: 16, charWidth: 5, classes: 'h-3.5 rounded-sm px-1 text-[9px] font-bold' },
-    md: { baseWidth: 20, charWidth: 6, classes: 'h-4.5 rounded-sm px-1.5 text-[10px] font-bold' },
-    lg: { baseWidth: 26, charWidth: 7, classes: 'h-6 rounded-md px-2 text-[11px] font-bold' },
-    xl: { baseWidth: 30, charWidth: 8, classes: 'h-7 rounded-lg px-2.5 text-[13px] font-extrabold' },
-} as const;
 
 /**
  * LineBadge
@@ -25,8 +19,8 @@ const SIZE_CONFIGS = {
 export const LineBadge = ({ name, routeColor: rawColor, size = 'md', className }: LineBadgeProps) => {
     const routeColor = safeHexColor(rawColor) ?? FALLBACK_ROUTE_COLOR;
     const len = name.length;
-    const config = SIZE_CONFIGS[size] || SIZE_CONFIGS.md;
-    const calculatedMinWidth = config.baseWidth + Math.max(0, len - 1) * config.charWidth;
+    const config = LINE_BADGE_SIZES[size] || LINE_BADGE_SIZES.md;
+    const calculatedMinWidth = lineBadgeWidth(name, size in LINE_BADGE_SIZES ? size : 'md');
 
     const textColor = getContrastColor(routeColor);
     const isLightBg = textColor === '#000000';
@@ -37,7 +31,7 @@ export const LineBadge = ({ name, routeColor: rawColor, size = 'md', className }
                 'inline-flex items-center justify-center shrink-0 border',
                 isLightBg ? 'border-black/15 dark:border-black/40' : 'border-transparent',
                 config.classes,
-                size === 'sm' && len > 1 && 'text-[8px]',
+                size === 'sm' && len > 1 && 'text-nano',
                 className
             )}
             style={{ 

@@ -4,6 +4,26 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.0] - 2026-10-08
+
+### Added
+
+- Mobile home sheet with favourites, nearby stops, disruptions and network links; stops, trips, settings and alerts open as cards in the same sheet.
+- Full-screen mobile search with favourite and recent shortcuts and results grouped into lines, stops, vehicles, points of sale and places.
+
+### Changed
+
+- On phones the map controls ride on top of the sheet, settings and alerts open in the sheet, feedback opens full-screen, and the city is picked from a globe button beside search.
+- The home sheet flags disruptions only when they hit the rider's favourite lines or stops.
+- The app opens where the rider is: once they have shared their location, it finds them at launch and after 15 minutes away, switching to the city they are in; otherwise it reopens their last map view. The map position is no longer kept in the URL.
+- The departure board is a clean list: each line and direction shows a live to-the-second countdown with a live-data icon, its expected departure time, and later departures as chips; delay changes flash briefly in place of the countdown.
+- The favourites panel uses the board's rows: pinned lines as direction rows, pinned stops as a card each, reordered from a Reorder mode.
+- Trip stops show the struck timetable time beside the expected one, and the wall board counts down to the second.
+
+### Fixed
+
+- The installed iPhone app fills the whole screen instead of stopping above the home indicator.
+
 ## [0.82.0] - 2026-10-08
 
 ### Changed

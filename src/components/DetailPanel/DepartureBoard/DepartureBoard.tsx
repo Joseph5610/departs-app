@@ -1,50 +1,41 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { Train, ArrowRight, ChevronDown } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { IconTooltip } from '@/components/IconTooltip';
+import { Train } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import { cn } from 'cn';
-import type { Departure, SelectedStop, AppError } from '@/types';
+import type { DepartureClickHandler, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
-import { DepartureItem } from './DepartureItem';
-import { DepartureList } from './DepartureList';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
+import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
-import { LineBadge } from '@/components/LineBadge';
-import { LineGradient } from '@/components/LineGradient';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { groupsHidingTrips, isMetroClosed, visibleInGroup } from '@/domain/departures';
+import { groupsHidingTrips, isMetroClosed } from '@/domain/departures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
-import { useInterchanges } from '@/hooks/derived/useInterchanges';
-import { InterchangeBadges } from '@/components/InterchangeBadges';
-import { lineRuleColor, safeHexColor } from '@/lib/color';
-import { PinLineButton } from './PinLineButton';
+import { safeHexColor } from '@/lib/color';
+import { badgeColumnStyle } from '@/lib/lineBadge';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useRideStore } from '@/state/rideStore';
 import { useRouteParams } from '@/hooks/useRouteParams';
 
 interface DepartureBoardProps {
     selectedStop: SelectedStop;
-    onDepartureClick: (tripId: string, vehicleId?: string, initialData?: Partial<Departure>) => void;
+    onDepartureClick: DepartureClickHandler;
 }
 
 /**
  * DepartureBoard
  *
- * Renders the list of upcoming departures for a selected stop,
- * grouped by line and type. High-density tabular layout.
+ * Renders the upcoming departures of a selected stop as one row per line and headsign, a line's
+ * headsigns following each other without a divider.
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
     const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine, data } = useDepartures();
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
-    const { forHeadsign } = useInterchanges();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
     const { stopId: routeStopId } = useRouteParams();
     // Pins and the departures query both key on the stop id in the URL.
@@ -103,6 +94,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
         };
     }, [data?.departures]);
 
+    // One badge column for the whole board, as wide as its widest badge, so headsigns align and sit close.
+    const badgeColumn = useMemo(() => badgeColumnStyle(groupedDepartures.map(group => String(group.line))), [groupedDepartures]);
+
     const showMetroNightMessage = useMemo(() => {
         if (groupedDepartures.length > 0) return false;
         if (isFiltered) return false;
@@ -152,126 +146,30 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     </Empty>
                 )
             ) : (
-                groupedDepartures.map((lineGroup) => {
-                    const firstSub = lineGroup.subGroups[0];
-                    const firstDep = firstSub.departures[0];
-                    const isMetro = firstDep.type === 'metro';
-                    return (
-                        <Card 
-                            key={lineGroup.lineGroupId} 
-                            size="none"
-                            variant="panel"
-                            className="mb-3 overflow-hidden"
-                        >
-                            {lineGroup.subGroups.map((subGroup, subIdx) => {
-                                const isFirstSub = subIdx === 0;
-                                
-                                const subFirstDep = subGroup.departures[0];
-                                const routeColor = safeHexColor(subFirstDep.route_color);
-                                const isExpanded = isFiltered || expandedGroups.has(subGroup.groupId);
-                                
-                                const { visible: visibleDepartures, hiddenCount, hasMore } = visibleInGroup(subGroup.departures, isExpanded, isFiltered);
-
-                                return (
-                                    <div key={subGroup.groupId} className="flex flex-col">
-                                        {isFirstSub ? (
-                                            /* Main Header - Vibrant Sophisticated Gradient */
-                                            <CardHeader 
-                                                className="p-0 pb-0! bg-transparent relative border-b-0"
-                                            >
-                                                <LineGradient routeColor={routeColor} className="rounded-t-2xl" />
-                                                <div className="relative z-10 flex items-center gap-2 p-3 px-4 w-full min-w-0 border-b-2"
-                                                     style={{ borderBottomColor: lineRuleColor(routeColor) }}
-                                                >
-                                                <LineBadge 
-                                                    name={String(lineGroup.line)} 
-                                                    routeColor={routeColor || FALLBACK_ROUTE_COLOR}
-                                                    size="lg" 
-                                                    className="shadow-sm" 
-                                                />
-                                                <ArrowRight size={14} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
-                                                    <div className="flex flex-col flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <CardTitle className="text-[15px] font-semibold truncate min-w-0 text-foreground">
-                                                                {subGroup.headsign}
-                                                            </CardTitle>
-                                                            <InterchangeBadges codes={forHeadsign(subFirstDep.headsign, subFirstDep.line)} />
-                                                        </div>
-                                                    </div>
-
-                                                {isMetro && subFirstDep.platform && (
-                                                    <IconTooltip
-                                                        label={t('map.departures.trackNumber', { track: subFirstDep.platform })}
-                                                        className="justify-center w-5 h-5 bg-foreground rounded-full shadow-sm"
-                                                    >
-                                                        <span className="text-background font-extrabold text-xs leading-none text-center inline-block">
-                                                            {subFirstDep.platform}
-                                                        </span>
-                                                    </IconTooltip>
-                                                )}
-                                                <PinLineButton stopId={boardStopId} line={String(lineGroup.line)} headsign={subGroup.headsign} />
-                                                </div>
-                                            </CardHeader>
-                                        ) : (
-                                            /* Secondary Variant Header - Vibrant Glow Style */
-                                            <div className="relative overflow-hidden border-t border-border/50 dark:border-white/5">
-                                                <LineGradient routeColor={routeColor} subtle />
-                                                <div className="relative z-10 flex items-center gap-3 px-0 py-2.5 w-full min-w-0">
-                                                    <div 
-                                                        className="w-1 h-4 rounded-r-sm shrink-0" 
-                                                        style={{ backgroundColor: routeColor || FALLBACK_ROUTE_COLOR }}
-                                                    />
-                                                    <div className="flex items-center gap-2 flex-1 min-w-0 pr-4">
-                                                        <ArrowRight size={12} strokeWidth={1.5} className="text-muted-foreground opacity-40 shrink-0" />
-                                                        <span className="text-foreground/90 text-sm font-bold truncate flex-1 min-w-0">
-                                                            {subGroup.headsign}
-                                                        </span>
-                                                        <PinLineButton stopId={boardStopId} line={String(lineGroup.line)} headsign={subGroup.headsign} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <CardContent className="p-0">
-                                            <DepartureList departures={visibleDepartures}>
-                                                {(dep) => (
-                                                    <DepartureItem
-                                                        departure={dep}
-                                                        timeZone={timezone}
-                                                        onDepartureClick={onDepartureClick}
-                                                        hideHeadsign={true}
-                                                        isHighlighted={!!dep.tripId && dep.tripId === highlightedTripId}
-                                                    />
-                                                )}
-                                            </DepartureList>
-                                        </CardContent>
-
-                                        {hasMore && (
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() => onToggleGroup(subGroup.groupId)}
-                                                className={cn(
-                                                    "w-full h-auto py-2.5 flex items-center justify-center gap-2 bg-black/[0.03] hover:bg-black/[0.06] dark:bg-white/[0.03] dark:hover:bg-white/[0.08] transition-colors border-t border-black/5 dark:border-white/5 text-muted-foreground/70 dark:text-muted-foreground/60 hover:text-foreground text-[10.5px] font-bold uppercase tracking-wider",
-                                                    subIdx === lineGroup.subGroups.length - 1 ? "rounded-b-[11px] rounded-t-none" : "rounded-none"
-                                                )}
-                                            >
-                                                <ChevronDown 
-                                                    size={14} 
-                                                    className={cn("transition-transform duration-200", isExpanded && "rotate-180")} 
-                                                 strokeWidth={1.5} />
-                                                <span>
-                                                    {isExpanded 
-                                                        ? t('map.departures.showLess') 
-                                                        : t('map.departures.moreConnections', { count: hiddenCount })}
-                                                </span>
-                                            </Button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </Card>
-                    );
-                })
+                <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+                    {groupedDepartures.map((lineGroup, groupIdx) => lineGroup.subGroups.map((subGroup, subIdx) => {
+                        const first = subGroup.departures[0];
+                        return (
+                            <DirectionRow
+                                key={subGroup.groupId}
+                                groupId={subGroup.groupId}
+                                line={String(lineGroup.line)}
+                                headsign={subGroup.headsign}
+                                departures={subGroup.departures}
+                                routeColor={safeHexColor(first.route_color) || FALLBACK_ROUTE_COLOR}
+                                startsLine={subIdx === 0}
+                                isFirst={groupIdx === 0 && subIdx === 0}
+                                isExpanded={isFiltered || expandedGroups.has(subGroup.groupId)}
+                                isFiltered={isFiltered}
+                                onToggleGroup={onToggleGroup}
+                                boardStopId={boardStopId}
+                                timeZone={timezone}
+                                highlightedTripId={highlightedTripId}
+                                onDepartureClick={onDepartureClick}
+                            />
+                        );
+                    }))}
+                </Card>
             )}
         </div>
     );

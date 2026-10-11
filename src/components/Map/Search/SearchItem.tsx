@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { FALLBACK_ROUTE_COLOR, STOP_SEARCH } from '@/config/constants';
 import { LineBadge } from '@/components/LineBadge';
 import { Autocomplete } from '@base-ui/react/autocomplete';
@@ -22,7 +22,7 @@ interface SearchItemProps {
  * Renders a list of color-coded transit line badges.
  * Extracted from SearchItem to avoid IIFE in JSX.
  */
-const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
+export const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
     if (!lines || lines.length === 0) return null;
 
     const uniqueLines: NonNullable<SearchItemProps['lines']> = [];
@@ -48,7 +48,7 @@ const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
             })}
             
             {uniqueLines.length > 5 && (
-                <span className="inline-flex items-center justify-center h-4.25 px-1 min-w-4.25 rounded-xs bg-muted text-muted-foreground text-[9px] font-bold mr-1.5 border border-border/50">
+                <span className="inline-flex items-center justify-center h-4.25 px-1 min-w-4.25 rounded-xs bg-muted text-muted-foreground text-micro font-bold mr-1.5 border border-border/50">
                     +{uniqueLines.length - 5}
                 </span>
             )}
@@ -86,7 +86,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
                 {icon}
             </div>
             <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                <span className="text-foreground font-semibold leading-tight text-[13px] truncate">
+                <span className="text-foreground font-semibold leading-tight text-body-sm truncate">
                     {title}
                 </span>
                 
@@ -94,7 +94,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
                     <LineBadges lines={displayLines} />
 
                     {subtitle && (
-                        <span className="text-muted-foreground/70 text-[10.5px] font-medium truncate">
+                        <span className="text-muted-foreground/70 text-badge font-medium truncate">
                             {subtitle}
                         </span>
                     )}

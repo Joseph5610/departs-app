@@ -67,7 +67,7 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
                     <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
                         <Badge
                             variant={delayFilterType === 'all' ? 'default' : 'secondary'}
-                            className="cursor-pointer whitespace-nowrap text-[10px] h-5 px-2"
+                            className="cursor-pointer whitespace-nowrap text-label h-5 px-2"
                             onClick={() => setDelayFilterType('all')}
                         >
                             {t('common.all')}
@@ -76,7 +76,7 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
                             <Badge
                                 key={tType}
                                 variant={delayFilterType === tType ? 'default' : 'secondary'}
-                                className="cursor-pointer whitespace-nowrap text-[10px] h-5 px-2"
+                                className="cursor-pointer whitespace-nowrap text-label h-5 px-2"
                                 onClick={() => setDelayFilterType(tType)}
                             >
                                 {t(getRouteTypeI18nKey(tType))}
@@ -93,7 +93,7 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
                     <Button
                         variant="ghost"
                         onClick={() => setIsDelayedExpanded(!isDelayedExpanded)}
-                        className="w-full mt-2 h-7 text-[11px] font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 bg-muted/50 border border-border/50 rounded-lg"
+                        className="w-full mt-2 h-7 text-caption font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 bg-muted/50 border border-border/50 rounded-lg"
                     >
                         {isDelayedExpanded
                             ? t('stats.showLess')

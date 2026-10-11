@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import type { City } from '@/types';
 import { groupCitiesByCountry } from '@/domain/cities';
@@ -90,7 +90,7 @@ export const CitySelectionList = ({
                             {city.name}
                         </span>
                         {city.isBeta && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 uppercase font-bold tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-500 border-amber-500/30">
+                            <Badge variant="outline" className="text-label px-1.5 py-0.5 uppercase font-bold tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-500 border-amber-500/30">
                                 {t('common.beta')}
                             </Badge>
                         )}
@@ -110,7 +110,7 @@ export const CitySelectionList = ({
             {groups.length > 1
                 ? groups.map((group) => (
                     <section key={group.country} className="flex flex-col gap-2.5">
-                        <div className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
+                        <div className="text-label text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
                             {countryNames?.of(group.country) ?? group.country}
                         </div>
                         {group.cities.map(renderCity)}

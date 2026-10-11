@@ -7,7 +7,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useUiStore } from '@/state/uiStore';
 import { useStops } from '@/hooks/data/useStops';
 import { toast } from 'sonner';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
@@ -171,7 +171,7 @@ export const SettingsFooter = () => {
             </Card>
 
             {updatedAt && (
-                <div className="text-[10px] text-muted-foreground/30 font-medium text-center pb-2 px-6">
+                <div className="text-label text-muted-foreground/30 font-medium text-center pb-2 px-6">
                     {t('settings.lastStopUpdate', { date: formatDateTime(updatedAt, i18n.resolvedLanguage) })}
                 </div>
             )}

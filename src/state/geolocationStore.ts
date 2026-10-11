@@ -2,20 +2,29 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { LOCATION_PRIVACY } from '@/config/constants';
 
-/** Why the map should move to the next fresh fix: a locate tap, or a silent automatic focus (launch, welcome). */
-export type FocusRequest = 'locate' | 'auto';
+/**
+ * Why the map should move to the next fresh fix: a locate tap (anywhere), the app opening or coming back
+ * (onto the user, switching city), or the welcome screen (only within the city picked there).
+ */
+export type FocusRequest = 'locate' | 'launch' | 'welcome';
 
 export interface GeolocationState {
     userLocation: [number, number] | null;
+    /** Accuracy of `userLocation` in metres. */
+    accuracyM: number;
     focusRequest: FocusRequest | null;
     focusRequestedAt: number;
     lastUpdatedAt: number;
     lastLocation: { lat: number; lng: number } | null;
+    /** When `lastLocation` was taken. */
+    lastLocationAt: number;
+    /** The user has shared their location before, so the app may look for it at launch without a tap. */
+    locationOptIn: boolean;
 }
 
 interface GeolocationActions {
     /** A new position fix: the live location, its time, and the coarse copy kept on the device. */
-    applyFix: (location: [number, number], at: number) => void;
+    applyFix: (location: [number, number], accuracyM: number, at: number) => void;
     requestFocus: (request: FocusRequest | null) => void;
 }
 
@@ -40,26 +49,39 @@ export const useGeolocationStore = create<GeolocationStore>()(
     persist(
         (set) => ({
             userLocation: null,
+            accuracyM: Infinity,
             focusRequest: null,
             focusRequestedAt: 0,
             lastUpdatedAt: 0,
             lastLocation: null,
+            lastLocationAt: 0,
+            locationOptIn: false,
 
             actions: {
-                applyFix: ([lng, lat], at) => set({ userLocation: [lng, lat], lastUpdatedAt: at, lastLocation: coarsenLocation({ lat, lng }) }),
+                applyFix: ([lng, lat], accuracyM, at) => set({
+                    userLocation: [lng, lat], accuracyM, lastUpdatedAt: at,
+                    lastLocation: coarsenLocation({ lat, lng }), lastLocationAt: at, locationOptIn: true,
+                }),
                 requestFocus: (focusRequest) => set({ focusRequest, focusRequestedAt: Date.now() }),
             },
         }),
         {
             name: 'departs-last-location',
             storage: createJSONStorage(() => localStorage),
-            // Version 0 stored the full GPS precision.
-            version: 1,
-            migrate: (persisted) => ({
-                lastLocation: coarsenLocation((persisted as Partial<GeolocationState> | null)?.lastLocation ?? null),
-            }),
+            // Version 0 stored the full GPS precision; version 1 had no time, so its position counts as stale.
+            version: 2,
+            migrate: (persisted) => {
+                const old = persisted as Partial<GeolocationState> | null;
+                return {
+                    lastLocation: coarsenLocation(old?.lastLocation ?? null),
+                    lastLocationAt: typeof old?.lastLocationAt === 'number' ? old.lastLocationAt : 0,
+                    locationOptIn: old?.lastLocation != null,
+                };
+            },
             partialize: (state) => ({
                 lastLocation: state.lastLocation,
+                lastLocationAt: state.lastLocationAt,
+                locationOptIn: state.locationOptIn,
             }),
         }
     )

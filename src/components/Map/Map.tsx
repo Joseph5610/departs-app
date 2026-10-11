@@ -42,6 +42,8 @@ import type { PointOfSale } from '@/types';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { Search } from './Search/Search';
+import { MobileSearch } from './Search/MobileSearch';
+import { HomeSections } from './HomeSheet/HomeSections';
 import { MountWhenOpened } from '@/components/MountWhenOpened';
 
 const SettingsModal = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsModal })));
@@ -49,9 +51,15 @@ const WelcomeModal = lazy(() => import('@/components/Modals/WelcomeModal').then(
 const AlertsModal = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsModal })));
 const FeedbackModal = lazy(() => import('@/components/Modals/FeedbackModal/FeedbackModal').then(m => ({ default: m.FeedbackModal })));
 const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default: m.StatsPanel })));
+const SettingsCardContent = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsContent })));
+const CityPickerCard = lazy(() => import('./CityPickerCard').then(m => ({ default: m.CityPickerCard })));
+const AlertsCardContent = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsContent })));
 const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
+
+const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
+const renderMobileHome = (isFull: boolean) => <HomeSections isFull={isFull} />;
 
 /**
  * Manages the layout of the map and its overlays.
@@ -61,6 +69,9 @@ const MapInner = () => {
     const mapEvents = useMapEvents();
     const isMobile = useIsMobile();
     const [drawerCollapseRequest, setDrawerCollapseRequest] = useState(0);
+    // A line filter or place picked in search shows on the map, so the sheet drops to its peek.
+    const collapseSheet = useCallback(() => setDrawerCollapseRequest(n => n + 1), []);
+    const mobileSearch = useMemo(() => <MobileSearch onMapPick={collapseSheet} />, [collapseSheet]);
 
     const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedId = tripId || vehicleId;
@@ -79,6 +90,8 @@ const MapInner = () => {
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const isFeedbackOpen = useUiStore(s => s.isFeedbackOpen);
     const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
+    const isCityPickerOpen = useUiStore(s => s.isCityPickerOpen);
+    const { setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen } = useUiStore(s => s.actions);
     const { resolvedTheme } = useTheme();
 
     const selectedStop = useSelectedStop();
@@ -135,6 +148,20 @@ const MapInner = () => {
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
     ), [isStatsRoute, isFavoritesRoute]);
+
+    // On phones settings, alerts and the city picker are cards in the sheet, over the home or whichever panel is open.
+    const sheetCard = !isMobile ? null : isSettingsOpen ? 'settings' : isAlertsOpen ? 'alerts' : isCityPickerOpen ? 'city' : null;
+    const closeSheetCard = useCallback(() => {
+        if (sheetCard === 'settings') setIsSettingsOpen(false);
+        else if (sheetCard === 'alerts') setIsAlertsOpen(false);
+        else setIsCityPickerOpen(false);
+    }, [sheetCard, setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen]);
+    const sheetCardTitle = sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
+    const sheetCardContent = useMemo(() => (
+        <Suspense fallback={null}>
+            {sheetCard === 'settings' ? <SettingsCardContent /> : sheetCard === 'alerts' ? <AlertsCardContent /> : <CityPickerCard />}
+        </Suspense>
+    ), [sheetCard]);
 
     const displayTitle = panelTitle ? `${panelTitle} - ${SITE.NAME}` : SITE.TITLE;
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE.URL}/`;
@@ -200,7 +227,7 @@ const MapInner = () => {
                     const f = evt.features?.[0];
                     if (!f || f.layer.id === MAP_LAYERS.STOP_ENTRANCES) {
                         if (!isPanelRoute) return;
-                        if (isMobile) setDrawerCollapseRequest(n => n + 1);
+                        if (isMobile) collapseSheet();
                         else closePanel();
                         return;
                     }
@@ -275,16 +302,20 @@ const MapInner = () => {
 
             <LiveStatus />
             <RideBar />
-            <Search />
-            <MapControls />
+            {!isMobile && (
+                <>
+                    <Search />
+                    <MapControls />
+                </>
+            )}
 
             <MountWhenOpened when={!hasSeenWelcome}>
                 <WelcomeModal />
             </MountWhenOpened>
-            <MountWhenOpened when={isSettingsOpen}>
+            <MountWhenOpened when={!isMobile && isSettingsOpen}>
                 <SettingsModal />
             </MountWhenOpened>
-            <MountWhenOpened when={isAlertsOpen}>
+            <MountWhenOpened when={!isMobile && isAlertsOpen}>
                 <AlertsModal />
             </MountWhenOpened>
             <MountWhenOpened when={isFeedbackOpen}>
@@ -294,17 +325,22 @@ const MapInner = () => {
                 <McpModal />
             </MountWhenOpened>
             <DetailPanel
-                isOpen={isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
-                id={isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined)}
-                onClose={closePanel}
-                onBack={shouldShowBackButton ? handleBack : undefined}
-                title={detailTitle}
-                platformCode={(!isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
-                subHeader={detailSubHeader}
-                actions={detailActions}
+                isOpen={!!sheetCard || isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
+                id={sheetCard ?? (isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined))}
+                onClose={sheetCard ? closeSheetCard : closePanel}
+                onBack={!sheetCard && shouldShowBackButton ? handleBack : undefined}
+                title={sheetCard ? sheetCardTitle : detailTitle}
+                platformCode={(!sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
+                subHeader={sheetCard ? undefined : detailSubHeader}
+                actions={sheetCard ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}
+                floating={renderSheetControls}
+                homeHeader={mobileSearch}
+                home={renderMobileHome}
+                minSnap={sheetCard && sheetCard !== 'city' ? 'full' : 'half'}
+                selfScrolling={sheetCard === 'alerts'}
             >
-                {detailContent}
+                {sheetCard ? sheetCardContent : detailContent}
             </DetailPanel>
         </>
     );

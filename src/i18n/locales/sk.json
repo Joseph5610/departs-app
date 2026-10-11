@@ -14,6 +14,17 @@
     "back": "Späť"
   },
   "search": {
+    "emptyHint": "Hľadajte zastávku, číslo linky, adresu alebo číslo vozidla.",
+    "lines": "Linky",
+    "lineOnMap_one": "na mape",
+    "lineOnMap_few": "na mape",
+    "lineOnMap_many": "na mape",
+    "lineOnMap_other": "na mape",
+    "clearRecent": "Vymazať",
+    "stops": "Zastávky",
+    "showOnMap": "Zobraziť na mape",
+    "noResults": "Nič sa nenašlo",
+    "noResultsHint": "Skúste názov zastávky, číslo linky alebo adresu.",
     "placeholder": "Hľadať zastávky, adresy, linky...",
     "platform": "Nástupište {{code}}",
     "lineFilter_one": "Filtrovať linku {{line}}",
@@ -202,17 +213,22 @@
       "moreConnections_other": "{{count}} ďalších spojov",
       "showLess": "Zobraziť menej",
       "now": "Teraz",
-      "minutes": "{{count}} min",
+      "minutes": "{{count}} min",
+      "departs": "Odchod",
+      "departsAt": "Odchod {{time}}",
+      "platformCode": "nást. {{code}}",
+      "hours": "{{hours}} h",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Nástupište / Koľaj",
-      "trackNumber": "Koľaj {{track}}",
+      "trackNumber": "Koľaj {{track}}",
       "sortByLine": "Zoradiť podľa linky",
       "sortByDeparture": "Zoradiť podľa času odchodu",
       "sort": "Zoradiť",
       "distance_one": "{{distance}}m • {{count}} minúta pešo",
       "distance_few": "{{distance}}m • {{count}} minúty pešo",
       "distance_other": "{{distance}}m • {{count}} minút pešo",
-      "meters": "{{distance}} m",
-      "kilometers": "{{distance}} km",
+      "meters": "{{distance}} m",
+      "kilometers": "{{distance}} km",
       "onTime": "Načas",
       "delayStatsTooltip": "Priemerné meškanie na základe {{count}} spojov",
       "openInMaps": "Otvoriť Mapy",
@@ -222,16 +238,22 @@
       "removeFromFavorites": "Odobrať z obľúbených",
       "canceled": "Zrušený",
       "feeder": {
-        "heldFor": "Čaká ~{{minutes}} min na {{line}}",
-        "wontWait": "Nepočká na {{line}}",
-        "waitsForLines": "Čaká na prípoje: {{lines}}"
+        "heldFor": "Čaká ~{{minutes}} min na <lines/>",
+        "wontWait": "Nepočká na <lines/>",
+        "waitsForLines": "Čaká na prípoje <lines/>"
       },
-      "continuesAs": "Pokračuje ako linka {{line}} smer {{headsign}}",
+      "continuesAs": "Pokračuje ako <line/> smer {{headsign}}",
       "vehicleFilters": "Filtre vozidiel",
       "lineFilters": "Filtre liniek",
       "viewedTrip": "Prezeraný spoj",
       "yourTrip": "Váš spoj",
-      "watchedTrip": "Sledovaný spoj"
+      "watchedTrip": "Sledovaný spoj",
+      "liveStatus": {
+        "late": "Mešká {{delay}}",
+        "early": "Ide skôr o {{delay}}",
+        "timetable": "Bez živých dát"
+      },
+      "atStopShort": "Na zastávke"
     }
   },
   "update": {
@@ -273,11 +295,11 @@
     "noWalk": "Bez času chôdze",
     "leaveIn": "vyrazte o {{count}} min",
     "leaveNow": "vyrazte hneď",
-    "withWalk": "S {{count}} min chôdze",
     "unavailable": "Odchody sa teraz nedajú načítať",
     "unavailableDescription": "Tabuľa to sama skúsi znova pri ďalšom obnovení.",
     "unknownStop": "Neznáma zastávka",
-    "unknownStopDescription": "Skontrolujte adresu tabule."
+    "unknownStopDescription": "Skontrolujte adresu tabule.",
+    "withWalk": "S {{count}} min chôdze"
   },
   "share": {
     "ride": "Idem linkou {{line}} smer {{headsign}}, na zastávke {{stop}} budem okolo {{time}}.",
@@ -371,7 +393,8 @@
       "10": "Stavebné práce",
       "11": "Policajný zásah",
       "12": "Záchranná akcia"
-    }
+    },
+    "searchPlaceholder": "Hľadať linku alebo zastávku…"
   },
   "transportModes": {
     "metro": "Metro",
@@ -419,8 +442,25 @@
     "tabLines": "Linky",
     "tabStops": "Zastávky",
     "reorder": "Presunúť",
-    "fromStop": "zo zastávky {{stop}}",
-    "linesLimit": "Obľúbených liniek môže byť najviac {{count}}."
+    "fromStop": "Zo zastávky {{stop}}",
+    "openBoard": "Otvoriť tabuľu zastávky",
+    "linesLimit": "Obľúbených liniek môže byť najviac {{count}}.",
+    "reorderStart": "Usporiadať",
+    "reorderDone": "Hotovo"
+  },
+  "home": {
+    "then": "potom",
+    "disruptionsOnYourLines_one": "Mimoriadnosť na vašich linkách",
+    "disruptionsOnYourLines_few": "{{count}} mimoriadnosti na vašich linkách",
+    "disruptionsOnYourLines_many": "{{count}} mimoriadností na vašich linkách",
+    "disruptionsOnYourLines_other": "{{count}} mimoriadností na vašich linkách",
+    "useLocationShort": "Použiť polohu",
+    "nearby": "Nablízku",
+    "seeAll": "Zobraziť všetko",
+    "network": "Sieť",
+    "locationNeeded": "Povoľte polohu a uvidíte zastávky okolo seba.",
+    "noNearby": "V pešej vzdialenosti nie sú žiadne zastávky.",
+    "resizeSheet": "Rozbaliť alebo zbaliť panel"
   },
   "feedback": {
     "title": "Odoslať spätnú väzbu",

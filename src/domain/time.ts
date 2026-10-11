@@ -83,3 +83,15 @@ export const formatDateTime = (value: string | number, locale: string | undefine
         hourCycle: 'h23',
     });
 };
+
+/** Whole minutes from `nowMs` until `iso`, rounded down; zero or less once it is due. */
+export const minutesUntil = (iso: string, nowMs: number): number => Math.floor((Date.parse(iso) - nowMs) / 60_000);
+
+/** How a glanceable countdown reads: due now, in whole minutes, or (from `minutesLimit` away) as its clock time. */
+export type MinutesCountdown = { kind: 'now' } | { kind: 'minutes'; minutes: number } | { kind: 'clock' };
+
+export const minutesCountdown = (iso: string, nowMs: number, minutesLimit: number): MinutesCountdown => {
+    const minutes = minutesUntil(iso, nowMs);
+    if (minutes <= 0) return { kind: 'now' };
+    return minutes < minutesLimit ? { kind: 'minutes', minutes } : { kind: 'clock' };
+};

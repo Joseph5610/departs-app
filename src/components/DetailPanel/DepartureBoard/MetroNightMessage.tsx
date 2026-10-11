@@ -29,7 +29,7 @@ export const MetroNightMessage = () => {
                 <EmptyTitle className="text-base font-bold text-foreground/90">
                     {t('map.departures.metroNight.title')}
                 </EmptyTitle>
-                <EmptyDescription className="text-[13px] max-w-70">
+                <EmptyDescription className="text-body-sm max-w-70">
                     {t('map.departures.metroNight.description')}
                 </EmptyDescription>
             </EmptyHeader>

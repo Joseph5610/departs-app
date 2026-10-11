@@ -1,4 +1,4 @@
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 
 interface SegmentedControlProps<T extends string> {
     value: T;
@@ -8,7 +8,7 @@ interface SegmentedControlProps<T extends string> {
 }
 
 const SIZE_CLASSES = {
-    sm: { group: 'shrink-0', item: 'text-[11px] px-2 py-0.5 transition-all shrink-0' },
+    sm: { group: 'shrink-0', item: 'text-caption px-2 py-0.5 transition-all shrink-0' },
     md: { group: 'border border-border/40', item: 'text-xs px-2.5 py-1 transition-colors' },
 };
 

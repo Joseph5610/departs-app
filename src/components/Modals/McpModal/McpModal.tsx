@@ -22,7 +22,7 @@ export const McpModal = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && setIsMcpModalOpen(false)}>
-            <DialogContent aria-describedby={undefined} variant="default" className="max-w-xl">
+            <DialogContent aria-describedby={undefined} variant="default" phoneLayout="page" className="max-w-xl">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                         <Sparkles className="size-5 text-primary animate-pulse" />
@@ -37,7 +37,7 @@ export const McpModal = () => {
 
                         <Card variant="subtle" size="none">
                             <div className="p-4 flex flex-col gap-2">
-                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                <span className="text-label text-muted-foreground font-bold uppercase tracking-widest">
                                     {t('mcp.endpointLabel')}
                                 </span>
                                 <div className="flex items-center justify-between gap-2">
@@ -111,7 +111,7 @@ export const McpModal = () => {
                                             )}
                                         </Button>
                                     </div>
-                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
+                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all">
                                         claude mcp add --transport sse departs {SITE.MCP_URL}
                                     </pre>
                                 </div>
@@ -145,7 +145,7 @@ export const McpModal = () => {
                                             )}
                                         </Button>
                                     </div>
-                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all">
+                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all">
                                         {JSON.stringify({
                                             mcpServers: {
                                                 departs: {

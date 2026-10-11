@@ -1,3 +1,4 @@
+import type { StopFeature } from '@/types';
 import { calculateDistance } from '@/lib/geo';
 import { WALKING } from '@/config/constants';
 
@@ -25,4 +26,33 @@ export const getStopDistanceInfo = (
         isAtStop,
         isReasonableWalkingDistance: distance < WALKING.MAX_REASONABLE_M
     };
+};
+
+export interface NearbyStop {
+    feature: StopFeature;
+    distance: number;
+}
+
+/**
+ * The stops closest to `location` within `maxDistanceM`, nearest first, one per stop name so a station's
+ * platforms list once, at the nearest. Only stops served by a line count: station centroids and entrances
+ * open no departure board.
+ */
+export const nearestStops = (
+    features: readonly StopFeature[],
+    location: [number, number] | null,
+    limit: number,
+    maxDistanceM: number
+): NearbyStop[] => {
+    if (!location) return [];
+    const byName = new Map<string, NearbyStop>();
+    for (const feature of features) {
+        const { is_drop_off_only, is_centroid, lines, stop_name } = feature.properties;
+        if (is_drop_off_only || is_centroid || !lines?.length) continue;
+        const distance = calculateDistance(location, feature.geometry.coordinates);
+        if (distance > maxDistanceM) continue;
+        const kept = byName.get(stop_name);
+        if (!kept || distance < kept.distance) byName.set(stop_name, { feature, distance });
+    }
+    return [...byName.values()].sort((a, b) => a.distance - b.distance).slice(0, limit);
 };

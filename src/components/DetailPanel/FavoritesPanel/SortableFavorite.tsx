@@ -1,6 +1,6 @@
 import type React from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
-import type { FavoriteDragHandle } from './FavoriteCard';
+import type { FavoriteDragHandle } from './DragHandle';
 
 interface SortableFavoriteProps<T> {
     value: T;
@@ -24,6 +24,8 @@ export function SortableFavorite<T>({ value, sortable, onMove, children }: Sorta
             value={value}
             dragListener={false}
             dragControls={controls}
+            // Position only: a size animation would stretch the text when a row changes height.
+            layout="position"
             className="relative"
             whileDrag={{ zIndex: 10 }}
         >

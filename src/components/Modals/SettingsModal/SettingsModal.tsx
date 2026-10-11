@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUiStore } from '@/state/uiStore';
 import { Sparkles } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { DisplaySection } from './DisplaySection';
 import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '@/i18n/config';
@@ -24,11 +24,87 @@ const LANGUAGE_FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number], string> = {
     sk: '🇸🇰',
 };
 
-export const SettingsModal = memo(() => {
+/** The settings themselves: the body of the settings dialog and of the mobile settings card. */
+export const SettingsContent = () => {
     const { t, i18n } = useTranslation();
+    const { setIsSettingsOpen, setIsMcpModalOpen } = useUiStore(s => s.actions);
+
+    return (
+        <div className="flex flex-col gap-8 py-2 pb-8">
+            <div className="flex flex-col gap-3">
+                <h3 className="text-muted-foreground micro-label-widest px-1">
+                    {t('settings.sections.ai')}
+                </h3>
+                <Button
+                    variant="ghost"
+                    onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }}
+                    className="w-full text-left p-4 h-auto rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-start gap-3.5 group whitespace-normal font-normal"
+                >
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
+                        <Sparkles size={18} strokeWidth={2} className="animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors block">
+                            {t('mcp.title')}
+                        </span>
+                        <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                            {t('mcp.subtitle')}
+                        </p>
+                    </div>
+                </Button>
+            </div>
+
+            <DisplaySection />
+
+            <div className="flex flex-col gap-3">
+                <h3 className="text-muted-foreground micro-label-widest px-1">
+                    {t('settings.sections.language')}
+                </h3>
+                <Card variant="subtle" size="none">
+                    <div className="p-3">
+                        <ToggleGroup
+                            value={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
+                            onValueChange={(val: string[]) => {
+                                if (val && val.length > 0) {
+                                    i18n.changeLanguage(val[0]);
+                                }
+                            }}
+                            className="grid grid-cols-3 gap-2 bg-transparent p-0"
+                        >
+                            {SUPPORTED_LANGUAGES.map((lang) => (
+                                <ToggleGroupItem
+                                    key={lang}
+                                    value={lang}
+                                    variant="outline"
+                                    className={cn(
+                                        "h-auto py-2.5 px-4 rounded-xl text-sm font-semibold border-border/80 transition-[transform,colors] active:scale-95 cursor-pointer",
+                                        "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
+                                        "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="text-base">{LANGUAGE_FLAGS[lang]}</span>
+                                        <span>{t(`settings.language.${lang}`)}</span>
+                                    </div>
+                                </ToggleGroupItem>
+                            ))}
+                        </ToggleGroup>
+                    </div>
+                </Card>
+            </div>
+
+
+            <SettingsFooter />
+        </div>
+    );
+};
+
+/** The settings dialog on desktop; phones show {@link SettingsContent} as a card in the sheet. */
+export const SettingsModal = memo(() => {
+    const { t } = useTranslation();
 
     const isOpen = useUiStore(s => s.isSettingsOpen);
-    const { setIsSettingsOpen, setIsMcpModalOpen } = useUiStore(s => s.actions);
+    const { setIsSettingsOpen } = useUiStore(s => s.actions);
 
     const onClose = useCallback(() => {
         setIsSettingsOpen(false);
@@ -43,72 +119,7 @@ export const SettingsModal = memo(() => {
                     </DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="flex-1 min-h-0 px-6">
-                    <div className="flex flex-col gap-8 py-2 pb-8">
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                                {t('settings.sections.ai')}
-                            </h3>
-                            <Button
-                                variant="ghost"
-                                onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }}
-                                className="w-full text-left p-4 h-auto rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors flex items-start justify-start gap-3.5 group whitespace-normal font-normal"
-                            >
-                                <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
-                                    <Sparkles size={18} strokeWidth={2} className="animate-pulse" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors block">
-                                        {t('mcp.title')}
-                                    </span>
-                                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                                        {t('mcp.subtitle')}
-                                    </p>
-                                </div>
-                            </Button>
-                        </div>
-
-                        <DisplaySection />
-
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest px-1">
-                                {t('settings.sections.language')}
-                            </h3>
-                            <Card variant="subtle" size="none">
-                                <div className="p-3">
-                                    <ToggleGroup
-                                        value={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
-                                        onValueChange={(val: string[]) => {
-                                            if (val && val.length > 0) {
-                                                i18n.changeLanguage(val[0]);
-                                            }
-                                        }}
-                                        className="grid grid-cols-3 gap-2 bg-transparent p-0"
-                                    >
-                                        {SUPPORTED_LANGUAGES.map((lang) => (
-                                            <ToggleGroupItem
-                                                key={lang}
-                                                value={lang}
-                                                variant="outline"
-                                                className={cn(
-                                                    "h-auto py-2.5 px-4 rounded-xl text-sm font-semibold border-border/80 transition-[transform,colors] active:scale-95 cursor-pointer",
-                                                    "data-[state=on]:bg-primary/20! data-[state=on]:text-primary! data-[state=on]:border-primary/50! data-[state=on]:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
-                                                    "data-[state=off]:bg-transparent data-[state=off]:text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
-                                                )}
-                                            >
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className="text-base">{LANGUAGE_FLAGS[lang]}</span>
-                                                    <span>{t(`settings.language.${lang}`)}</span>
-                                                </div>
-                                            </ToggleGroupItem>
-                                        ))}
-                                    </ToggleGroup>
-                                </div>
-                            </Card>
-                        </div>
-
-
-                        <SettingsFooter />
-                    </div>
+                    <SettingsContent />
                 </ScrollArea>
             </DialogContent>
         </Dialog>

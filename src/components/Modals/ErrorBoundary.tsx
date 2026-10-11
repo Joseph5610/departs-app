@@ -175,7 +175,7 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             </p>
                             {errorInfo && (
                                 <div className="max-h-48 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
-                                    <pre className="text-muted-foreground/70 text-[10px] font-mono leading-relaxed whitespace-pre w-full">
+                                    <pre className="text-muted-foreground/70 text-label font-mono leading-relaxed whitespace-pre w-full">
                                         {errorInfo.componentStack}
                                     </pre>
                                 </div>

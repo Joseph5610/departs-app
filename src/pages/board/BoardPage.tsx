@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Accessibility, Snowflake, Train, TrainFront } from 'lucide-react';
-import { cn } from 'cn';
+import { Accessibility, Snowflake, TrainFront } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { useNow } from '@/hooks/useNow';
 import { useStops } from '@/hooks/data/useStops';
 import { useBoardDepartures } from '@/hooks/data/useDepartures';
@@ -13,13 +13,14 @@ import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { BOARD_CONFIG } from '@/config/constants';
 import { SITE } from '@/config/site';
 import { LineBadge } from '@/components/LineBadge';
-import { Badge } from '@/components/ui/badge';
-import { DelayText } from '@/components/DelayText';
-import { catchableDepartures } from '@/domain/departures';
+import { StruckTime } from '@/components/StruckTime';
+import { PlatformCircle } from '@/components/PlatformCircle';
+import { Countdown } from '@/components/DetailPanel/DepartureBoard/Countdown';
+import { LiveSignal } from '@/components/DetailPanel/DepartureBoard/LiveSignal';
+import { boardingPlace, catchableDepartures, departureClock, liveStatus } from '@/domain/departures';
 import { activeNotices, noticesForStops, noticeText } from '@/domain/alerts';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { Departure } from '@/types';
-import { formatTimetableClock } from '@/domain/time';
 import { useCityConfig } from '@/hooks/data/useCities';
 
 const readWalkMins = (): number => {
@@ -63,7 +64,9 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
     const { t } = useTranslation();
     const secondsLeft = Math.floor((Date.parse(dep.timestamp) - now) / 1000);
     const leaveSecs = secondsLeft - walkMins * 60;
-    const showPlatform = !!dep.platform && dep.platform !== stopPlatform;
+    // Metro tracks lead the headsign in a circle, as in the app; other platforms show when they differ from the board's own.
+    const { track } = boardingPlace(dep);
+    const showPlatform = !track && !!dep.platform && dep.platform !== stopPlatform;
 
     const leaveText = walkMins === 0 || dep.isCanceled ? null
         : leaveSecs < 60 ? t('board.leaveNow')
@@ -81,22 +84,17 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
             />
             <div className="min-w-0">
                 <div className={cn(
-                    "font-semibold truncate text-[clamp(1.1rem,2.6vw,2.6rem)] leading-tight text-foreground",
+                    "flex min-w-0 items-center gap-[0.35em] font-semibold text-[clamp(1.1rem,2.6vw,2.6rem)] leading-tight text-foreground",
                     dep.isCanceled && "line-through text-muted-foreground"
                 )}>
-                    {dep.headsign}
+                    {track && <PlatformCircle code={track} label={t('map.departures.trackNumber', { track })} className="size-[1.8em] text-[0.55em]" />}
+                    <span className="truncate">{dep.headsign}</span>
                 </div>
                 <div className="mt-[0.2em] flex items-center gap-[0.75em] text-[clamp(0.75rem,1.4vw,1.3rem)] text-muted-foreground tabular-nums">
-                    <span className={cn("font-medium", dep.isCanceled && "line-through opacity-60")}>{formatTimetableClock(dep.scheduled, timeZone)}</span>
-                    {!dep.isCanceled && <DelayText delay={dep.delay} />}
+                    <StruckTime {...departureClock(dep, timeZone)} isCanceled={dep.isCanceled} className="font-medium" />
                     {dep.is_wheelchair_accessible && <Accessibility className="size-[1.1em] opacity-60" strokeWidth={1.5} aria-label={t('amenities.wheelchairAccessible')} />}
                     {dep.is_air_conditioned && <Snowflake className="size-[1.1em] opacity-60" strokeWidth={1.5} aria-label={t('amenities.airConditioned')} />}
-                    {showPlatform && (
-                        <span className="inline-flex items-center gap-[0.3em] px-[0.45em] py-[0.1em] bg-muted rounded-md border font-semibold">
-                            <Train className="size-[0.9em] opacity-50" aria-hidden="true" />
-                            {dep.platform}
-                        </span>
-                    )}
+                    {showPlatform && <span>{t('map.departures.platformCode', { code: dep.platform })}</span>}
                     {leaveText && (
                         <span className={cn("font-semibold", leaveSecs < 60 ? "text-emerald-400" : "text-foreground")}>
                             {leaveText}
@@ -106,11 +104,13 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
             </div>
             <div className="text-right font-bold tabular-nums leading-none text-[clamp(1.5rem,4vw,4rem)]">
                 {dep.isCanceled ? (
-                    <Badge variant="destructive" className="rounded-md font-semibold text-[0.4em] h-auto px-[0.5em] py-[0.25em]">{t('map.departures.canceled')}</Badge>
-                ) : secondsLeft < 60 ? (
-                    <span className="text-emerald-400 animate-pulse">{t('map.departures.now')}</span>
+                    <span className="text-[0.45em] font-semibold text-destructive">{t('map.departures.canceled')}</span>
                 ) : (
-                    <span className="text-foreground">{Math.floor(secondsLeft / 60)}<span className="text-[0.45em] font-semibold text-muted-foreground ml-[0.15em]">min</span></span>
+                    // The board's live countdown at wall size: status dot, then minutes and seconds.
+                    <span className="flex items-center justify-end gap-[0.3em]">
+                        <LiveSignal status={liveStatus(dep)} className="size-[clamp(0.8rem,1.8vw,1.6rem)]" />
+                        <Countdown timestamp={dep.timestamp} />
+                    </span>
                 )}
             </div>
         </li>
@@ -164,11 +164,6 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
                         )}
                         <span className="truncate">{stop?.stop_name ?? '…'}</span>
                     </h1>
-                    {walkMins > 0 && (
-                        <div className="mt-[0.4em] text-[clamp(0.75rem,1.3vw,1.1rem)] text-muted-foreground font-medium">
-                            {t('board.withWalk', { count: walkMins })}
-                        </div>
-                    )}
                 </div>
                 <div className="shrink-0 text-right">
                     <div className="font-bold tabular-nums text-[clamp(1.5rem,4vw,4rem)] leading-none">{clockFormat.format(now)}</div>

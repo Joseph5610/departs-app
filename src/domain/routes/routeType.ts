@@ -53,3 +53,13 @@ const ROUTE_TYPE_RANK = new Map<string, number>(ROUTE_TYPE_ORDER.map((type, i) =
 /** Position of a mode in ROUTE_TYPE_ORDER; unknown modes sort last. */
 export const routeTypeRank = (type: string | number | null | undefined): number =>
     ROUTE_TYPE_RANK.get(String(type ?? '')) ?? ROUTE_TYPE_ORDER.length;
+
+/** The leading mode among `types` in ROUTE_TYPE_ORDER (metro before train before tram...), or `unknown` for none. */
+export const primaryRouteType = (types: readonly (RouteType | string | number | null | undefined)[]): RouteType => {
+    let best: RouteType = 'unknown';
+    for (const type of types) {
+        const normalized = normalizeRouteType(type);
+        if (routeTypeRank(normalized) < routeTypeRank(best)) best = normalized;
+    }
+    return best;
+};

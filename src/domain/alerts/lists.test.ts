@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Infotext, RSSItem } from '@/types';
 import { MIN, NOW, at } from '@/test/factories';
-import { activeNotices, alertSections, alertsForLine } from './lists';
+import { activeNotices, alertSections, alertsForLine, incidentsOnLines } from './lists';
 
 const alert = (title: string, overrides: Partial<RSSItem> = {}): RSSItem => ({
     type: 'exclusion',
@@ -84,5 +84,20 @@ describe('activeNotices', () => {
         ], NOW);
 
         expect(result.map((n) => n.id)).toEqual(['open-ended', 'current']);
+    });
+});
+
+describe('incidentsOnLines', () => {
+    // The home sheet raises only what touches the rider's own lines; planned exclusions and ended incidents stay out.
+    it('keeps active incidents on the given lines, high priority first', () => {
+        const alerts = [
+            alert('other line', { type: 'incident', line_metadata: [line('9', 'tram')] }),
+            alert('low', { type: 'incident', line_metadata: [line('17', 'tram')] }),
+            alert('high', { type: 'incident', priority: 'high', line_metadata: [line('c', 'metro')] }),
+            alert('planned', { type: 'exclusion', line_metadata: [line('17', 'tram')] }),
+            alert('ended', { type: 'incident', isActive: false, line_metadata: [line('17', 'tram')] }),
+        ];
+        expect(incidentsOnLines(alerts, new Set(['17', 'C'])).map(a => a.title)).toEqual(['high', 'low']);
+        expect(incidentsOnLines(alerts, new Set())).toEqual([]);
     });
 });

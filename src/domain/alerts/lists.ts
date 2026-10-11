@@ -8,6 +8,10 @@ import { normalizeString } from '@/lib/strings';
 export const isHighPriorityAlert = (priority: string | undefined | null): boolean =>
     priority === 'high' || priority === '1';
 
+/** How many of the alerts are incidents (disruptions now), the count the alerts buttons badge. */
+export const countIncidents = (alerts: readonly RSSItem[] | undefined): number =>
+    alerts?.filter(a => a.type === 'incident').length ?? 0;
+
 /** Which alerts the alerts list shows. */
 export type AlertFilterMode = 'all' | 'incident' | 'exclusion';
 
@@ -80,6 +84,18 @@ export const alertsForLine = (alerts: RSSItem[], routeName: string): RSSItem[] =
     const upperRouteName = routeName.toUpperCase();
     return alerts
         .filter(item => item.isActive && item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName))
+        .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
+};
+
+/**
+ * The active incidents on any of `lineNames` (compared case-insensitively), high priority first:
+ * what the home sheet raises as disruptions on the rider's own lines.
+ */
+export const incidentsOnLines = (alerts: readonly RSSItem[] | undefined, lineNames: ReadonlySet<string>): RSSItem[] => {
+    if (!alerts || lineNames.size === 0) return [];
+    const names = new Set([...lineNames].map(n => n.toUpperCase()));
+    return alerts
+        .filter(item => item.type === 'incident' && item.isActive && item.line_metadata?.some(m => names.has(String(m.name).toUpperCase())))
         .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
 };
 

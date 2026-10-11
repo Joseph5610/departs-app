@@ -18,6 +18,7 @@ export const useStopSearch = (stops: { features: StopFeature[] } | null) => {
     return {
         query,
         setQuery,
-        results
+        results,
+        searchIndex
     };
 };

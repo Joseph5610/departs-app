@@ -34,12 +34,26 @@ export const UI_TIMING_MS = {
     CITY_SWITCH_HIGHLIGHT: 2000,
     /** Time a service-worker update check waits for a new version before reporting "up to date". */
     UPDATE_CHECK_WAIT: 2500,
+    /** How often minute-precision departure times (the home sheet's) re-render. */
+    MINUTES_TICK: 10_000,
 };
 
-/** Mobile detail drawer heights as a fraction of the screen; each value must appear in SNAP_POINTS. */
-export const DRAWER_SNAP = {
-    SNAP_POINTS: [0.18, 0.6, 0.8],
-    DEFAULT: 0.6,
+/** The mobile sheet's three heights: the peek shows only the search row or a card's header, half, and full, which stops just below the status bar. */
+export const SHEET = {
+    PEEK: '112px',
+    HALF: 0.5,
+    /** Gap between the status bar and a fully open sheet, through which the dimmed map shows. */
+    FULL_TOP_GAP_PX: 12,
+    /** The status bar height assumed where the browser reports no safe area (desktop previews, older phones). */
+    FULL_TOP_MIN_INSET_PX: 28,
+    /** A pointer that moves less than this between down and up on the grabber is a tap, not a drag. */
+    TAP_SLOP_PX: 6,
+};
+
+/** Stops listed under "Nearby" on the mobile home sheet. */
+export const NEARBY_STOPS = {
+    LIMIT: 4,
+    MAX_DISTANCE_M: 1500,
 };
 
 export const STOP_SEARCH = {
@@ -316,14 +330,16 @@ export const RIDE_CONFIG = {
 export const DEPARTURES_CONFIG = {
     /** Only departures expected within this window count towards the board's delay statistics. */
     DELAY_STATS_WINDOW_MS: 30 * MINUTE_MS,
-    /** Distinct feeder lines shown as badges on a departure row; beyond this a short label replaces them. */
-    MAX_FEEDER_BADGES: 2,
+    /** Home sheet countdowns read in minutes below this; later departures show their clock time instead. */
+    COUNTDOWN_MINUTES_LIMIT: 60,
     /** Departures stay listed this long after their expected time, while the vehicle may still be at the stop. */
     PAST_GRACE_MS: MINUTE_MS,
     /** Net delay change across the board, in seconds, beyond which the trend reads as worsening or improving. */
     TREND_THRESHOLD_S: 30,
     /** How long a delay change stays visible next to a departure after an update. */
     DELAY_DELTA_VISIBLE_MS: 5000,
+    /** How long a fresh delay change replaces a departure's countdown before it rolls back. */
+    DELAY_DELTA_FLASH_MS: 1400,
     /** A previous fetch older than this many refresh intervals is not compared against for delay changes. */
     DELAY_DELTA_MAX_AGE_REFRESHES: 2,
     /** Next departures listed in a shared stop's message. */
@@ -332,6 +348,8 @@ export const DEPARTURES_CONFIG = {
     FAVORITE_CARD_COUNT: 2,
     /** Departures shown per direction before the board offers to expand it. */
     VISIBLE_PER_GROUP: 3,
+    /** A pointer that moves further than this between press and release scrolled or swiped instead of tapping a departure. */
+    TAP_SLOP_PX: 10,
     /** Departures described in the page's structured data. */
     STRUCTURED_DATA_LIMIT: 15,
 };
@@ -344,6 +362,20 @@ export const GEOLOCATION_TIMING_MS = {
     /** A focus request with no fresh fix after this long gives up. */
     FOCUS_TIMEOUT: 20_000,
 };
+
+/** How the map opens and when it finds the user again. */
+export const LAUNCH_VIEW = {
+    /** A saved position or map view older than this is not reopened; the city overview is shown instead. */
+    SAVED_MAX_AGE_MS: 12 * 60 * 60 * 1000,
+    /** Back from the background after this long, the map moves to a fresh position again. */
+    RESUME_RELOCATE_AFTER_MS: 15 * 60 * 1000,
+    /** Zoom onto a launch fix by its accuracy, finest first; the last step catches the rest. */
+    ZOOM_BY_ACCURACY: [
+        { maxAccuracyM: 200, zoom: 15 },
+        { maxAccuracyM: 1500, zoom: 14 },
+        { maxAccuracyM: Infinity, zoom: 13 },
+    ],
+} as const;
 
 export const LOCATION_PRIVACY = {
     /** Decimal places kept when the last known position is saved on the device; 3 is roughly 100 m. */

@@ -1,5 +1,5 @@
 import { useMemo, useState, memo } from 'react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { useAlerts } from '@/hooks/data/useAlerts';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '@/state/uiStore';

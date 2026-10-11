@@ -25,7 +25,13 @@
   <style>
     #boot-splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; }
     #boot-splash img { width: 28vmin; height: 28vmin; }
+    /* At launch an iOS home-screen app paints the strip under the home indicator with the page background. */
+    html:has(#boot-splash) { background: #000; }
   </style>
+  <!-- iOS home-screen apps report display-mode: browser, so mark them for the full-screen height in index.css. -->
+  <script>
+    if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('standalone');
+  </script>
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />

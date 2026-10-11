@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { DELAY_TIERS, type DelayTierKey } from '@/config/transit';
 import { toggled } from '@/lib/strings';
@@ -90,7 +90,7 @@ export const DelayFilter = () => {
                 {delayFilter.length > 0 && (
                     <button
                         onClick={() => setDelayFilter([])}
-                        className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                        className="text-label font-bold text-primary hover:underline cursor-pointer"
                     >
                         {t('common.all')}
                     </button>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BellRing, ChevronDown, ChevronRight, ChevronUp, UserRound, X } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
@@ -274,7 +274,7 @@ const RideControl = ({ isPicking, exitStopName, stopsLeft, arrivalTime, onPick, 
             <span className="flex flex-col flex-1 min-w-0 leading-snug">
                 {isActive ? (
                     <>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{t('ride.kickerRiding')}</span>
+                        <span className="micro-label text-primary">{t('ride.kickerRiding')}</span>
                         <span className="text-sm font-semibold text-foreground line-clamp-2">{exitStopName}</span>
                         {(stopsLeft !== null || arrivalTime) && (
                             <span className="text-xs text-muted-foreground tabular-nums">

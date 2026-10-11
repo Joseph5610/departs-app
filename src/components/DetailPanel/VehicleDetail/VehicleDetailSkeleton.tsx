@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 
 /**
  * VehicleDetailSkeleton

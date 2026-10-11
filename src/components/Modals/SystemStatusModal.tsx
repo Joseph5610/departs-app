@@ -13,7 +13,7 @@ import { useCityConfig } from '@/hooks/data/useCities';
 import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { RefreshIntervalPicker } from '@/components/RefreshIntervalPicker';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { 
     Wifi, 
     WifiOff, 
@@ -184,7 +184,7 @@ const SystemStatusDetails = () => {
                     </ItemGroup>
                 </Card>
 
-                <p className="flex gap-2 px-1 text-[11px] leading-snug text-muted-foreground">
+                <p className="flex gap-2 px-1 text-caption leading-snug text-muted-foreground">
                     <Info className="w-3.5 h-3.5 shrink-0 mt-px" strokeWidth={1.5} />
                     {t('liveStatus.explanationText', { seconds: refreshIntervalS })}
                 </p>

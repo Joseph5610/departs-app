@@ -117,7 +117,7 @@ export const FeedbackModal = memo(() => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent variant="default" className="max-w-xl" data-testid="feedback-modal-content">
+            <DialogContent variant="default" phoneLayout="page" className="max-w-xl" data-testid="feedback-modal-content">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                         <MessageSquareHeart className="size-5 text-primary" />
@@ -136,7 +136,7 @@ export const FeedbackModal = memo(() => {
                             name="type"
                             render={({ field, fieldState }) => (
                                 <Field className="gap-1.5">
-                                    <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                    <FieldLabel className="micro-label-widest text-muted-foreground px-1">
                                         {t('feedback.type')}
                                     </FieldLabel>
                                     <Card variant="subtle" size="none">
@@ -173,7 +173,7 @@ export const FeedbackModal = memo(() => {
                             name="message"
                             render={({ field, fieldState }) => (
                                 <Field className="gap-1.5">
-                                    <FieldLabel htmlFor="feedback-message" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                    <FieldLabel htmlFor="feedback-message" className="micro-label-widest text-muted-foreground px-1">
                                         {t('feedback.message')} *
                                     </FieldLabel>
                                     <Textarea
@@ -193,7 +193,7 @@ export const FeedbackModal = memo(() => {
                             name="email"
                             render={({ field, fieldState }) => (
                                 <Field className="gap-1.5">
-                                    <FieldLabel htmlFor="feedback-email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                                    <FieldLabel htmlFor="feedback-email" className="micro-label-widest text-muted-foreground px-1">
                                         {t('feedback.email')}
                                     </FieldLabel>
                                     <Input
@@ -235,7 +235,7 @@ export const FeedbackModal = memo(() => {
 
                                         {includeDiagnostics && diagnosticSnapshot && (
                                             <div className="px-4 pb-4 pt-1 border-t border-border/50">
-                                                <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-[11px] font-mono text-foreground leading-relaxed overflow-x-auto select-all max-h-44">
+                                                <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all max-h-44">
                                                     {JSON.stringify(diagnosticSnapshot, null, 2)}
                                                 </pre>
                                             </div>

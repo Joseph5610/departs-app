@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
-import { cn } from 'cn';
+import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import type { RSSItem } from '@/types';
 import { LineBadge } from '@/components/LineBadge';
@@ -81,7 +81,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                             )}
 
                             {isFuture ? (
-                                <Badge variant="outline" className="text-[9px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
+                                <Badge variant="outline" className="text-micro font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
                                     <span>{t('alerts.planned')}</span>
                                 </Badge>
@@ -106,7 +106,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                 <div className="px-4 pb-4 pt-1 ml-7">
                     <div className="flex flex-col gap-3">
                         {(cause || item.causeDetail) && (
-                            <div className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
+                            <div className="text-label font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
                                 {cause && <span>{t(`alerts.causes.${cause}`, cause)}</span>}
                                 {item.causeDetail && (
                                     <span className={cn(
@@ -131,7 +131,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                             <button
                                 type="button"
                                 onClick={onOpenFull}
-                                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1 cursor-pointer outline-none"
+                                className="inline-flex items-center gap-1.5 text-caption font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1 cursor-pointer outline-none"
                             >
                                 <Maximize2 size={12} strokeWidth={2} />
                                 {t('alerts.showFull')}
@@ -141,7 +141,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                                 href={item.link} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1"
+                                className="inline-flex items-center gap-1.5 text-caption font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1"
                             >
                                 <ExternalLink size={12} strokeWidth={2} />
                                 {t('alerts.moreInfo')}
@@ -149,7 +149,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                         )}
 
                         {item.valid_from && (
-                            <div className="text-[11px] font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50 inline-flex w-fit">
+                            <div className="text-caption font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50 inline-flex w-fit">
                                 {validToText ? `${validFromText} – ${validToText}` : t('alerts.validFrom', { date: validFromText })}
                             </div>
                         )}

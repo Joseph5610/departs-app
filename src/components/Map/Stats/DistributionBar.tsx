@@ -35,7 +35,7 @@ export const DistributionBar = ({ segments, total }: DistributionBarProps) => {
                     </Popover>
                 ))}
             </div>
-            <div className="flex flex-wrap justify-between text-[10px] font-bold text-foreground/60 uppercase tracking-wider gap-x-3 gap-y-1 mt-1">
+            <div className="flex flex-wrap justify-between text-label font-bold text-foreground/60 uppercase tracking-wider gap-x-3 gap-y-1 mt-1">
                 {segments.filter(segment => !segment.hideInLegend).map(segment => (
                     <span key={segment.key} className={segment.textClass}>
                         {segment.label} ({percent.format(segment.count / total)})
