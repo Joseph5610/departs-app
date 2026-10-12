@@ -70,7 +70,8 @@ interface MobileSheetProps {
 
 /**
  * The one mobile sheet: the home content, or a card pushed over it, at three fixed heights.
- * Only the user moves it, except that opening a card lifts it to the card's minimum height.
+ * Only the user moves it, except that opening a card lifts it to the card's minimum height and closing
+ * the card puts back the home's own height (the bottom, when the card was swiped away).
  * Content scrolls only at full height, so at the lower heights every vertical drag moves the sheet
  * and scrolling down with a wheel raises it to full.
  */
@@ -94,32 +95,30 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
     const swipeCloseHeightRef = useRef(0);
     const swipeCollapseRef = useRef(false);
 
-    // The height before a card lifted the sheet; leaving that card returns to it.
-    const [liftedFrom, setLiftedFrom] = useState<Detent | null>(null);
+    // The home keeps its own height: a card opens at least at `minSnap` and leaving it restores the home's.
+    const [homeDetent, setHomeDetent] = useState<Detent>('peek');
     const [prevCardKey, setPrevCardKey] = useState(cardKey);
     if (cardKey !== prevCardKey) {
         setPrevCardKey(cardKey);
-        const base = liftedFrom ?? detent ?? 'peek';
-        const next = cardKey === null ? base : atLeast(base, minSnap);
-        setLiftedFrom(cardKey !== null && next !== base ? base : null);
-        setDetent(next);
+        const current = detent ?? 'peek';
+        if (cardKey === null) {
+            setDetent(homeDetent);
+        } else {
+            if (prevCardKey === null) setHomeDetent(current);
+            setDetent(atLeast(current, minSnap));
+        }
     }
 
     const [prevCollapseRequest, setPrevCollapseRequest] = useState(collapseRequest);
     if (collapseRequest !== prevCollapseRequest) {
         setPrevCollapseRequest(collapseRequest);
         setDetent('peek');
+        setHomeDetent('peek');
     }
 
     const isFull = detent === 'full';
 
-    // Moving the sheet by hand makes the new height the one to return to.
-    const moveTo = (next: Detent) => {
-        setLiftedFrom(null);
-        setDetent(next);
-    };
-
-    const cycleDetent = () => moveTo(DETENTS[(DETENTS.indexOf(detent ?? 'peek') + 1) % DETENTS.length]);
+    const cycleDetent = () => setDetent(DETENTS[(DETENTS.indexOf(detent ?? 'peek') + 1) % DETENTS.length]);
 
     return (
         <>
@@ -153,11 +152,15 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                     if (swipeCollapseRef.current) {
                         swipeCollapseRef.current = false;
                         const from = swipeCloseFromRef.current;
-                        moveTo(from === 'peek' ? 'peek' : landingBelow(from, swipeCloseHeightRef.current, points));
-                        if (from === 'peek' && isOpen) onDismiss();
+                        setDetent(from === 'peek' ? 'peek' : landingBelow(from, swipeCloseHeightRef.current, points));
+                        // Swiped away, the card leaves the home at the bottom too.
+                        if (from === 'peek' && isOpen) {
+                            setHomeDetent('peek');
+                            onDismiss();
+                        }
                         return;
                     }
-                    moveTo(DETENTS.find(d => points[d] === point) ?? 'peek');
+                    setDetent(DETENTS.find(d => points[d] === point) ?? 'peek');
                 }}
                 modal={false}
                 disablePointerDismissal={true}
@@ -170,7 +173,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                     aria-describedby={undefined}
                     data-testid={isOpen ? 'detail-panel' : 'home-sheet'}
                     // Content below full height does not scroll, so a mouse wheel or trackpad raises the sheet instead.
-                    onWheel={(e) => { if (!isFull && e.deltaY > 0) moveTo('full'); }}
+                    onWheel={(e) => { if (!isFull && e.deltaY > 0) setDetent('full'); }}
                     header={
                         <div className="relative shrink-0 flex flex-col">
                             {floating?.(isFull)}

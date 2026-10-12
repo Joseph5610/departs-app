@@ -20,8 +20,8 @@ export interface DpmpVehicleRow {
     /** Null when the vehicle reports no GPS fix (`0;0`); the rest of the row is still live. */
     latitude: number | null;
     longitude: number | null;
-    /** Schedule deviation in seconds: positive is ahead of schedule, negative is late. */
-    variation: number;
+    /** Schedule deviation in seconds: positive is ahead of schedule, negative is late; null when implausible. */
+    variation: number | null;
     vehicleNumber: string;
     /** Zone-less local timestamp, `YYYY-MM-DD HH:MM:SS`. */
     dateTime: string;
@@ -62,14 +62,14 @@ function parseRow(column: (name: string) => string): DpmpVehicleRow | null {
         realRoad,
         latitude: hasFix ? latitude : null,
         longitude: hasFix ? longitude : null,
-        variation,
+        variation: variation > DPMP_CONFIG.MAX_AHEAD_S || variation < -DPMP_CONFIG.MAX_LATE_S ? null : variation,
         vehicleNumber,
         dateTime,
     };
 }
 
 /** The export's rows; a malformed row is dropped rather than failing the rest. Read without a per-row schema, which cost more than the parse. */
-function parseDpmpCsv(text: string): DpmpVehicleRow[] {
+export function parseDpmpCsv(text: string): DpmpVehicleRow[] {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     if (lines.length === 0) return [];
 

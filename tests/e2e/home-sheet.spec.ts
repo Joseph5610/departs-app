@@ -116,4 +116,31 @@ test.describe('Mobile home sheet', () => {
         await expect(rows.first()).toHaveAttribute('data-testid', 'nearby-stop-S1');
         await context.close();
     });
+
+    // A card lifts the sheet only while it is open; closing it gives the home back the height it had.
+    test('returns to the peek after a stop opened from it is nudged and closed', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+        const page = await openPhone(context);
+        const sheet = page.getByTestId('home-sheet');
+        await expect(sheet).toBeVisible({ timeout: 30000 });
+        const peekTop = Math.round((await sheet.boundingBox())!.y);
+
+        await page.getByTestId('search-trigger').click();
+        await page.getByTestId('search-input').fill('Tusar');
+        await page.locator('[data-testid="search-item-res-stop-S2"]').click();
+        const panel = page.getByTestId('detail-panel');
+        await expect(panel).toBeVisible();
+        await expect.poll(async () => Math.round((await panel.boundingBox())!.y)).toBeLessThan(peekTop);
+
+        // A drag released back on the same height is reported as a snap change, like a sloppy tap.
+        const grabber = (await page.getByTestId('home-sheet-grabber').boundingBox())!;
+        await page.mouse.move(grabber.x + grabber.width / 2, grabber.y + grabber.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(grabber.x + grabber.width / 2, grabber.y + grabber.height / 2 + 30, { steps: 5 });
+        await page.mouse.up();
+
+        await page.getByTestId('detail-panel-close').click();
+        await expect.poll(async () => Math.round((await sheet.boundingBox())!.y)).toBe(peekTop);
+        await context.close();
+    });
 });

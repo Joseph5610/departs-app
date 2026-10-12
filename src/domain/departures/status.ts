@@ -42,7 +42,8 @@ export const departureClock = (
 ): { scheduled: string; expected: string | null } => {
     const scheduled = formatTimetableClock(dep.scheduled, timeZone);
     if (dep.isCanceled || dep.delay === null || dep.delay === undefined) return { scheduled, expected: null };
-    const expected = formatTimetableClock(dep.timestamp, timeZone);
+    // Rounded to the nearest minute, like the trip timeline, so a delay past the badge tolerance moves the minute.
+    const expected = formatTimetableClock(new Date(Date.parse(dep.timestamp) + 30_000).toISOString(), timeZone);
     return { scheduled, expected: expected === scheduled ? null : expected };
 };
 

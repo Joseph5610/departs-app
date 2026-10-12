@@ -35,6 +35,8 @@ describe('departureClock', () => {
             .toEqual({ scheduled: '13:43', expected: '13:45' });
         expect(departureClock({ scheduled: '2026-10-09T11:43:00Z', timestamp: '2026-10-09T11:43:17Z', delay: 17, isCanceled: false }, tz))
             .toEqual({ scheduled: '13:43', expected: null });
+        expect(departureClock({ scheduled: '2026-10-09T11:43:00Z', timestamp: '2026-10-09T11:43:40Z', delay: 40, isCanceled: false }, tz))
+            .toEqual({ scheduled: '13:43', expected: '13:44' });
         expect(departureClock({ scheduled: '2026-10-09T11:43:00Z', timestamp: '2026-10-09T11:42:15Z', delay: -45, isCanceled: false }, tz))
             .toEqual({ scheduled: '13:43', expected: '13:42' });
         expect(departureClock({ scheduled: '2026-10-09T11:43:00Z', timestamp: '2026-10-09T11:43:00Z', delay: null, isCanceled: false }, tz))

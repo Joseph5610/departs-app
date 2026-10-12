@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.1] - 2026-10-12
+
+### Fixed
+
+- Installed iOS app no longer blurs the top of the map under the status bar.
+- Closing a stop or trip returns the mobile sheet to the height the home had before it opened.
+- Feedback and AI integration pages close again in the installed iPhone app; their close button no longer sits under the status bar.
+- Prešov night trips no longer show hours-off delays and timetables from DPMP's implausible deviations.
+- Boards and trip timelines strike through the timetable time from a half-minute delay, matching the delay badge.
+
 ## [0.83.0] - 2026-10-08
 
 ### Added

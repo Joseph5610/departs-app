@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTimetableClock, minutesCountdown } from './time';
+import { formatExpectedClock, formatTimetableClock, minutesCountdown } from './time';
 
 // Board times follow the city's zone, so they agree with its trips' timetable times on any device.
 describe('formatTimetableClock', () => {
@@ -8,6 +8,16 @@ describe('formatTimetableClock', () => {
         expect(formatTimetableClock('2026-10-25T01:30:00Z', 'Europe/Prague')).toBe('02:30');
         expect(formatTimetableClock('2026-10-07T14:05:00+02:00', 'Europe/Prague')).toBe('14:05');
         expect(formatTimetableClock('2026-10-07T12:05:00Z', 'America/New_York')).toBe('08:05');
+    });
+});
+
+// A delay past the 30 s badge tolerance must move the shown minute, or a late stop reads as on time.
+describe('formatExpectedClock', () => {
+    it('rounds a live time to the nearest minute, across midnight', () => {
+        expect(formatExpectedClock('23:58:29')).toBe('23:58');
+        expect(formatExpectedClock('23:58:31')).toBe('23:59');
+        expect(formatExpectedClock('23:59:45')).toBe('00:00');
+        expect(formatExpectedClock(undefined)).toBe('');
     });
 });
 

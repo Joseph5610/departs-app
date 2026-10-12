@@ -17,6 +17,10 @@ export const formatClock = (time: string | null | undefined, withSeconds = false
     return hours >= 24 ? `${pad2(hours - 24)}${value.slice(2)}` : value;
 };
 
+/** `HH:MM` of a live time rounded to the nearest minute, so a delay past the half-minute badge tolerance moves the shown minute. */
+export const formatExpectedClock = (time: string | null | undefined): string =>
+    time ? formatClock(addSecondsToTime(time, 30)) : '';
+
 const timeOfDayFormats = new Map<string, Intl.DateTimeFormat>();
 
 /** Seconds since midnight of `ms` in `timeZone`, the zone timetables are written in. */

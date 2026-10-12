@@ -73,7 +73,7 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-5 right-5 text-muted-foreground hover:text-foreground rounded-full h-9 w-9 p-0"
+                className={cn("absolute top-5 right-5 text-muted-foreground hover:text-foreground rounded-full h-9 w-9 p-0", phoneLayout === 'page' && "max-md:top-[calc(1.25rem+env(safe-area-inset-top,0px))]")}
                 size="icon"
               />
             }

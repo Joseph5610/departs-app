@@ -154,7 +154,7 @@ export class DpmpVehicleSource implements NetworkVehicles {
 
         const isBeforeTrack = isWaitingToStart(match.startRelMins - ctx.mins, row.stopOrder);
 
-        return mapVehicle(vp, match.tripId, route, originTimestamp, -row.variation, isBeforeTrack);
+        return mapVehicle(vp, match.tripId, route, originTimestamp, row.variation === null ? null : -row.variation, isBeforeTrack);
     }
 
     /**

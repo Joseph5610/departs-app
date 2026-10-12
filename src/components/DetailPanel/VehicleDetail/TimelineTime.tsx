@@ -1,4 +1,4 @@
-import { calculateTimeDifferenceSecs, formatClock } from '@/domain/time';
+import { calculateTimeDifferenceSecs, formatClock, formatExpectedClock } from '@/domain/time';
 import { getDelayStatus } from '@/domain/delay';
 import { cn } from '@/lib/cn';
 
@@ -10,7 +10,7 @@ export const TimelineTime = ({ realtimeTime, scheduledTime, hasRealtime, isPast 
     isPast?: boolean;
 }) => {
     const scheduled = formatClock(scheduledTime ?? realtimeTime);
-    const expected = hasRealtime ? formatClock(realtimeTime) : null;
+    const expected = hasRealtime ? formatExpectedClock(realtimeTime) : null;
     const isLate = hasRealtime && !!realtimeTime && !!scheduledTime
         && getDelayStatus(calculateTimeDifferenceSecs(realtimeTime, scheduledTime)) === 'late';
     const color = isPast ? "text-muted-foreground" : hasRealtime ? (isLate ? "text-destructive" : "text-primary") : "text-muted-foreground";

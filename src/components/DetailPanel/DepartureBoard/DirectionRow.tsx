@@ -52,6 +52,7 @@ export const DirectionRow = memo(({
     const [next, ...later] = visible;
     const showsList = isExpanded || isFiltered;
     const showsChips = !showsList && later.length > 0;
+    const showsRows = showsList && later.length > 0;
 
     return (
         <>
@@ -70,10 +71,10 @@ export const DirectionRow = memo(({
             {/* Outside the row's button, which cannot hold another; centred under the badge column. */}
             <PinLineButton stopId={boardStopId} line={line} headsign={headsign} className="absolute left-[calc(0.375rem+var(--badge-col)/2-0.875rem)] top-11.5 mr-0" />
 
-            {(showsChips || showsList || hasMore || note) && (
+            {(showsChips || showsRows || hasMore || note) && (
                 <div className="flex flex-col gap-2 pl-[calc(var(--badge-col)+1rem)] pr-2">
                     {note}
-                    {showsList && later.length > 0 && (
+                    {showsRows && (
                         <div className="flex flex-col">
                             {later.map(dep => (
                                 <TripRow
@@ -87,7 +88,7 @@ export const DirectionRow = memo(({
                         </div>
                     )}
                     {(showsChips || hasMore) && (
-                        <div className={cn("flex min-w-0 items-center gap-1.5", showsList && "-mt-2")}>
+                        <div className={cn("flex min-w-0 items-center gap-1.5", showsRows && "-mt-2")}>
                             {showsChips && later.map(dep => (
                                 <DepartureChip
                                     key={departureKey(dep)}

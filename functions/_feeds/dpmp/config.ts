@@ -17,6 +17,13 @@ export const DPMP_CONFIG = {
     /** CSV `DIRECTION` to GTFS `direction_id`. D/Z/R (depot and positioning runs) have no GTFS trip. */
     DIRECTION_IDS: { T: 0, P: 1 } as Record<string, number>,
 
+    /**
+     * Plausible `VARIATION` range in seconds (positive is ahead). Night runs past midnight sometimes
+     * report hours of deviation (e.g. +20851 s); outside this range the delay is unknown.
+     */
+    MAX_AHEAD_S: 900,
+    MAX_LATE_S: 7200,
+
     /** Route type assumed for vehicles whose line is missing from routes.json. */
     FALLBACK_ROUTE_TYPE: '3',
 
