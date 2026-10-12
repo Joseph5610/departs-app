@@ -37,6 +37,9 @@ const measureHeights = (): Heights => ({
 
 const sameHeights = (a: Heights, b: Heights) => a.peek === b.peek && a.full === b.full;
 
+/** Whether a touch starts in the home indicator's strip, where iOS's swipe home begins. */
+const inHomeIndicator = (clientY: number) => clientY > window.innerHeight - readSafeArea('bottom');
+
 type Detent = 'peek' | 'half' | 'full';
 
 const DETENTS: Detent[] = ['peek', 'half', 'full'];
@@ -207,6 +210,9 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                     initialFocus={false}
                     aria-describedby={undefined}
                     data-testid={isOpen ? 'detail-panel' : 'home-sheet'}
+                    // Base UI starts its drag from the viewport's handlers; stopping here leaves the swipe home to iOS.
+                    onPointerDown={(e) => { if (e.pointerType === 'touch' && inHomeIndicator(e.clientY)) e.stopPropagation(); }}
+                    onTouchStart={(e) => { if (inHomeIndicator(e.touches[0].clientY)) e.stopPropagation(); }}
                     // Content below full height does not scroll, so a mouse wheel or trackpad raises the sheet instead.
                     onWheel={(e) => { if (!isFull && e.deltaY > 0) setDetent('full'); }}
                     header={

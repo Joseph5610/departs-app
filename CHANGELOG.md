@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- The mobile sheet no longer reopens halfway up after swiping home from the installed iPhone app.
+- Swiping home from the installed iPhone app no longer drags the mobile sheet up.
 - The fully open mobile sheet stops below the iPhone status bar again instead of running under it.
 - Map controls above the mobile sheet are real glass that blurs the map, like the desktop ones.
 

@@ -45,7 +45,7 @@ export const SHEET = {
     /** The bottom inset assumed where the device has no home indicator. */
     PEEK_MIN_BOTTOM_INSET_PX: 12,
     /** How far the peek's search row reaches into the home indicator's inset, like the Maps app. */
-    PEEK_HOME_INDICATOR_OVERLAP_PX: 16,
+    PEEK_HOME_INDICATOR_OVERLAP_PX: 11,
     HALF: 0.5,
     /** Gap between the status bar and a fully open sheet, through which the dimmed map shows. */
     FULL_TOP_GAP_PX: 28,
