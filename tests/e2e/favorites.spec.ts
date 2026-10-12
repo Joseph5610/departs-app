@@ -140,6 +140,58 @@ test.describe('Favorites Tests', () => {
         expect(afterUndo).toEqual([]);
     });
 
+    // A row's sideways swipe must not drag the sheet, even when the finger drifts a little vertically.
+    test('should pin a line direction with a swipe without moving the mobile sheet', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+            window.localStorage.setItem('departs-preferences', JSON.stringify({
+                state: { hasSeenWelcome: true, selectedCity: 'prague' },
+                version: 0
+            }));
+        });
+        await page.route('**/api/*/departures*', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                departures: [{
+                    tripId: 'trip-1', stopId: 'U1111Z1P', line: 'C', headsign: 'Letňany', type: 'metro', directionId: '0',
+                    scheduled: new Date(Date.now() + 60000).toISOString(), timestamp: new Date(Date.now() + 60000).toISOString(), delay: 0, route_color: 'C0115E',
+                }],
+            }),
+        }));
+        await page.goto('/prague/stop/U1111Z1P');
+
+        const row = page.getByTestId('departure-item-trip-1');
+        await expect(row).toBeVisible({ timeout: 30000 });
+        const sheet = page.getByTestId('detail-panel');
+        const sheetTop = async () => Math.round((await sheet.boundingBox())!.y);
+        await expect.poll(sheetTop).toBeGreaterThan(0);
+        const before = await sheetTop();
+
+        const box = (await row.boundingBox())!;
+        const x = box.x + box.width * 0.8;
+        const y = box.y + box.height / 2;
+        const cdp = await context.newCDPSession(page);
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        for (let i = 1; i <= 12; i++) {
+            await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - i * 10, y: y + i * 2 }] });
+        }
+        expect(await sheetTop()).toBe(before);
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+
+        await expect(page.getByText('Line C towards Letňany added to favorites')).toBeVisible();
+        expect(await sheetTop()).toBe(before);
+
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        for (let i = 1; i <= 12; i++) {
+            await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + i, y: y - i * 15 }] });
+        }
+        expect(await sheetTop()).toBeLessThan(before);
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+        await context.close();
+    });
+
     test('should split pinned lines and stops into tabs and remember the chosen tab', async ({ page }) => {
         await page.addInitScript(() => {
             if (window.localStorage.getItem('departs-preferences')) return;

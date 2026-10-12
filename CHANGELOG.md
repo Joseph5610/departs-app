@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.6] - 2026-10-12
+
+### Fixed
+
+- Swiping a departure to pin its line no longer drags the mobile sheet up or down.
+- The "Show less" button keeps its gap below an opened or hovered later departure.
+
 ## [0.83.5] - 2026-10-12
 
 ### Changed

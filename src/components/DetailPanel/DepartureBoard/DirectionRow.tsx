@@ -89,7 +89,7 @@ export const DirectionRow = memo(({
                         </div>
                     )}
                     {(showsChips || hasMore) && (
-                        <div className={cn("flex min-w-0 flex-wrap items-center gap-1.5", showsRows && "-mt-2")}>
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                             {showsChips && later.map(dep => (
                                 <DepartureChip
                                     key={departureKey(dep)}

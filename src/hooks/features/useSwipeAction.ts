@@ -1,8 +1,11 @@
 import type React from 'react';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 
-type Gesture = { id: number; x: number; y: number; offset: number; phase: 'pending' | 'swiping' };
+/** Whether a drag this far from its start is, or may still become, the row's left swipe. */
+const leansLeft = (dx: number, dy: number) => dx <= 0 && -dx >= Math.abs(dy) * 1.5;
+
+type Gesture = { id: number; x: number; y: number; offset: number; phase: 'pending' | 'swiping'; done: AbortController };
 
 /**
  * A row's left swipe (touch) or right click (mouse) that runs `onTrigger`. The swipe moves the element in
@@ -12,6 +15,15 @@ type Gesture = { id: number; x: number; y: number; offset: number; phase: 'pendi
 export const useSwipeAction = (onTrigger: (() => void) | undefined) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const gesture = useRef<Gesture | null>(null);
+    const release = () => {
+        gesture.current?.done.abort();
+        gesture.current = null;
+    };
+    const hasAction = !!onTrigger;
+    useEffect(() => () => {
+        gesture.current?.done.abort();
+        gesture.current = null;
+    }, [hasAction]);
 
     const show = (host: HTMLElement, offset: number, animate: boolean) => {
         const content = contentRef.current;
@@ -24,8 +36,9 @@ export const useSwipeAction = (onTrigger: (() => void) | undefined) => {
 
     const end = (e: React.PointerEvent<HTMLElement>, commit: boolean) => {
         const g = gesture.current;
-        gesture.current = null;
-        if (!g || g.phase !== 'swiping') return;
+        if (!g || g.id !== e.pointerId) return;
+        release();
+        if (g.phase !== 'swiping') return;
         if (commit && -g.offset >= DEPARTURES_CONFIG.SWIPE_ACTION_PX) onTrigger?.();
         show(e.currentTarget, 0, true);
     };
@@ -36,8 +49,20 @@ export const useSwipeAction = (onTrigger: (() => void) | undefined) => {
         contentRef,
         handlers: {
             onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
-                if (e.pointerType === 'mouse') return;
-                gesture.current = { id: e.pointerId, x: e.clientX, y: e.clientY, offset: 0, phase: 'pending' };
+                if (e.pointerType === 'mouse' || gesture.current) return;
+                const g: Gesture = { id: e.pointerId, x: e.clientX, y: e.clientY, offset: 0, phase: 'pending', done: new AbortController() };
+                gesture.current = g;
+                // The sheet drags itself from a capturing document touchmove; one on the window runs first and keeps a sideways swipe from it.
+                window.addEventListener('touchmove', (touch) => {
+                    const t = touch.touches[0];
+                    if (touch.touches.length !== 1 || (g.phase === 'pending' && !leansLeft(t.clientX - g.x, t.clientY - g.y))) return;
+                    touch.stopPropagation();
+                    if (g.phase === 'swiping' && touch.cancelable) touch.preventDefault();
+                }, { capture: true, passive: false, signal: g.done.signal });
+                // A pending drag lifted over another element never sends this row its pointerup.
+                window.addEventListener('touchend', (touch) => {
+                    if (touch.touches.length === 0 && gesture.current === g && g.phase === 'pending') release();
+                }, { capture: true, signal: g.done.signal });
             },
             onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
                 const g = gesture.current;
@@ -45,8 +70,8 @@ export const useSwipeAction = (onTrigger: (() => void) | undefined) => {
                 const dx = e.clientX - g.x;
                 const dy = e.clientY - g.y;
                 if (g.phase === 'pending') {
-                    if (Math.abs(dy) > DEPARTURES_CONFIG.TAP_SLOP_PX && Math.abs(dy) >= Math.abs(dx)) { gesture.current = null; return; }
-                    if (dx > -DEPARTURES_CONFIG.TAP_SLOP_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+                    if (Math.max(Math.abs(dy), dx) > DEPARTURES_CONFIG.TAP_SLOP_PX && !leansLeft(dx, dy)) { release(); return; }
+                    if (dx > -DEPARTURES_CONFIG.TAP_SLOP_PX || !leansLeft(dx, dy)) return;
                     g.phase = 'swiping';
                     e.currentTarget.setPointerCapture(e.pointerId);
                 }
