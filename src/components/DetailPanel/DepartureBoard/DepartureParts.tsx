@@ -90,8 +90,8 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
         <span className={cn("flex min-w-0 flex-col gap-1 text-xs leading-tight text-muted-foreground", className)}>
             {notice && <FeederNoticeText notice={notice} />}
             {dep.continues_as && (
-                <span className="flex min-w-0 items-center gap-1.5">
-                    <CornerDownRight size={13} strokeWidth={1.75} className="shrink-0 opacity-70" aria-hidden="true" />
+                <span className="flex min-w-0 items-start gap-1.5">
+                    <CornerDownRight size={13} strokeWidth={1.75} className="mt-1.5 shrink-0 opacity-70" aria-hidden="true" />
                     <span className={NOTE_TEXT}>
                         <Trans
                             i18nKey="map.departures.continuesAs"
@@ -106,12 +106,14 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
     );
 };
 
-/** A note's words and badges on one centred line, wrapping as a whole; the words are flex items beside the badges. */
-const NOTE_TEXT = "flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5";
+/** A note's words and badges as running text, so a long phrase wraps word by word instead of dropping to its own line. */
+const NOTE_TEXT = "min-w-0 leading-6";
 
 /** A line named inside a note, as its badge, so "waits for 910" never reads as a count. */
 const NoteBadge = ({ name, color }: { name: string; color: string }) => (
-    <LineBadge name={name} routeColor={color || FALLBACK_ROUTE_COLOR} size="md" />
+    <span className="mx-0.5 inline-flex align-middle">
+        <LineBadge name={name} routeColor={color || FALLBACK_ROUTE_COLOR} size="md" />
+    </span>
 );
 
 /** A feeder the departure waits for, is held by, or will not wait for, in words with its lines as badges. */
@@ -119,10 +121,10 @@ const FeederNoticeText = ({ notice }: { notice: FeederNotice }) => {
     const key = notice.kind === 'wontWait' ? 'map.departures.feeder.wontWait'
         : notice.kind === 'held' ? 'map.departures.feeder.heldFor'
         : 'map.departures.feeder.waitsForLines';
-    const lines = <span className="flex gap-1">{notice.lines.map(l => <NoteBadge key={l.name} name={l.name} color={l.color} />)}</span>;
+    const lines = <span className="inline-flex gap-1 align-middle">{notice.lines.map(l => <NoteBadge key={l.name} name={l.name} color={l.color} />)}</span>;
     return (
-        <span className={cn("flex min-w-0 items-center gap-1.5", notice.kind === 'wontWait' && "text-destructive")}>
-            <Hourglass size={13} strokeWidth={1.75} className="shrink-0 opacity-70" aria-hidden="true" />
+        <span className={cn("flex min-w-0 items-start gap-1.5", notice.kind === 'wontWait' && "text-destructive")}>
+            <Hourglass size={13} strokeWidth={1.75} className="mt-1.5 shrink-0 opacity-70" aria-hidden="true" />
             <span className={NOTE_TEXT}>
                 <Trans i18nKey={key} values={notice.kind === 'held' ? { minutes: notice.minutes } : {}} components={{ lines }} />
             </span>

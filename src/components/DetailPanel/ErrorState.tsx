@@ -51,7 +51,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
             <EmptyHeader>
                 <EmptyMedia
                     variant="icon"
-                    className={`size-14 rounded-2xl border shadow-sm backdrop-blur-md ${isNotFound ? 'bg-primary/10 border-primary/20 text-primary/90' : 'bg-destructive/10 border-destructive/20 text-destructive/90'} [&_svg:not([class*='size-'])]:size-7`}
+                    className={`size-14 rounded-2xl border shadow-sm ${isNotFound ? 'bg-primary/10 border-primary/20 text-primary/90' : 'bg-destructive/10 border-destructive/20 text-destructive/90'} [&_svg:not([class*='size-'])]:size-7`}
                 >
                     <Icon strokeWidth={1.5} />
                 </EmptyMedia>

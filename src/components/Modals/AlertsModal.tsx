@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { alertSections, type AlertFilterMode } from '@/domain/alerts';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
     Empty,
@@ -166,16 +167,18 @@ export const AlertsContent = () => {
                             const isLast = itemIndexInGroup === countInGroup - 1;
 
                             return (
-                                <div
+                                <Card
+                                    variant="inset"
+                                    size="none"
                                     className={cn(
-                                        "bg-card/70 backdrop-blur-xs border-x border-border/40 transition-colors overflow-hidden",
-                                        isFirst && "rounded-t-2xl border-t mt-1.5",
-                                        isLast && "rounded-b-2xl border-b mb-3 shadow-xs",
-                                        !isLast && "border-b border-border/40"
+                                        "overflow-hidden rounded-none transition-colors",
+                                        !isFirst && "border-t-0",
+                                        isFirst && "rounded-t-2xl mt-1.5",
+                                        isLast && "rounded-b-2xl mb-3"
                                     )}
                                 >
                                     <CondensedAlertItem key={item.guid ?? `${item.title}-${index}`} item={item} defaultExpanded={index === focusedIndex} />
-                                </div>
+                                </Card>
                             );
                         }}
                     />

@@ -5,7 +5,11 @@ import type {
     ExpressionSpecification
 } from 'maplibre-gl';
 import { DELAY_TIERS } from './transit';
+import { FALLBACK_ROUTE_COLOR } from './constants';
 import { mixHex } from '@/lib/color';
+
+/** A feature's line colour; a vehicle reaches the map uncoloured until its city's routes.json loads, or for a line it lacks. */
+const ROUTE_COLOR: ExpressionSpecification = ['to-color', ['get', 'route_color'], FALLBACK_ROUTE_COLOR];
 
 /** GeoJSON source IDs, shared by the layers below, the <Source> elements and direct map updates. */
 export const MAP_SOURCES = {
@@ -337,7 +341,7 @@ export const stopFavorites: SymbolLayerSpecification = {
 
 export const getVehicleColorExpression = (colorVehiclesByDelay: boolean): ExpressionSpecification => {
     if (!colorVehiclesByDelay) {
-        return ['get', 'route_color'] as ExpressionSpecification;
+        return ROUTE_COLOR;
     }
     const unknownColor = DELAY_TIERS.filter(tier => tier.includesUnknown)[0].color;
     const expression: unknown[] = ['case', ['any', ['!', ['has', 'delay']], ['==', ['get', 'delay'], null]], unknownColor];
@@ -375,7 +379,7 @@ const createVehicleLayers = (sourceId: string, ids: { point: string; direction: 
         ...(minzoom !== undefined && { minzoom }),
         paint: {
             'circle-radius': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 8, MAP_TOKENS.zoom.vehicles.max, 14],
-            'circle-color': ['get', 'route_color'],
+            'circle-color': ROUTE_COLOR,
             'circle-stroke-width': 1.5,
             'circle-stroke-color': MAP_TOKENS.colors.stroke,
             'circle-opacity': 1
@@ -398,7 +402,7 @@ const createVehicleLayers = (sourceId: string, ids: { point: string; direction: 
             'icon-anchor': 'center'
         },
         paint: {
-            'icon-color': ['get', 'route_color'],
+            'icon-color': ROUTE_COLOR,
             'icon-opacity': [
                 'case',
                 ['any',
@@ -449,7 +453,7 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
     paint: {
         'circle-radius': 0,
         'circle-opacity': 0,
-        'circle-color': ['get', 'route_color']
+        'circle-color': ROUTE_COLOR
     }
 };
 
@@ -493,8 +497,8 @@ export const createRouteLine = (routeColor: string | null, theme: 'dark' | 'ligh
         },
         paint: {
             'line-color': traversedColor
-                ? ['case', isTraversedSegment, traversedColor, ['get', 'route_color']]
-                : ['get', 'route_color'],
+                ? ['case', isTraversedSegment, traversedColor, ROUTE_COLOR]
+                : ROUTE_COLOR,
             'line-width': ['interpolate', ['linear'], ['zoom'],
                 MAP_TOKENS.zoom.vehicles.min, ['case', isTraversedSegment, 2.5 * MAP_TOKENS.route.traversedWidthScale, 2.5],
                 MAP_TOKENS.zoom.vehicles.max, ['case', isTraversedSegment, 6 * MAP_TOKENS.route.traversedWidthScale, 6],
@@ -520,7 +524,7 @@ const createRouteNodeLayer = (id: string, isTerminal: boolean): CircleLayerSpeci
             ],
             'circle-color': MAP_TOKENS.colors.routeDefault,
             'circle-stroke-width': isTerminal ? 2.5 : 1.5,
-            'circle-stroke-color': ['get', 'route_color'],
+            'circle-stroke-color': ROUTE_COLOR,
             'circle-opacity': 1
         }
     };

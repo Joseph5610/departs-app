@@ -95,7 +95,7 @@ export const DepartureBoardHeader = memo(() => {
                                     ? t('map.departures.onTime')
                                     : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${t('map.departures.minutes', { count: delayStats.averageDelayMin })}`}
                             </PopoverTrigger>
-                            <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/95 backdrop-blur-xl shadow-2xl">
+                            <PopoverContent side="bottom" align="center" className="w-auto">
                                 <span className="text-body-sm font-medium text-foreground/90">
                                     {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
                                 </span>

@@ -11,10 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The mobile sheet's lowest height shows only the search row, sitting just above the iPhone home indicator.
 - On phones, notifications appear at the top of the screen, clear of the sheet and its search.
 - Search results share the home sheet's section headings, icon sizes and text sizes.
+- Popovers and the alert list use the app's one glass style and card surface.
 
 ### Fixed
 
 - Swiping home from the installed iPhone app no longer drags the mobile sheet up.
+- Vehicles whose line colour is still loading or unknown show the neutral line colour instead of black.
+- "Continues as" and connection notes on boards wrap word by word instead of pushing the destination onto its own line.
 - The fully open mobile sheet stops below the iPhone status bar again instead of running under it.
 - Map controls above the mobile sheet are real glass that blurs the map, like the desktop ones.
 

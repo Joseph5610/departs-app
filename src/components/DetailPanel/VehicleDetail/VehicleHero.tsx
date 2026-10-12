@@ -244,7 +244,7 @@ const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { orig
                     <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
                 </Badge>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="center" className="w-auto border bg-popover/70 backdrop-blur-xl shadow-2xl p-3 max-w-62.5">
+            <PopoverContent side="bottom" align="center" className="w-auto p-3 max-w-62.5">
                 <span className="text-body-sm font-medium text-foreground/90 leading-tight block">
                     {isEnriched
                         ? t('map.vehicleDetails.enrichedTooltip')
