@@ -217,6 +217,7 @@
       "departs": "Odchod",
       "departsAt": "Odchod {{time}}",
       "platformCode": "nást. {{code}}",
+      "trackCode": "koľaj {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Nástupište / Koľaj",

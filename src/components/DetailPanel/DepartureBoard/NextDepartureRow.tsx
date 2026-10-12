@@ -4,7 +4,6 @@ import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { InterchangeBadges } from '@/components/InterchangeBadges';
 import { LineBadge } from '@/components/LineBadge';
-import { PlatformCircle } from '@/components/PlatformCircle';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { useTripMark } from '@/hooks/derived/useTripMark';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
@@ -17,7 +16,7 @@ interface NextDepartureRowProps {
     line: string;
     headsign: string;
     routeColor: string;
-    /** The metro track, shown in a circle before the headsign. */
+    /** The metro track, shown with the departure time like a train platform. */
     track: string | null;
     /** The train platform, shown with the departure time. */
     platform: string | null;
@@ -48,8 +47,7 @@ export const NextDepartureRow = memo(({ departure: dep, line, headsign, routeCol
             <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-center" />
             {/* Long headsigns wrap; interchanges follow on the same line or wrap after it. */}
             <span className="flex min-h-6 min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-                {track && <PlatformCircle code={track} label={t('map.departures.trackNumber', { track })} />}
-                <span className="min-w-0 text-title font-semibold leading-tight text-foreground [overflow-wrap:break-word]">{wrappableName(headsign)}</span>
+                <span className="min-w-0 text-title font-semibold leading-tight text-foreground wrap-break-word">{wrappableName(headsign)}</span>
                 <InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} />
             </span>
             <LiveCountdown departure={dep} size="lg" />
@@ -57,6 +55,7 @@ export const NextDepartureRow = memo(({ departure: dep, line, headsign, routeCol
             <span className="col-start-2 flex min-w-0 items-center gap-1 text-body-sm leading-tight text-muted-foreground">
                 {t('map.departures.departs')}
                 <ExpectedTime departure={dep} timeZone={timeZone} />
+                {track && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.trackCode', { code: track })}</span></>}
                 {platform && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.platformCode', { code: platform })}</span></>}
             </span>
             <span className="justify-self-end"><Amenities departure={dep} /></span>

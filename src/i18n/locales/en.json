@@ -213,6 +213,7 @@
       "departs": "Departs",
       "departsAt": "Departs {{time}}",
       "platformCode": "platform {{code}}",
+      "trackCode": "track {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Platform / Track",

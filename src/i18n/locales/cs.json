@@ -217,6 +217,7 @@
       "departs": "Odjezd",
       "departsAt": "Odjezd {{time}}",
       "platformCode": "nást. {{code}}",
+      "trackCode": "kolej {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Nástupiště / Kolej",
