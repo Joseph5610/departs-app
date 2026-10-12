@@ -65,12 +65,12 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                     className="flex-nowrap rounded-2xl border-destructive/30 bg-destructive/10 text-left"
                     render={<button type="button" onClick={() => myIncidents[0].guid ? openAlert(myIncidents[0].guid) : setIsAlertsOpen(true)} data-testid="home-disruptions" />}
                 >
-                    <ItemMedia variant="icon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
+                    <ItemMedia variant="icon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.5} /></ItemMedia>
                     <ItemContent className="min-w-0 gap-0.5">
-                        <ItemTitle className="text-sm font-semibold text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
+                        <ItemTitle className="text-title font-semibold text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
                         <ItemDescription className="text-xs line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
-                    <ItemActions><ChevronRight size={18} className="text-muted-foreground" /></ItemActions>
+                    <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
                 </Item>
             )}
 
@@ -128,14 +128,21 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                             </ItemContent>
                             <ItemActions>
                                 <Button variant="tinted" size="sm" className="rounded-full" onClick={(e) => onLocate(e)}>
-                                    <LocateFixed size={15} strokeWidth={1.75} />
+                                    <LocateFixed size={15} strokeWidth={1.5} />
                                     {t('home.useLocationShort')}
                                 </Button>
                             </ItemActions>
                         </Item>
                     </Card>
                 ) : nearby.length === 0 ? (
-                    <p className="px-1 text-body-sm text-muted-foreground">{t('home.noNearby')}</p>
+                    <Card variant="inset" size="none">
+                        <Item size="none" className="flex-nowrap px-4 py-3">
+                            <ItemMedia variant="icon" className="self-center! translate-y-0! text-muted-foreground"><MapPin size={20} strokeWidth={1.5} /></ItemMedia>
+                            <ItemContent className="min-w-0">
+                                <ItemDescription className="text-body-sm leading-snug">{t('home.noNearby')}</ItemDescription>
+                            </ItemContent>
+                        </Item>
+                    </Card>
                 ) : (
                     <Card variant="inset" size="none" className="overflow-hidden">
                         {nearby.map(n => (
@@ -160,19 +167,19 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                                 {incidentsCount > 0 && (
                                     <span className="min-w-5 rounded-full bg-destructive px-1.5 text-center text-xs font-bold leading-5 text-destructive-foreground">{incidentsCount}</span>
                                 )}
-                                <ChevronRight size={18} className="text-muted-foreground" />
+                                <ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" />
                             </ItemActions>
                         </Item>
                     )}
                     <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
                         <ItemMedia variant="icon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.5} /></ItemMedia>
                         <ItemContent><ItemTitle className="text-title text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={18} className="text-muted-foreground" /></ItemActions>
+                        <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
                     </Item>
                     <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
                         <ItemMedia variant="icon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.5} /></ItemMedia>
                         <ItemContent><ItemTitle className="text-title text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={18} className="text-muted-foreground" /></ItemActions>
+                        <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
                     </Item>
                 </Card>
             </SheetSection>

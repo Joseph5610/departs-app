@@ -9,12 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The mobile sheet's lowest height shows only the search row, sitting just above the iPhone home indicator.
+- On phones, notifications appear at the top of the screen, clear of the sheet and its search.
+- Search results share the home sheet's section headings, icon sizes and text sizes.
 
 ### Fixed
 
 - The mobile sheet no longer reopens halfway up after swiping home from the installed iPhone app.
 - The fully open mobile sheet stops below the iPhone status bar again instead of running under it.
-- The reset-north button above the mobile sheet is solid glass like the other map controls instead of see-through.
+- Map controls above the mobile sheet are real glass that blurs the map, like the desktop ones.
 
 ## [0.83.1] - 2026-10-12
 

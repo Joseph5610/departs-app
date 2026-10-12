@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Map } from './components/Map/Map';
 import { Toaster } from '@/components/ui/sonner';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
@@ -8,12 +9,15 @@ import { useCityConfig } from './hooks/data/useCities';
 import { SITE } from './config/site';
 import { BOARD_ROUTE, decodeRouteParam, paths } from './lib/routes';
 
+const TOASTER_MOBILE_OFFSET = { top: 'calc(env(safe-area-inset-top, 0px) + var(--top-controls-gap))' };
+
 const AdminRoutes = lazy(() => import('./pages/admin/AdminRoutes'));
 const BoardPage = lazy(() => import('./pages/board/BoardPage'));
 const LegalPage = lazy(() => import('./pages/legal/LegalPage'));
 const LicensesPage = lazy(() => import('./pages/legal/LicensesPage'));
 
 function App() {
+  const isMobile = useIsMobile();
   usePWALifecycle();
 
   useEnrichmentChannel(useCityConfig().enrichmentChannel ?? null);
@@ -65,7 +69,8 @@ function App() {
           <Map />
         </Route>
       </Switch>
-      <Toaster position="bottom-center" />
+      {/* On a phone at the top, where the sheet and its search never are; clear of the status bar. */}
+      <Toaster position={isMobile ? 'top-center' : 'bottom-center'} mobileOffset={TOASTER_MOBILE_OFFSET} />
     </>
   );
 }

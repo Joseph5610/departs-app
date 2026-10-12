@@ -113,7 +113,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     <div aria-hidden="true" className="absolute inset-0 bg-black/40" onClick={close} />
                     <div
                         className={cn(
-                            "absolute inset-x-0 bottom-0 flex flex-col rounded-t-[32px] border-t border-border/40 bg-background pt-5 shadow-2xl transition-transform duration-200 ease-out",
+                            "absolute inset-x-0 bottom-0 flex flex-col rounded-t-[32px] border-t border-border/40 bg-background pt-7 shadow-2xl transition-transform duration-200 ease-out",
                             isOpen ? "translate-y-0" : "translate-y-6"
                         )}
                         style={SEARCH_SHEET_STYLE}
@@ -142,7 +142,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                                 onBlur={() => window.scrollTo(0, 0)}
                                 placeholder={t('search.placeholder')}
                                 aria-label={t('search.placeholder')}
-                                className="h-full min-w-0 flex-1 bg-transparent text-base text-foreground outline-none focus-visible:ring-0 placeholder:text-muted-foreground/60 [&::-webkit-search-cancel-button]:hidden"
+                                className="h-full min-w-0 flex-1 bg-transparent text-title text-foreground outline-none focus-visible:ring-0 placeholder:text-muted-foreground/60 [&::-webkit-search-cancel-button]:hidden"
                                 data-testid="search-input"
                             />
                             {s.query && (

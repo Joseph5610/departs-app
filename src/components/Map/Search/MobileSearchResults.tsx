@@ -19,6 +19,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { HistoryItemIcon } from './HistoryItemIcon';
 import { historyItemSubtitle, historyItemTitle } from './historyItemText';
 import { LineBadges } from './SearchItem';
+import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
 
 interface MobileSearchResultsProps {
     query: string;
@@ -40,16 +41,6 @@ interface MobileSearchResultsProps {
     onVehicleSelect: (vehicle: VehicleFeature) => void;
 }
 
-const Section = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => (
-    <section className="flex flex-col gap-2">
-        <div className="flex min-h-6 items-center justify-between px-1.5">
-            <h3 className="micro-label-widest text-muted-foreground">{title}</h3>
-            {action}
-        </div>
-        {children}
-    </section>
-);
-
 interface ResultRowProps {
     icon: React.ReactNode;
     title: string;
@@ -66,7 +57,7 @@ interface ResultRowProps {
 const ResultRow = ({ icon, title, subtitle, meta, onClick, testId, isStop = false, children }: ResultRowProps) => (
     <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={onClick} data-testid={testId} />}>
         <ItemMedia variant="icon" className={cn("size-9 rounded-full", isStop ? "bg-primary/10 text-primary" : "bg-foreground/5 text-muted-foreground")}>{icon}</ItemMedia>
-        <ItemContent className="min-w-0 gap-1">
+        <ItemContent className="min-w-0 gap-1.5">
             <ItemTitle className="w-full text-title font-semibold text-foreground"><span className="truncate">{title}</span></ItemTitle>
             {children}
             {subtitle && <ItemDescription className="text-xs line-clamp-1">{subtitle}</ItemDescription>}
@@ -95,7 +86,7 @@ export const MobileSearchResults = ({
     const stopRow = (stop: StopFeature) => (
         <ResultRow
             key={stop.properties.stop_id}
-            icon={<StopModeIcon lines={stop.properties.lines} size={16} />}
+            icon={<StopModeIcon lines={stop.properties.lines} />}
             isStop
             title={stop.properties.stop_name}
             subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
@@ -133,7 +124,7 @@ export const MobileSearchResults = ({
                 <Section
                     title={t('search.recent')}
                     action={
-                        <Button variant="link" size="sm" className="h-auto px-0 text-xs" onClick={onClearHistory} data-testid="search-clear-history">
+                        <Button variant="link" size="sm" className="px-0" onClick={onClearHistory} data-testid="search-clear-history">
                             {t('search.clearRecent')}
                         </Button>
                     }
@@ -165,7 +156,7 @@ export const MobileSearchResults = ({
                             const meta = getLineMetadataFromMap(l, lineMetadataMap);
                             return { name: l, type: meta?.type || 'bus', route_color: meta?.route_color };
                         })} />
-                        <span className="text-sm text-muted-foreground">{t('search.showOnMap')}</span>
+                        <span className="text-title text-muted-foreground">{t('search.showOnMap')}</span>
                     </Button>
                 </Section>
             )}
@@ -187,7 +178,7 @@ export const MobileSearchResults = ({
                             return (
                                 <ResultRow
                                     key={vehicleId}
-                                    icon={<BusFront size={16} strokeWidth={1.5} />}
+                                    icon={<BusFront size={18} strokeWidth={1.5} />}
                                     title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
                                     subtitle={p.trip_headsign}
                                     onClick={() => onVehicleSelect(vehicle)}
@@ -207,7 +198,7 @@ export const MobileSearchResults = ({
                         {geocodingResults.map(place => (
                             <ResultRow
                                 key={place.id}
-                                icon={<Building2 size={16} strokeWidth={1.5} />}
+                                icon={<Building2 size={18} strokeWidth={1.5} />}
                                 title={place.name}
                                 subtitle={place.subtitle || undefined}
                                 onClick={() => onPlaceSelect(place)}
@@ -224,7 +215,7 @@ export const MobileSearchResults = ({
                         {posResults.map(result => (
                             <ResultRow
                                 key={result.pos.id}
-                                icon={<Ticket size={16} strokeWidth={1.5} />}
+                                icon={<Ticket size={18} strokeWidth={1.5} />}
                                 title={result.pos.name}
                                 subtitle={[t(`pos.types.${result.pos.type}`, result.pos.type), result.pos.address].filter(Boolean).join(' · ')}
                                 onClick={() => onPosSelect(result)}
@@ -236,7 +227,7 @@ export const MobileSearchResults = ({
             )}
 
             {isEmptyQuery && searchHistory.length === 0 && (
-                <p className="px-1.5 pt-2 text-body-sm leading-relaxed text-muted-foreground">{t('search.emptyHint')}</p>
+                <p className="px-1 pt-2 text-body-sm leading-relaxed text-muted-foreground">{t('search.emptyHint')}</p>
             )}
 
             {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (

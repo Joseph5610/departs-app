@@ -149,11 +149,15 @@ function DrawerContent({
             // Direction: right.
             "data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]",
             variant === "default" && "bg-popover text-popover-foreground",
-            (variant === "glassy" || variant === "tinted") && "glassy [--drawer-bleed-background:var(--background)]",
+            (variant === "glassy" || variant === "tinted") && "isolate [--drawer-bleed-background:var(--background)]",
             className
           )}
           {...props}
         >
+          {/* The glass sits on a layer behind the content, not the popup: a backdrop blur on the popup would stop anything inside it (controls riding above the sheet) from blurring the page. */}
+          {(variant === "glassy" || variant === "tinted") && (
+            <div aria-hidden="true" className="glassy absolute! inset-0 -z-10 rounded-[inherit] border-0! shadow-none! pointer-events-none" />
+          )}
           {showSwipeHandle && <DrawerSwipeHandle />}
           {header}
           <DrawerPrimitive.Content

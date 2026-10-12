@@ -18,8 +18,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
 
-/** Inside the sheet a backdrop blur only sees the sheet, so its pills take glass's opaque fallback. */
-const SHEET_PILL = 'glassy [background:var(--glass-fallback)]! rounded-full overflow-hidden shadow-lg';
+const SHEET_PILL = 'glassy rounded-full overflow-hidden shadow-lg';
 
 interface MapControlsProps {
     /** `corner` floats top-right of the map; `sheet` rides above the mobile sheet's top edge with only settings and locate. */
