@@ -51,6 +51,8 @@ export const DepartureBoardHeader = memo(() => {
         return source ? lineChips(source, lineRules) : [];
     }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures]);
 
+    const hasVehicleFilters = hasAirConditioningData || hasAccessibilityData;
+
     if (!showHeader) {
         return null;
     }
@@ -98,16 +100,9 @@ export const DepartureBoardHeader = memo(() => {
                 <PanelActions chips />
             </div>
 
-            {(uniqueLines.length > 0 || hasAirConditioningData || hasAccessibilityData) && (
+            {(uniqueLines.length > 0 || hasVehicleFilters) && (
                 // One scrolling strip: the vehicle filters lead, then the line chips.
-                <div
-                    className="-mx-6 overflow-x-auto px-6 pb-2.5 pt-0.5 no-scrollbar"
-                    style={{
-                        maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
-                    }}
-                >
-                    <div className="flex w-max items-center gap-1.5">
+                <ChipStrip>
                         {(hasAirConditioningData || hasAccessibilityData) && (
                             <div role="group" aria-label={t('map.departures.vehicleFilters')} className="flex items-center gap-1.5">
                                 {hasAirConditioningData && (
@@ -134,9 +129,7 @@ export const DepartureBoardHeader = memo(() => {
                                 )}
                             </div>
                         )}
-                        {uniqueLines.length > 0 && (hasAirConditioningData || hasAccessibilityData) && (
-                            <div className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
-                        )}
+                        {uniqueLines.length > 0 && hasVehicleFilters && <ChipDivider />}
                         {uniqueLines.length > 0 && (
                             <div role="group" aria-label={t('map.departures.lineFilters')} className="flex items-center gap-1.5">
                                 {uniqueLines.map((line) => {
@@ -160,15 +153,31 @@ export const DepartureBoardHeader = memo(() => {
                                 })}
                             </div>
                         )}
-                        <div className="h-1 w-6 shrink-0" aria-hidden="true" />
-                    </div>
-                </div>
+                </ChipStrip>
             )}
         </div>
     );
 });
 
 DepartureBoardHeader.displayName = 'DepartureBoardHeader';
+
+/** A row of filter chips scrolling sideways under the board header, fading out at its right edge. */
+const ChipStrip = ({ children }: { children: React.ReactNode }) => (
+    <div
+        className="-mx-6 overflow-x-auto px-6 pb-2.5 pt-0.5 no-scrollbar"
+        style={{
+            maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
+        }}
+    >
+        <div className="flex w-max items-center gap-1.5">
+            {children}
+            <div className="h-1 w-6 shrink-0" aria-hidden="true" />
+        </div>
+    </div>
+);
+
+const ChipDivider = () => <div className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />;
 
 /** One vehicle-property filter, shaped like the line chips it leads; the line chips filter by line instead. */
 const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, children }: {

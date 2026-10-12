@@ -157,6 +157,11 @@ export const MAP_CAMERA = {
     CLUSTER_EXPAND_MS: 500,
 };
 
+export const STATIONS = {
+    /** Same-named platforms of a network without parent stations this close to each other form one map station. */
+    GROUP_RADIUS_M: 400,
+} as const;
+
 export const SHARED_GROUND = {
     /** The selected network stays selected while it has at least this share of the busiest network's stops in view. */
     KEEP_SELECTED_SHARE: 0.05,
@@ -372,6 +377,8 @@ export const RIDE_PUSH_CONFIG = {
 };
 
 export const DEPARTURES_CONFIG = {
+    /** How often an empty metro board re-checks the metro's closed hours. */
+    METRO_CLOSED_CHECK_MS: 60_000,
     /** Only departures expected within this window count towards the board's delay statistics. */
     DELAY_STATS_WINDOW_MS: 30 * MINUTE_MS,
     /** Home sheet countdowns read in minutes below this; later departures show their clock time instead. */

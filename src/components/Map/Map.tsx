@@ -238,7 +238,7 @@ const MapInner = () => {
                         if (!map) {
                             return;
                         }
-                        const source = map.getSource(MAP_SOURCES.STOPS) as GeoJSONSource;
+                        const source = map.getSource(MAP_SOURCES.STATIONS) as GeoJSONSource;
                         if (source && clusterId !== undefined) {
                             source.getClusterExpansionZoom(clusterId).then((zoom) => {
                                 mapRef.current?.easeTo({

@@ -20,6 +20,10 @@ export interface StopProperties {
     all_ids?: string[];
     lines?: Array<{ name: string; type: RouteType; route_color: string }>;
     wheelchair_boarding?: number;
+    /** Tiles of the stop's map badge (`metro/B/F8B322|tram|bus`), see `stopBadgeTiles`; set for the map. */
+    badges?: string;
+    /** Rank of the stop's leading mode in ROUTE_TYPE_ORDER; the map places lower ranks first. */
+    mode_rank?: number;
     level_id?: string;
 }
 

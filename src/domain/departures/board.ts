@@ -1,7 +1,7 @@
 import { secondsOfDayIn } from '@/domain/time';
 import type { Departure } from '@/types';
 
-export const filterDepartures = (departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean, requireWheelchairAccessible: boolean) => {
+export const filterDepartures = (departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean, requireWheelchairAccessible: boolean, selectedPlatform: string | null = null) => {
     const hasAirConditioningData = departures.some(dep => dep.is_air_conditioned === true);
     const hasAccessibilityData = departures.some(dep => dep.is_wheelchair_accessible === true);
     const hasRequestStop = departures.some(dep => dep.is_request_stop === true);
@@ -9,6 +9,9 @@ export const filterDepartures = (departures: Departure[], selectedLine: string |
     let filtered = departures;
     if (selectedLine) {
         filtered = filtered.filter(dep => String(dep.line).toUpperCase() === selectedLine.toUpperCase());
+    }
+    if (selectedPlatform) {
+        filtered = filtered.filter(dep => dep.platform === selectedPlatform);
     }
     // Ignore the persistent AC preference at stops without AC data, so the board never goes empty unexpectedly.
     if (requireAirConditioned && hasAirConditioningData) {
