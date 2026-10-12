@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.4] - 2026-10-12
+
+### Changed
+
+- The desktop search box shows an active line filter as line badges, like the phone.
+
 ## [0.83.3] - 2026-10-12
 
 ### Changed

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { SearchDropdown } from './SearchDropdown';
+import { LineFilterLabel } from './LineFilterLabel';
 import { CitySwitcher } from '@/components/Map/CitySwitcher';
 
 /**
@@ -59,13 +60,6 @@ export const Search = memo(() => {
     const showDropdown = (results.length > 0 || s.vehicleResults.length > 0 || s.posResults.length > 0 || s.geocodingResults.length > 0 || !!s.queryLines || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
     const isListShown = isOpen && showDropdown;
 
-    const clearSearch = (e?: React.MouseEvent) => {
-        e?.preventDefault();
-        e?.stopPropagation();
-        if (activeFilter) s.setRouteFilter(null);
-        setQuery('');
-    };
-
     return (
         <div
             className={cn(
@@ -81,7 +75,7 @@ export const Search = memo(() => {
                 onOpenChange={(open, details) => {
                     if (!open && details.reason !== 'item-press') setIsOpen(false);
                 }}
-                value={s.lineFilterLabel ?? query}
+                value={activeFilter ? '' : query}
                 onValueChange={(value, details) => {
                     if (details.reason !== 'input-change' && details.reason !== 'input-clear') return;
                     if (activeFilter) {
@@ -107,16 +101,18 @@ export const Search = memo(() => {
                             <Autocomplete.Input
                                 ref={inputRef}
                                 render={<Input />}
-                                aria-label={t('search.placeholder')}
+                                aria-label={s.lineFilterLabel ?? t('search.placeholder')}
                                 onFocus={() => setIsOpen(true)}
-                                placeholder={t('search.placeholder')}
-                                className={cn(
-                                    "h-full w-full bg-transparent border-0! pl-10 text-title truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none",
-                                    activeFilter && "text-primary font-medium"
-                                )}
+                                placeholder={activeFilter ? undefined : t('search.placeholder')}
+                                className="h-full w-full bg-transparent border-0! pl-10 text-title truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
                                 data-testid="search-input"
                                 readOnly={!!activeFilter}
                             />
+                            {s.activeFilterBadges && (
+                                <div className="absolute inset-y-0 left-10 right-10 flex items-center pointer-events-none">
+                                    <LineFilterLabel lines={s.activeFilterBadges} />
+                                </div>
+                            )}
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
                                 <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-primary")}  />
                             </div>
@@ -126,8 +122,7 @@ export const Search = memo(() => {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => {
-                                            if (selectedPlaceId) s.setSelectedPlaceId(null);
-                                            clearSearch();
+                                            s.clearSelection();
                                             inputRef.current?.focus();
                                         }}
                                         className="h-9 w-9 text-muted-foreground hover:bg-muted/50"
@@ -148,6 +143,7 @@ export const Search = memo(() => {
                             query={query}
                             activeFilter={activeFilter}
                             queryLines={s.queryLines}
+                            queryLineBadges={s.queryLineBadges}
                             vehicleResults={s.vehicleResults}
                             geocodingResults={s.geocodingResults}
                             posResults={s.posResults}
@@ -157,7 +153,6 @@ export const Search = memo(() => {
                             onPlaceSelect={s.selectPlace}
                             onPosSelect={s.selectPos}
                             onVehicleSelect={s.selectVehicle}
-                            lineMetadataMap={s.lineMetadataMap}
                         />
                     )}
                 </div>

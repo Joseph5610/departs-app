@@ -3,6 +3,9 @@ import type { StopFeature } from '@/types';
 
 export type LineMetadata = { route_color: string; type: string };
 
+/** A line as a badge draws it. */
+export type LineBadgeData = { name: string; type: string; route_color?: string };
+
 /**
  * The lines a search query names, or null when it isn't a line query. Comma-separated tokens form
  * one multi-line filter. A token counts when the city runs that line, or, until the city's lines
@@ -64,3 +67,10 @@ export const knownLineMetadata = (stops: StopFeature[], routesByName: ReadonlyMa
     }
     return map;
 };
+
+/** Badges for the named lines, coloured from the city's line metadata; a line it doesn't know shows as a bus. */
+export const lineBadges = (names: readonly string[], metaMap: Map<string, LineMetadata>): LineBadgeData[] =>
+    names.map(name => {
+        const meta = getLineMetadataFromMap(name, metaMap);
+        return { name, type: meta?.type || 'bus', route_color: meta?.route_color };
+    });

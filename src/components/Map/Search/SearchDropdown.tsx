@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
 import { HistoryItemIcon } from './HistoryItemIcon';
-import { historyItemSubtitle, historyItemTitle } from './historyItemText';
-import { getLineMetadataFromMap, type LineMetadata } from '@/domain/routes';
+import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
+import type { LineBadgeData } from '@/domain/routes';
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from '@/lib/cn';
@@ -21,6 +21,7 @@ interface SearchDropdownProps {
     query: string;
     activeFilter: string[] | null;
     queryLines: string[] | null;
+    queryLineBadges: LineBadgeData[] | null;
     vehicleResults: VehicleFeature[];
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
@@ -30,7 +31,6 @@ interface SearchDropdownProps {
     onPlaceSelect: (result: GeocodingResult) => void;
     onPosSelect: (result: PosSearchResult) => void;
     onVehicleSelect: (vehicle: VehicleFeature) => void;
-    lineMetadataMap: Map<string, LineMetadata>;
 }
 
 const SearchGroup = ({ heading, className, children }: { heading?: React.ReactNode; className?: string; children: React.ReactNode }) => (
@@ -69,6 +69,7 @@ export const SearchDropdown = ({
     query,
     activeFilter,
     queryLines,
+    queryLineBadges,
     vehicleResults,
     geocodingResults,
     posResults,
@@ -78,7 +79,6 @@ export const SearchDropdown = ({
     onPlaceSelect,
     onPosSelect,
     onVehicleSelect,
-    lineMetadataMap
 }: SearchDropdownProps) => {
     const { t } = useTranslation();
     const favoriteStopIds = useMemo(() => new Set(favoriteStops), [favoriteStops]);
@@ -92,7 +92,7 @@ export const SearchDropdown = ({
                 key={stop.properties.stop_id}
                 icon={isFavorite ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
                 title={stop.properties.stop_name}
-                subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+                subtitle={stopResultSubtitle(stop, t)}
                 metroLines={stop.properties.metro_lines}
                 lines={stop.properties.lines}
                 highlight={isFavorite}
@@ -145,7 +145,7 @@ export const SearchDropdown = ({
                                     icon={<BusFront size={16} strokeWidth={1.5} />}
                                     title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
                                     subtitle={p.trip_headsign}
-                                    lines={[{ name: String(p.route_short_name), type: p.route_type, route_color: p.route_color }]}
+                                    lines={vehicleResultLines(vehicle)}
                                     testId={`search-item-vehicle-${vehicleId}`}
                                     onClick={() => onVehicleSelect(vehicle)}
                                 />
@@ -159,14 +159,7 @@ export const SearchDropdown = ({
                         <SearchItem
                             icon={<SearchIcon size={16} strokeWidth={1.5} />}
                             title={t('search.filterByLine')}
-                            lines={queryLines.map(l => {
-                                const meta = getLineMetadataFromMap(l, lineMetadataMap);
-                                return {
-                                    name: l,
-                                    type: meta?.type || 'bus',
-                                    route_color: meta?.route_color
-                                };
-                            })}
+                            lines={queryLineBadges ?? undefined}
                             variant="primary"
                             testId={`search-item-line-${queryLines.join('-')}`}
                             onClick={() => onLineSelect(queryLines)}
@@ -189,7 +182,7 @@ export const SearchDropdown = ({
                                 key={result.pos.id}
                                 icon={<Ticket size={16} strokeWidth={1.5} />}
                                 title={result.pos.name}
-                                subtitle={[t(`pos.types.${result.pos.type}`, result.pos.type), result.pos.address].filter(Boolean).join(' · ')}
+                                subtitle={posResultSubtitle(result, t)}
                                 testId={`search-item-pos-${result.pos.id}`}
                                 onClick={() => onPosSelect(result)}
                             />

@@ -3,13 +3,14 @@ import { cn } from '@/lib/cn';
 import { FALLBACK_ROUTE_COLOR, STOP_SEARCH } from '@/config/constants';
 import { LineBadge } from '@/components/LineBadge';
 import { Autocomplete } from '@base-ui/react/autocomplete';
+import type { LineBadgeData } from '@/domain/routes';
 
 interface SearchItemProps {
     icon: React.ReactNode;
     title: string;
     subtitle?: string;
     metroLines?: Array<{ name: string, route_color: string }>;
-    lines?: Array<{ name: string, type: string, route_color?: string }>;
+    lines?: LineBadgeData[];
     onClick: () => void;
     variant?: 'default' | 'primary';
     highlight?: boolean;

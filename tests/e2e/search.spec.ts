@@ -20,7 +20,6 @@ test.describe('Search tests', () => {
         // Click the line
         await lineItem.click();
         
-        // Verify search input shows the filter (it might show "Filtrovat linku 1" or "Filter line 1")
-        await expect(searchPage.searchInput).toHaveValue(/1/);
+        await expect(page.getByTestId('search-line-filter')).toContainText('1');
     });
 });

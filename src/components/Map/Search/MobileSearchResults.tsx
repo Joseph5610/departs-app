@@ -4,7 +4,7 @@ import { Building2, BusFront, Search as SearchIcon, Star, Ticket } from 'lucide-
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { cn } from '@/lib/cn';
 import { STOP_SEARCH } from '@/config/constants';
-import { getLineMetadataFromMap, type LineMetadata } from '@/domain/routes';
+import type { LineBadgeData } from '@/domain/routes';
 import { getStopDistanceInfo } from '@/domain/stops';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
@@ -17,7 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { HistoryItemIcon } from './HistoryItemIcon';
-import { historyItemSubtitle, historyItemTitle } from './historyItemText';
+import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
 import { LineBadges } from './SearchItem';
 import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
 
@@ -28,10 +28,10 @@ interface MobileSearchResultsProps {
     location: [number, number] | null;
     searchHistory: SearchHistoryItem[];
     queryLines: string[] | null;
+    queryLineBadges: LineBadgeData[] | null;
     vehicleResults: VehicleFeature[];
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
-    lineMetadataMap: Map<string, LineMetadata>;
     onStopSelect: (stop: StopFeature) => void;
     onHistorySelect: (item: SearchHistoryItem) => void;
     onClearHistory: () => void;
@@ -71,7 +71,7 @@ const ResultRow = ({ icon, title, subtitle, meta, onClick, testId, isStop = fals
  * then grouped cards for lines, stops, vehicles, places and points of sale.
  */
 export const MobileSearchResults = ({
-    query, stopResults, favoriteStops, location, searchHistory, queryLines, vehicleResults, geocodingResults, posResults, lineMetadataMap,
+    query, stopResults, favoriteStops, location, searchHistory, queryLines, queryLineBadges, vehicleResults, geocodingResults, posResults,
     onStopSelect, onHistorySelect, onClearHistory, onLineSelect, onPlaceSelect, onPosSelect, onVehicleSelect,
 }: MobileSearchResultsProps) => {
     const { t } = useTranslation();
@@ -89,7 +89,7 @@ export const MobileSearchResults = ({
             icon={<StopModeIcon lines={stop.properties.lines} />}
             isStop
             title={stop.properties.stop_name}
-            subtitle={stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined}
+            subtitle={stopResultSubtitle(stop, t)}
             meta={distanceTo(stop)}
             onClick={() => onStopSelect(stop)}
             testId={`search-item-res-stop-${stop.properties.stop_id}`}
@@ -152,10 +152,7 @@ export const MobileSearchResults = ({
                         onClick={() => onLineSelect(queryLines)}
                         data-testid={`search-item-line-${queryLines.join('-')}`}
                     >
-                        <LineBadges lines={queryLines.map(l => {
-                            const meta = getLineMetadataFromMap(l, lineMetadataMap);
-                            return { name: l, type: meta?.type || 'bus', route_color: meta?.route_color };
-                        })} />
+                        <LineBadges lines={queryLineBadges ?? undefined} />
                         <span className="text-title text-muted-foreground">{t('search.showOnMap')}</span>
                     </Button>
                 </Section>
@@ -184,7 +181,7 @@ export const MobileSearchResults = ({
                                     onClick={() => onVehicleSelect(vehicle)}
                                     testId={`search-item-vehicle-${vehicleId}`}
                                 >
-                                    <div className="flex items-center"><LineBadges lines={[{ name: String(p.route_short_name), type: p.route_type, route_color: p.route_color }]} /></div>
+                                    <div className="flex items-center"><LineBadges lines={vehicleResultLines(vehicle)} /></div>
                                 </ResultRow>
                             );
                         })}
@@ -217,7 +214,7 @@ export const MobileSearchResults = ({
                                 key={result.pos.id}
                                 icon={<Ticket size={18} strokeWidth={1.5} />}
                                 title={result.pos.name}
-                                subtitle={[t(`pos.types.${result.pos.type}`, result.pos.type), result.pos.address].filter(Boolean).join(' · ')}
+                                subtitle={posResultSubtitle(result, t)}
                                 onClick={() => onPosSelect(result)}
                                 testId={`search-item-pos-${result.pos.id}`}
                             />

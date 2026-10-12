@@ -14,7 +14,7 @@ import { useViewportStore } from '@/state/viewportStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectionStore } from '@/state/selectionStore';
-import { knownLineMetadata, parseLineQuery } from '@/domain/routes';
+import { knownLineMetadata, lineBadges, parseLineQuery } from '@/domain/routes';
 import { searchStops, stopHistoryEntry, stopsByIds } from '@/domain/stops';
 import { searchVehicles } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
@@ -57,6 +57,8 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const { byName: routesByName } = useRouteMetadata();
     const lineMetadataMap = useMemo(() => knownLineMetadata(stops.allFeatures?.features || [], routesByName), [stops.allFeatures, routesByName]);
     const queryLines = useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
+    const queryLineBadges = useMemo(() => queryLines && lineBadges(queryLines, lineMetadataMap), [queryLines, lineMetadataMap]);
+    const activeFilterBadges = useMemo(() => activeFilter && lineBadges(activeFilter, lineMetadataMap), [activeFilter, lineMetadataMap]);
 
     const { networkVehicles } = useVehicles();
     const vehicleResults = useMemo(() => searchVehicles(query, networkVehicles), [query, networkVehicles]);
@@ -149,8 +151,8 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     return {
         query, setQuery,
         stopResults, favoriteStopFeatures, favoriteStops, searchHistory,
-        vehicleResults, posResults, geocodingResults, queryLines, lineMetadataMap,
-        activeFilter, lineFilterLabel, selectedPlace, selectedPlaceId,
+        vehicleResults, posResults, geocodingResults, queryLines, queryLineBadges,
+        activeFilter, activeFilterBadges, lineFilterLabel, selectedPlace, selectedPlaceId,
         selectStop, selectHistory, selectLine, selectVehicle, selectPos, selectPlace, selectTopResult,
         clearSelection, setRouteFilter, setSelectedPlaceId,
     };
