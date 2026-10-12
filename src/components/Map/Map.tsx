@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useCallback, useState } from 'react';
+import { ViewportProbe } from '@/components/ViewportProbe';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { closeDetail, goBack, navigate, useBackTarget } from '@/lib/history';
@@ -302,8 +303,7 @@ const MapInner = () => {
 
             <LiveStatus />
             <RideBar />
-            {/* iOS 26 blurs the top edge unless a fixed box with an opaque background (10px+ tall, full width) covers it. */}
-            {isMobile && <div aria-hidden className="fixed inset-x-0 top-0 z-450 h-[env(safe-area-inset-top,0px)] bg-background pointer-events-none" />}
+            {import.meta.env.DEV && <ViewportProbe />}
             {!isMobile && (
                 <>
                     <Search />

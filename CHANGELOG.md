@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Prešov night trips no longer show hours-off delays and timetables from DPMP's implausible deviations.
 - Boards and trip timelines strike through the timetable time from a half-minute delay, matching the delay badge.
 
-## [0.83.0] - 2026-10-08
+## [0.83.0] - 2026-10-12
 
 ### Added
 
