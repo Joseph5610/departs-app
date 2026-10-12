@@ -302,8 +302,8 @@ const MapInner = () => {
 
             <LiveStatus />
             <RideBar />
-            {/* iOS blurs the map under the status bar unless a fixed element spans the top edge. */}
-            {isMobile && <div aria-hidden className="fixed inset-x-0 top-0 h-[env(safe-area-inset-top,0px)] pointer-events-none" />}
+            {/* iOS 26 blurs the top edge unless a fixed box with an opaque background (10px+ tall, full width) covers it. */}
+            {isMobile && <div aria-hidden className="fixed inset-x-0 top-0 z-450 h-[env(safe-area-inset-top,0px)] bg-background pointer-events-none" />}
             {!isMobile && (
                 <>
                     <Search />
