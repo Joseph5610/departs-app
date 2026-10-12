@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import type { TFunction } from 'i18next';
 import { useGeolocationStore } from '@/state/geolocationStore';
-import { useSelectedStop } from './useSelectedStop';
 import { getStopDistanceInfo, type StopDistanceInfo } from '@/domain/stops';
 
 /** "At the stop", walking distance with minutes when nearby, otherwise the plain distance. */
@@ -17,16 +16,14 @@ export const formatStopDistance = (info: StopDistanceInfo, t: TFunction, locale?
 };
 
 /**
- * Calculates the current distance and walking time from the user's location 
- * to the selected stop. Also determines if the user is currently at the stop 
- * or if they should see an indicator for "catching" the departure.
+ * Calculates the current distance and walking time from the user's location
+ * to `coordinates`, and whether the user is already there.
  */
-export const useStopDistance = (): StopDistanceInfo | null => {
-    const selectedStop = useSelectedStop();
+export const useStopDistance = (coordinates: [number, number] | undefined): StopDistanceInfo | null => {
     const userLocation = useGeolocationStore(s => s.userLocation);
 
     return useMemo(
-        () => getStopDistanceInfo(userLocation, selectedStop?.coordinates),
-        [selectedStop?.coordinates, userLocation]
+        () => getStopDistanceInfo(userLocation, coordinates),
+        [coordinates, userLocation]
     );
 };

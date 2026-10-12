@@ -33,6 +33,31 @@ export const secondsOfDayIn = (timeZone: string, ms: number): number => {
     return timeToSeconds(format.format(ms));
 };
 
+const weekdayFormats = new Map<string, Intl.DateTimeFormat>();
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** Day of the week of `ms` in `timeZone`, 0 = Monday … 6 = Sunday. */
+export const weekdayIn = (timeZone: string, ms: number): number => {
+    let format = weekdayFormats.get(timeZone);
+    if (!format) {
+        format = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' });
+        weekdayFormats.set(timeZone, format);
+    }
+    return WEEKDAYS.indexOf(format.format(ms));
+};
+
+/** 1 January 2024 was a Monday, so adding 0–6 days yields Monday–Sunday. */
+const REFERENCE_MONDAY_MS = Date.UTC(2024, 0, 1);
+
+/** Short weekday names in `locale`, Monday first, capitalized as on printed timetables. */
+export const weekdayShortNames = (locale: string | undefined): string[] => {
+    const format = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+    return Array.from({ length: 7 }, (_, i) => {
+        const name = format.format(REFERENCE_MONDAY_MS + i * DAY_S * 1000);
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    });
+};
+
 /**
  * A difference between two times of day wrapped into ±12 h, so times either side of midnight compare as close:
  * `00:20` is 50 minutes after `23:30`, and a service-day `24:30` is 20 minutes after `00:10`.

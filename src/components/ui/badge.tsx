@@ -21,6 +21,8 @@ const badgeVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         muted: "bg-muted/50 text-muted-foreground border-transparent",
         soft: "bg-primary/10 text-primary border-primary/20",
+        /** Status chips on a detail hero card, such as the delay and live-data age. */
+        hero: "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
         label: "border-border/40 bg-foreground/5 text-label font-semibold uppercase tracking-wider text-muted-foreground/70 [a]:hover:bg-muted [a]:hover:text-muted-foreground",
       },
     },

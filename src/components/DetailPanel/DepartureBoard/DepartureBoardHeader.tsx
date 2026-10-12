@@ -1,6 +1,6 @@
 import React, { useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Activity, Footprints, Snowflake, ArrowLeftRight, Accessibility } from 'lucide-react';
+import { Activity, Snowflake, ArrowLeftRight, Accessibility } from 'lucide-react';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -9,14 +9,13 @@ import { useRouteParams } from '@/hooks/useRouteParams';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { lineChips } from '@/domain/departures';
-import { useNavigate } from '@/hooks/features/useNavigate';
-import { formatStopDistance } from '@/hooks/derived/useStopDistance';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { PanelActions } from '@/components/DetailPanel/PanelActions';
+import { NavigatePill } from '@/components/DetailPanel/NavigatePill';
 import { useStopTwin } from '@/hooks/derived/useStopTwin';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { navigate } from '@/lib/history';
@@ -24,7 +23,7 @@ import { paths } from '@/lib/routes';
 
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
@@ -36,7 +35,6 @@ export const DepartureBoardHeader = memo(() => {
     const selectedStop = useSelectedStop();
     const { tripId } = useRouteParams();
 
-    const { handleNavigate, stopDistanceInfo } = useNavigate();
     const { liveDepartures, delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
 
     const { lineChipsFromDepartures } = useCityConfig();
@@ -61,27 +59,7 @@ export const DepartureBoardHeader = memo(() => {
         <div className="px-6 pb-0 shrink-0 flex flex-col gap-2.5">
             <div className="flex w-full min-h-8 items-center gap-2">
                 <div className="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto no-scrollbar text-body-sm text-muted-foreground">
-                    <button
-                        type="button"
-                        onClick={() => handleNavigate()}
-                        className="flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border/50 bg-card px-3 font-semibold text-foreground shadow-sm outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-                        data-testid="board-walk"
-                    >
-                        {stopDistanceInfo?.isReasonableWalkingDistance && !stopDistanceInfo.isAtStop ? (
-                            <>
-                                <Footprints size={14} strokeWidth={1.5} />
-                                {t('map.departures.minutes', { count: stopDistanceInfo.time })}
-                            </>
-                        ) : (
-                            <>
-                                <MapPin size={14} strokeWidth={1.5} />
-                                {/* The short form, so the delay stats beside the pill still fit on a narrow phone. */}
-                                {stopDistanceInfo?.isAtStop ? t('map.departures.atStopShort')
-                                    : stopDistanceInfo ? formatStopDistance(stopDistanceInfo, t, i18n.language)
-                                    : t('map.departures.openInMaps')}
-                            </>
-                        )}
-                    </button>
+                    <NavigatePill />
 
                     {delayStats && delayStats.sampleSize >= 2 && (
                         <Popover>

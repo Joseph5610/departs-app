@@ -25,7 +25,8 @@ import { ROUTE_TYPE_ORDER } from '@/config/transit';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { RefreshIntervalPicker } from '@/components/RefreshIntervalPicker';
 import { toggled } from '@/lib/strings';
-import { FilterButton, FilterHeading, SectionHeading, ToggleSection } from './SettingsControls';
+import { FilterButton, FilterHeading, ToggleSection } from './SettingsControls';
+import { SectionHeading } from '@/components/SectionHeading';
 import { DelayFilter } from './DelayFilter';
 
 const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));

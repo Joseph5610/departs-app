@@ -540,7 +540,16 @@
     "cursorTitle": "AI IDEs & Editors"
   },
   "pos": {
-    "title": "Point of Sale",
+    "status": {
+      "nonstop": "Open nonstop",
+      "open": "Open",
+      "closingSoon": "Closing soon",
+      "closed": "Closed",
+      "closesAt": "Closes at {{time}}",
+      "opensAt": "Opens at {{time}}",
+      "opensTomorrow": "Opens tomorrow at {{time}}",
+      "opensOn": "Opens {{day}} {{time}}"
+    },
     "types": {
       "ticketMachine": "Ticket Machine",
       "ticketOfficeMetro": "Metro Pre-sale Office",

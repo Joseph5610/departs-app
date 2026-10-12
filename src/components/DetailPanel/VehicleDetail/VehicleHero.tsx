@@ -203,9 +203,8 @@ const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: b
     const isEarly = delayStatus === 'early';
     return (
         <Badge
-            variant="outline"
+            variant="hero"
             className={cn(
-                "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
                 isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
             )}
         >
@@ -230,8 +229,8 @@ const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { orig
     return (
         <Popover>
             <PopoverTrigger render={<button type="button" className="outline-none" />}>
-                <Badge variant="muted" className={cn(
-                    "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider gap-1.5 cursor-pointer bg-card shadow-sm hover:brightness-95 transition-colors border-transparent",
+                <Badge variant="hero" className={cn(
+                    "gap-1.5 cursor-pointer hover:brightness-95 transition-colors",
                     isEnriched ? "text-emerald-500" :
                     (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
                 )}>

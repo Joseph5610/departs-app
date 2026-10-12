@@ -121,7 +121,7 @@ const MapInner = () => {
             return selectedStop.stop_name;
         }
         if (selectedPos) {
-            return t('pos.title');
+            return selectedPos.name;
         }
         return '';
     }, [selectedVehicle, selectedStop, selectedPos, t]);
@@ -133,8 +133,8 @@ const MapInner = () => {
         isStatsRoute ? t('stats.title') :
         isFavoritesRoute ? t('favorites.title') :
         vehicleLine ? <VehicleTitle line={vehicleLine} routeColor={vehicleRouteColor ?? ''} /> :
-        (selectedStop ? <StopTitle title={panelTitle} /> : panelTitle)
-    ), [isStatsRoute, isFavoritesRoute, vehicleLine, vehicleRouteColor, selectedStop, panelTitle, t]);
+        (selectedStop || selectedPos ? <StopTitle title={panelTitle} /> : panelTitle)
+    ), [isStatsRoute, isFavoritesRoute, vehicleLine, vehicleRouteColor, selectedStop, selectedPos, panelTitle, t]);
 
     const detailSubHeader = useMemo(() => (
         isStatsRoute ? <StatsTabs /> :

@@ -5,12 +5,6 @@ import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions }
 import { cn } from '@/lib/cn';
 import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
 
-export const SectionHeading = ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-muted-foreground micro-label-widest px-1">
-        {children}
-    </h3>
-);
-
 export const FilterHeading = ({ children }: { children: React.ReactNode }) => (
     <div className="flex items-center gap-2">
         <div className="w-1 h-1 rounded-full bg-primary" />

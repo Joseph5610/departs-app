@@ -1,36 +1,27 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Ticket, MapPin, CreditCard, CheckCircle2, Building2, Landmark, HelpCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Item, ItemGroup, ItemMedia, ItemContent, ItemTitle } from '@/components/ui/item';
-import type { PointOfSale, PointOfSaleType } from '@/types';
-import { DAY_MS } from '@/config/constants';
+import { CalendarRange, ClipboardPen, IdCard, Info, Printer, Receipt, Ticket } from 'lucide-react';
+import { PosRow, PosSection } from './PointOfSaleRows';
+import type { PointOfSale } from '@/types';
+import { cn } from '@/lib/cn';
+import { PointOfSaleHero } from '@/components/DetailPanel/PointOfSaleHero';
+import { usePointOfSaleStatus } from '@/hooks/derived/usePointOfSaleStatus';
+import { coversDay } from '@/domain/pointsOfSale';
+import { weekdayShortNames } from '@/domain/time';
 
 interface PointOfSaleDetailProps {
     pos: PointOfSale;
 }
 
-const TYPE_ICONS: Record<PointOfSaleType, React.ElementType> = {
-    ticketMachine: Ticket,
-    ticketOfficeMetro: Building2,
-    informationCenter: Landmark,
-    trainStation: Building2,
-    carrierOffice: Building2,
-    chipCardDispense: CreditCard,
+const SERVICE_ICONS: Record<PointOfSale['services'][number], React.ElementType> = {
+    card_application: ClipboardPen,
+    card_issuance: IdCard,
+    coupons: CalendarRange,
+    paper_tickets: Ticket,
+    penalties: Receipt,
+    information: Info,
+    tkt_prep: Printer,
 };
-
-/** 1 January 2024 was a Monday, so adding 0–6 days yields Monday–Sunday. */
-const REFERENCE_MONDAY_MS = Date.UTC(2024, 0, 1);
-
-/** Short weekday names, Monday first, capitalized as on printed timetables. */
-function getWeekdayNames(lang: string | undefined): string[] {
-    const format = new Intl.DateTimeFormat(lang, { weekday: 'short', timeZone: 'UTC' });
-    return Array.from({ length: 7 }, (_, i) => {
-        const name = format.format(REFERENCE_MONDAY_MS + i * DAY_MS);
-        return name.charAt(0).toUpperCase() + name.slice(1);
-    });
-}
 
 function formatDayRange(from: number, to: number, days: string[]): string {
     if (from === to) return days[from] || '';
@@ -39,97 +30,33 @@ function formatDayRange(from: number, to: number, days: string[]): string {
 
 export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
     const { t, i18n } = useTranslation();
-    const weekdayNames = useMemo(() => getWeekdayNames(i18n.resolvedLanguage), [i18n.resolvedLanguage]);
-
-    const Icon = TYPE_ICONS[pos.type] || HelpCircle;
+    const weekdayNames = useMemo(() => weekdayShortNames(i18n.resolvedLanguage), [i18n.resolvedLanguage]);
+    const { today, status } = usePointOfSaleStatus(pos);
 
     return (
-        <div className="flex flex-col gap-3 px-0 pt-3 pb-4">
-            <Card 
-                size="none" 
-                className="border border-emerald-500/30 ring-0 shadow-xl relative flex flex-col transition-colors overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent"
-            >
-                <div className="flex flex-col p-4 gap-3">
-                    <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-caption font-bold tracking-wide px-2.5 py-0.5 rounded-lg">
-                            <Icon size={13} className="mr-1.5 shrink-0 inline" />
-                            {t(`pos.types.${pos.type}`, pos.type)}
-                        </Badge>
-                    </div>
-
-                    <h2 className="text-xl font-bold text-foreground leading-tight whitespace-normal break-words">
-                        {pos.name}
-                    </h2>
-
-                    {pos.address && (
-                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed pt-2 border-t border-border/40">
-                            <MapPin size={15} className="shrink-0 mt-0.5 text-emerald-500" />
-                            <span className="whitespace-normal break-words font-medium">{pos.address}</span>
-                        </div>
-                    )}
-                </div>
-            </Card>
+        <div className="flex flex-col gap-4 pb-4">
+            <PointOfSaleHero pos={pos} status={status} />
 
             {pos.openingHours && pos.openingHours.length > 0 && (
-                <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2">
-                    <CardHeader className="p-0 pb-1">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            {t('pos.openingHours')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex flex-col gap-1.5">
-                        {pos.openingHours.map((oh) => (
-                            <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-b-0 last:py-0">
-                                <span className="font-semibold text-foreground">{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
-                                <span className="font-mono text-xs text-muted-foreground">{oh.hours}</span>
+                <PosSection title={t('pos.openingHours')}>
+                    {pos.openingHours.map((oh) => {
+                        const isToday = coversDay(oh, today);
+                        return (
+                            <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between gap-3 px-3 py-2.5 text-body-sm border-b border-border/40 last:border-b-0">
+                                <span className={cn("font-medium", isToday ? "text-foreground" : "text-muted-foreground")}>{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
+                                <span className={cn("tabular-nums text-right", isToday ? "font-medium text-foreground" : "text-muted-foreground")}>{oh.hours.replace(/,/g, ', ')}</span>
                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
-            {pos.payMethods && pos.payMethods.length > 0 && (
-                <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2.5">
-                    <CardHeader className="p-0">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            {t('pos.payMethodsTitle')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex flex-wrap gap-2">
-                        {pos.payMethods.map((pm) => (
-                            <Badge key={pm} variant="secondary" className="px-3 py-1.5 gap-2 text-xs font-medium rounded-xl border border-border/50 bg-secondary/60">
-                                <CreditCard size={13} className="text-emerald-500 shrink-0" />
-                                <span>{t(`pos.payMethods.${pm}`, pm)}</span>
-                            </Badge>
-                        ))}
-                    </CardContent>
-                </Card>
+                        );
+                    })}
+                </PosSection>
             )}
 
             {pos.services && pos.services.length > 0 && (
-                <Card variant="subtle" size="sm" className="p-3.5 flex flex-col gap-2.5">
-                    <CardHeader className="p-0">
-                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            {t('pos.servicesTitle')}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <ItemGroup>
-                            {pos.services.map((srv) => (
-                                <Item key={srv} size="none" variant="default" className="py-0.5">
-                                    <ItemMedia variant="icon" className="text-emerald-500 shrink-0">
-                                        <CheckCircle2 size={16} strokeWidth={2} />
-                                    </ItemMedia>
-                                    <ItemContent>
-                                        <ItemTitle className="text-xs font-medium text-foreground leading-snug">
-                                            {t(`pos.services.${srv}`, srv)}
-                                        </ItemTitle>
-                                    </ItemContent>
-                                </Item>
-                            ))}
-                        </ItemGroup>
-                    </CardContent>
-                </Card>
+                <PosSection title={t('pos.servicesTitle')}>
+                    {pos.services.map((srv) => (
+                        <PosRow key={srv} icon={SERVICE_ICONS[srv]}>{t(`pos.services.${srv}`, srv)}</PosRow>
+                    ))}
+                </PosSection>
             )}
         </div>
     );

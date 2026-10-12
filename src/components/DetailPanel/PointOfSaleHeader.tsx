@@ -1,31 +1,26 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin } from 'lucide-react';
-import { useNavigate } from '@/hooks/features/useNavigate';
+import { NavigatePill } from '@/components/DetailPanel/NavigatePill';
+import { PointOfSaleTypeIcon } from '@/components/DetailPanel/PointOfSaleTypeIcon';
 import type { PointOfSale } from '@/types';
 
 interface PointOfSaleHeaderProps {
     pos: PointOfSale;
 }
 
+/** Sticky subheader of a point of sale, laid out like a stop board's: directions pill, then its kind. */
 export const PointOfSaleHeader = ({ pos }: PointOfSaleHeaderProps) => {
     const { t } = useTranslation();
-    const { handleNavigate } = useNavigate();
+    const target = useMemo<[number, number]>(() => [pos.lon, pos.lat], [pos.lon, pos.lat]);
 
     return (
-        <div className="px-6 pb-0 shrink-0 flex flex-col gap-2">
-            <div className="flex w-full h-7 justify-between items-center">
-                <div className="flex items-center h-7 rounded-full bg-card border border-border/50 shadow-sm shrink-0 overflow-hidden">
-                    <button 
-                        type="button"
-                        className="flex items-center h-full px-3 hover:bg-muted active:bg-muted/80 transition-colors cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        onClick={() => handleNavigate([pos.lon, pos.lat])}
-                    >
-                        <MapPin size={12} className="text-muted-foreground/80 mr-1.5" strokeWidth={1.5} />
-                        <span className="font-bold text-foreground text-caption tracking-tight whitespace-nowrap">
-                            {t('map.departures.openInMaps')}
-                        </span>
-                    </button>
-                </div>
+        <div className="px-6 pb-3 shrink-0 flex flex-col">
+            <div className="flex w-full min-h-8 items-center gap-4 text-body-sm text-muted-foreground">
+                <NavigatePill target={target} />
+                <span className="flex min-w-0 items-center gap-1.5">
+                    <PointOfSaleTypeIcon type={pos.type} size={14} strokeWidth={1.5} className="shrink-0" />
+                    <span className="truncate">{t(`pos.types.${pos.type}`, pos.type)}</span>
+                </span>
             </div>
         </div>
     );

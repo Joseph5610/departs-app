@@ -4,15 +4,15 @@ import { useStopDistance } from '@/hooks/derived/useStopDistance';
 import { EXTERNAL_URLS } from '@/config/constants';
 
 /**
- * Walking directions to the selected stop via platform-specific map deep links,
+ * Walking directions to `target` (the selected stop by default) via platform-specific map deep links,
  * plus the user's distance to it.
  */
-export const useNavigate = () => {
+export const useNavigate = (target?: [number, number]) => {
     const selectedStop = useSelectedStop();
-    const stopDistanceInfo = useStopDistance();
+    const coords = target ?? selectedStop?.coordinates;
+    const stopDistanceInfo = useStopDistance(coords);
 
-    const handleNavigate = useCallback((targetCoordinates?: [number, number]) => {
-        const coords = targetCoordinates || selectedStop?.coordinates;
+    const handleNavigate = useCallback(() => {
         if (!coords) return;
 
         const [lon, lat] = coords;
@@ -24,7 +24,7 @@ export const useNavigate = () => {
             // location.href, not window.open, so the deep link doesn't leave a blank tab behind.
             window.location.href = EXTERNAL_URLS.WALKING_DIRECTIONS.google(lat, lon);
         }
-    }, [selectedStop]);
+    }, [coords]);
 
     return {
         handleNavigate,

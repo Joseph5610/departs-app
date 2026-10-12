@@ -549,7 +549,16 @@
     "cursorTitle": "AI IDE a editory"
   },
   "pos": {
-    "title": "Prodejní místo",
+    "status": {
+      "nonstop": "Otevřeno nonstop",
+      "open": "Otevřeno",
+      "closingSoon": "Brzy zavírá",
+      "closed": "Zavřeno",
+      "closesAt": "Zavírá v {{time}}",
+      "opensAt": "Otevírá v {{time}}",
+      "opensTomorrow": "Otevírá zítra v {{time}}",
+      "opensOn": "Otevírá {{day}} {{time}}"
+    },
     "types": {
       "ticketMachine": "Automat na jízdenky",
       "ticketOfficeMetro": "Předprodej v metru",

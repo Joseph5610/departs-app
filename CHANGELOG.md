@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.5] - 2026-10-12
+
+### Changed
+
+- The point-of-sale panel shares the stop board's layout and directions pill, and leads with a card saying whether it is open now, when it closes or opens next, and how to pay.
+
 ## [0.83.4] - 2026-10-12
 
 ### Changed

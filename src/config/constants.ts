@@ -94,6 +94,11 @@ export const LINE_SEARCH = {
     GENERIC_LINE_SHAPE: /^(?=.*\d)[A-Z0-9-]{1,6}$/,
 };
 
+export const POS_OPENING = {
+    /** Within this many minutes of closing, the panel warns that the point of sale closes soon. */
+    CLOSING_SOON_MIN: 30,
+};
+
 export const POS_SEARCH = {
     MIN_QUERY_LENGTH: 3,
     /** Points of sale are a side answer next to stops, so the dropdown keeps the group short. */
