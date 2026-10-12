@@ -31,7 +31,7 @@ interface Heights { peek: SnapPoint; full: SnapPoint }
  * minus the status bar and a small gap, like the Maps app's large sheet.
  */
 const measureHeights = (): Heights => ({
-    peek: `${Math.round(SHEET.PEEK_CONTENT_PX + Math.max(readSafeArea('bottom'), SHEET.PEEK_MIN_BOTTOM_INSET_PX))}px`,
+    peek: `${Math.round(SHEET.PEEK_CONTENT_PX + Math.max(readSafeArea('bottom') - SHEET.PEEK_HOME_INDICATOR_OVERLAP_PX, SHEET.PEEK_MIN_BOTTOM_INSET_PX))}px`,
     full: `${Math.round(window.innerHeight - Math.max(readSafeArea('top'), SHEET.FULL_TOP_MIN_INSET_PX) - SHEET.FULL_TOP_GAP_PX)}px`,
 });
 
@@ -100,6 +100,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
         };
         window.addEventListener('resize', update);
         document.addEventListener('visibilitychange', update);
+        update();
         return () => {
             window.clearTimeout(timer);
             window.removeEventListener('resize', update);
@@ -115,6 +116,18 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
     const swipeCloseFromRef = useRef<Detent>('peek');
     const swipeCloseHeightRef = useRef(0);
     const swipeCollapseRef = useRef(false);
+
+    // The iOS swipe home starts on the sheet and drags it up first, so a drag the app is hidden right after is undone.
+    const lastDragRef = useRef<{ from: Detent; at: number } | null>(null);
+    useEffect(() => {
+        const onVisibilityChange = () => {
+            const drag = lastDragRef.current;
+            lastDragRef.current = null;
+            if (document.visibilityState === 'hidden' && drag && performance.now() - drag.at < SHEET.HOME_GESTURE_UNDO_MS) setDetent(drag.from);
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }, []);
 
     // The home keeps its own height: a card opens at least at `minSnap` and leaving it restores the home's.
     const [homeDetent, setHomeDetent] = useState<Detent>('peek');
@@ -181,6 +194,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                         }
                         return;
                     }
+                    if (detent) lastDragRef.current = { from: detent, at: performance.now() };
                     setDetent(DETENTS.find(d => points[d] === point) ?? 'peek');
                 }}
                 modal={false}

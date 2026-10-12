@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- The mobile sheet no longer reopens halfway up when the installed iPhone app returns from the background.
+- The mobile sheet no longer reopens halfway up after swiping home from the installed iPhone app.
+- The fully open mobile sheet stops below the iPhone status bar again instead of running under it.
 - The reset-north button above the mobile sheet is solid glass like the other map controls instead of see-through.
 
 ## [0.83.1] - 2026-10-12
