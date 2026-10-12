@@ -18,6 +18,9 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
 
+/** Inside the sheet a backdrop blur only sees the sheet, so its pills take glass's opaque fallback. */
+const SHEET_PILL = 'glassy [background:var(--glass-fallback)]! rounded-full overflow-hidden shadow-lg';
+
 interface MapControlsProps {
     /** `corner` floats top-right of the map; `sheet` rides above the mobile sheet's top edge with only settings and locate. */
     placement?: 'corner' | 'sheet';
@@ -148,6 +151,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 
     const compassButton = showCompass && (
         <ControlButton
+            inPill={placement === 'sheet'}
             onClick={onResetBearing}
             title={t('map.controls.resetBearing')}
         >
@@ -164,9 +168,8 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 )}
                 data-testid="map-controls"
             >
-                {compassButton}
-                {/* Inside the sheet a backdrop blur only sees the sheet, so the pill takes glass's opaque fallback. */}
-                <ButtonGroup orientation="vertical" className="glassy [background:var(--glass-fallback)]! rounded-full overflow-hidden shadow-lg">
+                {compassButton && <ButtonGroup orientation="vertical" className={SHEET_PILL}>{compassButton}</ButtonGroup>}
+                <ButtonGroup orientation="vertical" className={SHEET_PILL}>
                     {settingsButton}
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
                     <ControlButton

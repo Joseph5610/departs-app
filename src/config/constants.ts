@@ -40,7 +40,10 @@ export const UI_TIMING_MS = {
 
 /** The mobile sheet's three heights: the peek shows only the search row or a card's header, half, and full, which stops just below the status bar. */
 export const SHEET = {
-    PEEK: '112px',
+    /** The peek's grabber and search row, above the bottom inset. */
+    PEEK_CONTENT_PX: 72,
+    /** The bottom inset assumed where the device has no home indicator. */
+    PEEK_MIN_BOTTOM_INSET_PX: 12,
     HALF: 0.5,
     /** Gap between the status bar and a fully open sheet, through which the dimmed map shows. */
     FULL_TOP_GAP_PX: 12,
@@ -48,6 +51,8 @@ export const SHEET = {
     FULL_TOP_MIN_INSET_PX: 28,
     /** A pointer that moves less than this between down and up on the grabber is a tap, not a drag. */
     TAP_SLOP_PX: 6,
+    /** The full height follows the screen only after resizes stop for this long. */
+    RESIZE_SETTLE_MS: 150,
 };
 
 /** Stops listed under "Nearby" on the mobile home sheet. */

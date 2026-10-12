@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { SHEET } from '@/config/constants';
-import { readSafeAreaTop } from '@/lib/safeArea';
+import { readSafeArea } from '@/lib/safeArea';
 
 type SnapPoint = number | string;
 
@@ -24,8 +24,18 @@ const sheetStyle = (full: SnapPoint) => ({
 /** Each card, and the home, eases in when it replaces what the sheet showed. */
 const CARD_ENTER = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200';
 
-/** The full height: the screen minus the status bar and a small gap, like the Maps app's large sheet. */
-const fullHeight = (): SnapPoint => `${Math.round(window.innerHeight - Math.max(readSafeAreaTop(), SHEET.FULL_TOP_MIN_INSET_PX) - SHEET.FULL_TOP_GAP_PX)}px`;
+interface Heights { peek: SnapPoint; full: SnapPoint }
+
+/**
+ * The peek shows the grabber and the search row above the home indicator; the full height is the screen
+ * minus the status bar and a small gap, like the Maps app's large sheet.
+ */
+const measureHeights = (): Heights => ({
+    peek: `${Math.round(SHEET.PEEK_CONTENT_PX + Math.max(readSafeArea('bottom'), SHEET.PEEK_MIN_BOTTOM_INSET_PX))}px`,
+    full: `${Math.round(window.innerHeight - Math.max(readSafeArea('top'), SHEET.FULL_TOP_MIN_INSET_PX) - SHEET.FULL_TOP_GAP_PX)}px`,
+});
+
+const sameHeights = (a: Heights, b: Heights) => a.peek === b.peek && a.full === b.full;
 
 type Detent = 'peek' | 'half' | 'full';
 
@@ -78,16 +88,27 @@ interface MobileSheetProps {
 export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header, subHeader, selfScrolling, homeHeader, home, floating, onDismiss, children }: MobileSheetProps) => {
     const { t } = useTranslation();
 
-    // The heights by name, so the full height can follow the screen while the sheet keeps its place.
-    const [full, setFull] = useState(fullHeight);
+    // The heights by name, so they can follow the screen while the sheet keeps its place.
+    // Base UI keeps a stale height if the popup regrows before its shrink renders (iOS resume), so follow the screen only once it settles.
+    const [heights, setHeights] = useState(measureHeights);
     useEffect(() => {
-        const update = () => setFull(fullHeight());
+        let timer: number | undefined;
+        const update = () => {
+            window.clearTimeout(timer);
+            if (document.visibilityState === 'hidden') return;
+            timer = window.setTimeout(() => setHeights(prev => { const next = measureHeights(); return sameHeights(prev, next) ? prev : next; }), SHEET.RESIZE_SETTLE_MS);
+        };
         window.addEventListener('resize', update);
-        return () => window.removeEventListener('resize', update);
+        document.addEventListener('visibilitychange', update);
+        return () => {
+            window.clearTimeout(timer);
+            window.removeEventListener('resize', update);
+            document.removeEventListener('visibilitychange', update);
+        };
     }, []);
-    const points = useMemo<Record<Detent, SnapPoint>>(() => ({ peek: SHEET.PEEK, half: SHEET.HALF, full }), [full]);
+    const points = useMemo<Record<Detent, SnapPoint>>(() => ({ peek: heights.peek, half: SHEET.HALF, full: heights.full }), [heights]);
     const snapPoints = useMemo(() => DETENTS.map(d => points[d]), [points]);
-    const style = useMemo(() => sheetStyle(full), [full]);
+    const style = useMemo(() => sheetStyle(heights.full), [heights.full]);
 
     // A card open from the first render (a shared stop link) starts at its own height; null while a swipe-close is undone.
     const [detent, setDetent] = useState<Detent | null>(() => (cardKey === null ? 'peek' : minSnap));

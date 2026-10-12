@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.83.2] - 2026-10-12
+
+### Changed
+
+- The mobile sheet's lowest height shows only the search row, sitting just above the iPhone home indicator.
+
+### Fixed
+
+- The mobile sheet no longer reopens halfway up when the installed iPhone app returns from the background.
+- The reset-north button above the mobile sheet is solid glass like the other map controls instead of see-through.
+
 ## [0.83.1] - 2026-10-12
 
 ### Fixed
