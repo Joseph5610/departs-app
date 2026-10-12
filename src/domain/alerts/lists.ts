@@ -105,6 +105,50 @@ export const noticesForStops = (infotexts: Infotext[], stopIds: string[]): Infot
     return infotexts.filter(info => info.relatedStopIds.some(id => ids.has(id)));
 };
 
+/** The notices of one platform of a station board, keyed by the code its departures carry. */
+export interface PlatformNotices {
+    code: string;
+    notices: Infotext[];
+}
+
+const PRIORITY_RANK: Record<Infotext['priority'], number> = { high: 0, normal: 1, low: 2 };
+
+/**
+ * A station board's notices split by platform, in platform order: `platforms` maps each platform id to
+ * its code. Notices posted for the station itself or a platform without a code are `station`, shown whole.
+ */
+export const noticesByPlatform = (infotexts: Infotext[], stationIds: string[], platforms: ReadonlyMap<string, string>): { station: Infotext[]; platforms: PlatformNotices[] } => {
+    const station = new Set<Infotext>();
+    const byCode = new Map<string, Set<Infotext>>();
+    const ids = new Set(stationIds);
+    for (const info of infotexts) {
+        for (const id of info.relatedStopIds) {
+            if (!ids.has(id)) continue;
+            const code = platforms.get(id);
+            if (!code) { station.add(info); continue; }
+            const set = byCode.get(code) ?? new Set();
+            set.add(info);
+            byCode.set(code, set);
+        }
+    }
+    const byPriority = (a: Infotext, b: Infotext) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+    return {
+        station: [...station].sort(byPriority),
+        platforms: [...byCode]
+            .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+            .map(([code, set]) => ({ code, notices: [...set].sort(byPriority) })),
+    };
+};
+
+/** The most urgent priority among the platforms' notices. */
+export const highestPlatformPriority = (platforms: PlatformNotices[]): Infotext['priority'] => {
+    let best: Infotext['priority'] = 'low';
+    for (const { notices } of platforms) {
+        for (const n of notices) if (PRIORITY_RANK[n.priority] < PRIORITY_RANK[best]) best = n.priority;
+    }
+    return best;
+};
+
 /** A notice's text in the UI language: English where the notice has it, Czech otherwise. */
 export const noticeText = (info: Infotext, language: string | undefined): string =>
     language === 'en' && info.textEn ? info.textEn : info.text;

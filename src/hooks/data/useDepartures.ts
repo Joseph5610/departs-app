@@ -71,6 +71,7 @@ const NO_DEPARTURES: Departure[] = [];
 export const useDepartures = () => {
     const { stopId } = useRouteParams();
     const selectedLine = useSelectionStore(s => s.selectedLine);
+    const selectedPlatform = useSelectionStore(s => s.selectedPlatform);
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
     const departureSort = usePreferencesStore(s => s.departureSort);
@@ -97,7 +98,7 @@ export const useDepartures = () => {
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
     const liveDepartures = useLiveDepartures(query.data?.departures ?? NO_DEPARTURES, dataUpdatedAt, enrichStopDepartures);
-    const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
+    const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible, selectedPlatform);
     const favoriteLines = usePreferencesStore(s => s.favoriteLines);
     const favoriteKeys = useMemo(() => {
         const keys = favoriteKeysAt(favoriteLines, selectedCity, stopId);
@@ -105,7 +106,7 @@ export const useDepartures = () => {
     }, [favoriteLines, selectedCity, stopId]);
     const groupedDepartures = favoritesFirst(groupDepartures(filtered, departureSort), favoriteKeys);
     const delayStats = computeDelayStats(filtered, dataUpdatedAt);
-    const isFiltered = !!selectedLine || (requireAirConditioned && hasAirConditioningData) || (requireWheelchairAccessible && hasAccessibilityData);
+    const isFiltered = !!selectedLine || !!selectedPlatform || (requireAirConditioned && hasAirConditioningData) || (requireWheelchairAccessible && hasAccessibilityData);
 
     const { data, isLoading, isError, error, refetch } = query;
 

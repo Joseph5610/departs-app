@@ -8,7 +8,7 @@ import { memoizeLast } from '@/lib/memoize';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE } from '@/config/constants';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
-import { indexStopsById, splitStopCollection } from '@/domain/stops';
+import { groupStations, indexStopsById, splitStopCollection } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 
 /** Checks the structure the map layers and stop index rely on; each stop's other properties are optional. */
@@ -26,6 +26,7 @@ const stopsPersister = createDevicePersister((data): StopCollection => {
 });
 
 const splitStops = memoizeLast(splitStopCollection);
+const buildStations = memoizeLast(groupStations);
 const buildStopIndex = memoizeLast(indexStopsById);
 
 export const stopsQueryOptions = (city: string) => queryOptions<StopCollection, AppError>({
@@ -39,7 +40,8 @@ export const stopsQueryOptions = (city: string) => queryOptions<StopCollection, 
 
 /**
  * Fetches the selected city's prebuilt stop list from the static data host, kept on the device (IndexedDB) across launches.
- * Provides GeoJSON for the map layers and an index resolving any stop or platform ID.
+ * Provides GeoJSON for the map layers, the stations the map groups platforms into, and an index resolving
+ * any stop, platform or map station ID.
  */
 export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -48,16 +50,18 @@ export const useStops = () => {
 
     const collection = query.data;
     const { stops, centroids } = splitStops(collection);
-    const stopIndex = buildStopIndex(collection);
+    const stations = buildStations(stops);
+    const stopIndex = buildStopIndex(collection, stations);
     const updatedAt = query.data ? query.dataUpdatedAt : null;
     const isLoading = query.isLoading;
 
     return useMemo(() => ({
         stops,
         centroids,
+        stations,
         stopIndex,
         allFeatures: collection ?? null,
         updatedAt,
         isLoading,
-    }), [stops, centroids, stopIndex, collection, updatedAt, isLoading]);
+    }), [stops, centroids, stations, stopIndex, collection, updatedAt, isLoading]);
 };

@@ -10,7 +10,7 @@ interface DepartureSubGroup {
     firstTime: number;
 }
 
-interface DepartureLineGroup {
+export interface DepartureLineGroup {
     lineGroupId: string;
     line: string | number;
     type: string | number;
@@ -88,6 +88,38 @@ export const groupDepartures = (departures: Departure[], departureSort: 'line' |
     }
     const groups = [...byLine].flatMap(([line, directions]) => mergeDirections(directions).map(direction => toLineGroup(line, direction)));
     return groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
+};
+
+/** One platform's rows on a station board; `platform` is null for departures whose feed names none. */
+export interface PlatformSection {
+    platform: string | null;
+    groups: DepartureLineGroup[];
+}
+
+/**
+ * A station board's rows split by the platform each departure leaves from, platforms in natural order
+ * (`2` before `10`, `A` before `B`) and unnamed ones last; the rows keep the board's order within each.
+ */
+export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[] => {
+    const byPlatform = new Map<string, DepartureLineGroup[]>();
+    for (const group of groups) {
+        const subsByPlatform = new Map<string, DepartureSubGroup[]>();
+        for (const sub of group.subGroups) {
+            const depsByPlatform = new Map<string, Departure[]>();
+            for (const dep of sub.departures) getOrCreate(depsByPlatform, dep.platform ?? '', (): Departure[] => []).push(dep);
+            for (const [platform, departures] of depsByPlatform) {
+                const part = depsByPlatform.size === 1 ? sub : { ...sub, departures, firstTime: Math.min(...departures.map(d => Date.parse(d.timestamp))) };
+                getOrCreate(subsByPlatform, platform, (): DepartureSubGroup[] => []).push(part);
+            }
+        }
+        for (const [platform, subGroups] of subsByPlatform) {
+            const part = subsByPlatform.size === 1 ? group : { ...group, subGroups, firstTime: Math.min(...subGroups.map(s => s.firstTime)) };
+            getOrCreate(byPlatform, platform, (): DepartureLineGroup[] => []).push(part);
+        }
+    }
+    return [...byPlatform]
+        .sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, undefined, { numeric: true })))
+        .map(([platform, groups]) => ({ platform: platform || null, groups }));
 };
 
 export const favoriteKey = (line: string | number, headsign: string) => `${String(line).toUpperCase()}|${headsign}`;

@@ -72,8 +72,11 @@ export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stop
 /** A search history entry for a stop picked in `city`. */
 export const stopHistoryEntry = (feature: StopFeature, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, ...stopSummary(feature) });
 
-/** Every stop and platform id to its feature; a merged station resolves its platforms' ids unless they have their own entry. */
-export const indexStopsById = (collection: StopCollection | undefined): Map<string, StopFeature> => {
+/**
+ * Every stop and platform id to its feature; a merged station resolves its platforms' ids unless they have their own entry.
+ * A map station (`groupStations`) resolves only its own id, and only when the stop list has no entry for it.
+ */
+export const indexStopsById = (collection: StopCollection | undefined, stations?: StopCollection | null): Map<string, StopFeature> => {
     const idx = new Map<string, StopFeature>();
     for (const f of collection?.features ?? []) {
         idx.set(f.properties.stop_id, f);
@@ -86,6 +89,9 @@ export const indexStopsById = (collection: StopCollection | undefined): Map<stri
                 if (!idx.has(part)) idx.set(part, f);
             }
         }
+    }
+    for (const f of stations?.features ?? []) {
+        if (!idx.has(f.properties.stop_id)) idx.set(f.properties.stop_id, f);
     }
     return idx;
 };

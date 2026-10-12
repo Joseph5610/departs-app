@@ -56,6 +56,8 @@ export interface InitialCityConfig {
     routeTypeColors?: Partial<Record<RouteType, string>>;
     /** Short network name, as riders know it (on the stop panel's link to the same stop in this network). */
     networkLabel: string;
+    /** Colour of each mode's tile in the map's stop badges; a mode left out takes `STOP_BADGE.MODE_COLORS`. */
+    modeColors?: Partial<Record<RouteType, string>>;
     /** Map colour of this network's stops, where they must be told apart from a neighbour's on shared ground. */
     stopColor?: string;
 }
@@ -79,6 +81,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
         slug: 'prague',
         networkLabel: 'PID',
+        modeColors: { train: '#251E62', tram: '#7A0603', trolleybus: '#80166F', bus: '#007DA8', ferry: '#00B3CB', funicular: '#B2B943' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [14.4212, 50.0875],
@@ -109,6 +112,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     brno: {
         slug: 'brno',
         networkLabel: 'IDS JMK',
+        modeColors: { tram: '#D40000', trolleybus: '#008033', bus: '#2C82C8', ferry: '#00224B' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [16.6068, 49.1951],
@@ -183,6 +187,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     duk: {
         slug: 'duk',
         networkLabel: 'DÚK',
+        modeColors: { train: '#004B90', tram: '#CF003D', trolleybus: '#00829B', bus: '#5E9E1F', funicular: '#C9A100' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [14.0322, 50.6607],

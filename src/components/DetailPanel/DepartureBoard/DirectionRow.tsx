@@ -15,6 +15,8 @@ import { Amenities, ExpectedTime, LiveCountdown, MARKED_ROW, TripNotes } from '.
 import { RowSeparator } from './RowSeparator';
 import { BoardSection } from './BoardRow';
 
+const NO_BOARDING_PLACE = { track: null, platform: null };
+
 interface DirectionRowProps {
     groupId: string;
     line: string;
@@ -30,6 +32,8 @@ interface DirectionRowProps {
     /** Without it the direction shows only its visible departures, with no way to expand. */
     onToggleGroup?: (groupId: string) => void;
     boardStopId: string;
+    /** The row sits in a platform section, which names the platform, so the row does not. */
+    inPlatformSection?: boolean;
     timeZone: string;
     highlightedTripId: string | null;
     onDepartureClick: DepartureClickHandler;
@@ -45,7 +49,7 @@ interface DirectionRowProps {
  */
 export const DirectionRow = memo(({
     groupId, line, headsign, departures, routeColor, startsLine, isFirst,
-    isExpanded, isFiltered, onToggleGroup, boardStopId, timeZone, highlightedTripId, onDepartureClick, note,
+    isExpanded, isFiltered, onToggleGroup, boardStopId, inPlatformSection, timeZone, highlightedTripId, onDepartureClick, note,
 }: DirectionRowProps) => {
     const { t } = useTranslation();
     const pin = usePinLine(boardStopId, line, headsign);
@@ -65,7 +69,7 @@ export const DirectionRow = memo(({
                 line={line}
                 headsign={headsign}
                 routeColor={routeColor}
-                {...boardingPlace(next)}
+                {...(inPlatformSection ? NO_BOARDING_PLACE : boardingPlace(next))}
                 timeZone={timeZone}
                 isHighlighted={!!next.tripId && next.tripId === highlightedTripId}
                 onDepartureClick={onDepartureClick}

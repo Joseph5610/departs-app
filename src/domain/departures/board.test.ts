@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -71,6 +71,30 @@ describe('filterDepartures', () => {
     it('matches the selected line case-insensitively', () => {
         const deps = [departure({ tripId: 'x', line: 'X9' }), departure({ tripId: 'n', line: '9' })];
         expect(filterDepartures(deps, 'x9', false, false).filtered.map((d) => d.tripId)).toEqual(['x']);
+    });
+
+    it('keeps only the selected platform of a station board', () => {
+        const deps = [departure({ tripId: 'a', platform: 'A' }), departure({ tripId: 'b', platform: 'B' })];
+        expect(filterDepartures(deps, null, false, false, 'B').filtered.map((d) => d.tripId)).toEqual(['b']);
+    });
+});
+
+describe('platformSections', () => {
+    // A station board reads like its signs: one section per platform, so rows never repeat their platform.
+    it('splits rows by platform in natural order, splitting a direction that leaves from two platforms', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'b1', line: '9', headsign: 'Řepy', platform: 'B' }),
+            departure({ tripId: 'a1', line: '9', headsign: 'Řepy', platform: 'A', scheduled: at(2 * MIN), timestamp: at(2 * MIN) }),
+            departure({ tripId: 'x', line: '176', headsign: 'Strahov', platform: '10' }),
+            departure({ tripId: 'n', line: '20', headsign: 'Radlická' }),
+        ], 'line');
+        const sections = platformSections(groups);
+        expect(sections.map(s => [s.platform, s.groups.flatMap(g => g.subGroups.flatMap(sub => sub.departures.map(d => d.tripId)))])).toEqual([
+            ['10', ['x']],
+            ['A', ['a1']],
+            ['B', ['b1']],
+            [null, ['n']],
+        ]);
     });
 });
 
