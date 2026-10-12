@@ -359,6 +359,10 @@ export const DEPARTURES_CONFIG = {
     VISIBLE_PER_GROUP: 3,
     /** A pointer that moves further than this between press and release scrolled or swiped instead of tapping a departure. */
     TAP_SLOP_PX: 10,
+    /** How far a board row is swiped left before releasing it pins or unpins its line. */
+    SWIPE_ACTION_PX: 72,
+    /** The furthest a swiped row follows the finger. */
+    SWIPE_MAX_PX: 96,
     /** Departures described in the page's structured data. */
     STRUCTURED_DATA_LIMIT: 15,
 };

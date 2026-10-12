@@ -19,6 +19,7 @@ import { PlatformCircle } from '@/components/PlatformCircle';
 import { StopModeIcon } from '@/components/StopModeIcon';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
 import { NextDepartureRow } from '@/components/DetailPanel/DepartureBoard/NextDepartureRow';
+import { BoardRow, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
 import type { StopFeature, Departure, DepartureClickHandler } from '@/types';
 
 interface FavoriteStopSectionProps {
@@ -97,7 +98,9 @@ export const FavoriteStopSection = ({ pinnedIds, stopFeature, departures, isErro
             <RowSeparator inset={false} className="my-1" />
 
             {status ? (
-                <span className={cn("py-2 pl-[calc(var(--badge-col)+1rem)] text-xs", isError ? "text-destructive" : "text-muted-foreground")}>{status}</span>
+                <BoardRow>
+                    <RowTimeLine className={cn("row-start-1 mt-0", isError && "text-destructive")}>{status}</RowTimeLine>
+                </BoardRow>
             ) : next.map(dep => (
                 <NextDepartureRow
                     key={departureKey(dep)}

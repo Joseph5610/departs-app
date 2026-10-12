@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { CornerDownRight, Hourglass } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -25,7 +26,10 @@ const TRIP_MARK_LABEL: Record<TripMark, string> = {
 };
 
 /** How a departure row stands out when it is the ridden, followed or viewed trip. */
-export const MARKED_ROW = 'bg-primary/10 shadow-[inset_3px_0_0_var(--color-primary)] hover:bg-primary/15';
+export const MARKED_ROW = 'bg-primary/10 hover:bg-primary/15';
+
+/** MARKED_ROW for a row whose background is its `before` backdrop. */
+export const MARKED_BACKDROP = 'before:bg-primary/10 hover:before:bg-primary/15';
 
 /** A departure's timetable time, struck through with the expected time beside it once live data moves it. */
 export const ExpectedTime = ({ departure: dep, timeZone }: { departure: Departure; timeZone: string }) => {
@@ -50,7 +54,7 @@ export const LiveCountdown = ({ departure: dep, size }: { departure: Departure; 
     }
     return (
         // A fixed minimum width keeps the headsign column steady as the countdown ticks or rolls to a change.
-        <span className={cn("flex items-center justify-end gap-1.5 justify-self-end", size === 'lg' ? "min-w-19" : "min-w-16")}>
+        <span className={cn("flex items-center justify-end gap-1.5 justify-self-end", size === 'lg' ? "min-w-16" : "min-w-15")}>
             {statusLabel ? (
                 <IconTooltip label={statusLabel}><LiveIndicator status={liveStatus(dep)} trend={trend} /></IconTooltip>
             ) : <LiveIndicator status={liveStatus(dep)} trend={trend} />}
@@ -91,7 +95,7 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
             {notice && <FeederNoticeText notice={notice} />}
             {dep.continues_as && (
                 <span className="flex min-w-0 items-start gap-1.5">
-                    <CornerDownRight size={13} strokeWidth={1.75} className="mt-1.5 shrink-0 opacity-70" aria-hidden="true" />
+                    <NoteIcon><CornerDownRight size={13} strokeWidth={1.75} className="-translate-y-0.5" /></NoteIcon>
                     <span className={NOTE_TEXT}>
                         <Trans
                             i18nKey="map.departures.continuesAs"
@@ -106,8 +110,13 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
     );
 };
 
+/** A note's icon, centred on the first line of its text; the turn arrow sits up a little as its stroke runs along its bottom. */
+const NoteIcon = ({ children }: { children: React.ReactNode }) => (
+    <span aria-hidden="true" className="flex h-5 shrink-0 items-center opacity-70">{children}</span>
+);
+
 /** A note's words and badges as running text, so a long phrase wraps word by word instead of dropping to its own line. */
-const NOTE_TEXT = "min-w-0 leading-6";
+const NOTE_TEXT = "min-w-0 leading-5";
 
 /** A line named inside a note, as its badge, so "waits for 910" never reads as a count. */
 const NoteBadge = ({ name, color }: { name: string; color: string }) => (
@@ -121,10 +130,10 @@ const FeederNoticeText = ({ notice }: { notice: FeederNotice }) => {
     const key = notice.kind === 'wontWait' ? 'map.departures.feeder.wontWait'
         : notice.kind === 'held' ? 'map.departures.feeder.heldFor'
         : 'map.departures.feeder.waitsForLines';
-    const lines = <span className="inline-flex gap-1 align-middle">{notice.lines.map(l => <NoteBadge key={l.name} name={l.name} color={l.color} />)}</span>;
+    const lines = <span className="inline-flex align-middle">{notice.lines.map(l => <NoteBadge key={l.name} name={l.name} color={l.color} />)}</span>;
     return (
         <span className={cn("flex min-w-0 items-start gap-1.5", notice.kind === 'wontWait' && "text-destructive")}>
-            <Hourglass size={13} strokeWidth={1.75} className="mt-1.5 shrink-0 opacity-70" aria-hidden="true" />
+            <NoteIcon><Hourglass size={13} strokeWidth={1.75} /></NoteIcon>
             <span className={NOTE_TEXT}>
                 <Trans i18nKey={key} values={notice.kind === 'held' ? { minutes: notice.minutes } : {}} components={{ lines }} />
             </span>

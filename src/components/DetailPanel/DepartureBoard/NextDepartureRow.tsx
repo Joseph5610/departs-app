@@ -1,15 +1,15 @@
+import type React from 'react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
-import { Button } from '@/components/ui/button';
 import { InterchangeBadges } from '@/components/InterchangeBadges';
 import { LineBadge } from '@/components/LineBadge';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { useTripMark } from '@/hooks/derived/useTripMark';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
 import type { Departure, DepartureClickHandler } from '@/types';
-import { wrappableName } from '@/lib/strings';
-import { Amenities, ExpectedTime, LiveCountdown, MARKED_ROW, TripNotes } from './DepartureParts';
+import { BoardRow, RowHeadsign, RowTimeLine, type RowAction } from './BoardRow';
+import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
 
 interface NextDepartureRowProps {
     departure: Departure;
@@ -23,45 +23,62 @@ interface NextDepartureRowProps {
     timeZone: string;
     isHighlighted: boolean;
     onDepartureClick: DepartureClickHandler;
+    /** A line's further direction leaves the badge to the row above, so the line reads as one group. */
+    hidesBadge?: boolean;
+    /** What swiping the row or right-clicking it does; its being active stars the headsign. */
+    action?: RowAction;
+    /** Content under the row in the headsign column, e.g. the later departures. */
+    children?: React.ReactNode;
     /** Overrides the row's test id, `departure-item-<tripId>` by default. */
     testId?: string;
 }
 
-/** A departure as the lead row of a direction: badge, headsign and live countdown, then its departure time, amenities and notes. */
-export const NextDepartureRow = memo(({ departure: dep, line, headsign, routeColor, track, platform, timeZone, isHighlighted, onDepartureClick, testId }: NextDepartureRowProps) => {
+const activateOnKey = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    e.currentTarget.click();
+};
+
+/**
+ * A departure as the lead row of a direction: badge, headsign and live countdown, then its departure time,
+ * amenities and notes. A div with the button role, as a button's inner box breaks the row's subgrid.
+ */
+export const NextDepartureRow = memo(({
+    departure: dep, line, headsign, routeColor, track, platform, timeZone, isHighlighted, onDepartureClick, hidesBadge, action, children, testId,
+}: NextDepartureRowProps) => {
     const { t } = useTranslation();
     const { forHeadsign } = useInterchanges();
     const mark = useTripMark(dep.tripId, isHighlighted);
     const tap = useDepartureTap(dep, onDepartureClick);
 
     return (
-        <Button
-            variant="ghost"
+        <BoardRow
+            role="button"
+            tabIndex={0}
             {...tap}
+            onKeyDown={activateOnKey}
             data-testid={testId ?? `departure-item-${dep.tripId}`}
+            action={action}
+            below={children}
             className={cn(
-                "grid h-auto w-full grid-cols-[var(--badge-col)_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-1 whitespace-normal rounded-xl py-2 pl-1.5 pr-2 text-left font-normal hover:bg-foreground/5",
-                mark && MARKED_ROW
+                "cursor-pointer outline-none before:absolute before:-inset-y-2 before:-left-1.5 before:-right-2 before:-z-10 before:rounded-xl before:transition-colors hover:before:bg-foreground/5 focus-visible:before:ring-2 focus-visible:before:ring-primary/50",
+                mark && MARKED_BACKDROP
             )}
         >
-            <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-center" />
-            {/* Long headsigns wrap; interchanges follow on the same line or wrap after it. */}
-            <span className="flex min-h-6 min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-                <span className="min-w-0 text-title font-semibold leading-tight text-foreground wrap-break-word">{wrappableName(headsign)}</span>
-                <InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} />
-            </span>
+            {!hidesBadge && <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-center" />}
+            <RowHeadsign headsign={headsign} isPinned={action?.isActive}><InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} /></RowHeadsign>
             <LiveCountdown departure={dep} size="lg" />
 
-            <span className="col-start-2 flex min-w-0 items-center gap-1 text-body-sm leading-tight text-muted-foreground">
+            <RowTimeLine>
                 {t('map.departures.departs')}
                 <ExpectedTime departure={dep} timeZone={timeZone} />
                 {track && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.trackCode', { code: track })}</span></>}
                 {platform && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.platformCode', { code: platform })}</span></>}
-            </span>
-            <span className="justify-self-end"><Amenities departure={dep} /></span>
+            </RowTimeLine>
+            <span className="col-start-3 row-start-2 mt-1 flex h-5 items-center justify-self-end"><Amenities departure={dep} /></span>
 
-            <TripNotes departure={dep} mark={mark} className="col-span-2 col-start-2" />
-        </Button>
+            <TripNotes departure={dep} mark={mark} className="col-span-2 col-start-2 row-start-3 mt-1" />
+        </BoardRow>
     );
 });
 

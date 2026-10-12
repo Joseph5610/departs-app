@@ -430,9 +430,12 @@
   "favorites": {
     "title": "Favorites",
     "empty": "No favorites yet",
-    "emptySub": "Tap the star on a stop, or on a line's direction in a departure board, to pin it here.",
+    "emptySub": "Tap the star on a stop, or swipe a line's direction left on a departure board (right-click on a computer), to pin it here.",
     "pinLine": "Add line {{line}} towards {{headsign}} to favorites",
     "unpinLine": "Remove line {{line}} towards {{headsign}} from favorites",
+    "linePinned": "Line {{line}} towards {{headsign}} added to favorites",
+    "lineUnpinned": "Line {{line}} towards {{headsign}} removed from favorites",
+    "undo": "Undo",
     "tabLines": "Lines",
     "tabStops": "Stops",
     "reorder": "Reorder",

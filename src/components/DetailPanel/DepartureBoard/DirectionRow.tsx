@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { boardingPlace, departureKey, visibleInGroup } from '@/domain/departures';
 import { useTripMark } from '@/hooks/derived/useTripMark';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
+import { usePinLine } from '@/hooks/features/usePinLine';
 import type { Departure, DepartureClickHandler } from '@/types';
 import { DepartureChip } from './DepartureChip';
 import { NextDepartureRow } from './NextDepartureRow';
 import { Amenities, ExpectedTime, LiveCountdown, MARKED_ROW, TripNotes } from './DepartureParts';
-import { PinLineButton } from './PinLineButton';
 import { RowSeparator } from './RowSeparator';
+import { BoardSection } from './BoardRow';
 
 interface DirectionRowProps {
     groupId: string;
@@ -21,7 +22,7 @@ interface DirectionRowProps {
     /** This direction's departures, soonest first. */
     departures: Departure[];
     routeColor: string;
-    /** Opens a new line on the board; a line's further directions follow without a divider. */
+    /** Opens a new line on the board; a line's further directions follow without a divider or badge. */
     startsLine: boolean;
     isFirst: boolean;
     isExpanded: boolean;
@@ -47,6 +48,7 @@ export const DirectionRow = memo(({
     isExpanded, isFiltered, onToggleGroup, boardStopId, timeZone, highlightedTripId, onDepartureClick, note,
 }: DirectionRowProps) => {
     const { t } = useTranslation();
+    const pin = usePinLine(boardStopId, line, headsign);
     const { visible, hiddenCount, hasMore: canExpand } = visibleInGroup(departures, isExpanded, isFiltered);
     const hasMore = canExpand && !!onToggleGroup;
     const [next, ...later] = visible;
@@ -57,7 +59,7 @@ export const DirectionRow = memo(({
     return (
         <>
         {startsLine && !isFirst && <RowSeparator />}
-        <section className={cn("relative flex flex-col gap-2 py-2.5", !startsLine && "-mt-1.5")}>
+        <BoardSection continuesLine={!startsLine}>
             <NextDepartureRow
                 departure={next}
                 line={line}
@@ -67,12 +69,11 @@ export const DirectionRow = memo(({
                 timeZone={timeZone}
                 isHighlighted={!!next.tripId && next.tripId === highlightedTripId}
                 onDepartureClick={onDepartureClick}
-            />
-            {/* Outside the row's button, which cannot hold another; centred under the badge column. */}
-            <PinLineButton stopId={boardStopId} line={line} headsign={headsign} className="absolute left-[calc(0.375rem+var(--badge-col)/2-0.875rem)] top-11.5 mr-0" />
-
-            {(showsChips || showsRows || hasMore || note) && (
-                <div className="flex flex-col gap-2 pl-[calc(var(--badge-col)+1rem)] pr-2">
+                hidesBadge={!startsLine}
+                action={{ onTrigger: pin.toggle, isActive: pin.isPinned }}
+            >
+                {(showsChips || showsRows || hasMore || note) && (
+                    <>
                     {note}
                     {showsRows && (
                         <div className="flex flex-col">
@@ -88,7 +89,7 @@ export const DirectionRow = memo(({
                         </div>
                     )}
                     {(showsChips || hasMore) && (
-                        <div className={cn("flex min-w-0 items-center gap-1.5", showsRows && "-mt-2")}>
+                        <div className={cn("flex min-w-0 flex-wrap items-center gap-1.5", showsRows && "-mt-2")}>
                             {showsChips && later.map(dep => (
                                 <DepartureChip
                                     key={departureKey(dep)}
@@ -113,9 +114,10 @@ export const DirectionRow = memo(({
                             )}
                         </div>
                     )}
-                </div>
-            )}
-        </section>
+                    </>
+                )}
+            </NextDepartureRow>
+        </BoardSection>
         </>
     );
 });

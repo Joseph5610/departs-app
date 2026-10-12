@@ -437,9 +437,12 @@
   "favorites": {
     "title": "Oblíbené",
     "empty": "Zatím žádné oblíbené",
-    "emptySub": "Klepnutím na hvězdičku u zastávky nebo u směru linky na tabuli odjezdů si je uložíte sem.",
+    "emptySub": "Klepněte na hvězdičku u zastávky nebo přejeďte doleva po směru linky na odjezdové tabuli (na počítači klikněte pravým tlačítkem) a připnete je sem.",
     "pinLine": "Přidat linku {{line}} směr {{headsign}} do oblíbených",
     "unpinLine": "Odebrat linku {{line}} směr {{headsign}} z oblíbených",
+    "linePinned": "Linka {{line}} směr {{headsign}} přidána do oblíbených",
+    "lineUnpinned": "Linka {{line}} směr {{headsign}} odebrána z oblíbených",
+    "undo": "Zpět",
     "tabLines": "Linky",
     "tabStops": "Zastávky",
     "reorder": "Přesunout",

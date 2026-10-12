@@ -115,6 +115,31 @@ test.describe('Favorites Tests', () => {
         await expect(page.getByTestId('vehicle-headsign')).toHaveText('Letňany', { timeout: 10000 });
     });
 
+    test('should pin a line direction with a right click and undo it from the toast', async ({ page }) => {
+        await page.route('**/api/*/departures*', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                departures: [{
+                    tripId: 'trip-1', stopId: 'U1111Z1P', line: 'C', headsign: 'Letňany', type: 'metro', directionId: '0',
+                    scheduled: new Date(Date.now() + 60000).toISOString(), timestamp: new Date(Date.now() + 60000).toISOString(), delay: 0, route_color: 'C0115E',
+                }],
+            }),
+        }));
+        await page.goto('/prague/stop/U1111Z1P');
+
+        const row = page.getByTestId('departure-item-trip-1');
+        await row.click({ button: 'right' });
+        await expect(page.getByText('Line C towards Letňany added to favorites')).toBeVisible();
+        await expect(page).toHaveURL(/\/prague\/stop\/U1111Z1P$/);
+        const pinned = await page.evaluate(() => JSON.parse(localStorage.getItem('departs-preferences') ?? '{}').state?.favoriteLines);
+        expect(pinned).toEqual([{ city: 'prague', stopId: 'U1111Z1P', line: 'C', headsign: 'Letňany' }]);
+
+        await page.getByRole('button', { name: 'Undo' }).click();
+        const afterUndo = await page.evaluate(() => JSON.parse(localStorage.getItem('departs-preferences') ?? '{}').state?.favoriteLines);
+        expect(afterUndo).toEqual([]);
+    });
+
     test('should split pinned lines and stops into tabs and remember the chosen tab', async ({ page }) => {
         await page.addInitScript(() => {
             if (window.localStorage.getItem('departs-preferences')) return;

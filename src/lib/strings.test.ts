@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { wrappableName } from './strings';
+import { splitLastWord, wrappableName } from './strings';
 
 const ZWSP = '\u200B';
 
@@ -10,5 +10,12 @@ describe('wrappableName', () => {
         expect(wrappableName('Florenc/Těšnov')).toBe(`Florenc/${ZWSP}Těšnov`);
         expect(wrappableName('Letiště / Airport')).toBe('Letiště / Airport');
         expect(wrappableName('Sídliště Čakovice')).toBe('Sídliště Čakovice');
+    });
+});
+
+describe('splitLastWord', () => {
+    it('splits before the last word, keeping the space with the lead', () => {
+        expect(splitLastWord('Nádraží Holešovice')).toEqual(['Nádraží ', 'Holešovice']);
+        expect(splitLastWord('Háje')).toEqual(['', 'Háje']);
     });
 });

@@ -9,12 +9,13 @@ import { lineColorAt } from '@/domain/stops';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { usePinLine } from '@/hooks/features/usePinLine';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
 import { Button } from '@/components/ui/button';
 import { LineBadge } from '@/components/LineBadge';
 import { DirectionRow } from '@/components/DetailPanel/DepartureBoard/DirectionRow';
-import { PinLineButton } from '@/components/DetailPanel/DepartureBoard/PinLineButton';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
+import { BoardRow, BoardSection, RowHeadsign, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
 import type { FavoriteLine, StopFeature, Departure, DepartureClickHandler } from '@/types';
 
 interface FavoriteLineRowProps {
@@ -30,6 +31,7 @@ export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: 
     const { timezone } = useCityConfig();
     const { presetLineFilter } = useSelectionStore(s => s.actions);
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const pin = usePinLine(favorite.stopId, favorite.line, favorite.headsign);
 
     const next = useMemo(
         () => nextDeparturesOf(departures, favorite.line, favorite.headsign, DEPARTURES_CONFIG.VISIBLE_PER_GROUP),
@@ -53,7 +55,7 @@ export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: 
             variant="ghost"
             onClick={openBoard}
             aria-label={t('favorites.openBoard')}
-            className="-mt-1 h-auto w-fit max-w-full justify-start gap-0.5 rounded-md p-0 text-xs font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+            className="h-auto w-fit max-w-full justify-start gap-0.5 rounded-md p-0 text-xs font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
             <span className="truncate">{t('favorites.fromStop', { stop: stopName })}</span>
             <ChevronRight size={14} strokeWidth={1.75} className="shrink-0" />
@@ -64,17 +66,13 @@ export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: 
         return (
             <>
             {!isFirst && <RowSeparator />}
-            <section className="flex gap-2.5 py-3.5 pl-1.5 pr-2">
-                <span className="flex w-(--badge-col) shrink-0 flex-col items-center">
-                    <LineBadge name={favorite.line} routeColor={routeColor} size="lg" />
-                    <PinLineButton stopId={favorite.stopId} line={favorite.line} headsign={favorite.headsign} className="mr-0 mt-1" />
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                    <span className="max-w-full truncate text-title font-semibold leading-6 text-foreground">{favorite.headsign}</span>
-                    {boardLink}
-                    <span className="text-xs text-muted-foreground/70">{t('map.departures.noUpcoming')}</span>
-                </span>
-            </section>
+            <BoardSection>
+                <BoardRow action={{ onTrigger: pin.toggle, isActive: pin.isPinned }} below={boardLink}>
+                    <LineBadge name={favorite.line} routeColor={routeColor} size="lg" className="justify-self-center" />
+                    <RowHeadsign headsign={favorite.headsign} isPinned={pin.isPinned} />
+                    <RowTimeLine>{t('map.departures.noUpcoming')}</RowTimeLine>
+                </BoardRow>
+            </BoardSection>
             </>
         );
     }

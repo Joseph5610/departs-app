@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { badgeColumnStyle } from '@/lib/lineBadge';
 import { RowSeparator } from './RowSeparator';
+import { BoardSection } from './BoardRow';
 
 /** The badge column of a loading list: as wide as a two-character line, the most common width. */
 const SKELETON_BADGE_COLUMN = badgeColumnStyle(['00']);
@@ -15,14 +16,20 @@ export const SkeletonList = ({ card = true, className, children }: { card?: bool
     <div className={cn("flex flex-col animate-in fade-in duration-500", className)} style={SKELETON_BADGE_COLUMN} aria-hidden="true">{children}</div>
 );
 
-/** Mirrors NextDepartureRow on the same grid: badge, headsign and countdown, then the time line and amenities. */
-export const NextDepartureRowSkeleton = ({ headsignWidth }: { headsignWidth: string }) => (
-    <div className="grid grid-cols-[var(--badge-col)_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-1 py-2 pl-1.5 pr-2">
+interface NextDepartureRowSkeletonProps {
+    headsignWidth: string;
+    children?: React.ReactNode;
+}
+
+/** Mirrors NextDepartureRow on the same grid: badge, headsign and countdown, then the time line and amenities, then what follows. */
+export const NextDepartureRowSkeleton = ({ headsignWidth, children }: NextDepartureRowSkeletonProps) => (
+    <div className={cn("grid grid-cols-[var(--badge-col)_minmax(0,1fr)_auto] items-start gap-x-2.5 py-2 pl-1.5 pr-2", !children && "pb-1")}>
         <Skeleton className="h-6 w-(--badge-col) rounded-md" />
-        <Skeleton className={cn("my-0.5 h-4", headsignWidth)} />
+        <Skeleton className={cn("my-1 h-4", headsignWidth)} />
         <Skeleton className="h-6 w-14" />
-        <Skeleton className="col-start-2 my-0.5 h-3 w-24" />
-        <Skeleton className="my-0.5 h-3 w-8 justify-self-end" />
+        <Skeleton className="col-start-2 row-start-2 mt-2 h-3 w-24" />
+        <Skeleton className="col-start-3 row-start-2 mt-2 h-3 w-8 justify-self-end" />
+        {children && <div className="col-span-2 col-start-2 mt-3 flex flex-col gap-2">{children}</div>}
     </div>
 );
 
@@ -37,24 +44,24 @@ interface DirectionRowSkeletonProps {
     note?: boolean;
 }
 
-/** Mirrors a DirectionRow: the next departure, its pin star under the badge, then the chips. */
+/** Mirrors a DirectionRow: the next departure, then the chips. */
 export const DirectionRowSkeleton = ({ headsignWidth, chips, divider, continuesLine = false, note = false }: DirectionRowSkeletonProps) => (
     <>
         {divider && <RowSeparator />}
-        <div className={cn("relative flex flex-col gap-2 py-2.5", continuesLine && "-mt-1.5")}>
-            <NextDepartureRowSkeleton headsignWidth={headsignWidth} />
-            <Skeleton className="absolute left-[calc(0.375rem+var(--badge-col)/2-0.5rem)] top-13 size-4 rounded-full" />
-            {(chips > 0 || note) && (
-                <div className="flex flex-col gap-2 pl-[calc(var(--badge-col)+1rem)] pr-2">
-                    {note && <Skeleton className="my-0.5 h-3 w-40" />}
-                    {chips > 0 && (
-                        <div className="flex gap-1.5">
-                            {Array.from({ length: chips }, (_, idx) => <Skeleton key={idx} className="h-7 w-16 rounded-full" />)}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+        <BoardSection continuesLine={continuesLine}>
+            <NextDepartureRowSkeleton headsignWidth={headsignWidth}>
+                {(chips > 0 || note) && (
+                    <>
+                        {note && <Skeleton className="my-0.5 h-3 w-40" />}
+                        {chips > 0 && (
+                            <div className="flex gap-1.5">
+                                {Array.from({ length: chips }, (_, idx) => <Skeleton key={idx} className="h-7 w-16 rounded-full" />)}
+                            </div>
+                        )}
+                    </>
+                )}
+            </NextDepartureRowSkeleton>
+        </BoardSection>
     </>
 );
 

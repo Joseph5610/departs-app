@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Metro departures name their track next to the departure time, as trains do with platforms.
+- A line's further directions on a board follow without repeating its badge.
+- Pin a line's direction by swiping its board row left, or right-clicking it on a computer, with an undo; pinned rows show a star.
+
+### Fixed
+
+- Departure board rows keep the badge, pin star, notes and later departures aligned on one grid.
+- Viewed and ridden trips are no longer marked with a bright bar along the row's edge.
 
 ## [0.83.2] - 2026-10-12
 
