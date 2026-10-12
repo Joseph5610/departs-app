@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Installed iOS app no longer blurs the top of the map under the status bar.
+- The live indicator sits lower in the installed iPhone app, clear of the blur iOS 27 draws under the status bar.
 - Closing a stop or trip returns the mobile sheet to the height the home had before it opened.
 - Feedback and AI integration pages close again in the installed iPhone app; their close button no longer sits under the status bar.
 - Prešov night trips no longer show hours-off delays and timetables from DPMP's implausible deviations.

@@ -9,6 +9,8 @@
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
 :root {
+  /* Space between the status bar and the top map controls (the live pill). */
+  --top-controls-gap: 0.75rem;
   /* The app's full height; an installed PWA uses 100vh, as its 100dvh stops short of the bottom of the screen. */
   --app-height: 100dvh;
   --sidebar-width: 420px;
@@ -113,6 +115,8 @@
 /* `.standalone` comes from index.html: iOS home-screen apps do not match display-mode: standalone. */
 :root.standalone {
   --app-height: 100vh;
+  /* iOS 27 blurs the top edge of installed apps and no CSS turns it off; the map may blur there, the top controls must clear it. */
+  --top-controls-gap: 1.5rem;
 }
 
 @media (display-mode: standalone) {

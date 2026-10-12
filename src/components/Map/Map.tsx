@@ -1,5 +1,4 @@
 import { lazy, Suspense, useMemo, useCallback, useState } from 'react';
-import { ViewportProbe } from '@/components/ViewportProbe';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { closeDetail, goBack, navigate, useBackTarget } from '@/lib/history';
@@ -303,7 +302,6 @@ const MapInner = () => {
 
             <LiveStatus />
             <RideBar />
-            {import.meta.env.DEV && <ViewportProbe />}
             {!isMobile && (
                 <>
                     <Search />
