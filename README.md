@@ -3,11 +3,12 @@
 Real-time public transport for Czech and Slovak cities: live departures, vehicles on a map and stop alerts, as an installable PWA with no ads or tracking. Currently Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
 
 [![Live App](https://img.shields.io/badge/Live-departs.app-emerald.svg?style=for-the-badge)](https://departs.app)
+[![Docs](https://img.shields.io/badge/Docs-docs.departs.app-purple.svg?style=for-the-badge)](https://docs.departs.app)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 ## 📚 Documentation
 
-The full documentation lives in [`docs/`](./docs/index.md) and is published as a VitePress site (`npm run docs:dev` to run it locally).
+**[docs.departs.app](https://docs.departs.app)**, built from [`docs/`](./docs/index.md) (`npm run docs:dev` runs it locally).
 
 - [Overview](./docs/index.md): features, architecture and stack.
 - [Local development](./docs/local-development.md): run the app on your machine.
