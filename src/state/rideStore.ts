@@ -14,6 +14,8 @@ interface RideState {
 interface RideActions {
     startRide: (ride: Omit<Ride, 'startedAt'>) => void;
     endRide: () => void;
+    /** Marks the ride with this exit as pushed by the server; ignored once another ride replaced it. */
+    markRidePushed: (tripId: string, exitSequence: number) => void;
     follow: (ride: Omit<Ride, 'startedAt'>) => void;
     /** Stops following; `remember` keeps the link from following the same ride again. */
     unfollow: (remember: boolean) => void;
@@ -34,6 +36,9 @@ export const useRideStore = create<RideStore>()(
             actions: {
                 startRide: (ride) => set({ ride: { ...ride, startedAt: Date.now() } }),
                 endRide: () => set({ ride: null }),
+                markRidePushed: (tripId, exitSequence) => set((state) => (
+                    state.ride?.tripId === tripId && state.ride.exitSequence === exitSequence ? { ride: { ...state.ride, pushed: true } } : state
+                )),
                 follow: (ride) => set({ followed: { ...ride, startedAt: Date.now() }, unfollowedKey: null }),
                 unfollow: (remember) => set((state) => ({
                     followed: null,

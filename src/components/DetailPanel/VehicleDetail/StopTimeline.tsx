@@ -38,7 +38,7 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const linkExitSequence = sharedExitParam !== null && Number.isFinite(Number(sharedExitParam)) ? Number(sharedExitParam) : null;
     /** The stop a shared ride gets off at: from the link, else from the ride being followed on this trip. */
     const sharedExitSequence = linkExitSequence ?? followedExitSequence;
-    const { startRide, endRide, follow, unfollow } = useRideStore(s => s.actions);
+    const { startRide, endRide, markRidePushed, follow, unfollow } = useRideStore(s => s.actions);
 
     const { stopIndex, stops, centroids } = useStops();
     const stationGrid = useMemo(() => indexStops(centroids, SHARED_GROUND.TWIN_STATION_RADIUS_M), [centroids]);
@@ -63,11 +63,11 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
             next: { title: t('ride.nextStop'), body: stopName },
             arrived: { title: t('ride.arrived', { stop: stopName }), body: SITE.NAME },
         }).then((result) => {
-            if (result.ok) return;
+            if (result.ok) return markRidePushed(tripId, sequence);
             if (result.reason !== 'unsupported' && !result.reason.startsWith('NotAllowedError')) toast(t('ride.pushUnavailable'), { description: result.reason });
             void requestNotificationPermission();
         });
-    }, [selectedCity, tripId, vehicleId, startRide, t]);
+    }, [selectedCity, tripId, vehicleId, startRide, markRidePushed, t]);
 
     const nextStopSequence = useMemo(() => nextSequence(stopTimes, effectiveSequence), [stopTimes, effectiveSequence]);
 

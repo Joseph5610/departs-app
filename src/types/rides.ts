@@ -8,6 +8,8 @@ export interface Ride {
     /** Shown while the trip's detail can't be loaded. */
     exitStopName?: string;
     startedAt: number;
+    /** The server pushes this ride's alerts, so the app shows no system notification of its own. */
+    pushed?: boolean;
 }
 
 /** `own`: the user's ride; `followed`: someone else's ride opened from a shared link. */

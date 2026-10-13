@@ -8,10 +8,13 @@ import type { RideKind, RidePhase, RideStatus } from '@/types';
 import { rideAlertFor } from '@/domain/rides';
 import { useWakeLock } from './useWakeLock';
 
-/** A system notification when permitted, since the screen stays on during a ride; otherwise a toast and vibration. */
-const alertRider = async (title: string, body: string, tag: string) => {
+/**
+ * A system notification when permitted, since the screen stays on during a ride; otherwise, or when the server
+ * pushes the alert itself (`pushed`), a toast and vibration.
+ */
+const alertRider = async (title: string, body: string, tag: string, pushed: boolean) => {
     navigator.vibrate?.(RIDE_CONFIG.VIBRATE_PATTERN);
-    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+    if (pushed || typeof Notification === 'undefined' || Notification.permission !== 'granted') {
         toast(title, { description: body });
         return;
     }
@@ -42,6 +45,7 @@ export const useRideAlerts = (status: RideStatus | null, kind: RideKind) => {
 
     const phase = status?.phase ?? null;
     const exitStopName = status?.exitStopName ?? '';
+    const pushed = status?.ride.pushed ?? false;
     const rideKey = status?.ride.startedAt ?? null;
     const [startedRide, setStartedRide] = useState<number | null>(null);
     if ((phase === 'riding' || phase === 'next') && rideKey !== null && startedRide !== rideKey) setStartedRide(rideKey);
@@ -58,9 +62,9 @@ export const useRideAlerts = (status: RideStatus | null, kind: RideKind) => {
         const alert = rideAlertFor(previous, phase, alerted.current.phases);
         if (!alert) return;
         alerted.current.phases.add(alert);
-        if (alert === 'next') void alertRider(t(watching ? 'share.watchNext' : 'ride.nextStop'), exitStopName, `ride-${kind}`);
-        else void alertRider(t(watching ? 'share.watchArrived' : 'ride.arrived', { stop: exitStopName }), SITE.NAME, `ride-${kind}`);
-    }, [phase, exitStopName, rideKey, watching, kind, t]);
+        if (alert === 'next') void alertRider(t(watching ? 'share.watchNext' : 'ride.nextStop'), exitStopName, `ride-${kind}`, pushed);
+        else void alertRider(t(watching ? 'share.watchArrived' : 'ride.arrived', { stop: exitStopName }), SITE.NAME, `ride-${kind}`, pushed);
+    }, [phase, exitStopName, rideKey, watching, kind, pushed, t]);
 
     useEffect(() => {
         if (phase !== 'arrived') return;
