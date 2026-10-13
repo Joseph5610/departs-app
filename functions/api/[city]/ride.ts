@@ -27,7 +27,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     const body = parsed.data;
 
     const command: RideWatchRequest = body.action === 'add'
-        ? { action: 'add', trip: { city: slug, tripId: body.tripId, vehicleId: body.vehicleId }, rider: { subscription: body.subscription, exitSequence: body.exitSequence, texts: body.texts } }
+        ? { action: 'add', trip: { city: slug, tripId: body.tripId, vehicleId: body.vehicleId }, rider: { subscription: body.subscription, exitSequence: body.exitSequence, texts: body.texts, navigate: new URL(body.path, request.url).href } }
         : { action: 'remove', endpoint: body.endpoint, exitSequence: body.exitSequence };
     // Keyed by vehicle too, so one request can't point other riders of the trip at a different vehicle.
     const stub = env.RIDE_WATCH.get(env.RIDE_WATCH.idFromName(`${slug}:${body.tripId}:${body.vehicleId ?? ''}`));

@@ -26,13 +26,13 @@ const postRide = (city: string, body: object) =>
  * Subscribes to push and asks the server to push this ride's alerts. Must run from a tap: iOS only lets
  * `subscribe` ask for notification permission there.
  */
-export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>, texts: RidePushTexts): Promise<RidePushResult> => {
+export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>, texts: RidePushTexts, path: string): Promise<RidePushResult> => {
     try {
         if (typeof PushManager === 'undefined') return { ok: false, reason: 'unsupported' };
         const manager = await pushManager();
         if (!manager) return { ok: false, reason: 'No service worker is registered' };
         const subscription = (await manager.getSubscription()) ?? (await manager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey() }));
-        await postRide(ride.city, { action: 'add', tripId: ride.tripId, vehicleId: ride.vehicleId, exitSequence: ride.exitSequence, subscription: subscription.toJSON(), texts });
+        await postRide(ride.city, { action: 'add', tripId: ride.tripId, vehicleId: ride.vehicleId, exitSequence: ride.exitSequence, subscription: subscription.toJSON(), texts, path });
         return { ok: true };
     } catch (error) {
         return { ok: false, reason: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };

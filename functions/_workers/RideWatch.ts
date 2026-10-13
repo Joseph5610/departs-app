@@ -24,6 +24,8 @@ export interface Rider {
     subscription: PushTarget;
     exitSequence: number;
     texts: RideTexts;
+    /** The app page the notification opens: the ride's trip, on the origin the rider registered from. */
+    navigate: string;
     alerted: RideAlert[];
     expiresAt: number;
 }
@@ -35,6 +37,15 @@ export interface Rider {
 export type RideWatchRequest =
     | { action: 'add'; trip: RideTrip; rider: Omit<Rider, 'alerted' | 'expiresAt'> }
     | { action: 'remove'; endpoint: string; exitSequence: number };
+
+/**
+ * A Declarative Web Push message (WebKit, iOS/macOS 18.4+): Safari shows it without running the service worker;
+ * other browsers hand the same JSON to `push-sw.js`.
+ */
+const ridePayload = (rider: Rider, alert: RideAlert): string => JSON.stringify({
+    web_push: 8030,
+    notification: { ...rider.texts[alert], navigate: rider.navigate, tag: 'ride-own' },
+});
 
 const RIDER_PREFIX = 'rider:';
 const riderKey = (endpoint: string) => `${RIDER_PREFIX}${endpoint}`;
@@ -111,7 +122,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             const alert = rideAlertFor(detail, rider.exitSequence, rider.alerted);
             if (alert) {
                 // One broken subscription must not stop the trip's other riders.
-                const status = await sendPush(rider.subscription, JSON.stringify({ ...rider.texts[alert], tag: 'ride-own' }), vapid, Math.floor(now / 1000)).catch((error: unknown) => {
+                const status = await sendPush(rider.subscription, ridePayload(rider, alert), vapid, Math.floor(now / 1000)).catch((error: unknown) => {
                     console.error('Push failed', trip.tripId, error);
                     return 0;
                 });

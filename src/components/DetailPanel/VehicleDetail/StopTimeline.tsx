@@ -62,7 +62,7 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
         void startRidePush({ city: selectedCity, tripId, vehicleId, exitSequence: sequence }, {
             next: { title: t('ride.nextStop'), body: stopName },
             arrived: { title: t('ride.arrived', { stop: stopName }), body: SITE.NAME },
-        }).then((result) => {
+        }, paths.trip(selectedCity, tripId, vehicleId)).then((result) => {
             if (result.ok) return markRidePushed(tripId, sequence);
             if (result.reason !== 'unsupported' && !result.reason.startsWith('NotAllowedError')) toast(t('ride.pushUnavailable'), { description: result.reason });
             void requestNotificationPermission();

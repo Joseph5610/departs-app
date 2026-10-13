@@ -27,6 +27,8 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
             keys: z.object({ p256dh: z.string().check(z.regex(/^[A-Za-z0-9_-]{87}={0,1}$/)), auth: z.string().check(z.regex(/^[A-Za-z0-9_-]{22}(==)?$/)) }),
         }),
         texts: z.object({ next: textSchema, arrived: textSchema }),
+        /** The ride's page in the app (`paths.trip`), opened from the notification. */
+        path: z.string().check(z.maxLength(400), z.regex(/^\/[a-z0-9-]+\/trip\/[A-Za-z0-9%._~-]+(\/[A-Za-z0-9%._~-]+)?$/)),
     }),
     z.object({ action: z.literal('remove'), tripId: idSchema, vehicleId: z.nullable(idSchema), exitSequence: z.number(), endpoint: endpointSchema }),
 ]);
