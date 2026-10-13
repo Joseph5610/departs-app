@@ -289,7 +289,8 @@
     "kickerNext": "Nasledujúca zastávka",
     "expandRides": "Zobraziť obe jazdy",
     "collapseRides": "Zbaliť jazdy",
-    "pickSub": "Vyberte zastávku a o zastávku skôr vás upozorníme"
+    "pickSub": "Vyberte zastávku a o zastávku skôr vás upozorníme",
+    "pushUnavailable": "Upozornenie príde, len keď bude appka otvorená"
   },
   "board": {
     "open": "Tabuľa na celú obrazovku",

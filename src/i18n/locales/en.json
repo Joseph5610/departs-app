@@ -283,7 +283,8 @@
     "kickerNext": "Next stop",
     "expandRides": "Show both rides",
     "collapseRides": "Stack the rides",
-    "pickSub": "Pick your stop and we'll alert you one stop before"
+    "pickSub": "Pick your stop and we'll alert you one stop before",
+    "pushUnavailable": "Alerts will only come while the app is open"
   },
   "board": {
     "open": "Full-screen board",

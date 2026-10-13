@@ -59,12 +59,13 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
         startRide({ city: selectedCity, tripId, vehicleId, exitSequence: sequence, exitStopName: stopName });
         setIsPickingExit(false);
         toast(t('ride.started', { stop: stopName }));
-        void requestNotificationPermission().then((permission) => {
-            if (permission !== 'granted') return;
-            void startRidePush({ city: selectedCity, tripId, vehicleId, exitSequence: sequence }, {
-                next: { title: t('ride.nextStop'), body: stopName },
-                arrived: { title: t('ride.arrived', { stop: stopName }), body: SITE.NAME },
-            });
+        void startRidePush({ city: selectedCity, tripId, vehicleId, exitSequence: sequence }, {
+            next: { title: t('ride.nextStop'), body: stopName },
+            arrived: { title: t('ride.arrived', { stop: stopName }), body: SITE.NAME },
+        }).then((result) => {
+            if (result.ok) return;
+            if (result.reason !== 'unsupported' && !result.reason.startsWith('NotAllowedError')) toast(t('ride.pushUnavailable'), { description: result.reason });
+            void requestNotificationPermission();
         });
     }, [selectedCity, tripId, vehicleId, startRide, t]);
 

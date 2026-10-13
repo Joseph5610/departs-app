@@ -13,24 +13,28 @@ const applicationServerKey = (): Uint8Array<ArrayBuffer> => {
     return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 };
 
-const pushManager = async (): Promise<PushManager | null> => {
-    if (typeof PushManager === 'undefined' || typeof Notification === 'undefined' || Notification.permission !== 'granted') return null;
-    return (await navigator.serviceWorker?.getRegistration())?.pushManager ?? null;
-};
+const pushManager = async (): Promise<PushManager | null> =>
+    typeof PushManager === 'undefined' ? null : (await navigator.serviceWorker?.getRegistration())?.pushManager ?? null;
+
+/** `unsupported`: no Web Push here (e.g. iOS outside the installed app); any other reason is a failure worth showing. */
+export type RidePushResult = { ok: true } | { ok: false; reason: string };
 
 const postRide = (city: string, body: object) =>
     apiFetch(`/${city}/ride`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-/** Asks the server to push this ride's alerts; false where push is unavailable (no permission, no service worker, iOS outside the installed app). */
-export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>, texts: RidePushTexts): Promise<boolean> => {
+/**
+ * Subscribes to push and asks the server to push this ride's alerts. Must run from a tap: iOS only lets
+ * `subscribe` ask for notification permission there.
+ */
+export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>, texts: RidePushTexts): Promise<RidePushResult> => {
     try {
         const manager = await pushManager();
-        if (!manager) return false;
+        if (!manager) return { ok: false, reason: 'unsupported' };
         const subscription = (await manager.getSubscription()) ?? (await manager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey() }));
         await postRide(ride.city, { action: 'add', tripId: ride.tripId, vehicleId: ride.vehicleId, exitSequence: ride.exitSequence, subscription: subscription.toJSON(), texts });
-        return true;
-    } catch {
-        return false;
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, reason: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
     }
 };
 
