@@ -9,10 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Ride mode sends the "get off at the next stop" and arrival alerts as Web Push, so they arrive with the screen locked; a `RideWatch` Durable Object in the separate `departs-ride-push` Worker watches the trip.
+- Ride notifications open the ride when tapped and use Declarative Web Push on Safari; on Android they stay until dismissed and show a tram badge.
 
 ### Changed
 
 - The privacy policy describes the push address kept for the length of a ride.
+- The ride bar sits lower in the installed app, clear of the iOS 27 top blur.
 
 ## [0.83.6] - 2026-10-12
 
