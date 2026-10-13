@@ -3,6 +3,15 @@ import { ridePushRequestSchema } from "../../_core/rideSchemas";
 import type { Env } from "../../_core/types";
 import { getCity } from "../../_cities";
 import type { RideWatchRequest } from "../../_workers/RideWatch";
+import { RIDE_PUSH } from "../../_core/config";
+
+const parseJson = (raw: string): unknown => {
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
 
 /** Starts or stops ride-mode push for one subscription, in the trip's `RideWatch` Durable Object. */
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
@@ -10,7 +19,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!getCity(slug)) return createErrorResponse('City not found', 404);
     if (!env.RIDE_WATCH) return createErrorResponse('Ride push is not available.', 503);
 
-    const parsed = ridePushRequestSchema.safeParse(await request.json().catch(() => null));
+    if (Number(request.headers.get('Content-Length') ?? 0) > RIDE_PUSH.MAX_BODY_BYTES) return createErrorResponse('Payload too large.', 413);
+    const raw = await request.text();
+    if (raw.length > RIDE_PUSH.MAX_BODY_BYTES) return createErrorResponse('Payload too large.', 413);
+    const parsed = ridePushRequestSchema.safeParse(parseJson(raw));
     if (!parsed.success) return createErrorResponse('Invalid payload.', 400);
     const body = parsed.data;
 

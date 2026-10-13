@@ -163,6 +163,10 @@ export const RIDE_PUSH = {
     RETRY_INTERVAL_S: 30,
     /** Failed detail reads in a row after which the trip is given up (~10 min). */
     MAX_FAILURES: 20,
+    /** The same for a trip that never answered, so a made-up trip id costs almost nothing. */
+    MAX_FAILURES_UNSEEN: 2,
+    /** Largest `/api/[city]/ride` body; a real one is under 1 KB. */
+    MAX_BODY_BYTES: 8192,
     /** Riders one trip's Durable Object accepts; more is abuse, not a crowded tram. */
     MAX_RIDERS: 50,
     /** A trip whose vehicle has had no live position this long (it finished or left the feed) is given up. */

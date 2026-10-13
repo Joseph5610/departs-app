@@ -94,12 +94,14 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         } catch (error) {
             console.error('Ride detail failed', trip.city, trip.tripId, error);
             const failures = ((await storage.get<number>('failures')) ?? 0) + 1;
-            if (failures >= RIDE_PUSH.MAX_FAILURES) return storage.deleteAll();
+            const seen = (await storage.get<boolean>('seen')) ?? false;
+            if (failures >= (seen ? RIDE_PUSH.MAX_FAILURES : RIDE_PUSH.MAX_FAILURES_UNSEEN)) return storage.deleteAll();
             await storage.put('failures', failures);
             await storage.setAlarm(now + RIDE_PUSH.RETRY_INTERVAL_S * 1000);
             return;
         }
         await storage.delete('failures');
+        await storage.put('seen', true);
 
         if (liveStopSequence(detail) !== null) await storage.put('liveAt', now);
         else if (now - ((await storage.get<number>('liveAt')) ?? now) > RIDE_PUSH.LOST_MS) return storage.deleteAll();
