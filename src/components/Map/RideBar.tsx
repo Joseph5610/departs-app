@@ -196,8 +196,8 @@ export const RideBar = () => {
                 "absolute z-50 pointer-events-none top-0 left-4 right-4 flex flex-col items-center md:right-auto md:left-1/2 md:-translate-x-1/2 md:w-max",
                 "transition-all duration-300 ease-in-out md:pt-0",
                 liveStatusHidden
-                    ? "pt-[calc(0.75rem+env(safe-area-inset-top,0))] md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
-                    : "pt-[calc(3rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]",
+                    ? "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
+                    : "pt-[calc(var(--top-controls-gap)+2.25rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]",
                 isSidebarOpen && "md:left-(--visible-center-x)"
             )}
         >
