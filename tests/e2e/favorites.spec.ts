@@ -33,6 +33,30 @@ test.describe('Favorites Tests', () => {
             });
         });
 
+        // Mock departures for the stop board and the favorites panel, so the test needs no live feed
+        await page.route('**/api/*/departures*', async route => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    departures: [
+                        {
+                            tripId: 'trip-1',
+                            vehicleId: 'veh-1',
+                            stopId: 'U1111Z1P',
+                            line: 'C',
+                            headsign: 'Letňany',
+                            type: '1',
+                            scheduled: new Date(Date.now() + 60000).toISOString(),
+                            timestamp: new Date(Date.now() + 60000).toISOString(),
+                            delay: 0,
+                            route_color: 'C0115E'
+                        }
+                    ]
+                })
+            });
+        });
+
         const stopsResponsePromise = page.waitForResponse(
             response => /\/[^/]+\/map-stops\.json(\?|$)/.test(response.url()) && response.status() === 200,
             { timeout: 30000 }
@@ -59,30 +83,6 @@ test.describe('Favorites Tests', () => {
         // Close the stop detail panel
         await mapPage.closeDetailPanel();
         await expect(mapPage.detailPanel).not.toBeVisible({ timeout: 10000 });
-
-        // Mock departures for the favorites panel bulk fetch
-        await page.route('**/api/*/departures*', async route => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    departures: [
-                        {
-                            tripId: 'trip-1',
-                            vehicleId: 'veh-1',
-                            stopId: 'U1111Z1P',
-                            line: 'C',
-                            headsign: 'Letňany',
-                            type: '1',
-                            scheduled: new Date(Date.now() + 60000).toISOString(),
-                            timestamp: new Date(Date.now() + 60000).toISOString(),
-                            delay: 0,
-                            route_color: 'C0115E'
-                        }
-                    ]
-                })
-            });
-        });
 
         await page.route('**/api/*/vehicle-detail*', async route => {
             await route.fulfill({

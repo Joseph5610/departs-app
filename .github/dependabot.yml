@@ -9,6 +9,9 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    # A push to master would otherwise rebase every open PR and rerun CI and a Pages preview for each;
+    # rebase one on demand by commenting `@dependabot rebase`.
+    rebase-strategy: "disabled"
     ignore:
       # typescript-eslint peers on typescript ">=4.8.4 <6.1.0" (still true on 8.70.0),
       # so a TS 7 bump makes `npm clean-install` fail with ERESOLVE.
@@ -36,3 +39,20 @@ updates:
       i18n:
         patterns:
           - "*i18next*"
+      # Everything else that isn't a major bump lands in one weekly PR.
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    rebase-strategy: "disabled"
+    groups:
+      actions:
+        patterns:
+          - "*"
