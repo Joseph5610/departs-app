@@ -638,7 +638,9 @@
         {
           "heading": "Upozornění",
           "paragraphs": [
-            "Když spustíte jízdu a povolíte upozornění, upozornění před vaší zastávkou vytvoří aplikace přímo ve vašem zařízení. Z našich serverů neposíláme žádné push zprávy a neukládáme žádný token pro upozornění. Pokud se to změní, uvedou to tyto zásady dříve, než se tak stane."
+            "Když spustíte jízdu a povolíte upozornění, váš prohlížeč vytvoří pro aplikaci push adresu: odkaz u push služby vašeho prohlížeče (Apple, Google, Mozilla nebo Microsoft) a klíče, kterými zprávy dokáže rozšifrovat jen vaše zařízení. Aplikace ji pošle na náš server spolu se spojem, zastávkou, kde vystupujete, a texty upozornění.",
+            "Během jízdy náš server sleduje, kde je vozidlo, a přes tuto push službu pošle upozornění před vaší zastávkou a při příjezdu. Zprávy jsou šifrované, push služba je jen doručí a přečíst je neumí. Když je aplikace otevřená, upozornění může zobrazit i sama.",
+            "Tyto údaje uchováváme jen během jízdy: smažou se, když jízdu ukončíte nebo dorazíte, nejpozději po 4 hodinách. Neobsahují jméno ani účet a nespojujeme je s žádnými jinými údaji."
           ]
         },
         {
@@ -669,7 +671,7 @@
         {
           "heading": "Změny",
           "paragraphs": [
-            "Když se tyto zásady změní, změní se i datum nahoře. Podstatné změny, například zavedení push upozornění, oznámíme i v aplikaci."
+            "Když se tyto zásady změní, změní se i datum nahoře. Podstatné změny, například zpracování nového druhu údajů, oznámíme i v aplikaci."
           ]
         }
       ]

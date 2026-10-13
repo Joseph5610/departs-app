@@ -141,3 +141,33 @@ export const STOP_SEARCH_CONFIG = {
     /** Slack on the flat-projection radius check, so a stop the haversine puts just inside is not dropped first. */
     RADIUS_MARGIN: 1.01,
 };
+
+/** Ride-mode Web Push: the `RideWatch` Durable Object and its push sender (`_core/push/webPush.ts`). */
+export const RIDE_PUSH = {
+    /** VAPID `sub` claim; Apple rejects pushes without one. */
+    VAPID_SUBJECT: 'mailto:info@departs.app',
+    /** How long a VAPID token stays valid; push services refuse more than 24 h. */
+    VAPID_EXP_S: 12 * 3600,
+    /** `aes128gcm` record size; one record holds any ride notification. */
+    RECORD_SIZE: 4096,
+    /** How long a push service keeps an undelivered ride alert; later it is no longer true. */
+    TTL_S: 120,
+    /** Alarm interval while any rider is within `NEAR_STOPS` of their exit. */
+    NEAR_INTERVAL_S: 15,
+    /** Alarm interval while every rider is further away or the trip has not started. */
+    FAR_INTERVAL_S: 90,
+    NEAR_STOPS: 2,
+    /** A rider older than this is dropped, matching the app's `RIDE_CONFIG.MAX_AGE_MS`. */
+    MAX_AGE_MS: 4 * 3600_000,
+    /** Alarm interval after a failed detail read. */
+    RETRY_INTERVAL_S: 30,
+    /** Failed detail reads in a row after which the trip is given up (~10 min). */
+    MAX_FAILURES: 20,
+    /** Riders one trip's Durable Object accepts; more is abuse, not a crowded tram. */
+    MAX_RIDERS: 50,
+    /** A trip whose vehicle has had no live position this long (it finished or left the feed) is given up. */
+    LOST_MS: 10 * 60_000,
+} as const;
+
+/** Push services a ride subscription may point at; the ride-push Worker POSTs to nothing else. */
+export const PUSH_SERVICE_HOSTS = [/^fcm\.googleapis\.com$/, /^([a-z0-9-]+\.)*push\.apple\.com$/, /^updates\.push\.services\.mozilla\.com$/, /^([a-z0-9-]+\.)*notify\.windows\.com$/];

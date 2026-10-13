@@ -20,7 +20,7 @@ export const SITE = {
     /** The data controller named in the privacy policy; its line is left out while unset. */
     OPERATOR: null as string | null,
     /** Date the privacy policy and terms last changed; bump it with any change to their texts. */
-    LEGAL_UPDATED: '2026-10-08',
+    LEGAL_UPDATED: '2026-10-13',
 } as const;
 
 /** `%KEY%` placeholders and their values for the build-time template step. */

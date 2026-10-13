@@ -10,3 +10,8 @@ enabled = true
 [[kv_namespaces]]
 binding = "FEEDBACK_STORE"
 id = "36234b692ee146bfb00c09686809cbb1"
+
+[[durable_objects.bindings]]
+name = "RIDE_WATCH"
+class_name = "RideWatch"
+script_name = "departs-ride-push"

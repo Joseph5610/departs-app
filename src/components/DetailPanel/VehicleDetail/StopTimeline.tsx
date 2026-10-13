@@ -18,6 +18,8 @@ import { navigate } from '@/lib/history';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useStops } from '@/hooks/data/useStops';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { startRidePush } from '@/lib/push';
+import { SITE } from '@/config/site';
 import { SHARED_GROUND } from '@/config/constants';
 import { boardableStopId, indexStops } from '@/domain/stops';
 
@@ -57,7 +59,13 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
         startRide({ city: selectedCity, tripId, vehicleId, exitSequence: sequence, exitStopName: stopName });
         setIsPickingExit(false);
         toast(t('ride.started', { stop: stopName }));
-        void requestNotificationPermission();
+        void requestNotificationPermission().then((permission) => {
+            if (permission !== 'granted') return;
+            void startRidePush({ city: selectedCity, tripId, vehicleId, exitSequence: sequence }, {
+                next: { title: t('ride.nextStop'), body: stopName },
+                arrived: { title: t('ride.arrived', { stop: stopName }), body: SITE.NAME },
+            });
+        });
     }, [selectedCity, tripId, vehicleId, startRide, t]);
 
     const nextStopSequence = useMemo(() => nextSequence(stopTimes, effectiveSequence), [stopTimes, effectiveSequence]);

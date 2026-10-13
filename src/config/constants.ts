@@ -341,6 +341,12 @@ export const RIDE_CONFIG = {
     VIBRATE_PATTERN: [200, 100, 200],
 };
 
+/** Ride-mode Web Push through the `departs-ride-push` Worker. */
+export const RIDE_PUSH_CONFIG = {
+    /** VAPID public key; its private half is that Worker's `VAPID_PRIVATE_KEY` secret. */
+    VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
+};
+
 export const DEPARTURES_CONFIG = {
     /** Only departures expected within this window count towards the board's delay statistics. */
     DELAY_STATS_WINDOW_MS: 30 * MINUTE_MS,

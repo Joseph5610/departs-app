@@ -1,4 +1,4 @@
-import type { Fetcher, KVNamespace } from "@cloudflare/workers-types";
+import type { DurableObjectNamespace, Fetcher, KVNamespace } from "@cloudflare/workers-types";
 
 export interface Env {
     ASSETS: Fetcher;
@@ -11,6 +11,8 @@ export interface Env {
      * rejects the upstream's legacy TLS. Not in `.dev.vars`: `[secrets] required` filters it out there.
      */
     DPMP_REALTIME_URL?: string;
+    /** The ride-push Worker's `RideWatch` Durable Objects; unbound where that Worker isn't deployed. */
+    RIDE_WATCH?: DurableObjectNamespace;
 }
 
 /**

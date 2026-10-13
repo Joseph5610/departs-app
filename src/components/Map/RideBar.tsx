@@ -9,6 +9,7 @@ import { useRideStatus } from '@/hooks/derived/useRide';
 import type { Ride, RideKind, RideStatus } from '@/types';
 import { followedRideFirst, isRideShown } from '@/domain/rides';
 import { useRideAlerts } from '@/hooks/features/useRideAlerts';
+import { useRidePush } from '@/hooks/features/useRidePush';
 import { useRideStore } from '@/state/rideStore';
 import { useShareTrip } from '@/hooks/features/useShare';
 import { useRouteParams } from '@/hooks/useRouteParams';
@@ -174,6 +175,7 @@ export const RideBar = () => {
     // Alerts live here, not in the bars: a bar remounts when the stack reorders, which would forget the last phase.
     useRideAlerts(ownStatus, 'own');
     useRideAlerts(followedStatus, 'followed');
+    useRidePush();
     const [isExpanded, setIsExpanded] = useState(false);
     const liveStatusHidden = useLiveStatusYieldsToRides();
     const { stopId, vehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();

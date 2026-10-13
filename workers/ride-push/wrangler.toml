@@ -1,0 +1,23 @@
+name = "departs-ride-push"
+main = "../../functions/_workers/ridePush.ts"
+compatibility_date = "2026-03-17"
+# Reached only through the Pages `RIDE_WATCH` binding; no public URL.
+workers_dev = false
+preview_urls = false
+
+[secrets]
+required = ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY"]
+
+[vars]
+API_ORIGIN = "https://departs.app"
+
+[observability]
+enabled = true
+
+[[durable_objects.bindings]]
+name = "RIDE_WATCH"
+class_name = "RideWatch"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RideWatch"]

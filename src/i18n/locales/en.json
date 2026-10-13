@@ -629,7 +629,9 @@
         {
           "heading": "Notifications",
           "paragraphs": [
-            "If you start a ride and allow notifications, the alert before your stop is created by the app on your device. We send no push messages from our servers and store no notification token. If that changes, this policy will say so before it does."
+            "If you start a ride and allow notifications, your browser creates a push address for the app: a link at your browser's push service (Apple, Google, Mozilla or Microsoft) and keys that only your device can decrypt with. The app sends it to our server together with the trip, the stop where you get off and the texts of the alerts.",
+            "While you ride, our server checks where the vehicle is and sends the alert before your stop and on arrival through that push service. The messages are encrypted, so the push service only delivers them and cannot read them. While the app is open, it can also show the alert itself.",
+            "We keep this only for the ride: it is deleted when you end the ride or arrive, and at the latest after 4 hours. It carries no name or account and is not linked to any other data."
           ]
         },
         {
@@ -660,7 +662,7 @@
         {
           "heading": "Changes",
           "paragraphs": [
-            "If this policy changes, the date at the top changes with it. Significant changes, such as adding push notifications, will also be announced in the app."
+            "If this policy changes, the date at the top changes with it. Significant changes, such as processing a new kind of data, will also be announced in the app."
           ]
         }
       ]

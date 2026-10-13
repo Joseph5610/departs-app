@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.84.0] - 2026-10-13
+
+### Added
+
+- Ride mode sends the "get off at the next stop" and arrival alerts as Web Push, so they arrive with the screen locked; a `RideWatch` Durable Object in the separate `departs-ride-push` Worker watches the trip.
+
+### Changed
+
+- The privacy policy describes the push address kept for the length of a ride.
+
 ## [0.83.6] - 2026-10-12
 
 ### Fixed

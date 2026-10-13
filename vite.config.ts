@@ -109,6 +109,7 @@ export default defineConfig({
       workbox: {
         // Admin pages load on demand; precaching them would ship them to every installed PWA.
         globIgnores: ['**/AdminRoutes-*'],
+        importScripts: ['/push-sw.js'],
         // Generated icons aren't picked up by includeManifestIcons; #boot-splash needs pwa-192x192.png offline.
         globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico'],
         navigateFallback: '/',
