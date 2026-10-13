@@ -14,7 +14,7 @@ const applicationServerKey = (): Uint8Array<ArrayBuffer> => {
 };
 
 const pushManager = async (): Promise<PushManager | null> =>
-    typeof PushManager === 'undefined' ? null : (await navigator.serviceWorker?.getRegistration())?.pushManager ?? null;
+    (await navigator.serviceWorker?.getRegistration())?.pushManager ?? null;
 
 /** `unsupported`: no Web Push here (e.g. iOS outside the installed app); any other reason is a failure worth showing. */
 export type RidePushResult = { ok: true } | { ok: false; reason: string };
@@ -28,8 +28,9 @@ const postRide = (city: string, body: object) =>
  */
 export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>, texts: RidePushTexts): Promise<RidePushResult> => {
     try {
+        if (typeof PushManager === 'undefined') return { ok: false, reason: 'unsupported' };
         const manager = await pushManager();
-        if (!manager) return { ok: false, reason: 'unsupported' };
+        if (!manager) return { ok: false, reason: 'No service worker is registered' };
         const subscription = (await manager.getSubscription()) ?? (await manager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey() }));
         await postRide(ride.city, { action: 'add', tripId: ride.tripId, vehicleId: ride.vehicleId, exitSequence: ride.exitSequence, subscription: subscription.toJSON(), texts });
         return { ok: true };
