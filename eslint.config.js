@@ -18,7 +18,7 @@ const typesDeepImportBan = { group: ['@/types/*'], message: 'Import types from `
 const domainDeepImportBan = { group: ['@/domain/*/*', '!@/domain/*/index'], message: 'Import a domain area through its index (`@/domain/vehicles`), not its files.' }
 
 export default defineConfig([
-  globalIgnores(['dist', 'scratch', 'ds-bundle', '.ds-sync']),
+  globalIgnores(['dist', 'scratch', 'ds-bundle', '.ds-sync', 'docs/.vitepress/cache', 'docs/.vitepress/dist']),
 
   // Frontend: browser globals, React rules.
   {

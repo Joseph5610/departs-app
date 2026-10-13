@@ -42,3 +42,7 @@ ds-bundle/
 .design-sync/node_modules
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+
+# VitePress docs build
+docs/.vitepress/cache
+docs/.vitepress/dist
