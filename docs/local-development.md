@@ -41,8 +41,8 @@
 | `npm run dev` | App and API on `http://localhost:8788` |
 | `npm run build` | Type-checks the frontend and builds it into `dist/` |
 | `npx tsc -p functions` | Type-checks the backend |
-| `npm run lint` | ESLint, including the architecture rules (import layering, domain purity) |
-| `npm run test:unit` | Vitest unit tests (`*.test.ts` next to the code) |
+| `npm run lint` | ESLint, including the architecture rules |
+| `npm run test:unit` | Vitest unit tests |
 | `npm test` | Playwright end-to-end tests against a production build on `http://localhost:8788` |
 | `npm run docs:dev` | This documentation on `http://localhost:5174` |
 
@@ -82,6 +82,6 @@ npx wrangler dev -c workers/ride-push/wrangler.toml --port 8790 --inspector-port
   --var API_ORIGIN:http://localhost:8788
 ```
 
-It reads VAPID keys from `workers/ride-push/.dev.vars` ([how to create them](./ride-push-deployment.md#1-vapid-keys)), and `npm run dev` connects to it through Wrangler's local dev registry.
+It reads its VAPID keys from `workers/ride-push/.dev.vars`, created as in [Ride push deployment, step 1](./ride-push-deployment.md#1-vapid-keys). `npm run dev` connects to it through Wrangler's local dev registry.
 
 To test the whole flow, serve a build, since only a build registers the service worker that receives pushes: `npm run build && npx wrangler pages dev dist`.

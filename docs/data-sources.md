@@ -1,6 +1,6 @@
 # Data sources and licences
 
-The code is licensed under the MIT License (see [LICENSE](https://github.com/Joseph5610/departs-app/blob/master/LICENSE)). The transit data it shows keeps each source's own terms.
+The code is under the [MIT License](https://github.com/Joseph5610/departs-app/blob/master/LICENSE). The transit data it shows keeps each source's own terms.
 
 | Region | Source (credit) | Licence |
 | --- | --- | --- |

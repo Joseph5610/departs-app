@@ -49,7 +49,6 @@ Everything runs on free plans: Cloudflare for the app, GitHub Pages for the data
 | Map | MapLibre GL JS, react-map-gl |
 | Backend | Cloudflare Pages Functions, Workers, Durable Objects, KV |
 | Tests | Vitest (unit), Playwright (end-to-end) |
-| Docs | VitePress |
 
 ## Guides
 

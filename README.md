@@ -1,6 +1,6 @@
 # 🚉 departs.app
 
-Real-time public transport for Czech and Slovak cities: live departures, vehicles on a map and stop alerts, as an installable PWA with no ads or tracking. Currently Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
+Real-time public transport for Czech and Slovak cities: live departures, vehicles on a map and stop alerts, in an installable PWA. Live in Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
 
 [![Live App](https://img.shields.io/badge/Live-departs.app-emerald.svg?style=for-the-badge)](https://departs.app)
 [![Docs](https://img.shields.io/badge/Docs-docs.departs.app-purple.svg?style=for-the-badge)](https://docs.departs.app)
@@ -8,7 +8,7 @@ Real-time public transport for Czech and Slovak cities: live departures, vehicle
 
 ## 📚 Documentation
 
-**[docs.departs.app](https://docs.departs.app)**, built from [`docs/`](./docs/index.md) (`npm run docs:dev` runs it locally).
+Full documentation: **[docs.departs.app](https://docs.departs.app)**
 
 - [Overview](./docs/index.md): features, architecture and stack.
 - [Local development](./docs/local-development.md): run the app on your machine.
@@ -32,4 +32,4 @@ See [Local development](./docs/local-development.md) for details.
 
 ## 📄 License
 
-The code is licensed under the MIT License, see the [LICENSE](LICENSE) file. The transit data it shows keeps its sources' own terms; see [Data sources and licences](./docs/data-sources.md).
+The code is under the [MIT License](LICENSE). The transit data keeps its sources' own terms, listed in [Data sources and licences](./docs/data-sources.md).

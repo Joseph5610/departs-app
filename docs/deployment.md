@@ -31,7 +31,7 @@ Scheduled GitHub Actions in `departs-data` download each network's timetables, c
 
 ## 1. Choose the data source
 
-**Default: use ours.** The app is already configured to read `https://data.departs.app`, which is public, rebuilt daily, and published under CC BY 4.0 (credit the sources as listed in the [`departs-data` README](https://github.com/Joseph5610/departs-data#-license)). Go to step 2.
+**Default: use ours.** The app is already configured to read `https://data.departs.app`, which is public, rebuilt daily and published under CC BY 4.0. Credit the sources as the [`departs-data` README](https://github.com/Joseph5610/departs-data#-license) lists them, then go to step 2.
 
 **Self-host** if you need your own schedule, networks or availability. Fork the [`departs-data` repository](https://github.com/Joseph5610/departs-data): its GitHub Actions build the data on a schedule and publish it to GitHub Pages. You can also run the build scripts yourself and host the output on any static host. With a domain on Cloudflare, serve the data through a proxied `data.<domain>` to get the edge caching from step 7.
 
@@ -83,7 +83,7 @@ Production runs with the dashboard settings above; `wrangler.toml` configures on
 
 ## 5. Attach the custom domain (optional)
 
-Pages > `<project>` > Custom domains > *Set up a domain* > `<domain>`. For an apex domain this creates a proxied `CNAME <domain> → <project>.pages.dev` (flattened at the root).
+Pages > `<project>` > Custom domains > *Set up a domain* > `<domain>`. For an apex domain this creates a proxied `CNAME <domain> → <project>.pages.dev`.
 
 **Check:** `https://<domain>` loads the app.
 
@@ -105,7 +105,7 @@ These are **zone-level** settings: they apply to traffic through your zone's hos
 
 ### Cache Rules (Caching > Cache Rules)
 
-Functions set their own `Cache-Control` (`max-age` = `s-maxage` per endpoint, plus `stale-while-revalidate` and `stale-if-error`). These rules make that JSON cacheable at the edge, so most client polls are answered without running a Function.
+Functions set their own `Cache-Control` per endpoint. These rules make that JSON cacheable at the edge, so most client polls are answered without running a Function.
 
 Create them in this order:
 
@@ -143,7 +143,7 @@ Use 301 and enable *preserve query string*, *subpath matching* and *preserve pat
 - **Web Analytics**: enable it in one place, either for the zone (automatic injection) or in the Pages project; both together count each page view twice.
 - **Speed** (Speed > Optimization): Rocket Loader, Early Hints and Brotli on; Polish and Mirage off. Rocket Loader rewrites the page's `<script>` tags to defer them, so if the app or PWA boot misbehaves on `<domain>` but not on `pages.dev`, turn it off first.
 
-**Check:** run `curl -sI https://<domain>/api/cities` twice; the second response has `cf-cache-status: HIT`. If you serve the data through your zone, `curl -sI https://data.<domain>/<city>/map-stops.json` shows `cf-cache-status` (proving the data host is proxied).
+**Check:** run `curl -sI https://<domain>/api/cities` twice; the second response has `cf-cache-status: HIT`. If you serve the data through your zone, `curl -sI https://data.<domain>/<city>/map-stops.json` shows `cf-cache-status`.
 
 ## Ongoing operation
 

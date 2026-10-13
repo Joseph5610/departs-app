@@ -2,7 +2,7 @@
 
 departs.app runs a public [Model Context Protocol](https://modelcontextprotocol.io) server at `https://departs.app/mcp`. AI assistants such as Claude can connect to it and query live departures, vehicles and service alerts. Clients connect with the URL alone.
 
-It speaks MCP's **Streamable HTTP** transport (JSON-RPC over `POST`) and covers the public networks: Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
+It speaks MCP's **Streamable HTTP** transport and covers the public networks: Prague (PID), Brno (IDS JMK) and Prešov (DPMP).
 
 ## Connect
 
