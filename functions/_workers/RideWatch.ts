@@ -44,7 +44,7 @@ export type RideWatchRequest =
  */
 const ridePayload = (rider: Rider, alert: RideAlert): string => JSON.stringify({
     web_push: 8030,
-    notification: { ...rider.texts[alert], navigate: rider.navigate, tag: 'ride-own' },
+    notification: { ...rider.texts[alert], ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: RIDE_PUSH.TAG },
 });
 
 const RIDER_PREFIX = 'rider:';

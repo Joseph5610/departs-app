@@ -343,6 +343,8 @@ export const RIDE_CONFIG = {
 
 /** Ride-mode Web Push through the `departs-ride-push` Worker. */
 export const RIDE_PUSH_CONFIG = {
+    /** Tag of the own ride's notifications, pushed (`RIDE_PUSH.TAG` on the server) or shown by the app. */
+    NOTIFICATION_TAG: 'ride-own',
     /** VAPID public key; its private half is that Worker's `VAPID_PRIVATE_KEY` secret. */
     VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };

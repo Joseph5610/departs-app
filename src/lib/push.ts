@@ -39,6 +39,16 @@ export const startRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicl
     }
 };
 
+/** Closes a ride's notifications still in the notification centre, e.g. a "next stop" kept until dismissed. */
+export const closeRideNotifications = async (tag: string): Promise<void> => {
+    try {
+        const registration = await navigator.serviceWorker?.getRegistration();
+        for (const notification of (await registration?.getNotifications({ tag })) ?? []) notification.close();
+    } catch {
+        // Nothing to close where notifications aren't supported.
+    }
+};
+
 /** Stops the server pushing a ride that ended or was replaced. */
 export const stopRidePush = async (ride: Pick<Ride, 'city' | 'tripId' | 'vehicleId' | 'exitSequence'>): Promise<void> => {
     try {

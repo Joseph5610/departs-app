@@ -144,6 +144,8 @@ export const STOP_SEARCH_CONFIG = {
 
 /** Ride-mode Web Push: the `RideWatch` Durable Object and its push sender (`_core/push/webPush.ts`). */
 export const RIDE_PUSH = {
+    /** Notification tag of a ride's alerts, so `arrived` replaces `next`; the app's own alerts and `push-sw.js` use it too. */
+    TAG: 'ride-own',
     /** VAPID `sub` claim; Apple rejects pushes without one. */
     VAPID_SUBJECT: 'mailto:info@departs.app',
     /** How long a VAPID token stays valid; push services refuse more than 24 h. */
@@ -167,6 +169,14 @@ export const RIDE_PUSH = {
     MAX_FAILURES_UNSEEN: 2,
     /** Largest `/api/[city]/ride` body; a real one is under 1 KB. */
     MAX_BODY_BYTES: 8192,
+    /**
+     * Notification options per alert, honoured by Android/desktop Chrome and ignored by iOS: `next` stays until
+     * dismissed and buzzes hard; `arrived` replaces it (same tag) and still alerts (`renotify`).
+     */
+    ALERT_OPTIONS: {
+        next: { requireInteraction: true, renotify: true, vibrate: [300, 150, 300, 150, 600] },
+        arrived: { renotify: true, vibrate: [150] },
+    },
     /** Riders one trip's Durable Object accepts; more is abuse, not a crowded tram. */
     MAX_RIDERS: 50,
     /** A trip whose vehicle has had no live position this long (it finished or left the feed) is given up. */

@@ -12,7 +12,13 @@ self.addEventListener('push', (event) => {
     event.waitUntil(self.registration.showNotification(notification.title || 'departs.app', {
         body: notification.body,
         tag: notification.tag,
+        renotify: Boolean(notification.tag && notification.renotify),
+        requireInteraction: Boolean(notification.requireInteraction),
+        vibrate: notification.vibrate,
         icon: '/icon.png',
+        // Android's status bar shows only this image's alpha.
+        badge: '/notification-badge.png',
+        timestamp: Date.now(),
         data: { navigate: notification.navigate },
     }));
 });
