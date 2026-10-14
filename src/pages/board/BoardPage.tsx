@@ -87,7 +87,7 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
                     "flex min-w-0 items-center gap-[0.35em] font-semibold text-[clamp(1.1rem,2.6vw,2.6rem)] leading-tight text-foreground",
                     dep.isCanceled && "line-through text-muted-foreground"
                 )}>
-                    {track && <PlatformCircle code={track} label={t('map.departures.trackNumber', { track })} className="size-[1.8em] text-[0.55em]" />}
+                    {track && <PlatformCircle code={track} size="fluid" />}
                     <span className="truncate">{dep.headsign}</span>
                 </div>
                 <div className="mt-[0.2em] flex items-center gap-[0.75em] text-[clamp(0.75rem,1.4vw,1.3rem)] text-muted-foreground tabular-nums">

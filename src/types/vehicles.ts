@@ -37,10 +37,14 @@ interface BaseVehicleProperties {
     state_position?: VehicleState;
     run_number?: number | string;
     last_stop_sequence?: number | null;
+    /** The feed's stop id where it reports no stop sequence (Brno). */
+    last_stop_id?: string;
     origin_timestamp?: string;
     vehicle_descriptor?: VehicleDescriptor;
     route_color: string;
     is_enriched?: boolean;
+    /** `delay` is the app's own estimate from the timetable and position (see `estimateDelay`). */
+    is_delay_estimated?: boolean;
     shape_dist_traveled?: number;
     /** Set on a vehicle of a neighbouring network shown beside the selected city's. */
     city_slug?: string;
@@ -141,3 +145,14 @@ export interface VehicleMetadata {
 
 /** A vehicle's register entry by its id; undefined for a vehicle the register does not list. */
 export type FleetLookup = (vehicleId: string | null | undefined) => VehicleMetadata | undefined;
+
+/**
+ * One hour of a city's timetable (`stop_times/<HH>.json` on the static data CDN, departs-data
+ * `StopTimeSliceFile`): every trip a vehicle may be running in that hour. A trip row repeats `[stopIndex, arrMin, dwellMin]`; `arrMin` is service-day minutes for the
+ * first stop and minutes since the previous stop's departure after it.
+ */
+export interface StopTimeSlice {
+    stops: string[];
+    coords: [number, number][];
+    trips: Record<string, number[]>;
+}

@@ -8,11 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IconTooltip } from '@/components/IconTooltip';
 import type { VehicleHeroProps } from './types';
+import { TripEndedNotice } from './TripEndedNotice';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { getDelayStatus } from '@/domain/delay';
 import { safeHexColor } from '@/lib/color';
 import { getRouteTypeI18nKey } from '@/domain/routes';
-import { vehicleNotice } from '@/domain/vehicles';
+import { delaySourceOf, vehicleNotice, type DelaySource } from '@/domain/vehicles';
 import { useNow } from '@/hooks/useNow';
 
 export const VehicleHero = ({
@@ -27,7 +28,7 @@ export const VehicleHero = ({
 
     if (!displayVehicle) return null;
 
-    const isEnriched = !!displayVehicle.is_enriched;
+    const delaySource = delaySourceOf(displayVehicle, hasEnrichment);
 
     const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
     const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
@@ -92,13 +93,12 @@ export const VehicleHero = ({
 
                 {!displayVehicle.isStaticFallback && (
                     <div className="flex gap-2 flex-wrap items-center">
-                        <DelayBadge delay={displayVehicle.delay} isEstimate={!isEnriched && hasEnrichment} />
+                        <DelayBadge delay={displayVehicle.delay} isEstimate={delaySource === 'estimated'} />
 
                         {displayVehicle.origin_timestamp && (
                             <LiveDataAgeBadge
                                 originTimestamp={displayVehicle.origin_timestamp}
-                                isEnriched={isEnriched}
-                                hasEnrichment={hasEnrichment}
+                                delaySource={delaySource}
                             />
                         )}
                     </div>
@@ -117,6 +117,8 @@ export const VehicleHero = ({
                         </div>
                     </div>
                 )}
+
+                <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
             </div>
 
             {displayVehicle.vehicle_descriptor && (
@@ -219,25 +221,24 @@ const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: b
 };
 
 /** Age of the vehicle's position fix; ticks on its own so the rest of the panel doesn't re-render every second. */
-const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { originTimestamp: string; isEnriched: boolean; hasEnrichment: boolean }) => {
+const LiveDataAgeBadge = ({ originTimestamp, delaySource }: { originTimestamp: string; delaySource: DelaySource }) => {
     const { t } = useTranslation();
     const now = useNow();
     const originMs = Date.parse(originTimestamp);
     if (Number.isNaN(originMs)) return null;
     const liveDataAgeSeconds = Math.max(0, Math.floor((now - originMs) / 1000));
+    const isLive = delaySource === 'live';
 
     return (
         <Popover>
             <PopoverTrigger render={<button type="button" className="outline-none" />}>
                 <Badge variant="hero" className={cn(
                     "gap-1.5 cursor-pointer hover:brightness-95 transition-colors",
-                    isEnriched ? "text-emerald-500" :
-                    (hasEnrichment && !isEnriched) ? "text-amber-500" : "text-muted-foreground"
+                    isLive ? "text-emerald-500" : "text-muted-foreground"
                 )}>
                     <div className={cn(
                         "w-1.5 h-1.5 rounded-full shrink-0",
-                        isEnriched ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
-                        (hasEnrichment && !isEnriched) ? "bg-amber-500 animate-pulse shadow-[0_0_8px_var(--color-amber-500)]" :
+                        isLive ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
                         liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
                     )} />
                     <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
@@ -245,12 +246,7 @@ const LiveDataAgeBadge = ({ originTimestamp, isEnriched, hasEnrichment }: { orig
             </PopoverTrigger>
             <PopoverContent side="bottom" align="center" className="w-auto p-3 max-w-62.5">
                 <span className="text-body-sm font-medium text-foreground/90 leading-tight block">
-                    {isEnriched
-                        ? t('map.vehicleDetails.enrichedTooltip')
-                        : hasEnrichment
-                            ? t('map.vehicleDetails.connectingTooltip')
-                            : t('map.vehicleDetails.standardTooltip')
-                    }
+                    {t(`map.vehicleDetails.delaySource.${delaySource}`)}
                 </span>
             </PopoverContent>
         </Popover>

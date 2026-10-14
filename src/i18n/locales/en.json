@@ -171,9 +171,11 @@
       "lineLabel": "Line {{line}}",
       "lineTitle": "Line <badge/>",
       "runNumber": "Run",
-      "enrichedTooltip": "This data is updated in real-time directly from the vehicle (Live Stream).",
-      "connectingTooltip": "Waiting for connection with the vehicle (Live Stream). Showing standard dispatch data in the meantime.",
-      "standardTooltip": "This data is updated in real-time (Standard).",
+      "delaySource": {
+        "live": "The delay comes straight from the vehicle in real time.",
+        "estimated": "The delay is estimated from the timetable and the vehicle’s current position.",
+        "standard": "The operator reports position and delay in real time."
+      },
       "liveDataAge": "{{seconds}}s ago",
       "showPastStops": "Show past stops",
       "hidePastStops": "Hide past stops",
@@ -191,8 +193,7 @@
         "title": "This trip has ended",
         "body": "It reached {{stop}} at {{time}}.",
         "bodyNoTime": "It reached its last stop, {{stop}}.",
-        "nextTrip": "Follow the vehicle, now line {{line}}",
-        "close": "Close"
+        "nextTrip": "Follow the vehicle, now line {{line}}"
       }
     },
     "departures": {
@@ -217,7 +218,6 @@
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Platform / Track",
-      "trackNumber": "Track {{track}}",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
       "sort": "Sort",

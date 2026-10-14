@@ -67,7 +67,7 @@ export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: 
             <>
             {!isFirst && <RowSeparator />}
             <BoardSection>
-                <BoardRow action={{ onTrigger: pin.toggle, isActive: pin.isPinned }} below={boardLink}>
+                <BoardRow action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label }} below={boardLink}>
                     <LineBadge name={favorite.line} routeColor={routeColor} size="lg" className="justify-self-center" />
                     <RowHeadsign headsign={favorite.headsign} isPinned={pin.isPinned} />
                     <RowTimeLine>{t('map.departures.noUpcoming')}</RowTimeLine>

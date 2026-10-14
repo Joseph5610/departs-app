@@ -4,6 +4,7 @@ import { useAlerts } from '@/hooks/data/useAlerts';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '@/state/uiStore';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { pushChannelOf } from '@/domain/cities';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
 import { Card } from '@/components/ui/card';
@@ -19,7 +20,6 @@ import type { RSSItem, VehicleDetail as VehicleDetailType, AppError } from '@/ty
 import { VehicleDetailSkeleton, StopTimelineSkeleton } from './VehicleDetailSkeleton';
 import { VehicleHero } from './VehicleHero';
 import { StopTimeline } from './StopTimeline';
-import { TripEndedNotice } from './TripEndedNotice';
 
 import type { DisplayVehicle } from './types';
 
@@ -88,14 +88,13 @@ export const VehicleDetail = memo<VehicleDetailProps>(({
 
             {showContent && (
                 <>
-                    <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
                     <VehicleHero
                         displayVehicle={displayVehicle}
                         hasEnded={hasEnded}
                         isFollowing={isFollowing}
                         onToggleFollow={onToggleFollow}
                         isDetailLoading={loadingDetail && !vehicleDetail}
-                        hasEnrichment={!!cityConfig.enrichmentChannel}
+                        hasEnrichment={!!pushChannelOf(cityConfig)}
                     />
 
                     {relevantAlerts.length > 0 && (

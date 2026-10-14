@@ -8,7 +8,6 @@ import { LIVE_FETCH_OPTIONS, DEPARTURES_CONFIG } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
 import { enrichLiveDepartures, computeDelayStats as computeBoardDelayStats, favoriteKeysAt, favoritesFirst as pinFavoriteLines, sortByExpectedTime, filterDepartures as filterBoardDepartures, groupDepartures as groupBoardDepartures, withDelayDeltas } from '@/domain/departures';
 import { memoizeLast } from '@/lib/memoize';
-import { useEnrichmentStore } from '@/state/enrichmentStore';
 import { useVehicles } from './useVehicles';
 import { useRouteMetadata } from './useRouteMetadata';
 import { useFleetLookup } from './useVehicleMetadata';
@@ -30,9 +29,7 @@ export const fetchDepartures = (city: string, stopIds: string[], signal?: AbortS
  * branding and fleet register. `enrich` must be a module-level `memoizeLast` owned by the caller.
  */
 export const useLiveDepartures = (departures: Departure[], dataUpdatedAt: number, enrich: typeof enrichLiveDepartures): Departure[] => {
-    const byTripId = useEnrichmentStore(s => s.byTripId);
-    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
-    const { tripIndex } = useVehicles();
+    const { tripIndex, byTripId, byVehicleId } = useVehicles();
     const { byShortName, byId } = useRouteMetadata();
     const fleet = useFleetLookup();
     return enrich(departures, tripIndex, byTripId, byVehicleId, byShortName, byId, dataUpdatedAt, fleet);

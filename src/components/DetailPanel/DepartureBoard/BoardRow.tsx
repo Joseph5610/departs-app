@@ -3,15 +3,18 @@ import { cn } from '@/lib/cn';
 import { Star } from 'lucide-react';
 import { splitLastWord, wrappableName } from '@/lib/strings';
 import { useSwipeAction } from '@/hooks/features/useSwipeAction';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 
 /** A board list's entry, spaced from its neighbours; a line's further direction follows the one above closely. */
 export const BoardSection = ({ continuesLine = false, children }: { continuesLine?: boolean; children: React.ReactNode }) => (
     <section className={cn("py-1.5", continuesLine && "-mt-2")}>{children}</section>
 );
 
-/** What swiping a row left, or right-clicking it, does. */
+/** What swiping a row left, or picking it from the row's right-click menu, does. */
 export interface RowAction {
     onTrigger: () => void;
+    /** The action's name in the right-click menu. */
+    label: string;
     /** The action undoes itself, e.g. the line is already pinned; its revealed star shows filled. */
     isActive: boolean;
 }
@@ -26,12 +29,32 @@ interface BoardRowProps extends React.HTMLAttributes<HTMLDivElement> {
  * The board's row grid: badge, headsign and time columns. `children` are the lead row's cells (badge,
  * headsign, countdown, then time line, amenities and notes); the element holding them, which gets the other
  * props, shares the grid's tracks, so `below` aligns to its cells. With an `action`, the row slides left
- * under a swipe to reveal a star, and runs it past the threshold or on a right click.
+ * under a swipe to reveal a star and runs it past the threshold; a right click offers it in a menu.
  */
-export const BoardRow = ({ action, below, className, children, ...lead }: BoardRowProps) => {
+export const BoardRow = ({ action, ...props }: BoardRowProps) => {
+    if (!action) return <RowBody {...props} />;
+    return (
+        <ContextMenu>
+            <ContextMenuTrigger
+                // Touch has the swipe; a long press stays a tap's start rather than opening the menu.
+                onTouchStart={(e) => e.preventBaseUIHandler()}
+                render={(trigger) => <RowBody action={action} outer={trigger} {...props} />}
+            />
+            <ContextMenuContent>
+                <ContextMenuItem onClick={action.onTrigger}>
+                    <Star strokeWidth={1.75} className="text-favorite" fill={action.isActive ? 'currentColor' : 'none'} />
+                    {action.label}
+                </ContextMenuItem>
+            </ContextMenuContent>
+        </ContextMenu>
+    );
+};
+
+/** The row itself; `outer` are the context menu trigger's props, which go on the element under the pointer. */
+const RowBody = ({ action, below, className, children, outer, ...lead }: BoardRowProps & { outer?: React.ComponentProps<'div'> }) => {
     const { contentRef, handlers } = useSwipeAction(action?.onTrigger);
     return (
-        <div {...handlers} className="group/row relative touch-pan-y">
+        <div {...outer} {...handlers} className="group/row relative touch-pan-y">
             {action && (
                 <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-[var(--swipe,0)]">
                     <Star size={22} strokeWidth={1.75} className="transition-transform group-data-armed/row:scale-125" fill={action.isActive ? 'currentColor' : 'none'} />

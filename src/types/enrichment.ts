@@ -19,6 +19,8 @@ export interface EnrichmentPatch {
 /** Internal stored patch — adds client-received timestamp for Gate 2 silence TTL */
 export interface StoredEnrichmentPatch extends EnrichmentPatch {
     receivedAt: number; // Date.now() when the client received the message
+    /** The app's own estimate rather than a message from the network's stream. */
+    isEstimate?: boolean;
 }
 
 type EnrichmentNormalizer<T = unknown> = (rawMsg: T) => EnrichmentPatch | null;
@@ -30,4 +32,6 @@ export interface EnrichmentChannelAdapter<T = unknown> {
     normalize: EnrichmentNormalizer<T>;
     /** Optional JSON payload to send upon WebSocket connection (e.g. for ArcGIS StreamServer filtering) */
     wsFilterPayload?: Record<string, unknown>;
+    /** Kept configured but not connected; the app's own delay estimate stands in. */
+    isDisabled?: boolean;
 }

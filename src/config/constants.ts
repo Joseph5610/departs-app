@@ -273,6 +273,23 @@ export const TRIP_SHAPES_CONFIG = {
     SHAPE_BUCKET_COUNT: 1024,
 };
 
+/** The app's own delay estimate from the hourly timetable slice, for networks whose feed reports none (`estimatesDelay`). */
+export const DELAY_ESTIMATE_CONFIG = {
+    /** A slice that failed to load (not yet published, CDN hiccup) is asked for again this often. */
+    SLICE_RETRY_MS: 60_000,
+    /** A larger estimate means the vehicle is on another trip or parked, not that late. */
+    MAX_DELAY_S: 90 * 60,
+    /** A vehicle at its last stop this long after the scheduled arrival has finished its trip and shows no delay. */
+    FINISHED_GRACE_S: 5 * 60,
+    /** Within this distance of its last stop a vehicle counts as there, whatever state the feed reports (turning loops and sidings included). */
+    AT_LAST_STOP_M: 1500,
+    /** A vehicle reporting a stop off its trip is placed on a leg only if it strays from the straight leg by at most this share of its length, or this many metres. */
+    LEG_DETOUR_SHARE: 0.25,
+    LEG_DETOUR_MIN_M: 500,
+    /** The network never reports a vehicle as early (it waits at its stop), so neither does the estimate. */
+    CLAMP_EARLY: true,
+};
+
 /** Estimating how far along its shape a vehicle is, for networks that publish no shape distances. */
 export const ROUTE_PROGRESS_CONFIG = {
     /** A stop served twice snaps to its first pass when that is within this many metres of the closest one. */
@@ -334,9 +351,14 @@ export const RIDE_CONFIG = {
     /** A stored ride older than this is dropped instead of resumed. */
     MAX_AGE_MS: 4 * HOUR_MS,
     /** How long the arrival stays shown before the ride ends itself. */
-    ARRIVED_CLEAR_MS: MINUTE_MS,
-    /** An arrived ride whose trip ended longer ago than this (seen on reopening the app) is dropped instead of shown as arrived. */
-    ARRIVED_STALE_MS: 10 * MINUTE_MS,
+    ARRIVED_CLEAR_MS: 20_000,
+    /**
+     * A ride whose vehicle reached the exit longer ago than this is dropped instead of shown as arrived, e.g. on
+     * reopening the app after getting off; the rider was already notified.
+     */
+    ARRIVED_STALE_MS: 2 * MINUTE_MS,
+    /** The same for a ride only the clock ended (no live position), counted from the trip's end, which needs a grace period first. */
+    ARRIVED_BY_CLOCK_STALE_MS: 10 * MINUTE_MS,
     /** Vibration when the next stop is the rider's (Android; iOS ignores it). */
     VIBRATE_PATTERN: [200, 100, 200],
 };

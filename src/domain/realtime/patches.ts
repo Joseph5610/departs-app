@@ -1,4 +1,5 @@
-import type { StoredEnrichmentPatch, VehicleCollection, VehicleFeature, VehicleProperties } from '@/types';
+import type { StoredEnrichmentPatch, VehicleCollection, VehicleDetail, VehicleFeature, VehicleProperties } from '@/types';
+import { addSecondsToTime } from '@/domain/time';
 import { ENRICHMENT_CONFIG } from '@/config/constants';
 import { mapStable } from '@/lib/memoize';
 
@@ -8,8 +9,22 @@ const META_KEYS = new Set<keyof StoredEnrichmentPatch>([
     'tripId',
     'vehicleId',
     'dataTimestamp',
-    'receivedAt'
+    'receivedAt',
+    'isEstimate',
 ]);
+
+/** Realtime times of the stops from `fromSequence` on, moved to the timetable plus `delay`, as the backend derives them. */
+function shiftUpcomingStops(stopTimes: NonNullable<VehicleDetail['stop_times']>, fromSequence: number, delay: number): NonNullable<VehicleDetail['stop_times']> {
+    const features = mapStable(stopTimes.features, (f) => {
+        const p = f.properties;
+        if (p.stop_sequence < fromSequence) return f;
+        const realtime_arrival_time = p.arrival_time ? addSecondsToTime(p.arrival_time, delay) : p.realtime_arrival_time;
+        const realtime_departure_time = p.departure_time ? addSecondsToTime(p.departure_time, delay) : p.realtime_departure_time;
+        if (realtime_arrival_time === p.realtime_arrival_time && realtime_departure_time === p.realtime_departure_time) return f;
+        return { ...f, properties: { ...p, realtime_arrival_time, realtime_departure_time } };
+    });
+    return features === stopTimes.features ? stopTimes : { ...stopTimes, features };
+}
 
 /**
  * Applies the push patch for a trip (or else its vehicle) over `base`; the push stream is the realtime
@@ -54,8 +69,17 @@ export function applyEnrichment<T extends object>(
     if (typeof mut.scheduled === 'string' && typeof mut.delay === 'number') {
         mut.timestamp = new Date(Date.parse(mut.scheduled) + mut.delay * 1000).toISOString();
     }
+    // A trip detail's upcoming stops carry realtime times derived from the delay; they must follow it too.
+    // Without a live stop sequence the stops already served are unknown, so none are moved.
+    if ('stop_times' in enriched && typeof mut.delay === 'number' && 'delay' in patch && patch.delay != null) {
+        const detail = enriched as unknown as VehicleDetail;
+        if (detail.stop_times && detail.last_stop_sequence != null && !detail.is_static_fallback) {
+            detail.stop_times = shiftUpcomingStops(detail.stop_times, detail.last_stop_sequence, mut.delay);
+        }
+    }
 
-    mut.is_enriched = true;
+    if (patch.isEstimate) mut.is_delay_estimated = true;
+    else mut.is_enriched = true;
     return enriched;
 }
 

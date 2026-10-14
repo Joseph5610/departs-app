@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { hasEnrichment } from '@/domain/cities';
 import { aggregateCityStats } from '@/domain/vehicles';
 import { VehicleMonitorList } from './VehicleMonitor/VehicleMonitorList';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -21,7 +22,7 @@ export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
     const { t } = useTranslation();
     
-    const hasEnrichment = !!cityConfig.enrichmentChannel;
+    const hasCityEnrichment = hasEnrichment(cityConfig);
     
     const tab = usePreferencesStore(s => s.statsTab);
     const setTab = usePreferencesStore(s => s.actions.setStatsTab);
@@ -45,7 +46,7 @@ export const StatsPanel = memo(() => {
     
     const activeStats = tab === 'screen' ? screenStats : enrichedNetworkStats;
     const isFetching = tab === 'network' && isNetworkFetching && !activeStats;
-    const hasNetworkDelayData = !hasEnrichment || !!enrichedNetworkStats;
+    const hasNetworkDelayData = !hasCityEnrichment || !!enrichedNetworkStats;
 
     return (
         <div className="flex flex-col gap-0 pt-0">

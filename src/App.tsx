@@ -6,6 +6,7 @@ import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
 import { useCityConfig } from './hooks/data/useCities';
+import { pushChannelOf } from '@/domain/cities';
 import { SITE } from './config/site';
 import { BOARD_ROUTE, decodeRouteParam, paths } from './lib/routes';
 
@@ -20,7 +21,7 @@ function App() {
   const isMobile = useIsMobile();
   usePWALifecycle();
 
-  useEnrichmentChannel(useCityConfig().enrichmentChannel ?? null);
+  useEnrichmentChannel(pushChannelOf(useCityConfig()));
 
   return (
     <>

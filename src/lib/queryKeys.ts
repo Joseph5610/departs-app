@@ -18,6 +18,7 @@ export const queryKeys = {
     alerts: (city: string) => ['alerts', city] as const,
     infotexts: (city: string) => ['infotexts', city] as const,
     geocoding: (url: string | null) => ['geocoding', url] as const,
+    stopTimeSlice: (city: string, hour: string) => ['stop-time-slice', city, hour] as const,
     tripShapeIds: (city: string, bucket: string | undefined) => ['trip-shape-ids', city, bucket] as const,
     tripShapeGeometry: (city: string, bucket: string | undefined) => ['trip-shape-geometry', city, bucket] as const,
 };

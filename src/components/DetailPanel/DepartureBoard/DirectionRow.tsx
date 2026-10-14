@@ -70,7 +70,7 @@ export const DirectionRow = memo(({
                 isHighlighted={!!next.tripId && next.tripId === highlightedTripId}
                 onDepartureClick={onDepartureClick}
                 hidesBadge={!startsLine}
-                action={{ onTrigger: pin.toggle, isActive: pin.isPinned }}
+                action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label }}
             >
                 {(showsChips || showsRows || hasMore || note) && (
                     <>

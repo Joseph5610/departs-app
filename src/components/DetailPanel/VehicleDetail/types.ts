@@ -25,6 +25,7 @@ export interface VehicleHeroProps {
     isFollowing: boolean;
     onToggleFollow: () => void;
     isDetailLoading?: boolean;
+    /** The city streams live patches (push channel), so a vehicle without one is still connecting. */
     hasEnrichment: boolean;
     hasEnded: boolean;
 }

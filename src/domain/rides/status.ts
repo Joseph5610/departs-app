@@ -24,6 +24,16 @@ export const exitArrival = (stops: StopTimeFeature[], exitSequence: number, dela
     return { stopName: p.stop_name, time: time ? formatClock(time) : null, rawTime: time };
 };
 
+/** Seconds since a timetable time, wrapped across midnight; negative while it is still ahead. */
+const secondsSince = (time: string, now: number, timeZone: string): number =>
+    wrapDaySeconds(secondsOfDayIn(timeZone, now) - timeToSeconds(time));
+
+/** Whether an arrival is too old to show: from the exit when the vehicle was seen there, else from the trip's end by the clock. */
+const isArrivalStale = (stops: StopTimeFeature[], exitTime: string | null, reachedExit: boolean, delay: number | null | undefined, now: number, timeZone: string): boolean =>
+    reachedExit && exitTime
+        ? secondsSince(exitTime, now, timeZone) * 1000 > RIDE_CONFIG.ARRIVED_STALE_MS
+        : (secondsSinceTripEnd(stops, delay, now, timeZone) ?? 0) * 1000 > RIDE_CONFIG.ARRIVED_BY_CLOCK_STALE_MS;
+
 /** Whole minutes from `now` to a timetable time, wrapped across midnight. */
 const minutesUntil = (time: string, now: number, timeZone: string): number => {
     const diff = wrapDaySeconds(timeToSeconds(time) - secondsOfDayIn(timeZone, now));
@@ -53,7 +63,7 @@ export const deriveRide = (ride: Ride | null, detail: VehicleDetail | undefined,
         : 'riding';
 
     const exit = exitArrival(stops, ride.exitSequence, detail?.delay);
-    if (phase === 'arrived' && (secondsSinceTripEnd(stops, detail?.delay, now, timeZone) ?? 0) * 1000 > RIDE_CONFIG.ARRIVED_STALE_MS) return null;
+    if (phase === 'arrived' && isArrivalStale(stops, exit?.rawTime ?? null, current !== null && current >= ride.exitSequence, detail?.delay, now, timeZone)) return null;
 
     return {
         ride,

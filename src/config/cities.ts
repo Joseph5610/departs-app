@@ -37,6 +37,8 @@ export interface InitialCityConfig {
         stops: string[];
     };
     enrichmentChannel?: EnrichmentChannelAdapter;
+    /** The feed reports no delay, so the app estimates it from `stop_times/<HH>.json` and the vehicle positions. */
+    estimatesDelay?: boolean;
     hasInfotexts?: boolean;
     /** Fleet register on the static data CDN (`<city>/<file>`) for vehicle detail; a vehicle it does not list keeps the backend's network operator. */
     vehicleMetadata?: { file: string };
@@ -118,6 +120,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             stops: []
         },
         hasInfotexts: false,
+        estimatesDelay: true,
         vehicleMetadata: { file: 'vehicles.json' },
         dataProvider: { nameKey: 'liveStatus.providerKordis', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328' },
         attributions: [

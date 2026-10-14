@@ -9,6 +9,7 @@ import {
     type DialogRootChangeEventDetails
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { PlatformCircle } from '@/components/PlatformCircle';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -62,9 +63,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
     );
 
     const platformBadge = platformCode && (
-        <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-foreground text-background text-body-sm font-bold tabular-nums mr-1.5 shadow-sm">
-            {platformCode}
-        </span>
+        <PlatformCircle code={platformCode} size="lg" className="mr-1.5" />
     );
 
     // A clamp on the title element itself clips a badge taller than one text line in Safari.

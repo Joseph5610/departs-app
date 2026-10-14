@@ -28,7 +28,7 @@ export const LineBadge = ({ name, routeColor: rawColor, size = 'md', className }
     return (
         <span
             className={cn(
-                'inline-flex items-center justify-center shrink-0 border',
+                'inline-flex items-center justify-center shrink-0 whitespace-nowrap border',
                 isLightBg ? 'border-black/15 dark:border-black/40' : 'border-transparent',
                 config.classes,
                 size === 'sm' && len > 1 && 'text-nano',

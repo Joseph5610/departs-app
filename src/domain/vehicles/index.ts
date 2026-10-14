@@ -1,3 +1,4 @@
+export * from './delayEstimate';
 export * from './enrich';
 export * from './fleet';
 export * from './fleetIndex';

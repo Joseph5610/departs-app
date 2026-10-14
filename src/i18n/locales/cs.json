@@ -174,9 +174,11 @@
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
       "runNumber": "Oběh",
-      "enrichedTooltip": "Tato data jsou aktualizována v reálném čase přímo z vozidla (Live Stream).",
-      "connectingTooltip": "Čekáme na spojení s vozidlem (Live Stream). Zatím zobrazujeme standardní data z dispečinku.",
-      "standardTooltip": "Tato data jsou aktualizována v reálném čase (Standard).",
+      "delaySource": {
+        "live": "Zpoždění posílá přímo vozidlo v reálném čase.",
+        "estimated": "Zpoždění odhadujeme z jízdního řádu a aktuální polohy vozidla.",
+        "standard": "Polohu a zpoždění hlásí dopravce v reálném čase."
+      },
       "liveDataAge": "před {{seconds}}s",
       "showPastStops": "Zobrazit předchozí zastávky",
       "hidePastStops": "Skrýt předchozí zastávky",
@@ -194,8 +196,7 @@
         "title": "Tento spoj už dojel",
         "body": "Do zastávky {{stop}} přijel v {{time}}.",
         "bodyNoTime": "Dojel do konečné zastávky {{stop}}.",
-        "nextTrip": "Sledovat vozidlo, nyní linka {{line}}",
-        "close": "Zavřít"
+        "nextTrip": "Sledovat vozidlo, nyní linka {{line}}"
       }
     },
     "departures": {
@@ -221,7 +222,6 @@
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Nástupiště / Kolej",
-      "trackNumber": "Kolej {{track}}",
       "sortByLine": "Seřadit podle linky",
       "sortByDeparture": "Seřadit podle času odjezdu",
       "sort": "Seřadit",

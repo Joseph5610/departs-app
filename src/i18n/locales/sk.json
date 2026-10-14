@@ -174,9 +174,11 @@
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
       "runNumber": "Obeh",
-      "enrichedTooltip": "Tieto dáta sa aktualizujú v reálnom čase priamo z vozidla (Live Stream).",
-      "connectingTooltip": "Čakáme na spojenie s vozidlom (Live Stream). Zatiaľ zobrazujeme štandardné dáta z dispečingu.",
-      "standardTooltip": "Tieto dáta sa aktualizujú v reálnom čase (Standard).",
+      "delaySource": {
+        "live": "Meškanie posiela priamo vozidlo v reálnom čase.",
+        "estimated": "Meškanie odhadujeme z cestovného poriadku a aktuálnej polohy vozidla.",
+        "standard": "Polohu a meškanie hlási dopravca v reálnom čase."
+      },
       "liveDataAge": "pred {{seconds}}s",
       "showPastStops": "Zobraziť prejdené",
       "hidePastStops": "Skryť prejdené",
@@ -194,8 +196,7 @@
         "title": "Tento spoj už dojazdil",
         "body": "Na zastávku {{stop}} prišiel o {{time}}.",
         "bodyNoTime": "Dorazil na konečnú zastávku {{stop}}.",
-        "nextTrip": "Sledovať vozidlo, teraz linka {{line}}",
-        "close": "Zavrieť"
+        "nextTrip": "Sledovať vozidlo, teraz linka {{line}}"
       }
     },
     "departures": {
@@ -221,7 +222,6 @@
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
       "platform": "Nástupište / Koľaj",
-      "trackNumber": "Koľaj {{track}}",
       "sortByLine": "Zoradiť podľa linky",
       "sortByDeparture": "Zoradiť podľa času odchodu",
       "sort": "Zoradiť",

@@ -11,3 +11,16 @@ export const vehicleNotice = (state: string | undefined, isStaticFallback: boole
     if (state === 'before_track') return 'previousTrip';
     return 'offTrack';
 };
+
+/** Where a vehicle's delay comes from, as the detail presents it. */
+export type DelaySource = 'live' | 'estimated' | 'standard';
+
+/**
+ * `live` from the city's push channel, `estimated` from the timetable and position (the app's own estimate,
+ * or the backend's while the push channel has sent nothing), `standard` as the network's feed reports it.
+ */
+export const delaySourceOf = (vehicle: { is_enriched?: boolean; is_delay_estimated?: boolean }, hasPushChannel: boolean): DelaySource => {
+    if (vehicle.is_enriched) return 'live';
+    if (vehicle.is_delay_estimated || hasPushChannel) return 'estimated';
+    return 'standard';
+};

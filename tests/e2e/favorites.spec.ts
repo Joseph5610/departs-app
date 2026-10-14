@@ -115,7 +115,7 @@ test.describe('Favorites Tests', () => {
         await expect(page.getByTestId('vehicle-headsign')).toHaveText('Letňany', { timeout: 10000 });
     });
 
-    test('should pin a line direction with a right click and undo it from the toast', async ({ page }) => {
+    test('should pin a line direction from the right-click menu and undo it from the toast', async ({ page }) => {
         await page.route('**/api/*/departures*', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -130,6 +130,10 @@ test.describe('Favorites Tests', () => {
 
         const row = page.getByTestId('departure-item-trip-1');
         await row.click({ button: 'right' });
+        const pinItem = page.getByRole('menuitem', { name: 'Add line C towards Letňany to favorites' });
+        await expect(pinItem).toBeVisible();
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem('departs-preferences') ?? '{}').state?.favoriteLines ?? [])).toEqual([]);
+        await pinItem.click();
         await expect(page.getByText('Line C towards Letňany added to favorites')).toBeVisible();
         await expect(page).toHaveURL(/\/prague\/stop\/U1111Z1P$/);
         const pinned = await page.evaluate(() => JSON.parse(localStorage.getItem('departs-preferences') ?? '{}').state?.favoriteLines);

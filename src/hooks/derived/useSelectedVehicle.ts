@@ -5,7 +5,6 @@ import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
 import { useFleetLookup } from '@/hooks/data/useVehicleMetadata';
 import { memoizeLast } from '@/lib/memoize';
 import { mergeSelectedVehicle as mergeVehicleSources } from '@/domain/vehicles';
-import { useEnrichmentStore } from '@/state/enrichmentStore';
 
 const mergeSelectedVehicle = memoizeLast(mergeVehicleSources);
 
@@ -13,11 +12,9 @@ const mergeSelectedVehicle = memoizeLast(mergeVehicleSources);
 export const useSelectedVehicle = () => {
     const { tripId, vehicleId } = useRouteParams();
 
-    const { vehicleIndex, tripIndex, dataUpdatedAt: vehiclesUpdatedAt } = useVehicles();
+    const { vehicleIndex, tripIndex, byTripId, byVehicleId, dataUpdatedAt: vehiclesUpdatedAt } = useVehicles();
     const { data: vehicleDetail, dataUpdatedAt: detailUpdatedAt } = useVehicleDetail();
 
-    const byTripId = useEnrichmentStore(s => s.byTripId);
-    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { byShortName, byId } = useRouteMetadata();
     const metadata = useFleetLookup()?.(vehicleId ?? vehicleDetail?.vehicle_id);
 

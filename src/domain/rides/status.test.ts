@@ -50,6 +50,11 @@ describe('deriveRide', () => {
         expect(deriveRide(ride, atStop(4), false, Date.parse('2026-10-07T12:45:00Z'), TZ)).toBeNull();
     });
 
+    // The exit, not the trip's end, dates the arrival: the trip runs on to 14:30, but the rider got off at 14:20.
+    it('drops an arrival a few minutes past the exit even while the trip still runs', () => {
+        expect(deriveRide(ride, atStop(4), false, Date.parse('2026-10-07T12:23:00Z'), TZ)).toBeNull();
+    });
+
     it('tells a failed load from a pending one, and drops an expired ride', () => {
         expect(deriveRide(ride, undefined, true, NOW, TZ)?.phase).toBe('unavailable');
         expect(deriveRide(ride, undefined, false, NOW, TZ)?.phase).toBe('loading');

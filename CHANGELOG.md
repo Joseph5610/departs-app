@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.85.0] - 2026-10-14
+
+### Added
+
+- Brno shows delays the app estimates itself from the timetable and live positions wherever the KORDIS stream has none (while it connects, or when it is down), on the map, departure boards, vehicle detail and ride bar.
+
+### Fixed
+
+- Right-clicking a departure board row opens a menu to pin or unpin the line instead of toggling it straight away.
+- Longer platform codes such as Brno's "AN 6" widen their badge into a pill instead of wrapping out of the circle.
+
 ## [0.84.0] - 2026-10-13
 
 ### Added
@@ -15,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The privacy policy describes the push address kept for the length of a ride.
 - The ride bar sits lower in the installed app, clear of the iOS 27 top blur.
+- "You've arrived" shows for 20 seconds and no longer reappears when the app is reopened after getting off.
 
 ## [0.83.6] - 2026-10-12
 

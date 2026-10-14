@@ -8,7 +8,7 @@ const leansLeft = (dx: number, dy: number) => dx <= 0 && -dx >= Math.abs(dy) * 1
 type Gesture = { id: number; x: number; y: number; offset: number; phase: 'pending' | 'swiping'; done: AbortController };
 
 /**
- * A row's left swipe (touch) or right click (mouse) that runs `onTrigger`. The swipe moves the element in
+ * A row's left swipe (touch) that runs `onTrigger`. The swipe moves the element in
  * `contentRef` without re-rendering and sets `--swipe` (0–1) and `data-armed` on the element the handlers go on,
  * so its revealed action can follow; a mostly vertical drag is left to scrolling and the sheet.
  */
@@ -80,10 +80,6 @@ export const useSwipeAction = (onTrigger: (() => void) | undefined) => {
             },
             onPointerUp: (e: React.PointerEvent<HTMLElement>) => end(e, true),
             onPointerCancel: (e: React.PointerEvent<HTMLElement>) => end(e, false),
-            onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
-                e.preventDefault();
-                onTrigger();
-            },
         },
     };
 };

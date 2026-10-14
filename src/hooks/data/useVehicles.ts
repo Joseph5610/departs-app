@@ -5,9 +5,11 @@ import { useViewportStore } from '@/state/viewportStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useEnrichmentStore } from '@/state/enrichmentStore';
 import { enrichVehicleCollection } from '@/domain/realtime';
-import { enrichVehicleRouteMetadata, indexVehicles, filterVehiclesToView } from '@/domain/vehicles';
+import { enrichVehicleRouteMetadata, indexVehicles, filterVehiclesToView, estimateFleetDelays, withEstimatedPatches, indexStopTimeSlice } from '@/domain/vehicles';
 import { memoizeLast } from '@/lib/memoize';
 import { useRouteMetadata } from './useRouteMetadata';
+import { useCityConfig } from './useCities';
+import { useStopTimeSlice } from './useStopTimeSlice';
 import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS, LIVE_VEHICLES_CONFIG } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
 import { queryKeys } from '@/lib/queryKeys';
@@ -47,14 +49,47 @@ export const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: num
 });
 
 const brandNetworkVehicles = memoizeLast(enrichVehicleRouteMetadata);
+const indexSlice = memoizeLast(indexStopTimeSlice);
+const estimateDelays = memoizeLast(estimateFleetDelays);
+const addEstimatedPatches = memoizeLast(withEstimatedPatches);
 const enrichNetworkVehicles = memoizeLast(enrichVehicleCollection);
 const selectScreenVehicles = memoizeLast(filterVehiclesToView);
 const buildVehicleIndexes = memoizeLast(indexVehicles);
 
 
+/** The push channel's patches with the app's own estimate for `fleet` added, in cities with `estimatesDelay`. */
+const usePatchesFor = (fleet: VehicleCollection | null | undefined, fleetUpdatedAt: number) => {
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const { timezone, estimatesDelay } = useCityConfig();
+    const pushByTripId = useEnrichmentStore(s => s.byTripId);
+    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
+
+    const slice = useStopTimeSlice(selectedCity, timezone, !!estimatesDelay, fleetUpdatedAt);
+    // Estimated once per fleet poll; each push flush only merges them.
+    const estimates = estimateDelays(fleet, indexSlice(slice), timezone, fleetUpdatedAt);
+    const byTripId = addEstimatedPatches(estimates, pushByTripId, byVehicleId);
+
+    return useMemo(() => ({ byTripId, byVehicleId }), [byTripId, byVehicleId]);
+};
+
+/**
+ * The enrichment every live consumer applies, for a consumer that does not need the fleet itself: push
+ * channel patches, plus the app's own delay estimate. `enabled: false` keeps it off the fleet poll.
+ */
+export const useEnrichmentPatches = (enabled = true) => {
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
+    const { data, dataUpdatedAt } = useQuery({
+        ...networkVehiclesQueryOptions(selectedCity, refreshMs),
+        enabled: enabled && !!selectedCity,
+    });
+    return usePatchesFor(data, dataUpdatedAt);
+};
+
 /**
  * The city's live fleet with push patches applied, as `networkVehicles`, and the part of it in the
- * current map view and filters, as `vehicles`. One query serves the map and the stats views.
+ * current map view and filters, as `vehicles`, with the patches themselves for the fleet's other consumers.
+ * One query serves the map and the stats views.
  */
 export const useVehicles = () => {
     const bounds = useViewportStore(s => s.debouncedBounds);
@@ -63,8 +98,6 @@ export const useVehicles = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
 
-    const byTripId = useEnrichmentStore(s => s.byTripId);
-    const byVehicleId = useEnrichmentStore(s => s.byVehicleId);
     const { byShortName } = useRouteMetadata();
 
     // Not tied to the map view: the stats views read the same fleet while the map is elsewhere.
@@ -72,6 +105,7 @@ export const useVehicles = () => {
         ...networkVehiclesQueryOptions(selectedCity, refreshMs),
         enabled: !!selectedCity,
     });
+    const { byTripId, byVehicleId } = usePatchesFor(query.data, query.dataUpdatedAt);
 
     const brandedVehicles = brandNetworkVehicles(query.data, byShortName);
     const networkVehicles = enrichNetworkVehicles(brandedVehicles, byTripId, byVehicleId, query.dataUpdatedAt || 0);
@@ -84,9 +118,11 @@ export const useVehicles = () => {
         networkVehicles,
         vehicleIndex,
         tripIndex,
+        byTripId,
+        byVehicleId,
         isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         dataUpdatedAt: query.dataUpdatedAt
-    }), [screenVehicles, networkVehicles, vehicleIndex, tripIndex, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
+    }), [screenVehicles, networkVehicles, vehicleIndex, tripIndex, byTripId, byVehicleId, query.isFetching, query.isError, query.error, query.dataUpdatedAt]);
 };
