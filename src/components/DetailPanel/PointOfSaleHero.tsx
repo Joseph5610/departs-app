@@ -71,7 +71,7 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
             {pos.address && (
                 <div className={cn("flex items-start gap-2 px-4 py-3 bg-foreground/3 text-body-sm text-foreground/80", hasBody && "border-t border-border/50")}>
                     <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0 break-words">{pos.address}</span>
+                    <span className="min-w-0 wrap-break-word">{pos.address}</span>
                 </div>
             )}
         </Card>

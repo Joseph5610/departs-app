@@ -1,11 +1,12 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
+import { mockStops } from '../fixtures/stops';
 
 const HERE = { latitude: 50.0995, longitude: 14.4385 };
 
 const stop = (stop_id: string, stop_name: string, northM: number, lines: Array<{ name: string; type: string; route_color: string }>) => ({
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [HERE.longitude, HERE.latitude + northM / 111_195] },
-    properties: { stop_id, stop_name, location_type: 0, zone_id: 'P', is_train: 0, lines },
+    properties: { stop_id, stop_name, location_type: 0, zone_id: 'P', lines },
 });
 
 const TRAM_17 = [{ name: '17', type: 'tram', route_color: '7A0603' }];
@@ -18,19 +19,14 @@ const openPhone = async (context: BrowserContext, favoriteStops: string[] = []) 
             version: 0
         }));
     }, favoriteStops);
-    await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, route => route.fulfill({
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-            type: 'FeatureCollection',
-            features: [
-                stop('S1', 'Vltavská', 40, TRAM_17),
-                stop('S2', 'Tusarova', 300, TRAM_17),
-                { ...stop('E1', 'E1', 5, []), properties: { stop_id: 'E1', stop_name: 'E1', location_type: 2 } },
-            ]
-        })
-    }));
+    await mockStops(page, {
+        type: 'FeatureCollection',
+        features: [
+            stop('S1', 'Vltavská', 40, TRAM_17),
+            stop('S2', 'Tusarova', 300, TRAM_17),
+            { ...stop('E1', 'E1', 5, []), properties: { stop_id: 'E1', stop_name: 'E1', location_type: 2 } },
+        ]
+    });
     await page.route('**/api/*/departures*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures: [] }) }));
     await page.goto('/prague');
     return page;

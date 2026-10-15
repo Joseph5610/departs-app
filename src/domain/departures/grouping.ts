@@ -1,6 +1,7 @@
 import type { StopFeature, Departure, FavoriteLine } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
+import { boardingKey } from './platforms';
 import { mapStable } from '@/lib/memoize';
 
 interface DepartureSubGroup {
@@ -90,15 +91,21 @@ export const groupDepartures = (departures: Departure[], departureSort: 'line' |
     return groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
 };
 
-/** One platform's rows on a station board; `platform` is null for departures whose feed names none. */
+/**
+ * One platform's rows on a station board, named by its code (`platform`) or, without one, by the
+ * direction it serves; both null for departures whose platform is unknown. `key` is its `boardingKey`.
+ */
 export interface PlatformSection {
+    key: string;
     platform: string | null;
+    direction: string | null;
     groups: DepartureLineGroup[];
 }
 
 /**
- * A station board's rows split by the platform each departure leaves from, platforms in natural order
- * (`2` before `10`, `A` before `B`) and unnamed ones last; the rows keep the board's order within each.
+ * A station board's rows split by the platform each departure leaves from: coded platforms in natural
+ * order (`2` before `10`, `A` before `B`), then those named by direction, unknown ones last; the rows
+ * keep the board's order within each. Platforms serving one direction share a section.
  */
 export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[] => {
     const byPlatform = new Map<string, DepartureLineGroup[]>();
@@ -106,7 +113,7 @@ export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[
         const subsByPlatform = new Map<string, DepartureSubGroup[]>();
         for (const sub of group.subGroups) {
             const depsByPlatform = new Map<string, Departure[]>();
-            for (const dep of sub.departures) getOrCreate(depsByPlatform, dep.platform ?? '', (): Departure[] => []).push(dep);
+            for (const dep of sub.departures) getOrCreate(depsByPlatform, boardingKey(dep), (): Departure[] => []).push(dep);
             for (const [platform, departures] of depsByPlatform) {
                 const part = depsByPlatform.size === 1 ? sub : { ...sub, departures, firstTime: Math.min(...departures.map(d => Date.parse(d.timestamp))) };
                 getOrCreate(subsByPlatform, platform, (): DepartureSubGroup[] => []).push(part);
@@ -117,9 +124,12 @@ export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[
             getOrCreate(byPlatform, platform, (): DepartureLineGroup[] => []).push(part);
         }
     }
-    return [...byPlatform]
-        .sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, undefined, { numeric: true })))
-        .map(([platform, groups]) => ({ platform: platform || null, groups }));
+    const sections = [...byPlatform].map(([key, groups]): PlatformSection => {
+        const dep = groups[0]!.subGroups[0]!.departures[0]!;
+        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, groups };
+    });
+    const rank = (s: PlatformSection) => (s.platform ? 0 : s.direction ? 1 : 2);
+    return sections.sort((a, b) => rank(a) - rank(b) || (a.platform ?? a.direction ?? '').localeCompare(b.platform ?? b.direction ?? '', undefined, { numeric: true }));
 };
 
 export const favoriteKey = (line: string | number, headsign: string) => `${String(line).toUpperCase()}|${headsign}`;

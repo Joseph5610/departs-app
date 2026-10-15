@@ -157,10 +157,8 @@ export const MAP_CAMERA = {
     CLUSTER_EXPAND_MS: 500,
 };
 
-export const STATIONS = {
-    /** Same-named platforms of a network without parent stations this close to each other form one map station. */
-    GROUP_RADIUS_M: 400,
-} as const;
+/** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
+export const STOPS_FILE_VERSION = 1;
 
 export const SHARED_GROUND = {
     /** The selected network stays selected while it has at least this share of the busiest network's stops in view. */
@@ -323,7 +321,7 @@ export const GEOCODING_CONFIG = {
 /** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
 export const DEVICE_CACHE = {
     /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
-    VERSION: 'v50',
+    VERSION: 'v51',
     /** Entries older than this are dropped instead of shown while refreshing. */
     MAX_AGE: 14 * DAY_MS,
     /** On a metered connection a copy is refreshed only once older than this, however short its usual stale time. */

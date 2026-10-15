@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.86.0] - 2026-10-16
+
+### Added
+
+- Stations on the map as one badge of their modes, and station boards split into platform sections with an "Only this" filter.
+
+### Changed
+
+- Stops load from the new `stops.json`, so every city's stations come from the data instead of being grouped in the app.
+
 ## [0.85.0] - 2026-10-14
 
 ### Added

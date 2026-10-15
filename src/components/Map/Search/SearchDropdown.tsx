@@ -93,7 +93,6 @@ export const SearchDropdown = ({
                 icon={isFavorite ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
                 title={stop.properties.stop_name}
                 subtitle={stopResultSubtitle(stop, t)}
-                metroLines={stop.properties.metro_lines}
                 lines={stop.properties.lines}
                 highlight={isFavorite}
                 testId={`search-item-${testIdPrefix}-stop-${stop.properties.stop_id}`}
@@ -115,7 +114,6 @@ export const SearchDropdown = ({
                                 icon={<HistoryItemIcon type={item.type} />}
                                 title={historyItemTitle(item, t)}
                                 subtitle={historyItemSubtitle(item, t)}
-                                metroLines={item.type === 'stop' ? item.metro_lines : undefined}
                                 lines={item.type === 'stop' ? item.lines : undefined}
                                 testId={`search-item-hist-${searchHistoryKey(item)}`}
                                 onClick={() => onHistorySelect(item)}

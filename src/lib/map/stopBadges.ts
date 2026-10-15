@@ -91,9 +91,7 @@ const drawTile = (ctx: CanvasRenderingContext2D, tile: string, colors: Record<Ro
     const fill = mode === 'metro' && metroColor ? `#${metroColor}` : colors[mode];
     const ink = getContrastColor(fill);
     ctx.fillStyle = fill;
-    ctx.beginPath();
-    ctx.roundRect(x, 0, size, size, size * STOP_BADGE.RADIUS_SCALE);
-    ctx.fill();
+    ctx.fillRect(x, 0, size, size);
     if (mode === 'metro') drawLetter(ctx, metroLine ?? 'M', x, size, ink);
     else if (mode === 'trolleybus') {
         drawGlyph(ctx, TROLLEY_POLES, x, size, ink);
@@ -101,20 +99,50 @@ const drawTile = (ctx: CanvasRenderingContext2D, tile: string, colors: Record<Ro
     } else if (mode !== 'unknown') drawGlyph(ctx, GLYPHS[mode], x, size, ink);
 };
 
-/** A row of tiles for the image id's `<city>:<badges>` part; one grey tile for a stop with no lines. */
+/** A favourite's five-pointed star centred on (`cx`, `cy`), outlined so it reads on any tile and on the map. */
+const drawStar = (ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) => {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? radius : radius * 0.48;
+        const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+        ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+    }
+    ctx.closePath();
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = radius * 0.35;
+    ctx.strokeStyle = STOP_BADGE.STAR_OUTLINE;
+    ctx.stroke();
+    ctx.fillStyle = STOP_BADGE.STAR_COLOR;
+    ctx.fill();
+};
+
+/**
+ * One pill of joined tiles for the image id's `<city>:<star>:<badges>` part; one grey tile for a stop with
+ * no lines. A starred pill gets a margin on every side, so its centre, and so its place on the map, stays put.
+ */
 const drawStopBadge = (key: string): ImageData | null => {
-    const split = key.indexOf(':');
-    const colors = modeColorsOf(key.slice(0, split));
-    const badges = key.slice(split + 1);
+    const [city, star, badges] = key.split(':');
+    const colors = modeColorsOf(city);
     const tiles = badges ? badges.split(STOP_BADGE_SEPARATOR) : ['unknown'];
     const size = STOP_BADGE.TILE_PX * STOP_BADGE.PIXEL_RATIO;
-    const gap = STOP_BADGE.GAP_PX * STOP_BADGE.PIXEL_RATIO;
+    const divider = STOP_BADGE.DIVIDER_PX * STOP_BADGE.PIXEL_RATIO;
+    const margin = star ? Math.round(size * STOP_BADGE.STAR_MARGIN_SCALE) : 0;
+    const width = tiles.length * size;
     const canvas = document.createElement('canvas');
-    canvas.width = tiles.length * size + (tiles.length - 1) * gap;
-    canvas.height = size;
+    canvas.width = width + 2 * margin;
+    canvas.height = size + 2 * margin;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    tiles.forEach((tile, i) => drawTile(ctx, tile, colors, i * (size + gap), size));
+    ctx.save();
+    ctx.translate(margin, margin);
+    ctx.beginPath();
+    ctx.roundRect(0, 0, width, size, size * STOP_BADGE.RADIUS_SCALE);
+    ctx.clip();
+    tiles.forEach((tile, i) => drawTile(ctx, tile, colors, i * size, size));
+    ctx.fillStyle = STOP_BADGE.DIVIDER_COLOR;
+    for (let i = 1; i < tiles.length; i++) ctx.fillRect(i * size - divider / 2, 0, divider, size);
+    ctx.restore();
+    if (star) drawStar(ctx, margin + width, margin, size * STOP_BADGE.STAR_RADIUS_SCALE);
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 };
 

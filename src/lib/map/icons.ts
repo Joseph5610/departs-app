@@ -32,31 +32,6 @@ const drawArrow = (ctx: CanvasRenderingContext2D) => {
     ctx.fill();
 };
 
-const drawStar = (ctx: CanvasRenderingContext2D) => {
-    const cx = 32;
-    const cy = 32;
-    const spikes = 5;
-    const outerRadius = 24;
-    const innerRadius = 12;
-    const step = Math.PI / spikes;
-    let rot = Math.PI / 2 * 3;
-
-    ctx.fillStyle = 'black';
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - outerRadius);
-    for (let i = 0; i < spikes; i++) {
-        ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
-        rot += step;
-        ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
-        rot += step;
-    }
-    ctx.lineTo(cx, cy - outerRadius);
-    ctx.closePath();
-    ctx.fill();
-};
-
 /** Coloured disc with a white outline, the background of every point-of-sale icon. */
 const drawPosBadge = (ctx: CanvasRenderingContext2D, color: string) => {
     ctx.fillStyle = color;
@@ -111,7 +86,6 @@ const drawPosOffice = (ctx: CanvasRenderingContext2D) => {
 
 export const addAllIcons = (map: Map) => {
     registerIcon(map, MAP_ICONS.VEHICLE_ARROW, true, drawArrow);
-    registerIcon(map, MAP_ICONS.FAVORITE_STAR, true, drawStar);
     registerIcon(map, MAP_ICONS.POS_MACHINE, false, drawPosMachine);
     registerIcon(map, MAP_ICONS.POS_INFO, false, drawPosInfo);
     registerIcon(map, MAP_ICONS.POS_OFFICE, false, drawPosOffice);

@@ -1,7 +1,7 @@
 
 import { useMemo, useCallback, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { FilterSpecification, SymbolLayerSpecification } from 'maplibre-gl';
+import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
 import type { StopCollection, StopProperties } from '@/types';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
@@ -12,7 +12,7 @@ import { useVehicles } from '@/hooks/data/useVehicles';
 import { useStops } from '@/hooks/data/useStops';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
-import { groupStations, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
+import { favoriteMarks, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
@@ -21,12 +21,13 @@ import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
     stopClusters,
+    STATION_CLUSTER_PROPERTIES,
+    clusterModeColor,
     stationDots,
     stationBadges,
     stationLabels,
     platformBadges,
     stopEntrances,
-    stopFavorites,
     vehicleSelectedPulse,
     vehicleSelectedPoint,
     vehicleSelectedDirection,
@@ -44,6 +45,7 @@ import {
     MAP_SOURCES,
     STATION_CLUSTER_MAX_ZOOM,
     stopBadgeImage,
+    platformSortKey,
     leadingModeColor,
 } from '@/config/mapLayers';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -58,8 +60,9 @@ interface MapLayersProps {
 
 const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
 const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
-const overlayStations = memoizeLast(groupStations);
+const overlayStations = memoizeLast(withStopModes);
 const platformModes = memoizeLast(withStopModes);
+const starredStops = memoizeLast(favoriteMarks);
 const CITY_SLUGS = Object.keys(FRONTEND_CITIES_CONFIG);
 
 /** A collection with a neighbouring network's features appended; the collection itself when there are none. */
@@ -86,8 +89,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const delayFilter = usePreferencesStore(s => s.delayFilter);
     const userLocation = useGeolocationStore(s => s.userLocation);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const badgeImage = useMemo(() => stopBadgeImage(selectedCity), [selectedCity]);
     const dotColor = useMemo(() => leadingModeColor(selectedCity, modeColorsOf, CITY_SLUGS), [selectedCity]);
+    const clusterColor = useMemo(() => clusterModeColor(modeColorsOf(selectedCity)), [selectedCity]);
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
@@ -100,8 +103,12 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
         () => platformModes(withOverlay(ownStops, withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false))),
         [ownStops, overlay.stops]);
     const stationsData = useMemo(
-        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.stops), stationGrid(ownStations ?? null), true)),
-        [ownStations, overlay.stops]);
+        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids), stationGrid(ownStations ?? null), true)),
+        [ownStations, overlay.centroids]);
+    const starred = starredStops(stationsData, stopsData, favoriteStops);
+    const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
+    const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
+    const platformOrder = useMemo(() => platformSortKey(starred.platformIds), [starred.platformIds]);
     const routeShapeData = useRouteShape();
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
@@ -203,12 +210,13 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 cluster={true}
                 clusterMaxZoom={STATION_CLUSTER_MAX_ZOOM}
                 clusterRadius={25}
+                clusterProperties={STATION_CLUSTER_PROPERTIES}
             >
-                <Layer {...stopClusters} />
+                <Layer {...stopClusters} paint={{ ...stopClusters.paint, 'circle-color': clusterColor }} />
                 <Layer {...stationDots} paint={{ ...stationDots.paint, 'circle-color': dotColor }} />
                 <Layer
                     {...stationBadges}
-                    layout={{ ...stationBadges.layout, 'icon-image': badgeImage, 'text-field': stationText }}
+                    layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage, 'text-field': stationText }}
                     paint={{ ...stationBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }}
                 />
                 {showStopLabels && <Layer {...stationLabels} paint={{ ...stationLabels.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />}
@@ -216,14 +224,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
             <Source id={MAP_SOURCES.STOPS} type="geojson" data={filteredStopsData}>
                 <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
-                <Layer {...platformBadges} layout={{ ...platformBadges.layout, 'icon-image': badgeImage }} paint={{ ...platformBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />
-                {favoriteStops.length > 0 && (
-                    <Layer
-                        {...stopFavorites}
-                        paint={{ ...(stopFavorites.paint as SymbolLayerSpecification['paint']), 'icon-halo-color': haloColor }}
-                        filter={['in', ['get', 'stop_id'], ['literal', favoriteStops]] as FilterSpecification}
-                    />
-                )}
+                <Layer {...platformBadges} layout={{ ...platformBadges.layout, 'icon-image': platformBadgeImage, 'symbol-sort-key': platformOrder }} paint={{ ...platformBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
         </>
     );

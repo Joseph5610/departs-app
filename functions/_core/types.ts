@@ -204,6 +204,8 @@ export interface AppDeparture {
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
     stopId?: string;
+    /** The platform a departure leaves from when `stopId` is the station the client asked for. */
+    platformStopId?: string;
     is_request_stop?: boolean;
     connections?: AppDepartureFeeder[];
     continues_as?: AppContinuation;
