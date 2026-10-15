@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -95,6 +95,42 @@ describe('platformSections', () => {
             ['B', ['b1']],
             [null, ['n']],
         ]);
+    });
+
+    // Without platform codes (IDS JMK, DPMP) a station board reads by direction, as the stop signs do.
+    it('names platforms without a code by direction, after the coded ones, one section per direction', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'g', line: '4', platformDirection: 'Grohova' }),
+            departure({ tripId: 'c', line: '9', headsign: 'Lesná', platformDirection: 'Grohova' }),
+            departure({ tripId: 'k', line: '12', headsign: 'Komárov', platformDirection: 'Komenského náměstí' }),
+            departure({ tripId: '1', line: '6', headsign: 'Starý Lískovec', platform: '1' }),
+        ], 'line');
+        expect(platformSections(groups).map(s => [s.key, s.platform, s.direction])).toEqual([
+            ['1', '1', null],
+            ['→Grohova', null, 'Grohova'],
+            ['→Komenského náměstí', null, 'Komenského náměstí'],
+        ]);
+    });
+});
+
+describe('withStopPlatforms', () => {
+    const stopIndex = new Map([
+        ['Z1', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z1', stop_name: 'Česká', platform_code: '1' } }],
+        ['Z2', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z2', stop_name: 'Česká', direction: 'Grohova' } }],
+    ] as const) as never;
+
+    // A GTFS city's station board names the station in stopId and the platform in platformStopId.
+    it('fills the platform code, else the direction, from the departure\'s stop', () => {
+        const deps = withStopPlatforms([
+            departure({ tripId: 'a', stopId: 'S', platformStopId: 'Z1' }),
+            departure({ tripId: 'b', stopId: 'S', platformStopId: 'Z2' }),
+        ], stopIndex);
+        expect(deps.map(d => [d.platform, d.platformDirection])).toEqual([['1', undefined], [undefined, 'Grohova']]);
+    });
+
+    it('returns the same list when nothing changes', () => {
+        const deps = [departure({ tripId: 'a', platform: 'A', stopId: 'Z1' })];
+        expect(withStopPlatforms(deps, stopIndex)).toBe(deps);
     });
 });
 

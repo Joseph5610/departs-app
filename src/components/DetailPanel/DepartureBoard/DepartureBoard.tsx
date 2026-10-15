@@ -1,7 +1,8 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { Train, X } from 'lucide-react';
+import { ArrowRight, ListFilter, Train, X } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, SelectedStop, AppError } from '@/types';
@@ -12,8 +13,8 @@ import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { groupsHidingTrips, isMetroClosed, platformSections, type DepartureLineGroup } from '@/domain/departures';
-import { isStationBoard } from '@/domain/stops';
+import { groupsHidingTrips, isMetroClosed, platformSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
+import { isStationBoard, servesMode } from '@/domain/stops';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
@@ -49,7 +50,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const sections = useMemo(() => {
         if (!onStation) return null;
         const split = platformSections(groupedDepartures);
-        return split.some(section => section.platform) ? split : null;
+        return split.some(section => section.key) ? split : null;
     }, [onStation, groupedDepartures]);
     const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
@@ -110,7 +111,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 
     const now = useNowEvery(DEPARTURES_CONFIG.METRO_CLOSED_CHECK_MS);
     const showMetroNightMessage = groupedDepartures.length === 0 && !isFiltered
-        && (selectedStop.metro_lines?.length ?? 0) > 0 && isMetroClosed(now, timezone, lineRules.metroClosedHours);
+        && servesMode(selectedStop, 'metro') && isMetroClosed(now, timezone, lineRules.metroClosedHours);
 
     const rowProps = { isFiltered, expandedGroups, onToggleGroup, boardStopId, timeZone: timezone, highlightedTripId, onDepartureClick };
 
@@ -159,12 +160,12 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             ) : (
                 sections ? (
                     sections.map(section => (
-                        <section key={section.platform ?? ''} className="flex flex-col gap-1.5">
-                            {section.platform && (
+                        <section key={section.key} className="flex flex-col gap-1.5">
+                            {section.key && (
                                 <PlatformHeader
-                                    code={section.platform}
+                                    section={section}
                                     isMetro={section.groups[0]?.type === 'metro'}
-                                    isSelected={selectedPlatform === section.platform}
+                                    isSelected={selectedPlatform === section.key}
                                     onToggle={togglePlatformFilter}
                                 />
                             )}
@@ -224,32 +225,39 @@ const DirectionRows = ({ groups, inPlatformSection, isFiltered, expandedGroups, 
     }));
 
 interface PlatformHeaderProps {
-    code: string;
+    section: PlatformSection;
     isMetro: boolean;
     isSelected: boolean;
     onToggle: (code: string) => void;
 }
 
 /** A station board's platform section title; tapping it shows only that platform, tapping again shows them all. */
-const PlatformHeader = ({ code, isMetro, isSelected, onToggle }: PlatformHeaderProps) => {
+const PlatformHeader = ({ section, isMetro, isSelected, onToggle }: PlatformHeaderProps) => {
     const { t } = useTranslation();
     return (
         <button
             type="button"
-            onClick={() => onToggle(code)}
+            onClick={() => onToggle(section.key)}
             aria-pressed={isSelected}
             className="flex items-center gap-2 rounded-lg px-2 py-1 text-left outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-            <PlatformCircle code={code} className="size-6 text-label" />
-            <span className="flex-1 text-body-sm font-semibold text-foreground">
-                {isMetro ? t('map.departures.trackNumber', { track: code }) : t('map.departures.platformSection', { code })}
-            </span>
-            {isSelected && (
-                <span className="flex items-center gap-1 text-label font-semibold text-muted-foreground">
-                    {t('map.departures.allPlatforms')}
-                    <X size={14} strokeWidth={2} aria-hidden="true" />
+            {section.platform ? (
+                <>
+                    <PlatformCircle code={section.platform} className="size-6 text-label" />
+                    <span className="flex-1 text-body-sm font-semibold text-foreground">
+                        {isMetro ? t('map.departures.trackNumber', { track: section.platform }) : t('map.departures.platformSection', { code: section.platform })}
+                    </span>
+                </>
+            ) : (
+                <span className="flex min-w-0 flex-1 items-center gap-2 text-body-sm font-semibold text-foreground">
+                    <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
                 </span>
             )}
+            <span className={cn("flex items-center gap-1 rounded-full px-2.5 py-1 text-label font-semibold transition-colors", isSelected ? "bg-primary/15 text-primary" : "bg-foreground/5 text-muted-foreground")}>
+                {isSelected ? <X size={13} strokeWidth={2} aria-hidden="true" /> : <ListFilter size={13} strokeWidth={2} aria-hidden="true" />}
+                {isSelected ? t('map.departures.allPlatforms') : t('map.departures.onlyThisPlatform')}
+            </span>
         </button>
     );
 };

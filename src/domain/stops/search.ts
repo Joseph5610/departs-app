@@ -10,10 +10,10 @@ export interface SearchIndexItem {
     stopId: string;
 }
 
-/** Searchable platforms and stations; entrances (location_type 2) and centroids are left out. */
+/** Searchable stations and platforms; entrances (location_type 2) are left out. */
 export const createSearchIndex = (features: StopFeature[]): SearchIndexItem[] =>
     features
-        .filter((stop) => stop.properties.location_type !== 2 && !stop.properties.is_centroid)
+        .filter((stop) => stop.properties.location_type !== 2)
         .map((stop) => {
             const normalizedName = normalizeString(stop.properties.stop_name);
             return {
@@ -38,7 +38,7 @@ const scoreOf = (item: SearchIndexItem, upperQuery: string, normalizedQuery: str
     return score;
 };
 
-/** Stops by id prefix or by every query word starting a word of the name, best first, one per name. */
+/** Stops by id prefix or by every query word starting a word of the name, best first, one per name: a station before its platforms. */
 export const searchStops = (searchIndex: SearchIndexItem[], query: string): StopFeature[] => {
     if (query.length < STOP_SEARCH.MIN_QUERY_LENGTH) return [];
 
@@ -49,7 +49,9 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
     const matches = searchIndex
         .filter((item) => item.stopId.startsWith(upperQuery) || matchesAllTokens(queryTokens, item.nameTokens))
         .map((item) => ({ stop: item.stop, score: scoreOf(item, upperQuery, normalizedQuery, queryTokens) }))
-        .sort((a, b) => b.score - a.score || a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name));
+        .sort((a, b) => b.score - a.score
+            || Number(!!b.stop.properties.is_centroid) - Number(!!a.stop.properties.is_centroid)
+            || a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name));
 
     return firstUnique(matches, (match) => match.stop.properties.stop_name, STOP_SEARCH.RESULT_LIMIT).map((match) => match.stop);
 };

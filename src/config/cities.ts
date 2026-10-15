@@ -39,6 +39,8 @@ export interface InitialCityConfig {
     enrichmentChannel?: EnrichmentChannelAdapter;
     /** The feed reports no delay, so the app estimates it from `stop_times/<HH>.json` and the vehicle positions. */
     estimatesDelay?: boolean;
+    /** The departures API knows no stations, so a station is identified by its platforms' ids, comma-joined (Golemio). */
+    departuresByPlatforms?: boolean;
     hasInfotexts?: boolean;
     /** Fleet register on the static data CDN (`<city>/<file>`) for vehicle detail; a vehicle it does not list keeps the backend's network operator. */
     vehicleMetadata?: { file: string };
@@ -81,6 +83,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
         slug: 'prague',
         networkLabel: 'PID',
+        departuresByPlatforms: true,
         modeColors: { train: '#251E62', tram: '#7A0603', trolleybus: '#80166F', bus: '#007DA8', ferry: '#00B3CB', funicular: '#B2B943' },
         country: 'CZ',
         timezone: 'Europe/Prague',

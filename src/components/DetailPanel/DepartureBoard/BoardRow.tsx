@@ -56,7 +56,7 @@ const RowBody = ({ action, below, className, children, outer, ...lead }: BoardRo
     return (
         <div {...outer} {...handlers} className="group/row relative touch-pan-y">
             {action && (
-                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-[var(--swipe,0)]">
+                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-(--swipe,0)">
                     <Star size={22} strokeWidth={1.75} className="transition-transform group-data-armed/row:scale-125" fill={action.isActive ? 'currentColor' : 'none'} />
                 </span>
             )}

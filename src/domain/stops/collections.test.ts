@@ -12,21 +12,21 @@ const collection = (...features: StopFeature[]): StopCollection => ({ type: 'Fea
 
 describe('indexStopsById', () => {
     // Links and departures name any platform id; each must open the stop the map draws.
-    it('resolves sub-ids and the parts of a merged station id, letting a platform keep its own entry', () => {
-        const station = stop('U1Z1,U1Z2,U1Z3', { all_ids: ['U1'] });
-        const ownPlatform = stop('U1Z2');
-        const index = indexStopsById(collection(ownPlatform, station));
+    it('resolves a station and its platforms ids, letting a platform listed after it keep its own entry', () => {
+        const station = stop('S1', { all_ids: ['U1Z1', 'U1Z2'], is_centroid: true });
+        const platform = stop('U1Z2');
+        const index = indexStopsById(collection(station, platform));
 
-        expect(index.get('U1')).toBe(station);
+        expect(index.get('S1')).toBe(station);
         expect(index.get('U1Z1')).toBe(station);
-        expect(index.get('U1Z2')).toBe(ownPlatform);
+        expect(index.get('U1Z2')).toBe(platform);
     });
 });
 
 describe('pinnedStops', () => {
     // A pin can name a platform of a merged station; unpinning and reordering must write that id back.
     it('keeps each pin\'s own id next to the stop it resolves to', () => {
-        const station = stop('U1Z1,U1Z2');
+        const station = stop('U1Z1,U1Z2', { all_ids: ['U1Z1', 'U1Z2'] });
         const other = stop('S2');
         const index = indexStopsById(collection(station, other));
 
@@ -38,7 +38,7 @@ describe('pinnedStops', () => {
 
     // Unpinning the one card must remove every id it was pinned under, or the card stays.
     it('lists a stop pinned under two of its ids once, at its first pin, with both ids', () => {
-        const station = stop('U1Z1,U1Z2');
+        const station = stop('U1Z1,U1Z2', { all_ids: ['U1Z1', 'U1Z2'] });
         const index = indexStopsById(collection(station));
 
         expect(pinnedStops(index, ['U1Z2', 'U1Z1'])).toEqual([{ id: 'U1Z2', ids: ['U1Z2', 'U1Z1'], feature: station }]);
@@ -55,8 +55,8 @@ describe('lineColorAt', () => {
 });
 
 describe('splitStopCollection', () => {
-    // Drop-off-only platforms have no departures to open; station dots come from centroids when the feed has them.
-    it('separates platforms from station centroids and leaves out drop-off-only stops', () => {
+    // Drop-off-only platforms have no departures to open.
+    it('separates platforms from stations and leaves out drop-off-only stops', () => {
         const { stops, centroids } = splitStopCollection(collection(
             stop('P1'),
             stop('P2', { is_drop_off_only: true }),

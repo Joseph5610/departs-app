@@ -28,7 +28,6 @@ export const MAP_ICONS = {
     VEHICLE_ARROW: 'v-arrow-centered',
     /** Prefix of the stop badge images (`stop-badge:<city>:<badges>`), drawn on demand by lib/map/stopBadges.ts. */
     STOP_BADGE_PREFIX: 'stop-badge:',
-    FAVORITE_STAR: 'favorite-star',
     POS_MACHINE: 'pos-machine-icon',
     POS_INFO: 'pos-info-icon',
     POS_OFFICE: 'pos-office-icon',
@@ -41,7 +40,6 @@ export const MAP_LAYERS = {
     STATION_LABELS: 'station-labels',
     PLATFORM_BADGES: 'platform-badges',
     STOP_ENTRANCES: 'entrance-layer',
-    STOP_FAVORITES: 'favorite-star-layer',
     VEHICLE_POINTS: 'vehicles-point',
     VEHICLE_DIRECTIONS: 'vehicles-direction',
     VEHICLE_LABELS: 'vehicles-label',
@@ -66,9 +64,16 @@ export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS
 
 /** Stop badges: one rounded tile per mode serving the stop, in each mode's colour. */
 export const STOP_BADGE = {
-    /** Tile edge in CSS pixels at icon-size 1. */
-    TILE_PX: 26,
-    GAP_PX: 3,
+    /** Tile edge in CSS pixels at icon-size 1; a station's tiles join into one pill. */
+    TILE_PX: 24,
+    /** Line between joined tiles, so two same-coloured modes still read as two. */
+    DIVIDER_PX: 1,
+    DIVIDER_COLOR: 'rgba(0, 0, 0, 0.35)',
+    /** A favourite's star on the pill's top-right corner, as fractions of the tile edge. */
+    STAR_RADIUS_SCALE: 0.36,
+    STAR_MARGIN_SCALE: 0.4,
+    STAR_COLOR: '#f59e0b',
+    STAR_OUTLINE: '#111111',
     PIXEL_RATIO: 2,
     /** Corner radius and glyph size as fractions of the tile edge. */
     RADIUS_SCALE: 0.22,
@@ -87,13 +92,18 @@ export const STOP_BADGE = {
 
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
 const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
-const METRO_LINE_COUNT: ExpressionSpecification = ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]];
 /** A stop's city: its own `city_slug` for a neighbouring network's stop, else the selected city. */
 const stopCity = (selectedCity: string): ExpressionSpecification => ['coalesce', ['get', 'city_slug'], selectedCity];
 
-/** The badge image of a stop, in its city's mode colours. */
-export const stopBadgeImage = (selectedCity: string): ExpressionSpecification =>
-    ['concat', MAP_ICONS.STOP_BADGE_PREFIX, stopCity(selectedCity), ':', ['coalesce', ['get', 'badges'], '']];
+/** The badge image of a stop, in its city's mode colours, starred when its id is in `starredIds`. */
+export const stopBadgeImage = (selectedCity: string, starredIds: readonly string[] = []): ExpressionSpecification =>
+    ['concat', MAP_ICONS.STOP_BADGE_PREFIX, stopCity(selectedCity), ':',
+        ['case', ['in', ['get', 'stop_id'], ['literal', starredIds]], '*', ''], ':',
+        ['coalesce', ['get', 'badges'], '']];
+
+/** Draw order of overlapping platform badges: by leading mode, a starred one on top so its star stays visible. */
+export const platformSortKey = (starredIds: readonly string[]): ExpressionSpecification =>
+    ['+', ['coalesce', ['get', 'mode_rank'], 99], ['case', ['in', ['get', 'stop_id'], ['literal', starredIds]], 1000, 0]];
 
 /** The colour of a stop's leading mode in its city's mode colours, read from its `mode_rank`. */
 export const leadingModeColor = (selectedCity: string, modeColors: (city: string) => Record<RouteType, string>, cities: string[]): ExpressionSpecification => {
@@ -107,13 +117,12 @@ export const leadingModeColor = (selectedCity: string, modeColors: (city: string
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
-        stops: { min: 13, max: 17 },
         /** Stations cluster up to this zoom, like the platforms did before them. */
         clusterMax: 13,
-        /** Stations are drawn as mode badges from here, as dots below it. */
-        badges: 13,
-        /** Station names show from here. */
-        labels: 14,
+        /** Stations are drawn as mode badges from here, as dots below it; clusters end just before. */
+        badges: 14,
+        /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
+        labels: 15,
         /** From here a station splits into its platforms. */
         platforms: 16,
     },
@@ -141,9 +150,6 @@ const MAP_TOKENS = {
 /** Zoom up to which stations are clustered. */
 export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.clusterMax;
 
-/** A linear zoom ramp across the stop layers' zoom range. */
-const stopZoomRamp = (atMin: number, atMax: number): ExpressionSpecification =>
-    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, atMin, MAP_TOKENS.zoom.stops.max, atMax];
 
 // -----------------------------------------------------------------------------
 // STOPS & STATIONS
@@ -156,15 +162,32 @@ const STATION_NAME_TEXT = {
     'text-max-width': 7,
     'text-justify': 'center',
 } as const;
+/** A wide, sharp halo, since a station's name often lies on the vehicles waiting at it. */
 const STATION_NAME_PAINT = {
     'text-color': '#bdbdbd',
     'text-halo-color': '#111111',
-    'text-halo-width': 1,
-    'text-halo-blur': 0.5,
+    'text-halo-width': 2,
+    'text-halo-blur': 0.25,
 } as const;
 /** Badge scale across the zoom range in which stations are drawn whole. */
 const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
     ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh];
+
+const clusterModeCount = (mode: RouteType) => `modes_${mode}`;
+
+/** Each cluster counts its stations by leading mode, so it can take the colour most of them share. */
+export const STATION_CLUSTER_PROPERTIES = Object.fromEntries(ROUTE_TYPE_ORDER.map((mode, rank) =>
+    [clusterModeCount(mode), ['+', ['case', ['==', ['coalesce', ['get', 'mode_rank'], -1], rank], 1, 0]]]));
+
+/** A cluster's colour: that of the mode most of its stations lead with, in the city's mode colours. */
+export const clusterModeColor = (colors: Record<RouteType, string>): ExpressionSpecification => {
+    const count = (mode: RouteType): ExpressionSpecification => ['get', clusterModeCount(mode)];
+    const wins = ROUTE_TYPE_ORDER.flatMap(mode => [
+        ['all', ...ROUTE_TYPE_ORDER.filter(other => other !== mode).map(other => ['>=', count(mode), count(other)])],
+        colors[mode],
+    ]);
+    return ['case', ...wins, colors.unknown] as ExpressionSpecification;
+};
 
 export const stopClusters: CircleLayerSpecification = {
     id: MAP_LAYERS.STOP_CLUSTERS,
@@ -236,7 +259,7 @@ export const stationBadges: SymbolLayerSpecification = {
     }
 };
 
-/** A station's name over its platforms once they are drawn apart; it gives way to the platform badges. */
+/** A station's name once its platforms are drawn apart, beside them rather than on them: a one-platform station's badge sits on its point. */
 export const stationLabels: SymbolLayerSpecification = {
     id: MAP_LAYERS.STATION_LABELS,
     type: 'symbol',
@@ -247,9 +270,9 @@ export const stationLabels: SymbolLayerSpecification = {
         ...STATION_NAME_TEXT,
         'text-field': ['get', 'stop_name'],
         'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 12, 18, 14],
-        'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
-        'text-radial-offset': 1,
-        'text-padding': 30,
+        'text-variable-anchor': ['bottom', 'top', 'left', 'right'],
+        'text-radial-offset': 1.6,
+        'text-padding': 6,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
     paint: STATION_NAME_PAINT,
@@ -312,28 +335,6 @@ export const stopEntrances: SymbolLayerSpecification = {
         'text-halo-width': 1,
         'text-halo-blur': 0.2,
         'text-opacity': ['interpolate', ['linear'], ['zoom'], 15.5, 0, 16, 1]
-    }
-};
-
-export const stopFavorites: SymbolLayerSpecification = {
-    id: MAP_LAYERS.STOP_FAVORITES,
-    type: 'symbol',
-    source: MAP_SOURCES.STOPS,
-    layout: {
-        'icon-image': MAP_ICONS.FAVORITE_STAR,
-        'icon-size': stopZoomRamp(0.18, 0.36),
-        'icon-offset': ['case',
-            ['>=', METRO_LINE_COUNT, 2], ['literal', [45, -55]],
-            ['literal', [35, -35]]
-        ],
-        'icon-allow-overlap': true,
-        'icon-ignore-placement': true
-    },
-    paint: {
-        'icon-color': MAP_TOKENS.colors.favorite,
-        'icon-halo-color': MAP_TOKENS.colors.stroke,
-        'icon-halo-width': 1,
-        'icon-opacity': 1
     }
 };
 

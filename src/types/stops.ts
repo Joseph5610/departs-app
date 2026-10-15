@@ -5,7 +5,6 @@ export interface StopProperties {
     stop_name: string;
     platform_code?: string;
     location_type: number;
-    parent_station?: string;
     zone_id?: string;
     is_centroid?: boolean;
     /** Set on a stop of a neighbouring network shown beside the selected city's. */
@@ -13,18 +12,16 @@ export interface StopProperties {
     /** The network's own stop colour (`stopColor`), where it has one. */
     stop_color?: string;
     is_drop_off_only?: boolean;
-    is_train?: number;
-    metro_lines?: Array<{ name: string; route_color: string }>;
     /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
     interchanges?: string[];
     all_ids?: string[];
     lines?: Array<{ name: string; type: RouteType; route_color: string }>;
-    wheelchair_boarding?: number;
     /** Tiles of the stop's map badge (`metro/B/F8B322|tram|bus`), see `stopBadgeTiles`; set for the map. */
     badges?: string;
     /** Rank of the stop's leading mode in ROUTE_TYPE_ORDER; the map places lower ranks first. */
     mode_rank?: number;
-    level_id?: string;
+    /** A platform without a code: the stop most of its trips call at next, from departs-data. */
+    direction?: string;
 }
 
 export interface StopFeature {
@@ -44,4 +41,40 @@ export interface StopCollection {
 export interface SelectedStop extends Partial<StopProperties> {
     stop_id: string;
     coordinates?: [number, number];
+}
+
+/** `<city>/stops.json` on the static data CDN (departs-data `StopsFile`); `pos` is `[lon, lat]`. */
+export interface StopsFile {
+    version: 1;
+    stations: StopsFileStation[];
+    platforms: StopsFilePlatform[];
+    entrances: StopsFileEntrance[];
+}
+
+export interface StopsFileStation {
+    id: string;
+    name: string;
+    pos: [number, number];
+}
+
+export interface StopsFilePlatform {
+    id: string;
+    /** Further ids the network uses for this same platform (PID `U1000Z1P` beside `U1000Z1`). */
+    aliases?: string[];
+    station: string;
+    pos: [number, number];
+    code?: string;
+    direction?: string;
+    zones?: string[];
+    /** Keys into the city's `routes.json`. */
+    routes: string[];
+    alightOnly?: true;
+    interchanges?: string[];
+}
+
+export interface StopsFileEntrance {
+    id: string;
+    station: string;
+    name: string;
+    pos: [number, number];
 }

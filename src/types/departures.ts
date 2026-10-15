@@ -17,10 +17,14 @@ export interface Departure {
     tripId?: string;
     vehicleId?: string;
     platform?: string;
+    /** Set in the app for a platform without a code: the direction it serves (`withStopPlatforms`). */
+    platformDirection?: string;
     route_color?: string;
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
     stopId?: string;
+    /** The platform a departure leaves from when `stopId` is the station asked for (GTFS cities). */
+    platformStopId?: string;
     is_request_stop?: boolean;
     connections?: DepartureFeeder[];
     continues_as?: Continuation;

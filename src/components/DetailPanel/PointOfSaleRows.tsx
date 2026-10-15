@@ -20,7 +20,7 @@ export const PosRow = ({ icon: Icon, children }: { icon: React.ElementType; chil
             <Icon size={16} strokeWidth={1.5} />
         </ItemMedia>
         <ItemContent>
-            <ItemTitle className="block text-body-sm font-medium text-foreground whitespace-normal break-words">{children}</ItemTitle>
+            <ItemTitle className="block text-body-sm font-medium text-foreground whitespace-normal wrap-break-word">{children}</ItemTitle>
         </ItemContent>
     </Item>
 );
