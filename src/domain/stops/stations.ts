@@ -2,8 +2,8 @@ import type { RouteType, StopCollection, StopFeature, StopProperties } from '@/t
 import { normalizeRouteType, routeTypeRank } from '@/domain/routes';
 
 /** Whether a stop's board gathers several platforms, so its rows name the platform each leaves from. */
-export const isStationBoard = (stop: Pick<StopProperties, 'all_ids' | 'is_centroid'>): boolean =>
-    !!stop.is_centroid && (stop.all_ids?.length ?? 0) > 1;
+export const isStationBoard = (stop: Pick<StopProperties, 'platform_count' | 'is_centroid'>): boolean =>
+    !!stop.is_centroid && (stop.platform_count ?? 0) > 1;
 
 /** Separator of the tiles in a stop's `badges` property, which the map's badge images are named after. */
 export const STOP_BADGE_SEPARATOR = '|';
@@ -47,6 +47,16 @@ const withModes = (f: StopFeature): StopFeature => {
 /** Each stop carrying its `badges` tiles and the rank of its leading mode. */
 export const withStopModes = (collection: StopCollection | null): StopCollection | null =>
     collection && { ...collection, features: collection.features.map(withModes) };
+
+/** Each of `ids` the stop list knows a platform code for, mapped to that code. */
+export const platformCodes = (ids: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): Map<string, string> => {
+    const codes = new Map<string, string>();
+    for (const id of ids) {
+        const code = stopIndex.get(id)?.properties.platform_code;
+        if (code) codes.set(id, code);
+    }
+    return codes;
+};
 
 const idParts = (id: string): string[] => id.split(',');
 

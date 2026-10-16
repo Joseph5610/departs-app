@@ -91,6 +91,8 @@ export const groupDepartures = (departures: Departure[], departureSort: 'line' |
     return groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
 };
 
+const soonest = (departures: Departure[]) => Math.min(...departures.map(d => Date.parse(d.timestamp)));
+
 /**
  * One platform's rows on a station board, named by its code (`platform`) or, without one, by the
  * direction it serves; both null for departures whose platform is unknown. `key` is its `boardingKey`.
@@ -104,10 +106,11 @@ export interface PlatformSection {
 
 /**
  * A station board's rows split by the platform each departure leaves from: coded platforms in natural
- * order (`2` before `10`, `A` before `B`), then those named by direction, unknown ones last; the rows
- * keep the board's order within each. Platforms serving one direction share a section.
+ * order (`2` before `10`, `A` before `B`), then those named by direction, unknown ones last; each sorted
+ * as the board is. Platforms serving one direction share a section. A row split across platforms gets a
+ * `groupId` per platform, so each part expands on its own.
  */
-export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[] => {
+export const platformSections = (groups: DepartureLineGroup[], departureSort: 'line' | 'departure'): PlatformSection[] => {
     const byPlatform = new Map<string, DepartureLineGroup[]>();
     for (const group of groups) {
         const subsByPlatform = new Map<string, DepartureSubGroup[]>();
@@ -115,18 +118,18 @@ export const platformSections = (groups: DepartureLineGroup[]): PlatformSection[
             const depsByPlatform = new Map<string, Departure[]>();
             for (const dep of sub.departures) getOrCreate(depsByPlatform, boardingKey(dep), (): Departure[] => []).push(dep);
             for (const [platform, departures] of depsByPlatform) {
-                const part = depsByPlatform.size === 1 ? sub : { ...sub, departures, firstTime: Math.min(...departures.map(d => Date.parse(d.timestamp))) };
+                const part = depsByPlatform.size === 1 ? sub : { ...sub, groupId: `${sub.groupId}@${platform}`, departures, firstTime: soonest(departures) };
                 getOrCreate(subsByPlatform, platform, (): DepartureSubGroup[] => []).push(part);
             }
         }
         for (const [platform, subGroups] of subsByPlatform) {
-            const part = subsByPlatform.size === 1 ? group : { ...group, subGroups, firstTime: Math.min(...subGroups.map(s => s.firstTime)) };
+            const part = subsByPlatform.size === 1 ? group : { ...group, subGroups: [...subGroups].sort(byFirstTime), firstTime: Math.min(...subGroups.map(s => s.firstTime)) };
             getOrCreate(byPlatform, platform, (): DepartureLineGroup[] => []).push(part);
         }
     }
     const sections = [...byPlatform].map(([key, groups]): PlatformSection => {
         const dep = groups[0]!.subGroups[0]!.departures[0]!;
-        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, groups };
+        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, groups: groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime) };
     });
     const rank = (s: PlatformSection) => (s.platform ? 0 : s.direction ? 1 : 2);
     return sections.sort((a, b) => rank(a) - rank(b) || (a.platform ?? a.direction ?? '').localeCompare(b.platform ?? b.direction ?? '', undefined, { numeric: true }));

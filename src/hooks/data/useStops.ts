@@ -29,6 +29,7 @@ const stopsPersister = createDevicePersister((data): StopCollection => {
 
 const splitStops = memoizeLast(splitStopCollection);
 const stationModes = memoizeLast(withStopModes);
+const platformModes = memoizeLast(withStopModes);
 const buildStopIndex = memoizeLast(indexStopsById);
 
 export const stopsQueryOptions = (city: string) => queryOptions<StopCollection, AppError>({
@@ -59,7 +60,8 @@ export const useStops = () => {
     const query = useQuery(stopsQueryOptions(selectedCity));
 
     const collection = query.data;
-    const { stops, centroids } = splitStops(collection);
+    const { stops: platforms, centroids } = splitStops(collection);
+    const stops = platformModes(platforms);
     const stations = stationModes(centroids);
     const stopIndex = buildStopIndex(collection);
     const updatedAt = query.data ? query.dataUpdatedAt : null;

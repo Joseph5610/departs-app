@@ -31,6 +31,7 @@ describe('stopCollectionFromFile', () => {
             is_centroid: true,
             zone_id: 'P',
             all_ids: ['U1040Z1P', 'U1040Z101P', 'U1040Z102P'],
+            platform_count: 2,
             lines: [{ name: '9', type: 'tram' }, { name: 'A', type: 'metro' }, { name: 'S1', type: 'train' }],
         });
     });
@@ -48,7 +49,9 @@ describe('stopCollectionFromFile', () => {
 
     // Golemio knows no stations: a PID station is asked for as its platforms.
     it('names a station by its platforms ids when the network has no station ids', () => {
-        expect(byId(true).get('U1040Z1P,U1040Z101P,U1040Z102P')).toMatchObject({ is_centroid: true, stop_name: 'Anděl' });
+        const station = byId(true).get('U1040Z1P,U1040Z101P,U1040Z102P');
+        expect(station).toMatchObject({ is_centroid: true, stop_name: 'Anděl' });
+        expect(station?.all_ids?.[0]).toBe('centroid-U1040S1');
     });
 
     it('resolves every platform id and alias to its platform, not to the station', () => {

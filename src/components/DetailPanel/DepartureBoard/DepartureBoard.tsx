@@ -4,7 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { ArrowRight, ListFilter, Train, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
+import { Button } from '@/components/ui/button';
 import type { DepartureClickHandler, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
@@ -20,6 +21,7 @@ import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
 import { PlatformCircle } from '@/components/PlatformCircle';
 import { useSelectionStore } from '@/state/selectionStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { useNowEvery } from '@/hooks/useNow';
@@ -46,12 +48,14 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const { stopId: routeStopId } = useRouteParams();
     // Pins and the departures query both key on the stop id in the URL.
     const boardStopId = routeStopId ?? selectedStop.stop_id;
+    const departureSort = usePreferencesStore(s => s.departureSort);
     const onStation = isStationBoard(selectedStop);
     const sections = useMemo(() => {
         if (!onStation) return null;
-        const split = platformSections(groupedDepartures);
+        const split = platformSections(groupedDepartures, departureSort);
         return split.some(section => section.key) ? split : null;
-    }, [onStation, groupedDepartures]);
+    }, [onStation, groupedDepartures, departureSort]);
+    const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
     const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
@@ -60,11 +64,11 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     useEffect(() => {
         if (!highlightedTripId && !rideTripId && !followedTripId) return;
         const marked = new Set([highlightedTripId, rideTripId, followedTripId].filter((id): id is string => !!id));
-        const toOpen = groupsHidingTrips(groupedDepartures, marked).filter(id => !autoExpanded.current.has(id));
+        const toOpen = groupsHidingTrips(shownGroups, marked).filter(id => !autoExpanded.current.has(id));
         if (toOpen.length === 0) return;
         for (const id of toOpen) autoExpanded.current.add(id);
         setExpandedGroups(prev => new Set([...prev, ...toOpen]));
-    }, [groupedDepartures, highlightedTripId, rideTripId, followedTripId]);
+    }, [shownGroups, highlightedTripId, rideTripId, followedTripId]);
 
     // Re-runs on expansion: a highlighted trip in a collapsed group only has a row once its group opens.
     const scrolledTo = useRef<string | null>(null);
@@ -147,14 +151,22 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                 <Train strokeWidth={1.5} className="opacity-50" />
                             </EmptyMedia>
                             <EmptyTitle className="text-base font-bold text-foreground/80">
-                                {isFiltered 
-                                    ? t('map.departures.noUpcomingForLine', { line: selectedLine }) 
+                                {selectedLine
+                                    ? t('map.departures.noUpcomingForLine', { line: selectedLine })
                                     : t('map.departures.noUpcoming')}
                             </EmptyTitle>
                             <EmptyDescription className="text-sm">
                                 {t('map.departures.noUpcomingDescription')}
                             </EmptyDescription>
                         </EmptyHeader>
+                        {selectedPlatform && (
+                            <EmptyContent>
+                                <Button variant="secondary" size="sm" onClick={() => togglePlatformFilter(selectedPlatform)}>
+                                    <X size={14} strokeWidth={2} aria-hidden="true" />
+                                    {t('map.departures.allPlatforms')}
+                                </Button>
+                            </EmptyContent>
+                        )}
                     </Empty>
                 )
             ) : (

@@ -62,15 +62,15 @@ describe('favoriteMarks', () => {
 
 describe('isStationBoard', () => {
     // PID lists a platform once per fare zone; the app shows the pair as the one platform it is.
-    it('treats a platform merged from its fare-zone twins as one platform', () => {
-        expect(isStationBoard({ all_ids: ['U1Z8', 'U1Z8P'] })).toBe(false);
+    it('treats a station of one platform, listed once per fare zone, as that platform', () => {
+        expect(isStationBoard({ is_centroid: true, platform_count: 1 })).toBe(false);
     });
 
     it('treats a station of several platforms as a station', () => {
-        expect(isStationBoard({ all_ids: ['U1Z1P', 'U1Z2P'], is_centroid: true })).toBe(true);
+        expect(isStationBoard({ is_centroid: true, platform_count: 2 })).toBe(true);
     });
 
-    it('treats a station of one platform as that platform', () => {
-        expect(isStationBoard({ all_ids: ['U1Z1P'], is_centroid: true })).toBe(false);
+    it('treats a platform as a platform', () => {
+        expect(isStationBoard({ platform_count: 2 })).toBe(false);
     });
 });

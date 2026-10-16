@@ -5,7 +5,7 @@ import type {
     ExpressionSpecification
 } from 'maplibre-gl';
 import type { RouteType } from '@/types';
-import { DELAY_TIERS, ROUTE_TYPE_ORDER } from './transit';
+import { DELAY_TIERS } from './transit';
 import { FALLBACK_ROUTE_COLOR } from './constants';
 import { mixHex } from '@/lib/color';
 
@@ -92,28 +92,6 @@ export const STOP_BADGE = {
 
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
 const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
-/** A stop's city: its own `city_slug` for a neighbouring network's stop, else the selected city. */
-const stopCity = (selectedCity: string): ExpressionSpecification => ['coalesce', ['get', 'city_slug'], selectedCity];
-
-/** The badge image of a stop, in its city's mode colours, starred when its id is in `starredIds`. */
-export const stopBadgeImage = (selectedCity: string, starredIds: readonly string[] = []): ExpressionSpecification =>
-    ['concat', MAP_ICONS.STOP_BADGE_PREFIX, stopCity(selectedCity), ':',
-        ['case', ['in', ['get', 'stop_id'], ['literal', starredIds]], '*', ''], ':',
-        ['coalesce', ['get', 'badges'], '']];
-
-/** Draw order of overlapping platform badges: by leading mode, a starred one on top so its star stays visible. */
-export const platformSortKey = (starredIds: readonly string[]): ExpressionSpecification =>
-    ['+', ['coalesce', ['get', 'mode_rank'], 99], ['case', ['in', ['get', 'stop_id'], ['literal', starredIds]], 1000, 0]];
-
-/** The colour of a stop's leading mode in its city's mode colours, read from its `mode_rank`. */
-export const leadingModeColor = (selectedCity: string, modeColors: (city: string) => Record<RouteType, string>, cities: string[]): ExpressionSpecification => {
-    const palette = (city: string) => ['literal', [...ROUTE_TYPE_ORDER.map(mode => modeColors(city)[mode]), modeColors(city).unknown]];
-    return ['to-color', ['at',
-        ['coalesce', ['get', 'mode_rank'], ROUTE_TYPE_ORDER.length],
-        ['match', stopCity(selectedCity), ...cities.flatMap(city => [city, palette(city)]), palette('')],
-    ]] as ExpressionSpecification;
-};
-
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
@@ -173,22 +151,6 @@ const STATION_NAME_PAINT = {
 const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
     ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh];
 
-const clusterModeCount = (mode: RouteType) => `modes_${mode}`;
-
-/** Each cluster counts its stations by leading mode, so it can take the colour most of them share. */
-export const STATION_CLUSTER_PROPERTIES = Object.fromEntries(ROUTE_TYPE_ORDER.map((mode, rank) =>
-    [clusterModeCount(mode), ['+', ['case', ['==', ['coalesce', ['get', 'mode_rank'], -1], rank], 1, 0]]]));
-
-/** A cluster's colour: that of the mode most of its stations lead with, in the city's mode colours. */
-export const clusterModeColor = (colors: Record<RouteType, string>): ExpressionSpecification => {
-    const count = (mode: RouteType): ExpressionSpecification => ['get', clusterModeCount(mode)];
-    const wins = ROUTE_TYPE_ORDER.flatMap(mode => [
-        ['all', ...ROUTE_TYPE_ORDER.filter(other => other !== mode).map(other => ['>=', count(mode), count(other)])],
-        colors[mode],
-    ]);
-    return ['case', ...wins, colors.unknown] as ExpressionSpecification;
-};
-
 export const stopClusters: CircleLayerSpecification = {
     id: MAP_LAYERS.STOP_CLUSTERS,
     type: 'circle',
@@ -241,7 +203,6 @@ export const stationBadges: SymbolLayerSpecification = {
     filter: UNCLUSTERED,
     layout: {
         ...STATION_NAME_TEXT,
-        'icon-image': stopBadgeImage(''),
         'icon-size': badgeSize(0.6, 0.9),
         'icon-padding': 2,
         'text-field': ['step', ['zoom'], '', MAP_TOKENS.zoom.labels, ['get', 'stop_name']],
@@ -286,7 +247,6 @@ export const platformBadges: SymbolLayerSpecification = {
     minzoom: MAP_TOKENS.zoom.platforms,
     filter: ['!=', LOCATION_TYPE, 2],
     layout: {
-        'icon-image': stopBadgeImage(''),
         'icon-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0.8, 18, 1],
         'icon-allow-overlap': true,
         'text-field': ['coalesce', ['get', 'platform_code'], ''],
