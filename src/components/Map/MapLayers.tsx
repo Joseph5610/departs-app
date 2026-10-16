@@ -21,8 +21,6 @@ import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
     stopClusters,
-    STATION_CLUSTER_PROPERTIES,
-    clusterModeColor,
     stationDots,
     stationBadges,
     stationLabels,
@@ -44,10 +42,8 @@ import {
     getVehicleColorExpression,
     MAP_SOURCES,
     STATION_CLUSTER_MAX_ZOOM,
-    stopBadgeImage,
-    platformSortKey,
-    leadingModeColor,
 } from '@/config/mapLayers';
+import { STATION_CLUSTER_PROPERTIES, clusterModeColor, leadingModeColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { modeColorsOf } from '@/lib/map/stopBadges';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
@@ -61,7 +57,7 @@ interface MapLayersProps {
 const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
 const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
 const overlayStations = memoizeLast(withStopModes);
-const platformModes = memoizeLast(withStopModes);
+const overlayPlatforms = memoizeLast(withStopModes);
 const starredStops = memoizeLast(favoriteMarks);
 const CITY_SLUGS = Object.keys(FRONTEND_CITIES_CONFIG);
 
@@ -100,7 +96,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
     const stopsData = useMemo(
-        () => platformModes(withOverlay(ownStops, withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false))),
+        () => withOverlay(ownStops, overlayPlatforms(withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false))),
         [ownStops, overlay.stops]);
     const stationsData = useMemo(
         () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids), stationGrid(ownStations ?? null), true)),

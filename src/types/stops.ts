@@ -15,6 +15,8 @@ export interface StopProperties {
     /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
     interchanges?: string[];
     all_ids?: string[];
+    /** A station's number of platforms (its `all_ids` also hold their aliases). */
+    platform_count?: number;
     lines?: Array<{ name: string; type: RouteType; route_color: string }>;
     /** Tiles of the stop's map badge (`metro/B/F8B322|tram|bus`), see `stopBadgeTiles`; set for the map. */
     badges?: string;

@@ -88,7 +88,7 @@ describe('platformSections', () => {
             departure({ tripId: 'x', line: '176', headsign: 'Strahov', platform: '10' }),
             departure({ tripId: 'n', line: '20', headsign: 'Radlická' }),
         ], 'line');
-        const sections = platformSections(groups);
+        const sections = platformSections(groups, 'line');
         expect(sections.map(s => [s.platform, s.groups.flatMap(g => g.subGroups.flatMap(sub => sub.departures.map(d => d.tripId)))])).toEqual([
             ['10', ['x']],
             ['A', ['a1']],
@@ -105,11 +105,23 @@ describe('platformSections', () => {
             departure({ tripId: 'k', line: '12', headsign: 'Komárov', platformDirection: 'Komenského náměstí' }),
             departure({ tripId: '1', line: '6', headsign: 'Starý Lískovec', platform: '1' }),
         ], 'line');
-        expect(platformSections(groups).map(s => [s.key, s.platform, s.direction])).toEqual([
+        expect(platformSections(groups, 'line').map(s => [s.key, s.platform, s.direction])).toEqual([
             ['1', '1', null],
             ['→Grohova', null, 'Grohova'],
             ['→Komenského náměstí', null, 'Komenského náměstí'],
         ]);
+    });
+
+    // Sorted by departure, a row split off to another platform keeps its place by its own first departure there.
+    it('sorts each section by its own departures and gives each part of a split row its own id', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'a9', line: '9', headsign: 'Řepy', platform: 'A', scheduled: at(MIN), timestamp: at(MIN) }),
+            departure({ tripId: 'b9', line: '9', headsign: 'Řepy', platform: 'B', scheduled: at(10 * MIN), timestamp: at(10 * MIN) }),
+            departure({ tripId: 'b5', line: '5', headsign: 'Barrandov', platform: 'B', scheduled: at(5 * MIN), timestamp: at(5 * MIN) }),
+        ], 'departure');
+        const [a, b] = platformSections(groups, 'departure');
+        expect(b!.groups.map(g => g.line)).toEqual(['5', '9']);
+        expect(a!.groups[0]!.subGroups[0]!.groupId).not.toBe(b!.groups[1]!.subGroups[0]!.groupId);
     });
 });
 

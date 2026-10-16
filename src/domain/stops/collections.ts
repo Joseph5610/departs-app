@@ -58,7 +58,7 @@ const stopSummary = (feature: StopFeature) => {
 };
 
 /** The panel's view of a stop from its map feature. */
-export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_centroid: feature.properties.is_centroid });
+export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_centroid: feature.properties.is_centroid, platform_count: feature.properties.platform_count });
 
 /** A search history entry for a stop picked in `city`. */
 export const stopHistoryEntry = (feature: StopFeature, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, ...stopSummary(feature) });

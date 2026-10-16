@@ -6,8 +6,8 @@ import { AlertIcon } from '@/components/Alerts/AlertIcon';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
-import { highestPlatformPriority, noticesByPlatform, noticesForStops, noticeText, type PlatformNotices } from '@/domain/alerts';
-import { isStationBoard } from '@/domain/stops';
+import { boardNotices, highestPlatformPriority, noticeText, type PlatformNotices } from '@/domain/alerts';
+import { isStationBoard, platformCodes } from '@/domain/stops';
 import { useStops } from '@/hooks/data/useStops';
 import { useSelectionStore } from '@/state/selectionStore';
 import { PlatformCircle } from '@/components/PlatformCircle';
@@ -26,30 +26,21 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
     const selectedPlatform = useSelectionStore(s => s.selectedPlatform);
     const onStation = isStationBoard(selectedStop);
 
-    const notices = useMemo(() => {
-        if (!allInfotexts) return { station: [], platforms: [] };
+    const { shown, summary } = useMemo(() => {
+        if (!allInfotexts) return { shown: [], summary: [] };
         const ids = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
-        if (!onStation) return { station: noticesForStops(allInfotexts, ids), platforms: [] };
-        const codes = new Map<string, string>();
-        for (const id of selectedStop.all_ids ?? []) {
-            const code = stopIndex.get(id)?.properties.platform_code;
-            if (code) codes.set(id, code);
-        }
-        return noticesByPlatform(allInfotexts, ids, codes);
-    }, [selectedStop, allInfotexts, onStation, stopIndex]);
+        const codes = onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null;
+        return boardNotices(allInfotexts, ids, codes, selectedPlatform);
+    }, [selectedStop, allInfotexts, onStation, stopIndex, selectedPlatform]);
 
-    const picked = selectedPlatform ? notices.platforms.find(p => p.code === selectedPlatform) : undefined;
-    const shown = picked ? [...notices.station, ...picked.notices.filter(n => !notices.station.includes(n))] : notices.station;
-    const showSummary = !selectedPlatform && notices.platforms.length > 0;
-
-    if (shown.length === 0 && !showSummary) return null;
+    if (shown.length === 0 && summary.length === 0) return null;
 
     return (
         <div className="flex flex-col gap-2">
             {shown.map(info => (
                 <InfoTextCard key={info.id} info={info} />
             ))}
-            {showSummary && <PlatformNoticesCard platforms={notices.platforms} />}
+            {summary.length > 0 && <PlatformNoticesCard platforms={summary} />}
         </div>
     );
 };

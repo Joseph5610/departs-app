@@ -34,17 +34,20 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
         const platforms = platformsOf.get(s.id) ?? [];
         const lines = new Map<string, StopLines[number]>();
         for (const line of linesOf(platforms.flatMap(p => p.routes))) lines.set(`${line.type}|${line.name}`, line);
+        const stopId = stationIds.get(s.id) ?? s.id;
         return {
             type: 'Feature',
             geometry: pointAt(s.pos),
             properties: {
-                stop_id: stationIds.get(s.id) ?? s.id,
+                stop_id: stopId,
                 stop_name: s.name,
                 location_type: 1,
                 is_centroid: true,
                 zone_id: platforms[0]?.zones?.[0],
                 lines: [...lines.values()],
-                all_ids: platforms.flatMap(idsOf),
+                // The station's own id stays resolvable where `stop_id` lists its platforms instead.
+                all_ids: stopId === s.id ? platforms.flatMap(idsOf) : [s.id, ...platforms.flatMap(idsOf)],
+                platform_count: platforms.length,
             },
         };
     });
