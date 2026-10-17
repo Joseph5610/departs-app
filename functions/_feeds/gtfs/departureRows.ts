@@ -34,7 +34,7 @@ function getParentChildMap(city: CityConfig): Promise<Record<string, string[]>> 
         `parent_child_map_${city.slug}`,
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
-            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/parent_child_map.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/parent_child_map.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
             if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
             return await res.json() as Record<string, string[]>;
         }
@@ -45,7 +45,7 @@ async function getStopShard(city: CityConfig, shardId: string): Promise<Record<s
     const key = `${city.slug}:${shardId}`;
     const held = stopShards.get(key);
     if (held) return held;
-    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/stop_index/${shardId}.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/stop_index/${shardId}.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
     if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
     const shard = await res.json() as Record<string, StopRelation>;
     stopShards.set(key, shard);
@@ -105,7 +105,7 @@ export async function getDepartureRows(city: CityConfig, stopIds: string[], pare
 
     await Promise.all(Array.from(byBucket, async ([bucketId, ids]) => {
         try {
-            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/departure_buckets/${bucketId}.json`, {
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/departure_buckets/${bucketId}.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, {
                 cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS,
                 cf: { cacheTtl: UPSTREAM_TTL_S.DEPARTURE_BUCKETS }
             });
