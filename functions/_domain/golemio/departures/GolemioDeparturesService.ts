@@ -19,14 +19,12 @@ export class GolemioDeparturesService implements DeparturesUseCase {
      * 
      * If a query includes a mix of S and Z nodes, we strip the S nodes to prevent upstream API errors.
      * If no Z nodes exist, we fall back to raw IDs to ensure the query doesn't fail silently.
-     * Also strips internal "centroid-" prefixes.
      * 
      * @param stopId The raw stop ID (potentially a comma-separated list of child IDs)
      * @returns Array of filtered platform IDs ready for Golemio API
      */
     private filterStopIdsForDepartures(stopId: string): string[] {
-        const cleanStopId = stopId.replace(/^centroid-/, '');
-        const rawIds = cleanStopId.split(',');
+        const rawIds = stopId.split(',');
         const finalIds = rawIds.filter(id => {
             if (id.includes('S')) return false; 
             if (!id.includes('Z')) return false; 

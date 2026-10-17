@@ -116,7 +116,7 @@ export async function findStopsByName(citySlug: string, query: string, limit: nu
 }
 
 /** PID-style node shared by every platform of a station (`U1146Z11` -> `U1146`); undefined for other id schemes. */
-const stationNode = (stopId: string): string | undefined => /^(?:centroid-)?(U\d+)/i.exec(stopId)?.[1];
+const stationNode = (stopId: string): string | undefined => /^(U\d+)/i.exec(stopId)?.[1];
 
 /**
  * The station a name query means, as every platform id serving it: all stops with the best match's
@@ -265,10 +265,9 @@ export async function loadInfotexts(ctx: McpContext, city: CityUseCases, citySlu
 
 /** The infotexts that name any platform of `stopId`, as exposed to MCP clients. */
 export function toMcpStopInfotexts(infotexts: AppInfotext[], stopId: string) {
-    // `stop_id` may be a comma-joined platform list or `centroid-` prefixed; match the parts exactly.
+    // `stop_id` may be a comma-joined platform list; match the parts exactly.
     const targetIds = new Set(
         stopId
-            .replace(/^centroid-/i, '')
             .split(',')
             .map((id) => id.trim().toLowerCase())
             .filter((id) => id.length > 0)
