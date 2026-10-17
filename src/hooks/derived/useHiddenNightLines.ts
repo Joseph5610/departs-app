@@ -3,16 +3,16 @@ import { useNowEvery } from '@/hooks/useNow';
 import { DEFAULT_LINE_RULES, FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { MAP_DATA } from '@/config/constants';
 import { memoizeLast } from '@/lib/memoize';
-import { nightLinesByNetwork, type HiddenNightLinesOf, type NightLineNetwork } from '@/domain/stops';
+import { nightLinesByNetwork, networksHidingNightLines, type HiddenNightLinesOf, type NightLineNetwork } from '@/domain/stops';
 
 const NETWORKS: Record<string, NightLineNetwork> = Object.fromEntries(Object.entries(FRONTEND_CITIES_CONFIG).map(([slug, city]) =>
     [slug, { timeZone: city.timezone, rules: { ...DEFAULT_LINE_RULES, ...city.lineRules } }]));
 
 const byNetwork = memoizeLast(nightLinesByNetwork);
 
-/** The night lines each stop's map badge leaves out now, by its network; changes only when a check step passes. */
+/** The night lines each stop's map badge leaves out now, by its network; changes only when a network's night hours start or end. */
 export const useHiddenNightLines = (): HiddenNightLinesOf => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const now = useNowEvery(MAP_DATA.NIGHT_LINES_CHECK_MS);
-    return byNetwork(now, selectedCity, NETWORKS);
+    return byNetwork(networksHidingNightLines(now, NETWORKS), selectedCity, NETWORKS);
 };

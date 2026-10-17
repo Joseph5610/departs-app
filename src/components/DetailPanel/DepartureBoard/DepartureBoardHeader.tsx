@@ -103,7 +103,7 @@ export const DepartureBoardHeader = memo(() => {
             {(uniqueLines.length > 0 || hasVehicleFilters) && (
                 // One scrolling strip: the vehicle filters lead, then the line chips.
                 <ChipStrip>
-                        {(hasAirConditioningData || hasAccessibilityData) && (
+                        {hasVehicleFilters && (
                             <div role="group" aria-label={t('map.departures.vehicleFilters')} className="flex items-center gap-1.5">
                                 {hasAirConditioningData && (
                                     <PropertyToggle

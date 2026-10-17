@@ -1,5 +1,5 @@
 import type { PinnedStop, SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
-import { servesMode } from './stations';
+import { servesMode, stopIdParts, uniqueLines } from './stations';
 
 /** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only ones are left out. */
 export const splitStopCollection = (collection: StopCollection | undefined) => {
@@ -67,15 +67,14 @@ export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stop
 export const selectedStopOf = (stopId: string, stopIndex: ReadonlyMap<string, StopFeature>): SelectedStop => {
     const own = stopIndex.get(stopId);
     if (own) return toSelectedStop(own);
-    const features = [...new Set(stopId.split(',').map(id => stopIndex.get(id)).filter((f): f is StopFeature => !!f))];
+    const features = [...new Set(stopIdParts(stopId).map(id => stopIndex.get(id)).filter((f): f is StopFeature => !!f))];
     const first = features[0];
     if (!first) return { stop_id: stopId };
-    const lines = new Map(features.flatMap(f => f.properties.lines ?? []).map(line => [`${line.type}|${line.name}`, line]));
     return {
         ...toSelectedStop(first),
         stop_id: stopId,
-        lines: [...lines.values()],
-        all_ids: features.flatMap(f => f.properties.stop_id.split(',')),
+        lines: uniqueLines(features.flatMap(f => f.properties.lines ?? [])),
+        all_ids: features.flatMap(f => stopIdParts(f.properties.stop_id)),
         is_centroid: false,
         platform_count: features.length,
     };

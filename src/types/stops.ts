@@ -9,8 +9,6 @@ export interface StopProperties {
     is_centroid?: boolean;
     /** Set on a stop of a neighbouring network shown beside the selected city's. */
     city_slug?: string;
-    /** The network's own stop colour (`stopColor`), where it has one. */
-    stop_color?: string;
     is_drop_off_only?: boolean;
     /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
     interchanges?: string[];

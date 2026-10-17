@@ -98,11 +98,11 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
     const stopsData = useMemo(
-        () => withOverlay(ownStops, overlayPlatforms(withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false), hiddenNightLines)),
-        [ownStops, overlay.stops, hiddenNightLines]);
+        () => withOverlay(ownStops, withoutTwins(overlayPlatforms(overlay.stops, hiddenNightLines), platformGrid(ownPlatforms ?? null), false)),
+        [ownStops, ownPlatforms, overlay.stops, hiddenNightLines]);
     const stationsData = useMemo(
-        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids, hiddenNightLines), stationGrid(ownStations ?? null), true)),
-        [ownStations, overlay.centroids, hiddenNightLines]);
+        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids, hiddenNightLines), stationGrid(ownCentroids ?? null), true)),
+        [ownStations, ownCentroids, overlay.centroids, hiddenNightLines]);
     const starred = starredStops(stationsData, stopsData, favoriteStops);
     const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);

@@ -1,5 +1,6 @@
 import type { RouteInfo, StopCollection, StopFeature, StopProperties, StopsFile, StopsFilePlatform } from '@/types';
 import { normalizeRouteType } from '@/domain/routes';
+import { uniqueLines } from './stations';
 
 type StopLines = NonNullable<StopProperties['lines']>;
 
@@ -28,13 +29,11 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
         else platformsOf.set(p.station, [p]);
     }
     const nameOf = new Map(file.stations.map(s => [s.id, s.name]));
-    const stationIds = new Map(stationsByPlatforms ? file.stations.map(s => [s.id, (platformsOf.get(s.id) ?? []).flatMap(idsOf).join(',') || s.id]) : []);
 
     const stations = file.stations.map((s): StopFeature => {
         const platforms = platformsOf.get(s.id) ?? [];
-        const lines = new Map<string, StopLines[number]>();
-        for (const line of linesOf(platforms.flatMap(p => p.routes))) lines.set(`${line.type}|${line.name}`, line);
-        const stopId = stationIds.get(s.id) ?? s.id;
+        const platformIds = platforms.flatMap(idsOf);
+        const stopId = stationsByPlatforms ? platformIds.join(',') || s.id : s.id;
         return {
             type: 'Feature',
             geometry: pointAt(s.pos),
@@ -44,9 +43,9 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
                 location_type: 1,
                 is_centroid: true,
                 zone_id: platforms[0]?.zones?.[0],
-                lines: [...lines.values()],
+                lines: uniqueLines(linesOf(platforms.flatMap(p => p.routes))),
                 // The station's own id stays resolvable where `stop_id` lists its platforms instead.
-                all_ids: stopId === s.id ? platforms.flatMap(idsOf) : [s.id, ...platforms.flatMap(idsOf)],
+                all_ids: stopId === s.id ? platformIds : [s.id, ...platformIds],
                 platform_count: platforms.length,
                 // Nobody boards at a station whose every platform is alight-only: the map leaves it out with them.
                 is_drop_off_only: platforms.every(p => p.alightOnly) ? true : undefined,

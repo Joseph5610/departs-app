@@ -66,13 +66,20 @@ export interface NightLineNetwork {
     rules: Pick<LineRules, 'isNightLine' | 'nightHours'>;
 }
 
+/** The networks whose stop badges leave night lines out at `nowMs`, as a key that changes only when that set does. */
+export const networksHidingNightLines = (nowMs: number, networks: Readonly<Record<string, NightLineNetwork>>): string =>
+    Object.entries(networks).filter(([, n]) => hiddenNightLinesAt(nowMs, n.timeZone, n.rules)).map(([slug]) => slug).join(',');
+
 /**
- * The night lines each stop's badge leaves out at `nowMs`: a neighbouring network's stop (`city_slug`) follows
- * its own city's rules and clock, any other stop `ownCity`'s.
+ * The night lines each stop's badge leaves out, given the networks hiding them (`networksHidingNightLines`): a
+ * neighbouring network's stop (`city_slug`) follows its own city's rules, any other stop `ownCity`'s.
  */
-export const nightLinesByNetwork = (nowMs: number, ownCity: string, networks: Readonly<Record<string, NightLineNetwork>>): HiddenNightLinesOf => {
-    const hidden = new Map(Object.entries(networks).map(([slug, n]) => [slug, hiddenNightLinesAt(nowMs, n.timeZone, n.rules)]));
-    return (props) => hidden.get(props.city_slug ?? ownCity) ?? null;
+export const nightLinesByNetwork = (hiding: string, ownCity: string, networks: Readonly<Record<string, NightLineNetwork>>): HiddenNightLinesOf => {
+    const hidden = new Set(hiding.split(','));
+    return (props) => {
+        const slug = props.city_slug ?? ownCity;
+        return hidden.has(slug) ? networks[slug]?.rules.isNightLine ?? null : null;
+    };
 };
 
 const withModes = (f: StopFeature, hiddenNightLines: NightLineTest | null): StopFeature => {
@@ -106,6 +113,18 @@ export interface SectionPlatforms {
     groups: readonly { subGroups: readonly { departures: readonly { platformStopId?: string }[] }[] }[];
 }
 
+/** The platforms among a station's `all_ids`, each once though its aliases name it again. */
+const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): StopProperties[] => {
+    const found = new Map<string, StopProperties>();
+    for (const id of stationIds) {
+        const p = stopIndex.get(id)?.properties;
+        if (p && !p.is_centroid) found.set(p.stop_id, p);
+    }
+    return [...found.values()];
+};
+
+const isMetroOnly = (p: StopProperties) => !!p.lines?.length && p.lines.every(line => line.type === 'metro');
+
 /**
  * The stop a board section's header opens: every platform of the station the section stands for (by its code,
  * or without one by the direction it serves), comma-joined as one stop; the departures' own platforms where the
@@ -117,12 +136,9 @@ export const sectionStopId = (
     { platform, direction, groups }: SectionPlatforms,
     openStopId: string,
 ): string | null => {
-    const found = new Set<string>();
-    for (const id of stationIds) {
-        const p = stopIndex.get(id)?.properties;
-        if (!p || p.is_centroid || (p.lines?.length && p.lines.every(line => line.type === 'metro'))) continue;
-        if (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction) found.add(p.stop_id);
-    }
+    const found = new Set(stationPlatforms(stationIds, stopIndex)
+        .filter(p => !isMetroOnly(p) && (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction))
+        .map(p => p.stop_id));
     if (found.size === 0) {
         for (const group of groups) for (const sub of group.subGroups) for (const dep of sub.departures) if (dep.platformStopId) found.add(dep.platformStopId);
     }
@@ -135,15 +151,16 @@ export const sectionStopId = (
  * several do (a metro track and a tram platform both `1`), so the notice links nowhere rather than to a guess.
  */
 export const platformIdByCode = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>, code: string): string | null => {
-    const found = new Set<string>();
-    for (const id of stationIds) {
-        const p = stopIndex.get(id)?.properties;
-        if (p && !p.is_centroid && p.platform_code === code) found.add(p.stop_id);
-    }
-    return found.size === 1 ? [...found][0]! : null;
+    const found = stationPlatforms(stationIds, stopIndex).filter(p => p.platform_code === code);
+    return found.length === 1 ? found[0]!.stop_id : null;
 };
 
-const idParts = (id: string): string[] => id.split(',');
+/** The ids a stop id names: a single stop, or a comma-joined list (a PID station, a merged platform, a board section). */
+export const stopIdParts = (id: string): string[] => id.split(',');
+
+/** Lines without repeats of the same mode and name, as a station lists its platforms' lines. */
+export const uniqueLines = <L extends { type: string; name: string }>(lines: readonly L[]): L[] =>
+    [...new Map(lines.map(line => [`${line.type}|${line.name}`, line])).values()];
 
 export interface FavoriteMarks {
     stationIds: string[];
@@ -159,11 +176,11 @@ const NO_MARKS: FavoriteMarks = { stationIds: [], platformIds: [] };
  */
 export const favoriteMarks = (stations: StopCollection | null, platforms: StopCollection | null, favoriteIds: readonly string[]): FavoriteMarks => {
     if (favoriteIds.length === 0) return NO_MARKS;
-    const pinned = new Set(favoriteIds.flatMap(idParts));
+    const pinned = new Set(favoriteIds.flatMap(stopIdParts));
     const whole = new Set(favoriteIds);
     const stationIds: string[] = [];
     for (const { properties: p } of stations?.features ?? []) {
-        const parts = p.all_ids ?? idParts(p.stop_id);
+        const parts = p.all_ids ?? stopIdParts(p.stop_id);
         if (whole.has(p.stop_id)) {
             stationIds.push(p.stop_id);
             for (const part of parts) pinned.add(part);
@@ -172,7 +189,7 @@ export const favoriteMarks = (stations: StopCollection | null, platforms: StopCo
         }
     }
     const platformIds = (platforms?.features ?? [])
-        .filter(f => idParts(f.properties.stop_id).some(part => pinned.has(part)))
+        .filter(f => stopIdParts(f.properties.stop_id).some(part => pinned.has(part)))
         .map(f => f.properties.stop_id);
     return { stationIds, platformIds };
 };

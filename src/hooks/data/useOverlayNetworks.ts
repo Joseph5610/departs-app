@@ -57,8 +57,8 @@ export const useOverlayNetworks = (cities: readonly string[]) => {
         const split = p.split(stops[i]?.data);
         return {
             vehicles: p.tagVehicles(p.view(branded, bounds, routeFilter, routeTypeFilter), city),
-            stops: p.tagStops(split.stops, city, FRONTEND_CITIES_CONFIG[city]?.stopColor),
-            centroids: p.tagCentroids(split.centroids, city, FRONTEND_CITIES_CONFIG[city]?.stopColor),
+            stops: p.tagStops(split.stops, city),
+            centroids: p.tagCentroids(split.centroids, city),
         };
     });
 

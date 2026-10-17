@@ -60,8 +60,6 @@ export interface InitialCityConfig {
     networkLabel: string;
     /** Colour of each mode's tile in the map's stop badges; a mode left out takes `STOP_BADGE.MODE_COLORS`. */
     modeColors?: Partial<Record<RouteType, string>>;
-    /** Map colour of this network's stops, where they must be told apart from a neighbour's on shared ground. */
-    stopColor?: string;
 }
 
 export interface LineRules {
@@ -216,7 +214,6 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         ],
         lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },
-        stopColor: '#7BBA2E',
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },
 };

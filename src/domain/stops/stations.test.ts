@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList } from './stations';
+import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList } from './stations';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
     type: 'Feature',
@@ -147,14 +147,21 @@ describe('nightLinesByNetwork', () => {
 
     // A neighbouring network's stop follows its own city's night lines, not the selected city's.
     it('reads each stop\'s rules from its own network', () => {
-        const byDay = nightLinesByNetwork(Date.parse('2026-10-16T10:00:00Z'), 'prague', networks);
+        const byDay = nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks), 'prague', networks);
         expect(byDay({})).toBeNull();
         expect(byDay({ city_slug: 'brno' })).toBe(brnoNight);
         expect(byDay({ city_slug: 'presov' })).toBeNull();
     });
 
+    // The key stays the same while no network's night hours start or end, so the map keeps its badges.
+    it('keys on which networks hide night lines, not on the time', () => {
+        expect(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks)).toBe('brno');
+        expect(networksHidingNightLines(Date.parse('2026-10-16T14:00:00Z'), networks)).toBe('brno');
+        expect(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks)).toBe('');
+    });
+
     it('hides nothing at night', () => {
-        expect(nightLinesByNetwork(Date.parse('2026-10-16T22:30:00Z'), 'brno', networks)({})).toBeNull();
+        expect(nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks), 'brno', networks)({})).toBeNull();
     });
 });
 
