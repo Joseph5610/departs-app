@@ -137,8 +137,13 @@ const MAP_TOKENS = {
     },
     network: {
         zoom: { min: 10, max: 16 },
-        width: { min: 2.5, max: 7 },
-        casingWidth: { min: 4.5, max: 10 },
+        /** Metro stands alone and is drawn bold; other modes share track and are drawn thin, side by side. */
+        metroWidth: { min: 2.5, max: 7 },
+        width: { min: 1.5, max: 3.5 },
+        /** Extra width of the casing over its line. */
+        casingExtra: 2,
+        /** Distance between neighbouring lines on shared track, per `slot`; equal to `width` so they touch. */
+        slotSpacing: { min: 1.5, max: 3.5 },
         opacity: 0.9,
         /** While a trip's route is drawn, the backbone steps back so the selected line stands out. */
         dimmedOpacity: 0.3,
@@ -427,8 +432,24 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 const isTraversedSegment: ExpressionSpecification = ['==', ['get', 'status'], 'traversed'];
 
 /** Outlines both parts of the route line, so a feed colour close to the map background (Brno's black night lines) stays visible. */
-const networkZoomRamp = ({ min, max }: { min: number; max: number }): ExpressionSpecification =>
+type NetworkValue = number | ExpressionSpecification;
+
+const networkZoomRamp = (min: NetworkValue, max: NetworkValue): ExpressionSpecification =>
     ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.network.zoom.min, min, MAP_TOKENS.network.zoom.max, max];
+
+const IS_METRO_LINE: ExpressionSpecification = ['==', ['get', 'route_type'], 1];
+const NETWORK_SLOT: ExpressionSpecification = ['coalesce', ['get', 'slot'], 0];
+const networkWidth = (extra: number): [ExpressionSpecification, ExpressionSpecification] => {
+    const { metroWidth, width } = MAP_TOKENS.network;
+    return [
+        ['case', IS_METRO_LINE, metroWidth.min + extra, width.min + extra],
+        ['case', IS_METRO_LINE, metroWidth.max + extra, width.max + extra],
+    ];
+};
+const NETWORK_OFFSET = networkZoomRamp(
+    ['*', NETWORK_SLOT, MAP_TOKENS.network.slotSpacing.min],
+    ['*', NETWORK_SLOT, MAP_TOKENS.network.slotSpacing.max],
+);
 
 /**
  * The city's backbone lines (metro), drawn beneath everything else at every zoom; `dimmed` while a route
@@ -447,7 +468,8 @@ export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hi
             layout,
             paint: {
                 'line-color': theme === 'dark' ? '#000000' : '#ffffff',
-                'line-width': networkZoomRamp(MAP_TOKENS.network.casingWidth),
+                'line-width': networkZoomRamp(...networkWidth(MAP_TOKENS.network.casingExtra)),
+                'line-offset': NETWORK_OFFSET,
                 'line-opacity': opacity,
             },
         },
@@ -459,7 +481,8 @@ export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hi
             layout,
             paint: {
                 'line-color': ['to-color', ['get', 'route_color']],
-                'line-width': networkZoomRamp(MAP_TOKENS.network.width),
+                'line-width': networkZoomRamp(...networkWidth(0)),
+                'line-offset': NETWORK_OFFSET,
                 'line-opacity': opacity,
             },
         },
