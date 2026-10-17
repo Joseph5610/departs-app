@@ -4,6 +4,7 @@ export * from './departures';
 export * from './enrichment';
 export * from './error';
 export * from './favorites';
+export * from './network';
 export * from './feedback';
 export * from './pointsOfSale';
 export * from './rides';

@@ -28,6 +28,8 @@ export interface InitialCityConfig {
     hasPointsOfSale?: boolean;
     /** Route shapes are read by the app from the static data CDN; without them the route is drawn straight from stop to stop. */
     hasTripShapes?: boolean;
+    /** The city publishes `network.json`, its backbone lines (e.g. metro) drawn on the map at all times. */
+    hasNetworkLines?: boolean;
     /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
     isHidden?: boolean;
     /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
@@ -93,6 +95,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasPointsOfSale: true,
         hasAlerts: true,
         hasTripShapes: true,
+        hasNetworkLines: true,
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']

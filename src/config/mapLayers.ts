@@ -2,7 +2,8 @@ import type {
     CircleLayerSpecification,
     SymbolLayerSpecification,
     LineLayerSpecification,
-    ExpressionSpecification
+    ExpressionSpecification,
+    FilterSpecification
 } from 'maplibre-gl';
 import type { RouteType } from '@/types';
 import { DELAY_TIERS } from './transit';
@@ -19,6 +20,7 @@ export const MAP_SOURCES = {
     VEHICLES: 'city-vehicles',
     SELECTED_VEHICLE: 'selected-vehicle',
     ROUTE_SHAPE: 'route-shape',
+    NETWORK_LINES: 'network-lines',
     USER_LOCATION: 'user-location',
     POINTS_OF_SALE: 'points-of-sale-source',
 } as const;
@@ -46,6 +48,8 @@ export const MAP_LAYERS = {
     SELECTED_VEHICLE_POINT: 'vehicle-selected-point',
     SELECTED_VEHICLE_DIRECTION: 'vehicle-selected-direction',
     SELECTED_VEHICLE_LABEL: 'vehicle-selected-label',
+    NETWORK_LINE_CASING: 'network-line-casing',
+    NETWORK_LINE: 'network-line',
     ROUTE_LINE_CASING: 'route-line-casing',
     ROUTE_LINE: 'route-line',
     ROUTE_STOPS: 'route-stops',
@@ -130,6 +134,14 @@ const MAP_TOKENS = {
         traversedCasingOpacity: 0.5,
         /** Dark theme washes out toward mid grey, since fading toward its background would make dark feed colours vanish. */
         traversedTarget: { dark: '#52525b', light: '#f4f4f5' },
+    },
+    network: {
+        zoom: { min: 10, max: 16 },
+        width: { min: 2.5, max: 7 },
+        casingWidth: { min: 4.5, max: 10 },
+        opacity: 0.9,
+        /** While a trip's route is drawn, the backbone steps back so the selected line stands out. */
+        dimmedOpacity: 0.3,
     },
 };
 
@@ -415,6 +427,45 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 const isTraversedSegment: ExpressionSpecification = ['==', ['get', 'status'], 'traversed'];
 
 /** Outlines both parts of the route line, so a feed colour close to the map background (Brno's black night lines) stays visible. */
+const networkZoomRamp = ({ min, max }: { min: number; max: number }): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.network.zoom.min, min, MAP_TOKENS.network.zoom.max, max];
+
+/**
+ * The city's backbone lines (metro), drawn beneath everything else at every zoom; `dimmed` while a route
+ * is shown, without `hiddenLine`, the shown route's own line, which would tint its travelled part.
+ */
+export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hiddenLine: string | null): [LineLayerSpecification, LineLayerSpecification] => {
+    const opacity = dimmed ? MAP_TOKENS.network.dimmedOpacity : MAP_TOKENS.network.opacity;
+    const layout: LineLayerSpecification['layout'] = { 'line-join': 'round', 'line-cap': 'round' };
+    const filter: FilterSpecification = ['!=', ['get', 'name'], hiddenLine ?? ''];
+    return [
+        {
+            id: MAP_LAYERS.NETWORK_LINE_CASING,
+            type: 'line',
+            source: MAP_SOURCES.NETWORK_LINES,
+            filter,
+            layout,
+            paint: {
+                'line-color': theme === 'dark' ? '#000000' : '#ffffff',
+                'line-width': networkZoomRamp(MAP_TOKENS.network.casingWidth),
+                'line-opacity': opacity,
+            },
+        },
+        {
+            id: MAP_LAYERS.NETWORK_LINE,
+            type: 'line',
+            source: MAP_SOURCES.NETWORK_LINES,
+            filter,
+            layout,
+            paint: {
+                'line-color': ['to-color', ['get', 'route_color']],
+                'line-width': networkZoomRamp(MAP_TOKENS.network.width),
+                'line-opacity': opacity,
+            },
+        },
+    ];
+};
+
 export const routeLineCasing: LineLayerSpecification = {
     id: MAP_LAYERS.ROUTE_LINE_CASING,
     type: 'line',
