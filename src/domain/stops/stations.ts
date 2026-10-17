@@ -99,22 +99,35 @@ export const platformCodes = (ids: readonly string[], stopIndex: ReadonlyMap<str
     return codes;
 };
 
+/** A board section as `sectionStopId` reads it: its platform code or direction, and its departures' platforms. */
+export interface SectionPlatforms {
+    platform: string | null;
+    direction: string | null;
+    groups: readonly { subGroups: readonly { departures: readonly { platformStopId?: string }[] }[] }[];
+}
+
 /**
- * The `stop_id` of a station's platform a board section names: by its code, or without one by the direction
- * it serves. The first when several share it, null when none does.
+ * The stop a board section's header opens: every platform of the station the section stands for (by its code,
+ * or without one by the direction it serves), comma-joined as one stop; the departures' own platforms where the
+ * stop list knows none. Null for a metro section (each line numbers its own tracks) or the board already open.
  */
-export const sectionPlatformId = (
+export const sectionStopId = (
     stationIds: readonly string[],
     stopIndex: ReadonlyMap<string, StopFeature>,
-    { platform, direction }: { platform: string | null; direction: string | null },
+    { platform, direction, groups }: SectionPlatforms,
+    openStopId: string,
 ): string | null => {
+    const found = new Set<string>();
     for (const id of stationIds) {
         const p = stopIndex.get(id)?.properties;
-        // Metro tracks have sections of their own and share codes (`1`, `2`) with the station's other platforms.
         if (!p || p.is_centroid || (p.lines?.length && p.lines.every(line => line.type === 'metro'))) continue;
-        if (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction) return p.stop_id;
+        if (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction) found.add(p.stop_id);
     }
-    return null;
+    if (found.size === 0) {
+        for (const group of groups) for (const sub of group.subGroups) for (const dep of sub.departures) if (dep.platformStopId) found.add(dep.platformStopId);
+    }
+    const stopId = [...found].join(',');
+    return stopId && stopId !== openStopId ? stopId : null;
 };
 
 /**

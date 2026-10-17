@@ -15,7 +15,7 @@ import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { groupsHidingTrips, isMetroClosed, platformSections, sectionPreview, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
 import { Button } from '@/components/ui/button';
-import { isStationBoard, sectionPlatformId, servesMode } from '@/domain/stops';
+import { isStationBoard, sectionStopId, servesMode } from '@/domain/stops';
 import { useStops } from '@/hooks/data/useStops';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
@@ -170,7 +170,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                         <PlatformSectionView
                             key={section.key}
                             section={section}
-                            platformStopId={section.groups[0]?.subGroups[0]?.departures[0]?.platformStopId ?? sectionPlatformId(selectedStop.all_ids ?? [], stopIndex, section)}
+                            platformStopId={sectionStopId(selectedStop.all_ids ?? [], stopIndex, section, boardStopId)}
                             markedTripIds={marked}
                             badgeColumn={badgeColumn}
                             rowProps={rowProps}

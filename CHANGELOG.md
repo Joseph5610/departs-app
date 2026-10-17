@@ -8,12 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Stations on the map as one badge of their modes, and station boards split into platform sections, each opening that platform's own board.
+- Stations on the map as one badge of their modes, and station boards split into platform sections, each opening a board of its platforms.
 - Stop badges leave out night lines outside night hours.
 
 ### Changed
 
 - Stops load from the new `stops.json`, so every city's stations come from the data instead of being grouped in the app.
+- The departures API reads a comma-joined `stopId` as one stop made of several platforms in every city, not only Prague.
 
 ## [0.85.0] - 2026-10-14
 

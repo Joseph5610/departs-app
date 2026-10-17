@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, platformIdByCode, sectionPlatformId, stopBadgeTiles, stopModeList } from './stations';
+import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList } from './stations';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
     type: 'Feature',
@@ -95,18 +95,31 @@ describe('badgeLines', () => {
     });
 });
 
-describe('sectionPlatformId', () => {
+describe('sectionStopId', () => {
     const index = new Map([
         ['S', stop('S', { is_centroid: true })],
         ['P1', stop('P1', { platform_code: 'A' })],
         ['P2', stop('P2', { direction: 'Grohova' })],
+        ['P3', stop('P3', { direction: 'Grohova' })],
+        ['M1', stop('M1', { platform_code: '1', lines: [{ name: 'B', type: 'metro', route_color: '#F8B322' }] })],
     ]);
+    const section = (platform: string | null, direction: string | null, platformStopIds: string[] = []) =>
+        ({ platform, direction, groups: [{ subGroups: [{ departures: platformStopIds.map(platformStopId => ({ platformStopId })) }] }] });
+    const ids = ['S', 'P1', 'P2', 'P3', 'M1'];
 
-    // A section header opens its platform's own board, found by code or, without one, by direction.
-    it('finds the platform a section names by code or by direction', () => {
-        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: 'A', direction: null })).toBe('P1');
-        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: null, direction: 'Grohova' })).toBe('P2');
-        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: 'Z', direction: null })).toBeNull();
+    // A section header opens a board of every platform the section shows, so it lists the same departures.
+    it('opens every platform of a code or a direction as one stop', () => {
+        expect(sectionStopId(ids, index, section('A', null), 'S')).toBe('P1');
+        expect(sectionStopId(ids, index, section(null, 'Grohova'), 'S')).toBe('P2,P3');
+    });
+
+    it('opens nothing for a metro section or the board already open', () => {
+        expect(sectionStopId(ids, index, section(null, null), 'S')).toBeNull();
+        expect(sectionStopId(ids, index, section(null, 'Grohova'), 'P2,P3')).toBeNull();
+    });
+
+    it('falls back to the departures\' own platforms the stop list does not know', () => {
+        expect(sectionStopId(ids, index, section('Z', null, ['X1', 'X1']), 'S')).toBe('X1');
     });
 });
 

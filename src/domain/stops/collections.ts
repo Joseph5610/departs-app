@@ -60,6 +60,27 @@ const stopSummary = (feature: StopFeature) => {
 /** The panel's view of a stop from its map feature. */
 export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_centroid: feature.properties.is_centroid, platform_count: feature.properties.platform_count });
 
+/**
+ * The stop a board shows for `stopId`: its own entry, or for a comma-joined id of several platforms (a board
+ * section's) one stop named after the first, with all their ids and lines; just the id when none is known.
+ */
+export const selectedStopOf = (stopId: string, stopIndex: ReadonlyMap<string, StopFeature>): SelectedStop => {
+    const own = stopIndex.get(stopId);
+    if (own) return toSelectedStop(own);
+    const features = [...new Set(stopId.split(',').map(id => stopIndex.get(id)).filter((f): f is StopFeature => !!f))];
+    const first = features[0];
+    if (!first) return { stop_id: stopId };
+    const lines = new Map(features.flatMap(f => f.properties.lines ?? []).map(line => [`${line.type}|${line.name}`, line]));
+    return {
+        ...toSelectedStop(first),
+        stop_id: stopId,
+        lines: [...lines.values()],
+        all_ids: features.flatMap(f => f.properties.stop_id.split(',')),
+        is_centroid: false,
+        platform_count: features.length,
+    };
+};
+
 /** A search history entry for a stop picked in `city`. */
 export const stopHistoryEntry = (feature: StopFeature, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, ...stopSummary(feature) });
 

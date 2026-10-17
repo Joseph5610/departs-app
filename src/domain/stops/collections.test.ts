@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { indexStopsById, lineColorAt, pinnedStops, splitStopCollection } from './collections';
+import { indexStopsById, lineColorAt, pinnedStops, selectedStopOf, splitStopCollection } from './collections';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}): StopFeature => ({
     type: 'Feature',
@@ -66,5 +66,29 @@ describe('splitStopCollection', () => {
 
         expect(stops?.features.map((f) => f.properties.stop_id)).toEqual(['P1']);
         expect(centroids?.features.map((f) => f.properties.stop_id)).toEqual(['centroid-S1']);
+    });
+});
+
+describe('selectedStopOf', () => {
+    const bus = { name: '67', type: 'bus' as const, route_color: '#007DA8' };
+    const tram = { name: '4', type: 'tram' as const, route_color: '#7A0603' };
+    const index = indexStopsById(collection(
+        stop('Z1', { stop_name: 'Moravanské lány', lines: [bus] }),
+        stop('Z3', { stop_name: 'Moravanské lány', lines: [tram, bus] }),
+    ));
+
+    it('is the stop list\'s own entry for a known id', () => {
+        expect(selectedStopOf('Z1', index)).toMatchObject({ stop_id: 'Z1', stop_name: 'Moravanské lány' });
+    });
+
+    // A board section opened as one stop keeps its comma-joined id, so the board asks for all its platforms.
+    it('gathers a comma-joined id of several platforms into one stop', () => {
+        expect(selectedStopOf('Z1,Z3', index)).toMatchObject({
+            stop_id: 'Z1,Z3', stop_name: 'Moravanské lány', all_ids: ['Z1', 'Z3'], platform_count: 2, lines: [bus, tram],
+        });
+    });
+
+    it('is just the id when the stop list knows none of it', () => {
+        expect(selectedStopOf('X9', index)).toEqual({ stop_id: 'X9' });
     });
 });
