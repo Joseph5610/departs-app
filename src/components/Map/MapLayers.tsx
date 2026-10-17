@@ -113,6 +113,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     const passesStopFilter = useCallback((props: StopProperties | null) => matchesStopTypeFilter(props, stopTypeFilter), [stopTypeFilter]);
 
+    const stationText = showStopLabels ? stationBadges.layout?.['text-field'] : '';
+
     const { resolvedTheme } = useTheme();
     const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
@@ -211,7 +213,11 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 clusterProperties={STATION_CLUSTER_PROPERTIES}
             >
                 <Layer {...stopClusters} paint={{ ...stopClusters.paint, 'circle-color': clusterColor }} />
-                <Layer {...stationBadges} layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage }} />
+                <Layer
+                    {...stationBadges}
+                    layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage, 'text-field': stationText }}
+                    paint={{ ...stationBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }}
+                />
                 {showStopLabels && <Layer {...stationNames} paint={{ ...stationNames.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />}
             </Source>
 
