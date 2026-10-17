@@ -33,7 +33,7 @@ export async function handleSearchNearestStops(
             stop_name: f.properties?.stop_name,
             platform_code: f.properties?.platform_code || null,
             distance_meters: Math.round(distance),
-            is_centroid: f.properties?.is_centroid,
+            is_centroid: f.properties?.is_station,
             coordinates: f.geometry?.coordinates,
             lines: toMcpStopLines(f)
         }))

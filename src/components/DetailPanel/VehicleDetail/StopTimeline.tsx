@@ -40,9 +40,9 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const sharedExitSequence = linkExitSequence ?? followedExitSequence;
     const { startRide, endRide, markRidePushed, follow, unfollow } = useRideStore(s => s.actions);
 
-    const { stopIndex, stops, centroids } = useStops();
-    const stationGrid = useMemo(() => indexStops(centroids, SHARED_GROUND.TWIN_STATION_RADIUS_M), [centroids]);
-    const platformGrid = useMemo(() => indexStops(stops, SHARED_GROUND.TWIN_STATION_RADIUS_M), [stops]);
+    const { stopIndex, platforms, stations } = useStops();
+    const stationGrid = useMemo(() => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M), [stations]);
+    const platformGrid = useMemo(() => indexStops(platforms, SHARED_GROUND.TWIN_STATION_RADIUS_M), [platforms]);
     const { presetTripHighlight } = useSelectionStore(s => s.actions);
     /** Opens a timeline stop's board; an arrival-only platform (a terminus) opens the nearby same-named stop that has departures. */
     const openStop = useCallback((stop: StopFeature) => {

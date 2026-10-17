@@ -10,7 +10,7 @@ interface StopFixture {
         location_type?: number;
         parent_station?: string | null;
         zone_id?: string | null;
-        is_centroid?: boolean;
+        is_station?: boolean;
         lines?: Array<{ name: string; type: string; route_color: string }>;
     };
 }
@@ -27,12 +27,12 @@ export function stopFilesOf({ features }: { features: StopFixture[] }) {
     const routes: Record<string, Route> = {};
     const stations = new Map<string, { id: string; name: string; pos: [number, number] }>();
     for (const f of features) {
-        if (f.properties.is_centroid || f.properties.location_type === 1) {
+        if (f.properties.is_station || f.properties.location_type === 1) {
             stations.set(f.properties.stop_id, { id: f.properties.stop_id, name: f.properties.stop_name, pos: posOf(f) });
         }
     }
     const platforms = features
-        .filter(f => !f.properties.is_centroid && (f.properties.location_type ?? 0) === 0)
+        .filter(f => !f.properties.is_station && (f.properties.location_type ?? 0) === 0)
         .map(f => {
             const p = f.properties;
             const [id, ...aliases] = p.stop_id.split(',');

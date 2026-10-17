@@ -113,7 +113,7 @@ interface AppStopProperties {
     location_type: number | string;
     parent_station: string | null;
     zone_id: string | null;
-    is_centroid?: boolean;
+    is_station?: boolean;
     is_drop_off_only?: boolean;
     is_train?: number;
     metro_lines?: Array<{ name: string; route_color: string }>;

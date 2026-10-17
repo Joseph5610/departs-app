@@ -4,7 +4,7 @@ import { stationOfRequest, toStopRequest } from './stopRequests';
 
 const relations = new Map<string, StopRelation>([
     ['952', [null, '952-1', '952-2', '952-3']],
-    ['centroid-952', [null, '952-1', '952-2', '952-3']],
+    ['station-952', [null, '952-1', '952-2', '952-3']],
     ['952-1', ['952']],
     ['952-3', ['952']],
 ]);
@@ -12,7 +12,7 @@ const relationOf = (id: string) => relations.get(id);
 
 describe('toStopRequest', () => {
     it('reads a station node from its platforms, whatever the station id looks like', () => {
-        expect(toStopRequest('centroid-952', relationOf)).toEqual({ id: 'centroid-952', node: '952', posts: null });
+        expect(toStopRequest('station-952', relationOf)).toEqual({ id: 'station-952', node: '952', posts: null });
         expect(toStopRequest('952', relationOf)).toEqual({ id: '952', node: '952', posts: null });
     });
 

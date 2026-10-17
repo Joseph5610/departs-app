@@ -13,7 +13,7 @@ const collection = (...features: StopFeature[]): StopCollection => ({ type: 'Fea
 describe('indexStopsById', () => {
     // Links and departures name any platform id; each must open the stop the map draws.
     it('resolves a station and its platforms ids, letting a platform listed after it keep its own entry', () => {
-        const station = stop('S1', { all_ids: ['U1Z1', 'U1Z2'], is_centroid: true });
+        const station = stop('S1', { all_ids: ['U1Z1', 'U1Z2'], is_station: true });
         const platform = stop('U1Z2');
         const index = indexStopsById(collection(station, platform));
 
@@ -57,15 +57,15 @@ describe('lineColorAt', () => {
 describe('splitStopCollection', () => {
     // Drop-off-only platforms have no departures to open.
     it('separates platforms from stations and leaves out drop-off-only stops', () => {
-        const { stops, centroids } = splitStopCollection(collection(
+        const { platforms, stations } = splitStopCollection(collection(
             stop('P1'),
             stop('P2', { is_drop_off_only: true }),
-            stop('centroid-S1', { is_centroid: true }),
-            stop('centroid-S2', { is_centroid: true, is_drop_off_only: true }),
+            stop('station-S1', { is_station: true }),
+            stop('station-S2', { is_station: true, is_drop_off_only: true }),
         ));
 
-        expect(stops?.features.map((f) => f.properties.stop_id)).toEqual(['P1']);
-        expect(centroids?.features.map((f) => f.properties.stop_id)).toEqual(['centroid-S1']);
+        expect(platforms?.features.map((f) => f.properties.stop_id)).toEqual(['P1']);
+        expect(stations?.features.map((f) => f.properties.stop_id)).toEqual(['station-S1']);
     });
 });
 

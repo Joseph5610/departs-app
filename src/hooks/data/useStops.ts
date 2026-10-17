@@ -77,17 +77,17 @@ export const useStops = () => {
     const query = useQuery(stopsQueryOptions(selectedCity));
 
     const collection = query.data;
-    const { stops, centroids } = splitStops(collection);
+    const { platforms, stations } = splitStops(collection);
     const stopIndex = buildStopIndex(collection);
     const updatedAt = query.data ? query.dataUpdatedAt : null;
     const isLoading = query.isLoading;
 
     return useMemo(() => ({
-        stops,
-        centroids,
+        platforms,
+        stations,
         stopIndex,
         allFeatures: collection ?? null,
         updatedAt,
         isLoading,
-    }), [stops, centroids, stopIndex, collection, updatedAt, isLoading]);
+    }), [platforms, stations, stopIndex, collection, updatedAt, isLoading]);
 };

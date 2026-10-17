@@ -11,7 +11,7 @@ const idsOf = (p: StopsFilePlatform): string[] => p.aliases ? [p.id, ...p.aliase
 
 /**
  * A city's `stops.json` as the stop features the map, search and panels read: stations first (marked
- * `is_centroid`, so a platform's own entry wins in `indexStopsById`), then platforms and entrances. A platform
+ * `is_station`, so a platform's own entry wins in `indexStopsById`), then platforms and entrances. A platform
  * keeps its aliases comma-joined in `stop_id`, the id links, favorites and the departures API already use.
  * With `stationsByPlatforms` a station's `stop_id` is its platforms' ids, comma-joined, for a departures API
  * that knows no stations.
@@ -41,7 +41,7 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
                 stop_id: stopId,
                 stop_name: s.name,
                 location_type: 1,
-                is_centroid: true,
+                is_station: true,
                 zone_id: platforms[0]?.zones?.[0],
                 lines: uniqueLines(linesOf(platforms.flatMap(p => p.routes))),
                 // The station's own id stays resolvable where `stop_id` lists its platforms instead.
@@ -63,7 +63,7 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
             direction: p.direction,
             location_type: 0,
             zone_id: p.zones?.[0],
-            is_centroid: false,
+            is_station: false,
             is_drop_off_only: p.alightOnly,
             lines: linesOf(p.routes),
             all_ids: p.aliases ? idsOf(p) : undefined,

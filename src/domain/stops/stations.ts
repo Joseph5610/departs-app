@@ -4,8 +4,8 @@ import type { LineRules } from '@/config/cities';
 import { isWithinLocalHours } from '@/domain/time';
 
 /** Whether a stop's board gathers several platforms, so its rows name the platform each leaves from. */
-export const isStationBoard = (stop: Pick<StopProperties, 'platform_count' | 'is_centroid'>): boolean =>
-    !!stop.is_centroid && (stop.platform_count ?? 0) > 1;
+export const isStationBoard = (stop: Pick<StopProperties, 'platform_count' | 'is_station'>): boolean =>
+    !!stop.is_station && (stop.platform_count ?? 0) > 1;
 
 /** Separator of the tiles in a stop's `badges` property, which the map's badge images are named after. */
 export const STOP_BADGE_SEPARATOR = '|';
@@ -85,9 +85,9 @@ export const nightLinesByNetwork = (hiding: string, ownCity: string, networks: R
 const withModes = (f: StopFeature, hiddenNightLines: NightLineTest | null): StopFeature => {
     const shown = badgeLines(f.properties, hiddenNightLines);
     const modes = stopModeList(shown);
-    const code = f.properties.is_centroid ? undefined : f.properties.platform_code;
+    const code = f.properties.is_station ? undefined : f.properties.platform_code;
     // A platform without lines (a train platform the live feed alone serves) still gets a tile, so it can be tapped.
-    const tiles = stopBadgeTiles(shown, modes) || (f.properties.is_centroid ? '' : 'unknown');
+    const tiles = stopBadgeTiles(shown, modes) || (f.properties.is_station ? '' : 'unknown');
     const badges = code ? [tiles, [PLATFORM_CODE_TILE, code].join(TILE_PART_SEPARATOR)].join(STOP_BADGE_SEPARATOR) : tiles;
     return { ...f, properties: { ...f.properties, badges, mode_rank: routeTypeRank(modes[0]) } };
 };
@@ -118,7 +118,7 @@ const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<
     const found = new Map<string, StopProperties>();
     for (const id of stationIds) {
         const p = stopIndex.get(id)?.properties;
-        if (p && !p.is_centroid) found.set(p.stop_id, p);
+        if (p && !p.is_station) found.set(p.stop_id, p);
     }
     return [...found.values()];
 };

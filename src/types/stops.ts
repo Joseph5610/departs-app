@@ -6,7 +6,7 @@ export interface StopProperties {
     platform_code?: string;
     location_type: number;
     zone_id?: string;
-    is_centroid?: boolean;
+    is_station?: boolean;
     /** Set on a stop of a neighbouring network shown beside the selected city's. */
     city_slug?: string;
     is_drop_off_only?: boolean;

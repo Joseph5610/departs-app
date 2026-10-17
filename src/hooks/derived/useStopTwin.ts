@@ -22,14 +22,14 @@ const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(
 export const useStopTwin = (): StopTwin | null => {
     const stop = useSelectedStop();
     const networks = useNetworksInView();
-    const { stops, centroids } = useOverlayNetworks(networks);
+    const { platforms, stations } = useOverlayNetworks(networks);
 
     return useMemo(() => {
         const point = stop?.coordinates;
         if (!point) return null;
-        const twin = stopNear(platformGrid(stops), point)
-            ?? stopNear(stationGrid(centroids), point, stopNameKey(stop.stop_name));
+        const twin = stopNear(platformGrid(platforms), point)
+            ?? stopNear(stationGrid(stations), point, stopNameKey(stop.stop_name));
         const city = twin?.properties.city_slug;
         return twin && city ? { city, stopId: twin.properties.stop_id } : null;
-    }, [stop, stops, centroids]);
+    }, [stop, platforms, stations]);
 };

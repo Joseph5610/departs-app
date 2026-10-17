@@ -11,12 +11,12 @@ const routes: Record<string, RouteInfo> = {
 
 const file: StopsFile = {
     version: 1,
-    stations: [{ id: 'centroid-U1040S1', name: 'Anděl', pos: [14.4037, 50.071] }],
+    stations: [{ id: 'station-U1040S1', name: 'Anděl', pos: [14.4037, 50.071] }],
     platforms: [
-        { id: 'U1040Z1P', station: 'centroid-U1040S1', pos: [14.4036, 50.0719], code: 'A', zones: ['P'], routes: ['L9'] },
-        { id: 'U1040Z101P', aliases: ['U1040Z102P'], station: 'centroid-U1040S1', pos: [14.4039, 50.0695], routes: ['L991', 'L1300'] },
+        { id: 'U1040Z1P', station: 'station-U1040S1', pos: [14.4036, 50.0719], code: 'A', zones: ['P'], routes: ['L9'] },
+        { id: 'U1040Z101P', aliases: ['U1040Z102P'], station: 'station-U1040S1', pos: [14.4039, 50.0695], routes: ['L991', 'L1300'] },
     ],
-    entrances: [{ id: 'U1040E1', station: 'centroid-U1040S1', name: 'Anděl', pos: [14.404, 50.0705] }],
+    entrances: [{ id: 'U1040E1', station: 'station-U1040S1', name: 'Anděl', pos: [14.404, 50.0705] }],
 };
 
 const byId = (stationsByPlatforms = false) =>
@@ -25,10 +25,10 @@ const byId = (stationsByPlatforms = false) =>
 describe('stopCollectionFromFile', () => {
     // A station's board, badges and stars cover every platform listed under it, aliases included.
     it('gives a station its platforms ids and the union of their lines', () => {
-        expect(byId().get('centroid-U1040S1')).toMatchObject({
+        expect(byId().get('station-U1040S1')).toMatchObject({
             stop_name: 'Anděl',
             location_type: 1,
-            is_centroid: true,
+            is_station: true,
             zone_id: 'P',
             all_ids: ['U1040Z1P', 'U1040Z101P', 'U1040Z102P'],
             platform_count: 2,
@@ -50,15 +50,15 @@ describe('stopCollectionFromFile', () => {
     // Golemio knows no stations: a PID station is asked for as its platforms.
     it('names a station by its platforms ids when the network has no station ids', () => {
         const station = byId(true).get('U1040Z1P,U1040Z101P,U1040Z102P');
-        expect(station).toMatchObject({ is_centroid: true, stop_name: 'Anděl' });
-        expect(station?.all_ids?.[0]).toBe('centroid-U1040S1');
+        expect(station).toMatchObject({ is_station: true, stop_name: 'Anděl' });
+        expect(station?.all_ids?.[0]).toBe('station-U1040S1');
     });
 
     it('resolves every platform id and alias to its platform, not to the station', () => {
         const index = indexStopsById(stopCollectionFromFile(file, routes));
         expect(index.get('U1040Z102P')?.properties.stop_id).toBe('U1040Z101P,U1040Z102P');
         expect(index.get('U1040Z1P')?.properties.stop_id).toBe('U1040Z1P');
-        expect(index.get('centroid-U1040S1')?.properties.is_centroid).toBe(true);
+        expect(index.get('station-U1040S1')?.properties.is_station).toBe(true);
     });
 
     // A terminus kept only for alighting has no departures to open; the map must not draw an empty badge for it.
@@ -70,6 +70,6 @@ describe('stopCollectionFromFile', () => {
             entrances: [],
         };
         expect(stopCollectionFromFile(terminus, routes).features[0]!.properties.is_drop_off_only).toBe(true);
-        expect(byId().get('centroid-U1040S1')?.is_drop_off_only).toBeUndefined();
+        expect(byId().get('station-U1040S1')?.is_drop_off_only).toBeUndefined();
     });
 });

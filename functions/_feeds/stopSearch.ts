@@ -57,7 +57,7 @@ export class StopSearch {
         if (this.offsets[count] !== text.length) throw new Error('stop_search.txt and stop_search.bin come from different builds');
     }
 
-    isCentroid(index: number): boolean {
+    isStation(index: number): boolean {
         return (this.flags[index] & 1) !== 0;
     }
 
@@ -73,7 +73,7 @@ export class StopSearch {
         return lo;
     }
 
-    /** A line's folded name; empty for centroids. */
+    /** A line's folded name; empty for stations. */
     foldedName(index: number): string {
         const start = this.offsets[index];
         const end = this.offsets[index + 1] - 1;
@@ -82,7 +82,7 @@ export class StopSearch {
     }
 
     /**
-     * Non-centroid stops whose name or id contains `query`, best match first: exact name, then name
+     * Platforms whose name or id contains `query`, best match first: exact name, then name
      * starting with it, then any containment, then id containment; shorter names win ties, then stop order.
      */
     byName(query: string, limit: number): number[] {
@@ -116,7 +116,7 @@ export class StopSearch {
         return ranked;
     }
 
-    /** Non-centroid stops whose folded name is exactly `folded`, in stop order. */
+    /** Platforms whose folded name is exactly `folded`, in stop order. */
     withFoldedName(folded: string): number[] {
         const found: number[] = [];
         const needle = `\n${folded}\t`;
@@ -133,14 +133,14 @@ export class StopSearch {
      * The `limit` stops nearest to a point within `radiusM`, nearest first. Ranked on a flat projection,
      * which at a city's scale orders stops as the haversine does; callers read exact distances off the details.
      */
-    nearest(lat: number, lon: number, { includeCentroids = false, radiusM = Infinity, limit }: { includeCentroids?: boolean; radiusM?: number; limit: number }): RankedStopIndex[] {
+    nearest(lat: number, lon: number, { includeStations = false, radiusM = Infinity, limit }: { includeStations?: boolean; radiusM?: number; limit: number }): RankedStopIndex[] {
         if (limit <= 0) return [];
         const kx = Math.cos(lat * Math.PI / 180) * EARTH_M_PER_DEG;
         const maxSq = radiusM === Infinity ? Infinity : (radiusM * STOP_SEARCH_CONFIG.RADIUS_MARGIN) ** 2;
 
         const best: RankedStopIndex[] = [];
         for (let i = 0; i < this.count; i++) {
-            if (!includeCentroids && (this.flags[i] & 1) !== 0) continue;
+            if (!includeStations && (this.flags[i] & 1) !== 0) continue;
             const dx = (this.lon[i] - lon) * kx;
             const dy = (this.lat[i] - lat) * EARTH_M_PER_DEG;
             const sq = dx * dx + dy * dy;
@@ -220,7 +220,7 @@ export async function stopFeatures(city: CityConfig, search: StopSearch, indexes
                 location_type: typeof locationType === 'number' || typeof locationType === 'string' ? locationType : 0,
                 parent_station: null,
                 zone_id: null,
-                is_centroid: search.isCentroid(index),
+                is_station: search.isStation(index),
                 // The stop data carries GTFS route type codes here; `toMcpStopLines` normalizes them.
                 lines: Array.isArray(lines) ? lines.filter(isStopLine) : [],
             },

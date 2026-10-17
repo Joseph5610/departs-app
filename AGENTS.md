@@ -110,7 +110,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
 
-- **Static Data**: Stop lists (parent-station grouping, `centroid-` station nodes with `is_centroid: true`), routes, shapes and schedules are built by `departs-data`; the app and `functions/` only read them.
+- **Static Data**: Stop lists (`stops.json`: stations, their platforms and entrances; the app marks stations `is_station: true`), routes, shapes and schedules are built by `departs-data`; the app and `functions/` only read them.
 - **Parallel Fetching**: Fetch large independent datasets in parallel via `Promise.all` where possible.
 - **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
 - **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppStopFeature`, `AppVehicleFeature`).

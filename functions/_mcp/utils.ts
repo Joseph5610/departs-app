@@ -104,7 +104,7 @@ function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<Sto
 }
 
 /**
- * Up to `limit` non-centroid stops whose name or id contains `query`, best match first: exact name, then
+ * Up to `limit` platforms whose name or id contains `query`, best match first: exact name, then
  * name starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
  */
 export async function findStopsByName(citySlug: string, query: string, limit: number): Promise<StopFeature[]> {
@@ -150,7 +150,7 @@ export async function nearestStops(
     citySlug: string,
     lat: number,
     lon: number,
-    options: { includeCentroids?: boolean; radiusM?: number; limit: number }
+    options: { includeStations?: boolean; radiusM?: number; limit: number }
 ): Promise<RankedStop[]> {
     const { city, search: pending } = stopSearchOf(citySlug);
     const search = await pending;

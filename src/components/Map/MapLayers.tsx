@@ -89,20 +89,20 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
-    const { stops: ownPlatforms, centroids: ownCentroids } = useStops();
+    const { platforms, stations } = useStops();
     const hiddenNightLines = useHiddenNightLines();
-    const ownStops = ownPlatformModes(ownPlatforms, hiddenNightLines);
-    const ownStations = ownStationModes(ownCentroids, hiddenNightLines);
+    const ownPlatforms = ownPlatformModes(platforms, hiddenNightLines);
+    const ownStations = ownStationModes(stations, hiddenNightLines);
     const networksInView = useNetworksInView();
     const overlay = useOverlayNetworks(networksInView);
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
     const stopsData = useMemo(
-        () => withOverlay(ownStops, withoutTwins(overlayPlatforms(overlay.stops, hiddenNightLines), platformGrid(ownPlatforms ?? null), false)),
-        [ownStops, ownPlatforms, overlay.stops, hiddenNightLines]);
+        () => withOverlay(ownPlatforms, withoutTwins(overlayPlatforms(overlay.platforms, hiddenNightLines), platformGrid(platforms ?? null), false)),
+        [ownPlatforms, platforms, overlay.platforms, hiddenNightLines]);
     const stationsData = useMemo(
-        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids, hiddenNightLines), stationGrid(ownCentroids ?? null), true)),
-        [ownStations, ownCentroids, overlay.centroids, hiddenNightLines]);
+        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.stations, hiddenNightLines), stationGrid(stations ?? null), true)),
+        [ownStations, stations, overlay.stations, hiddenNightLines]);
     const starred = starredStops(stationsData, stopsData, favoriteStops);
     const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);

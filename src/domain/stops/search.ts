@@ -50,7 +50,7 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
         .filter((item) => item.stopId.startsWith(upperQuery) || matchesAllTokens(queryTokens, item.nameTokens))
         .map((item) => ({ stop: item.stop, score: scoreOf(item, upperQuery, normalizedQuery, queryTokens) }))
         .sort((a, b) => b.score - a.score
-            || Number(!!b.stop.properties.is_centroid) - Number(!!a.stop.properties.is_centroid)
+            || Number(!!b.stop.properties.is_station) - Number(!!a.stop.properties.is_station)
             || a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name));
 
     return firstUnique(matches, (match) => match.stop.properties.stop_name, STOP_SEARCH.RESULT_LIMIT).map((match) => match.stop);

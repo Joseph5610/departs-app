@@ -63,11 +63,11 @@ describe('favoriteMarks', () => {
 describe('isStationBoard', () => {
     // PID lists a platform once per fare zone; the app shows the pair as the one platform it is.
     it('treats a station of one platform, listed once per fare zone, as that platform', () => {
-        expect(isStationBoard({ is_centroid: true, platform_count: 1 })).toBe(false);
+        expect(isStationBoard({ is_station: true, platform_count: 1 })).toBe(false);
     });
 
     it('treats a station of several platforms as a station', () => {
-        expect(isStationBoard({ is_centroid: true, platform_count: 2 })).toBe(true);
+        expect(isStationBoard({ is_station: true, platform_count: 2 })).toBe(true);
     });
 
     it('treats a platform as a platform', () => {
@@ -97,7 +97,7 @@ describe('badgeLines', () => {
 
 describe('sectionStopId', () => {
     const index = new Map([
-        ['S', stop('S', { is_centroid: true })],
+        ['S', stop('S', { is_station: true })],
         ['P1', stop('P1', { platform_code: 'A' })],
         ['P2', stop('P2', { direction: 'Grohova' })],
         ['P3', stop('P3', { direction: 'Grohova' })],
@@ -167,7 +167,7 @@ describe('nightLinesByNetwork', () => {
 
 describe('platformIdByCode', () => {
     const index = new Map([
-        ['S', stop('S', { is_centroid: true })],
+        ['S', stop('S', { is_station: true })],
         ['T1', stop('T1', { platform_code: '1', lines: [{ name: 'A', type: 'metro', route_color: '#00A562' }] })],
         ['P1', stop('P1', { platform_code: '1' })],
         ['PA', stop('PA', { platform_code: 'A' })],

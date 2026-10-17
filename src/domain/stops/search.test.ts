@@ -11,12 +11,12 @@ const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = 
 describe('searchStops', () => {
     // A name opens the whole station's board, not one of its platforms.
     it('returns the station rather than a platform of the same name', () => {
-        const index = createSearchIndex([stop('U1040Z1P'), stop('S1', { location_type: 1, is_centroid: true }), stop('E1', { location_type: 2 })]);
+        const index = createSearchIndex([stop('U1040Z1P'), stop('S1', { location_type: 1, is_station: true }), stop('E1', { location_type: 2 })]);
         expect(searchStops(index, 'Anděl').map(s => s.properties.stop_id)).toEqual(['S1']);
     });
 
     it('still finds a platform by its id', () => {
-        const index = createSearchIndex([stop('U1040Z1P'), stop('S1', { location_type: 1, is_centroid: true })]);
+        const index = createSearchIndex([stop('U1040Z1P'), stop('S1', { location_type: 1, is_station: true })]);
         expect(searchStops(index, 'U1040Z1')[0]?.properties.stop_id).toBe('U1040Z1P');
     });
 });

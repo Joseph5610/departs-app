@@ -21,8 +21,8 @@ const createPipeline = () => ({
     view: memoizeLast(filterVehiclesToView),
     tagVehicles: memoizeLast(tagVehicles),
     split: memoizeLast(splitStopCollection),
-    tagStops: memoizeLast(tagStops),
-    tagCentroids: memoizeLast(tagStops),
+    tagPlatforms: memoizeLast(tagStops),
+    tagStations: memoizeLast(tagStops),
 });
 const pipelines = new Map<string, ReturnType<typeof createPipeline>>();
 const pipelineOf = (city: string) => {
@@ -32,8 +32,8 @@ const pipelineOf = (city: string) => {
 };
 
 const concatVehicles = memoizeLast(concatCollections<VehicleCollection>);
-const concatStops = memoizeLast(concatCollections<StopCollection>);
-const concatCentroids = memoizeLast(concatCollections<StopCollection>);
+const concatPlatforms = memoizeLast(concatCollections<StopCollection>);
+const concatStations = memoizeLast(concatCollections<StopCollection>);
 
 /**
  * The vehicles in view and the stops of the other networks that run where the map is, each feature
@@ -57,14 +57,14 @@ export const useOverlayNetworks = (cities: readonly string[]) => {
         const split = p.split(stops[i]?.data);
         return {
             vehicles: p.tagVehicles(p.view(branded, bounds, routeFilter, routeTypeFilter), city),
-            stops: p.tagStops(split.stops, city),
-            centroids: p.tagCentroids(split.centroids, city),
+            platforms: p.tagPlatforms(split.platforms, city),
+            stations: p.tagStations(split.stations, city),
         };
     });
 
     const allVehicles = concatVehicles(...perNetwork.map(n => n.vehicles));
-    const allStops = concatStops(...perNetwork.map(n => n.stops));
-    const allCentroids = concatCentroids(...perNetwork.map(n => n.centroids));
+    const allPlatforms = concatPlatforms(...perNetwork.map(n => n.platforms));
+    const allStations = concatStations(...perNetwork.map(n => n.stations));
 
-    return useMemo(() => ({ vehicles: allVehicles, stops: allStops, centroids: allCentroids }), [allVehicles, allStops, allCentroids]);
+    return useMemo(() => ({ vehicles: allVehicles, platforms: allPlatforms, stations: allStations }), [allVehicles, allPlatforms, allStations]);
 };

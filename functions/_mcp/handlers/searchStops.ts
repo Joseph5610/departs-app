@@ -7,7 +7,7 @@ import { findStopsByName, toMcpStopLines } from "../utils";
  * 
  * @param args - Tool arguments containing `query`, `city` (default: 'prague'), and optional `limit`.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
- * @returns Filtered stop list with coordinates, line list, and centroid status.
+ * @returns Filtered stop list with coordinates, line list, and whether each is a station (`is_centroid`).
  */
 export async function handleSearchStops(
     args: Record<string, unknown>,
@@ -24,7 +24,7 @@ export async function handleSearchStops(
             stop_id: f.properties?.stop_id,
             stop_name: f.properties?.stop_name,
             platform_code: f.properties?.platform_code || null,
-            is_centroid: f.properties?.is_centroid,
+            is_centroid: f.properties?.is_station,
             coordinates: f.geometry?.coordinates,
             lines: toMcpStopLines(f)
         }))

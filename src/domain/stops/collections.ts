@@ -3,16 +3,16 @@ import { servesMode, stopIdParts, uniqueLines } from './stations';
 
 /** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only ones are left out. */
 export const splitStopCollection = (collection: StopCollection | undefined) => {
-    if (!collection) return { stops: null, centroids: null };
-    const stops: StopFeature[] = [];
-    const centroids: StopFeature[] = [];
+    if (!collection) return { platforms: null, stations: null };
+    const platforms: StopFeature[] = [];
+    const stations: StopFeature[] = [];
     for (const f of collection.features) {
         if (f.properties.is_drop_off_only) continue;
-        (f.properties.is_centroid ? centroids : stops).push(f);
+        (f.properties.is_station ? stations : platforms).push(f);
     }
     return {
-        stops: { type: 'FeatureCollection', features: stops } as StopCollection,
-        centroids: { type: 'FeatureCollection', features: centroids } as StopCollection,
+        platforms: { type: 'FeatureCollection', features: platforms } as StopCollection,
+        stations: { type: 'FeatureCollection', features: stations } as StopCollection,
     };
 };
 
@@ -58,7 +58,7 @@ const stopSummary = (feature: StopFeature) => {
 };
 
 /** The panel's view of a stop from its map feature. */
-export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_centroid: feature.properties.is_centroid, platform_count: feature.properties.platform_count });
+export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_station: feature.properties.is_station, platform_count: feature.properties.platform_count });
 
 /**
  * The stop a board shows for `stopId`: its own entry, or for a comma-joined id of several platforms (a board
@@ -75,7 +75,7 @@ export const selectedStopOf = (stopId: string, stopIndex: ReadonlyMap<string, St
         stop_id: stopId,
         lines: uniqueLines(features.flatMap(f => f.properties.lines ?? [])),
         all_ids: features.flatMap(f => stopIdParts(f.properties.stop_id)),
-        is_centroid: false,
+        is_station: false,
         platform_count: features.length,
     };
 };
