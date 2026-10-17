@@ -108,7 +108,7 @@ const MAP_TOKENS = {
         /** Stations are drawn as mode badges from here, where the clusters end. */
         badges: 13,
         /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
-        labels: 15,
+        labels: 14,
         /** From here a station's platforms take over from its badge. */
         platforms: 16,
     },
@@ -144,19 +144,21 @@ export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.clusterMax;
 const UNCLUSTERED: ExpressionSpecification = ['!', ['has', 'point_count']];
 const STATION_NAME_TEXT = {
     'text-font': MAP_FONT_STACK,
-    'text-letter-spacing': 0.03,
+    'text-letter-spacing': 0.05,
     'text-max-width': 8,
     'text-justify': 'center',
+    // Keeps neighbouring names apart, so a dense centre shows fewer of them rather than a wall of text.
+    'text-padding': 15,
 } as const;
 /** One size curve for a station's name, drawn by the badge layer below `zoom.platforms` and the name layer above it. */
 const STATION_NAME_SIZE: ExpressionSpecification =
     ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 11, MAP_TOKENS.zoom.platforms, 13, 18, 15];
-/** A wide, sharp halo, since a station's name often lies on the vehicles waiting at it. */
+/** A soft halo, still wide enough to read a name lying on the vehicles waiting at its station. */
 const STATION_NAME_PAINT = {
     'text-color': '#bdbdbd',
     'text-halo-color': '#111111',
-    'text-halo-width': 2,
-    'text-halo-blur': 0.25,
+    'text-halo-width': 1.5,
+    'text-halo-blur': 0.5,
 } as const;
 /** Badge scale across the zoom range in which stations are drawn whole. */
 const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
@@ -204,8 +206,8 @@ export const stationBadges: SymbolLayerSpecification = {
         'text-size': STATION_NAME_SIZE,
         // Only below or above: the offset counts from the point, and a badge of several tiles is wider than any side offset.
         'text-variable-anchor': ['top', 'bottom'],
-        'text-radial-offset': 1.3,
-        'text-padding': 4,
+        // Moves off the point as the badge grows, so the name never touches it.
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 1.3, MAP_TOKENS.zoom.platforms, 1.8],
         'text-optional': true,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
@@ -230,8 +232,8 @@ export const stationNames: SymbolLayerSpecification = {
         'text-size': STATION_NAME_SIZE,
         // Clear of the platform pills that usually sit on the station's point: above or below them first.
         'text-variable-anchor': ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
-        'text-radial-offset': 1.5,
-        'text-padding': 4,
+        // Moves off the point as the platform pills around it grow.
+        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 1.8, 18, 2.8],
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
     paint: STATION_NAME_PAINT,
