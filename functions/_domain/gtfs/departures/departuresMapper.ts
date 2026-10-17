@@ -57,7 +57,7 @@ export function mapDepartures(
         // Recently past departures are still sent: the app's live delay may show them as still to come.
         .filter(item => item.rtTimestampMs >= now - GTFS_CONFIG.DEPARTURES_RESURRECT_WINDOW_MS)
         .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
-        .slice(0, 150);
+        .slice(0, GTFS_CONFIG.DEPARTURE_LIMIT);
 
     return topDeps.map(item => {
         const { d, rtTimestampMs, delaySecs } = item;
