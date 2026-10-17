@@ -61,6 +61,7 @@ describe('splitStopCollection', () => {
             stop('P1'),
             stop('P2', { is_drop_off_only: true }),
             stop('centroid-S1', { is_centroid: true }),
+            stop('centroid-S2', { is_centroid: true, is_drop_off_only: true }),
         ));
 
         expect(stops?.features.map((f) => f.properties.stop_id)).toEqual(['P1']);

@@ -48,6 +48,8 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
                 // The station's own id stays resolvable where `stop_id` lists its platforms instead.
                 all_ids: stopId === s.id ? platforms.flatMap(idsOf) : [s.id, ...platforms.flatMap(idsOf)],
                 platform_count: platforms.length,
+                // Nobody boards at a station whose every platform is alight-only: the map leaves it out with them.
+                is_drop_off_only: platforms.every(p => p.alightOnly) ? true : undefined,
             },
         };
     });

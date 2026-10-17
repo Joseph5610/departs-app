@@ -26,7 +26,7 @@ export const lineChips = <T extends LineChip>(lines: T[], rules: LineRules): T[]
         if (line.type === 'metro') return routeTypeRank('metro');
         if (line.type === 'train' || rules.trainLinePrefixes.some(prefix => name.startsWith(prefix))) return routeTypeRank('train');
         const rank = routeTypeRank(line.type);
-        return rules.isNightLine(line.type, name) ? rank + ROUTE_TYPE_ORDER.length + 1 : rank;
+        return rules.isNightLine?.(line.type, name) ? rank + ROUTE_TYPE_ORDER.length + 1 : rank;
     };
 
     return unique.sort((a, b) => {

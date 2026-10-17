@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { favoriteMarks, isStationBoard, stopBadgeTiles, stopModeList } from './stations';
+import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, sectionPlatformId, stopBadgeTiles, stopModeList } from './stations';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
     type: 'Feature',
@@ -72,5 +72,55 @@ describe('isStationBoard', () => {
 
     it('treats a platform as a platform', () => {
         expect(isStationBoard({ platform_count: 2 })).toBe(false);
+    });
+});
+
+describe('badgeLines', () => {
+    const isNight = (_type: string, name: string) => /^N/.test(name);
+    const tram = { name: '4', type: 'tram' as const, route_color: '' };
+    const nightBus = { name: 'N89', type: 'bus' as const, route_color: '' };
+
+    // A night bus at a tram stop must not show a bus on its badge by day.
+    it('leaves night lines out while they are hidden', () => {
+        expect(badgeLines({ lines: [tram, nightBus] }, isNight).lines).toEqual([tram]);
+    });
+
+    // A stop served only at night stays on the map with its own badge.
+    it('keeps the night lines of a stop that has no other', () => {
+        expect(badgeLines({ lines: [nightBus] }, isNight).lines).toEqual([nightBus]);
+    });
+
+    it('shows every line at night', () => {
+        expect(badgeLines({ lines: [tram, nightBus] }, null).lines).toEqual([tram, nightBus]);
+    });
+});
+
+describe('sectionPlatformId', () => {
+    const index = new Map([
+        ['S', stop('S', { is_centroid: true })],
+        ['P1', stop('P1', { platform_code: 'A' })],
+        ['P2', stop('P2', { direction: 'Grohova' })],
+    ]);
+
+    // A section header opens its platform's own board, found by code or, without one, by direction.
+    it('finds the platform a section names by code or by direction', () => {
+        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: 'A', direction: null })).toBe('P1');
+        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: null, direction: 'Grohova' })).toBe('P2');
+        expect(sectionPlatformId(['S', 'P1', 'P2'], index, { platform: 'Z', direction: null })).toBeNull();
+    });
+});
+
+describe('hiddenNightLinesAt', () => {
+    const isNight = () => true;
+    const rules = { isNightLine: isNight, nightHours: [22, 5] as [number, number] };
+
+    // By day a stop's badge leaves out night lines; at night it shows them all.
+    it('hides night lines only outside the night hours', () => {
+        expect(hiddenNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', rules)).toBe(isNight);
+        expect(hiddenNightLinesAt(Date.parse('2026-10-16T22:30:00Z'), 'Europe/Prague', rules)).toBeNull();
+    });
+
+    it('hides nothing in a city that tells no night lines', () => {
+        expect(hiddenNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', { ...rules, isNightLine: null })).toBeNull();
     });
 });

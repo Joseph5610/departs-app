@@ -101,13 +101,18 @@ export interface PlatformSection {
     key: string;
     platform: string | null;
     direction: string | null;
+    /** A metro line's section: each line numbers its own tracks, so its directions share one section. */
+    metroLine: string | null;
     groups: DepartureLineGroup[];
 }
 
+/** The section a departure belongs to: its metro line, else its platform (`boardingKey`). */
+const sectionKey = (dep: Departure) => dep.type === 'metro' ? `metro:${String(dep.line).toUpperCase()}` : boardingKey(dep);
+
 /**
- * A station board's rows split by the platform each departure leaves from: coded platforms in natural
- * order (`2` before `10`, `A` before `B`), then those named by direction, unknown ones last; each sorted
- * as the board is. Platforms serving one direction share a section. A row split across platforms gets a
+ * A station board's rows split by the platform each departure leaves from: metro lines first, one section
+ * each, then coded platforms in natural order (`2` before `10`, `A` before `B`), then those named by
+ * direction, unknown ones last; each sorted as the board is. Platforms serving one direction share a section. A row split across platforms gets a
  * `groupId` per platform, so each part expands on its own.
  */
 export const platformSections = (groups: DepartureLineGroup[], departureSort: 'line' | 'departure'): PlatformSection[] => {
@@ -116,7 +121,7 @@ export const platformSections = (groups: DepartureLineGroup[], departureSort: 'l
         const subsByPlatform = new Map<string, DepartureSubGroup[]>();
         for (const sub of group.subGroups) {
             const depsByPlatform = new Map<string, Departure[]>();
-            for (const dep of sub.departures) getOrCreate(depsByPlatform, boardingKey(dep), (): Departure[] => []).push(dep);
+            for (const dep of sub.departures) getOrCreate(depsByPlatform, sectionKey(dep), (): Departure[] => []).push(dep);
             for (const [platform, departures] of depsByPlatform) {
                 const part = depsByPlatform.size === 1 ? sub : { ...sub, groupId: `${sub.groupId}@${platform}`, departures, firstTime: soonest(departures) };
                 getOrCreate(subsByPlatform, platform, (): DepartureSubGroup[] => []).push(part);
@@ -129,11 +134,28 @@ export const platformSections = (groups: DepartureLineGroup[], departureSort: 'l
     }
     const sections = [...byPlatform].map(([key, groups]): PlatformSection => {
         const dep = groups[0]!.subGroups[0]!.departures[0]!;
-        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, groups: groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime) };
+        const sorted = groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
+        if (dep.type === 'metro') return { key, platform: null, direction: null, metroLine: String(dep.line).toUpperCase(), groups: sorted };
+        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, metroLine: null, groups: sorted };
     });
-    const rank = (s: PlatformSection) => (s.platform ? 0 : s.direction ? 1 : 2);
-    return sections.sort((a, b) => rank(a) - rank(b) || (a.platform ?? a.direction ?? '').localeCompare(b.platform ?? b.direction ?? '', undefined, { numeric: true }));
+    const rank = (s: PlatformSection) => (s.metroLine ? 0 : s.platform ? 1 : s.direction ? 2 : 3);
+    const label = (s: PlatformSection) => s.metroLine ?? s.platform ?? s.direction ?? '';
+    return sections.sort((a, b) => rank(a) - rank(b) || label(a).localeCompare(label(b), undefined, { numeric: true }));
 };
+
+/**
+ * The rows a platform section shows before "more": its first `limit` lines, or all of them when one further
+ * down holds a marked trip (viewed, ridden or followed), which must stay visible. `hidden` counts the rest.
+ */
+export const sectionPreview = (groups: DepartureLineGroup[], limit: number, markedTripIds: ReadonlySet<string>): { shown: DepartureLineGroup[]; hidden: number } => {
+    if (groups.length <= limit) return { shown: groups, hidden: 0 };
+    const rest = groups.slice(limit);
+    if (markedTripIds.size > 0 && rest.some(g => g.subGroups.some(s => s.departures.some(d => holdsTrip(d, markedTripIds))))) return { shown: groups, hidden: 0 };
+    return { shown: groups.slice(0, limit), hidden: rest.length };
+};
+
+/** Whether `dep` is one of the marked trips (viewed, ridden or followed), which must never be folded away. */
+const holdsTrip = (dep: Departure, tripIds: ReadonlySet<string>) => !!dep.tripId && tripIds.has(dep.tripId);
 
 export const favoriteKey = (line: string | number, headsign: string) => `${String(line).toUpperCase()}|${headsign}`;
 
@@ -219,7 +241,7 @@ export const groupsHidingTrips = (groups: DepartureLineGroup[], tripIds: Readonl
     for (const lineGroup of groups) {
         for (const subGroup of lineGroup.subGroups) {
             const hidden = subGroup.departures.slice(DEPARTURES_CONFIG.VISIBLE_PER_GROUP);
-            if (hidden.some(dep => !!dep.tripId && tripIds.has(dep.tripId))) result.push(subGroup.groupId);
+            if (hidden.some(dep => holdsTrip(dep, tripIds))) result.push(subGroup.groupId);
         }
     }
     return result;

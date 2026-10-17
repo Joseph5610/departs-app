@@ -16,15 +16,6 @@ export const stopBadgeImage = (selectedCity: string, starredIds: readonly string
 export const platformSortKey = (starredIds: readonly string[]): ExpressionSpecification =>
     ['+', ['coalesce', ['get', 'mode_rank'], 99], ['case', ['in', ['get', 'stop_id'], ['literal', starredIds]], 1000, 0]];
 
-/** The colour of a stop's leading mode in its city's mode colours, read from its `mode_rank`. */
-export const leadingModeColor = (selectedCity: string, modeColors: (city: string) => Record<RouteType, string>, cities: string[]): ExpressionSpecification => {
-    const palette = (city: string) => ['literal', [...ROUTE_TYPE_ORDER.map(mode => modeColors(city)[mode]), modeColors(city).unknown]];
-    return ['to-color', ['at',
-        ['coalesce', ['get', 'mode_rank'], ROUTE_TYPE_ORDER.length],
-        ['match', stopCity(selectedCity), ...cities.flatMap(city => [city, palette(city)]), palette('')],
-    ]] as ExpressionSpecification;
-};
-
 const clusterModeCount = (mode: RouteType) => `modes_${mode}`;
 
 /** Each cluster counts its stations by leading mode, so it can take the colour most of them share. */

@@ -35,9 +35,8 @@ export const MAP_ICONS = {
 
 export const MAP_LAYERS = {
     STOP_CLUSTERS: 'clusters',
-    STATION_DOTS: 'station-dots',
     STATION_BADGES: 'station-badges',
-    STATION_LABELS: 'station-labels',
+    STATION_NAMES: 'station-names',
     PLATFORM_BADGES: 'platform-badges',
     STOP_ENTRANCES: 'entrance-layer',
     VEHICLE_POINTS: 'vehicles-point',
@@ -57,7 +56,7 @@ export const MAP_LAYERS = {
 } as const;
 
 /** Layers whose click opens a stop's departures. */
-export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STATION_DOTS, MAP_LAYERS.STATION_BADGES, MAP_LAYERS.STATION_LABELS, MAP_LAYERS.PLATFORM_BADGES];
+export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STATION_BADGES, MAP_LAYERS.STATION_NAMES, MAP_LAYERS.PLATFORM_BADGES];
 /** Layers whose click opens a vehicle's detail. */
 export const VEHICLE_CLICK_LAYERS: string[] = [MAP_LAYERS.VEHICLE_POINTS, MAP_LAYERS.VEHICLE_DIRECTIONS, MAP_LAYERS.VEHICLE_LABELS];
 export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE];
@@ -74,6 +73,15 @@ export const STOP_BADGE = {
     STAR_MARGIN_SCALE: 0.4,
     STAR_COLOR: '#f59e0b',
     STAR_OUTLINE: '#111111',
+    /** A platform's code: a white circle beside its pill, sized and spaced as fractions of the tile edge. */
+    CODE_FILL: '#f8fafc',
+    CODE_INK: '#0f172a',
+    CODE_GAP_SCALE: 0.12,
+    /** Lettering of metro lines and platform codes: the app's UI face, sized by character count as fractions of the shape. */
+    FONT: '"Geist Variable", Arial, sans-serif',
+    LETTER_SCALES: [0.62, 0.5, 0.4],
+    /** A circle's share of its square's room for lettering, so a code keeps a margin round it. */
+    CIRCLE_LETTER_INSET: 0.82,
     PIXEL_RATIO: 2,
     /** Corner radius and glyph size as fractions of the tile edge. */
     RADIUS_SCALE: 0.22,
@@ -97,11 +105,11 @@ const MAP_TOKENS = {
         vehicles: { min: 10, max: 15 },
         /** Stations cluster up to this zoom, like the platforms did before them. */
         clusterMax: 13,
-        /** Stations are drawn as mode badges from here, as dots below it; clusters end just before. */
-        badges: 14,
+        /** Stations are drawn as mode badges from here, where the clusters end. */
+        badges: 13,
         /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
         labels: 15,
-        /** From here a station splits into its platforms. */
+        /** From here a station's platforms take over from its badge. */
         platforms: 16,
     },
     colors: {
@@ -111,9 +119,9 @@ const MAP_TOKENS = {
         routeDefault: '#ffffff',
         favorite: '#f59e0b',
         vehicleLabelText: '#f8fafc',
-        stopIconHalo: '#000000',
-        platformText: '#cbd5e1'
     },
+    /** How much stations and platforms grow from the platforms' zoom to zoom 18. */
+    platformGrowth: 1.25,
     route: {
         /** How far a travelled segment's colour is blended toward `traversedTarget`; drawn opaque so streets and casing do not muddy it. */
         traversedMix: { dark: 0.5, light: 0.6 },
@@ -136,8 +144,8 @@ export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.clusterMax;
 const UNCLUSTERED: ExpressionSpecification = ['!', ['has', 'point_count']];
 const STATION_NAME_TEXT = {
     'text-font': MAP_FONT_STACK,
-    'text-letter-spacing': 0.15,
-    'text-max-width': 7,
+    'text-letter-spacing': 0.03,
+    'text-max-width': 8,
     'text-justify': 'center',
 } as const;
 /** A wide, sharp halo, since a station's name often lies on the vehicles waiting at it. */
@@ -149,7 +157,7 @@ const STATION_NAME_PAINT = {
 } as const;
 /** Badge scale across the zoom range in which stations are drawn whole. */
 const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
-    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh];
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh, 18, atHigh * MAP_TOKENS.platformGrowth];
 
 export const stopClusters: CircleLayerSpecification = {
     id: MAP_LAYERS.STOP_CLUSTERS,
@@ -173,23 +181,6 @@ export const stopClusters: CircleLayerSpecification = {
     }
 };
 
-/** Below the badges' zoom, a station is a dot in its leading mode's colour (`leadingModeColor`). */
-export const stationDots: CircleLayerSpecification = {
-    id: MAP_LAYERS.STATION_DOTS,
-    type: 'circle',
-    source: MAP_SOURCES.STATIONS,
-    maxzoom: MAP_TOKENS.zoom.badges,
-    filter: UNCLUSTERED,
-    paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, MAP_TOKENS.zoom.badges, 4.5],
-        'circle-color': MAP_TOKENS.colors.blueCluster,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': MAP_TOKENS.colors.stroke,
-        'circle-opacity': 0.9,
-        'circle-stroke-opacity': 0.8,
-    }
-};
-
 /**
  * A station as one badge of its modes, with its name above or below it from `zoom.labels`. Badges that
  * collide give way by mode rank; a name that fits neither above nor below is dropped, never laid over a badge.
@@ -198,7 +189,8 @@ export const stationBadges: SymbolLayerSpecification = {
     id: MAP_LAYERS.STATION_BADGES,
     type: 'symbol',
     source: MAP_SOURCES.STATIONS,
-    minzoom: MAP_TOKENS.zoom.badges,
+    // No minzoom: below the badges' zoom a station the clusters leave alone is still drawn, at the smallest size.
+    // Hands over to its platforms at one zoom, with no crossfade in which both are too faint to read.
     maxzoom: MAP_TOKENS.zoom.platforms,
     filter: UNCLUSTERED,
     layout: {
@@ -206,7 +198,8 @@ export const stationBadges: SymbolLayerSpecification = {
         'icon-size': badgeSize(0.6, 0.9),
         'icon-padding': 2,
         'text-field': ['step', ['zoom'], '', MAP_TOKENS.zoom.labels, ['get', 'stop_name']],
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 10, MAP_TOKENS.zoom.platforms, 12],
+        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 11, MAP_TOKENS.zoom.platforms, 13],
+        // Only below or above: the offset counts from the point, and a badge of several tiles is wider than any side offset.
         'text-variable-anchor': ['top', 'bottom'],
         'text-radial-offset': 1.3,
         'text-padding': 4,
@@ -215,14 +208,15 @@ export const stationBadges: SymbolLayerSpecification = {
     },
     paint: {
         ...STATION_NAME_PAINT,
-        'icon-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, 0, MAP_TOKENS.zoom.badges + 0.3, 1, MAP_TOKENS.zoom.platforms - 0.3, 1, MAP_TOKENS.zoom.platforms, 0],
-        'text-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms - 0.3, 1, MAP_TOKENS.zoom.platforms, 0],
     }
 };
 
-/** A station's name once its platforms are drawn apart, beside them rather than on them: a one-platform station's badge sits on its point. */
-export const stationLabels: SymbolLayerSpecification = {
-    id: MAP_LAYERS.STATION_LABELS,
+/**
+ * A station's name once its platforms carry the badges: on its point when that is free, else beside it,
+ * set as the badge layer set it below this zoom.
+ */
+export const stationNames: SymbolLayerSpecification = {
+    id: MAP_LAYERS.STATION_NAMES,
     type: 'symbol',
     source: MAP_SOURCES.STATIONS,
     minzoom: MAP_TOKENS.zoom.platforms,
@@ -230,41 +224,29 @@ export const stationLabels: SymbolLayerSpecification = {
     layout: {
         ...STATION_NAME_TEXT,
         'text-field': ['get', 'stop_name'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 12, 18, 14],
-        'text-variable-anchor': ['bottom', 'top', 'left', 'right'],
-        'text-radial-offset': 1.6,
-        'text-padding': 6,
+        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 13, 18, 15],
+        // Clear of the platform pills that usually sit on the station's point: above or below them first.
+        'text-variable-anchor': ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        'text-radial-offset': 1.5,
+        'text-padding': 4,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
     paint: STATION_NAME_PAINT,
 };
 
-/** Each platform as a badge of its modes with its platform code beside it. */
+/** Each platform as a pill of its modes (a metro platform: its line) with its code in a circle beside it. */
 export const platformBadges: SymbolLayerSpecification = {
     id: MAP_LAYERS.PLATFORM_BADGES,
     type: 'symbol',
     source: MAP_SOURCES.STOPS,
     minzoom: MAP_TOKENS.zoom.platforms,
-    filter: ['!=', LOCATION_TYPE, 2],
+    filter: ['all', ['!=', LOCATION_TYPE, 2], ['!=', ['coalesce', ['get', 'badges'], ''], '']],
     layout: {
-        'icon-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0.8, 18, 1],
+        // Takes over from its station's badge at the same scale, and grows from there.
+        'icon-size': badgeSize(0.6, 0.9),
         'icon-allow-overlap': true,
-        'text-field': ['coalesce', ['get', 'platform_code'], ''],
-        'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 11, 18, 13],
-        'text-anchor': 'top',
-        'text-offset': [0, 1.2],
-        'text-allow-overlap': true,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
-    paint: {
-        'text-color': MAP_TOKENS.colors.platformText,
-        'text-halo-color': MAP_TOKENS.colors.stopIconHalo,
-        'text-halo-width': 0.8,
-        'text-halo-blur': 0.2,
-        'icon-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0, MAP_TOKENS.zoom.platforms + 0.3, 1],
-        'text-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0, MAP_TOKENS.zoom.platforms + 0.3, 1],
-    }
 };
 
 export const stopEntrances: SymbolLayerSpecification = {
@@ -275,11 +257,12 @@ export const stopEntrances: SymbolLayerSpecification = {
         ['!', ['has', 'point_count']],
         ['==', LOCATION_TYPE, 2]
     ],
-    minzoom: 15.5,
+    // Not before the platforms: an entrance's name would push the station badges out of placement.
+    minzoom: MAP_TOKENS.zoom.platforms,
     layout: {
         'text-field': ['get', 'stop_name'],
         'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'], 15.5, 8, 18, 10],
+        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 8, 18, 10],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
         'text-radial-offset': 1.2,
         'text-letter-spacing': 0.1,
@@ -294,7 +277,7 @@ export const stopEntrances: SymbolLayerSpecification = {
         'text-halo-color': MAP_TOKENS.colors.stroke,
         'text-halo-width': 1,
         'text-halo-blur': 0.2,
-        'text-opacity': ['interpolate', ['linear'], ['zoom'], 15.5, 0, 16, 1]
+        'text-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0, MAP_TOKENS.zoom.platforms + 0.5, 1]
     }
 };
 

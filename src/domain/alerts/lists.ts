@@ -142,20 +142,16 @@ export const noticesByPlatform = (infotexts: Infotext[], stationIds: string[], p
 
 /**
  * The notices a stop's board shows. A plain stop shows all of them; a station (`platformCodes` given)
- * shows its own whole, adds a picked platform's, and otherwise `summary` names the platforms holding theirs.
+ * shows its own whole, and `summary` names the platforms holding theirs, each read on its own board.
  */
 export const boardNotices = (
     infotexts: Infotext[],
     stopIds: string[],
     platformCodes: ReadonlyMap<string, string> | null,
-    selectedPlatform: string | null,
 ): { shown: Infotext[]; summary: PlatformNotices[] } => {
     if (!platformCodes) return { shown: noticesForStops(infotexts, stopIds), summary: [] };
     const { station, platforms } = noticesByPlatform(infotexts, stopIds, platformCodes);
-    if (!selectedPlatform) return { shown: station, summary: platforms };
-    const own = new Set(station);
-    const picked = platforms.find(p => p.code === selectedPlatform)?.notices ?? [];
-    return { shown: [...station, ...picked.filter(n => !own.has(n))], summary: [] };
+    return { shown: station, summary: platforms };
 };
 
 /** The most urgent priority among the platforms' notices. */

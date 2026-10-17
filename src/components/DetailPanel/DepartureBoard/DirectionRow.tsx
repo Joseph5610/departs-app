@@ -104,13 +104,12 @@ export const DirectionRow = memo(({
                                 />
                             ))}
                             {hasMore && (
-                                // Shaped like the chips it extends, so it reads as "more departures", not as a menu.
                                 <Button
-                                    variant="ghost"
+                                    variant="more"
+                                    size="chip"
                                     onClick={() => onToggleGroup?.(groupId)}
                                     aria-label={isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: hiddenCount })}
                                     aria-expanded={isExpanded}
-                                    className="h-7 gap-1 rounded-full border border-dashed border-foreground/20 px-2.5 text-body-sm font-semibold tabular-nums text-muted-foreground hover:border-foreground/30 hover:bg-foreground/5 hover:text-foreground"
                                 >
                                     {isExpanded ? t('map.departures.showLess') : `+${hiddenCount}`}
                                     <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />

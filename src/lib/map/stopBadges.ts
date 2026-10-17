@@ -2,7 +2,7 @@ import type { Map } from 'maplibre-gl';
 import type { RouteType } from '@/types';
 import { MAP_ICONS, STOP_BADGE } from '@/config/mapLayers';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
-import { METRO_TILE_SEPARATOR, STOP_BADGE_SEPARATOR } from '@/domain/stops';
+import { PLATFORM_CODE_TILE, STOP_BADGE_SEPARATOR, TILE_PART_SEPARATOR } from '@/domain/stops';
 import { getContrastColor } from '@/lib/color';
 
 type GlyphNode =
@@ -76,17 +76,24 @@ const drawGlyph = (ctx: CanvasRenderingContext2D, nodes: GlyphNode[], x: number,
 export const modeColorsOf = (city: string): Record<RouteType, string> =>
     ({ ...STOP_BADGE.MODE_COLORS, ...FRONTEND_CITIES_CONFIG[city]?.modeColors });
 
-const drawLetter = (ctx: CanvasRenderingContext2D, letter: string, x: number, size: number, color: string) => {
+/** `letter` centred on its ink, not its line box, in a `size` square at (`x`, `y`); longer codes set smaller. */
+const drawLetter = (ctx: CanvasRenderingContext2D, letter: string, x: number, size: number, color: string, y = 0, inset = 1) => {
+    const scale = STOP_BADGE.LETTER_SCALES[Math.min(letter.length, STOP_BADGE.LETTER_SCALES.length) - 1]! * inset;
     ctx.fillStyle = color;
-    ctx.font = `700 ${Math.round(size * (letter.length > 1 ? 0.48 : 0.62))}px Montserrat, Arial, sans-serif`;
+    ctx.font = `700 ${Math.round(size * scale)}px ${STOP_BADGE.FONT}`;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(letter, x + size / 2, size / 2 + size * 0.04);
+    ctx.textBaseline = 'alphabetic';
+    const ink = ctx.measureText(letter);
+    ctx.fillText(
+        letter,
+        x + size / 2 + (ink.actualBoundingBoxLeft - ink.actualBoundingBoxRight) / 2,
+        y + size / 2 + (ink.actualBoundingBoxAscent - ink.actualBoundingBoxDescent) / 2,
+    );
 };
 
 /** One tile: `tram`, `bus`..., or a metro line `metro/B/F8B322` lettered in its own colour. */
 const drawTile = (ctx: CanvasRenderingContext2D, tile: string, colors: Record<RouteType, string>, x: number, size: number) => {
-    const [token, metroLine, metroColor] = tile.split(METRO_TILE_SEPARATOR);
+    const [token, metroLine, metroColor] = tile.split(TILE_PART_SEPARATOR);
     const mode = (token in colors ? token : 'unknown') as RouteType;
     const fill = mode === 'metro' && metroColor ? `#${metroColor}` : colors[mode];
     const ink = getContrastColor(fill);
@@ -97,6 +104,19 @@ const drawTile = (ctx: CanvasRenderingContext2D, tile: string, colors: Record<Ro
         drawGlyph(ctx, TROLLEY_POLES, x, size, ink);
         drawGlyph(ctx, BUS, x, size, ink, TROLLEYBUS_BUS_DROP);
     } else if (mode !== 'unknown') drawGlyph(ctx, GLYPHS[mode], x, size, ink);
+};
+
+/** A platform's code in a white circle, as station boards head each platform's section. */
+const drawPlatformCircle = (ctx: CanvasRenderingContext2D, code: string, x: number, y: number, size: number) => {
+    const r = size / 2;
+    ctx.beginPath();
+    ctx.arc(x + r, y + r, r - STOP_BADGE.PIXEL_RATIO / 2, 0, Math.PI * 2);
+    ctx.fillStyle = STOP_BADGE.CODE_FILL;
+    ctx.fill();
+    ctx.lineWidth = STOP_BADGE.PIXEL_RATIO;
+    ctx.strokeStyle = STOP_BADGE.CODE_INK;
+    ctx.stroke();
+    drawLetter(ctx, code, x, size, STOP_BADGE.CODE_INK, y, STOP_BADGE.CIRCLE_LETTER_INSET);
 };
 
 /** A favourite's five-pointed star centred on (`cx`, `cy`), outlined so it reads on any tile and on the map. */
@@ -117,19 +137,24 @@ const drawStar = (ctx: CanvasRenderingContext2D, cx: number, cy: number, radius:
 };
 
 /**
- * One pill of joined tiles for the image id's `<city>:<star>:<badges>` part; one grey tile for a stop with
- * no lines. A starred pill gets a margin on every side, so its centre, and so its place on the map, stays put.
+ * The image for the id's `<city>:<star>:<badges>` part: one pill of joined mode tiles (one grey tile for a stop
+ * with no lines), a platform's code in a circle beside it. A starred one gets a margin on every side, so its
+ * centre, and so its place on the map, stays put.
  */
 const drawStopBadge = (key: string): ImageData | null => {
     const [city, star, badges] = key.split(':');
     const colors = modeColorsOf(city);
-    const tiles = badges ? badges.split(STOP_BADGE_SEPARATOR) : ['unknown'];
+    const all = badges ? badges.split(STOP_BADGE_SEPARATOR) : [];
+    const codeTile = all.find(tile => tile.startsWith(PLATFORM_CODE_TILE + TILE_PART_SEPARATOR));
+    const modeTiles = all.filter(tile => tile !== codeTile);
+    const tiles = modeTiles.length ? modeTiles : ['unknown'];
     const size = STOP_BADGE.TILE_PX * STOP_BADGE.PIXEL_RATIO;
     const divider = STOP_BADGE.DIVIDER_PX * STOP_BADGE.PIXEL_RATIO;
     const margin = star ? Math.round(size * STOP_BADGE.STAR_MARGIN_SCALE) : 0;
     const width = tiles.length * size;
+    const codeGap = codeTile ? Math.round(size * STOP_BADGE.CODE_GAP_SCALE) : 0;
     const canvas = document.createElement('canvas');
-    canvas.width = width + 2 * margin;
+    canvas.width = width + (codeTile ? codeGap + size : 0) + 2 * margin;
     canvas.height = size + 2 * margin;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
@@ -142,12 +167,15 @@ const drawStopBadge = (key: string): ImageData | null => {
     ctx.fillStyle = STOP_BADGE.DIVIDER_COLOR;
     for (let i = 1; i < tiles.length; i++) ctx.fillRect(i * size - divider / 2, 0, divider, size);
     ctx.restore();
-    if (star) drawStar(ctx, margin + width, margin, size * STOP_BADGE.STAR_RADIUS_SCALE);
+    if (codeTile) drawPlatformCircle(ctx, codeTile.slice(PLATFORM_CODE_TILE.length + 1), margin + width + codeGap, margin, size);
+    if (star) drawStar(ctx, margin + width + (codeTile ? codeGap + size : 0), margin, size * STOP_BADGE.STAR_RADIUS_SCALE);
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 };
 
 /** Draws stop badge images the first time a layer asks for one, since the mode combinations are only known from the data. */
 export const provideStopBadges = (map: Map) => {
+    // Badges are drawn once and cached by the map, so the face must be loaded before the first one.
+    void document.fonts?.load(`700 16px ${STOP_BADGE.FONT}`);
     map.setMissingStyleImageResolver((id) => {
         if (!id.startsWith(MAP_ICONS.STOP_BADGE_PREFIX) || map.hasImage(id)) return;
         const image = drawStopBadge(id.slice(MAP_ICONS.STOP_BADGE_PREFIX.length));

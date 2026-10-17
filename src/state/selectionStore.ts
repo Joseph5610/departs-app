@@ -3,8 +3,6 @@ import { create } from 'zustand';
 interface SelectionState {
     isFollowing: boolean;
     selectedLine: string | null;
-    /** Platform filter of a station board, which gathers several platforms. */
-    selectedPlatform: string | null;
     /** Line filter the next opened stop starts with, then cleared; a pinned line's card sets it. */
     pendingLine: string | null;
     /** The trip the opened stop was reached from, highlighted on its board. */
@@ -15,7 +13,6 @@ interface SelectionState {
 interface SelectionActions {
     setIsFollowing: (isFollowing: boolean) => void;
     toggleLineFilter: (line: string | null) => void;
-    togglePlatformFilter: (platform: string) => void;
     clearLineFilter: () => void;
     presetLineFilter: (line: string) => void;
     presetTripHighlight: (tripId: string) => void;
@@ -30,7 +27,6 @@ export interface SelectionStore extends SelectionState {
 export const useSelectionStore = create<SelectionStore>((set) => ({
     isFollowing: false,
     selectedLine: null,
-    selectedPlatform: null,
     pendingLine: null,
     highlightedTripId: null,
     pendingTripId: null,
@@ -43,11 +39,6 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
                 selectedLine: state.selectedLine === line ? null : line,
             })),
             
-        togglePlatformFilter: (platform) =>
-            set((state) => ({
-                selectedPlatform: state.selectedPlatform === platform ? null : platform,
-            })),
-
         clearLineFilter: () => set({ selectedLine: null }),
 
         presetLineFilter: (line) => set({ pendingLine: line }),
@@ -56,7 +47,6 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
 
         resetStopSelection: () => set((state) => ({
             selectedLine: state.pendingLine,
-            selectedPlatform: null,
             pendingLine: null,
             highlightedTripId: state.pendingTripId,
             pendingTripId: null,

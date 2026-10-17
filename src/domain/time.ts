@@ -23,6 +23,12 @@ export const formatExpectedClock = (time: string | null | undefined): string =>
 
 const timeOfDayFormats = new Map<string, Intl.DateTimeFormat>();
 
+/** Whether the local hour at `ms` falls in [from, to); a range with `from` after `to` wraps past midnight. */
+export const isWithinLocalHours = (ms: number, timeZone: string, [from, to]: readonly [number, number]): boolean => {
+    const hour = Math.floor(secondsOfDayIn(timeZone, ms) / 3600);
+    return from <= to ? hour >= from && hour < to : hour >= from || hour < to;
+};
+
 /** Seconds since midnight of `ms` in `timeZone`, the zone timetables are written in. */
 export const secondsOfDayIn = (timeZone: string, ms: number): number => {
     let format = timeOfDayFormats.get(timeZone);

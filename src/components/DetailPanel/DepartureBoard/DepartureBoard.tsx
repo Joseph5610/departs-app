@@ -1,11 +1,10 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
-import { ArrowRight, ListFilter, Train, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import { Button } from '@/components/ui/button';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
@@ -14,12 +13,17 @@ import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { groupsHidingTrips, isMetroClosed, platformSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
-import { isStationBoard, servesMode } from '@/domain/stops';
+import { groupsHidingTrips, isMetroClosed, platformSections, sectionPreview, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
+import { Button } from '@/components/ui/button';
+import { isStationBoard, sectionPlatformId, servesMode } from '@/domain/stops';
+import { useStops } from '@/hooks/data/useStops';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
 import { PlatformCircle } from '@/components/PlatformCircle';
+import { LineBadge } from '@/components/LineBadge';
 import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
@@ -43,8 +47,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
-    const selectedPlatform = useSelectionStore(s => s.selectedPlatform);
-    const { togglePlatformFilter } = useSelectionStore(s => s.actions);
+    const { stopIndex } = useStops();
     const { stopId: routeStopId } = useRouteParams();
     // Pins and the departures query both key on the stop id in the URL.
     const boardStopId = routeStopId ?? selectedStop.stop_id;
@@ -58,17 +61,17 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
     const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
+    const marked = useMemo(() => new Set([highlightedTripId, rideTripId, followedTripId].filter((id): id is string => !!id)), [highlightedTripId, rideTripId, followedTripId]);
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
     /** Groups whose viewed or ridden trip sits below the collapsed rows open once, then follow the user's toggle. */
     const autoExpanded = useRef(new Set<string>());
     useEffect(() => {
-        if (!highlightedTripId && !rideTripId && !followedTripId) return;
-        const marked = new Set([highlightedTripId, rideTripId, followedTripId].filter((id): id is string => !!id));
+        if (marked.size === 0) return;
         const toOpen = groupsHidingTrips(shownGroups, marked).filter(id => !autoExpanded.current.has(id));
         if (toOpen.length === 0) return;
         for (const id of toOpen) autoExpanded.current.add(id);
         setExpandedGroups(prev => new Set([...prev, ...toOpen]));
-    }, [shownGroups, highlightedTripId, rideTripId, followedTripId]);
+    }, [shownGroups, marked]);
 
     // Re-runs on expansion: a highlighted trip in a collapsed group only has a row once its group opens.
     const scrolledTo = useRef<string | null>(null);
@@ -159,32 +162,19 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                                 {t('map.departures.noUpcomingDescription')}
                             </EmptyDescription>
                         </EmptyHeader>
-                        {selectedPlatform && (
-                            <EmptyContent>
-                                <Button variant="secondary" size="sm" onClick={() => togglePlatformFilter(selectedPlatform)}>
-                                    <X size={14} strokeWidth={2} aria-hidden="true" />
-                                    {t('map.departures.allPlatforms')}
-                                </Button>
-                            </EmptyContent>
-                        )}
                     </Empty>
                 )
             ) : (
                 sections ? (
                     sections.map(section => (
-                        <section key={section.key} className="flex flex-col gap-1.5">
-                            {section.key && (
-                                <PlatformHeader
-                                    section={section}
-                                    isMetro={section.groups[0]?.type === 'metro'}
-                                    isSelected={selectedPlatform === section.key}
-                                    onToggle={togglePlatformFilter}
-                                />
-                            )}
-                            <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
-                                <DirectionRows groups={section.groups} inPlatformSection {...rowProps} />
-                            </Card>
-                        </section>
+                        <PlatformSectionView
+                            key={section.key}
+                            section={section}
+                            platformStopId={section.groups[0]?.subGroups[0]?.departures[0]?.platformStopId ?? sectionPlatformId(selectedStop.all_ids ?? [], stopIndex, section)}
+                            markedTripIds={marked}
+                            badgeColumn={badgeColumn}
+                            rowProps={rowProps}
+                        />
                     ))
                 ) : (
                     <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
@@ -236,40 +226,77 @@ const DirectionRows = ({ groups, inPlatformSection, isFiltered, expandedGroups, 
         );
     }));
 
-interface PlatformHeaderProps {
+interface PlatformSectionViewProps {
     section: PlatformSection;
-    isMetro: boolean;
-    isSelected: boolean;
-    onToggle: (code: string) => void;
+    platformStopId: string | null;
+    markedTripIds: ReadonlySet<string>;
+    badgeColumn: React.CSSProperties;
+    rowProps: Omit<DirectionRowsProps, 'groups' | 'inPlatformSection'>;
 }
 
-/** A station board's platform section title; tapping it shows only that platform, tapping again shows them all. */
-const PlatformHeader = ({ section, isMetro, isSelected, onToggle }: PlatformHeaderProps) => {
+/** One platform's section of a station board: its first lines, the rest behind a button. */
+const PlatformSectionView = ({ section, platformStopId, markedTripIds, badgeColumn, rowProps }: PlatformSectionViewProps) => {
     const { t } = useTranslation();
+    const [showAll, setShowAll] = useState(false);
+    const { shown, hidden } = sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES, markedTripIds);
+    const groups = showAll ? section.groups : shown;
+    return (
+        <section className="flex flex-col gap-1.5">
+            {section.key && <PlatformHeader section={section} platformStopId={platformStopId} />}
+            <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+                {/* A metro line's rows name their track, which is the line's own. */}
+                <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
+                {hidden > 0 && (
+                    <div className="flex justify-center border-t border-border/50 py-2.5">
+                        <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => setShowAll(open => !open)}>
+                            {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
+                            <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
+                        </Button>
+                    </div>
+                )}
+            </Card>
+        </section>
+    );
+};
+
+interface PlatformHeaderProps {
+    section: PlatformSection;
+    /** The platform's own board; null when the stop list does not know the platform. */
+    platformStopId: string | null;
+}
+
+/** A station board's platform section title, opening that platform's own board. */
+const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
+    const { t } = useTranslation();
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const metroColor = section.groups[0]?.subGroups[0]?.departures[0]?.route_color;
+    const title = section.metroLine ? (
+        <>
+            <LineBadge name={section.metroLine} routeColor={metroColor ?? FALLBACK_ROUTE_COLOR} />
+            <span className="flex-1 text-body-sm font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
+        </>
+    ) : section.platform ? (
+        <>
+            <PlatformCircle code={section.platform} className="size-6 text-label" />
+            <span className="flex-1 text-body-sm font-semibold text-foreground">
+                {t('map.departures.platformSection', { code: section.platform })}
+            </span>
+        </>
+    ) : (
+        <span className="flex min-w-0 flex-1 items-center gap-2 text-body-sm font-semibold text-foreground">
+            <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
+        </span>
+    );
+    if (!platformStopId) return <div className="flex items-center gap-2 px-2 py-1">{title}</div>;
     return (
         <button
             type="button"
-            onClick={() => onToggle(section.key)}
-            aria-pressed={isSelected}
+            onClick={() => navigate(paths.stop(selectedCity, platformStopId))}
             className="flex items-center gap-2 rounded-lg px-2 py-1 text-left outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-            {section.platform ? (
-                <>
-                    <PlatformCircle code={section.platform} className="size-6 text-label" />
-                    <span className="flex-1 text-body-sm font-semibold text-foreground">
-                        {isMetro ? t('map.departures.trackNumber', { track: section.platform }) : t('map.departures.platformSection', { code: section.platform })}
-                    </span>
-                </>
-            ) : (
-                <span className="flex min-w-0 flex-1 items-center gap-2 text-body-sm font-semibold text-foreground">
-                    <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-                    <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
-                </span>
-            )}
-            <span className={cn("flex items-center gap-1 rounded-full px-2.5 py-1 text-label font-semibold transition-colors", isSelected ? "bg-primary/15 text-primary" : "bg-foreground/5 text-muted-foreground")}>
-                {isSelected ? <X size={13} strokeWidth={2} aria-hidden="true" /> : <ListFilter size={13} strokeWidth={2} aria-hidden="true" />}
-                {isSelected ? t('map.departures.allPlatforms') : t('map.departures.onlyThisPlatform')}
-            </span>
+            {title}
+            <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
         </button>
     );
 };
