@@ -13,17 +13,12 @@ import type { VehiclesService } from '../../vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
 import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/dukStationBoard';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
+import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
+import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
 const lineKey = (node: string, line: string) => `${node}|${line.toUpperCase()}`;
-
-/** A requested stop id resolved to its Portabo node and, for a platform, its post. */
-interface StopRequest {
-    id: string;
-    node: string;
-    post: string | null;
-}
 
 interface TimetableLink {
     tripId: string;
@@ -38,7 +33,7 @@ interface TimetableLink {
  * departure is linked to the CIS JŘ timetable trip of the same line and minute, for the trip's
  * timeline, vehicle and accessibility; the timetable alone is served only when Portabo fails.
  *
- * Stop ids are `centroid-<node>` (station), `<node>-<post>` (platform) or a bare `<node>`.
+ * Platforms are `<node>-<post>`; a station's node comes from its platforms in the stop index.
  */
 export class DukDeparturesService implements DeparturesUseCase {
     constructor(
@@ -53,18 +48,21 @@ export class DukDeparturesService implements DeparturesUseCase {
         }
         const stopIndex = getStopIndex(this.city);
 
-        const requests = stopIds.map(parseStopId);
+        const relations = await stopIndex.relationsOf(stopIds).catch(() => new Map<string, StopRelation>());
+        const requests = stopIds.map(id => toStopRequest(id, relations.get(id)));
         const nodes = [...new Set(requests.map(r => r.node))];
 
-        const platformsByStation = await stopIndex.childrenOf(nodes.map(n => `${DUK_CONFIG.STATION_PREFIX}${n}`)).catch(() => new Map<string, string[]>());
-        const platformsOf = (node: string) => platformsByStation.get(`${DUK_CONFIG.STATION_PREFIX}${node}`) ?? [];
+        const stationOf = new Map(stopIds.map(id => [id, stationOfRequest(id, relations.get(id))]));
+        const stationIds = [...new Set([...stationOf.values()].filter((id): id is string => id !== null))];
+        const platformsByStation = await stopIndex.childrenOf(stationIds).catch(() => new Map<string, string[]>());
+        const platformsOf = (request: StopRequest) => platformsByStation.get(stationOf.get(request.id) ?? '') ?? [];
         // Timetable rows are filed under the bare node, which has no station of its own.
         const tuplesRead = collectDepartureTuples(stopIndex, nodes, new Map(nodes.map(n => [n, n])), new Map()).catch((e) => {
             console.warn('[DUK] Timetable unavailable for board linking:', e);
             return [] as { stopId: string; tuple: GtfsDepartureTuple }[];
         });
         const [boards, tuples, { routes }, vehicles] = await Promise.all([
-            Promise.all(requests.map(r => this.getBoard(r, platformsOf(r.node), ctx))),
+            Promise.all(requests.map(r => this.getBoard(r, platformsOf(r), ctx))),
             tuplesRead,
             getGtfsRoutes(this.city),
             tuplesRead.then(rows => boardVehicles(this.vehiclesService, collectTripIds(rows), ctx.waitUntil)),
@@ -94,7 +92,7 @@ export class DukDeparturesService implements DeparturesUseCase {
         const departures: AppDeparture[] = [];
 
         for (const request of requests) {
-            const knownPlatforms = new Set(platformsOf(request.node));
+            const knownPlatforms = new Set(platformsOf(request));
             const board = boardOf.get(request.id) ?? [];
             const directionsAt = new Map<string, Set<string>>();
             for (const entry of board) {
@@ -262,12 +260,6 @@ function nearbyLink(
         }
     }
     return undefined;
-}
-
-function parseStopId(id: string): StopRequest {
-    if (id.startsWith(DUK_CONFIG.STATION_PREFIX)) return { id, node: id.slice(DUK_CONFIG.STATION_PREFIX.length), post: null };
-    const [node, post] = id.split('-');
-    return { id, node, post: post ?? null };
 }
 
 function toLink(tuple: GtfsDepartureTuple, route: GtfsRoute): TimetableLink {
