@@ -7,9 +7,11 @@ import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
 import { boardNotices, highestPlatformPriority, noticeText, type PlatformNotices } from '@/domain/alerts';
-import { isStationBoard, platformCodes } from '@/domain/stops';
+import { isStationBoard, platformCodes, sectionPlatformId } from '@/domain/stops';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { useStops } from '@/hooks/data/useStops';
-import { useSelectionStore } from '@/state/selectionStore';
 import { PlatformCircle } from '@/components/PlatformCircle';
 
 interface InfoTextsProps {
@@ -23,15 +25,19 @@ interface InfoTextsProps {
 export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
     const allInfotexts = useInfotexts();
     const { stopIndex } = useStops();
-    const selectedPlatform = useSelectionStore(s => s.selectedPlatform);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const onStation = isStationBoard(selectedStop);
 
+    const codes = useMemo(() => onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null, [onStation, selectedStop, stopIndex]);
     const { shown, summary } = useMemo(() => {
         if (!allInfotexts) return { shown: [], summary: [] };
-        const ids = [selectedStop.stop_id, ...(selectedStop.all_ids || [])];
-        const codes = onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null;
-        return boardNotices(allInfotexts, ids, codes, selectedPlatform);
-    }, [selectedStop, allInfotexts, onStation, stopIndex, selectedPlatform]);
+        return boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes);
+    }, [selectedStop, allInfotexts, codes]);
+
+    const openPlatform = (code: string) => {
+        const id = sectionPlatformId(selectedStop.all_ids ?? [], stopIndex, { platform: code, direction: null });
+        if (id) navigate(paths.stop(selectedCity, id));
+    };
 
     if (shown.length === 0 && summary.length === 0) return null;
 
@@ -40,7 +46,7 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
             {shown.map(info => (
                 <InfoTextCard key={info.id} info={info} />
             ))}
-            {summary.length > 0 && <PlatformNoticesCard platforms={summary} />}
+            {summary.length > 0 && <PlatformNoticesCard platforms={summary} onOpen={openPlatform} />}
         </div>
     );
 };
@@ -51,34 +57,32 @@ const alertVariant = (priority: Infotext['priority']) =>
 const iconTone = (priority: Infotext['priority']) =>
     priority === 'high' ? "text-destructive!" : priority === 'normal' ? "text-amber-500!" : "text-muted-foreground";
 
-/** One card for a station's platform notices: the platforms concerned, each opening its notices through the platform filter. */
-const PlatformNoticesCard = ({ platforms }: { platforms: PlatformNotices[] }) => {
+/** One line for a station's platform notices: the platforms concerned, each opening its own board with them. */
+const PlatformNoticesCard = ({ platforms, onOpen }: { platforms: PlatformNotices[]; onOpen: (code: string) => void }) => {
     const { t } = useTranslation();
-    const { togglePlatformFilter } = useSelectionStore(s => s.actions);
     const priority = highestPlatformPriority(platforms);
 
     return (
-        <Alert variant={alertVariant(priority)} className="relative p-3 sm:p-4 rounded-2xl">
-            <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", iconTone(priority))} />
-            <AlertTitle className="mb-1 text-sm font-bold leading-tight text-foreground/95">
-                {t('map.departures.stationNotices')}
-            </AlertTitle>
-            <AlertDescription className="grid gap-2">
-                <span className="text-label font-semibold text-foreground/60">{t('map.departures.stationNoticesHint')}</span>
-                <span className="flex flex-wrap gap-1.5">
+        <Alert variant={alertVariant(priority)} className="items-center px-3 py-2.5">
+            <AlertIcon className={cn("h-4 w-4 shrink-0", iconTone(priority))} />
+            <div className="flex min-w-0 items-center gap-2">
+                <AlertTitle className="min-w-0 flex-1 text-body-sm font-semibold leading-tight text-foreground/95">
+                    {t('map.departures.stationNotices')}
+                </AlertTitle>
+                <span className="flex shrink-0 flex-wrap justify-end gap-1">
                     {platforms.map(({ code }) => (
                         <button
                             key={code}
                             type="button"
-                            onClick={() => togglePlatformFilter(code)}
+                            onClick={() => onOpen(code)}
                             aria-label={t('map.departures.platformCode', { code })}
                             className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
                         >
-                            <PlatformCircle code={code} className="size-7 text-body-sm" />
+                            <PlatformCircle code={code} className="size-6 text-label" />
                         </button>
                     ))}
                 </span>
-            </AlertDescription>
+            </div>
         </Alert>
     );
 };

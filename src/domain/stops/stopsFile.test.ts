@@ -60,4 +60,16 @@ describe('stopCollectionFromFile', () => {
         expect(index.get('U1040Z1P')?.properties.stop_id).toBe('U1040Z1P');
         expect(index.get('centroid-U1040S1')?.properties.is_centroid).toBe(true);
     });
+
+    // A terminus kept only for alighting has no departures to open; the map must not draw an empty badge for it.
+    it('marks a station whose every platform is alight-only as drop-off only', () => {
+        const terminus: StopsFile = {
+            version: 1,
+            stations: [{ id: 'S', name: 'ZŠ Jana Babáka', pos: [16.59, 49.21] }],
+            platforms: [{ id: 'P', station: 'S', pos: [16.59, 49.21], routes: [], alightOnly: true }],
+            entrances: [],
+        };
+        expect(stopCollectionFromFile(terminus, routes).features[0]!.properties.is_drop_off_only).toBe(true);
+        expect(byId().get('centroid-U1040S1')?.is_drop_off_only).toBeUndefined();
+    });
 });

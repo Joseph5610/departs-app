@@ -248,11 +248,7 @@
       "lineFilters": "Filtre liniek",
       "platformSection": "Nástupište {{code}}",
       "towardsSection": "Smer {{stop}}",
-      "trackNumber": "Koľaj {{track}}",
-      "allPlatforms": "Všetky nástupištia",
-      "onlyThisPlatform": "Len toto",
-      "stationNotices": "Zmeny premávky na tejto zastávke",
-      "stationNoticesHint": "Vyberte nástupište pre podrobnosti.",
+      "stationNotices": "Zmeny premávky na nástupišti",
       "viewedTrip": "Prezeraný spoj",
       "yourTrip": "Váš spoj",
       "watchedTrip": "Sledovaný spoj",
@@ -261,7 +257,10 @@
         "early": "Ide skôr o {{delay}}",
         "timetable": "Bez živých dát"
       },
-      "atStopShort": "Na zastávke"
+      "atStopShort": "Na zastávke",
+      "moreLines": "Ďalšie linky (+{{count}})",
+      "fewerLines": "Menej liniek",
+      "metroSection": "Metro {{line}}"
     }
   },
   "update": {

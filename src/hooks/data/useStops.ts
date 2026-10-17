@@ -1,48 +1,70 @@
 import '@/lib/zodConfig';
 import { z } from 'zod/mini';
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import type { StopCollection, StopsFile, AppError } from '@/types';
+import type { RouteInfo, StopCollection, StopsFile, AppError } from '@/types';
 import { useMemo } from 'react';
 import { apiFetch } from '@/lib/apiClient';
 import { memoizeLast } from '@/lib/memoize';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE, STOPS_FILE_VERSION } from '@/config/constants';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE, NIGHT_LINES_CHECK_MS, STOPS_FILE_VERSION } from '@/config/constants';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
-import { indexStopsById, splitStopCollection, stopCollectionFromFile, withStopModes } from '@/domain/stops';
+import { hiddenNightLinesAt, indexStopsById, splitStopCollection, stopCollectionFromFile, withStopModes } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 import { routesQueryOptions } from './useRouteMetadata';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { useNowEvery } from '@/hooks/useNow';
+import { useCityConfig, useLineRules } from './useCities';
 
-/** Checks the structure the map layers and stop index rely on; each stop's other properties are optional. */
-const stopsFileSchema = z.object({
-    type: z.literal('FeatureCollection'),
-    features: z.array(z.looseObject({
-        geometry: z.looseObject({ coordinates: z.tuple([z.number(), z.number()]) }),
-        properties: z.looseObject({ stop_id: z.string() }),
-    })),
+/** A city's stop files as fetched, kept on the device; what the app builds from them is derived on every load. */
+interface StopFiles {
+    file: StopsFile;
+    routes: Record<string, RouteInfo>;
+}
+
+/** Checks the stop files' shape; departs-data validates every station and platform before publishing them. */
+const stopFilesSchema = z.object({
+    file: z.looseObject({ version: z.literal(STOPS_FILE_VERSION) }),
+    routes: z.record(z.string(), z.looseObject({})),
 });
 
-const stopsPersister = createDevicePersister((data): StopCollection => {
-    stopsFileSchema.parse(data);
-    return data as StopCollection;
+const stopsPersister = createDevicePersister((data): StopFiles => {
+    stopFilesSchema.parse(data);
+    return data as StopFiles;
 });
+
+/** One stop collection per fetched files, shared by every observer of a city (the map, its neighbours' overlay). */
+const collections = new WeakMap<StopFiles, StopCollection>();
+const selectCollection = (city: string) => (files: StopFiles): StopCollection => {
+    let collection = collections.get(files);
+    if (!collection) {
+        collection = stopCollectionFromFile(files.file, files.routes, FRONTEND_CITIES_CONFIG[city]?.departuresByPlatforms);
+        collections.set(files, collection);
+    }
+    return collection;
+};
+const selectors = new Map<string, ReturnType<typeof selectCollection>>();
+const selectorOf = (city: string) => {
+    let selector = selectors.get(city);
+    if (!selector) selectors.set(city, selector = selectCollection(city));
+    return selector;
+};
 
 const splitStops = memoizeLast(splitStopCollection);
 const stationModes = memoizeLast(withStopModes);
 const platformModes = memoizeLast(withStopModes);
 const buildStopIndex = memoizeLast(indexStopsById);
 
-export const stopsQueryOptions = (city: string) => queryOptions<StopCollection, AppError>({
+export const stopsQueryOptions = (city: string) => queryOptions<StopFiles, AppError, StopCollection>({
     queryKey: queryKeys.stops(city, DEVICE_CACHE.VERSION),
     queryFn: async ({ client, signal }) => {
         const [file, routes] = await Promise.all([
-            apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/stops.json?v=${DEVICE_CACHE.VERSION}`, { signal }),
+            apiFetch<StopsFile>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/stops.json?v=${DEVICE_CACHE.VERSION}`, { signal }),
             client.query({ ...routesQueryOptions(city), staleTime: 'static' }),
         ]);
-        // departs-data validates every stop before publishing; only a format change is caught here.
-        if ((file as StopsFile).version !== STOPS_FILE_VERSION) throw new Error(`Unsupported stops.json version for ${city}`);
-        return stopCollectionFromFile(file as StopsFile, routes, FRONTEND_CITIES_CONFIG[city]?.departuresByPlatforms);
+        if (file.version !== STOPS_FILE_VERSION) throw new Error(`Unsupported stops.json version for ${city}`);
+        return { file, routes };
     },
+    select: selectorOf(city),
     staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STOPS_STALE),
     gcTime: Infinity,
     persister: stopsPersister,
@@ -58,11 +80,14 @@ export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const query = useQuery(stopsQueryOptions(selectedCity));
+    const { timezone } = useCityConfig();
+    const lineRules = useLineRules();
+    const hiddenNightLines = hiddenNightLinesAt(useNowEvery(NIGHT_LINES_CHECK_MS), timezone, lineRules);
 
     const collection = query.data;
     const { stops: platforms, centroids } = splitStops(collection);
-    const stops = platformModes(platforms);
-    const stations = stationModes(centroids);
+    const stops = platformModes(platforms, hiddenNightLines);
+    const stations = stationModes(centroids, hiddenNightLines);
     const stopIndex = buildStopIndex(collection);
     const updatedAt = query.data ? query.dataUpdatedAt : null;
     const isLoading = query.isLoading;

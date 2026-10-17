@@ -1,14 +1,14 @@
 import type { PinnedStop, SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
 import { servesMode } from './stations';
 
-/** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only platforms are left out. */
+/** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only ones are left out. */
 export const splitStopCollection = (collection: StopCollection | undefined) => {
     if (!collection) return { stops: null, centroids: null };
     const stops: StopFeature[] = [];
     const centroids: StopFeature[] = [];
     for (const f of collection.features) {
-        if (f.properties.is_centroid) centroids.push(f);
-        else if (!f.properties.is_drop_off_only) stops.push(f);
+        if (f.properties.is_drop_off_only) continue;
+        (f.properties.is_centroid ? centroids : stops).push(f);
     }
     return {
         stops: { type: 'FeatureCollection', features: stops } as StopCollection,

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -73,10 +73,6 @@ describe('filterDepartures', () => {
         expect(filterDepartures(deps, 'x9', false, false).filtered.map((d) => d.tripId)).toEqual(['x']);
     });
 
-    it('keeps only the selected platform of a station board', () => {
-        const deps = [departure({ tripId: 'a', platform: 'A' }), departure({ tripId: 'b', platform: 'B' })];
-        expect(filterDepartures(deps, null, false, false, 'B').filtered.map((d) => d.tripId)).toEqual(['b']);
-    });
 });
 
 describe('platformSections', () => {
@@ -272,3 +268,30 @@ describe('favoriteLineNames', () => {
     });
 });
 
+describe('sectionPreview', () => {
+    const groups = groupDepartures(['1', '2', '3', '4', '5'].map(line => departure({ tripId: `t${line}`, line })), 'line');
+
+    // A large station lists a few lines per platform; the rest wait behind "more lines".
+    it('shows the first lines and counts the rest', () => {
+        const { shown, hidden } = sectionPreview(groups, 3, new Set());
+        expect(shown.map(g => g.line)).toEqual(['1', '2', '3']);
+        expect(hidden).toBe(2);
+    });
+
+    // A viewed or ridden trip must never be folded away.
+    it('shows every line when a hidden one holds a marked trip', () => {
+        expect(sectionPreview(groups, 3, new Set(['t5'])).hidden).toBe(0);
+    });
+});
+
+describe('platformSections metro', () => {
+    // Each metro line numbers its own tracks: track 1 of B is not track 1 of C.
+    it('gives each metro line its own section, ahead of the platforms', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'b1', line: 'B', type: 'metro', platform: '1', headsign: 'Zličín' }),
+            departure({ tripId: 'c1', line: 'C', type: 'metro', platform: '1', headsign: 'Letňany' }),
+            departure({ tripId: 't', line: '3', platform: 'A' }),
+        ], 'line');
+        expect(platformSections(groups, 'line').map(s => [s.metroLine, s.platform])).toEqual([['B', null], ['C', null], [null, 'A']]);
+    });
+});

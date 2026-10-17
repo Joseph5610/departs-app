@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Stations on the map as one badge of their modes, and station boards split into platform sections with an "Only this" filter.
+- Stations on the map as one badge of their modes, and station boards split into platform sections, each opening that platform's own board.
+- Stop badges leave out night lines outside night hours.
 
 ### Changed
 

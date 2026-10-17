@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatExpectedClock, formatTimetableClock, minutesCountdown } from './time';
+import { formatExpectedClock, formatTimetableClock, isWithinLocalHours, minutesCountdown } from './time';
 
 // Board times follow the city's zone, so they agree with its trips' timetable times on any device.
 describe('formatTimetableClock', () => {
@@ -32,5 +32,21 @@ describe('minutesCountdown', () => {
         expect(minutesCountdown(at(60), now, 60)).toEqual({ kind: 'minutes', minutes: 1 });
         expect(minutesCountdown(at(59 * 60 + 59), now, 60)).toEqual({ kind: 'minutes', minutes: 59 });
         expect(minutesCountdown(at(60 * 60), now, 60)).toEqual({ kind: 'clock' });
+    });
+});
+
+describe('isWithinLocalHours', () => {
+    const at = (iso: string) => Date.parse(iso);
+
+    // Night lines run from late evening past midnight; the range must wrap.
+    it('wraps a range past midnight, in the city time zone', () => {
+        expect(isWithinLocalHours(at('2026-10-16T21:30:00Z'), 'Europe/Prague', [22, 5])).toBe(true);
+        expect(isWithinLocalHours(at('2026-10-16T02:00:00Z'), 'Europe/Prague', [22, 5])).toBe(true);
+        expect(isWithinLocalHours(at('2026-10-16T12:00:00Z'), 'Europe/Prague', [22, 5])).toBe(false);
+    });
+
+    it('reads a plain range without wrapping', () => {
+        expect(isWithinLocalHours(at('2026-10-16T23:30:00Z'), 'Europe/Prague', [0, 5])).toBe(true);
+        expect(isWithinLocalHours(at('2026-10-16T04:00:00Z'), 'Europe/Prague', [0, 5])).toBe(false);
     });
 });

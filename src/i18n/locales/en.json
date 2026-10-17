@@ -243,11 +243,7 @@
       "lineFilters": "Line filters",
       "platformSection": "Platform {{code}}",
       "towardsSection": "Towards {{stop}}",
-      "trackNumber": "Track {{track}}",
-      "allPlatforms": "All platforms",
-      "onlyThisPlatform": "Only this",
-      "stationNotices": "Service changes at this stop",
-      "stationNoticesHint": "Pick a platform to read them.",
+      "stationNotices": "Service changes at platform",
       "viewedTrip": "Viewed trip",
       "yourTrip": "Your trip",
       "watchedTrip": "Followed trip",
@@ -256,7 +252,10 @@
         "early": "Early by {{delay}}",
         "timetable": "No live data"
       },
-      "atStopShort": "At the stop"
+      "atStopShort": "At the stop",
+      "moreLines": "More lines (+{{count}})",
+      "fewerLines": "Fewer lines",
+      "metroSection": "Metro {{line}}"
     }
   },
   "update": {
