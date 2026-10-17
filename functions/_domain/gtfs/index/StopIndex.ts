@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../../_core/cityConfig';
 import { ApiError } from '../../../_core/errors';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { getDepartureRows, getStopRelations } from '../../../_feeds/gtfs/departureRows';
+import { getDepartureRows, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 
 /** The stop ids a request named, resolved to the platforms whose rows must actually be read. */
@@ -18,6 +18,11 @@ export interface StopTargets {
  */
 export class StopIndex {
     constructor(private readonly city: CityConfig) {}
+
+    /** Each of `stopIds` the data knows, with its station (a platform) or its platforms (a station). */
+    relationsOf(stopIds: string[]): Promise<Map<string, StopRelation>> {
+        return getStopRelations(this.city, stopIds);
+    }
 
     /** The platforms of each of `stationIds` that has any. */
     async childrenOf(stationIds: string[]): Promise<Map<string, string[]>> {

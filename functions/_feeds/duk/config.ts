@@ -51,8 +51,6 @@ export const DUK_CONFIG = {
     /** How long the Portabo station names used for headsigns are kept. */
     STATION_NAMES_TTL_MS: 3_600_000,
 
-    /** Station ids; platforms are `<node>-<post>` (departs-data `build-duk.mjs`). */
-    STATION_PREFIX: 'centroid-',
     /** Departures requested per station board. */
     BOARD_DEPARTURE_COUNT: 20,
     BOARD_CACHE_MAX_ENTRIES: 256,
