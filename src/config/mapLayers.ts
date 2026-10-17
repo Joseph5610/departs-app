@@ -113,11 +113,9 @@ const MAP_TOKENS = {
         platforms: 16,
     },
     colors: {
-        glow: '#000000',
         stroke: '#000000',
         blueCluster: '#1e3a8a',
         routeDefault: '#ffffff',
-        favorite: '#f59e0b',
         vehicleLabelText: '#f8fafc',
     },
     /** How much stations and platforms grow from the platforms' zoom to zoom 18. */
