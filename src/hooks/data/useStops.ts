@@ -6,14 +6,12 @@ import { useMemo } from 'react';
 import { apiFetch } from '@/lib/apiClient';
 import { memoizeLast } from '@/lib/memoize';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE, NIGHT_LINES_CHECK_MS, STOPS_FILE_VERSION } from '@/config/constants';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE, STOPS_FILE_VERSION } from '@/config/constants';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
-import { hiddenNightLinesAt, indexStopsById, splitStopCollection, stopCollectionFromFile, withStopModes } from '@/domain/stops';
+import { indexStopsById, splitStopCollection, stopCollectionFromFile } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 import { routesQueryOptions } from './useRouteMetadata';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
-import { useNowEvery } from '@/hooks/useNow';
-import { useCityConfig, useLineRules } from './useCities';
 
 /** A city's stop files as fetched, kept on the device; what the app builds from them is derived on every load. */
 interface StopFiles {
@@ -50,8 +48,6 @@ const selectorOf = (city: string) => {
 };
 
 const splitStops = memoizeLast(splitStopCollection);
-const stationModes = memoizeLast(withStopModes);
-const platformModes = memoizeLast(withStopModes);
 const buildStopIndex = memoizeLast(indexStopsById);
 
 export const stopsQueryOptions = (city: string) => queryOptions<StopFiles, AppError, StopCollection>({
@@ -73,21 +69,15 @@ export const stopsQueryOptions = (city: string) => queryOptions<StopFiles, AppEr
 
 /**
  * Fetches the selected city's prebuilt stop list from the static data host, kept on the device (IndexedDB) across launches.
- * Provides GeoJSON for the map layers, the stations with their mode badges, and an index resolving
- * any stop, platform or station ID.
+ * Provides GeoJSON for the map layers and an index resolving any stop, platform or station ID.
  */
 export const useStops = () => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
     const query = useQuery(stopsQueryOptions(selectedCity));
-    const { timezone } = useCityConfig();
-    const lineRules = useLineRules();
-    const hiddenNightLines = hiddenNightLinesAt(useNowEvery(NIGHT_LINES_CHECK_MS), timezone, lineRules);
 
     const collection = query.data;
-    const { stops: platforms, centroids } = splitStops(collection);
-    const stops = platformModes(platforms, hiddenNightLines);
-    const stations = stationModes(centroids, hiddenNightLines);
+    const { stops, centroids } = splitStops(collection);
     const stopIndex = buildStopIndex(collection);
     const updatedAt = query.data ? query.dataUpdatedAt : null;
     const isLoading = query.isLoading;
@@ -95,10 +85,9 @@ export const useStops = () => {
     return useMemo(() => ({
         stops,
         centroids,
-        stations,
         stopIndex,
         allFeatures: collection ?? null,
         updatedAt,
         isLoading,
-    }), [stops, centroids, stations, stopIndex, collection, updatedAt, isLoading]);
+    }), [stops, centroids, stopIndex, collection, updatedAt, isLoading]);
 };

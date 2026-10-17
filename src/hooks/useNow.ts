@@ -40,14 +40,54 @@ const getSnapshot = () => (timer === undefined ? currentSecond() : now);
  */
 export const useNow = (): number => useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-const coarseSnapshots = new Map<number, () => number>();
+interface CoarseClock {
+    listeners: Set<() => void>;
+    timer: number | undefined;
+    value: number;
+    subscribe: (listener: () => void) => () => void;
+    getSnapshot: () => number;
+}
 
-/** The current time floored to `stepMs`; a component using it re-renders only when the step changes. */
+const coarseClocks = new Map<number, CoarseClock>();
+
+const coarseClockOf = (stepMs: number): CoarseClock => {
+    const held = coarseClocks.get(stepMs);
+    if (held) return held;
+    const floored = () => Math.floor(Date.now() / stepMs) * stepMs;
+    const clock: CoarseClock = {
+        listeners: new Set(),
+        timer: undefined,
+        value: 0,
+        subscribe: (listener) => {
+            clock.listeners.add(listener);
+            if (clock.timer === undefined) {
+                clock.value = floored();
+                schedule();
+            }
+            return () => {
+                clock.listeners.delete(listener);
+                if (clock.listeners.size === 0) {
+                    window.clearTimeout(clock.timer);
+                    clock.timer = undefined;
+                }
+            };
+        },
+        getSnapshot: () => (clock.timer === undefined ? floored() : clock.value),
+    };
+    // Fires once per step, at the wall-clock boundary, rather than riding the one-second ticker.
+    const schedule = () => {
+        clock.timer = window.setTimeout(() => {
+            clock.value = floored();
+            schedule();
+            clock.listeners.forEach(l => l());
+        }, stepMs - (Date.now() % stepMs));
+    };
+    coarseClocks.set(stepMs, clock);
+    return clock;
+};
+
+/** The current time floored to `stepMs`, from a timer that fires once per step; a component using it re-renders only then. */
 export const useNowEvery = (stepMs: number): number => {
-    let snapshot = coarseSnapshots.get(stepMs);
-    if (!snapshot) {
-        snapshot = () => Math.floor(getSnapshot() / stepMs) * stepMs;
-        coarseSnapshots.set(stepMs, snapshot);
-    }
-    return useSyncExternalStore(subscribe, snapshot, snapshot);
+    const clock = coarseClockOf(stepMs);
+    return useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getSnapshot);
 };

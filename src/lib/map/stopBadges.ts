@@ -172,13 +172,32 @@ const drawStopBadge = (key: string): ImageData | null => {
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 };
 
-/** Draws stop badge images the first time a layer asks for one, since the mode combinations are only known from the data. */
+/**
+ * Draws stop badge images the first time a layer asks for one, since the mode combinations are only known from
+ * the data. Badges drawn before the badge face has loaded fall back to another font, so they are redrawn once it has.
+ */
 export const provideStopBadges = (map: Map) => {
-    // Badges are drawn once and cached by the map, so the face must be loaded before the first one.
-    void document.fonts?.load(`700 16px ${STOP_BADGE.FONT}`);
+    const font = `700 16px ${STOP_BADGE.FONT}`;
+    let fontReady = document.fonts?.check(font) ?? true;
+    const drawnEarly = new Set<string>();
+    const draw = (id: string) => drawStopBadge(id.slice(MAP_ICONS.STOP_BADGE_PREFIX.length));
+
     map.setMissingStyleImageResolver((id) => {
         if (!id.startsWith(MAP_ICONS.STOP_BADGE_PREFIX) || map.hasImage(id)) return;
-        const image = drawStopBadge(id.slice(MAP_ICONS.STOP_BADGE_PREFIX.length));
-        if (image) map.addImage(id, image, { pixelRatio: STOP_BADGE.PIXEL_RATIO });
+        const image = draw(id);
+        if (!image) return;
+        map.addImage(id, image, { pixelRatio: STOP_BADGE.PIXEL_RATIO });
+        if (!fontReady) drawnEarly.add(id);
+    });
+
+    if (fontReady) return;
+    void document.fonts.load(font).then(() => {
+        fontReady = true;
+        for (const id of drawnEarly) {
+            const image = draw(id);
+            // A badge's size comes from its tiles, never its text, so the redrawn image fits the slot in place.
+            if (image && map.hasImage(id)) map.updateImage(id, image);
+        }
+        drawnEarly.clear();
     });
 };

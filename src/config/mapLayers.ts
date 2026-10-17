@@ -107,8 +107,6 @@ const MAP_TOKENS = {
         clusterMax: 13,
         /** Stations are drawn as mode badges from here, where the clusters end. */
         badges: 13,
-        /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
-        labels: 15,
         /** From here a station's platforms take over from its badge. */
         platforms: 16,
     },
@@ -181,10 +179,7 @@ export const stopClusters: CircleLayerSpecification = {
     }
 };
 
-/**
- * A station as one badge of its modes, with its name above or below it from `zoom.labels`. Badges that
- * collide give way by mode rank; a name that fits neither above nor below is dropped, never laid over a badge.
- */
+/** A station as one badge of its modes; badges that collide give way by mode rank. Its name shows with its platforms. */
 export const stationBadges: SymbolLayerSpecification = {
     id: MAP_LAYERS.STATION_BADGES,
     type: 'symbol',
@@ -194,27 +189,13 @@ export const stationBadges: SymbolLayerSpecification = {
     maxzoom: MAP_TOKENS.zoom.platforms,
     filter: UNCLUSTERED,
     layout: {
-        ...STATION_NAME_TEXT,
         'icon-size': badgeSize(0.6, 0.9),
         'icon-padding': 2,
-        'text-field': ['step', ['zoom'], '', MAP_TOKENS.zoom.labels, ['get', 'stop_name']],
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 11, MAP_TOKENS.zoom.platforms, 13],
-        // Only below or above: the offset counts from the point, and a badge of several tiles is wider than any side offset.
-        'text-variable-anchor': ['top', 'bottom'],
-        'text-radial-offset': 1.3,
-        'text-padding': 4,
-        'text-optional': true,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
-    paint: {
-        ...STATION_NAME_PAINT,
-    }
 };
 
-/**
- * A station's name once its platforms carry the badges: on its point when that is free, else beside it,
- * set as the badge layer set it below this zoom.
- */
+/** A station's name once its platforms carry the badges: on its point when that is free, else beside it. */
 export const stationNames: SymbolLayerSpecification = {
     id: MAP_LAYERS.STATION_NAMES,
     type: 'symbol',
@@ -240,7 +221,7 @@ export const platformBadges: SymbolLayerSpecification = {
     type: 'symbol',
     source: MAP_SOURCES.STOPS,
     minzoom: MAP_TOKENS.zoom.platforms,
-    filter: ['all', ['!=', LOCATION_TYPE, 2], ['!=', ['coalesce', ['get', 'badges'], ''], '']],
+    filter: ['!=', LOCATION_TYPE, 2],
     layout: {
         // Takes over from its station's badge at the same scale, and grows from there.
         'icon-size': badgeSize(0.6, 0.9),

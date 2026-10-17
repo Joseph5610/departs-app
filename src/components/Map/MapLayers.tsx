@@ -18,6 +18,7 @@ import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
 import { useMapFilters } from '@/hooks/derived/useMapFilters';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
+import { useHiddenNightLines } from '@/hooks/derived/useHiddenNightLines';
 import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
     stopClusters,
@@ -54,6 +55,8 @@ interface MapLayersProps {
 
 const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
 const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
+const ownStationModes = memoizeLast(withStopModes);
+const ownPlatformModes = memoizeLast(withStopModes);
 const overlayStations = memoizeLast(withStopModes);
 const overlayPlatforms = memoizeLast(withStopModes);
 const starredStops = memoizeLast(favoriteMarks);
@@ -86,17 +89,20 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
-    const { stops: ownStops, stations: ownStations } = useStops();
+    const { stops: ownPlatforms, centroids: ownCentroids } = useStops();
+    const hiddenNightLines = useHiddenNightLines();
+    const ownStops = ownPlatformModes(ownPlatforms, hiddenNightLines);
+    const ownStations = ownStationModes(ownCentroids, hiddenNightLines);
     const networksInView = useNetworksInView();
     const overlay = useOverlayNetworks(networksInView);
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
     const stopsData = useMemo(
-        () => withOverlay(ownStops, overlayPlatforms(withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false))),
-        [ownStops, overlay.stops]);
+        () => withOverlay(ownStops, overlayPlatforms(withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false), hiddenNightLines)),
+        [ownStops, overlay.stops, hiddenNightLines]);
     const stationsData = useMemo(
-        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids), stationGrid(ownStations ?? null), true)),
-        [ownStations, overlay.centroids]);
+        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.centroids, hiddenNightLines), stationGrid(ownStations ?? null), true)),
+        [ownStations, overlay.centroids, hiddenNightLines]);
     const starred = starredStops(stationsData, stopsData, favoriteStops);
     const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
@@ -141,7 +147,6 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
         filterGeoJSON(stationsData, showStops),
         [stationsData, showStops, filterGeoJSON]
     );
-    const stationText = showStopLabels ? stationBadges.layout?.['text-field'] : '';
 
     const filteredStopsData = useMemo(() => 
         filterGeoJSON(stopsData, showStops), 
@@ -182,11 +187,6 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 <Layer {...userLocationPoint} />
             </Source>
 
-            {/* Entrances under the stations, so a station's name is placed before them. */}
-            <Source id={MAP_SOURCES.STOPS} type="geojson" data={filteredStopsData}>
-                <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
-            </Source>
-
             {/* Vehicles under the stations: a vehicle at a stop never covers its badge, and the name's halo keeps it readable over it. */}
             <Source id={MAP_SOURCES.SELECTED_VEHICLE} type="geojson" data={selectedGeoJSON}>
                 <Layer {...vehicleSelectedPulse} paint={{ ...vehicleSelectedPulse.paint, 'circle-color': vehicleColorExpr }} />
@@ -211,16 +211,20 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 clusterProperties={STATION_CLUSTER_PROPERTIES}
             >
                 <Layer {...stopClusters} paint={{ ...stopClusters.paint, 'circle-color': clusterColor }} />
-                <Layer
-                    {...stationBadges}
-                    layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage, 'text-field': stationText }}
-                    paint={{ ...stationBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }}
-                />
+                <Layer {...stationBadges} layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage }} />
                 {showStopLabels && <Layer {...stationNames} paint={{ ...stationNames.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />}
             </Source>
 
-            {/* Platforms on top: small and tapped, they must not hide under a vehicle; placed first, so names move off them. */}
-            <Layer {...platformBadges} layout={{ ...platformBadges.layout, 'icon-image': platformBadgeImage, 'symbol-sort-key': platformOrder }} />
+            <Source id={MAP_SOURCES.STOPS} type="geojson" data={filteredStopsData}>
+                {/* Entrances under the vehicles and stations, so a station's name is placed before them. */}
+                <Layer
+                    {...stopEntrances}
+                    beforeId={vehicleSelectedPulse.id}
+                    paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }}
+                />
+                {/* Platforms on top: small and tapped, they must not hide under a vehicle; placed first, so names move off them. */}
+                <Layer {...platformBadges} layout={{ ...platformBadges.layout, 'icon-image': platformBadgeImage, 'symbol-sort-key': platformOrder }} />
+            </Source>
         </>
     );
 });

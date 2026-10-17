@@ -127,6 +127,8 @@ export const POS_SEARCH = {
 export const MAP_DATA = {
     BOUNDS_DEBOUNCE_MS: 800,
     MIN_ZOOM: 9,
+    /** How often stop badges check whether night lines are due. */
+    NIGHT_LINES_CHECK_MS: 5 * 60_000,
 };
 
 /**
@@ -156,9 +158,6 @@ export const MAP_CAMERA = {
     EASE_MS: 1000,
     CLUSTER_EXPAND_MS: 500,
 };
-
-/** How often stop badges check whether night lines are due. */
-export const NIGHT_LINES_CHECK_MS = 5 * 60_000;
 
 /** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
 export const STOPS_FILE_VERSION = 1;
