@@ -147,8 +147,6 @@ const STATION_NAME_TEXT = {
     'text-letter-spacing': 0.05,
     'text-max-width': 8,
     'text-justify': 'center',
-    // Keeps neighbouring names apart, so a dense centre shows fewer of them rather than a wall of text.
-    'text-padding': 15,
 } as const;
 /** One size curve for a station's name, drawn by the badge layer below `zoom.platforms` and the name layer above it. */
 const STATION_NAME_SIZE: ExpressionSpecification =
@@ -206,8 +204,9 @@ export const stationBadges: SymbolLayerSpecification = {
         'text-size': STATION_NAME_SIZE,
         // Only below or above: the offset counts from the point, and a badge of several tiles is wider than any side offset.
         'text-variable-anchor': ['top', 'bottom'],
-        // Moves off the point as the badge grows, so the name never touches it.
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 1.3, MAP_TOKENS.zoom.platforms, 1.8],
+        // Close under or over the badge, as its caption.
+        'text-radial-offset': 1.3,
+        'text-padding': 4,
         'text-optional': true,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
@@ -234,6 +233,8 @@ export const stationNames: SymbolLayerSpecification = {
         'text-variable-anchor': ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
         // Moves off the point as the platform pills around it grow.
         'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 1.8, 18, 2.8],
+        // Keeps neighbouring names apart among the platform pills, so a dense centre is not a wall of text.
+        'text-padding': 15,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
     paint: STATION_NAME_PAINT,
