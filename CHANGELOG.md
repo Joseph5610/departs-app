@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Stops load from the new `stops.json`, so every city's stations come from the data instead of being grouped in the app.
 - The departures API reads a comma-joined `stopId` as one stop made of several platforms in every city, not only Prague.
+- Prague boards list a few more departures, so a station board fills its platform sections.
 
 ## [0.85.0] - 2026-10-14
 
