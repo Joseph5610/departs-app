@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, sectionPlatformId, stopBadgeTiles, stopModeList } from './stations';
+import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, platformIdByCode, sectionPlatformId, stopBadgeTiles, stopModeList } from './stations';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
     type: 'Feature',
@@ -122,5 +122,43 @@ describe('hiddenNightLinesAt', () => {
 
     it('hides nothing in a city that tells no night lines', () => {
         expect(hiddenNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', { ...rules, isNightLine: null })).toBeNull();
+    });
+});
+
+describe('nightLinesByNetwork', () => {
+    const brnoNight = () => true;
+    const networks = {
+        brno: { timeZone: 'Europe/Prague', rules: { isNightLine: brnoNight, nightHours: [22, 5] as [number, number] } },
+        prague: { timeZone: 'Europe/Prague', rules: { isNightLine: null, nightHours: [22, 5] as [number, number] } },
+    };
+
+    // A neighbouring network's stop follows its own city's night lines, not the selected city's.
+    it('reads each stop\'s rules from its own network', () => {
+        const byDay = nightLinesByNetwork(Date.parse('2026-10-16T10:00:00Z'), 'prague', networks);
+        expect(byDay({})).toBeNull();
+        expect(byDay({ city_slug: 'brno' })).toBe(brnoNight);
+        expect(byDay({ city_slug: 'presov' })).toBeNull();
+    });
+
+    it('hides nothing at night', () => {
+        expect(nightLinesByNetwork(Date.parse('2026-10-16T22:30:00Z'), 'brno', networks)({})).toBeNull();
+    });
+});
+
+describe('platformIdByCode', () => {
+    const index = new Map([
+        ['S', stop('S', { is_centroid: true })],
+        ['T1', stop('T1', { platform_code: '1', lines: [{ name: 'A', type: 'metro', route_color: '#00A562' }] })],
+        ['P1', stop('P1', { platform_code: '1' })],
+        ['PA', stop('PA', { platform_code: 'A' })],
+        ['PA2', stop('PA', { platform_code: 'A' })],
+    ]);
+
+    // A notice's platform code opens a board only when it names one platform, never a guess between a metro track and a stop.
+    it('finds the one platform with a code, aliases included, and none when the code is shared', () => {
+        expect(platformIdByCode(['S', 'PA', 'PA2'], index, 'A')).toBe('PA');
+        expect(platformIdByCode(['S', 'T1', 'P1'], index, '1')).toBeNull();
+        expect(platformIdByCode(['S', 'T1'], index, '1')).toBe('T1');
+        expect(platformIdByCode(['S', 'PA'], index, 'Z')).toBeNull();
     });
 });

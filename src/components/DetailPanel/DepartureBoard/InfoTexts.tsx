@@ -7,7 +7,7 @@ import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
 import { boardNotices, highestPlatformPriority, noticeText, type PlatformNotices } from '@/domain/alerts';
-import { isStationBoard, platformCodes, sectionPlatformId } from '@/domain/stops';
+import { isStationBoard, platformCodes, platformIdByCode } from '@/domain/stops';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -34,10 +34,10 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
         return boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes);
     }, [selectedStop, allInfotexts, codes]);
 
-    const openPlatform = (code: string) => {
-        const id = sectionPlatformId(selectedStop.all_ids ?? [], stopIndex, { platform: code, direction: null });
-        if (id) navigate(paths.stop(selectedCity, id));
-    };
+    const platformIds = useMemo(
+        () => new Map(summary.map(({ code }) => [code, platformIdByCode(selectedStop.all_ids ?? [], stopIndex, code)])),
+        [summary, selectedStop, stopIndex]);
+    const openPlatform = (id: string) => navigate(paths.stop(selectedCity, id));
 
     if (shown.length === 0 && summary.length === 0) return null;
 
@@ -46,7 +46,7 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
             {shown.map(info => (
                 <InfoTextCard key={info.id} info={info} />
             ))}
-            {summary.length > 0 && <PlatformNoticesCard platforms={summary} onOpen={openPlatform} />}
+            {summary.length > 0 && <PlatformNoticesCard platforms={summary} platformIds={platformIds} onOpen={openPlatform} />}
         </div>
     );
 };
@@ -57,8 +57,15 @@ const alertVariant = (priority: Infotext['priority']) =>
 const iconTone = (priority: Infotext['priority']) =>
     priority === 'high' ? "text-destructive!" : priority === 'normal' ? "text-amber-500!" : "text-muted-foreground";
 
+interface PlatformNoticesCardProps {
+    platforms: PlatformNotices[];
+    /** Each code's platform; null where the code names no single one, which is then shown but not linked. */
+    platformIds: ReadonlyMap<string, string | null>;
+    onOpen: (platformId: string) => void;
+}
+
 /** One line for a station's platform notices: the platforms concerned, each opening its own board with them. */
-const PlatformNoticesCard = ({ platforms, onOpen }: { platforms: PlatformNotices[]; onOpen: (code: string) => void }) => {
+const PlatformNoticesCard = ({ platforms, platformIds, onOpen }: PlatformNoticesCardProps) => {
     const { t } = useTranslation();
     const priority = highestPlatformPriority(platforms);
 
@@ -71,19 +78,27 @@ const PlatformNoticesCard = ({ platforms, onOpen }: { platforms: PlatformNotices
                 </AlertTitle>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
                     {platforms.map(({ code }) => (
-                        <button
-                            key={code}
-                            type="button"
-                            onClick={() => onOpen(code)}
-                            aria-label={t('map.departures.platformCode', { code })}
-                            className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
-                        >
-                            <PlatformCircle code={code} className="size-6 text-label" />
-                        </button>
+                        <PlatformNoticeCode key={code} code={code} platformId={platformIds.get(code) ?? null} onOpen={onOpen} />
                     ))}
                 </span>
             </div>
         </Alert>
+    );
+};
+
+const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platformId: string | null; onOpen: (platformId: string) => void }) => {
+    const { t } = useTranslation();
+    const circle = <PlatformCircle code={code} className="size-6 text-label" />;
+    if (!platformId) return <span className="flex" aria-label={t('map.departures.platformCode', { code })}>{circle}</span>;
+    return (
+        <button
+            type="button"
+            onClick={() => onOpen(platformId)}
+            aria-label={t('map.departures.platformCode', { code })}
+            className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
+        >
+            {circle}
+        </button>
     );
 };
 

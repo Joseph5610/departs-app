@@ -57,6 +57,24 @@ export const badgeLines = (props: Pick<StopProperties, 'lines'>, hiddenNightLine
     return day.length ? { lines: day } : props;
 };
 
+/** The night lines a stop's badge leaves out, from the stop itself (its network); null for none. */
+export type HiddenNightLinesOf = (props: Pick<StopProperties, 'city_slug'>) => NightLineTest | null;
+
+/** A network's clock and line conventions, as `hiddenNightLinesAt` reads them. */
+export interface NightLineNetwork {
+    timeZone: string;
+    rules: Pick<LineRules, 'isNightLine' | 'nightHours'>;
+}
+
+/**
+ * The night lines each stop's badge leaves out at `nowMs`: a neighbouring network's stop (`city_slug`) follows
+ * its own city's rules and clock, any other stop `ownCity`'s.
+ */
+export const nightLinesByNetwork = (nowMs: number, ownCity: string, networks: Readonly<Record<string, NightLineNetwork>>): HiddenNightLinesOf => {
+    const hidden = new Map(Object.entries(networks).map(([slug, n]) => [slug, hiddenNightLinesAt(nowMs, n.timeZone, n.rules)]));
+    return (props) => hidden.get(props.city_slug ?? ownCity) ?? null;
+};
+
 const withModes = (f: StopFeature, hiddenNightLines: NightLineTest | null): StopFeature => {
     const shown = badgeLines(f.properties, hiddenNightLines);
     const modes = stopModeList(shown);
@@ -67,9 +85,9 @@ const withModes = (f: StopFeature, hiddenNightLines: NightLineTest | null): Stop
     return { ...f, properties: { ...f.properties, badges, mode_rank: routeTypeRank(modes[0]) } };
 };
 
-/** Each stop carrying its `badges` tiles and the rank of its leading mode; night lines left out while `hiddenNightLines` is given. */
-export const withStopModes = (collection: StopCollection | null, hiddenNightLines: NightLineTest | null = null): StopCollection | null =>
-    collection && { ...collection, features: collection.features.map(f => withModes(f, hiddenNightLines)) };
+/** Each stop carrying its `badges` tiles and the rank of its leading mode, without the night lines `hiddenNightLinesOf` names for it. */
+export const withStopModes = (collection: StopCollection | null, hiddenNightLinesOf: HiddenNightLinesOf = () => null): StopCollection | null =>
+    collection && { ...collection, features: collection.features.map(f => withModes(f, hiddenNightLinesOf(f.properties))) };
 
 /** Each of `ids` the stop list knows a platform code for, mapped to that code. */
 export const platformCodes = (ids: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): Map<string, string> => {
@@ -97,6 +115,19 @@ export const sectionPlatformId = (
         if (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction) return p.stop_id;
     }
     return null;
+};
+
+/**
+ * The `stop_id` of the one platform of a station with `code`, for a notice naming it; null when none has it or
+ * several do (a metro track and a tram platform both `1`), so the notice links nowhere rather than to a guess.
+ */
+export const platformIdByCode = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>, code: string): string | null => {
+    const found = new Set<string>();
+    for (const id of stationIds) {
+        const p = stopIndex.get(id)?.properties;
+        if (p && !p.is_centroid && p.platform_code === code) found.add(p.stop_id);
+    }
+    return found.size === 1 ? [...found][0]! : null;
 };
 
 const idParts = (id: string): string[] => id.split(',');
