@@ -143,6 +143,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             { creator: 'Statutární město Brno, KORDIS JMK', title: 'IDS JMK timetables (GTFS, GTFS-RT)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328', license: 'ccBy4' },
             { creator: 'Statutární město Brno, KORDIS JMK', title: 'Public transit vehicle positions', url: 'https://data.brno.cz/datasets/e8aa121910df41bb9a28e4ca34a263c7', license: 'ccBy4' },
             { creator: 'Lissy, FIT VUT Brno', title: 'Route shapes (Lissy API)', url: 'https://github.com/Jorgen98/Lissy', license: 'permission' },
+            { creator: 'KORDIS JMK, Statutární město Brno', title: 'IDS JMK – výluky a odklony', url: 'https://data.brno.cz/datasets/227c819ed9fc4d2e8498e9ea9c93c965', license: 'notStated' },
         ],
         debugFeedLabels: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
         enrichmentChannel: {

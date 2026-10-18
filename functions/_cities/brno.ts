@@ -4,6 +4,8 @@ import { gtfsUseCases } from '../_domain/gtfs/useCases';
 import { GtfsRtVehicleSource } from '../_domain/gtfs/vehicles/GtfsRtVehicleSource';
 import { KordisVehicleMapping } from '../_domain/kordis/index/KordisVehicleMapping';
 import { createKordisAlertsMapper } from '../_domain/kordis/alerts/kordisAlertsMapper';
+import { KordisAlertsService } from '../_domain/kordis/alerts/KordisAlertsService';
+import { AlertsService } from '../_domain/gtfs/alerts/AlertsService';
 
 const config: CityConfig = {
     slug: 'brno',
@@ -33,6 +35,6 @@ export const city: City = {
     config,
     create: () => gtfsUseCases(config, {
         vehicleSource: new GtfsRtVehicleSource(config, new KordisVehicleMapping()),
-        alertsMapper: createKordisAlertsMapper(),
+        alerts: new KordisAlertsService(new AlertsService(config, createKordisAlertsMapper()), config.timezone),
     }),
 };
