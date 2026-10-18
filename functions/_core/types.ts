@@ -115,8 +115,6 @@ interface AppStopProperties {
     zone_id: string | null;
     is_station?: boolean;
     is_drop_off_only?: boolean;
-    is_train?: number;
-    metro_lines?: Array<{ name: string; route_color: string }>;
     /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
     interchanges?: string[];
     all_ids?: string[];

@@ -86,6 +86,11 @@ export const STOP_BADGE = {
     /** Corner radius and glyph size as fractions of the tile edge. */
     RADIUS_SCALE: 0.22,
     GLYPH_SCALE: 0.66,
+    /** Glyph stroke in its 24-unit viewBox; Lucide's own is 2. */
+    GLYPH_STROKE: 2.2,
+    /** The star's inner points and outline, as fractions of its radius. */
+    STAR_INNER_SCALE: 0.48,
+    STAR_STROKE_SCALE: 0.35,
     MODE_COLORS: {
         metro: '#E8710A',
         train: '#1F3F8F',
@@ -103,9 +108,7 @@ const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get'
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
-        /** Stations cluster up to this zoom, like the platforms did before them. */
-        clusterMax: 13,
-        /** Stations are drawn as mode badges from here, where the clusters end. */
+        /** Stations cluster up to this zoom and are drawn as mode badges from it. */
         badges: 13,
         /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
         labels: 14,
@@ -114,7 +117,6 @@ const MAP_TOKENS = {
     },
     colors: {
         stroke: '#000000',
-        blueCluster: '#1e3a8a',
         routeDefault: '#ffffff',
         vehicleLabelText: '#f8fafc',
     },
@@ -132,7 +134,7 @@ const MAP_TOKENS = {
 };
 
 /** Zoom up to which stations are clustered. */
-export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.clusterMax;
+export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.badges;
 
 
 // -----------------------------------------------------------------------------
@@ -166,7 +168,6 @@ export const stopClusters: CircleLayerSpecification = {
     source: MAP_SOURCES.STATIONS,
     filter: ['has', 'point_count'],
     paint: {
-        'circle-color': MAP_TOKENS.colors.blueCluster,
         'circle-radius': [
             'interpolate', ['linear'], ['get', 'point_count'],
             1, 6,

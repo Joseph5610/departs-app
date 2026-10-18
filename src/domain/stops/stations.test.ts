@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopCollection, StopFeature } from '@/types';
-import { badgeLines, hiddenNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList } from './stations';
+import { badgeLines, hidesNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stationPlatforms, stopBadgeTiles, stopModeList } from './stations';
 
 const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
     type: 'Feature',
@@ -109,32 +109,32 @@ describe('sectionStopId', () => {
 
     // A section header opens a board of every platform the section shows, so it lists the same departures.
     it('opens every platform of a code or a direction as one stop', () => {
-        expect(sectionStopId(ids, index, section('A', null), 'S')).toBe('P1');
-        expect(sectionStopId(ids, index, section(null, 'Grohova'), 'S')).toBe('P2,P3');
+        expect(sectionStopId(stationPlatforms(ids, index), section('A', null), 'S')).toBe('P1');
+        expect(sectionStopId(stationPlatforms(ids, index), section(null, 'Grohova'), 'S')).toBe('P2,P3');
     });
 
     it('opens nothing for a metro section or the board already open', () => {
-        expect(sectionStopId(ids, index, section(null, null), 'S')).toBeNull();
-        expect(sectionStopId(ids, index, section(null, 'Grohova'), 'P2,P3')).toBeNull();
+        expect(sectionStopId(stationPlatforms(ids, index), section(null, null), 'S')).toBeNull();
+        expect(sectionStopId(stationPlatforms(ids, index), section(null, 'Grohova'), 'P2,P3')).toBeNull();
     });
 
     it('falls back to the departures\' own platforms the stop list does not know', () => {
-        expect(sectionStopId(ids, index, section('Z', null, ['X1', 'X1']), 'S')).toBe('X1');
+        expect(sectionStopId(stationPlatforms(ids, index), section('Z', null, ['X1', 'X1']), 'S')).toBe('X1');
     });
 });
 
-describe('hiddenNightLinesAt', () => {
+describe('hidesNightLinesAt', () => {
     const isNight = () => true;
     const rules = { isNightLine: isNight, nightHours: [22, 5] as [number, number] };
 
     // By day a stop's badge leaves out night lines; at night it shows them all.
     it('hides night lines only outside the night hours', () => {
-        expect(hiddenNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', rules)).toBe(isNight);
-        expect(hiddenNightLinesAt(Date.parse('2026-10-16T22:30:00Z'), 'Europe/Prague', rules)).toBeNull();
+        expect(hidesNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', rules)).toBe(true);
+        expect(hidesNightLinesAt(Date.parse('2026-10-16T22:30:00Z'), 'Europe/Prague', rules)).toBe(false);
     });
 
     it('hides nothing in a city that tells no night lines', () => {
-        expect(hiddenNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', { ...rules, isNightLine: null })).toBeNull();
+        expect(hidesNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', { ...rules, isNightLine: null })).toBe(false);
     });
 });
 
@@ -176,9 +176,9 @@ describe('platformIdByCode', () => {
 
     // A notice's platform code opens a board only when it names one platform, never a guess between a metro track and a stop.
     it('finds the one platform with a code, aliases included, and none when the code is shared', () => {
-        expect(platformIdByCode(['S', 'PA', 'PA2'], index, 'A')).toBe('PA');
-        expect(platformIdByCode(['S', 'T1', 'P1'], index, '1')).toBeNull();
-        expect(platformIdByCode(['S', 'T1'], index, '1')).toBe('T1');
-        expect(platformIdByCode(['S', 'PA'], index, 'Z')).toBeNull();
+        expect(platformIdByCode(stationPlatforms(['S', 'PA', 'PA2'], index), 'A')).toBe('PA');
+        expect(platformIdByCode(stationPlatforms(['S', 'T1', 'P1'], index), '1')).toBeNull();
+        expect(platformIdByCode(stationPlatforms(['S', 'T1'], index), '1')).toBe('T1');
+        expect(platformIdByCode(stationPlatforms(['S', 'PA'], index), 'Z')).toBeNull();
     });
 });

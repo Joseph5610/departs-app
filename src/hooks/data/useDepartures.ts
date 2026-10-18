@@ -99,7 +99,7 @@ export const useDepartures = () => {
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
     const { stopIndex } = useStops();
-    const liveDepartures = platformsOf(useLiveDepartures(query.data?.departures ?? NO_DEPARTURES, dataUpdatedAt, enrichStopDepartures), stopIndex);
+    const liveDepartures = useLiveDepartures(platformsOf(query.data?.departures ?? NO_DEPARTURES, stopIndex), dataUpdatedAt, enrichStopDepartures);
     const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
     const favoriteLines = usePreferencesStore(s => s.favoriteLines);
     const favoriteKeys = useMemo(() => {

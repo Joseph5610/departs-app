@@ -6,12 +6,11 @@ import { AlertIcon } from '@/components/Alerts/AlertIcon';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
-import { boardNotices, highestPlatformPriority, noticeText, type PlatformNotices } from '@/domain/alerts';
-import { isStationBoard, platformCodes, platformIdByCode } from '@/domain/stops';
-import { navigate } from '@/lib/history';
-import { paths } from '@/lib/routes';
-import { usePreferencesStore } from '@/state/preferencesStore';
+import { boardNotices, noticeText } from '@/domain/alerts';
+import { isStationBoard, platformCodes, platformIdByCode, stationPlatforms } from '@/domain/stops';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { useStops } from '@/hooks/data/useStops';
+import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { PlatformCircle } from '@/components/PlatformCircle';
 
 interface InfoTextsProps {
@@ -25,28 +24,29 @@ interface InfoTextsProps {
 export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
     const allInfotexts = useInfotexts();
     const { stopIndex } = useStops();
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const openPlatform = useOpenStop();
     const onStation = isStationBoard(selectedStop);
 
     const codes = useMemo(() => onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null, [onStation, selectedStop, stopIndex]);
-    const { shown, summary } = useMemo(() => {
-        if (!allInfotexts) return { shown: [], summary: [] };
-        return boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes);
-    }, [selectedStop, allInfotexts, codes]);
+    const notices = useMemo(
+        () => allInfotexts ? boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes) : null,
+        [selectedStop, allInfotexts, codes]);
 
-    const platformIds = useMemo(
-        () => new Map(summary.map(({ code }) => [code, platformIdByCode(selectedStop.all_ids ?? [], stopIndex, code)])),
-        [summary, selectedStop, stopIndex]);
-    const openPlatform = (id: string) => navigate(paths.stop(selectedCity, id));
+    const platformIds = useMemo(() => {
+        if (!notices?.platformCodes.length) return new Map<string, string | null>();
+        const platforms = stationPlatforms(selectedStop.all_ids ?? [], stopIndex);
+        return new Map(notices.platformCodes.map(code => [code, platformIdByCode(platforms, code)]));
+    }, [notices, selectedStop, stopIndex]);
 
-    if (shown.length === 0 && summary.length === 0) return null;
+    if (!notices || (notices.shown.length === 0 && notices.platformCodes.length === 0)) return null;
+    const { shown, platformCodes: codesWithNotices, platformPriority } = notices;
 
     return (
         <div className="flex flex-col gap-2">
             {shown.map(info => (
                 <InfoTextCard key={info.id} info={info} />
             ))}
-            {summary.length > 0 && <PlatformNoticesCard platforms={summary} platformIds={platformIds} onOpen={openPlatform} />}
+            {codesWithNotices.length > 0 && <PlatformNoticesCard codes={codesWithNotices} priority={platformPriority} platformIds={platformIds} onOpen={openPlatform} />}
         </div>
     );
 };
@@ -54,30 +54,27 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
 const alertVariant = (priority: Infotext['priority']) =>
     priority === 'high' ? 'destructive' : priority === 'normal' ? 'warning' : 'subtle';
 
-const iconTone = (priority: Infotext['priority']) =>
-    priority === 'high' ? "text-destructive!" : priority === 'normal' ? "text-amber-500!" : "text-muted-foreground";
-
 interface PlatformNoticesCardProps {
-    platforms: PlatformNotices[];
+    codes: string[];
+    priority: Infotext['priority'];
     /** Each code's platform; null where the code names no single one, which is then shown but not linked. */
     platformIds: ReadonlyMap<string, string | null>;
     onOpen: (platformId: string) => void;
 }
 
 /** One line for a station's platform notices: the platforms concerned, each opening its own board with them. */
-const PlatformNoticesCard = ({ platforms, platformIds, onOpen }: PlatformNoticesCardProps) => {
+const PlatformNoticesCard = ({ codes, priority, platformIds, onOpen }: PlatformNoticesCardProps) => {
     const { t } = useTranslation();
-    const priority = highestPlatformPriority(platforms);
 
     return (
         <Alert variant={alertVariant(priority)} className="items-center px-3 py-2.5">
-            <AlertIcon className={cn("h-4 w-4 shrink-0", iconTone(priority))} />
+            <AlertIcon className={cn("h-4 w-4 shrink-0", noticeIconTone(priority))} />
             <div className="flex min-w-0 items-center gap-2">
                 <AlertTitle className="min-w-0 flex-1 text-body-sm font-semibold leading-tight text-foreground/95">
                     {t('map.departures.stationNotices')}
                 </AlertTitle>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
-                    {platforms.map(({ code }) => (
+                    {codes.map(code => (
                         <PlatformNoticeCode key={code} code={code} platformId={platformIds.get(code) ?? null} onOpen={onOpen} />
                     ))}
                 </span>
@@ -88,7 +85,7 @@ const PlatformNoticesCard = ({ platforms, platformIds, onOpen }: PlatformNotices
 
 const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platformId: string | null; onOpen: (platformId: string) => void }) => {
     const { t } = useTranslation();
-    const circle = <PlatformCircle code={code} className="size-6 text-label" />;
+    const circle = <PlatformCircle code={code} size="md" />;
     if (!platformId) return <span className="flex" aria-label={t('map.departures.platformCode', { code })}>{circle}</span>;
     return (
         <button
@@ -111,7 +108,7 @@ const InfoTextCard = ({ info }: { info: Infotext }) => {
             variant={alertVariant(info.priority)}
             className="relative p-3 sm:p-4 rounded-2xl"
         >
-            <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", iconTone(info.priority))} />
+            <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", noticeIconTone(info.priority))} />
 
             <AlertTitle className="flex flex-col gap-1 mb-2">
                 <span className="font-bold text-sm leading-tight text-foreground/95 whitespace-pre-line">

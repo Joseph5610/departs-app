@@ -4,9 +4,9 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import type { RouteInfo, StopCollection, StopsFile, AppError } from '@/types';
 import { useMemo } from 'react';
 import { apiFetch } from '@/lib/apiClient';
-import { memoizeLast } from '@/lib/memoize';
+import { getOrCreate, memoizeLast } from '@/lib/memoize';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE, STOPS_FILE_VERSION } from '@/config/constants';
+import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE } from '@/config/constants';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { indexStopsById, splitStopCollection, stopCollectionFromFile } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
@@ -21,7 +21,7 @@ interface StopFiles {
 
 /** Checks the stop files' shape; departs-data validates every station and platform before publishing them. */
 const stopFilesSchema = z.object({
-    file: z.looseObject({ version: z.literal(STOPS_FILE_VERSION) }),
+    file: z.looseObject({ version: z.literal(DEVICE_CACHE.STOPS_FILE_VERSION) }),
     routes: z.record(z.string(), z.looseObject({})),
 });
 
@@ -32,20 +32,10 @@ const stopsPersister = createDevicePersister((data): StopFiles => {
 
 /** One stop collection per fetched files, shared by every observer of a city (the map, its neighbours' overlay). */
 const collections = new WeakMap<StopFiles, StopCollection>();
-const selectCollection = (city: string) => (files: StopFiles): StopCollection => {
-    let collection = collections.get(files);
-    if (!collection) {
-        collection = stopCollectionFromFile(files.file, files.routes, FRONTEND_CITIES_CONFIG[city]?.departuresByPlatforms);
-        collections.set(files, collection);
-    }
-    return collection;
-};
+const selectCollection = (city: string) => (files: StopFiles): StopCollection =>
+    getOrCreate(collections, files, () => stopCollectionFromFile(files.file, files.routes, FRONTEND_CITIES_CONFIG[city]?.departuresByPlatforms));
 const selectors = new Map<string, ReturnType<typeof selectCollection>>();
-const selectorOf = (city: string) => {
-    let selector = selectors.get(city);
-    if (!selector) selectors.set(city, selector = selectCollection(city));
-    return selector;
-};
+const selectorOf = (city: string) => getOrCreate(selectors, city, () => selectCollection(city));
 
 const splitStops = memoizeLast(splitStopCollection);
 const buildStopIndex = memoizeLast(indexStopsById);
@@ -57,7 +47,7 @@ export const stopsQueryOptions = (city: string) => queryOptions<StopFiles, AppEr
             apiFetch<StopsFile>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/stops.json?v=${DEVICE_CACHE.VERSION}`, { signal }),
             client.query({ ...routesQueryOptions(city), staleTime: 'static' }),
         ]);
-        if (file.version !== STOPS_FILE_VERSION) throw new Error(`Unsupported stops.json version for ${city}`);
+        if (file.version !== DEVICE_CACHE.STOPS_FILE_VERSION) throw new Error(`Unsupported stops.json version for ${city}`);
         return { file, routes };
     },
     select: selectorOf(city),

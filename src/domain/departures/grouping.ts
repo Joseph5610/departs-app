@@ -2,7 +2,7 @@ import type { StopFeature, Departure, FavoriteLine } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
 import { boardingKey } from './platforms';
-import { mapStable } from '@/lib/memoize';
+import { getOrCreate, mapStable } from '@/lib/memoize';
 
 interface DepartureSubGroup {
     groupId: string;
@@ -19,17 +19,13 @@ export interface DepartureLineGroup {
     firstTime: number;
 }
 
+const soonest = (departures: Departure[]) => Math.min(...departures.map(d => Date.parse(d.timestamp)));
+
 /** One line's departures merged across direction ids that share a headsign. */
 interface Direction {
     ids: string[];
     byHeadsign: Map<string, Departure[]>;
 }
-
-const getOrCreate = <K, V>(map: Map<K, V>, key: K, create: () => V): V => {
-    let value = map.get(key);
-    if (value === undefined) map.set(key, value = create());
-    return value;
-};
 
 /** Feeds sometimes flip direction_id within one headsign, so a direction joins the first one sharing any of its headsigns. */
 const mergeDirections = (directions: Map<string, Map<string, Departure[]>>): Direction[] => {
@@ -60,7 +56,7 @@ const toLineGroup = (line: string, { ids, byHeadsign }: Direction): DepartureLin
             groupId: `${lineGroupId}-${headsign}`,
             headsign,
             departures: deps.sort((a, b) => Date.parse(a.scheduled) - Date.parse(b.scheduled)),
-            firstTime: Math.min(...deps.map(d => Date.parse(d.timestamp))),
+            firstTime: soonest(deps),
         }))
         .sort(byFirstTime);
     const first = subGroups[0].departures[0];
@@ -91,8 +87,6 @@ export const groupDepartures = (departures: Departure[], departureSort: 'line' |
     return groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
 };
 
-const soonest = (departures: Departure[]) => Math.min(...departures.map(d => Date.parse(d.timestamp)));
-
 /**
  * One platform's rows on a station board, named by its code (`platform`) or, without one, by the
  * direction it serves; both null for departures whose platform is unknown. `key` is its `boardingKey`.
@@ -103,6 +97,8 @@ export interface PlatformSection {
     direction: string | null;
     /** A metro line's section: each line numbers its own tracks, so its directions share one section. */
     metroLine: string | null;
+    /** The metro line's colour, for its header badge. */
+    metroColor: string | null;
     groups: DepartureLineGroup[];
 }
 
@@ -135,12 +131,18 @@ export const platformSections = (groups: DepartureLineGroup[], departureSort: 'l
     const sections = [...byPlatform].map(([key, groups]): PlatformSection => {
         const dep = groups[0]!.subGroups[0]!.departures[0]!;
         const sorted = favoritesFirst(groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime), favorites);
-        if (dep.type === 'metro') return { key, platform: null, direction: null, metroLine: String(dep.line).toUpperCase(), groups: sorted };
-        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, metroLine: null, groups: sorted };
+        if (dep.type === 'metro') return { key, platform: null, direction: null, metroLine: String(dep.line).toUpperCase(), metroColor: dep.route_color ?? null, groups: sorted };
+        return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, metroLine: null, metroColor: null, groups: sorted };
     });
     const rank = (s: PlatformSection) => (s.metroLine ? 0 : s.platform ? 1 : s.direction ? 2 : 3);
     const label = (s: PlatformSection) => s.metroLine ?? s.platform ?? s.direction ?? '';
     return sections.sort((a, b) => rank(a) - rank(b) || label(a).localeCompare(label(b), undefined, { numeric: true }));
+};
+
+/** A station board's platform sections, or null when no departure names its platform and the board stays one list. */
+export const stationBoardSections = (groups: DepartureLineGroup[], departureSort: 'line' | 'departure', favorites?: ReadonlySet<string>): PlatformSection[] | null => {
+    const sections = platformSections(groups, departureSort, favorites);
+    return sections.some(section => section.key) ? sections : null;
 };
 
 /**

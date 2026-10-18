@@ -46,9 +46,9 @@ export const stopBadgeTiles = (props: Pick<StopProperties, 'lines'>, modes = sto
 /** Tells a night line by its mode and name (the city's `isNightLine`). */
 export type NightLineTest = NonNullable<LineRules['isNightLine']>;
 
-/** The night lines stop badges leave out at `nowMs`: the city's night lines outside its night hours, else none. */
-export const hiddenNightLinesAt = (nowMs: number, timeZone: string, rules: Pick<LineRules, 'isNightLine' | 'nightHours'>): NightLineTest | null =>
-    rules.isNightLine && !isWithinLocalHours(nowMs, timeZone, rules.nightHours) ? rules.isNightLine : null;
+/** Whether stop badges leave out the city's night lines at `nowMs`: it tells them apart and it is outside its night hours. */
+export const hidesNightLinesAt = (nowMs: number, timeZone: string, rules: Pick<LineRules, 'isNightLine' | 'nightHours'>): boolean =>
+    !!rules.isNightLine && !isWithinLocalHours(nowMs, timeZone, rules.nightHours);
 
 /** The lines a stop's badge shows: without night lines when `hiddenNightLines` is given, unless the stop has no other. */
 export const badgeLines = (props: Pick<StopProperties, 'lines'>, hiddenNightLines: NightLineTest | null): Pick<StopProperties, 'lines'> => {
@@ -60,7 +60,7 @@ export const badgeLines = (props: Pick<StopProperties, 'lines'>, hiddenNightLine
 /** The night lines a stop's badge leaves out, from the stop itself (its network); null for none. */
 export type HiddenNightLinesOf = (props: Pick<StopProperties, 'city_slug'>) => NightLineTest | null;
 
-/** A network's clock and line conventions, as `hiddenNightLinesAt` reads them. */
+/** A network's clock and line conventions, as `hidesNightLinesAt` reads them. */
 export interface NightLineNetwork {
     timeZone: string;
     rules: Pick<LineRules, 'isNightLine' | 'nightHours'>;
@@ -68,7 +68,7 @@ export interface NightLineNetwork {
 
 /** The networks whose stop badges leave night lines out at `nowMs`, as a key that changes only when that set does. */
 export const networksHidingNightLines = (nowMs: number, networks: Readonly<Record<string, NightLineNetwork>>): string =>
-    Object.entries(networks).filter(([, n]) => hiddenNightLinesAt(nowMs, n.timeZone, n.rules)).map(([slug]) => slug).join(',');
+    Object.entries(networks).filter(([, n]) => hidesNightLinesAt(nowMs, n.timeZone, n.rules)).map(([slug]) => slug).join(',');
 
 /**
  * The night lines each stop's badge leaves out, given the networks hiding them (`networksHidingNightLines`): a
@@ -114,7 +114,7 @@ export interface SectionPlatforms {
 }
 
 /** The platforms among a station's `all_ids`, each once though its aliases name it again. */
-const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): StopProperties[] => {
+export const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): StopProperties[] => {
     const found = new Map<string, StopProperties>();
     for (const id of stationIds) {
         const p = stopIndex.get(id)?.properties;
@@ -126,17 +126,16 @@ const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<
 const isMetroOnly = (p: StopProperties) => !!p.lines?.length && p.lines.every(line => line.type === 'metro');
 
 /**
- * The stop a board section's header opens: every platform of the station the section stands for (by its code,
+ * The stop a board section's header opens: every platform of the station (`stationPlatforms`) the section stands for (by its code,
  * or without one by the direction it serves), comma-joined as one stop; the departures' own platforms where the
  * stop list knows none. Null for a metro section (each line numbers its own tracks) or the board already open.
  */
 export const sectionStopId = (
-    stationIds: readonly string[],
-    stopIndex: ReadonlyMap<string, StopFeature>,
+    platforms: readonly StopProperties[],
     { platform, direction, groups }: SectionPlatforms,
     openStopId: string,
 ): string | null => {
-    const found = new Set(stationPlatforms(stationIds, stopIndex)
+    const found = new Set(platforms
         .filter(p => !isMetroOnly(p) && (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction))
         .map(p => p.stop_id));
     if (found.size === 0) {
@@ -150,8 +149,8 @@ export const sectionStopId = (
  * The `stop_id` of the one platform of a station with `code`, for a notice naming it; null when none has it or
  * several do (a metro track and a tram platform both `1`), so the notice links nowhere rather than to a guess.
  */
-export const platformIdByCode = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>, code: string): string | null => {
-    const found = stationPlatforms(stationIds, stopIndex).filter(p => p.platform_code === code);
+export const platformIdByCode = (platforms: readonly StopProperties[], code: string): string | null => {
+    const found = platforms.filter(p => p.platform_code === code);
     return found.length === 1 ? found[0]!.stop_id : null;
 };
 

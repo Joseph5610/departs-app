@@ -5,8 +5,8 @@ import { useViewportStore } from '@/state/viewportStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { enrichVehicleRouteMetadata, filterVehiclesToView } from '@/domain/vehicles';
-import { memoizeLast } from '@/lib/memoize';
-import { concatCollections, tagStops, tagVehicles } from '@/domain/cities';
+import { getOrCreate, memoizeLast } from '@/lib/memoize';
+import { concatCollections, tagCity } from '@/domain/cities';
 import { NO_TYPE_COLORS } from '@/domain/routes';
 import { buildRouteMetadata, routesQueryOptions } from './useRouteMetadata';
 import { networkVehiclesQueryOptions } from './useVehicles';
@@ -19,17 +19,13 @@ const NO_ROUTES = new Map<string, RouteInfo>();
 const createPipeline = () => ({
     brand: memoizeLast(enrichVehicleRouteMetadata),
     view: memoizeLast(filterVehiclesToView),
-    tagVehicles: memoizeLast(tagVehicles),
+    tagVehicles: memoizeLast(tagCity<VehicleCollection>),
     split: memoizeLast(splitStopCollection),
-    tagPlatforms: memoizeLast(tagStops),
-    tagStations: memoizeLast(tagStops),
+    tagPlatforms: memoizeLast(tagCity<StopCollection>),
+    tagStations: memoizeLast(tagCity<StopCollection>),
 });
 const pipelines = new Map<string, ReturnType<typeof createPipeline>>();
-const pipelineOf = (city: string) => {
-    let pipeline = pipelines.get(city);
-    if (!pipeline) pipelines.set(city, pipeline = createPipeline());
-    return pipeline;
-};
+const pipelineOf = (city: string) => getOrCreate(pipelines, city, createPipeline);
 
 const concatVehicles = memoizeLast(concatCollections<VehicleCollection>);
 const concatPlatforms = memoizeLast(concatCollections<StopCollection>);

@@ -1,11 +1,5 @@
-import type { StopCollection, VehicleCollection } from '@/types';
-
-/** A neighbouring network's vehicles, each tagged with its `city_slug` so opening one moves the selection there. */
-export const tagVehicles = (collection: VehicleCollection | null | undefined, city: string): VehicleCollection | null =>
-    collection ? { ...collection, features: collection.features.map(f => ({ ...f, properties: { ...f.properties, city_slug: city } })) } : null;
-
-/** A neighbouring network's stops, tagged with its `city_slug`. */
-export const tagStops = (collection: StopCollection | null, city: string): StopCollection | null =>
+/** A neighbouring network's vehicles or stops, each tagged with its `city_slug` so opening one moves the selection there. */
+export const tagCity = <T extends { features: { properties: object }[] }>(collection: T | null | undefined, city: string): T | null =>
     collection ? { ...collection, features: collection.features.map(f => ({ ...f, properties: { ...f.properties, city_slug: city } })) } : null;
 
 /** The networks' collections as one; memoized on the collections themselves. */

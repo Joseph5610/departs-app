@@ -60,7 +60,7 @@ const drawGlyph = (ctx: CanvasRenderingContext2D, nodes: GlyphNode[], x: number,
     ctx.translate(x + (size - glyphPx) / 2, (size - glyphPx) / 2);
     ctx.scale(scale, scale);
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = STOP_BADGE.GLYPH_STROKE;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     for (const node of nodes) {
@@ -124,18 +124,24 @@ const drawPlatformCircle = (ctx: CanvasRenderingContext2D, code: string, x: numb
 const drawStar = (ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number) => {
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
-        const r = i % 2 === 0 ? radius : radius * 0.48;
+        const r = i % 2 === 0 ? radius : radius * STOP_BADGE.STAR_INNER_SCALE;
         const angle = -Math.PI / 2 + (i * Math.PI) / 5;
         ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
     }
     ctx.closePath();
     ctx.lineJoin = 'round';
-    ctx.lineWidth = radius * 0.35;
+    ctx.lineWidth = radius * STOP_BADGE.STAR_STROKE_SCALE;
     ctx.strokeStyle = STOP_BADGE.STAR_OUTLINE;
     ctx.stroke();
     ctx.fillStyle = STOP_BADGE.STAR_COLOR;
     ctx.fill();
 };
+
+let sharedContext: CanvasRenderingContext2D | null | undefined;
+/** One canvas for every badge, read back after each draw. */
+const badgeContext = () => (sharedContext === undefined
+    ? sharedContext = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+    : sharedContext);
 
 /**
  * The image for the id's `<city>:<star>:<badges>` part: one pill of joined mode tiles (one grey tile for a stop
@@ -154,11 +160,12 @@ const drawStopBadge = (key: string): ImageData | null => {
     const margin = star ? Math.round(size * STOP_BADGE.STAR_MARGIN_SCALE) : 0;
     const width = tiles.length * size;
     const codeGap = codeTile ? Math.round(size * STOP_BADGE.CODE_GAP_SCALE) : 0;
-    const canvas = document.createElement('canvas');
+    const ctx = badgeContext();
+    if (!ctx) return null;
+    const { canvas } = ctx;
+    // Resizing clears the canvas and resets its state, so each badge starts blank.
     canvas.width = width + (codeTile ? codeGap + size : 0) + 2 * margin;
     canvas.height = size + 2 * margin;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
     ctx.save();
     ctx.translate(margin, margin);
     ctx.beginPath();

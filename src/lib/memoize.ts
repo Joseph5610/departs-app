@@ -31,3 +31,10 @@ export function mapStable<T>(items: T[], fn: (item: T) => T): T[] {
     });
     return changed ? result : items;
 }
+
+/** `map`'s value for `key`, created with `create` and stored the first time it is asked for. */
+export function getOrCreate<K, V>(map: { get(key: K): V | undefined; set(key: K, value: V): unknown }, key: K, create: () => V): V {
+    let value = map.get(key);
+    if (value === undefined) map.set(key, value = create());
+    return value;
+}

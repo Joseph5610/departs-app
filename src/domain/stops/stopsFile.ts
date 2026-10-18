@@ -1,5 +1,6 @@
 import type { RouteInfo, StopCollection, StopFeature, StopProperties, StopsFile, StopsFilePlatform } from '@/types';
 import { normalizeRouteType } from '@/domain/routes';
+import { getOrCreate } from '@/lib/memoize';
 import { uniqueLines } from './stations';
 
 type StopLines = NonNullable<StopProperties['lines']>;
@@ -23,11 +24,7 @@ export const stopCollectionFromFile = (file: StopsFile, routes: Readonly<Record<
     });
 
     const platformsOf = new Map<string, StopsFilePlatform[]>();
-    for (const p of file.platforms) {
-        const list = platformsOf.get(p.station);
-        if (list) list.push(p);
-        else platformsOf.set(p.station, [p]);
-    }
+    for (const p of file.platforms) getOrCreate(platformsOf, p.station, (): StopsFilePlatform[] => []).push(p);
     const nameOf = new Map(file.stations.map(s => [s.id, s.name]));
 
     const stations = file.stations.map((s): StopFeature => {

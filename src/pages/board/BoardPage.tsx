@@ -7,6 +7,7 @@ import { useStops } from '@/hooks/data/useStops';
 import { useBoardDepartures } from '@/hooks/data/useDepartures';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
 import { AlertIcon } from '@/components/Alerts/AlertIcon';
+import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { useWakeLock } from '@/hooks/features/useWakeLock';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -45,10 +46,7 @@ const BoardNotices = ({ stopIds, now }: { stopIds: string[]; now: number }) => {
                 : info.priority === 'normal' ? "bg-amber-500/10 border-amber-500/30 text-foreground"
                 : "bg-muted/40 border-border text-muted-foreground"
         )}>
-            <AlertIcon className={cn(
-                "size-[1.2em] shrink-0",
-                info.priority === 'high' ? "text-destructive!" : info.priority === 'normal' ? "text-amber-500!" : "text-muted-foreground"
-            )} />
+            <AlertIcon className={cn("size-[1.2em] shrink-0", noticeIconTone(info.priority))} />
             <span key={info.id} className="min-w-0 line-clamp-2 whitespace-pre-line animate-in fade-in duration-500">{text}</span>
             {active.length > 1 && (
                 <span className="ml-auto shrink-0 tabular-nums text-muted-foreground font-medium">

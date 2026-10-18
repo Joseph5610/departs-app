@@ -105,62 +105,47 @@ export const noticesForStops = (infotexts: Infotext[], stopIds: string[]): Infot
     return infotexts.filter(info => info.relatedStopIds.some(id => ids.has(id)));
 };
 
-/** The notices of one platform of a station board, keyed by the code its departures carry. */
-export interface PlatformNotices {
-    code: string;
-    notices: Infotext[];
+const PRIORITY_RANK: Record<Infotext['priority'], number> = { high: 0, normal: 1, low: 2 };
+const byPriority = (a: Infotext, b: Infotext) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+
+/** What a stop's board shows of its notices: those shown whole, and the platforms holding the rest with their top priority. */
+export interface BoardNotices {
+    shown: Infotext[];
+    /** Codes of the platforms with notices of their own, in natural order (`2` before `10`). */
+    platformCodes: string[];
+    /** The most urgent priority among those platforms' notices. */
+    platformPriority: Infotext['priority'];
 }
 
-const PRIORITY_RANK: Record<Infotext['priority'], number> = { high: 0, normal: 1, low: 2 };
-
 /**
- * A station board's notices split by platform, in platform order: `platforms` maps each platform id to
- * its code. Notices posted for the station itself or a platform without a code are `station`, shown whole.
- */
-export const noticesByPlatform = (infotexts: Infotext[], stationIds: string[], platforms: ReadonlyMap<string, string>): { station: Infotext[]; platforms: PlatformNotices[] } => {
-    const station = new Set<Infotext>();
-    const byCode = new Map<string, Set<Infotext>>();
-    const ids = new Set(stationIds);
-    for (const info of infotexts) {
-        for (const id of info.relatedStopIds) {
-            if (!ids.has(id)) continue;
-            const code = platforms.get(id);
-            if (!code) { station.add(info); continue; }
-            const set = byCode.get(code) ?? new Set();
-            set.add(info);
-            byCode.set(code, set);
-        }
-    }
-    const byPriority = (a: Infotext, b: Infotext) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
-    return {
-        station: [...station].sort(byPriority),
-        platforms: [...byCode]
-            .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-            .map(([code, set]) => ({ code, notices: [...set].sort(byPriority) })),
-    };
-};
-
-/**
- * The notices a stop's board shows. A plain stop shows all of them; a station (`platformCodes` given)
- * shows its own whole, and `summary` names the platforms holding theirs, each read on its own board.
+ * The notices a stop's board shows. A plain stop shows all of them; a station (`platformCodes` maps each platform
+ * id to its code) shows its own, and a notice posted for a coded platform only names that platform, each read on
+ * its own board. Notices for the station itself or a platform without a code are shown whole.
  */
 export const boardNotices = (
     infotexts: Infotext[],
     stopIds: string[],
     platformCodes: ReadonlyMap<string, string> | null,
-): { shown: Infotext[]; summary: PlatformNotices[] } => {
-    if (!platformCodes) return { shown: noticesForStops(infotexts, stopIds), summary: [] };
-    const { station, platforms } = noticesByPlatform(infotexts, stopIds, platformCodes);
-    return { shown: station, summary: platforms };
-};
-
-/** The most urgent priority among the platforms' notices. */
-export const highestPlatformPriority = (platforms: PlatformNotices[]): Infotext['priority'] => {
-    let best: Infotext['priority'] = 'low';
-    for (const { notices } of platforms) {
-        for (const n of notices) if (PRIORITY_RANK[n.priority] < PRIORITY_RANK[best]) best = n.priority;
+): BoardNotices => {
+    if (!platformCodes) return { shown: noticesForStops(infotexts, stopIds), platformCodes: [], platformPriority: 'low' };
+    const ids = new Set(stopIds);
+    const shown = new Set<Infotext>();
+    const codes = new Set<string>();
+    let platformPriority: Infotext['priority'] = 'low';
+    for (const info of infotexts) {
+        for (const id of info.relatedStopIds) {
+            if (!ids.has(id)) continue;
+            const code = platformCodes.get(id);
+            if (!code) { shown.add(info); continue; }
+            codes.add(code);
+            if (PRIORITY_RANK[info.priority] < PRIORITY_RANK[platformPriority]) platformPriority = info.priority;
+        }
     }
-    return best;
+    return {
+        shown: [...shown].sort(byPriority),
+        platformCodes: [...codes].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+        platformPriority,
+    };
 };
 
 /** A notice's text in the UI language: English where the notice has it, Czech otherwise. */

@@ -159,9 +159,6 @@ export const MAP_CAMERA = {
     CLUSTER_EXPAND_MS: 500,
 };
 
-/** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
-export const STOPS_FILE_VERSION = 1;
-
 export const SHARED_GROUND = {
     /** The selected network stays selected while it has at least this share of the busiest network's stops in view. */
     KEEP_SELECTED_SHARE: 0.05,
@@ -324,6 +321,8 @@ export const GEOCODING_CONFIG = {
 export const DEVICE_CACHE = {
     /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
     VERSION: 'v53',
+    /** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
+    STOPS_FILE_VERSION: 1,
     /** Entries older than this are dropped instead of shown while refreshing. */
     MAX_AGE: 14 * DAY_MS,
     /** On a metered connection a copy is refreshed only once older than this, however short its usual stale time. */

@@ -3,7 +3,6 @@ import { getDepartureRows, getStopRelations, type StopRelation } from '../../../
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import { boundedStopTargets, requestedStopParts, type StopTargets } from './stopTargets';
 
-export type { StopTargets } from './stopTargets';
 
 /**
  * A city's static departure data: which platforms a station's departures are attached to, and the

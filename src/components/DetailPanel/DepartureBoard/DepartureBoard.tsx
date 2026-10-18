@@ -13,12 +13,11 @@ import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { groupsHidingTrips, isMetroClosed, platformSections, sectionPreview, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
+import { groupsHidingTrips, isMetroClosed, sectionPreview, stationBoardSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
 import { Button } from '@/components/ui/button';
-import { isStationBoard, sectionStopId, servesMode } from '@/domain/stops';
+import { isStationBoard, sectionStopId, servesMode, stationPlatforms } from '@/domain/stops';
 import { useStops } from '@/hooks/data/useStops';
-import { navigate } from '@/lib/history';
-import { paths } from '@/lib/routes';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
@@ -53,11 +52,13 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const boardStopId = routeStopId ?? selectedStop.stop_id;
     const departureSort = usePreferencesStore(s => s.departureSort);
     const onStation = isStationBoard(selectedStop);
-    const sections = useMemo(() => {
-        if (!onStation) return null;
-        const split = platformSections(groupedDepartures, departureSort, favoriteKeys);
-        return split.some(section => section.key) ? split : null;
-    }, [onStation, groupedDepartures, departureSort, favoriteKeys]);
+    const sections = useMemo(
+        () => onStation ? stationBoardSections(groupedDepartures, departureSort, favoriteKeys) : null,
+        [onStation, groupedDepartures, departureSort, favoriteKeys]);
+    const platforms = useMemo(() => stationPlatforms(selectedStop.all_ids ?? [], stopIndex), [selectedStop.all_ids, stopIndex]);
+    const sectionStopIds = useMemo(
+        () => new Map(sections?.map(section => [section.key, sectionStopId(platforms, section, boardStopId)])),
+        [sections, platforms, boardStopId]);
     const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
     const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
@@ -116,11 +117,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     // One badge column for the whole board, as wide as its widest badge, so headsigns align and sit close.
     const badgeColumn = useMemo(() => badgeColumnStyle(groupedDepartures.map(group => String(group.line))), [groupedDepartures]);
 
-    const now = useNowEvery(DEPARTURES_CONFIG.METRO_CLOSED_CHECK_MS);
-    const showMetroNightMessage = groupedDepartures.length === 0 && !isFiltered
-        && servesMode(selectedStop, 'metro') && isMetroClosed(now, timezone, lineRules.metroClosedHours);
-
-    const rowProps = { isFiltered, expandedGroups, onToggleGroup, boardStopId, timeZone: timezone, highlightedTripId, onDepartureClick };
+    const rowProps = useMemo(
+        () => ({ isFiltered, expandedGroups, onToggleGroup, boardStopId, timeZone: timezone, highlightedTripId, onDepartureClick }),
+        [isFiltered, expandedGroups, onToggleGroup, boardStopId, timezone, highlightedTripId, onDepartureClick]);
 
     if (isLoading && groupedDepartures.length === 0) {
         return <DepartureBoardSkeleton />;
@@ -142,9 +141,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (
-                showMetroNightMessage ? (
-                    <MetroNightMessage />
-                ) : (
+                <MetroClosedOr show={!isFiltered && servesMode(selectedStop, 'metro')} timeZone={timezone} closedHours={lineRules.metroClosedHours}>
                     <Empty className="py-12">
                         <EmptyHeader>
                             <EmptyMedia
@@ -163,14 +160,14 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                             </EmptyDescription>
                         </EmptyHeader>
                     </Empty>
-                )
+                </MetroClosedOr>
             ) : (
                 sections ? (
                     sections.map(section => (
                         <PlatformSectionView
                             key={section.key}
                             section={section}
-                            platformStopId={sectionStopId(selectedStop.all_ids ?? [], stopIndex, section, boardStopId)}
+                            platformStopId={sectionStopIds.get(section.key) ?? null}
                             markedTripIds={marked}
                             badgeColumn={badgeColumn}
                             rowProps={rowProps}
@@ -187,6 +184,12 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
 });
 
 DepartureBoard.displayName = 'DepartureBoard';
+
+/** The metro's closed-hours message on an empty metro board while the metro sleeps, else `children`; only it follows the clock. */
+const MetroClosedOr = ({ show, timeZone, closedHours, children }: { show: boolean; timeZone: string; closedHours: [number, number] | null; children: React.ReactNode }) => {
+    const now = useNowEvery(DEPARTURES_CONFIG.METRO_CLOSED_CHECK_MS);
+    return show && isMetroClosed(now, timeZone, closedHours) ? <MetroNightMessage /> : children;
+};
 
 interface DirectionRowsProps {
     groups: DepartureLineGroup[];
@@ -235,10 +238,12 @@ interface PlatformSectionViewProps {
 }
 
 /** One platform's section of a station board: its first lines, the rest behind a button. */
-const PlatformSectionView = ({ section, platformStopId, markedTripIds, badgeColumn, rowProps }: PlatformSectionViewProps) => {
+const PlatformSectionView = memo(({ section, platformStopId, markedTripIds, badgeColumn, rowProps }: PlatformSectionViewProps) => {
     const { t } = useTranslation();
     const [showAll, setShowAll] = useState(false);
-    const { shown, hidden } = sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES, markedTripIds);
+    const { shown, hidden } = useMemo(
+        () => sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES, markedTripIds),
+        [section.groups, markedTripIds]);
     const groups = showAll ? section.groups : shown;
     return (
         <section className="flex flex-col gap-1.5">
@@ -257,7 +262,8 @@ const PlatformSectionView = ({ section, platformStopId, markedTripIds, badgeColu
             </Card>
         </section>
     );
-};
+});
+PlatformSectionView.displayName = 'PlatformSectionView';
 
 interface PlatformHeaderProps {
     section: PlatformSection;
@@ -268,16 +274,15 @@ interface PlatformHeaderProps {
 /** A station board's platform section title, opening that platform's own board. */
 const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
     const { t } = useTranslation();
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const metroColor = section.groups[0]?.subGroups[0]?.departures[0]?.route_color;
+    const openStop = useOpenStop();
     const title = section.metroLine ? (
         <>
-            <LineBadge name={section.metroLine} routeColor={metroColor ?? FALLBACK_ROUTE_COLOR} />
+            <LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />
             <span className="flex-1 text-body-sm font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
         </>
     ) : section.platform ? (
         <>
-            <PlatformCircle code={section.platform} className="size-6 text-label" />
+            <PlatformCircle code={section.platform} size="md" />
             <span className="flex-1 text-body-sm font-semibold text-foreground">
                 {t('map.departures.platformSection', { code: section.platform })}
             </span>
@@ -292,7 +297,7 @@ const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
     return (
         <button
             type="button"
-            onClick={() => navigate(paths.stop(selectedCity, platformStopId))}
+            onClick={() => openStop(platformStopId)}
             className="flex items-center gap-2 rounded-lg px-2 py-1 text-left outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring/50"
         >
             {title}
