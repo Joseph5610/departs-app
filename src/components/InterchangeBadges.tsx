@@ -1,5 +1,6 @@
 import { Bus, CableCar, Plane, Ship, Train, TramFront, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Trolleybus } from '@/components/routeTypeIcons';
 import { LineBadge } from './LineBadge';
 import { IconTooltip } from './IconTooltip';
 import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
@@ -15,7 +16,7 @@ const MODE_ICONS: Record<string, { icon: LucideIcon; label: string }> = {
     Fe: { icon: Ship, label: 'ferry' },
     Ap: { icon: Plane, label: 'airport' },
     Tw: { icon: TramFront, label: 'tram' },
-    Tb: { icon: Bus, label: 'trolleybus' },
+    Tb: { icon: Trolleybus, label: 'trolleybus' },
     Bu: { icon: Bus, label: 'bus' },
 };
 

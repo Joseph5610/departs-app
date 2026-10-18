@@ -1,9 +1,11 @@
 import type { Map } from 'maplibre-gl';
+import type { IconNode } from 'lucide-react';
 import type { RouteType } from '@/types';
 import { MAP_ICONS, STOP_BADGE } from '@/config/mapLayers';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { PLATFORM_CODE_TILE, STOP_BADGE_SEPARATOR, TILE_PART_SEPARATOR } from '@/domain/stops';
 import { getContrastColor } from '@/lib/color';
+import { TROLLEYBUS_ICON_NODE } from '@/lib/trolleybusGlyph';
 
 type GlyphNode =
     | ['path', string]
@@ -34,27 +36,29 @@ const CABLE_CAR: GlyphNode[] = [
     ['rect', 4, 12, 16, 10, 3], ['path', 'M9 12v5'], ['path', 'M15 12v5'], ['path', 'M4 17h16'],
 ];
 
-/** The trolleybus is the bus lowered under its two trolley poles, so it never reads as a bus. */
-const TROLLEY_POLES: GlyphNode[] = [['path', 'M11 8 7 2'], ['path', 'M16 8 12 2']];
-const TROLLEYBUS_BUS_DROP = 2;
+/** A Lucide icon node as canvas glyph nodes. */
+const glyphOf = (node: IconNode): GlyphNode[] => node.map(([tag, a]): GlyphNode =>
+    tag === 'circle' ? ['circle', Number(a.cx), Number(a.cy), Number(a.r)]
+        : tag === 'rect' ? ['rect', Number(a.x), Number(a.y), Number(a.width), Number(a.height), Number(a.rx ?? 0)]
+            : ['path', a.d ?? '']);
+const TROLLEYBUS = glyphOf(TROLLEYBUS_ICON_NODE);
 
 /** Metro is lettered with its line rather than drawn, as on the network's own signs. */
 const GLYPHS: Record<Exclude<RouteType, 'metro' | 'unknown'>, GlyphNode[]> = {
     train: TRAIN_FRONT,
     tram: TRAM_FRONT,
-    trolleybus: BUS,
+    trolleybus: TROLLEYBUS,
     bus: BUS,
     ferry: SHIP,
     funicular: CABLE_CAR,
 };
 
-const drawGlyph = (ctx: CanvasRenderingContext2D, nodes: GlyphNode[], x: number, size: number, color: string, dy = 0) => {
+const drawGlyph = (ctx: CanvasRenderingContext2D, nodes: GlyphNode[], x: number, size: number, color: string) => {
     const glyphPx = size * STOP_BADGE.GLYPH_SCALE;
     const scale = glyphPx / 24;
     ctx.save();
     ctx.translate(x + (size - glyphPx) / 2, (size - glyphPx) / 2);
     ctx.scale(scale, scale);
-    ctx.translate(0, dy);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.2;
     ctx.lineCap = 'round';
@@ -100,10 +104,7 @@ const drawTile = (ctx: CanvasRenderingContext2D, tile: string, colors: Record<Ro
     ctx.fillStyle = fill;
     ctx.fillRect(x, 0, size, size);
     if (mode === 'metro') drawLetter(ctx, metroLine ?? 'M', x, size, ink);
-    else if (mode === 'trolleybus') {
-        drawGlyph(ctx, TROLLEY_POLES, x, size, ink);
-        drawGlyph(ctx, BUS, x, size, ink, TROLLEYBUS_BUS_DROP);
-    } else if (mode !== 'unknown') drawGlyph(ctx, GLYPHS[mode], x, size, ink);
+    else if (mode !== 'unknown') drawGlyph(ctx, GLYPHS[mode], x, size, ink);
 };
 
 /** A platform's code in a white circle, as station boards head each platform's section. */

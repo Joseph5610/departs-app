@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Stations on the map as one badge of their modes, and station boards split into platform sections, each opening a board of its platforms.
 - Stop badges leave out night lines outside night hours.
+- Trolleybuses have their own icon (a bus under trolley poles) in filters, alerts and stop lists, as on the map badges.
 
 ### Changed
 
