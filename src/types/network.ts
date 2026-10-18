@@ -1,9 +1,12 @@
-/** One line of a city's always-visible backbone network (`network.json` from departs-data). */
+/**
+ * One piece of a city's always-visible network (`network.json` from departs-data). Lines drawn one by
+ * one (metro) carry their route's id, name and colour; merged modes carry only their GTFS route type.
+ */
 export interface NetworkLineProperties {
-    route_id: string;
-    name: string;
     route_type: number;
-    route_color: string;
+    route_id?: string;
+    name?: string;
+    route_color?: string;
 }
 
 export interface NetworkLineFeature {

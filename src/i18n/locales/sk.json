@@ -74,6 +74,10 @@
       "labels": "Zobraziť popisy",
       "labelsDescription": "Zobraziť názvy zastávok na mape"
     },
+    "showNetworkLines": {
+      "title": "Sieť liniek",
+      "description": "Vždy zobraziť linky metra, električiek alebo trolejbusov na mape"
+    },
     "showPointsOfSale": {
       "title": "Predajné miesta",
       "description": "Zobraziť automaty, infocentrá a pokladne na mape"

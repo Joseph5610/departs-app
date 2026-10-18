@@ -137,16 +137,16 @@ const MAP_TOKENS = {
     },
     network: {
         zoom: { min: 10, max: 16 },
-        /** Metro stands alone and is drawn bold; other modes share track and are drawn thin, side by side. */
+        /** Metro lines are drawn bold, each in its colour; merged tram and trolleybus tracks thinner. */
         metroWidth: { min: 2.5, max: 7 },
-        width: { min: 1.5, max: 3.5 },
+        width: { min: 1.5, max: 4.5 },
         /** Extra width of the casing over its line. */
-        casingExtra: 2,
-        /** Distance between neighbouring lines on shared track, per `slot`; equal to `width` so they touch. */
-        slotSpacing: { min: 1.5, max: 3.5 },
-        opacity: 0.9,
-        /** While a trip's route is drawn, the backbone steps back so the selected line stands out. */
-        dimmedOpacity: 0.3,
+        casingExtra: 1.5,
+        /** Widths grow late, so the network stays thin until the streets around it are drawn. */
+        zoomCurve: 1.6,
+        /** While a trip's route is drawn, lines blend this far toward the basemap's ground; opaque, so overlapping pieces do not stack darker. */
+        dimmedMix: { dark: 0.55, light: 0.6 },
+        dimTarget: { dark: '#0e0e0e', light: '#fafaf8' },
     },
 };
 
@@ -435,10 +435,9 @@ const isTraversedSegment: ExpressionSpecification = ['==', ['get', 'status'], 't
 type NetworkValue = number | ExpressionSpecification;
 
 const networkZoomRamp = (min: NetworkValue, max: NetworkValue): ExpressionSpecification =>
-    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.network.zoom.min, min, MAP_TOKENS.network.zoom.max, max];
+    ['interpolate', ['exponential', MAP_TOKENS.network.zoomCurve], ['zoom'], MAP_TOKENS.network.zoom.min, min, MAP_TOKENS.network.zoom.max, max];
 
 const IS_METRO_LINE: ExpressionSpecification = ['==', ['get', 'route_type'], 1];
-const NETWORK_SLOT: ExpressionSpecification = ['coalesce', ['get', 'slot'], 0];
 const networkWidth = (extra: number): [ExpressionSpecification, ExpressionSpecification] => {
     const { metroWidth, width } = MAP_TOKENS.network;
     return [
@@ -446,17 +445,23 @@ const networkWidth = (extra: number): [ExpressionSpecification, ExpressionSpecif
         ['case', IS_METRO_LINE, metroWidth.max + extra, width.max + extra],
     ];
 };
-const NETWORK_OFFSET = networkZoomRamp(
-    ['*', NETWORK_SLOT, MAP_TOKENS.network.slotSpacing.min],
-    ['*', NETWORK_SLOT, MAP_TOKENS.network.slotSpacing.max],
-);
 
 /**
- * The city's backbone lines (metro), drawn beneath everything else at every zoom; `dimmed` while a route
- * is shown, without `hiddenLine`, the shown route's own line, which would tint its travelled part.
+ * The city's network (metro lines, or merged tram or trolleybus tracks), drawn beneath everything else at
+ * every zoom; `dimmed` while a route is shown, without `hiddenLine`, the shown route's own metro line,
+ * which would tint its travelled part. `colors` lists every colour drawn, for the dimmed palette.
  */
-export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hiddenLine: string | null): [LineLayerSpecification, LineLayerSpecification] => {
-    const opacity = dimmed ? MAP_TOKENS.network.dimmedOpacity : MAP_TOKENS.network.opacity;
+export const createNetworkLayers = (
+    theme: 'dark' | 'light',
+    dimmed: boolean,
+    hiddenLine: string | null,
+    colors: readonly string[],
+): [LineLayerSpecification, LineLayerSpecification] => {
+    const { dimTarget, dimmedMix } = MAP_TOKENS.network;
+    const dimmedOf = Object.fromEntries(colors.map(c => [c, mixHex(c, dimTarget[theme], dimmedMix[theme])]));
+    const lineColor: ExpressionSpecification = dimmed
+        ? ['to-color', ['get', ['get', 'route_color'], ['literal', dimmedOf]], dimTarget[theme]]
+        : ['to-color', ['get', 'route_color']];
     const layout: LineLayerSpecification['layout'] = { 'line-join': 'round', 'line-cap': 'round' };
     const filter: FilterSpecification = ['!=', ['get', 'name'], hiddenLine ?? ''];
     return [
@@ -469,8 +474,8 @@ export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hi
             paint: {
                 'line-color': theme === 'dark' ? '#000000' : '#ffffff',
                 'line-width': networkZoomRamp(...networkWidth(MAP_TOKENS.network.casingExtra)),
-                'line-offset': NETWORK_OFFSET,
-                'line-opacity': opacity,
+                // Only metro is cased; on grey roads a casing's dark edges make a thin line read darker.
+                'line-opacity': dimmed ? 0 : ['case', IS_METRO_LINE, 1, 0],
             },
         },
         {
@@ -480,10 +485,8 @@ export const createNetworkLayers = (theme: 'dark' | 'light', dimmed: boolean, hi
             filter,
             layout,
             paint: {
-                'line-color': ['to-color', ['get', 'route_color']],
+                'line-color': lineColor,
                 'line-width': networkZoomRamp(...networkWidth(0)),
-                'line-offset': NETWORK_OFFSET,
-                'line-opacity': opacity,
             },
         },
     ];

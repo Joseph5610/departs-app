@@ -4,20 +4,24 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.86.0] - 2026-10-16
+## [0.86.0] - 2026-10-18
 
 ### Added
 
 - Stations on the map as one badge of their modes, and station boards split into platform sections, each opening a board of its platforms.
 - Stop badges leave out night lines outside night hours.
 - Trolleybuses have their own icon (a bus under trolley poles) in filters, alerts and stop lists, as on the map badges.
-- Prague's metro lines are drawn on the map at all times, dimmed while a trip's route is shown.
+- The city's network is drawn on the map at all times (Prague's metro lines, Brno's trams, Prešov's trolleybuses), dimmed while a trip's route is shown; a setting hides it.
 
 ### Changed
 
 - Stops load from the new `stops.json`, so every city's stations come from the data instead of being grouped in the app.
 - The departures API reads a comma-joined `stopId` as one stop made of several platforms in every city, not only Prague.
 - Prague boards list a few more departures (24), so a station board fills its platform sections; GTFS city boards list up to 120 instead of 150.
+
+### Fixed
+
+- An ended trip's timeline shows its whole run as past, without a current or next stop.
 
 ## [0.85.0] - 2026-10-14
 

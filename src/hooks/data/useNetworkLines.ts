@@ -10,11 +10,12 @@ import type { NetworkLineCollection } from '@/types';
 export function useNetworkLines(): NetworkLineCollection | null {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const hasNetworkLines = Boolean(useCityConfig().hasNetworkLines);
+    const show = usePreferencesStore(s => s.showNetworkLines);
 
     const { data } = useQuery({
         queryKey: queryKeys.networkLines(selectedCity),
         queryFn: ({ signal }) => apiFetch<NetworkLineCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/network.json`, { signal }),
-        enabled: hasNetworkLines,
+        enabled: hasNetworkLines && show,
         staleTime: QUERY_TIMING_MS.STATIC_METADATA_STALE,
         gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
     });

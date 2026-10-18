@@ -130,6 +130,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         bounds: [16.44, 49.11, 16.77, 49.28],
         hasAlerts: true,
         hasTripShapes: true,
+        hasNetworkLines: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []
@@ -182,6 +183,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
         hasTripShapes: true,
+        hasNetworkLines: true,
         vehicleMetadata: { file: 'dpmp-vehicles.json' },
         filters: {
             vehicles: ['bus', 'trolleybus'],

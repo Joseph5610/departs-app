@@ -11,12 +11,12 @@ import { useRouteParams } from '@/hooks/useRouteParams';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { useStops } from '@/hooks/data/useStops';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
-import { useNetworkLines } from '@/hooks/data/useNetworkLines';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
 import { favoriteMarks, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
+import { useNetworkLayer } from '@/hooks/derived/useNetworkLayer';
 import { useMapFilters } from '@/hooks/derived/useMapFilters';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { useHiddenNightLines } from '@/hooks/derived/useHiddenNightLines';
@@ -110,7 +110,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
     const platformOrder = useMemo(() => platformSortKey(starred.platformIds), [starred.platformIds]);
     const routeShapeData = useRouteShape();
-    const networkLines = useNetworkLines();
+    const network = useNetworkLayer();
+    const networkColors = network?.colors;
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
 
@@ -127,8 +128,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const hasRoute = Boolean(routeShapeData?.features.length);
     const routeLineName = hasRoute ? selectedVehicle?.route_short_name ?? null : null;
     const [networkCasing, networkLine] = useMemo(
-        () => createNetworkLayers(resolvedTheme === 'light' ? 'light' : 'dark', hasRoute, routeLineName),
-        [resolvedTheme, hasRoute, routeLineName]);
+        () => createNetworkLayers(resolvedTheme === 'light' ? 'light' : 'dark', hasRoute, routeLineName, networkColors ?? []),
+        [resolvedTheme, hasRoute, routeLineName, networkColors]);
 
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
@@ -177,7 +178,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     return (
         <>
-            <Source id={MAP_SOURCES.NETWORK_LINES} type="geojson" data={networkLines ?? EMPTY_FEATURE_COLLECTION}>
+            <Source id={MAP_SOURCES.NETWORK_LINES} type="geojson" data={network?.lines ?? EMPTY_FEATURE_COLLECTION}>
                 <Layer {...networkCasing} />
                 <Layer {...networkLine} />
             </Source>

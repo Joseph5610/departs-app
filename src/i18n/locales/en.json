@@ -71,6 +71,10 @@
       "labels": "Show labels",
       "labelsDescription": "Show stop name labels on the map"
     },
+    "showNetworkLines": {
+      "title": "Network lines",
+      "description": "Always show the city's metro, tram or trolleybus lines on the map"
+    },
     "showPointsOfSale": {
       "title": "Points of Sale",
       "description": "Show ticket machines, info centers, and offices on map"
