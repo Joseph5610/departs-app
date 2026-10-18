@@ -15,20 +15,24 @@ test.describe('Settings tests', () => {
         await expect(settingsPage.container).toBeVisible();
 
         // Toggle Live Vehicles switch by clicking the row
+        const vehiclesSwitch = settingsPage.showVehiclesRow.getByRole('switch');
+        await expect(vehiclesSwitch).toHaveAttribute('aria-checked', 'true');
         await settingsPage.showVehiclesRow.click();
-        await page.waitForTimeout(300);
-        
+        await expect(vehiclesSwitch).toHaveAttribute('aria-checked', 'false');
+
         // Toggle it back
         await settingsPage.showVehiclesRow.click();
-        await page.waitForTimeout(300);
-        
+        await expect(vehiclesSwitch).toHaveAttribute('aria-checked', 'true');
+
         // Ensure "metro" button exists (it should be visible when Live Vehicles is ON)
         const metroBtn = settingsPage.container.getByTestId('vehicle-type-metro');
         await expect(metroBtn).toBeVisible();
 
         // Toggle Show Stops
+        const stopsSwitch = settingsPage.showStopsRow.getByRole('switch');
+        const stopsWereShown = await stopsSwitch.getAttribute('aria-checked');
         await settingsPage.showStopsRow.click();
-        await page.waitForTimeout(300);
+        await expect(stopsSwitch).toHaveAttribute('aria-checked', stopsWereShown === 'true' ? 'false' : 'true');
 
         // Close the modal using the Page Object method
         await expect(settingsPage.closeButton).toBeVisible();
