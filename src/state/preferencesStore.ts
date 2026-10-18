@@ -125,8 +125,8 @@ const favoriteLineSchema = z.looseObject({ city: z.string(), stopId: z.string(),
 const stringArraySchema = z.array(z.string());
 
 /** The entries of a stored list that pass `schema`; null when the stored value is not a list at all. */
-const validEntries = <T,>(value: unknown, schema: { safeParse: (v: unknown) => { success: boolean } }): T[] | null =>
-    Array.isArray(value) ? value.filter((entry) => schema.safeParse(entry).success) as T[] : null;
+const validEntries = <T,>(value: unknown, schema: z.ZodMiniType<unknown, T>): T[] | null =>
+    Array.isArray(value) ? value.filter((entry): entry is T => z.validate(schema, entry)) : null;
 
 /** The hidden region `?beta=<slug>` in the page URL unlocks, so testers can switch to it from the city list. */
 export const getUrlUnlockedCity = (): string | null => {
@@ -155,13 +155,13 @@ export const mergePersisted = (persisted: unknown, current: PreferencesStore): P
         if (key === 'refreshIntervalS') {
             if ((REFRESH_INTERVAL_OPTIONS_S as readonly unknown[]).includes(value)) merged[key] = value;
         } else if (key === 'searchHistory') {
-            const history = validEntries<SearchHistoryItem>(value, searchHistoryItemSchema);
+            const history = validEntries(value, searchHistoryItemSchema);
             if (history) merged[key] = firstUnique(history, searchHistoryKey, Infinity);
         } else if (key === 'favoriteLines') {
-            const favorites = validEntries<FavoriteLine>(value, favoriteLineSchema);
+            const favorites = validEntries(value, favoriteLineSchema);
             if (favorites) merged[key] = favorites;
         } else if (Array.isArray(fallback)) {
-            if (stringArraySchema.safeParse(value).success) merged[key] = value;
+            if (z.validate(stringArraySchema, value)) merged[key] = value;
         } else if (typeof value === typeof fallback && (!ALLOWED_VALUES[key] || ALLOWED_VALUES[key].includes(value as string))) {
             merged[key] = value;
         }
