@@ -229,8 +229,8 @@ export const stationNames: SymbolLayerSpecification = {
         'text-size': STATION_NAME_SIZE,
         // Clear of the platform pills that usually sit on the station's point: above or below them first.
         'text-variable-anchor': ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
-        // Moves off the point as the platform pills around it grow.
-        'text-radial-offset': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 1.8, 18, 2.8],
+        // Past the pills packed round the point when the platforms first show; nearer, every side is taken.
+        'text-radial-offset': 3,
         // Keeps neighbouring names apart among the platform pills, so a dense centre is not a wall of text.
         'text-padding': 15,
         'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
