@@ -8,6 +8,7 @@ import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
 import { distanceMeters } from "../_core/utils/geo";
+import { stopIdParts } from "../_core/utils/stopIds";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -266,12 +267,7 @@ export async function loadInfotexts(ctx: McpContext, city: CityUseCases, citySlu
 /** The infotexts that name any platform of `stopId`, as exposed to MCP clients. */
 export function toMcpStopInfotexts(infotexts: AppInfotext[], stopId: string) {
     // `stop_id` may be a comma-joined platform list; match the parts exactly.
-    const targetIds = new Set(
-        stopId
-            .split(',')
-            .map((id) => id.trim().toLowerCase())
-            .filter((id) => id.length > 0)
-    );
+    const targetIds = new Set(stopIdParts(stopId).map((id) => id.toLowerCase()));
     if (targetIds.size === 0) return [];
 
     return infotexts

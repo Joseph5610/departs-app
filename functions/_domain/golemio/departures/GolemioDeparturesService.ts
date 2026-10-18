@@ -5,6 +5,7 @@ import { ApiError } from "../../../_core/errors";
 import { getDepartureBoards } from "../../../_feeds/golemio/departures";
 import { mapGolemioDepartures } from "./golemioDeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../_core/schemas";
+import { stopIdParts } from '../../../_core/utils/stopIds';
 import { getLiveConnections } from "../../../_feeds/golemio/connections";
 
 /** Prague departure boards: Golemio's boards for the requested platforms, with PID connections. */
@@ -24,7 +25,7 @@ export class GolemioDeparturesService implements DeparturesUseCase {
      * @returns Array of filtered platform IDs ready for Golemio API
      */
     private filterStopIdsForDepartures(stopId: string): string[] {
-        const rawIds = stopId.split(',');
+        const rawIds = stopIdParts(stopId);
         const finalIds = rawIds.filter(id => {
             if (id.includes('S')) return false; 
             if (!id.includes('Z')) return false; 

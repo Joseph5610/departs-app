@@ -43,7 +43,7 @@ interface DepartureBoardProps {
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
-    const { isLoading, isError, error, refetch, groupedDepartures, isFiltered, selectedLine, data } = useDepartures();
+    const { isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, isFiltered, selectedLine, data } = useDepartures();
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
@@ -55,9 +55,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const onStation = isStationBoard(selectedStop);
     const sections = useMemo(() => {
         if (!onStation) return null;
-        const split = platformSections(groupedDepartures, departureSort);
+        const split = platformSections(groupedDepartures, departureSort, favoriteKeys);
         return split.some(section => section.key) ? split : null;
-    }, [onStation, groupedDepartures, departureSort]);
+    }, [onStation, groupedDepartures, departureSort, favoriteKeys]);
     const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
     const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);

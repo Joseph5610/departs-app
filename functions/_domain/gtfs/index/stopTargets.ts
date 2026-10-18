@@ -1,4 +1,7 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
+import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+import { ApiError } from '../../../_core/errors';
+import { stopIdParts } from '../../../_core/utils/stopIds';
 
 /** The stop ids a request named, resolved to the platforms whose rows must actually be read. */
 export interface StopTargets {
@@ -8,8 +11,25 @@ export interface StopTargets {
     parentOf: Map<string, string>;
 }
 
-/** The ids one requested `stopId` value names: a single stop, or a comma-joined list read as one stop. */
-export const stopIdParts = (stopId: string): string[] => stopId.split(',').map(id => id.trim()).filter(Boolean);
+
+const tooManyStops = () => new ApiError(
+    `Too many stops requested; this expands to more than ${GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS} platforms.`,
+    400
+);
+
+/** Every id the requested values name, rejected before any lookup when they already exceed the platform cap. */
+export function requestedStopParts(stopIds: readonly string[]): string[] {
+    const parts = stopIds.flatMap(stopIdParts);
+    if (parts.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) throw tooManyStops();
+    return parts;
+}
+
+/** `stopTargets`, rejected when the stations expand past the platform cap. */
+export function boundedStopTargets(stopIds: readonly string[], relations: ReadonlyMap<string, StopRelation>): StopTargets {
+    const targets = stopTargets(stopIds, relations);
+    if (targets.targetIds.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) throw tooManyStops();
+    return targets;
+}
 
 /**
  * Expands each requested id into the platforms its departures are attached to, every row tagged with the

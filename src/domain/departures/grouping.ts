@@ -112,10 +112,10 @@ const sectionKey = (dep: Departure) => dep.type === 'metro' ? `metro:${String(de
 /**
  * A station board's rows split by the platform each departure leaves from: metro lines first, one section
  * each, then coded platforms in natural order (`2` before `10`, `A` before `B`), then those named by
- * direction, unknown ones last; each sorted as the board is. Platforms serving one direction share a section. A row split across platforms gets a
+ * direction, unknown ones last; each sorted as the board is, favourite directions (`favorites`) first. Platforms serving one direction share a section. A row split across platforms gets a
  * `groupId` per platform, so each part expands on its own.
  */
-export const platformSections = (groups: DepartureLineGroup[], departureSort: 'line' | 'departure'): PlatformSection[] => {
+export const platformSections = (groups: DepartureLineGroup[], departureSort: 'line' | 'departure', favorites: ReadonlySet<string> = new Set()): PlatformSection[] => {
     const byPlatform = new Map<string, DepartureLineGroup[]>();
     for (const group of groups) {
         const subsByPlatform = new Map<string, DepartureSubGroup[]>();
@@ -134,7 +134,7 @@ export const platformSections = (groups: DepartureLineGroup[], departureSort: 'l
     }
     const sections = [...byPlatform].map(([key, groups]): PlatformSection => {
         const dep = groups[0]!.subGroups[0]!.departures[0]!;
-        const sorted = groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime);
+        const sorted = favoritesFirst(groups.sort(departureSort === 'line' ? byModeThenLine : byFirstTime), favorites);
         if (dep.type === 'metro') return { key, platform: null, direction: null, metroLine: String(dep.line).toUpperCase(), groups: sorted };
         return { key, platform: dep.platform ?? null, direction: dep.platform ? null : dep.platformDirection ?? null, metroLine: null, groups: sorted };
     });

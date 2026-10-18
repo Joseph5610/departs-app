@@ -1,9 +1,7 @@
 import type { CityConfig } from '../../../_core/cityConfig';
-import { ApiError } from '../../../_core/errors';
-import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { getDepartureRows, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
-import { stopIdParts, stopTargets, type StopTargets } from './stopTargets';
+import { boundedStopTargets, requestedStopParts, type StopTargets } from './stopTargets';
 
 export type { StopTargets } from './stopTargets';
 
@@ -37,15 +35,8 @@ export class StopIndex {
      * the first check.
      */
     async resolve(stopIds: string[]): Promise<StopTargets> {
-        const relations = await getStopRelations(this.city, stopIds.flatMap(stopIdParts));
-        const targets = stopTargets(stopIds, relations);
-        if (targets.targetIds.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) {
-            throw new ApiError(
-                `Too many stops requested; this expands to more than ${GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS} platforms.`,
-                400
-            );
-        }
-        return targets;
+        const relations = await getStopRelations(this.city, requestedStopParts(stopIds));
+        return boundedStopTargets(stopIds, relations);
     }
 
     /** The timetable rows of the given stops; `parentOf` names the station of any that are platforms. */

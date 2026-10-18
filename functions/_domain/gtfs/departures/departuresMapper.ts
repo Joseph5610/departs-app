@@ -15,16 +15,17 @@ export function indexVehiclesByTrip(rtVehicles: AppVehicleCollection | null): Ma
     return byTrip;
 }
 
-/**
- * A stop's timetable tuples as departures with live delay, vehicle and equipment joined in, within the
- * past/future windows; recently past ones are kept for the app to revive with its live delay.
- */
 /** One timetable row: the stop the client asked for, the platform it leaves from, and the row itself. */
 export interface DepartureSource {
     stopId: string;
     platformStopId?: string;
     tuple: GtfsDepartureTuple;
 }
+
+/**
+ * A stop's timetable tuples as departures with live delay, vehicle and equipment joined in, within the
+ * past/future windows; recently past ones are kept for the app to revive with its live delay.
+ */
 
 export function mapDepartures(
     deps: DepartureSource[], 

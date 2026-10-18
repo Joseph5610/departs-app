@@ -26,6 +26,11 @@ describe('toStopRequest', () => {
         expect(toStopRequest('952-1,952', relationOf)).toEqual({ id: '952-1,952', node: '952', posts: null });
     });
 
+    // One Portabo board per node: a part on another node would be read as a post of the first.
+    it('ignores parts on another node than the first', () => {
+        expect(toStopRequest('952-1,77-2', relationOf)).toEqual({ id: '952-1,77-2', node: '952', posts: ['1'] });
+    });
+
     it('reads an id the stop index does not know as a platform or a bare node', () => {
         expect(toStopRequest('77-2', relationOf)).toEqual({ id: '77-2', node: '77', posts: ['2'] });
         expect(toStopRequest('77', relationOf)).toEqual({ id: '77', node: '77', posts: null });

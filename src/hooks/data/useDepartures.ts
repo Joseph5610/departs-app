@@ -120,11 +120,12 @@ export const useDepartures = () => {
         error,
         refetch,
         groupedDepartures,
+        favoriteKeys,
         delayStats,
         isFiltered,
         selectedLine,
         hasAirConditioningData,
         hasAccessibilityData,
         hasRequestStop,
-    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop]);
+    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop]);
 };

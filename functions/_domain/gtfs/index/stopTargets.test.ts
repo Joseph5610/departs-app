@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { stopTargets } from './stopTargets';
+import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
+import { requestedStopParts, stopTargets } from './stopTargets';
 
 const relations = new Map<string, StopRelation>([
     ['U1396', [null, 'U1396Z1', 'U1396Z3']],
@@ -31,5 +32,14 @@ describe('stopTargets', () => {
         expect(t.childToRequestedMap.get('U1396Z1')).toBe('U1396Z1');
         expect(t.childToRequestedMap.get('U1271Z1')).toBe('U1271Z1');
         expect(t.parentOf.get('U1271Z1')).toBe('U1271');
+    });
+});
+
+describe('requestedStopParts', () => {
+    // A single value may join any number of ids, so the cap counts the parts before any bucket is read.
+    it('rejects comma-joined parts past the platform cap', () => {
+        const ids = Array.from({ length: GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS }, (_, i) => `Z${i}`);
+        expect(requestedStopParts([ids.join(',')])).toHaveLength(ids.length);
+        expect(() => requestedStopParts([ids.join(','), 'Z'])).toThrow(/Too many stops/);
     });
 });

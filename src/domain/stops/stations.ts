@@ -156,7 +156,7 @@ export const platformIdByCode = (stationIds: readonly string[], stopIndex: Reado
 };
 
 /** The ids a stop id names: a single stop, or a comma-joined list (a PID station, a merged platform, a board section). */
-export const stopIdParts = (id: string): string[] => id.split(',');
+export const stopIdParts = (id: string): string[] => id.split(',').map(part => part.trim()).filter(Boolean);
 
 /** Lines without repeats of the same mode and name, as a station lists its platforms' lines. */
 export const uniqueLines = <L extends { type: string; name: string }>(lines: readonly L[]): L[] =>

@@ -1,5 +1,5 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { stopIdParts } from '../../gtfs/index/stopTargets';
+import { stopIdParts } from '../../../_core/utils/stopIds';
 
 /** A requested stop resolved to its Portabo node and the posts to read; null posts read the whole station. */
 export interface StopRequest {
@@ -24,12 +24,13 @@ const partOf = (id: string, relation: StopRelation | undefined): { node: string;
 
 /**
  * A requested value as its Portabo node and posts. A comma-joined value is one stop made of several platforms
- * of a node (one direction's); a station among them, or a bare node, reads the whole station. An id the stop
- * index does not know is read as a platform or a bare node.
+ * of a node (one direction's); a station among them, or a bare node, reads the whole station. Parts on another
+ * node than the first are ignored. An id the stop index does not know is read as a platform or a bare node.
  */
 export function toStopRequest(id: string, relationOf: RelationOf): StopRequest {
-    const parts = stopIdParts(id).map(part => partOf(part, relationOf(part)));
-    const node = parts[0]?.node ?? id;
+    const all = stopIdParts(id).map(part => partOf(part, relationOf(part)));
+    const node = all[0]?.node ?? id;
+    const parts = all.filter(p => p.node === node);
     const posts = parts.some(p => p.post === null) ? null : [...new Set(parts.map(p => p.post as string))];
     return { id, node, posts };
 }

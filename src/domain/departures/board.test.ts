@@ -119,6 +119,16 @@ describe('platformSections', () => {
         expect(b!.groups.map(g => g.line)).toEqual(['5', '9']);
         expect(a!.groups[0]!.subGroups[0]!.groupId).not.toBe(b!.groups[1]!.subGroups[0]!.groupId);
     });
+
+    // A pinned direction leads its platform's section, so the section's preview never folds it away.
+    it('puts favourite directions first in each section', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'n9', line: '9', headsign: 'Řepy', platform: 'A' }),
+            departure({ tripId: 'n22', line: '22', headsign: 'Bílá Hora', platform: 'A' }),
+        ], 'line');
+        const [a] = platformSections(groups, 'line', new Set([favoriteKey('22', 'Bílá Hora')]));
+        expect(a!.groups.map(g => g.line)).toEqual(['22', '9']);
+    });
 });
 
 describe('withStopPlatforms', () => {
