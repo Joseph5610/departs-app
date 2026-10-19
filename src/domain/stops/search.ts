@@ -1,28 +1,26 @@
 import { normalizeString } from '@/lib/strings';
 import { firstUnique, matchesAllTokens } from '@/lib/search';
-import type { StopFeature } from '@/types';
+import type { Stop } from '@/types';
 import { STOP_SEARCH } from '@/config/constants';
 
 export interface SearchIndexItem {
-    stop: StopFeature;
+    stop: Stop;
     normalizedName: string;
     nameTokens: string[];
     stopId: string;
 }
 
-/** Searchable stations and platforms; entrances (location_type 2) are left out. */
-export const createSearchIndex = (features: StopFeature[]): SearchIndexItem[] =>
-    features
-        .filter((stop) => stop.properties.location_type !== 2)
-        .map((stop) => {
-            const normalizedName = normalizeString(stop.properties.stop_name);
-            return {
-                stop,
-                normalizedName,
-                nameTokens: normalizedName.split(STOP_SEARCH.TOKEN_SEPARATORS),
-                stopId: stop.properties.stop_id.toUpperCase(),
-            };
-        });
+/** Searchable stations and platforms. */
+export const createSearchIndex = (stops: readonly Stop[]): SearchIndexItem[] =>
+    stops.map((stop) => {
+        const normalizedName = normalizeString(stop.name);
+        return {
+            stop,
+            normalizedName,
+            nameTokens: normalizedName.split(STOP_SEARCH.TOKEN_SEPARATORS),
+            stopId: stop.id.toUpperCase(),
+        };
+    });
 
 const scoreOf = (item: SearchIndexItem, upperQuery: string, normalizedQuery: string, queryTokens: string[]): number => {
     const { SCORES } = STOP_SEARCH;
@@ -38,8 +36,10 @@ const scoreOf = (item: SearchIndexItem, upperQuery: string, normalizedQuery: str
     return score;
 };
 
+const isStation = (stop: Stop) => Number(stop.kind === 'station');
+
 /** Stops by id prefix or by every query word starting a word of the name, best first, one per name: a station before its platforms. */
-export const searchStops = (searchIndex: SearchIndexItem[], query: string): StopFeature[] => {
+export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop[] => {
     if (query.length < STOP_SEARCH.MIN_QUERY_LENGTH) return [];
 
     const normalizedQuery = normalizeString(query).trim();
@@ -50,8 +50,8 @@ export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop
         .filter((item) => item.stopId.startsWith(upperQuery) || matchesAllTokens(queryTokens, item.nameTokens))
         .map((item) => ({ stop: item.stop, score: scoreOf(item, upperQuery, normalizedQuery, queryTokens) }))
         .sort((a, b) => b.score - a.score
-            || Number(!!b.stop.properties.is_station) - Number(!!a.stop.properties.is_station)
-            || a.stop.properties.stop_name.localeCompare(b.stop.properties.stop_name));
+            || isStation(b.stop) - isStation(a.stop)
+            || a.stop.name.localeCompare(b.stop.name));
 
-    return firstUnique(matches, (match) => match.stop.properties.stop_name, STOP_SEARCH.RESULT_LIMIT).map((match) => match.stop);
+    return firstUnique(matches, (match) => match.stop.name, STOP_SEARCH.RESULT_LIMIT).map((match) => match.stop);
 };

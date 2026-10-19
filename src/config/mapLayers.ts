@@ -108,7 +108,7 @@ export const STOP_BADGE = {
 } as const;
 
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
-const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
+const IS_ENTRANCE: ExpressionSpecification = ['==', ['get', 'kind'], 'entrance'];
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
@@ -262,7 +262,7 @@ export const platformBadges: SymbolLayerSpecification = {
     type: 'symbol',
     source: MAP_SOURCES.STOPS,
     minzoom: MAP_TOKENS.zoom.platforms,
-    filter: ['!=', LOCATION_TYPE, 2],
+    filter: ['!', IS_ENTRANCE],
     layout: {
         // Takes over from its station's badge at the same scale, and grows from there.
         'icon-size': badgeSize(0.6, 0.9),
@@ -275,10 +275,7 @@ export const stopEntrances: SymbolLayerSpecification = {
     id: MAP_LAYERS.STOP_ENTRANCES,
     type: 'symbol',
     source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['==', LOCATION_TYPE, 2]
-    ],
+    filter: IS_ENTRANCE,
     // Not before the platforms: an entrance's name would push the station badges out of placement.
     minzoom: MAP_TOKENS.zoom.platforms,
     layout: {

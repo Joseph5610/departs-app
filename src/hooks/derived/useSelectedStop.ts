@@ -1,16 +1,8 @@
-import { useMemo } from 'react';
 import { useRouteParams } from '@/hooks/useRouteParams';
-import { useStops } from '@/hooks/data/useStops';
-import type { SelectedStop } from '@/types';
-import { selectedStopOf } from '@/domain/stops';
+import { useResolvedStop } from '@/hooks/data/useStops';
 
-/**
- * A derived data hook that resolves the currently selected stop ID
- * into a full SelectedStop object using the local GeoJSON cache.
- */
-export const useSelectedStop = () => {
-    const { stopId } = useRouteParams();
-    const { stopIndex } = useStops();
-
-    return useMemo((): SelectedStop | null => (stopId ? selectedStopOf(stopId, stopIndex) : null), [stopId, stopIndex]);
+/** The stop the URL opens (or `stopId`, when given), resolved against the selected city's stop list. */
+export const useSelectedStop = (stopId?: string | null) => {
+    const route = useRouteParams();
+    return useResolvedStop(stopId === undefined ? route.stopId : stopId);
 };

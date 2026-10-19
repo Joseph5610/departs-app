@@ -320,7 +320,7 @@ export const GEOCODING_CONFIG = {
 /** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
 export const DEVICE_CACHE = {
     /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
-    VERSION: 'v53',
+    VERSION: 'v54',
     /** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
     STOPS_FILE_VERSION: 1,
     /** Entries older than this are dropped instead of shown while refreshing. */

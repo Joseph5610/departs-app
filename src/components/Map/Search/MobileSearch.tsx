@@ -156,7 +156,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     <MobileSearchResults
                         query={s.query}
                         stopResults={s.stopResults}
-                        favoriteStops={s.favoriteStopFeatures}
+                        favoriteStops={s.pinnedStopList}
                         location={userLocation}
                         searchHistory={s.searchHistory}
                         queryLines={s.queryLines}

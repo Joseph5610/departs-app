@@ -9,7 +9,7 @@ import { EXTERNAL_URLS } from '@/config/constants';
  */
 export const useNavigate = (target?: [number, number]) => {
     const selectedStop = useSelectedStop();
-    const coords = target ?? selectedStop?.coordinates;
+    const coords = target ?? selectedStop?.board?.pos;
     const stopDistanceInfo = useStopDistance(coords);
 
     const handleNavigate = useCallback(() => {

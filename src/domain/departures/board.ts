@@ -41,8 +41,11 @@ export const catchableDepartures = (departures: Departure[], now: number, walkMi
 export const nextDeparturesOf = (departures: Departure[], line: string, headsign: string, count: number): Departure[] =>
     nextDepartures(departures.filter(dep => dep.line === line && dep.headsign === headsign), count);
 
-/** A multi-stop response split back per stop. */
-export const departuresByStop = (departures: Departure[]): Map<string, Departure[]> => {
+/**
+ * A multi-stop response split back per stop: by the `stopId` each departure was requested under, or, given
+ * `requestOf` (each stop's request id), per stop, several stops asked for under one request sharing its departures.
+ */
+export const departuresByStop = (departures: Departure[], requestOf?: ReadonlyMap<string, string>): Map<string, Departure[]> => {
     const byStop = new Map<string, Departure[]>();
     for (const dep of departures) {
         if (!dep.stopId) continue;
@@ -50,5 +53,11 @@ export const departuresByStop = (departures: Departure[]): Map<string, Departure
         if (list) list.push(dep);
         else byStop.set(dep.stopId, [dep]);
     }
-    return byStop;
+    if (!requestOf) return byStop;
+    const byOwnId = new Map<string, Departure[]>();
+    for (const [id, request] of requestOf) {
+        const deps = byStop.get(request);
+        if (deps) byOwnId.set(id, deps);
+    }
+    return byOwnId;
 };

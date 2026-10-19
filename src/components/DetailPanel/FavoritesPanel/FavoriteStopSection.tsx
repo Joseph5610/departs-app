@@ -20,18 +20,18 @@ import { StopModeIcon } from '@/components/StopModeIcon';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
 import { NextDepartureRow } from '@/components/DetailPanel/DepartureBoard/NextDepartureRow';
 import { BoardRow, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
-import type { StopFeature, Departure, DepartureClickHandler } from '@/types';
+import type { BoardStop, Departure, DepartureClickHandler } from '@/types';
 
 interface FavoriteStopSectionProps {
     /** The ids the stop was pinned under, all of which unpinning removes. */
     pinnedIds: string[];
-    stopFeature: StopFeature;
+    stop: BoardStop;
     departures: Departure[];
     isError: boolean;
 }
 
 /** A pinned stop: its name opens the board, and its next departures follow as board rows. */
-export const FavoriteStopSection = ({ pinnedIds, stopFeature, departures, isError }: FavoriteStopSectionProps) => {
+export const FavoriteStopSection = ({ pinnedIds, stop, departures, isError }: FavoriteStopSectionProps) => {
     const { t, i18n } = useTranslation();
     const { timezone } = useCityConfig();
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
@@ -39,14 +39,12 @@ export const FavoriteStopSection = ({ pinnedIds, stopFeature, departures, isErro
     const { removeFavoriteStops } = usePreferencesStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
 
-    const { stop_id, stop_name, platform_code } = stopFeature.properties;
-    const coordinates = stopFeature.geometry.coordinates as [number, number];
-    const distance = useMemo(() => getStopDistanceInfo(userLocation, coordinates), [userLocation, coordinates]);
+    const distance = useMemo(() => getStopDistanceInfo(userLocation, stop.pos), [userLocation, stop.pos]);
     const next = useMemo(() => nextDepartures(departures, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT), [departures]);
 
     const openBoard = () => {
-        flyTo({ center: coordinates, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop_id));
+        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
+        navigate(paths.stop(selectedCity, stop.id));
     };
     const openTrip = useCallback<DepartureClickHandler>(
         (tripId, vehicleId) => navigate(paths.trip(selectedCity, tripId, vehicleId)),
@@ -65,12 +63,12 @@ export const FavoriteStopSection = ({ pinnedIds, stopFeature, departures, isErro
                     className="h-auto w-full justify-start gap-3 whitespace-normal rounded-xl py-2 pl-2 pr-11 text-left font-normal hover:bg-foreground/5"
                 >
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
-                        <StopModeIcon lines={stopFeature.properties.lines} />
+                        <StopModeIcon lines={stop.lines} />
                     </span>
                     <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="flex min-w-0 items-center gap-1.5">
-                            {platform_code && <PlatformCircle code={platform_code} />}
-                            <span className="truncate text-base font-bold leading-tight tracking-tight text-foreground">{stop_name}</span>
+                            {stop.code && <PlatformCircle code={stop.code} />}
+                            <span className="truncate text-base font-bold leading-tight tracking-tight text-foreground">{stop.name}</span>
                             <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
                         </span>
                         {distance && (

@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { nearestStops, toMcpStopLines } from "../utils";
+import { nearestStops, toMcpStop } from "../utils";
 
 /**
  * Handles the 'search_nearest_stops' MCP tool invocation.
@@ -28,14 +28,9 @@ export async function handleSearchNearestStops(
         search_location: { latitude: lat, longitude: lon },
         radius_meters: radiusMeters,
         count: Math.min(stopsInRadius.length, limit),
-        stops: stopsInRadius.slice(0, limit).map(({ feature: f, distance }) => ({
-            stop_id: f.properties?.stop_id,
-            stop_name: f.properties?.stop_name,
-            platform_code: f.properties?.platform_code || null,
-            distance_meters: Math.round(distance),
-            is_centroid: f.properties?.is_station,
-            coordinates: f.geometry?.coordinates,
-            lines: toMcpStopLines(f)
-        }))
+        stops: stopsInRadius.slice(0, limit).map(({ stop, distance }) => {
+            const { stop_id, stop_name, platform_code, ...rest } = toMcpStop(stop);
+            return { stop_id, stop_name, platform_code, distance_meters: Math.round(distance), ...rest };
+        })
     };
 }

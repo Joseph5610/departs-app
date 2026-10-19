@@ -55,7 +55,7 @@ export const Search = memo(() => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const results = query === '' && !activeFilter ? s.favoriteStopFeatures : s.stopResults;
+    const results = query === '' && !activeFilter ? s.pinnedStopList : s.stopResults;
 
     const showDropdown = (results.length > 0 || s.vehicleResults.length > 0 || s.posResults.length > 0 || s.geocodingResults.length > 0 || !!s.queryLines || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
     const isListShown = isOpen && showDropdown;
@@ -139,7 +139,7 @@ export const Search = memo(() => {
                         <SearchDropdown
                             results={results}
                             searchHistory={searchHistory}
-                            favoriteStops={s.favoriteStops}
+                            favoriteStopIds={s.pinnedStopIds}
                             query={query}
                             activeFilter={activeFilter}
                             queryLines={s.queryLines}

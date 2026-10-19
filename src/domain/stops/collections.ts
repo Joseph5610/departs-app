@@ -1,96 +1,95 @@
-import type { PinnedStop, SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
-import { servesMode, stopIdParts, uniqueLines } from './stations';
-
-/** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only ones are left out. */
-export const splitStopCollection = (collection: StopCollection | undefined) => {
-    if (!collection) return { platforms: null, stations: null };
-    const platforms: StopFeature[] = [];
-    const stations: StopFeature[] = [];
-    for (const f of collection.features) {
-        if (f.properties.is_drop_off_only) continue;
-        (f.properties.is_station ? stations : platforms).push(f);
-    }
-    return {
-        platforms: { type: 'FeatureCollection', features: platforms } as StopCollection,
-        stations: { type: 'FeatureCollection', features: stations } as StopCollection,
-    };
-};
+import type { BoardStop, Entrance, PinnedStop, Platform, SearchHistoryBase, Station, Stop, StopLine, StopModel } from '@/types';
+import { servesMode } from './stations';
+import { resolveStop } from './model';
+import { indexStops, withoutTwins } from './twins';
+import { SHARED_GROUND } from '@/config/constants';
 
 /** Whether a stop passes the map's stop-type filter; an empty filter passes every stop. */
-export const matchesStopTypeFilter = (props: StopProperties | null, stopTypeFilter: readonly string[]): boolean => {
-    if (!props || stopTypeFilter.length === 0) return true;
-    return (stopTypeFilter.includes('metro') && servesMode(props, 'metro')) || (stopTypeFilter.includes('train') && servesMode(props, 'train'));
+export const matchesStopTypeFilter = (stop: { lines: readonly StopLine[] }, stopTypeFilter: readonly string[]): boolean => {
+    if (stopTypeFilter.length === 0) return true;
+    return (stopTypeFilter.includes('metro') && servesMode(stop, 'metro')) || (stopTypeFilter.includes('train') && servesMode(stop, 'train'));
 };
 
-/** The stops for `ids` that the stop list knows, in the order given. */
-export const stopsByIds = (stopIndex: ReadonlyMap<string, StopFeature>, ids: readonly string[]): StopFeature[] =>
-    ids.map(id => stopIndex.get(id)).filter((s): s is StopFeature => s !== undefined);
+/** The stops the map draws: alight-only ones are left out, and with a stop-type filter so are entrances and stops of other modes. */
+export const mapStopsOf = (model: StopModel | null | undefined, stopTypeFilter: readonly string[]): { stations: Station[]; platforms: Array<Platform | Entrance> } => {
+    if (!model) return { stations: [], platforms: [] };
+    const shown = <S extends Stop>(stop: S) => !stop.alightOnly && matchesStopTypeFilter(stop, stopTypeFilter);
+    return {
+        stations: model.stations.filter(shown),
+        platforms: stopTypeFilter.length ? model.platforms.filter(shown) : [...model.platforms.filter(shown), ...model.entrances],
+    };
+};
 
 /**
- * The pinned stops the stop list knows, in pin order, each kept with its pinned ids so unpinning and
- * reordering write those ids back; a stop pinned under several ids is listed once, at its first pin.
+ * The stops the map draws: the selected network's, then each other network's where the selected one has none
+ * on the same spot (a platform within a few metres, a station of the same name nearby).
  */
-export const pinnedStops = (stopIndex: ReadonlyMap<string, StopFeature>, ids: readonly string[]): PinnedStop[] => {
-    const byFeature = new Map<StopFeature, PinnedStop>();
-    for (const id of ids) {
-        const feature = stopIndex.get(id);
-        if (!feature) continue;
-        const pin = byFeature.get(feature);
-        if (pin) pin.ids.push(id);
-        else byFeature.set(feature, { id, ids: [id], feature });
+export const mapStopsWithOverlay = (model: StopModel | null, overlay: readonly StopModel[], stopTypeFilter: readonly string[]) => {
+    const own = mapStopsOf(model, stopTypeFilter);
+    if (overlay.length === 0) return own;
+    const platformGrid = indexStops(own.platforms, SHARED_GROUND.TWIN_STOP_RADIUS_M);
+    const stationGrid = indexStops(own.stations, SHARED_GROUND.TWIN_STATION_RADIUS_M);
+    const stations: Station[] = [...own.stations];
+    const platforms: Array<Platform | Entrance> = [...own.platforms];
+    for (const network of overlay) {
+        const other = mapStopsOf(network, stopTypeFilter);
+        stations.push(...withoutTwins(other.stations, stationGrid, true));
+        platforms.push(...withoutTwins(other.platforms, platformGrid, false));
     }
-    return [...byFeature.values()];
+    return { stations, platforms };
 };
+
+/** The stop each of `ids` opens, for the ids the stop model knows. */
+export const boardsOf = (model: StopModel | null | undefined, ids: readonly string[]): ReadonlyMap<string, BoardStop> => {
+    const boards = new Map<string, BoardStop>();
+    if (!model) return boards;
+    for (const id of ids) {
+        const board = resolveStop(model, id);
+        if (board) boards.set(id, board);
+    }
+    return boards;
+};
+
+/**
+ * The pinned stops the stop model knows, in pin order, each kept with its pinned ids so unpinning and
+ * reordering write those ids back; a stop pinned under several ids (an alias, a pre-stops.json PID id) is listed once, at its first pin.
+ */
+export const pinnedStops = (model: StopModel | null | undefined, ids: readonly string[]): PinnedStop[] => {
+    if (!model) return [];
+    const byBoard = new Map<string, PinnedStop>();
+    for (const id of ids) {
+        const stop = resolveStop(model, id);
+        if (!stop) continue;
+        const pin = byBoard.get(stop.id);
+        if (pin) pin.ids.push(id);
+        else byBoard.set(stop.id, { id, ids: [id], stop });
+    }
+    return [...byBoard.values()];
+};
+
+/** The id links and favorites name `id`'s stop by; `id` itself when the model does not know it. */
+export const canonicalStopId = (model: StopModel | null | undefined, id: string): string =>
+    (model && resolveStop(model, id)?.id) ?? id;
+
+/** Whether `id`, in whichever form it was saved (an alias, a pre-stops.json PID id), opens the stop `boardId` names. */
+export const opensStop = (model: StopModel | null | undefined, id: string, boardId: string): boolean =>
+    id === boardId || canonicalStopId(model, id) === boardId;
+
+/** The pinned ids that open `boardId`'s stop, whichever form they were pinned under. */
+export const pinnedIdsOf = (model: StopModel | null | undefined, favoriteIds: readonly string[], boardId: string): string[] =>
+    favoriteIds.filter(id => opensStop(model, id, boardId));
 
 /** The colour of `line` as the stop list records it for this stop, or undefined when the stop does not list it. */
-export const lineColorAt = (stop: StopFeature | undefined, line: string): string | undefined =>
-    stop?.properties.lines?.find(l => l.name === line)?.route_color;
-
-const stopSummary = (feature: StopFeature) => {
-    const { stop_id, stop_name, platform_code, lines } = feature.properties;
-    return {
-        stop_id,
-        stop_name,
-        platform_code,
-        lines,
-        coordinates: feature.geometry.coordinates as [number, number],
-    };
-};
-
-/** The panel's view of a stop from its map feature. */
-export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_station: feature.properties.is_station, platform_count: feature.properties.platform_count });
-
-/**
- * The stop a board shows for `stopId`: its own entry, or for a comma-joined id of several platforms (a board
- * section's) one stop named after the first, with all their ids and lines; just the id when none is known.
- */
-export const selectedStopOf = (stopId: string, stopIndex: ReadonlyMap<string, StopFeature>): SelectedStop => {
-    const own = stopIndex.get(stopId);
-    if (own) return toSelectedStop(own);
-    const features = [...new Set(stopIdParts(stopId).map(id => stopIndex.get(id)).filter((f): f is StopFeature => !!f))];
-    const first = features[0];
-    if (!first) return { stop_id: stopId };
-    return {
-        ...toSelectedStop(first),
-        stop_id: stopId,
-        lines: uniqueLines(features.flatMap(f => f.properties.lines ?? [])),
-        all_ids: features.flatMap(f => stopIdParts(f.properties.stop_id)),
-        is_station: false,
-        platform_count: features.length,
-    };
-};
+export const lineColorAt = (stop: { lines: readonly StopLine[] } | null | undefined, line: string): string | undefined =>
+    stop?.lines.find(l => l.name === line)?.route_color;
 
 /** A search history entry for a stop picked in `city`. */
-export const stopHistoryEntry = (feature: StopFeature, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, ...stopSummary(feature) });
-
-/** Every stop id and each of its `all_ids` to its feature; a platform's own entry wins over its station's. */
-export const indexStopsById = (collection: StopCollection | undefined): Map<string, StopFeature> => {
-    const idx = new Map<string, StopFeature>();
-    for (const f of collection?.features ?? []) {
-        idx.set(f.properties.stop_id, f);
-        for (const subId of f.properties.all_ids ?? []) {
-            idx.set(subId, f);
-        }
-    }
-    return idx;
-};
+export const stopHistoryEntry = (stop: Stop, city: string): SearchHistoryBase => ({
+    type: 'stop',
+    city_slug: city,
+    stop_id: stop.id,
+    stop_name: stop.name,
+    platform_code: stop.kind === 'platform' ? stop.code : undefined,
+    lines: stop.lines,
+    coordinates: stop.pos,
+});

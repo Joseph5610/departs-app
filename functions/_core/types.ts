@@ -106,35 +106,6 @@ export interface AppDepartureFeeder {
     max_wait_s: number;
 }
 
-interface AppStopProperties {
-    stop_id: string;
-    stop_name: string;
-    platform_code?: string | null;
-    location_type: number | string;
-    parent_station: string | null;
-    zone_id: string | null;
-    is_station?: boolean;
-    is_drop_off_only?: boolean;
-    /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
-    interchanges?: string[];
-    all_ids?: string[];
-    lines?: Array<{
-        name: string;
-        type: AppRouteType;
-        route_color: string;
-    }>;
-}
-
-export interface AppStopFeature {
-    type: 'Feature';
-    id?: string | number;
-    geometry: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    properties: AppStopProperties;
-}
-
 export interface AppVehicleCollection {
     type: 'FeatureCollection';
     features: AppVehicleFeature[];

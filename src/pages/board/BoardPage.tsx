@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Accessibility, Snowflake, TrainFront } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useNow } from '@/hooks/useNow';
-import { useStops } from '@/hooks/data/useStops';
+import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
+import { boardStopIds } from '@/domain/stops';
 import { useBoardDepartures } from '@/hooks/data/useDepartures';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
 import { AlertIcon } from '@/components/Alerts/AlertIcon';
@@ -131,9 +132,8 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
 
     useWakeLock(true);
 
-    const { stopIndex } = useStops();
-    const stop = stopIndex.get(stopId)?.properties;
-    const stopNoticeIds = useMemo(() => stop ? [stop.stop_id, ...(stop.all_ids ?? [])] : [], [stop]);
+    const stop = useSelectedStop(stopId)?.board;
+    const stopNoticeIds = useMemo(() => stop ? boardStopIds(stop) : [], [stop]);
     const isKnownCity = !!FRONTEND_CITIES_CONFIG[city];
     const { departures, isLoading, isError } = useBoardDepartures(selectedCity === city ? stopId : '');
     const rows = useMemo(() => {
@@ -155,12 +155,12 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
             <header className="flex items-center gap-[clamp(0.75rem,2vw,2rem)] px-[clamp(1rem,3vw,3rem)] py-[clamp(0.75rem,2vh,1.75rem)] border-b border-border">
                 <div className="min-w-0 flex-1">
                     <h1 className="flex items-center gap-[0.3em] font-bold text-[clamp(1.5rem,4vw,4rem)] leading-none min-w-0">
-                        {stop?.platform_code && (
+                        {stop?.code && (
                             <span className="shrink-0 inline-flex items-center justify-center size-[0.9em] rounded-full bg-foreground text-background shadow-sm">
-                                <span className="text-[0.5em] font-bold leading-none tabular-nums">{stop.platform_code}</span>
+                                <span className="text-[0.5em] font-bold leading-none tabular-nums">{stop.code}</span>
                             </span>
                         )}
-                        <span className="truncate">{stop?.stop_name ?? '…'}</span>
+                        <span className="truncate">{stop?.name ?? '…'}</span>
                     </h1>
                 </div>
                 <div className="shrink-0 text-right">
@@ -172,7 +172,7 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
             {rows.length > 0 ? (
                 <ul ref={listRef} className="relative flex-1 overflow-hidden">
                     {rows.map(dep => (
-                        <BoardRow key={`${dep.tripId ?? dep.line}-${dep.scheduled}`} dep={dep} timeZone={timezone} now={now} walkMins={walkMins} stopPlatform={stop?.platform_code} />
+                        <BoardRow key={`${dep.tripId ?? dep.line}-${dep.scheduled}`} dep={dep} timeZone={timezone} now={now} walkMins={walkMins} stopPlatform={stop?.code} />
                     ))}
                 </ul>
             ) : (isError || !isKnownCity) ? (

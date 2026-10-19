@@ -1,5 +1,5 @@
-import { getStopSearch, stopFeatures, type StopSearch } from "../_feeds/stopSearch";
-import type { AppInfotext, AppDeparture, AppStopFeature, CityRequestContext, Env } from "../_core/types";
+import { getStopSearch, stopsAt, type SearchedStop, type StopSearch } from "../_feeds/stopSearch";
+import type { AppInfotext, AppDeparture, CityRequestContext, Env } from "../_core/types";
 import type { CityConfig } from "../_core/cityConfig";
 import type { McpContext } from "./types";
 import { CITY_REGISTRY, getCityConfig, getCityUseCases } from "../_cities";
@@ -94,8 +94,7 @@ export function resolveCity(citySlug: string | undefined, env: Env): { city: Cit
     return { city: getCityUseCases(slug, env), citySlug: slug };
 }
 
-type StopFeature = AppStopFeature;
-type RankedStop = { feature: StopFeature; distance: number };
+type RankedStop = { stop: SearchedStop; distance: number };
 
 /** The city's stop search index; throws for a city without static stop data. */
 function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<StopSearch> } {
@@ -108,20 +107,17 @@ function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<Sto
  * Up to `limit` platforms whose name or id contains `query`, best match first: exact name, then
  * name starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
  */
-export async function findStopsByName(citySlug: string, query: string, limit: number): Promise<StopFeature[]> {
+export async function findStopsByName(citySlug: string, query: string, limit: number): Promise<SearchedStop[]> {
     const { city, search: pending } = stopSearchOf(citySlug);
     const search = await pending;
     const indexes = search.byName(query, limit);
-    const features = await stopFeatures(city, search, indexes);
-    return indexes.flatMap(i => features.get(i) ?? []);
+    const stops = await stopsAt(city, search, indexes);
+    return indexes.flatMap(i => stops.get(i) ?? []);
 }
 
-/** PID-style node shared by every platform of a station (`U1146Z11` -> `U1146`); undefined for other id schemes. */
-const stationNode = (stopId: string): string | undefined => /^(U\d+)/i.exec(stopId)?.[1];
-
 /**
- * The station a name query means, as every platform id serving it: all stops with the best match's
- * exact name in the same node, so both directions and every mode (tram, bus, metro, train) are included.
+ * The station a name query means: the best-matching platform's station, whose id names every platform of
+ * it, so both directions and every mode (tram, bus, metro, train) are included.
  */
 export async function resolveStationByName(citySlug: string, query: string): Promise<{ stopIds: string; stopName: string } | null> {
     const { city, search: pending } = stopSearchOf(citySlug);
@@ -129,21 +125,11 @@ export async function resolveStationByName(citySlug: string, query: string): Pro
     const bestIndex = search.byName(query, 1)[0];
     if (bestIndex === undefined) return null;
 
-    const sameName = search.withFoldedName(search.foldedName(bestIndex));
-    const features = await stopFeatures(city, search, [bestIndex, ...sameName]);
-    const best = features.get(bestIndex);
-    const stopName = best?.properties?.stop_name;
-    if (!best || !stopName) return null;
-
-    const node = stationNode(best.properties.stop_id);
-    const ids = new Set<string>();
-    for (const index of sameName) {
-        const p = features.get(index)?.properties;
-        if (!p || p.stop_name !== stopName || Number(p.location_type) === 2) continue;
-        if (stationNode(p.stop_id) !== node) continue;
-        for (const id of p.stop_id.split(',')) if (id) ids.add(id);
-    }
-    return { stopIds: [...ids].join(','), stopName };
+    const best = (await stopsAt(city, search, [bestIndex])).get(bestIndex);
+    if (!best) return null;
+    const station = best.station === undefined ? undefined : (await stopsAt(city, search, [best.station])).get(best.station);
+    const stop = station ?? best;
+    return { stopIds: stop.id, stopName: stop.name };
 }
 
 /** Up to `limit` stops within `radiusM` of the point (anywhere, when omitted), nearest first, with their distance in meters. */
@@ -156,22 +142,34 @@ export async function nearestStops(
     const { city, search: pending } = stopSearchOf(citySlug);
     const search = await pending;
     const ranked = search.nearest(lat, lon, options);
-    const features = await stopFeatures(city, search, ranked.map(r => r.index));
+    const stops = await stopsAt(city, search, ranked.map(r => r.index));
     const radiusM = options.radiusM ?? Infinity;
     return ranked
         .flatMap(({ index }) => {
-            const feature = features.get(index);
-            if (!feature) return [];
-            const [stopLon, stopLat] = feature.geometry.coordinates;
-            return [{ feature, distance: distanceMeters(lat, lon, stopLat, stopLon) }];
+            const stop = stops.get(index);
+            if (!stop) return [];
+            const [stopLon, stopLat] = stop.coordinates;
+            return [{ stop, distance: distanceMeters(lat, lon, stopLat, stopLon) }];
         })
         .filter(stop => stop.distance <= radiusM)
         .sort((a, b) => a.distance - b.distance);
 }
 
 /** A stop's lines with the vehicle type as a word (`tram`), whatever form the city's stop data uses. */
-export function toMcpStopLines(feature: StopFeature) {
-    return (feature.properties?.lines ?? []).map(line => ({ ...line, type: normalizeRouteType(line.type) }));
+export function toMcpStopLines(stop: SearchedStop) {
+    return stop.lines.map(line => ({ ...line, type: normalizeRouteType(line.type) }));
+}
+
+/** A stop as the stop tools answer with it; `is_centroid` names a station, as the tools have always called it. */
+export function toMcpStop(stop: SearchedStop) {
+    return {
+        stop_id: stop.id,
+        stop_name: stop.name,
+        platform_code: stop.platformCode,
+        is_centroid: stop.isStation,
+        coordinates: stop.coordinates,
+        lines: toMcpStopLines(stop),
+    };
 }
 
 /**

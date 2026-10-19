@@ -36,20 +36,20 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
     const { alerts, hasAlerts } = useAlerts();
     const incidentsCount = useMemo(() => countIncidents(alerts), [alerts]);
 
-    const { allLines, allStops, stopIndex } = useFavorites();
+    const { allLines, allStops, lineStops } = useFavorites();
     const { nearby, hasLocation } = useNearbyStops();
 
     const stopIds = useMemo(() => {
         const ids = new Set<string>();
-        for (const pin of allStops) ids.add(pin.feature.properties.stop_id);
+        for (const pin of allStops) ids.add(pin.stop.id);
         for (const fav of allLines) ids.add(fav.stopId);
-        for (const n of nearby) ids.add(n.feature.properties.stop_id);
+        for (const n of nearby) ids.add(n.stop.id);
         return [...ids];
     }, [allStops, allLines, nearby]);
 
     const { departuresByStop, isLoading } = useFavoriteDepartures(stopIds);
     const myIncidents = useMemo(
-        () => incidentsOnLines(alerts, favoriteLineNames(allLines, allStops.map(pin => pin.feature))),
+        () => incidentsOnLines(alerts, favoriteLineNames(allLines, allStops.map(pin => pin.stop))),
         [alerts, allLines, allStops],
     );
     const hasFavorites = allStops.length > 0 || allLines.length > 0;
@@ -101,7 +101,7 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                             <CompactLineCard
                                 key={`${fav.stopId}|${fav.line}|${fav.headsign}`}
                                 favorite={fav}
-                                stopFeature={stopIndex.get(fav.stopId)}
+                                stop={lineStops.get(fav.stopId)}
                                 departures={departuresByStop.get(fav.stopId) ?? []}
                                 isLoading={isLoading}
                             />
@@ -109,8 +109,8 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                         {allStops.map(pin => (
                             <CompactStopCard
                                 key={pin.id}
-                                stopFeature={pin.feature}
-                                departures={departuresByStop.get(pin.feature.properties.stop_id) ?? []}
+                                stop={pin.stop}
+                                departures={departuresByStop.get(pin.stop.id) ?? []}
                                 isLoading={isLoading}
                             />
                         ))}
@@ -147,10 +147,10 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                     <Card variant="inset" size="none" className="overflow-hidden">
                         {nearby.map(n => (
                             <NearbyStopRow
-                                key={n.feature.properties.stop_id}
+                                key={n.stop.id}
                                 nearby={n}
                                 location={userLocation}
-                                departures={departuresByStop.get(n.feature.properties.stop_id) ?? []}
+                                departures={departuresByStop.get(n.stop.id) ?? []}
                             />
                         ))}
                     </Card>

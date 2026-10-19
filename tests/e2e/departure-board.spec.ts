@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockStops, STOPS_FILE_URL } from '../fixtures/stops';
+import { hlavniNadrazi, mockStops, STOPS_FILE_URL } from '../fixtures/stops';
 import { MapPage } from '../page-objects/MapPage';
 import { SearchPage } from '../page-objects/SearchPage';
 
@@ -8,24 +8,7 @@ test.describe('Departure Board Tests', () => {
         const mapPage = new MapPage(page);
         const searchPage = new SearchPage(page);
 
-        await mockStops(page, {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-                    properties: {
-                        stop_id: 'U1111Z1P',
-                        stop_name: 'Hlavní nádraží',
-                        platform_code: 'C',
-                        location_type: 0,
-                        parent_station: 'U1111',
-                        zone_id: 'P',
-                        lines: [{ name: 'C', type: 'metro', route_color: 'C0115E' }]
-                    }
-                }
-            ]
-        });
+        await mockStops(page, hlavniNadrazi());
 
         // Mock departures
         await page.route('**/api/*/departures*', async route => {

@@ -1,4 +1,5 @@
-import type { Departure, DepartureFeeder, StoredEnrichmentPatch, VehicleDetail, VehicleFeature, StopTimeFeature } from '@/types';
+import type { Departure, DepartureFeeder, RouteInfo, StopModel, StopsFile, StopsFilePlatform, StoredEnrichmentPatch, VehicleDetail, VehicleFeature, StopTimeFeature } from '@/types';
+import { buildStopModel } from '@/domain/stops';
 
 /** Fixed "now" for unit tests: 2026-10-07 12:00 UTC, 14:00 in Prague. */
 export const NOW = Date.parse('2026-10-07T12:00:00Z');
@@ -87,3 +88,29 @@ export const stopTime = (sequence: number, time: string, overrides: Partial<Stop
         ...overrides,
     },
 });
+
+/** Routes the stop builders name: trams 9 and 17, metro A and B, bus 67. */
+export const ROUTES: Record<string, RouteInfo> = {
+    T9: { name: '9', type: '0', route_color: '#7A0603' },
+    T17: { name: '17', type: '0', route_color: '#7A0603' },
+    MA: { name: 'A', type: '1', route_color: '#00A562' },
+    MB: { name: 'B', type: '1', route_color: '#F8B322' },
+    B67: { name: '67', type: '3', route_color: '#007DA8' },
+};
+
+const STOP_POS: [number, number] = [14.42, 50.08];
+
+type PlatformSpec = Omit<StopsFilePlatform, 'station' | 'pos' | 'routes'> & { pos?: [number, number]; routes?: string[] };
+type StationSpec = { id: string; name?: string; pos?: [number, number]; platforms: PlatformSpec[] };
+
+/** A `stops.json` of these stations, each platform at its station's position unless given its own; names default to the id. */
+export const stopsFile = (stations: StationSpec[], entrances: StopsFile['entrances'] = []): StopsFile => ({
+    version: 1,
+    stations: stations.map(s => ({ id: s.id, name: s.name ?? s.id, pos: s.pos ?? STOP_POS })),
+    platforms: stations.flatMap(s => s.platforms.map(({ pos, routes, ...p }) => ({ ...p, station: s.id, pos: pos ?? s.pos ?? STOP_POS, routes: routes ?? [] }))),
+    entrances,
+});
+
+/** The stop model of `stopsFile(stations)` over ROUTES. */
+export const stopModel = (stations: StationSpec[], entrances: StopsFile['entrances'] = []): StopModel =>
+    buildStopModel(stopsFile(stations, entrances), ROUTES);

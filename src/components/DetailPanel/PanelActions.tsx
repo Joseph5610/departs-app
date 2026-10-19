@@ -31,7 +31,8 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useRouteParams } from '@/hooks/useRouteParams';
+import { useStops } from '@/hooks/data/useStops';
+import { pinnedIdsOf } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 
 /**
@@ -56,15 +57,16 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
     const { setIsFeedbackOpen } = useUiStore(s => s.actions);
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
     const departureSort = usePreferencesStore(s => s.departureSort);
-    const { toggleFavorite, setDepartureSort } = usePreferencesStore(s => s.actions);
+    const { toggleFavorite, removeFavoriteStops, setDepartureSort } = usePreferencesStore(s => s.actions);
+    const { model } = useStops();
 
     const routeName = selectedVehicle?.route_short_name;
     const tripId = selectedVehicle?.gtfs_trip_id;
     const vehicleId = selectedVehicle?.vehicle_id;
-    const stopId = tripId ? undefined : selectedStop?.stop_id;
-    const stopName = selectedStop?.stop_name;
+    const stopId = tripId ? undefined : selectedStop?.board?.id ?? selectedStop?.id;
+    const stopName = selectedStop?.board?.name;
+    const departuresId = selectedStop?.departuresId ?? null;
     const boardCity = usePreferencesStore(s => s.selectedCity);
-    const routeStopId = useRouteParams().stopId;
 
     const handleShare = useCallback(() => {
         if (tripId) {
@@ -82,7 +84,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
         } else if (stopId) {
             const now = Date.now();
             // Read at tap time, so the panel doesn't re-render with every departures refresh.
-            const departures = queryClient.getQueryData<DeparturesResponse | null>(queryKeys.departures(boardCity, routeStopId ?? stopId ?? null))?.departures ?? [];
+            const departures = queryClient.getQueryData<DeparturesResponse | null>(queryKeys.departures(boardCity, departuresId))?.departures ?? [];
             const next = nextDepartures(departures, DEPARTURES_CONFIG.SHARE_SUMMARY_COUNT, true)
                 .map(dep => {
                     const mins = Math.floor((Date.parse(dep.timestamp) - now) / 60_000);
@@ -94,15 +96,21 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                 stopId
             });
         }
-    }, [share, shareTrip, t, tripId, vehicleId, routeName, stopId, stopName, selectedVehicle, ride, queryClient, boardCity, routeStopId]);
+    }, [share, shareTrip, t, tripId, vehicleId, routeName, stopId, stopName, selectedVehicle, ride, queryClient, boardCity, departuresId]);
 
     if (!tripId && !stopId) return null;
 
     const chipClassName = chips ? 'size-7 rounded-full border border-border/50 bg-card shadow-sm' : undefined;
-    const isFavorite = !!stopId && favoriteStops.includes(stopId);
+    // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
+    const pinnedIds = stopId ? pinnedIdsOf(model, favoriteStops, stopId) : [];
+    const isFavorite = pinnedIds.length > 0;
     const handleToggleFavorite = () => {
         if (!stopId) return;
-        if (!isFavorite && favoriteStops.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
+        if (isFavorite) {
+            removeFavoriteStops(pinnedIds);
+            return;
+        }
+        if (favoriteStops.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
             toast.error(t('toasts.favoritesLimitReached'));
             return;
         }

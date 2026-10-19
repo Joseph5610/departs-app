@@ -1,3 +1,5 @@
+import type { StopModel } from '@/types';
+
 /** A neighbouring network's vehicles or stops, each tagged with its `city_slug` so opening one moves the selection there. */
 export const tagCity = <T extends { features: { properties: object }[] }>(collection: T | null | undefined, city: string): T | null =>
     collection ? { ...collection, features: collection.features.map(f => ({ ...f, properties: { ...f.properties, city_slug: city } })) } : null;
@@ -8,3 +10,10 @@ export function concatCollections<T extends { features: unknown[] }>(...collecti
     if (present.length <= 1) return present[0] ?? null;
     return { ...present[0], features: present.flatMap(c => c.features) };
 }
+
+/** A neighbouring network's stops, each tagged with its `city` so opening one moves the selection there. */
+export const stopsInCity = (model: StopModel | null | undefined, city: string): StopModel | null => model ? {
+    ...model,
+    stations: model.stations.map(s => ({ ...s, city })),
+    platforms: model.platforms.map(p => ({ ...p, city })),
+} : null;

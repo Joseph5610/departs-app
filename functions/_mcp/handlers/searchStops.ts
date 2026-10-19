@@ -1,5 +1,5 @@
 import { MCP_DEFAULTS } from "../../_core/config";
-import { findStopsByName, toMcpStopLines } from "../utils";
+import { findStopsByName, toMcpStop } from "../utils";
 
 /**
  * Handles the 'search_stops' MCP tool invocation.
@@ -20,13 +20,6 @@ export async function handleSearchStops(
         city: resolvedCity,
         query: args.query,
         count: filtered.length,
-        stops: filtered.map((f) => ({
-            stop_id: f.properties?.stop_id,
-            stop_name: f.properties?.stop_name,
-            platform_code: f.properties?.platform_code || null,
-            is_centroid: f.properties?.is_station,
-            coordinates: f.geometry?.coordinates,
-            lines: toMcpStopLines(f)
-        }))
+        stops: filtered.map(toMcpStop)
     };
 }

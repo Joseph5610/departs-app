@@ -47,7 +47,7 @@ export const DepartureBoardHeader = memo(() => {
     const uniqueLines = useMemo(() => {
         const source = lineChipsFromDepartures
             ? liveDepartures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
-            : selectedStop?.lines;
+            : selectedStop?.board?.lines;
         return source ? lineChips(source, lineRules) : [];
     }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures]);
 

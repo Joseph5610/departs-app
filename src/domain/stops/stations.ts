@@ -1,11 +1,10 @@
-import type { RouteType, StopCollection, StopFeature, StopProperties } from '@/types';
+import type { BoardStop, Entrance, MapStopCollection, MapStopFeature, Platform, RouteType, Stop, StopLine, StopModel } from '@/types';
 import { normalizeRouteType, routeTypeRank } from '@/domain/routes';
 import type { LineRules } from '@/config/cities';
 import { isWithinLocalHours } from '@/domain/time';
+import { resolveStop } from './model';
 
-/** Whether a stop's board gathers several platforms, so its rows name the platform each leaves from. */
-export const isStationBoard = (stop: Pick<StopProperties, 'platform_count' | 'is_station'>): boolean =>
-    !!stop.is_station && (stop.platform_count ?? 0) > 1;
+type WithLines = { lines: readonly StopLine[] };
 
 /** Separator of the tiles in a stop's `badges` property, which the map's badge images are named after. */
 export const STOP_BADGE_SEPARATOR = '|';
@@ -15,13 +14,13 @@ export const TILE_PART_SEPARATOR = '/';
 export const PLATFORM_CODE_TILE = 'code';
 
 /** Whether any of a stop's lines is of `mode`. */
-export const servesMode = (props: Pick<StopProperties, 'lines'>, mode: RouteType): boolean =>
-    (props.lines ?? []).some(line => normalizeRouteType(line.type) === mode);
+export const servesMode = (props: WithLines, mode: RouteType): boolean =>
+    props.lines.some(line => normalizeRouteType(line.type) === mode);
 
 /** The modes serving a stop in ROUTE_TYPE_ORDER (metro before train before tram...), without `unknown`. */
-export const stopModeList = (props: Pick<StopProperties, 'lines'>): RouteType[] => {
+export const stopModeList = (props: WithLines): RouteType[] => {
     const modes = new Set<RouteType>();
-    for (const line of props.lines ?? []) {
+    for (const line of props.lines) {
         const mode = normalizeRouteType(line.type);
         if (mode !== 'unknown') modes.add(mode);
     }
@@ -32,11 +31,11 @@ export const stopModeList = (props: Pick<StopProperties, 'lines'>): RouteType[] 
  * The tiles of a stop's map badge: one per mode in display order, metro as one tile per line
  * (`metro/B/F8B322|tram|bus`); empty when the stop lists no lines.
  */
-export const stopBadgeTiles = (props: Pick<StopProperties, 'lines'>, modes = stopModeList(props)): string => {
+export const stopBadgeTiles = (props: WithLines, modes = stopModeList(props)): string => {
     const tiles: string[] = [];
     for (const mode of modes) {
         if (mode !== 'metro') { tiles.push(mode); continue; }
-        const metro = (props.lines ?? []).filter(line => normalizeRouteType(line.type) === 'metro').sort((a, b) => a.name.localeCompare(b.name));
+        const metro = props.lines.filter(line => normalizeRouteType(line.type) === 'metro').sort((a, b) => a.name.localeCompare(b.name));
         if (metro.length === 0) tiles.push(mode);
         for (const line of metro) tiles.push([mode, line.name, line.route_color.replace('#', '')].join(TILE_PART_SEPARATOR));
     }
@@ -51,14 +50,14 @@ export const hidesNightLinesAt = (nowMs: number, timeZone: string, rules: Pick<L
     !!rules.isNightLine && !isWithinLocalHours(nowMs, timeZone, rules.nightHours);
 
 /** The lines a stop's badge shows: without night lines when `hiddenNightLines` is given, unless the stop has no other. */
-export const badgeLines = (props: Pick<StopProperties, 'lines'>, hiddenNightLines: NightLineTest | null): Pick<StopProperties, 'lines'> => {
-    if (!hiddenNightLines || !props.lines) return props;
+export const badgeLines = (props: WithLines, hiddenNightLines: NightLineTest | null): WithLines => {
+    if (!hiddenNightLines) return props;
     const day = props.lines.filter(line => !hiddenNightLines(line.type, line.name));
     return day.length ? { lines: day } : props;
 };
 
-/** The night lines a stop's badge leaves out, from the stop itself (its network); null for none. */
-export type HiddenNightLinesOf = (props: Pick<StopProperties, 'city_slug'>) => NightLineTest | null;
+/** The night lines a stop's badge leaves out, by its network (a neighbouring one's `city`, else the selected); null for none. */
+export type HiddenNightLinesOf = (city: string | undefined) => NightLineTest | null;
 
 /** A network's clock and line conventions, as `hidesNightLinesAt` reads them. */
 export interface NightLineNetwork {
@@ -72,39 +71,36 @@ export const networksHidingNightLines = (nowMs: number, networks: Readonly<Recor
 
 /**
  * The night lines each stop's badge leaves out, given the networks hiding them (`networksHidingNightLines`): a
- * neighbouring network's stop (`city_slug`) follows its own city's rules, any other stop `ownCity`'s.
+ * neighbouring network's stop (`city`) follows its own city's rules, any other stop `ownCity`'s.
  */
 export const nightLinesByNetwork = (hiding: string, ownCity: string, networks: Readonly<Record<string, NightLineNetwork>>): HiddenNightLinesOf => {
     const hidden = new Set(hiding.split(','));
-    return (props) => {
-        const slug = props.city_slug ?? ownCity;
+    return (city) => {
+        const slug = city ?? ownCity;
         return hidden.has(slug) ? networks[slug]?.rules.isNightLine ?? null : null;
     };
 };
 
-const withModes = (f: StopFeature, hiddenNightLines: NightLineTest | null): StopFeature => {
-    const shown = badgeLines(f.properties, hiddenNightLines);
+/** A stop as the map draws it: its badge tiles (a platform's code beside them) and the rank of its leading mode. */
+const toMapFeature = (stop: Stop | Entrance, hiddenNightLinesOf: HiddenNightLinesOf): MapStopFeature => {
+    const geometry = { type: 'Point' as const, coordinates: stop.pos };
+    if (stop.kind === 'entrance') return { type: 'Feature', geometry, properties: { stop_id: stop.id, stop_name: stop.name, kind: 'entrance' } };
+    const shown = badgeLines(stop, hiddenNightLinesOf(stop.city));
     const modes = stopModeList(shown);
-    const code = f.properties.is_station ? undefined : f.properties.platform_code;
+    const code = stop.kind === 'platform' ? stop.code : undefined;
     // A platform without lines (a train platform the live feed alone serves) still gets a tile, so it can be tapped.
-    const tiles = stopBadgeTiles(shown, modes) || (f.properties.is_station ? '' : 'unknown');
+    const tiles = stopBadgeTiles(shown, modes) || (stop.kind === 'platform' ? 'unknown' : '');
     const badges = code ? [tiles, [PLATFORM_CODE_TILE, code].join(TILE_PART_SEPARATOR)].join(STOP_BADGE_SEPARATOR) : tiles;
-    return { ...f, properties: { ...f.properties, badges, mode_rank: routeTypeRank(modes[0]) } };
+    return {
+        type: 'Feature',
+        geometry,
+        properties: { stop_id: stop.id, stop_name: stop.name, kind: stop.kind, badges, mode_rank: routeTypeRank(modes[0]), city_slug: stop.city },
+    };
 };
 
-/** Each stop carrying its `badges` tiles and the rank of its leading mode, without the night lines `hiddenNightLinesOf` names for it. */
-export const withStopModes = (collection: StopCollection | null, hiddenNightLinesOf: HiddenNightLinesOf = () => null): StopCollection | null =>
-    collection && { ...collection, features: collection.features.map(f => withModes(f, hiddenNightLinesOf(f.properties))) };
-
-/** Each of `ids` the stop list knows a platform code for, mapped to that code. */
-export const platformCodes = (ids: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): Map<string, string> => {
-    const codes = new Map<string, string>();
-    for (const id of ids) {
-        const code = stopIndex.get(id)?.properties.platform_code;
-        if (code) codes.set(id, code);
-    }
-    return codes;
-};
+/** Stops as one map source, each carrying its badge without the night lines `hiddenNightLinesOf` names for its network. */
+export const toMapStops = (stops: readonly (Stop | Entrance)[], hiddenNightLinesOf: HiddenNightLinesOf = () => null): MapStopCollection =>
+    ({ type: 'FeatureCollection', features: stops.map(stop => toMapFeature(stop, hiddenNightLinesOf)) });
 
 /** A board section as `sectionStopId` reads it: its platform code or direction, and its departures' platforms. */
 export interface SectionPlatforms {
@@ -113,31 +109,21 @@ export interface SectionPlatforms {
     groups: readonly { subGroups: readonly { departures: readonly { platformStopId?: string }[] }[] }[];
 }
 
-/** The platforms among a station's `all_ids`, each once though its aliases name it again. */
-export const stationPlatforms = (stationIds: readonly string[], stopIndex: ReadonlyMap<string, StopFeature>): StopProperties[] => {
-    const found = new Map<string, StopProperties>();
-    for (const id of stationIds) {
-        const p = stopIndex.get(id)?.properties;
-        if (p && !p.is_station) found.set(p.stop_id, p);
-    }
-    return [...found.values()];
-};
-
-const isMetroOnly = (p: StopProperties) => !!p.lines?.length && p.lines.every(line => line.type === 'metro');
+const isMetroOnly = (p: Platform) => p.lines.length > 0 && p.lines.every(line => line.type === 'metro');
 
 /**
- * The stop a board section's header opens: every platform of the station (`stationPlatforms`) the section stands for (by its code,
+ * The stop a board section's header opens: every platform of the station the section stands for (by its code,
  * or without one by the direction it serves), comma-joined as one stop; the departures' own platforms where the
  * stop list knows none. Null for a metro section (each line numbers its own tracks) or the board already open.
  */
 export const sectionStopId = (
-    platforms: readonly StopProperties[],
+    platforms: readonly Platform[],
     { platform, direction, groups }: SectionPlatforms,
     openStopId: string,
 ): string | null => {
     const found = new Set(platforms
-        .filter(p => !isMetroOnly(p) && (platform ? p.platform_code === platform : !!direction && !p.platform_code && p.direction === direction))
-        .map(p => p.stop_id));
+        .filter(p => !isMetroOnly(p) && (platform ? p.code === platform : !!direction && !p.code && p.direction === direction))
+        .map(p => p.id));
     if (found.size === 0) {
         for (const group of groups) for (const sub of group.subGroups) for (const dep of sub.departures) if (dep.platformStopId) found.add(dep.platformStopId);
     }
@@ -146,20 +132,13 @@ export const sectionStopId = (
 };
 
 /**
- * The `stop_id` of the one platform of a station with `code`, for a notice naming it; null when none has it or
+ * The id of the one platform of a station with `code`, for a notice naming it; null when none has it or
  * several do (a metro track and a tram platform both `1`), so the notice links nowhere rather than to a guess.
  */
-export const platformIdByCode = (platforms: readonly StopProperties[], code: string): string | null => {
-    const found = platforms.filter(p => p.platform_code === code);
-    return found.length === 1 ? found[0]!.stop_id : null;
+export const platformIdByCode = (platforms: readonly Platform[], code: string): string | null => {
+    const found = platforms.filter(p => p.code === code);
+    return found.length === 1 ? found[0]!.id : null;
 };
-
-/** The ids a stop id names: a single stop, or a comma-joined list (a PID station, a merged platform, a board section). */
-export const stopIdParts = (id: string): string[] => id.split(',').map(part => part.trim()).filter(Boolean);
-
-/** Lines without repeats of the same mode and name, as a station lists its platforms' lines. */
-export const uniqueLines = <L extends { type: string; name: string }>(lines: readonly L[]): L[] =>
-    [...new Map(lines.map(line => [`${line.type}|${line.name}`, line])).values()];
 
 export interface FavoriteMarks {
     stationIds: string[];
@@ -169,26 +148,24 @@ export interface FavoriteMarks {
 const NO_MARKS: FavoriteMarks = { stationIds: [], platformIds: [] };
 
 /**
- * The stations and platforms the map stars for the pinned `favoriteIds`: a station when it or any of
- * its platforms is pinned, a platform when it or its whole station is pinned. Ids may be comma-joined
- * (a PID station or a merged platform), so they are compared part by part.
+ * The stations and platforms the map stars for the pinned `favoriteIds`, in each network's stops: a station
+ * when it or any of its platforms is pinned, a platform when it, a section holding it or its whole station is.
  */
-export const favoriteMarks = (stations: StopCollection | null, platforms: StopCollection | null, favoriteIds: readonly string[]): FavoriteMarks => {
+export const favoriteMarks = (models: readonly (StopModel | null)[], favoriteIds: readonly string[]): FavoriteMarks => {
     if (favoriteIds.length === 0) return NO_MARKS;
-    const pinned = new Set(favoriteIds.flatMap(stopIdParts));
-    const whole = new Set(favoriteIds);
-    const stationIds: string[] = [];
-    for (const { properties: p } of stations?.features ?? []) {
-        const parts = p.all_ids ?? stopIdParts(p.stop_id);
-        if (whole.has(p.stop_id)) {
-            stationIds.push(p.stop_id);
-            for (const part of parts) pinned.add(part);
-        } else if (parts.some(part => pinned.has(part))) {
-            stationIds.push(p.stop_id);
+    const stationIds = new Set<string>();
+    const platformIds = new Set<string>();
+    for (const model of models) {
+        if (!model) continue;
+        for (const id of favoriteIds) {
+            const board: BoardStop | null = resolveStop(model, id);
+            if (!board) continue;
+            if (board.kind === 'station') stationIds.add(board.id);
+            for (const p of board.platforms) {
+                platformIds.add(p.id);
+                if (board.kind !== 'station') stationIds.add(p.station);
+            }
         }
     }
-    const platformIds = (platforms?.features ?? [])
-        .filter(f => stopIdParts(f.properties.stop_id).some(part => pinned.has(part)))
-        .map(f => f.properties.stop_id);
-    return { stationIds, platformIds };
+    return { stationIds: [...stationIds], platformIds: [...platformIds] };
 };

@@ -23,16 +23,16 @@ import { FavoriteReorderRow } from './FavoriteReorderRow';
 import { StopLead } from './StopLead';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { TFunction } from 'i18next';
-import type { FavoriteLine, PinnedStop, StopFeature } from '@/types';
+import type { BoardStop, FavoriteLine, PinnedStop } from '@/types';
 
 export const FavoritesPanel = () => {
     const { t } = useTranslation();
 
-    const { allLines: favoriteLines, allStops: favoriteStops, lines, stops, stopIndex, isLoading: stopsLoading, pinnedStopCount, hasTabs, tab } = useFavorites();
+    const { allLines: favoriteLines, allStops: favoriteStops, lines, stops, lineStops, isLoading: stopsLoading, pinnedStopCount, hasTabs, tab } = useFavorites();
     const { reorderFavoriteLines, reorderFavoriteStops } = usePreferencesStore(s => s.actions);
 
     const stopIds = useMemo(() => {
-        const ids = new Set(favoriteStops.map(pin => pin.feature.properties.stop_id));
+        const ids = new Set(favoriteStops.map(pin => pin.stop.id));
         for (const fav of favoriteLines) ids.add(fav.stopId);
         return [...ids];
     }, [favoriteStops, favoriteLines]);
@@ -56,7 +56,7 @@ export const FavoritesPanel = () => {
     // Each list shares one badge column, as wide as its widest badge, like the rows of a board.
     const lineBadgeColumn = useMemo(() => badgeColumnStyle(lines.map(fav => fav.line)), [lines]);
     const stopBadgeColumn = useMemo(() => badgeColumnStyle(stops.flatMap(pin =>
-        nextDepartures(departuresByStop.get(pin.feature.properties.stop_id) ?? [], DEPARTURES_CONFIG.FAVORITE_CARD_COUNT).map(dep => String(dep.line))
+        nextDepartures(departuresByStop.get(pin.stop.id) ?? [], DEPARTURES_CONFIG.FAVORITE_CARD_COUNT).map(dep => String(dep.line))
     )), [stops, departuresByStop]);
     const canReorder = lines.length > 1 || stops.length > 1;
     const isLoading = stopsLoading || departuresLoading;
@@ -111,16 +111,16 @@ export const FavoritesPanel = () => {
                                 <SortableFavorite key={`${fav.stopId}|${fav.line}|${fav.headsign}`} value={fav} sortable={isReordering && lines.length > 1} onMove={moveLine}>
                                     {(handle) => isReordering ? (
                                         <FavoriteReorderRow
-                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(stopIndex.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="lg" />}
+                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(lineStops.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="lg" />}
                                             title={fav.headsign}
-                                            subtitle={stopName(stopIndex.get(fav.stopId), t)}
+                                            subtitle={stopName(lineStops.get(fav.stopId), t)}
                                             isFirst={idx === 0}
                                             dragHandle={handle}
                                         />
                                     ) : (
                                         <FavoriteLineRow
                                             favorite={fav}
-                                            stopFeature={stopIndex.get(fav.stopId)}
+                                            stop={lineStops.get(fav.stopId)}
                                             departures={departuresByStop.get(fav.stopId) ?? []}
                                             isFirst={idx === 0}
                                         />
@@ -137,8 +137,8 @@ export const FavoritesPanel = () => {
                                 <SortableFavorite key={pin.id} value={pin} sortable={stops.length > 1} onMove={moveStop}>
                                     {(handle) => (
                                         <FavoriteReorderRow
-                                            lead={<StopLead stop={pin.feature} />}
-                                            title={pin.feature.properties.stop_name}
+                                            lead={<StopLead stop={pin.stop} />}
+                                            title={pin.stop.name}
                                             isFirst={idx === 0}
                                             dragHandle={handle}
                                         />
@@ -154,8 +154,8 @@ export const FavoritesPanel = () => {
                             <Card key={pin.id} size="none" variant="inset" className="px-2 animate-in fade-in duration-200">
                                 <FavoriteStopSection
                                     pinnedIds={pin.ids}
-                                    stopFeature={pin.feature}
-                                    departures={departuresByStop.get(pin.feature.properties.stop_id) ?? []}
+                                    stop={pin.stop}
+                                    departures={departuresByStop.get(pin.stop.id) ?? []}
                                     isError={isError}
                                 />
                             </Card>
@@ -169,5 +169,5 @@ export const FavoritesPanel = () => {
 };
 
 /** "From <stop>" for a pinned line, when its stop is known. */
-const stopName = (stop: StopFeature | undefined, t: TFunction): string | undefined =>
-    stop ? t('favorites.fromStop', { stop: stop.properties.stop_name }) : undefined;
+const stopName = (stop: BoardStop | undefined, t: TFunction): string | undefined =>
+    stop ? t('favorites.fromStop', { stop: stop.name }) : undefined;

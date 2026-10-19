@@ -1,4 +1,4 @@
-import type { StopFeature } from '@/types';
+import type { Platform } from '@/types';
 import { calculateDistance } from '@/lib/geo';
 import { WALKING } from '@/config/constants';
 
@@ -29,30 +29,28 @@ export const getStopDistanceInfo = (
 };
 
 export interface NearbyStop {
-    feature: StopFeature;
+    stop: Platform;
     distance: number;
 }
 
 /**
  * The stops closest to `location` within `maxDistanceM`, nearest first, one per stop name so a station's
- * platforms list once, at the nearest. Only platforms served by a line count: stations and entrances
- * are left out.
+ * platforms list once, at the nearest. Only platforms served by a line count.
  */
 export const nearestStops = (
-    features: readonly StopFeature[],
+    platforms: readonly Platform[],
     location: [number, number] | null,
     limit: number,
     maxDistanceM: number
 ): NearbyStop[] => {
     if (!location) return [];
     const byName = new Map<string, NearbyStop>();
-    for (const feature of features) {
-        const { is_drop_off_only, is_station, lines, stop_name } = feature.properties;
-        if (is_drop_off_only || is_station || !lines?.length) continue;
-        const distance = calculateDistance(location, feature.geometry.coordinates);
+    for (const stop of platforms) {
+        if (stop.alightOnly || !stop.lines.length) continue;
+        const distance = calculateDistance(location, stop.pos);
         if (distance > maxDistanceM) continue;
-        const kept = byName.get(stop_name);
-        if (!kept || distance < kept.distance) byName.set(stop_name, { feature, distance });
+        const kept = byName.get(stop.name);
+        if (!kept || distance < kept.distance) byName.set(stop.name, { stop, distance });
     }
     return [...byName.values()].sort((a, b) => a.distance - b.distance).slice(0, limit);
 };

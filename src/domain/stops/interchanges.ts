@@ -1,4 +1,4 @@
-import type { StopCollection } from '@/types';
+import type { Platform } from '@/types';
 
 /**
  * PID `stop_icons` codes, in PID's documented order: the modes a rider can change to at a stop.
@@ -20,12 +20,11 @@ const NO_CODES: readonly string[] = [];
 const nameKey = (name: string): string => name.trim().toUpperCase();
 
 /** Interchange codes by stop name: departures and Golemio trip stops carry only the name, not the stop id. */
-export const interchangeIndex = (collection: StopCollection | null): Map<string, readonly string[]> => {
+export const interchangeIndex = (platforms: readonly Platform[]): Map<string, readonly string[]> => {
     const byName = new Map<string, Set<string>>();
-    for (const feature of collection?.features ?? []) {
-        const { stop_name, interchanges } = feature.properties;
-        if (!stop_name || !interchanges?.length) continue;
-        const key = nameKey(stop_name);
+    for (const { name, interchanges } of platforms) {
+        if (!name || !interchanges?.length) continue;
+        const key = nameKey(name);
         let codes = byName.get(key);
         if (!codes) {
             codes = new Set();
