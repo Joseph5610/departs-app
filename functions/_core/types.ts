@@ -113,10 +113,8 @@ interface AppStopProperties {
     location_type: number | string;
     parent_station: string | null;
     zone_id: string | null;
-    is_centroid?: boolean;
+    is_station?: boolean;
     is_drop_off_only?: boolean;
-    is_train?: number;
-    metro_lines?: Array<{ name: string; route_color: string }>;
     /** PID `stop_icons` codes of the modes a rider can change to here (`Ma`, `Ra`, `Ap`, ...). */
     interchanges?: string[];
     all_ids?: string[];
@@ -204,6 +202,8 @@ export interface AppDeparture {
     is_wheelchair_accessible?: boolean | null;
     is_air_conditioned?: boolean | null;
     stopId?: string;
+    /** The platform a departure leaves from when `stopId` is the station the client asked for. */
+    platformStopId?: string;
     is_request_stop?: boolean;
     connections?: AppDepartureFeeder[];
     continues_as?: AppContinuation;

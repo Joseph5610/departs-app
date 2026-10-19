@@ -28,10 +28,10 @@ describe('nearestStops', () => {
             .toEqual([['A1', 120], ['B', 200]]);
     });
 
-    // Centroids and entrances open no departure board, so they must not crowd out real stops.
-    it('skips station centroids, entrances and other stops without lines', () => {
+    // Stations and entrances are not platforms one boards at, so they must not crowd out real stops.
+    it('skips stations, entrances and other stops without lines', () => {
         const stops = [
-            stop('centroid-A', 'Vltavská', 10, { is_centroid: true, lines: [] }),
+            stop('station-A', 'Vltavská', 10, { is_station: true, lines: [] }),
             stop('A-E6', 'E6', 5, { location_type: 2, lines: undefined }),
             stop('A1', 'Vltavská', 40),
         ];

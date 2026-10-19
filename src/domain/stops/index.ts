@@ -3,3 +3,5 @@ export * from './distance';
 export * from './interchanges';
 export * from './search';
 export * from './twins';
+export * from './stations';
+export * from './stopsFile';

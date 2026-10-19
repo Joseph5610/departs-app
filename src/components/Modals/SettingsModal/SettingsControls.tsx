@@ -6,11 +6,8 @@ import { cn } from '@/lib/cn';
 import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
 
 export const FilterHeading = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex items-center gap-2">
-        <div className="w-1 h-1 rounded-full bg-primary" />
-        <div className="text-muted-foreground text-label uppercase font-bold tracking-[0.2em]">
-            {children}
-        </div>
+    <div className="text-muted-foreground text-label uppercase font-bold tracking-[0.2em]">
+        {children}
     </div>
 );
 

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { FRONTEND_CITIES_CONFIG } from '../../src/config/cities';
 
 /** Ústí n.L., Divadlo and its platform 1. Fixed ids: CI must not fetch data.departs.app itself, where Bot Fight Mode challenges runner IPs. */
-const STATION_ID = 'centroid-1734';
+const STATION_ID = 'station-1734';
 const PLATFORM_ID = '1734-1';
 const PLATFORM_CODE = '1';
 

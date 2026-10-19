@@ -6,50 +6,109 @@ import { AlertIcon } from '@/components/Alerts/AlertIcon';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
-import { noticesForStops, noticeText } from '@/domain/alerts';
+import { boardNotices, noticeText } from '@/domain/alerts';
+import { isStationBoard, platformCodes, platformIdByCode, stationPlatforms } from '@/domain/stops';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
+import { useStops } from '@/hooks/data/useStops';
+import { noticeIconTone } from '@/components/Alerts/noticeTone';
+import { PlatformCircle } from '@/components/PlatformCircle';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
 }
 
-/** The stop's notices (PID infotexts) posted for any of its platform ids. */
+/**
+ * The stop's notices (PID infotexts) posted for any of its platform ids. A station board lists only its
+ * own notices whole and names the platforms that have theirs; picking one in the filter shows them.
+ */
 export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
     const allInfotexts = useInfotexts();
+    const { stopIndex } = useStops();
+    const openPlatform = useOpenStop();
+    const onStation = isStationBoard(selectedStop);
 
-    const relevantInfotexts = useMemo(() => {
-        if (!selectedStop || !allInfotexts) {
-            return [];
-        }
+    const codes = useMemo(() => onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null, [onStation, selectedStop, stopIndex]);
+    const notices = useMemo(
+        () => allInfotexts ? boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes) : null,
+        [selectedStop, allInfotexts, codes]);
 
-        return noticesForStops(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])]);
-    }, [selectedStop, allInfotexts]);
+    const platformIds = useMemo(() => {
+        if (!notices?.platformCodes.length) return new Map<string, string | null>();
+        const platforms = stationPlatforms(selectedStop.all_ids ?? [], stopIndex);
+        return new Map(notices.platformCodes.map(code => [code, platformIdByCode(platforms, code)]));
+    }, [notices, selectedStop, stopIndex]);
 
-    if (relevantInfotexts.length === 0) return null;
+    if (!notices || (notices.shown.length === 0 && notices.platformCodes.length === 0)) return null;
+    const { shown, platformCodes: codesWithNotices, platformPriority } = notices;
 
     return (
         <div className="flex flex-col gap-2">
-            {relevantInfotexts.map(info => (
+            {shown.map(info => (
                 <InfoTextCard key={info.id} info={info} />
             ))}
+            {codesWithNotices.length > 0 && <PlatformNoticesCard codes={codesWithNotices} priority={platformPriority} platformIds={platformIds} onOpen={openPlatform} />}
         </div>
+    );
+};
+
+const alertVariant = (priority: Infotext['priority']) =>
+    priority === 'high' ? 'destructive' : priority === 'normal' ? 'warning' : 'subtle';
+
+interface PlatformNoticesCardProps {
+    codes: string[];
+    priority: Infotext['priority'];
+    /** Each code's platform; null where the code names no single one, which is then shown but not linked. */
+    platformIds: ReadonlyMap<string, string | null>;
+    onOpen: (platformId: string) => void;
+}
+
+/** One line for a station's platform notices: the platforms concerned, each opening its own board with them. */
+const PlatformNoticesCard = ({ codes, priority, platformIds, onOpen }: PlatformNoticesCardProps) => {
+    const { t } = useTranslation();
+
+    return (
+        <Alert variant={alertVariant(priority)} className="items-center px-3 py-2.5">
+            <AlertIcon className={cn("h-4 w-4 shrink-0", noticeIconTone(priority))} />
+            <div className="flex min-w-0 items-center gap-2">
+                <AlertTitle className="min-w-0 flex-1 text-body-sm font-semibold leading-tight text-foreground/95">
+                    {t('map.departures.stationNotices')}
+                </AlertTitle>
+                <span className="flex shrink-0 flex-wrap justify-end gap-1">
+                    {codes.map(code => (
+                        <PlatformNoticeCode key={code} code={code} platformId={platformIds.get(code) ?? null} onOpen={onOpen} />
+                    ))}
+                </span>
+            </div>
+        </Alert>
+    );
+};
+
+const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platformId: string | null; onOpen: (platformId: string) => void }) => {
+    const { t } = useTranslation();
+    const circle = <PlatformCircle code={code} size="md" />;
+    if (!platformId) return <span className="flex" aria-label={t('map.departures.platformCode', { code })}>{circle}</span>;
+    return (
+        <button
+            type="button"
+            onClick={() => onOpen(platformId)}
+            aria-label={t('map.departures.platformCode', { code })}
+            className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
+        >
+            {circle}
+        </button>
     );
 };
 
 const InfoTextCard = ({ info }: { info: Infotext }) => {
     const { t, i18n } = useTranslation();
-    const isHigh = info.priority === 'high';
-    const isNormal = info.priority === 'normal';
     const text = noticeText(info, i18n.resolvedLanguage);
 
     return (
         <Alert
-            variant={isHigh ? 'destructive' : isNormal ? 'warning' : 'subtle'}
+            variant={alertVariant(info.priority)}
             className="relative p-3 sm:p-4 rounded-2xl"
         >
-            <AlertIcon className={cn(
-                "h-4 w-4 mt-0.5 shrink-0",
-                isHigh ? "text-destructive!" : isNormal ? "text-amber-500!" : "text-muted-foreground"
-            )} />
+            <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", noticeIconTone(info.priority))} />
 
             <AlertTitle className="flex flex-col gap-1 mb-2">
                 <span className="font-bold text-sm leading-tight text-foreground/95 whitespace-pre-line">

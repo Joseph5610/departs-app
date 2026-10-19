@@ -35,8 +35,8 @@ export interface NearbyStop {
 
 /**
  * The stops closest to `location` within `maxDistanceM`, nearest first, one per stop name so a station's
- * platforms list once, at the nearest. Only stops served by a line count: station centroids and entrances
- * open no departure board.
+ * platforms list once, at the nearest. Only platforms served by a line count: stations and entrances
+ * are left out.
  */
 export const nearestStops = (
     features: readonly StopFeature[],
@@ -47,8 +47,8 @@ export const nearestStops = (
     if (!location) return [];
     const byName = new Map<string, NearbyStop>();
     for (const feature of features) {
-        const { is_drop_off_only, is_centroid, lines, stop_name } = feature.properties;
-        if (is_drop_off_only || is_centroid || !lines?.length) continue;
+        const { is_drop_off_only, is_station, lines, stop_name } = feature.properties;
+        if (is_drop_off_only || is_station || !lines?.length) continue;
         const distance = calculateDistance(location, feature.geometry.coordinates);
         if (distance > maxDistanceM) continue;
         const kept = byName.get(stop_name);

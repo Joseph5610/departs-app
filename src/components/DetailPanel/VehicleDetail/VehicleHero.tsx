@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap } from 'lucide-react';
+import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap, History } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IconTooltip } from '@/components/IconTooltip';
+import { SignalMark } from '@/components/SignalMark';
 import type { VehicleHeroProps } from './types';
 import { TripEndedNotice } from './TripEndedNotice';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
@@ -93,7 +94,7 @@ export const VehicleHero = ({
 
                 {!displayVehicle.isStaticFallback && (
                     <div className="flex gap-2 flex-wrap items-center">
-                        <DelayBadge delay={displayVehicle.delay} isEstimate={delaySource === 'estimated'} />
+                        <DelayBadge delay={displayVehicle.delay} delaySource={delaySource} />
 
                         {displayVehicle.origin_timestamp && (
                             <LiveDataAgeBadge
@@ -185,8 +186,8 @@ export const VehicleHero = ({
     );
 };
 
-/** The trip's delay as a badge; `isEstimate` marks a delay not yet confirmed by the push channel. */
-const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: boolean }) => {
+/** The trip's delay as a badge, led by the same broadcast mark a live departure carries on the board. */
+const DelayBadge = ({ delay, delaySource }: { delay: number | null; delaySource: DelaySource }) => {
     const { t } = useTranslation();
     if (delay === null) {
         return (
@@ -207,10 +208,12 @@ const DelayBadge = ({ delay, isEstimate }: { delay: number | null; isEstimate: b
         <Badge
             variant="hero"
             className={cn(
+                "gap-1.5",
                 isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
             )}
         >
-            {isEstimate && `${t('map.vehicleDetails.estimatedPrefix')} `}
+            <SignalMark />
+            {delaySource === 'estimated' && `${t('map.vehicleDetails.estimatedPrefix')} `}
             {isLate
                 ? t('map.vehicleDetails.delayLabel', { minutes: delayMinutes || 1 })
                 : isEarly
@@ -227,20 +230,11 @@ const LiveDataAgeBadge = ({ originTimestamp, delaySource }: { originTimestamp: s
     const originMs = Date.parse(originTimestamp);
     if (Number.isNaN(originMs)) return null;
     const liveDataAgeSeconds = Math.max(0, Math.floor((now - originMs) / 1000));
-    const isLive = delaySource === 'live';
-
     return (
         <Popover>
             <PopoverTrigger render={<button type="button" className="outline-none" />}>
-                <Badge variant="hero" className={cn(
-                    "gap-1.5 cursor-pointer hover:brightness-95 transition-colors",
-                    isLive ? "text-emerald-500" : "text-muted-foreground"
-                )}>
-                    <div className={cn(
-                        "w-1.5 h-1.5 rounded-full shrink-0",
-                        isLive ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_var(--color-emerald-500)]" :
-                        liveDataAgeSeconds < 60 ? "bg-primary animate-pulse shadow-[0_0_8px_var(--color-primary)]" : "bg-muted-foreground/40"
-                    )} />
+                <Badge variant="hero" className="gap-1.5 cursor-pointer hover:brightness-95 transition-colors text-muted-foreground">
+                    <History className="size-3 shrink-0" strokeWidth={2.25} />
                     <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
                 </Badge>
             </PopoverTrigger>

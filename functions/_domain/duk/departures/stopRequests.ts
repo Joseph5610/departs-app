@@ -1,10 +1,11 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
+import { stopIdParts } from '../../../_core/utils/stopIds';
 
-/** A requested stop id resolved to its Portabo node and, for a platform, its post. */
+/** A requested stop resolved to its Portabo node and the posts to read; null posts read the whole station. */
 export interface StopRequest {
     id: string;
     node: string;
-    post: string | null;
+    posts: string[] | null;
 }
 
 /** A Portabo platform id `<node>-<post>` as its parts; a bare node has no post. */
@@ -13,19 +14,29 @@ const splitPlatformId = (id: string): { node: string; post: string | null } => {
     return { node: node ?? id, post: post ?? null };
 };
 
-/**
- * A requested id as its Portabo node and post. A station's node is read from its platforms, never from the
- * station id, so the data may name stations however it likes; an id the stop index does not know is read as
- * a platform or a bare node.
- */
-export function toStopRequest(id: string, relation: StopRelation | undefined): StopRequest {
+/** One id's node and post: a station's node is read from its platforms, never from the station id. */
+const partOf = (id: string, relation: StopRelation | undefined): { node: string; post: string | null } => {
     const firstPlatform = relation?.[0] === null ? relation[1] : undefined;
-    if (firstPlatform) return { id, node: splitPlatformId(firstPlatform).node, post: null };
-    return { id, ...splitPlatformId(id) };
+    return firstPlatform ? { node: splitPlatformId(firstPlatform).node, post: null } : splitPlatformId(id);
+};
+
+/**
+ * A requested value as its Portabo node and posts. A comma-joined value is one stop made of several platforms
+ * of a node (one direction's); a station among them, or a bare node, reads the whole station. Parts on another
+ * node than the first are ignored. An id the stop index does not know is read as a platform or a bare node.
+ */
+export function toStopRequest(id: string, relations: ReadonlyMap<string, StopRelation>): StopRequest {
+    const all = stopIdParts(id).map(part => partOf(part, relations.get(part)));
+    const node = all[0]?.node ?? id;
+    const parts = all.filter(p => p.node === node);
+    const posts = parts.some(p => p.post === null) ? null : [...new Set(parts.map(p => p.post as string))];
+    return { id, node, posts };
 }
 
-/** The station whose platforms a requested id's board labels: the id itself for a station, its parent for a platform. */
-export function stationOfRequest(id: string, relation: StopRelation | undefined): string | null {
-    if (!relation) return null;
-    return relation[0] === null ? id : relation[0];
+/** The station whose platforms a requested value's board labels: its first part's station, if the data knows it. */
+export function stationOfRequest(id: string, relations: ReadonlyMap<string, StopRelation>): string | null {
+    const first = stopIdParts(id)[0];
+    const relation = first ? relations.get(first) : undefined;
+    if (!first || !relation) return null;
+    return relation[0] === null ? first : relation[0];
 }

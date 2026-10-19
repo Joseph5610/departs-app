@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -71,6 +71,84 @@ describe('filterDepartures', () => {
     it('matches the selected line case-insensitively', () => {
         const deps = [departure({ tripId: 'x', line: 'X9' }), departure({ tripId: 'n', line: '9' })];
         expect(filterDepartures(deps, 'x9', false, false).filtered.map((d) => d.tripId)).toEqual(['x']);
+    });
+
+});
+
+describe('platformSections', () => {
+    // A station board reads like its signs: one section per platform, so rows never repeat their platform.
+    it('splits rows by platform in natural order, splitting a direction that leaves from two platforms', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'b1', line: '9', headsign: 'Řepy', platform: 'B' }),
+            departure({ tripId: 'a1', line: '9', headsign: 'Řepy', platform: 'A', scheduled: at(2 * MIN), timestamp: at(2 * MIN) }),
+            departure({ tripId: 'x', line: '176', headsign: 'Strahov', platform: '10' }),
+            departure({ tripId: 'n', line: '20', headsign: 'Radlická' }),
+        ], 'line');
+        const sections = platformSections(groups, 'line');
+        expect(sections.map(s => [s.platform, s.groups.flatMap(g => g.subGroups.flatMap(sub => sub.departures.map(d => d.tripId)))])).toEqual([
+            ['10', ['x']],
+            ['A', ['a1']],
+            ['B', ['b1']],
+            [null, ['n']],
+        ]);
+    });
+
+    // Without platform codes (IDS JMK, DPMP) a station board reads by direction, as the stop signs do.
+    it('names platforms without a code by direction, after the coded ones, one section per direction', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'g', line: '4', platformDirection: 'Grohova' }),
+            departure({ tripId: 'c', line: '9', headsign: 'Lesná', platformDirection: 'Grohova' }),
+            departure({ tripId: 'k', line: '12', headsign: 'Komárov', platformDirection: 'Komenského náměstí' }),
+            departure({ tripId: '1', line: '6', headsign: 'Starý Lískovec', platform: '1' }),
+        ], 'line');
+        expect(platformSections(groups, 'line').map(s => [s.key, s.platform, s.direction])).toEqual([
+            ['1', '1', null],
+            ['→Grohova', null, 'Grohova'],
+            ['→Komenského náměstí', null, 'Komenského náměstí'],
+        ]);
+    });
+
+    // Sorted by departure, a row split off to another platform keeps its place by its own first departure there.
+    it('sorts each section by its own departures and gives each part of a split row its own id', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'a9', line: '9', headsign: 'Řepy', platform: 'A', scheduled: at(MIN), timestamp: at(MIN) }),
+            departure({ tripId: 'b9', line: '9', headsign: 'Řepy', platform: 'B', scheduled: at(10 * MIN), timestamp: at(10 * MIN) }),
+            departure({ tripId: 'b5', line: '5', headsign: 'Barrandov', platform: 'B', scheduled: at(5 * MIN), timestamp: at(5 * MIN) }),
+        ], 'departure');
+        const [a, b] = platformSections(groups, 'departure');
+        expect(b!.groups.map(g => g.line)).toEqual(['5', '9']);
+        expect(a!.groups[0]!.subGroups[0]!.groupId).not.toBe(b!.groups[1]!.subGroups[0]!.groupId);
+    });
+
+    // A pinned direction leads its platform's section, so the section's preview never folds it away.
+    it('puts favourite directions first in each section', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'n9', line: '9', headsign: 'Řepy', platform: 'A' }),
+            departure({ tripId: 'n22', line: '22', headsign: 'Bílá Hora', platform: 'A' }),
+        ], 'line');
+        const [a] = platformSections(groups, 'line', new Set([favoriteKey('22', 'Bílá Hora')]));
+        expect(a!.groups.map(g => g.line)).toEqual(['22', '9']);
+    });
+});
+
+describe('withStopPlatforms', () => {
+    const stopIndex = new Map([
+        ['Z1', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z1', stop_name: 'Česká', platform_code: '1' } }],
+        ['Z2', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z2', stop_name: 'Česká', direction: 'Grohova' } }],
+    ] as const) as never;
+
+    // A GTFS city's station board names the station in stopId and the platform in platformStopId.
+    it('fills the platform code, else the direction, from the departure\'s stop', () => {
+        const deps = withStopPlatforms([
+            departure({ tripId: 'a', stopId: 'S', platformStopId: 'Z1' }),
+            departure({ tripId: 'b', stopId: 'S', platformStopId: 'Z2' }),
+        ], stopIndex);
+        expect(deps.map(d => [d.platform, d.platformDirection])).toEqual([['1', undefined], [undefined, 'Grohova']]);
+    });
+
+    it('returns the same list when nothing changes', () => {
+        const deps = [departure({ tripId: 'a', platform: 'A', stopId: 'Z1' })];
+        expect(withStopPlatforms(deps, stopIndex)).toBe(deps);
     });
 });
 
@@ -200,3 +278,30 @@ describe('favoriteLineNames', () => {
     });
 });
 
+describe('sectionPreview', () => {
+    const groups = groupDepartures(['1', '2', '3', '4', '5'].map(line => departure({ tripId: `t${line}`, line })), 'line');
+
+    // A large station lists a few lines per platform; the rest wait behind "more lines".
+    it('shows the first lines and counts the rest', () => {
+        const { shown, hidden } = sectionPreview(groups, 3, new Set());
+        expect(shown.map(g => g.line)).toEqual(['1', '2', '3']);
+        expect(hidden).toBe(2);
+    });
+
+    // A viewed or ridden trip must never be folded away.
+    it('shows every line when a hidden one holds a marked trip', () => {
+        expect(sectionPreview(groups, 3, new Set(['t5'])).hidden).toBe(0);
+    });
+});
+
+describe('platformSections metro', () => {
+    // Each metro line numbers its own tracks: track 1 of B is not track 1 of C.
+    it('gives each metro line its own section, ahead of the platforms', () => {
+        const groups = groupDepartures([
+            departure({ tripId: 'b1', line: 'B', type: 'metro', platform: '1', headsign: 'Zličín' }),
+            departure({ tripId: 'c1', line: 'C', type: 'metro', platform: '1', headsign: 'Letňany' }),
+            departure({ tripId: 't', line: '3', platform: 'A' }),
+        ], 'line');
+        expect(platformSections(groups, 'line').map(s => [s.metroLine, s.platform])).toEqual([['B', null], ['C', null], [null, 'A']]);
+    });
+});

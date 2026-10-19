@@ -2,8 +2,10 @@ import type {
     CircleLayerSpecification,
     SymbolLayerSpecification,
     LineLayerSpecification,
-    ExpressionSpecification
+    ExpressionSpecification,
+    FilterSpecification
 } from 'maplibre-gl';
+import type { RouteType } from '@/types';
 import { DELAY_TIERS } from './transit';
 import { FALLBACK_ROUTE_COLOR } from './constants';
 import { mixHex } from '@/lib/color';
@@ -14,10 +16,11 @@ const ROUTE_COLOR: ExpressionSpecification = ['to-color', ['get', 'route_color']
 /** GeoJSON source IDs, shared by the layers below, the <Source> elements and direct map updates. */
 export const MAP_SOURCES = {
     STOPS: 'city-stops',
-    STOP_LABELS: 'stop-labels-centroids',
+    STATIONS: 'stop-stations',
     VEHICLES: 'city-vehicles',
     SELECTED_VEHICLE: 'selected-vehicle',
     ROUTE_SHAPE: 'route-shape',
+    NETWORK_LINES: 'network-lines',
     USER_LOCATION: 'user-location',
     POINTS_OF_SALE: 'points-of-sale-source',
 } as const;
@@ -25,9 +28,8 @@ export const MAP_SOURCES = {
 /** Canvas-drawn images registered by lib/map/icons.ts. */
 export const MAP_ICONS = {
     VEHICLE_ARROW: 'v-arrow-centered',
-    TRAIN_STATION: 'train-icon',
-    BUS_STOP: 'bus-icon',
-    FAVORITE_STAR: 'favorite-star',
+    /** Prefix of the stop badge images (`stop-badge:<city>:<star>:<badges>`), drawn on demand by lib/map/stopBadges.ts. */
+    STOP_BADGE_PREFIX: 'stop-badge:',
     POS_MACHINE: 'pos-machine-icon',
     POS_INFO: 'pos-info-icon',
     POS_OFFICE: 'pos-office-icon',
@@ -35,14 +37,10 @@ export const MAP_ICONS = {
 
 export const MAP_LAYERS = {
     STOP_CLUSTERS: 'clusters',
-    STOP_POINTS_GLOW: 'unclustered-point-glow',
-    STOP_POINTS: 'unclustered-point',
-    TRANSFER_OUTER: 'transfer-outer',
-    TRANSFER_INNER: 'transfer-inner',
-    STOP_LABELS: 'stop-labels',
-    STOP_ICONS: 'stop-icons',
+    STATION_BADGES: 'station-badges',
+    STATION_NAMES: 'station-names',
+    PLATFORM_BADGES: 'platform-badges',
     STOP_ENTRANCES: 'entrance-layer',
-    STOP_FAVORITES: 'favorite-star-layer',
     VEHICLE_POINTS: 'vehicles-point',
     VEHICLE_DIRECTIONS: 'vehicles-direction',
     VEHICLE_LABELS: 'vehicles-label',
@@ -50,6 +48,8 @@ export const MAP_LAYERS = {
     SELECTED_VEHICLE_POINT: 'vehicle-selected-point',
     SELECTED_VEHICLE_DIRECTION: 'vehicle-selected-direction',
     SELECTED_VEHICLE_LABEL: 'vehicle-selected-label',
+    NETWORK_LINE_CASING: 'network-line-casing',
+    NETWORK_LINE: 'network-line',
     ROUTE_LINE_CASING: 'route-line-casing',
     ROUTE_LINE: 'route-line',
     ROUTE_STOPS: 'route-stops',
@@ -60,40 +60,72 @@ export const MAP_LAYERS = {
 } as const;
 
 /** Layers whose click opens a stop's departures. */
-export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STOP_POINTS, MAP_LAYERS.STOP_ICONS, MAP_LAYERS.TRANSFER_OUTER, MAP_LAYERS.TRANSFER_INNER];
+export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STATION_BADGES, MAP_LAYERS.STATION_NAMES, MAP_LAYERS.PLATFORM_BADGES];
 /** Layers whose click opens a vehicle's detail. */
 export const VEHICLE_CLICK_LAYERS: string[] = [MAP_LAYERS.VEHICLE_POINTS, MAP_LAYERS.VEHICLE_DIRECTIONS, MAP_LAYERS.VEHICLE_LABELS];
 export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE];
 
+/** Stop badges: one rounded tile per mode serving the stop, in each mode's colour. */
+export const STOP_BADGE = {
+    /** Tile edge in CSS pixels at icon-size 1; a station's tiles join into one pill. */
+    TILE_PX: 24,
+    /** Line between joined tiles, so two same-coloured modes still read as two. */
+    DIVIDER_PX: 1,
+    DIVIDER_COLOR: 'rgba(0, 0, 0, 0.35)',
+    /** A favourite's star on the pill's top-right corner, as fractions of the tile edge. */
+    STAR_RADIUS_SCALE: 0.36,
+    STAR_MARGIN_SCALE: 0.4,
+    STAR_COLOR: '#f59e0b',
+    STAR_OUTLINE: '#111111',
+    /** A platform's code: a white circle beside its pill, sized and spaced as fractions of the tile edge. */
+    CODE_FILL: '#f8fafc',
+    CODE_INK: '#0f172a',
+    CODE_GAP_SCALE: 0.12,
+    /** Lettering of metro lines and platform codes: the app's UI face, sized by character count as fractions of the shape. */
+    FONT: '"Geist Variable", Arial, sans-serif',
+    LETTER_SCALES: [0.62, 0.5, 0.4],
+    /** A circle's share of its square's room for lettering, so a code keeps a margin round it. */
+    CIRCLE_LETTER_INSET: 0.82,
+    PIXEL_RATIO: 2,
+    /** Corner radius and glyph size as fractions of the tile edge. */
+    RADIUS_SCALE: 0.22,
+    GLYPH_SCALE: 0.66,
+    /** Glyph stroke in its 24-unit viewBox; Lucide's own is 2. */
+    GLYPH_STROKE: 2.2,
+    /** The star's inner points and outline, as fractions of its radius. */
+    STAR_INNER_SCALE: 0.48,
+    STAR_STROKE_SCALE: 0.35,
+    MODE_COLORS: {
+        metro: '#E8710A',
+        train: '#1F3F8F',
+        tram: '#C8102E',
+        trolleybus: '#13856B',
+        bus: '#1C7CC0',
+        ferry: '#6B3FA0',
+        funicular: '#8A5A2B',
+        unknown: '#64748B',
+    } satisfies Record<RouteType, string>,
+} as const;
+
 const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
 const LOCATION_TYPE: ExpressionSpecification = ['to-number', ['coalesce', ['get', 'location_type'], 0]];
-const METRO_LINE_COUNT: ExpressionSpecification = ['length', ['coalesce', ['get', 'metro_lines'], ['literal', []]]];
-/** A parent station served by two or more metro lines, drawn as a transfer ring. */
-const IS_TRANSFER_STATION: ExpressionSpecification = ['all', ['==', LOCATION_TYPE, 1], ['>=', METRO_LINE_COUNT, 2]];
-const IS_RAIL_STATION: ExpressionSpecification = ['any', ['==', ['get', 'is_train'], 1], ['>', METRO_LINE_COUNT, 0]];
-/** Colour of the stop's n-th metro line, or `fallback` when it has fewer lines. */
-const metroColor = (index: number, fallback: ExpressionSpecification | string): ExpressionSpecification => ['case',
-    ['>', METRO_LINE_COUNT, index], ['to-color', ['get', 'route_color', ['object', ['at', index, ['array', ['get', 'metro_lines']]]]]],
-    fallback
-];
-
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
-        stops: { min: 13, max: 17 },
-        icons: 13.5, // Unified zoom level for all icons (bus, platform, train)
-        labels: 14, // Unified zoom level for labels
+        /** Stations cluster up to this zoom and are drawn as mode badges from it. */
+        badges: 13,
+        /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
+        labels: 14,
+        /** From here a station's platforms take over from its badge. */
+        platforms: 16,
     },
     colors: {
-        glow: '#000000',
         stroke: '#000000',
         routeDefault: '#ffffff',
-        blueCluster: '#1e3a8a',
-        favorite: '#f59e0b',
         vehicleLabelText: '#f8fafc',
-        stopIconHalo: '#000000',
-        platformText: '#cbd5e1'
     },
+    /** How much stations and platforms grow from the platforms' zoom to zoom 18. */
+    platformGrowth: 1.25,
     route: {
         /** How far a travelled segment's colour is blended toward `traversedTarget`; drawn opaque so streets and casing do not muddy it. */
         traversedMix: { dark: 0.5, light: 0.6 },
@@ -103,23 +135,56 @@ const MAP_TOKENS = {
         /** Dark theme washes out toward mid grey, since fading toward its background would make dark feed colours vanish. */
         traversedTarget: { dark: '#52525b', light: '#f4f4f5' },
     },
+    network: {
+        zoom: { min: 10, max: 16 },
+        /** Metro lines are drawn bold, each in its colour; merged tram and trolleybus tracks thinner. */
+        metroWidth: { min: 2.5, max: 7 },
+        width: { min: 1.5, max: 4.5 },
+        /** Extra width of the casing over its line. */
+        casingExtra: 1.5,
+        /** Widths grow late, so the network stays thin until the streets around it are drawn. */
+        zoomCurve: 1.6,
+        /** While a trip's route is drawn, lines blend this far toward the basemap's ground; opaque, so overlapping pieces do not stack darker. */
+        dimmedMix: { dark: 0.55, light: 0.6 },
+        dimTarget: { dark: '#0e0e0e', light: '#fafaf8' },
+    },
 };
 
-/** A linear zoom ramp across the stop layers' zoom range. */
-const stopZoomRamp = (atMin: number, atMax: number): ExpressionSpecification =>
-    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, atMin, MAP_TOKENS.zoom.stops.max, atMax];
+/** Zoom up to which stations are clustered. */
+export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.badges;
+
 
 // -----------------------------------------------------------------------------
 // STOPS & STATIONS
 // -----------------------------------------------------------------------------
 
+const UNCLUSTERED: ExpressionSpecification = ['!', ['has', 'point_count']];
+const STATION_NAME_TEXT = {
+    'text-font': MAP_FONT_STACK,
+    'text-letter-spacing': 0.05,
+    'text-max-width': 8,
+    'text-justify': 'center',
+} as const;
+/** One size curve for a station's name, drawn by the badge layer below `zoom.platforms` and the name layer above it. */
+const STATION_NAME_SIZE: ExpressionSpecification =
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.labels, 11, MAP_TOKENS.zoom.platforms, 13, 18, 15];
+/** A soft halo, still wide enough to read a name lying on the vehicles waiting at its station. */
+const STATION_NAME_PAINT = {
+    'text-color': '#bdbdbd',
+    'text-halo-color': '#111111',
+    'text-halo-width': 1.5,
+    'text-halo-blur': 0.5,
+} as const;
+/** Badge scale across the zoom range in which stations are drawn whole. */
+const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh, 18, atHigh * MAP_TOKENS.platformGrowth];
+
 export const stopClusters: CircleLayerSpecification = {
     id: MAP_LAYERS.STOP_CLUSTERS,
     type: 'circle',
-    source: MAP_SOURCES.STOPS,
+    source: MAP_SOURCES.STATIONS,
     filter: ['has', 'point_count'],
     paint: {
-        'circle-color': MAP_TOKENS.colors.blueCluster,
         'circle-radius': [
             'interpolate', ['linear'], ['get', 'point_count'],
             1, 6,
@@ -131,155 +196,79 @@ export const stopClusters: CircleLayerSpecification = {
             8, 0.4,
             13, 0.7
         ],
-        'circle-blur': 1.0 // Maximum blur for the "glow" effect
-    }
-};
-
-export const stopPointsGlow: CircleLayerSpecification = {
-    id: MAP_LAYERS.STOP_POINTS_GLOW,
-    type: 'circle',
-    source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', LOCATION_TYPE, 2]
-    ],
-    paint: {
-        'circle-radius': stopZoomRamp(9.5, 28.5),
-        'circle-color': MAP_TOKENS.colors.glow, // Black glow for all ensures glass transparency works
-        'circle-opacity': stopZoomRamp(0.1, 0.2),
         'circle-blur': 1.0
     }
 };
 
-export const stopPoints: CircleLayerSpecification = {
-    id: MAP_LAYERS.STOP_POINTS,
-    type: 'circle',
-    source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', LOCATION_TYPE, 2],
-        ['!', IS_TRANSFER_STATION]
-    ],
-    paint: {
-        'circle-radius': stopZoomRamp(5.7, 20.9),
-        'circle-color': metroColor(0, ['case', ['has', 'stop_color'], ['to-color', ['get', 'stop_color']], ['==', ['get', 'is_train'], 1], '#1c1745', MAP_TOKENS.colors.blueCluster]),
-        'circle-stroke-width': stopZoomRamp(1.0, 2.0),
-        'circle-stroke-color': MAP_TOKENS.colors.stroke,
-        'circle-opacity': [
-            'case',
-            ['==', LOCATION_TYPE, 1],
-            0.75, // More transparent for vibrant metro stations
-            0.85  // Standard for others
-        ],
-        'circle-stroke-opacity': 0.8
-    }
-};
-
-export const transferOuterPoints: CircleLayerSpecification = {
-    id: MAP_LAYERS.TRANSFER_OUTER,
-    type: 'circle',
-    source: MAP_SOURCES.STOPS,
-    filter: IS_TRANSFER_STATION,
-    minzoom: 10,
-    paint: {
-        'circle-radius': stopZoomRamp(6.5, 24),
-        'circle-color': metroColor(0, '#0f172a'),
-        'circle-stroke-color': MAP_TOKENS.colors.stroke,
-        'circle-stroke-width': stopZoomRamp(1, 3),
-        'circle-opacity': 0.85
-    }
-};
-
-export const transferInnerPoints: CircleLayerSpecification = {
-    id: MAP_LAYERS.TRANSFER_INNER,
-    type: 'circle',
-    source: MAP_SOURCES.STOPS,
-    filter: IS_TRANSFER_STATION,
-    minzoom: 10,
-    paint: {
-        'circle-radius': stopZoomRamp(4.5, 16),
-        'circle-color': metroColor(1, '#ffffff'),
-        'circle-opacity': 0.85
-    }
-};
-
-export const stopLabels: SymbolLayerSpecification = {
-    id: MAP_LAYERS.STOP_LABELS,
+/**
+ * A station as one badge of its modes, with its name above or below it from `zoom.labels`. Badges that
+ * collide give way by mode rank; a name that fits neither above nor below is dropped, never laid over a badge.
+ */
+export const stationBadges: SymbolLayerSpecification = {
+    id: MAP_LAYERS.STATION_BADGES,
     type: 'symbol',
-    source: MAP_SOURCES.STOP_LABELS,
-    filter: ['all',
-        ['!=', LOCATION_TYPE, 2]
-    ],
-    minzoom: MAP_TOKENS.zoom.labels,
+    source: MAP_SOURCES.STATIONS,
+    // No minzoom: below the badges' zoom a station the clusters leave alone is still drawn, at the smallest size.
+    // Hands over to its platforms at one zoom, with no crossfade in which both are too faint to read.
+    maxzoom: MAP_TOKENS.zoom.platforms,
+    filter: UNCLUSTERED,
     layout: {
+        ...STATION_NAME_TEXT,
+        'icon-size': badgeSize(0.6, 0.9),
+        'icon-padding': 2,
+        'text-field': ['step', ['zoom'], '', MAP_TOKENS.zoom.labels, ['get', 'stop_name']],
+        'text-size': STATION_NAME_SIZE,
+        // Only below or above: the offset counts from the point, and a badge of several tiles is wider than any side offset.
+        'text-variable-anchor': ['top', 'bottom'],
+        // Close under or over the badge, as its caption.
+        'text-radial-offset': 1.3,
+        'text-padding': 4,
+        'text-optional': true,
+        'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
+    },
+    paint: {
+        ...STATION_NAME_PAINT,
+    }
+};
+
+/**
+ * A station's name once its platforms carry the badges: on its point when that is free, else beside it,
+ * set as the badge layer set it below this zoom.
+ */
+export const stationNames: SymbolLayerSpecification = {
+    id: MAP_LAYERS.STATION_NAMES,
+    type: 'symbol',
+    source: MAP_SOURCES.STATIONS,
+    minzoom: MAP_TOKENS.zoom.platforms,
+    filter: UNCLUSTERED,
+    layout: {
+        ...STATION_NAME_TEXT,
         'text-field': ['get', 'stop_name'],
-        'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'],
-            10, ['match', LOCATION_TYPE, 1, 10, 8],
-            16, ['match', LOCATION_TYPE, 1, 14, 11]
-        ],
-        'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': stopZoomRamp(2.2, 4.2),
-        'text-justify': 'auto',
-        'text-max-width': 7,
-        'text-letter-spacing': 0.15,
-        'text-padding': 30,
-        'text-allow-overlap': false,
-        'text-ignore-placement': false,
-        'symbol-sort-key': ['case',
-            ['==', LOCATION_TYPE, 1], 1,
-            ['==', ['get', 'is_train'], 1], 2,
-            3
-        ]
+        'text-size': STATION_NAME_SIZE,
+        // Clear of the platform pills that usually sit on the station's point: above or below them first.
+        'text-variable-anchor': ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        // Past the pills packed round the point when the platforms first show; nearer, every side is taken.
+        'text-radial-offset': 3,
+        // Keeps neighbouring names apart among the platform pills, so a dense centre is not a wall of text.
+        'text-padding': 15,
+        'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
-    paint: {
-        'text-color': '#bdbdbd',
-        'text-halo-color': '#111111',
-        'text-halo-width': 1,
-        'text-halo-blur': 0.5
-    }
+    paint: STATION_NAME_PAINT,
 };
 
-// Merged layer for platform codes, bus icons, and train/metro icons
-export const stopIcons: SymbolLayerSpecification = {
-    id: MAP_LAYERS.STOP_ICONS,
+/** Each platform as a pill of its modes (a metro platform: its line) with its code in a circle beside it. */
+export const platformBadges: SymbolLayerSpecification = {
+    id: MAP_LAYERS.PLATFORM_BADGES,
     type: 'symbol',
     source: MAP_SOURCES.STOPS,
-    filter: ['all',
-        ['!', ['has', 'point_count']],
-        ['!=', LOCATION_TYPE, 2]
-    ],
-    minzoom: MAP_TOKENS.zoom.icons,
+    minzoom: MAP_TOKENS.zoom.platforms,
+    filter: ['!=', LOCATION_TYPE, 2],
     layout: {
-        'text-field': ['case', 
-            IS_RAIL_STATION, '',
-            ['has', 'platform_code'], ['get', 'platform_code'], 
-            ''
-        ],
-        'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.stops.min, 9, 18, 17],
-        'text-anchor': 'center',
-        'text-padding': 0,
-        'text-allow-overlap': true,
-        'text-ignore-placement': true,
-        'icon-image': ['case',
-            IS_RAIL_STATION, MAP_ICONS.TRAIN_STATION,
-            ['>', ['length', ['to-string', ['coalesce', ['get', 'platform_code'], '']]], 0], '',
-            MAP_ICONS.BUS_STOP
-        ],
-        'icon-size': stopZoomRamp(0.09, 0.28),
+        // Takes over from its station's badge at the same scale, and grows from there.
+        'icon-size': badgeSize(0.6, 0.9),
         'icon-allow-overlap': true,
-        'icon-ignore-placement': true,
-        'symbol-sort-key': 5
+        'symbol-sort-key': ['coalesce', ['get', 'mode_rank'], 99],
     },
-    paint: {
-        'text-color': MAP_TOKENS.colors.platformText,
-        'text-halo-color': MAP_TOKENS.colors.stopIconHalo,
-        'text-halo-width': 0.8,
-        'text-halo-blur': 0.2,
-        'icon-color': '#ffffff',
-        'icon-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.icons, 0, MAP_TOKENS.zoom.icons + 0.5, 1]
-    }
 };
 
 export const stopEntrances: SymbolLayerSpecification = {
@@ -290,11 +279,12 @@ export const stopEntrances: SymbolLayerSpecification = {
         ['!', ['has', 'point_count']],
         ['==', LOCATION_TYPE, 2]
     ],
-    minzoom: 15.5,
+    // Not before the platforms: an entrance's name would push the station badges out of placement.
+    minzoom: MAP_TOKENS.zoom.platforms,
     layout: {
         'text-field': ['get', 'stop_name'],
         'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'], 15.5, 8, 18, 10],
+        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 8, 18, 10],
         'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
         'text-radial-offset': 1.2,
         'text-letter-spacing': 0.1,
@@ -309,29 +299,7 @@ export const stopEntrances: SymbolLayerSpecification = {
         'text-halo-color': MAP_TOKENS.colors.stroke,
         'text-halo-width': 1,
         'text-halo-blur': 0.2,
-        'text-opacity': ['interpolate', ['linear'], ['zoom'], 15.5, 0, 16, 1]
-    }
-};
-
-export const stopFavorites: SymbolLayerSpecification = {
-    id: MAP_LAYERS.STOP_FAVORITES,
-    type: 'symbol',
-    source: MAP_SOURCES.STOPS,
-    layout: {
-        'icon-image': MAP_ICONS.FAVORITE_STAR,
-        'icon-size': stopZoomRamp(0.18, 0.36),
-        'icon-offset': ['case',
-            ['>=', METRO_LINE_COUNT, 2], ['literal', [45, -55]],
-            ['literal', [35, -35]]
-        ],
-        'icon-allow-overlap': true,
-        'icon-ignore-placement': true
-    },
-    paint: {
-        'icon-color': MAP_TOKENS.colors.favorite,
-        'icon-halo-color': MAP_TOKENS.colors.stroke,
-        'icon-halo-width': 1,
-        'icon-opacity': 1
+        'text-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0, MAP_TOKENS.zoom.platforms + 0.5, 1]
     }
 };
 
@@ -464,6 +432,66 @@ export const vehicleSelectedPulse: CircleLayerSpecification = {
 const isTraversedSegment: ExpressionSpecification = ['==', ['get', 'status'], 'traversed'];
 
 /** Outlines both parts of the route line, so a feed colour close to the map background (Brno's black night lines) stays visible. */
+type NetworkValue = number | ExpressionSpecification;
+
+const networkZoomRamp = (min: NetworkValue, max: NetworkValue): ExpressionSpecification =>
+    ['interpolate', ['exponential', MAP_TOKENS.network.zoomCurve], ['zoom'], MAP_TOKENS.network.zoom.min, min, MAP_TOKENS.network.zoom.max, max];
+
+const IS_METRO_LINE: ExpressionSpecification = ['==', ['get', 'route_type'], 1];
+const networkWidth = (extra: number): [ExpressionSpecification, ExpressionSpecification] => {
+    const { metroWidth, width } = MAP_TOKENS.network;
+    return [
+        ['case', IS_METRO_LINE, metroWidth.min + extra, width.min + extra],
+        ['case', IS_METRO_LINE, metroWidth.max + extra, width.max + extra],
+    ];
+};
+
+/**
+ * The city's network (metro lines, or merged tram or trolleybus tracks), drawn beneath everything else at
+ * every zoom; `dimmed` while a route is shown, without `hiddenLine`, the shown route's own metro line,
+ * which would tint its travelled part. `colors` lists every colour drawn, for the dimmed palette.
+ */
+export const createNetworkLayers = (
+    theme: 'dark' | 'light',
+    dimmed: boolean,
+    hiddenLine: string | null,
+    colors: readonly string[],
+): [LineLayerSpecification, LineLayerSpecification] => {
+    const { dimTarget, dimmedMix } = MAP_TOKENS.network;
+    const dimmedOf = Object.fromEntries(colors.map(c => [c, mixHex(c, dimTarget[theme], dimmedMix[theme])]));
+    const lineColor: ExpressionSpecification = dimmed
+        ? ['to-color', ['get', ['get', 'route_color'], ['literal', dimmedOf]], dimTarget[theme]]
+        : ['to-color', ['get', 'route_color']];
+    const layout: LineLayerSpecification['layout'] = { 'line-join': 'round', 'line-cap': 'round' };
+    const filter: FilterSpecification = ['!=', ['get', 'name'], hiddenLine ?? ''];
+    return [
+        {
+            id: MAP_LAYERS.NETWORK_LINE_CASING,
+            type: 'line',
+            source: MAP_SOURCES.NETWORK_LINES,
+            filter,
+            layout,
+            paint: {
+                'line-color': theme === 'dark' ? '#000000' : '#ffffff',
+                'line-width': networkZoomRamp(...networkWidth(MAP_TOKENS.network.casingExtra)),
+                // Only metro is cased; on grey roads a casing's dark edges make a thin line read darker.
+                'line-opacity': dimmed ? 0 : ['case', IS_METRO_LINE, 1, 0],
+            },
+        },
+        {
+            id: MAP_LAYERS.NETWORK_LINE,
+            type: 'line',
+            source: MAP_SOURCES.NETWORK_LINES,
+            filter,
+            layout,
+            paint: {
+                'line-color': lineColor,
+                'line-width': networkZoomRamp(...networkWidth(0)),
+            },
+        },
+    ];
+};
+
 export const routeLineCasing: LineLayerSpecification = {
     id: MAP_LAYERS.ROUTE_LINE_CASING,
     type: 'line',

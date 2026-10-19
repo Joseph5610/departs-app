@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3, Filter } from 'lucide-react';
 import { closeDetail, navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { useAlerts } from '@/hooks/data/useAlerts';
@@ -124,7 +124,9 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         >
             <Settings size={20} strokeWidth={1.5} className={cn("transition-transform hover:rotate-45", isFiltered && "text-purple-400")} />
             {isFiltered && (
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_var(--color-purple-500)] pointer-events-none" />
+                <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-purple-500 text-white pointer-events-none">
+                    <Filter className="size-2.5" strokeWidth={2.5} />
+                </span>
             )}
         </ControlButton>
     );

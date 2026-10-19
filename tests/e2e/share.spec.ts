@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mockStops } from '../fixtures/stops';
 import { MapPage } from '../page-objects/MapPage';
 
 test.describe('Share functionality', () => {
@@ -9,19 +10,13 @@ test.describe('Share functionality', () => {
         const mapPage = new MapPage(page);
 
         // Mock stops and departures
-        await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, async route => {
-            await route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' },
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-                        properties: { stop_id: 'U1111Z1P', stop_name: 'Hlavní nádraží', lines: [] }
-                    }]
-                })
-            });
+        await mockStops(page, {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
+                properties: { stop_id: 'U1111Z1P', stop_name: 'Hlavní nádraží', lines: [] }
+            }]
         });
 
         await page.route('**/api/*/departures*', async route => {

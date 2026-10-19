@@ -23,6 +23,12 @@ export const formatExpectedClock = (time: string | null | undefined): string =>
 
 const timeOfDayFormats = new Map<string, Intl.DateTimeFormat>();
 
+/** Whether the local hour at `ms` falls in [from, to); a range with `from` after `to` wraps past midnight. */
+export const isWithinLocalHours = (ms: number, timeZone: string, [from, to]: readonly [number, number]): boolean => {
+    const hour = Math.floor(secondsOfDayIn(timeZone, ms) / 3600);
+    return from <= to ? hour >= from && hour < to : hour >= from || hour < to;
+};
+
 /** Seconds since midnight of `ms` in `timeZone`, the zone timetables are written in. */
 export const secondsOfDayIn = (timeZone: string, ms: number): number => {
     let format = timeOfDayFormats.get(timeZone);
@@ -110,6 +116,23 @@ export const formatDateTime = (value: string | number, locale: string | undefine
         hour: '2-digit',
         minute: '2-digit',
         hourCycle: 'h23',
+    });
+};
+
+/**
+ * When something upcoming starts, short and in `timeZone`: weekday, day and month, plus the time unless it
+ * starts at midnight. Example (cs): "so 24. 10. 7:20", "po 19. 10.".
+ */
+export const formatStartDate = (iso: string, locale: string | undefined, timeZone: string): string => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const atMidnight = secondsOfDayIn(timeZone, date.getTime()) < 60;
+    return date.toLocaleString(locale, {
+        timeZone,
+        weekday: 'short',
+        day: 'numeric',
+        month: 'numeric',
+        ...(atMidnight ? {} : { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' as const }),
     });
 };
 

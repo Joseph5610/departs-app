@@ -5,9 +5,12 @@ import { splitLastWord, wrappableName } from '@/lib/strings';
 import { useSwipeAction } from '@/hooks/features/useSwipeAction';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 
-/** A board list's entry, spaced from its neighbours; a line's further direction follows the one above closely. */
+/**
+ * A board list's entry, spaced from its neighbours; a line's further direction follows the one above closely.
+ * The padding leaves the row's hover backdrop as far from the card edge and separators as the card's side padding.
+ */
 export const BoardSection = ({ continuesLine = false, children }: { continuesLine?: boolean; children: React.ReactNode }) => (
-    <section className={cn("py-1.5", continuesLine && "-mt-2")}>{children}</section>
+    <section className={cn("pt-1.5 pb-2.5", continuesLine && "-mt-4")}>{children}</section>
 );
 
 /** What swiping a row left, or picking it from the row's right-click menu, does. */
@@ -56,7 +59,7 @@ const RowBody = ({ action, below, className, children, outer, ...lead }: BoardRo
     return (
         <div {...outer} {...handlers} className="group/row relative touch-pan-y">
             {action && (
-                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-[var(--swipe,0)]">
+                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-(--swipe,0)">
                     <Star size={22} strokeWidth={1.75} className="transition-transform group-data-armed/row:scale-125" fill={action.isActive ? 'currentColor' : 'none'} />
                 </span>
             )}

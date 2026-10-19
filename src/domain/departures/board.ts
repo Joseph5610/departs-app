@@ -1,4 +1,4 @@
-import { secondsOfDayIn } from '@/domain/time';
+import { isWithinLocalHours } from '@/domain/time';
 import type { Departure } from '@/types';
 
 export const filterDepartures = (departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean, requireWheelchairAccessible: boolean) => {
@@ -22,9 +22,7 @@ export const filterDepartures = (departures: Departure[], selectedLine: string |
 
 /** Whether an empty board at a metro station is explained by the metro's closed hours `[from, to)`, in the city's zone. */
 export const isMetroClosed = (nowMs: number, timeZone: string, metroClosedHours: [number, number] | null): boolean => {
-    if (!metroClosedHours) return false;
-    const hour = Math.floor(secondsOfDayIn(timeZone, nowMs) / 3600);
-    return hour >= metroClosedHours[0] && hour < metroClosedHours[1];
+    return !!metroClosedHours && isWithinLocalHours(nowMs, timeZone, metroClosedHours);
 };
 
 /** Departures in expected-time order, as a new array. */

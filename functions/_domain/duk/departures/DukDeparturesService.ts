@@ -7,7 +7,7 @@ import { normalizeRouteType } from '../../../_core/utils/routeTypes';
 import { getStopIndex } from '../../gtfs/index/StopIndex';
 import { boardVehicles, collectDepartureTuples, collectTripIds } from '../../gtfs/departures/DeparturesService';
 import type { DeparturesUseCase } from '../../useCases';
-import { indexVehiclesByTrip, mapDepartures } from '../../gtfs/departures/departuresMapper';
+import { indexVehiclesByTrip, mapDepartures, type DepartureSource } from '../../gtfs/departures/departuresMapper';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
@@ -15,6 +15,7 @@ import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type D
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
+import { requestedStopParts } from '../../gtfs/index/stopTargets';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
@@ -48,18 +49,18 @@ export class DukDeparturesService implements DeparturesUseCase {
         }
         const stopIndex = getStopIndex(this.city);
 
-        const relations = await stopIndex.relationsOf(stopIds).catch(() => new Map<string, StopRelation>());
-        const requests = stopIds.map(id => toStopRequest(id, relations.get(id)));
+        const relations = await stopIndex.relationsOf(requestedStopParts(stopIds)).catch(() => new Map<string, StopRelation>());
+        const requests = stopIds.map(id => toStopRequest(id, relations));
         const nodes = [...new Set(requests.map(r => r.node))];
 
-        const stationOf = new Map(stopIds.map(id => [id, stationOfRequest(id, relations.get(id))]));
+        const stationOf = new Map(stopIds.map(id => [id, stationOfRequest(id, relations)]));
         const stationIds = [...new Set([...stationOf.values()].filter((id): id is string => id !== null))];
         const platformsByStation = await stopIndex.childrenOf(stationIds).catch(() => new Map<string, string[]>());
         const platformsOf = (request: StopRequest) => platformsByStation.get(stationOf.get(request.id) ?? '') ?? [];
         // Timetable rows are filed under the bare node, which has no station of its own.
         const tuplesRead = collectDepartureTuples(stopIndex, nodes, new Map(nodes.map(n => [n, n])), new Map()).catch((e) => {
             console.warn('[DUK] Timetable unavailable for board linking:', e);
-            return [] as { stopId: string; tuple: GtfsDepartureTuple }[];
+            return [] as DepartureSource[];
         });
         const [boards, tuples, { routes }, vehicles] = await Promise.all([
             Promise.all(requests.map(r => this.getBoard(r, platformsOf(r), ctx))),
@@ -130,35 +131,37 @@ export class DukDeparturesService implements DeparturesUseCase {
     }
 
     /**
-     * A platform's board is Portabo's board for its post. Departures of lines Portabo never places
-     * on any platform of the station (Most's trams) are added from its virtual post; which lines
-     * those are is surveyed in the background, since reading it costs a board per platform.
+     * A platform's board is Portabo's board for its post; a stop of several platforms reads each post. Departures
+     * of lines Portabo never places on any platform of the station (Most's trams) are added from its virtual post;
+     * which lines those are is surveyed in the background, since reading it costs a board per platform.
      */
     private async getBoard(request: StopRequest, platforms: string[], ctx: CityRequestContext): Promise<DukBoardDeparture[] | null> {
         const virtualPost = String(DUK_CONFIG.VIRTUAL_POST);
         const schedule = (task: Promise<unknown>) => ctx.waitUntil(task);
-        if (!request.post || request.post === virtualPost) {
-            return getDukStationBoard(this.city, request.node, request.post ?? DUK_CONFIG.WHOLE_STATION_POST, schedule);
+        const ownPosts = request.posts?.filter(post => post !== virtualPost) ?? [];
+        if (!request.posts || ownPosts.length === 0) {
+            return getDukStationBoard(this.city, request.node, request.posts ? virtualPost : DUK_CONFIG.WHOLE_STATION_POST, schedule);
         }
 
-        const posts = [...new Set([request.post, ...platforms.map(id => id.split('-')[1])])].filter(post => post !== virtualPost);
+        const posts = [...new Set([...ownPosts, ...platforms.map(id => id.split('-')[1])])].filter(post => post !== virtualPost);
         const unplaced = getDukUnplacedLines(this.city, request.node);
         if (!unplaced) ctx.waitUntil(surveyDukUnplacedLines(this.city, request.node, posts));
 
         const [own, virtual] = await Promise.all([
-            getDukStationBoard(this.city, request.node, request.post, schedule),
+            Promise.all(ownPosts.map(post => getDukStationBoard(this.city, request.node, post, schedule))),
             // Until the survey answers, the virtual post is read too, so nothing is missing meanwhile.
             unplaced?.size === 0 ? null : getDukStationBoard(this.city, request.node, virtualPost, schedule),
         ]);
-        if (!own) return null;
+        const boards = own.filter((board): board is DukBoardDeparture[] => board !== null);
+        if (boards.length < own.length) return null;
         const elsewhere = (virtual ?? []).filter(entry => !unplaced || unplaced.has(entry.line));
-        return [...own, ...elsewhere].sort((a, b) => a.scheduledMs - b.scheduledMs);
+        return [...boards.flat(), ...elsewhere].sort((a, b) => a.scheduledMs - b.scheduledMs);
     }
 
     /** The timetable's departures for the requested stops, for when Portabo has no board. */
     private timetableOnly(
         requests: StopRequest[],
-        tuples: { stopId: string; tuple: GtfsDepartureTuple }[],
+        tuples: DepartureSource[],
         routes: Record<string, GtfsRoute>,
         vehicles: AppVehicleCollection | null
     ): AppDepartureResponse {
@@ -168,7 +171,7 @@ export class DukDeparturesService implements DeparturesUseCase {
             if (list) list.push(tuple);
             else tuplesOf.set(node, [tuple]);
         }
-        const deps: { stopId: string; tuple: GtfsDepartureTuple }[] = [];
+        const deps: DepartureSource[] = [];
         for (const request of requests) {
             for (const tuple of tuplesOf.get(request.node) ?? []) deps.push({ stopId: request.id, tuple });
         }

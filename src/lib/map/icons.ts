@@ -1,5 +1,6 @@
 import type { Map } from 'maplibre-gl';
 import { MAP_ICONS } from '@/config/mapLayers';
+import { provideStopBadges } from './stopBadges';
 
 const ICON_SIZE_PX = 64;
 
@@ -28,79 +29,6 @@ const drawArrow = (ctx: CanvasRenderingContext2D) => {
     ctx.lineTo(32, 38);
     ctx.lineTo(46, 46);
     ctx.closePath();
-    ctx.fill();
-};
-
-const drawTrain = (ctx: CanvasRenderingContext2D) => {
-    const s = ICON_SIZE_PX / 24;
-    ctx.strokeStyle = 'black';
-    ctx.fillStyle = 'black';
-    ctx.lineWidth = 2 * s;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-
-    ctx.beginPath();
-    roundRectPath(ctx, 4 * s, 3 * s, 16 * s, 16 * s, 2 * s);
-    ctx.stroke();
-
-    const strokeLine = (x1: number, y1: number, x2: number, y2: number) => {
-        ctx.beginPath();
-        ctx.moveTo(x1 * s, y1 * s);
-        ctx.lineTo(x2 * s, y2 * s);
-        ctx.stroke();
-    };
-    strokeLine(4, 11, 20, 11);
-    strokeLine(12, 3, 12, 11);
-    strokeLine(8, 19, 6, 22);
-    strokeLine(16, 19, 18, 22);
-
-    for (const lightX of [8, 16]) {
-        ctx.beginPath();
-        ctx.arc(lightX * s, 15 * s, 1 * s, 0, Math.PI * 2);
-        ctx.fill();
-    }
-};
-
-const drawStar = (ctx: CanvasRenderingContext2D) => {
-    const cx = 32;
-    const cy = 32;
-    const spikes = 5;
-    const outerRadius = 24;
-    const innerRadius = 12;
-    const step = Math.PI / spikes;
-    let rot = Math.PI / 2 * 3;
-
-    ctx.fillStyle = 'black';
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - outerRadius);
-    for (let i = 0; i < spikes; i++) {
-        ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
-        rot += step;
-        ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
-        rot += step;
-    }
-    ctx.lineTo(cx, cy - outerRadius);
-    ctx.closePath();
-    ctx.fill();
-};
-
-const drawBusStop = (ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = 'black';
-    ctx.fillStyle = 'black';
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(32, 34);
-    ctx.lineTo(32, 58);
-    ctx.stroke();
-
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    roundRectPath(ctx, 10, 8, 44, 28, 4);
     ctx.fill();
 };
 
@@ -158,10 +86,8 @@ const drawPosOffice = (ctx: CanvasRenderingContext2D) => {
 
 export const addAllIcons = (map: Map) => {
     registerIcon(map, MAP_ICONS.VEHICLE_ARROW, true, drawArrow);
-    registerIcon(map, MAP_ICONS.TRAIN_STATION, true, drawTrain);
-    registerIcon(map, MAP_ICONS.BUS_STOP, true, drawBusStop);
-    registerIcon(map, MAP_ICONS.FAVORITE_STAR, true, drawStar);
     registerIcon(map, MAP_ICONS.POS_MACHINE, false, drawPosMachine);
     registerIcon(map, MAP_ICONS.POS_INFO, false, drawPosInfo);
     registerIcon(map, MAP_ICONS.POS_OFFICE, false, drawPosOffice);
+    provideStopBadges(map);
 };

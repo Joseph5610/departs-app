@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mockStops, STOPS_FILE_URL } from '../fixtures/stops';
 import { MapPage } from '../page-objects/MapPage';
 import { SearchPage } from '../page-objects/SearchPage';
 
@@ -7,31 +8,23 @@ test.describe('Departure Board Tests', () => {
         const mapPage = new MapPage(page);
         const searchPage = new SearchPage(page);
 
-        await page.route(/\/(api\/[^/]+\/stops|[^/]+\/map-stops\.json)(\?|$)/, async route => {
-            await route.fulfill({ headers: { 'Access-Control-Allow-Origin': '*' },
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    type: 'FeatureCollection',
-                    features: [
-                        {
-                            type: 'Feature',
-                            geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-                            properties: {
-                                stop_id: 'U1111Z1P',
-                                stop_name: 'Hlavní nádraží',
-                                platform_code: 'C',
-                                location_type: 0,
-                                parent_station: 'U1111',
-                                zone_id: 'P',
-                                is_train: 0,
-                                metro_lines: [{ name: 'C', route_color: 'C0115E' }],
-                                lines: [{ name: 'C', type: 'metro', route_color: 'C0115E' }]
-                            }
-                        }
-                    ]
-                })
-            });
+        await mockStops(page, {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
+                    properties: {
+                        stop_id: 'U1111Z1P',
+                        stop_name: 'Hlavní nádraží',
+                        platform_code: 'C',
+                        location_type: 0,
+                        parent_station: 'U1111',
+                        zone_id: 'P',
+                        lines: [{ name: 'C', type: 'metro', route_color: 'C0115E' }]
+                    }
+                }
+            ]
         });
 
         // Mock departures
@@ -93,7 +86,7 @@ test.describe('Departure Board Tests', () => {
 
         // Wait for the stops API response to finish loading so the stop search index is fully built
         const stopsResponsePromise = page.waitForResponse(
-            response => /\/[^/]+\/map-stops\.json(\?|$)/.test(response.url()) && response.status() === 200,
+            response => STOPS_FILE_URL.test(response.url()) && response.status() === 200,
             { timeout: 30000 }
         );
 

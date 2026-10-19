@@ -1,32 +1,25 @@
 import type { PinnedStop, SelectedStop, StopCollection, StopFeature, StopProperties, SearchHistoryBase } from '@/types';
+import { servesMode, stopIdParts, uniqueLines } from './stations';
 
-/** The platforms and the station centroids of a stop list, as the map's two stop sources take them. */
+/** The platforms (and entrances) and the stations of a stop list, as the map's two stop sources take them; alight-only ones are left out. */
 export const splitStopCollection = (collection: StopCollection | undefined) => {
-    if (!collection || !Array.isArray(collection.features)) {
-        return { stops: null, centroids: null };
+    if (!collection) return { platforms: null, stations: null };
+    const platforms: StopFeature[] = [];
+    const stations: StopFeature[] = [];
+    for (const f of collection.features) {
+        if (f.properties.is_drop_off_only) continue;
+        (f.properties.is_station ? stations : platforms).push(f);
     }
-
-    const features = collection.features;
-    const hasCentroids = features.some(f => f.properties.is_centroid);
-
-    const stops: StopCollection = {
-        type: 'FeatureCollection',
-        features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? !f.properties.is_centroid : true))
+    return {
+        platforms: { type: 'FeatureCollection', features: platforms } as StopCollection,
+        stations: { type: 'FeatureCollection', features: stations } as StopCollection,
     };
-
-    const centroids: StopCollection = {
-        type: 'FeatureCollection',
-        features: features.filter(f => !f.properties.is_drop_off_only && (hasCentroids ? f.properties.is_centroid : Number(f.properties.location_type) === 1))
-    };
-
-    return { stops, centroids };
 };
 
 /** Whether a stop passes the map's stop-type filter; an empty filter passes every stop. */
 export const matchesStopTypeFilter = (props: StopProperties | null, stopTypeFilter: readonly string[]): boolean => {
     if (!props || stopTypeFilter.length === 0) return true;
-    if (stopTypeFilter.includes('metro') && (props.metro_lines?.length ?? 0) > 0) return true;
-    return stopTypeFilter.includes('train') && props.is_train === 1;
+    return (stopTypeFilter.includes('metro') && servesMode(props, 'metro')) || (stopTypeFilter.includes('train') && servesMode(props, 'train'));
 };
 
 /** The stops for `ids` that the stop list knows, in the order given. */
@@ -54,37 +47,49 @@ export const lineColorAt = (stop: StopFeature | undefined, line: string): string
     stop?.properties.lines?.find(l => l.name === line)?.route_color;
 
 const stopSummary = (feature: StopFeature) => {
-    const { stop_id, stop_name, platform_code, is_train, metro_lines, lines } = feature.properties;
+    const { stop_id, stop_name, platform_code, lines } = feature.properties;
     return {
         stop_id,
         stop_name,
         platform_code,
-        is_train: Number(is_train) === 1 ? 1 : 0,
-        metro_lines,
         lines,
         coordinates: feature.geometry.coordinates as [number, number],
     };
 };
 
 /** The panel's view of a stop from its map feature. */
-export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids });
+export const toSelectedStop = (feature: StopFeature): SelectedStop => ({ ...stopSummary(feature), all_ids: feature.properties.all_ids, is_station: feature.properties.is_station, platform_count: feature.properties.platform_count });
+
+/**
+ * The stop a board shows for `stopId`: its own entry, or for a comma-joined id of several platforms (a board
+ * section's) one stop named after the first, with all their ids and lines; just the id when none is known.
+ */
+export const selectedStopOf = (stopId: string, stopIndex: ReadonlyMap<string, StopFeature>): SelectedStop => {
+    const own = stopIndex.get(stopId);
+    if (own) return toSelectedStop(own);
+    const features = [...new Set(stopIdParts(stopId).map(id => stopIndex.get(id)).filter((f): f is StopFeature => !!f))];
+    const first = features[0];
+    if (!first) return { stop_id: stopId };
+    return {
+        ...toSelectedStop(first),
+        stop_id: stopId,
+        lines: uniqueLines(features.flatMap(f => f.properties.lines ?? [])),
+        all_ids: features.flatMap(f => stopIdParts(f.properties.stop_id)),
+        is_station: false,
+        platform_count: features.length,
+    };
+};
 
 /** A search history entry for a stop picked in `city`. */
 export const stopHistoryEntry = (feature: StopFeature, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, ...stopSummary(feature) });
 
-/** Every stop and platform id to its feature; a merged station resolves its platforms' ids unless they have their own entry. */
+/** Every stop id and each of its `all_ids` to its feature; a platform's own entry wins over its station's. */
 export const indexStopsById = (collection: StopCollection | undefined): Map<string, StopFeature> => {
     const idx = new Map<string, StopFeature>();
     for (const f of collection?.features ?? []) {
         idx.set(f.properties.stop_id, f);
         for (const subId of f.properties.all_ids ?? []) {
             idx.set(subId, f);
-        }
-        // A merged station's id joins its platforms' ids; each resolves to it unless the platform has its own entry.
-        if (f.properties.stop_id.includes(',')) {
-            for (const part of f.properties.stop_id.split(',')) {
-                if (!idx.has(part)) idx.set(part, f);
-            }
         }
     }
     return idx;

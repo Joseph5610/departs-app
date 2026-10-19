@@ -4,12 +4,6 @@ import { DEG, EARTH_RADIUS_M } from '@/lib/geo';
 /** Grid cell for the twin lookup: a latitude degree is about this many metres. */
 const METRES_PER_DEG_LAT = DEG * EARTH_RADIUS_M;
 
-/** Stops carrying their network's map colour; the collection itself for a network without one. */
-export function withStopColor(collection: StopCollection | null, color: string | undefined): StopCollection | null {
-    if (!collection || !color) return collection;
-    return { ...collection, features: collection.features.map(f => ({ ...f, properties: { ...f.properties, stop_color: color } })) };
-}
-
 /** Name compared across networks, which punctuate and space stop names differently. */
 export const stopNameKey = (name: string | undefined): string =>
     (name ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');

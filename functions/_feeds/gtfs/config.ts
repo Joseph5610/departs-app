@@ -9,6 +9,9 @@ export const GTFS_CONFIG = {
     /** Window to resurrect departed vehicles if backend cache missed */
     DEPARTURES_RESURRECT_WINDOW_MS: 15 * 60 * 1000, // 15 mins
 
+    /** Departures per board, a whole station included, soonest first. */
+    DEPARTURE_LIMIT: 120,
+
     /**
      * Ceiling on the platforms one departures request may resolve to once parent stations are expanded.
      * GTFS-only: this stack fetches a file per distinct station bucket, so the expanded count is what

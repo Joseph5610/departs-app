@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { FRONTEND_CITIES_CONFIG } from '../../src/config/cities';
 
 /** Trojica. A fixed id: CI must not fetch data.departs.app itself, where Bot Fight Mode challenges runner IPs. */
-const STATION_ID = 'centroid-trojica';
+const STATION_ID = 'station-trojica';
 
 test.describe('Prešov Backend API tests', () => {
     test.skip(!FRONTEND_CITIES_CONFIG['presov'], 'Prešov city support is currently disabled in config');

@@ -8,6 +8,7 @@ import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
 import { distanceMeters } from "../_core/utils/geo";
+import { stopIdParts } from "../_core/utils/stopIds";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -104,7 +105,7 @@ function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<Sto
 }
 
 /**
- * Up to `limit` non-centroid stops whose name or id contains `query`, best match first: exact name, then
+ * Up to `limit` platforms whose name or id contains `query`, best match first: exact name, then
  * name starting with it, then any containment; shorter names win ties, so `Hlavní nádraží` beats `Brno, Hlavní nádraží, …`.
  */
 export async function findStopsByName(citySlug: string, query: string, limit: number): Promise<StopFeature[]> {
@@ -116,7 +117,7 @@ export async function findStopsByName(citySlug: string, query: string, limit: nu
 }
 
 /** PID-style node shared by every platform of a station (`U1146Z11` -> `U1146`); undefined for other id schemes. */
-const stationNode = (stopId: string): string | undefined => /^(?:centroid-)?(U\d+)/i.exec(stopId)?.[1];
+const stationNode = (stopId: string): string | undefined => /^(U\d+)/i.exec(stopId)?.[1];
 
 /**
  * The station a name query means, as every platform id serving it: all stops with the best match's
@@ -150,7 +151,7 @@ export async function nearestStops(
     citySlug: string,
     lat: number,
     lon: number,
-    options: { includeCentroids?: boolean; radiusM?: number; limit: number }
+    options: { includeStations?: boolean; radiusM?: number; limit: number }
 ): Promise<RankedStop[]> {
     const { city, search: pending } = stopSearchOf(citySlug);
     const search = await pending;
@@ -265,14 +266,8 @@ export async function loadInfotexts(ctx: McpContext, city: CityUseCases, citySlu
 
 /** The infotexts that name any platform of `stopId`, as exposed to MCP clients. */
 export function toMcpStopInfotexts(infotexts: AppInfotext[], stopId: string) {
-    // `stop_id` may be a comma-joined platform list or `centroid-` prefixed; match the parts exactly.
-    const targetIds = new Set(
-        stopId
-            .replace(/^centroid-/i, '')
-            .split(',')
-            .map((id) => id.trim().toLowerCase())
-            .filter((id) => id.length > 0)
-    );
+    // `stop_id` may be a comma-joined platform list; match the parts exactly.
+    const targetIds = new Set(stopIdParts(stopId).map((id) => id.toLowerCase()));
     if (targetIds.size === 0) return [];
 
     return infotexts

@@ -13,6 +13,7 @@ import {
     Palette,
     Ticket,
     Timer,
+    Waypoints,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
@@ -51,6 +52,7 @@ export const DisplaySection = () => {
     const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
     const showStopLabels = usePreferencesStore(s => s.showStopLabels);
     const showPointsOfSale = usePreferencesStore(s => s.showPointsOfSale);
+    const showNetworkLines = usePreferencesStore(s => s.showNetworkLines);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
 
@@ -58,6 +60,7 @@ export const DisplaySection = () => {
         setShowVehicles,
         setShowStops,
         setShowPointsOfSale,
+        setShowNetworkLines,
         setRouteTypeFilter,
         setStopTypeFilter,
         setShowStopLabels,
@@ -159,6 +162,16 @@ export const DisplaySection = () => {
                     className="mt-3"
                 />
 
+                {cityConfig.hasNetworkLines && (
+                    <ToggleSection
+                        title={t('settings.showNetworkLines.title')}
+                        description={t('settings.showNetworkLines.description')}
+                        icon={Waypoints}
+                        isChecked={showNetworkLines}
+                        onToggle={setShowNetworkLines}
+                        className="mt-3"
+                    />
+                )}
                 <ToggleSection
                     title={t('settings.showStops.title')}
                     description={t('settings.showStops.description')}

@@ -40,9 +40,9 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const sharedExitSequence = linkExitSequence ?? followedExitSequence;
     const { startRide, endRide, markRidePushed, follow, unfollow } = useRideStore(s => s.actions);
 
-    const { stopIndex, stops, centroids } = useStops();
-    const stationGrid = useMemo(() => indexStops(centroids, SHARED_GROUND.TWIN_STATION_RADIUS_M), [centroids]);
-    const platformGrid = useMemo(() => indexStops(stops, SHARED_GROUND.TWIN_STATION_RADIUS_M), [stops]);
+    const { stopIndex, platforms, stations } = useStops();
+    const stationGrid = useMemo(() => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M), [stations]);
+    const platformGrid = useMemo(() => indexStops(platforms, SHARED_GROUND.TWIN_STATION_RADIUS_M), [platforms]);
     const { presetTripHighlight } = useSelectionStore(s => s.actions);
     /** Opens a timeline stop's board; an arrival-only platform (a terminus) opens the nearby same-named stop that has departures. */
     const openStop = useCallback((stop: StopFeature) => {
@@ -69,17 +69,20 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
         });
     }, [selectedCity, tripId, vehicleId, startRide, markRidePushed, t]);
 
-    const nextStopSequence = useMemo(() => nextSequence(stopTimes, effectiveSequence), [stopTimes, effectiveSequence]);
+    /** An ended trip has no current or next stop: its whole run shows as past, nothing collapsed. */
+    const currentSequence = hasEnded ? null : effectiveSequence;
+
+    const nextStopSequence = useMemo(() => nextSequence(stopTimes, currentSequence), [stopTimes, currentSequence]);
 
     /** Only the first upcoming stop with transfers starts expanded, so long lists stay scannable. */
-    const firstTransferSequence = useMemo(() => firstTransfer(stopTimes, effectiveSequence), [stopTimes, effectiveSequence]);
+    const firstTransferSequence = useMemo(() => (hasEnded ? null : firstTransfer(stopTimes, currentSequence)), [stopTimes, currentSequence, hasEnded]);
 
-    const pastStopsCount = useMemo(() => countPastStops(stopTimes, effectiveSequence), [stopTimes, effectiveSequence]);
+    const pastStopsCount = useMemo(() => countPastStops(stopTimes, currentSequence), [stopTimes, currentSequence]);
 
     /** The line must stop at the last dot, not run behind that stop's own transfer card. */
     const lastStop = useMemo(() => lastStopOf(stopTimes), [stopTimes]);
     const lastStopSequence = lastStop ? Number(lastStop.properties.stop_sequence) : null;
-    const lastStopIsPast = lastStopSequence !== null && effectiveSequence !== null && lastStopSequence < effectiveSequence;
+    const lastStopIsPast = hasEnded || lastStopSequence !== null && effectiveSequence !== null && lastStopSequence < effectiveSequence;
     const sharedExit = sharedExitSequence !== null ? exitArrival(stopTimes, sharedExitSequence, delay) : null;
 
     // A shared link follows its ride on open, unless the user stopped following it or it is their own ride.
@@ -105,7 +108,7 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
             <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-center gap-2 px-1">
                     <span className="micro-label-widest text-muted-foreground">{t('map.vehicleDetails.routeSchedule')}</span>
-                    {effectiveSequence !== null && pastStopsCount > 0 && (
+                    {currentSequence !== null && pastStopsCount > 0 && (
                         <CollapsibleTrigger render={
                             <Button
                                 variant="outline"
@@ -175,14 +178,14 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
 
                         <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
                             {stopTimes
-                                .filter(stop => Number(stop.properties.stop_sequence) < (effectiveSequence ?? 0))
+                                .filter(stop => Number(stop.properties.stop_sequence) < (currentSequence ?? 0))
                                 .map((stop, idx: number) => (
                                     <StopTimelineItem
                                         key={`past-${stop.properties.stop_sequence || idx}`}
                                         stop={stop}
                                         routeName={routeName}
                                         isPast={true}
-                                        effectiveSequence={effectiveSequence}
+                                        effectiveSequence={currentSequence}
                                         nextStopSequence={nextStopSequence}
                                         delay={delay}
                                         isFirstTransfer={false}
@@ -195,20 +198,20 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                         </CollapsibleContent>
 
                         {stopTimes
-                            .filter(stop => Number(stop.properties.stop_sequence) >= (effectiveSequence ?? 0))
+                            .filter(stop => Number(stop.properties.stop_sequence) >= (currentSequence ?? 0))
                             .map((stop, idx: number) => (
                                 <StopTimelineItem
                                     key={`future-${stop.properties.stop_sequence || idx}`}
                                     stop={stop}
                                     routeName={routeName}
-                                    isPast={false}
-                                    effectiveSequence={effectiveSequence}
+                                    isPast={hasEnded}
+                                    effectiveSequence={currentSequence}
                                     nextStopSequence={nextStopSequence}
                                     delay={delay}
                                     isFirstTransfer={Number(stop.properties.stop_sequence) === firstTransferSequence}
                                     isLastStop={Number(stop.properties.stop_sequence) === lastStopSequence}
                                     exitKind={Number(stop.properties.stop_sequence) === rideExitSequence ? 'own' : Number(stop.properties.stop_sequence) === sharedExitSequence ? 'shared' : null}
-                                    isOnJourney={journeyEnd !== null && Number(stop.properties.stop_sequence) > (effectiveSequence ?? 0) && Number(stop.properties.stop_sequence) < journeyEnd}
+                                    isOnJourney={!hasEnded && journeyEnd !== null && Number(stop.properties.stop_sequence) > (effectiveSequence ?? 0) && Number(stop.properties.stop_sequence) < journeyEnd}
                                     onOpenStop={openStop}
                                     isPicking={isPickingExit && !hasEnded}
                                     onPickExit={isPickingExit && !hasEnded && Number(stop.properties.stop_sequence) > (effectiveSequence ?? 0) ? pickExit : undefined}

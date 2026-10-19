@@ -15,12 +15,20 @@ export function indexVehiclesByTrip(rtVehicles: AppVehicleCollection | null): Ma
     return byTrip;
 }
 
+/** One timetable row: the stop the client asked for, the platform it leaves from, and the row itself. */
+export interface DepartureSource {
+    stopId: string;
+    platformStopId?: string;
+    tuple: GtfsDepartureTuple;
+}
+
 /**
  * A stop's timetable tuples as departures with live delay, vehicle and equipment joined in, within the
  * past/future windows; recently past ones are kept for the app to revive with its live delay.
  */
+
 export function mapDepartures(
-    deps: Array<{ stopId: string, tuple: GtfsDepartureTuple }>, 
+    deps: DepartureSource[], 
     routes: Record<string, GtfsRoute>, 
     rtVehicles: AppVehicleCollection | null
 ): AppDeparture[] {
@@ -50,11 +58,11 @@ export function mapDepartures(
         // Recently past departures are still sent: the app's live delay may show them as still to come.
         .filter(item => item.rtTimestampMs >= now - GTFS_CONFIG.DEPARTURES_RESURRECT_WINDOW_MS)
         .sort((a, b) => a.rtTimestampMs - b.rtTimestampMs)
-        .slice(0, 150);
+        .slice(0, GTFS_CONFIG.DEPARTURE_LIMIT);
 
     return topDeps.map(item => {
         const { d, rtTimestampMs, delaySecs } = item;
-        const { stopId, tuple } = d;
+        const { stopId, platformStopId, tuple } = d;
         const [trip_id, route_id, headsign, timestamp_ms, wheelchair_accessible, is_request_stop_num, extras] = tuple;
         const route = routes[route_id];
         
@@ -93,6 +101,7 @@ export function mapDepartures(
             delay: delaySecs,
             isCanceled: false,
             stopId: stopId,
+            ...(platformStopId && platformStopId !== stopId ? { platformStopId } : {}),
             is_air_conditioned: isAirConditioned,
             is_wheelchair_accessible: isWheelchairAccessible,
             is_request_stop: is_request_stop_num === 1,

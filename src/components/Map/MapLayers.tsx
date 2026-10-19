@@ -1,7 +1,7 @@
 
 import { useMemo, useCallback, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { FilterSpecification, SymbolLayerSpecification } from 'maplibre-gl';
+import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
 import type { StopCollection, StopProperties } from '@/types';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
@@ -12,24 +12,22 @@ import { useVehicles } from '@/hooks/data/useVehicles';
 import { useStops } from '@/hooks/data/useStops';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
-import { useCityConfig } from '@/hooks/data/useCities';
-import { indexStops, matchesStopTypeFilter, withoutTwins, withStopColor } from '@/domain/stops';
+import { favoriteMarks, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
+import { hasDrawnLine } from '@/domain/routes';
 import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
+import { useNetworkLayer } from '@/hooks/derived/useNetworkLayer';
 import { useMapFilters } from '@/hooks/derived/useMapFilters';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
+import { useHiddenNightLines } from '@/hooks/derived/useHiddenNightLines';
 import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
     stopClusters,
-    stopPointsGlow,
-    stopPoints,
-    transferOuterPoints,
-    transferInnerPoints,
-    stopLabels,
-    stopIcons,
+    stationBadges,
+    stationNames,
+    platformBadges,
     stopEntrances,
-    stopFavorites,
     vehicleSelectedPulse,
     vehicleSelectedPoint,
     vehicleSelectedDirection,
@@ -39,13 +37,17 @@ import {
     vehicleLabels,
     routeLineCasing,
     createRouteLine,
+    createNetworkLayers,
     routeStops,
     routeTerminals,
     userLocationPulse,
     userLocationPoint,
     getVehicleColorExpression,
-    MAP_SOURCES
+    MAP_SOURCES,
+    STATION_CLUSTER_MAX_ZOOM,
 } from '@/config/mapLayers';
+import { STATION_CLUSTER_PROPERTIES, clusterModeColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
+import { modeColorsOf } from '@/lib/map/stopBadges';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 import { safeHexColor } from '@/lib/color';
 
@@ -56,6 +58,11 @@ interface MapLayersProps {
 
 const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
 const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
+const ownStationModes = memoizeLast(withStopModes);
+const ownPlatformModes = memoizeLast(withStopModes);
+const overlayStations = memoizeLast(withStopModes);
+const overlayPlatforms = memoizeLast(withStopModes);
+const starredStops = memoizeLast(favoriteMarks);
 
 /** A collection with a neighbouring network's features appended; the collection itself when there are none. */
 function withOverlay<T extends { features: unknown[] }>(own: T | null | undefined, overlay: T | null): T | null {
@@ -80,27 +87,38 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
     const delayFilter = usePreferencesStore(s => s.delayFilter);
     const userLocation = useGeolocationStore(s => s.userLocation);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const clusterColor = useMemo(() => clusterModeColor(modeColorsOf(selectedCity)), [selectedCity]);
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
-    const { stops: ownStops, centroids: ownCentroids } = useStops();
+    const { platforms, stations } = useStops();
+    const hiddenNightLines = useHiddenNightLines();
+    const ownPlatforms = ownPlatformModes(platforms, hiddenNightLines);
+    const ownStations = ownStationModes(stations, hiddenNightLines);
     const networksInView = useNetworksInView();
     const overlay = useOverlayNetworks(networksInView);
-    const { stopColor } = useCityConfig();
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
-    const ownColoredStops = useMemo(() => withStopColor(ownStops, stopColor), [ownStops, stopColor]);
     // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
     const stopsData = useMemo(
-        () => withOverlay(ownColoredStops, withoutTwins(overlay.stops, platformGrid(ownStops ?? null), false)),
-        [ownColoredStops, ownStops, overlay.stops]);
-    const labelData = useMemo(
-        () => withOverlay(ownCentroids, withoutTwins(overlay.centroids, stationGrid(ownCentroids ?? null), true)),
-        [ownCentroids, overlay.centroids]);
+        () => withOverlay(ownPlatforms, withoutTwins(overlayPlatforms(overlay.platforms, hiddenNightLines), platformGrid(platforms ?? null), false)),
+        [ownPlatforms, platforms, overlay.platforms, hiddenNightLines]);
+    const stationsData = useMemo(
+        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.stations, hiddenNightLines), stationGrid(stations ?? null), true)),
+        [ownStations, stations, overlay.stations, hiddenNightLines]);
+    const starred = starredStops(stationsData, stopsData, favoriteStops);
+    const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
+    const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
+    const platformOrder = useMemo(() => platformSortKey(starred.platformIds), [starred.platformIds]);
     const routeShapeData = useRouteShape();
+    const network = useNetworkLayer();
+    const networkColors = network?.colors;
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
 
     const passesStopFilter = useCallback((props: StopProperties | null) => matchesStopTypeFilter(props, stopTypeFilter), [stopTypeFilter]);
+
+    const stationText = showStopLabels ? stationBadges.layout?.['text-field'] : '';
 
     const { resolvedTheme } = useTheme();
     const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
@@ -108,6 +126,12 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
     const routeLine = useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
+    const hasRoute = Boolean(routeShapeData?.features.length);
+    // The selected line leaves the network only once the trip draws its own, so it never blinks out while the shape loads.
+    const routeLineName = hasDrawnLine(routeShapeData) ? selectedVehicle?.route_short_name ?? null : null;
+    const [networkCasing, networkLine] = useMemo(
+        () => createNetworkLayers(resolvedTheme === 'light' ? 'light' : 'dark', hasRoute, routeLineName, networkColors ?? []),
+        [resolvedTheme, hasRoute, routeLineName, networkColors]);
 
     const mapRef = useMapMetadataStore(s => s.mapRef);
     const { displayGeoJSON, selectedGeoJSON } = useVehicleAnimation(
@@ -132,9 +156,9 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
         };
     }, [stopTypeFilter, passesStopFilter]);
 
-    const filteredLabelData = useMemo(() => 
-        filterGeoJSON(labelData, showStops && showStopLabels), 
-        [labelData, showStops, showStopLabels, filterGeoJSON]
+    const filteredStationsData = useMemo(() =>
+        filterGeoJSON(stationsData, showStops),
+        [stationsData, showStops, filterGeoJSON]
     );
 
     const filteredStopsData = useMemo(() => 
@@ -156,6 +180,11 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     return (
         <>
+            <Source id={MAP_SOURCES.NETWORK_LINES} type="geojson" data={network?.lines ?? EMPTY_FEATURE_COLLECTION}>
+                <Layer {...networkCasing} />
+                <Layer {...networkLine} />
+            </Source>
+
             <Source id={MAP_SOURCES.ROUTE_SHAPE} type="geojson" data={routeShapeData || EMPTY_FEATURE_COLLECTION}>
                 <Layer
                     {...routeLineCasing}
@@ -176,6 +205,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 <Layer {...userLocationPoint} />
             </Source>
 
+            {/* Vehicles under the stations: a vehicle at a stop never covers its badge, and the name's halo keeps it readable over it. */}
             <Source id={MAP_SOURCES.SELECTED_VEHICLE} type="geojson" data={selectedGeoJSON}>
                 <Layer {...vehicleSelectedPulse} paint={{ ...vehicleSelectedPulse.paint, 'circle-color': vehicleColorExpr }} />
                 <Layer {...vehicleSelectedPoint} paint={{ ...vehicleSelectedPoint.paint, 'circle-color': vehicleColorExpr }} />
@@ -189,32 +219,33 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 <Layer {...vehicleLabels} filter={vehiclesFilter} paint={{ ...(vehicleLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
 
-            <Source id={MAP_SOURCES.STOP_LABELS} type="geojson" data={filteredLabelData}>
-                <Layer {...stopLabels} paint={{ ...(stopLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
+            <Source
+                id={MAP_SOURCES.STATIONS}
+                type="geojson"
+                data={filteredStationsData}
+                cluster={true}
+                clusterMaxZoom={STATION_CLUSTER_MAX_ZOOM}
+                clusterRadius={25}
+                clusterProperties={STATION_CLUSTER_PROPERTIES}
+            >
+                <Layer {...stopClusters} paint={{ ...stopClusters.paint, 'circle-color': clusterColor }} />
+                <Layer
+                    {...stationBadges}
+                    layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage, 'text-field': stationText }}
+                    paint={{ ...stationBadges.paint, 'text-color': textColor, 'text-halo-color': haloColor }}
+                />
+                {showStopLabels && <Layer {...stationNames} paint={{ ...stationNames.paint, 'text-color': textColor, 'text-halo-color': haloColor }} />}
             </Source>
 
-            <Source
-                id={MAP_SOURCES.STOPS}
-                type="geojson"
-                data={filteredStopsData}
-                cluster={true}
-                clusterMaxZoom={13}
-                clusterRadius={25}
-            >
-                <Layer {...stopEntrances} paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }} />
-                <Layer {...stopClusters} />
-                <Layer {...stopPointsGlow} />
-                <Layer {...stopPoints} />
-                <Layer {...transferOuterPoints} />
-                <Layer {...transferInnerPoints} />
-                <Layer {...stopIcons} paint={{ ...(stopIcons.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
-                {favoriteStops.length > 0 && (
-                    <Layer
-                        {...stopFavorites}
-                        paint={{ ...(stopFavorites.paint as SymbolLayerSpecification['paint']), 'icon-halo-color': haloColor }}
-                        filter={['in', ['get', 'stop_id'], ['literal', favoriteStops]] as FilterSpecification}
-                    />
-                )}
+            <Source id={MAP_SOURCES.STOPS} type="geojson" data={filteredStopsData}>
+                {/* Entrances under the vehicles and stations, so a station's name is placed before them. */}
+                <Layer
+                    {...stopEntrances}
+                    beforeId={vehicleSelectedPulse.id}
+                    paint={{ ...(stopEntrances.paint as SymbolLayerSpecification['paint']), 'text-halo-color': haloColor }}
+                />
+                {/* Platforms on top: small and tapped, they must not hide under a vehicle; placed first, so names move off them. */}
+                <Layer {...platformBadges} layout={{ ...platformBadges.layout, 'icon-image': platformBadgeImage, 'symbol-sort-key': platformOrder }} />
             </Source>
         </>
     );

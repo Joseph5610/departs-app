@@ -87,7 +87,8 @@ export const DetailPanelContent = memo(() => {
                     />
 
                     {showDepartureBoard && (
-                        <DepartureBoard 
+                        <DepartureBoard
+                            key={stopId ?? selectedStop.stop_id}
                             selectedStop={selectedStop}
                             onDepartureClick={(tripId, vehicleId) => {
                                 navigate(paths.trip(selectedCity, tripId, vehicleId));

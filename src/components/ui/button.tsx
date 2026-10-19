@@ -20,10 +20,13 @@ const buttonVariants = cva(
         ghost: "text-muted-foreground hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",
         link: "text-primary underline-offset-4 hover:underline",
         tinted: "glassy text-muted-foreground hover:text-foreground hover:bg-foreground/10 active:bg-foreground/15",
+        /** "More of these": dashed like an empty slot of the chips it extends, so it never reads as a menu. */
+        more: "rounded-full border border-dashed border-foreground/20 text-body-sm font-semibold tabular-nums text-muted-foreground hover:border-foreground/30 hover:bg-foreground/5 hover:text-foreground",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
+        chip: "h-7 gap-1 px-2.5",
         lg: "h-10 rounded-md px-8",
         xl: "h-12 rounded-xl px-6 text-base",
         icon: "h-11 w-11 rounded-full",

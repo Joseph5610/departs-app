@@ -28,6 +28,8 @@ export interface InitialCityConfig {
     hasPointsOfSale?: boolean;
     /** Route shapes are read by the app from the static data CDN; without them the route is drawn straight from stop to stop. */
     hasTripShapes?: boolean;
+    /** The city publishes `network.json`, its backbone lines (e.g. metro) drawn on the map at all times. */
+    hasNetworkLines?: boolean;
     /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
     isHidden?: boolean;
     /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
@@ -39,6 +41,8 @@ export interface InitialCityConfig {
     enrichmentChannel?: EnrichmentChannelAdapter;
     /** The feed reports no delay, so the app estimates it from `stop_times/<HH>.json` and the vehicle positions. */
     estimatesDelay?: boolean;
+    /** The departures API knows no stations, so a station is identified by its platforms' ids, comma-joined (Golemio). */
+    departuresByPlatforms?: boolean;
     hasInfotexts?: boolean;
     /** Fleet register on the static data CDN (`<city>/<file>`) for vehicle detail; a vehicle it does not list keeps the backend's network operator. */
     vehicleMetadata?: { file: string };
@@ -56,8 +60,8 @@ export interface InitialCityConfig {
     routeTypeColors?: Partial<Record<RouteType, string>>;
     /** Short network name, as riders know it (on the stop panel's link to the same stop in this network). */
     networkLabel: string;
-    /** Map colour of this network's stops, where they must be told apart from a neighbour's on shared ground. */
-    stopColor?: string;
+    /** Colour of each mode's tile in the map's stop badges; a mode left out takes `STOP_BADGE.MODE_COLORS`. */
+    modeColors?: Partial<Record<RouteType, string>>;
 }
 
 export interface LineRules {
@@ -65,20 +69,25 @@ export interface LineRules {
     trainLinePrefixes: string[];
     /** Local hours [from, to) with no metro service, to explain an empty metro board. */
     metroClosedHours: [number, number] | null;
-    /** Night lines are listed after the day lines of their mode. */
-    isNightLine: (routeType: string, lineName: string) => boolean;
+    /** Night lines are listed after the day lines of their mode, and left off stop badges outside `nightHours`; null where the city tells none. */
+    isNightLine: ((routeType: string, lineName: string) => boolean) | null;
+    /** Local hours [from, to), wrapping past midnight, in which stop badges show night lines. */
+    nightHours: [number, number];
 }
 
 export const DEFAULT_LINE_RULES: LineRules = {
     trainLinePrefixes: ['S', 'R'],
     metroClosedHours: null,
-    isNightLine: () => false,
+    isNightLine: null,
+    nightHours: [22, 5],
 };
 
 export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     prague: {
         slug: 'prague',
         networkLabel: 'PID',
+        departuresByPlatforms: true,
+        modeColors: { train: '#251E62', tram: '#7A0603', trolleybus: '#80166F', bus: '#007DA8', ferry: '#00B3CB', funicular: '#B2B943' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [14.4212, 50.0875],
@@ -86,6 +95,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         hasPointsOfSale: true,
         hasAlerts: true,
         hasTripShapes: true,
+        hasNetworkLines: true,
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
             stops: ['metro', 'train']
@@ -99,22 +109,28 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
         lineRules: {
             metroClosedHours: [0, 5],
+            // PID numbers night trams 90-99 and night buses 900+; a replacement bus (X91) keeps the number it replaces.
             isNightLine: (routeType, lineName) => {
                 const num = parseInt(lineName.replace(/\D/g, ''), 10);
-                if (Number.isNaN(num)) return false;
-                return (routeType === 'tram' && num >= 90 && num < 100) || (routeType === 'bus' && num >= 900);
+                const nightTram = num >= 90 && num < 100 && (routeType === 'tram' || lineName.startsWith('X'));
+                return nightTram || (routeType === 'bus' && num >= 900);
             },
         },
     },
     brno: {
         slug: 'brno',
         networkLabel: 'IDS JMK',
+        lineRules: {
+            isNightLine: (_routeType, lineName) => /^N\d/.test(lineName),
+        },
+        modeColors: { tram: '#D40000', trolleybus: '#008033', bus: '#2C82C8', ferry: '#00224B' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
         hasAlerts: true,
         hasTripShapes: true,
+        hasNetworkLines: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
             stops: []
@@ -127,6 +143,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
             { creator: 'Statutární město Brno, KORDIS JMK', title: 'IDS JMK timetables (GTFS, GTFS-RT)', url: 'https://data.brno.cz/datasets/379d2e9a7907460c8ca7fda1f3e84328', license: 'ccBy4' },
             { creator: 'Statutární město Brno, KORDIS JMK', title: 'Public transit vehicle positions', url: 'https://data.brno.cz/datasets/e8aa121910df41bb9a28e4ca34a263c7', license: 'ccBy4' },
             { creator: 'Lissy, FIT VUT Brno', title: 'Route shapes (Lissy API)', url: 'https://github.com/Jorgen98/Lissy', license: 'permission' },
+            { creator: 'KORDIS JMK, Statutární město Brno', title: 'IDS JMK – výluky a odklony', url: 'https://data.brno.cz/datasets/227c819ed9fc4d2e8498e9ea9c93c965', license: 'notStated' },
         ],
         debugFeedLabels: { vehicles: 'GTFS-RT -> JSON', alerts: 'GTFS-RT Alerts -> JSON' },
         enrichmentChannel: {
@@ -167,6 +184,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         center: [21.2393, 48.9985],
         bounds: [21.13, 48.93, 21.37, 49.08],
         hasTripShapes: true,
+        hasNetworkLines: true,
         vehicleMetadata: { file: 'dpmp-vehicles.json' },
         filters: {
             vehicles: ['bus', 'trolleybus'],
@@ -183,6 +201,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
     duk: {
         slug: 'duk',
         networkLabel: 'DÚK',
+        modeColors: { train: '#004B90', tram: '#CF003D', trolleybus: '#00829B', bus: '#5E9E1F', funicular: '#C9A100' },
         country: 'CZ',
         timezone: 'Europe/Prague',
         center: [14.0322, 50.6607],
@@ -201,7 +220,6 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         ],
         lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },
-        stopColor: '#7BBA2E',
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },
 };

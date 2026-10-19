@@ -74,6 +74,10 @@
       "labels": "Zobraziť popisy",
       "labelsDescription": "Zobraziť názvy zastávok na mape"
     },
+    "showNetworkLines": {
+      "title": "Linky MHD",
+      "description": "Zobraziť hlavné linky na mape"
+    },
     "showPointsOfSale": {
       "title": "Predajné miesta",
       "description": "Zobraziť automaty, infocentrá a pokladne na mape"
@@ -246,6 +250,9 @@
       "continuesAs": "Pokračuje ako <line/> smer {{headsign}}",
       "vehicleFilters": "Filtre vozidiel",
       "lineFilters": "Filtre liniek",
+      "platformSection": "Nástupište {{code}}",
+      "towardsSection": "Smer {{stop}}",
+      "stationNotices": "Zmeny premávky na nástupišti",
       "viewedTrip": "Prezeraný spoj",
       "yourTrip": "Váš spoj",
       "watchedTrip": "Sledovaný spoj",
@@ -254,7 +261,10 @@
         "early": "Ide skôr o {{delay}}",
         "timetable": "Bez živých dát"
       },
-      "atStopShort": "Na zastávke"
+      "atStopShort": "Na zastávke",
+      "moreLines": "Ďalšie linky (+{{count}})",
+      "fewerLines": "Menej liniek",
+      "metroSection": "Metro {{line}}"
     }
   },
   "update": {
@@ -376,7 +386,7 @@
     "noAlertsSearchDescription": "Žiadne hlásené upozornenia nezodpovedajú zadanému vyhľadávaniu.",
     "moreInfo": "Viac informácií",
     "all": "Všetko",
-    "planned": "Plánované",
+    "startsAt": "Začína {{date}}",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolania",
     "showMore": "Zobraziť ďalšie (+{{count}})",

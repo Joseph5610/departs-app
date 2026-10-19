@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Infotext, RSSItem } from '@/types';
 import { MIN, NOW, at } from '@/test/factories';
-import { activeNotices, alertSections, alertsForLine, incidentsOnLines } from './lists';
+import { activeNotices, alertSections, alertsForLine, incidentsOnLines, boardNotices } from './lists';
 
 const alert = (title: string, overrides: Partial<RSSItem> = {}): RSSItem => ({
     type: 'exclusion',
@@ -15,6 +15,28 @@ const alert = (title: string, overrides: Partial<RSSItem> = {}): RSSItem => ({
 });
 
 const line = (name: string, type: NonNullable<RSSItem['line_metadata']>[number]['type']) => ({ name, type });
+
+const notice = (id: string, relatedStopIds: string[], priority: Infotext['priority'] = 'normal'): Infotext => ({
+    id, text: id, textEn: null, priority, displayType: 'inline', relatedStopIds, valid_from: at(0), valid_to: null,
+});
+
+describe('boardNotices', () => {
+    // A station board names the platforms a notice concerns instead of showing every platform's notice as the station's.
+    it('files platform notices under their codes and keeps station-wide or unknown ones whole', () => {
+        const platforms = new Map([['Z1', 'A'], ['Z2', 'B'], ['Z10', '10']]);
+        const result = boardNotices([
+            notice('b-low', ['Z2'], 'low'),
+            notice('b-high', ['Z2'], 'high'),
+            notice('both', ['Z1', 'Z10']),
+            notice('station', ['S1']),
+            notice('elsewhere', ['X9']),
+        ], ['S1', 'Z1', 'Z2', 'Z10'], platforms);
+
+        expect(result.shown.map(n => n.id)).toEqual(['station']);
+        expect(result.platformCodes).toEqual(['10', 'A', 'B']);
+        expect(result.platformPriority).toBe('high');
+    });
+});
 
 describe('alertSections', () => {
     // Trolleybuses are listed with buses; alerts without lines fall under "other", after every mode.

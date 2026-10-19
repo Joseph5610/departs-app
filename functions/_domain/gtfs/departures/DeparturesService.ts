@@ -8,6 +8,7 @@ import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { getStopIndex, type StopIndex } from '../index/StopIndex';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
+import type { DepartureSource } from './departuresMapper';
 import type { DeparturesUseCase } from '../../useCases';
 
 /** Trip ids a board refers to: its own departures, the arrivals they wait for, and their through-running. */
@@ -23,18 +24,18 @@ export function collectTripIds(deps: { tuple: GtfsDepartureTuple }[]): Set<strin
     return ids;
 }
 
-/** The rows of every target platform, tagged with the stop the client asked for. */
+/** The rows of every target platform, tagged with the stop the client asked for and the platform each leaves from. */
 export async function collectDepartureTuples(
     stopIndex: StopIndex,
     targetIds: string[],
     childToRequestedMap: Map<string, string>,
     parentOf: ReadonlyMap<string, string>
-): Promise<{ stopId: string; tuple: GtfsDepartureTuple }[]> {
+): Promise<DepartureSource[]> {
     const rows = await stopIndex.rows(targetIds, parentOf);
-    const allDeps: { stopId: string; tuple: GtfsDepartureTuple }[] = [];
+    const allDeps: DepartureSource[] = [];
     for (const [id, tuples] of rows) {
         const requestedStopId = childToRequestedMap.get(id) || id;
-        for (const tuple of tuples) allDeps.push({ stopId: requestedStopId, tuple });
+        for (const tuple of tuples) allDeps.push({ stopId: requestedStopId, platformStopId: id, tuple });
     }
     return allDeps;
 }

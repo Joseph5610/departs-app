@@ -4,7 +4,8 @@ import { STATIC_DATA_CONFIG } from '../../_core/config';
 export const GOLEMIO_CONFIG = {
     BASE_URL: 'https://api.golemio.cz',
     TIMEZONE: 'Europe/Prague',
-    DEPARTURE_LIMIT: 20,
+    /** Departures per requested stop, a whole station included; Golemio allows at most 30. */
+    DEPARTURE_LIMIT: 24,
     DEPARTURE_MINUTES_AFTER: 120,
     /** Held connections and through-running built from the PID GTFS, hashed by trip id into `<bucket>.json` files. */
     CONNECTION_BUCKETS_URL: `${STATIC_DATA_CONFIG.BASE_URL}/prague/connection_buckets`,

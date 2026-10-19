@@ -6,10 +6,11 @@ import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { LIVE_FETCH_OPTIONS, DEPARTURES_CONFIG } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
-import { enrichLiveDepartures, computeDelayStats as computeBoardDelayStats, favoriteKeysAt, favoritesFirst as pinFavoriteLines, sortByExpectedTime, filterDepartures as filterBoardDepartures, groupDepartures as groupBoardDepartures, withDelayDeltas } from '@/domain/departures';
+import { enrichLiveDepartures, computeDelayStats as computeBoardDelayStats, favoriteKeysAt, favoritesFirst as pinFavoriteLines, sortByExpectedTime, filterDepartures as filterBoardDepartures, groupDepartures as groupBoardDepartures, withDelayDeltas, withStopPlatforms } from '@/domain/departures';
 import { memoizeLast } from '@/lib/memoize';
 import { useVehicles } from './useVehicles';
 import { useRouteMetadata } from './useRouteMetadata';
+import { useStops } from './useStops';
 import { useFleetLookup } from './useVehicleMetadata';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -36,6 +37,7 @@ export const useLiveDepartures = (departures: Departure[], dataUpdatedAt: number
 };
 
 const enrichStopDepartures = memoizeLast(enrichLiveDepartures);
+const platformsOf = memoizeLast(withStopPlatforms);
 const enrichBoardDepartures = memoizeLast(enrichLiveDepartures);
 const sortByTime = memoizeLast(sortByExpectedTime);
 
@@ -96,7 +98,8 @@ export const useDepartures = () => {
     });
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
-    const liveDepartures = useLiveDepartures(query.data?.departures ?? NO_DEPARTURES, dataUpdatedAt, enrichStopDepartures);
+    const { stopIndex } = useStops();
+    const liveDepartures = useLiveDepartures(platformsOf(query.data?.departures ?? NO_DEPARTURES, stopIndex), dataUpdatedAt, enrichStopDepartures);
     const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
     const favoriteLines = usePreferencesStore(s => s.favoriteLines);
     const favoriteKeys = useMemo(() => {
@@ -117,11 +120,12 @@ export const useDepartures = () => {
         error,
         refetch,
         groupedDepartures,
+        favoriteKeys,
         delayStats,
         isFiltered,
         selectedLine,
         hasAirConditioningData,
         hasAccessibilityData,
         hasRequestStop,
-    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop]);
+    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop]);
 };

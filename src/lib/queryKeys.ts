@@ -20,5 +20,6 @@ export const queryKeys = {
     geocoding: (url: string | null) => ['geocoding', url] as const,
     stopTimeSlice: (city: string, hour: string) => ['stop-time-slice', city, hour] as const,
     tripShapeIds: (city: string, bucket: string | undefined) => ['trip-shape-ids', city, bucket] as const,
+    networkLines: (city: string) => ['network-lines', city] as const,
     tripShapeGeometry: (city: string, bucket: string | undefined) => ['trip-shape-geometry', city, bucket] as const,
 };

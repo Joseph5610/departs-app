@@ -71,6 +71,10 @@
       "labels": "Show labels",
       "labelsDescription": "Show stop name labels on the map"
     },
+    "showNetworkLines": {
+      "title": "Transit lines",
+      "description": "Show the main lines on the map"
+    },
     "showPointsOfSale": {
       "title": "Points of Sale",
       "description": "Show ticket machines, info centers, and offices on map"
@@ -241,6 +245,9 @@
       "continuesAs": "Continues as <line/> to {{headsign}}",
       "vehicleFilters": "Vehicle filters",
       "lineFilters": "Line filters",
+      "platformSection": "Platform {{code}}",
+      "towardsSection": "Towards {{stop}}",
+      "stationNotices": "Service changes at platform",
       "viewedTrip": "Viewed trip",
       "yourTrip": "Your trip",
       "watchedTrip": "Followed trip",
@@ -249,7 +256,10 @@
         "early": "Early by {{delay}}",
         "timetable": "No live data"
       },
-      "atStopShort": "At the stop"
+      "atStopShort": "At the stop",
+      "moreLines": "More lines (+{{count}})",
+      "fewerLines": "Fewer lines",
+      "metroSection": "Metro {{line}}"
     }
   },
   "update": {
@@ -369,7 +379,7 @@
     "noAlertsSearchDescription": "No reported alerts match your search query.",
     "moreInfo": "More info",
     "all": "All",
-    "planned": "Planned",
+    "startsAt": "Starts {{date}}",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice",
     "showMore": "Show more (+{{count}})",

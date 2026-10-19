@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
+import { ExternalLink, ChevronDown, Maximize2, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Badge } from '@/components/ui/badge';
 import type { RSSItem } from '@/types';
 import { LineBadge } from '@/components/LineBadge';
 import { AlertIcon } from './AlertIcon';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { isHighPriorityAlert } from '@/domain/alerts';
-import { formatDateTime } from '@/domain/time';
+import { formatDateTime, formatStartDate } from '@/domain/time';
+import { useCityConfig } from '@/hooks/data/useCities';
 import {
     Collapsible,
     CollapsibleContent,
@@ -32,6 +32,7 @@ interface CondensedAlertItemProps {
  */
 export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = false, onOpenFull, className }: CondensedAlertItemProps) => {
     const { t, i18n } = useTranslation();
+    const { timezone } = useCityConfig();
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
     const isHigh = isHighPriorityAlert(item.priority);
@@ -65,27 +66,16 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                 </div>
 
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    {((lines && lines.length > 0) || isFuture) && (
-                        <div className="flex gap-2 flex-wrap items-center">
-                            {lines && lines.length > 0 && (
-                                <div className="flex gap-1 flex-wrap">
-                                    {lines.map((line, idx) => (
-                                        <LineBadge
-                                            key={`${line.name}-${idx}`}
-                                            name={line.name ?? ''}
-                                            routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
-                                            size="md"
-                                        />
-                                    ))}
-                                </div>
-                            )}
-
-                            {isFuture ? (
-                                <Badge variant="outline" className="text-micro font-bold text-amber-500 bg-amber-500/10 border-amber-500/30 uppercase tracking-widest gap-1.5 px-1.5 py-0.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                                    <span>{t('alerts.planned')}</span>
-                                </Badge>
-                            ) : null}
+                    {lines && lines.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                            {lines.map((line, idx) => (
+                                <LineBadge
+                                    key={`${line.name}-${idx}`}
+                                    name={line.name ?? ''}
+                                    routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
+                                    size="md"
+                                />
+                            ))}
                         </div>
                     )}
 
@@ -95,6 +85,13 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                     )}>
                         {item.title}
                     </div>
+
+                    {isFuture && item.valid_from && (
+                        <div className="flex items-center gap-1.5 text-caption font-medium text-muted-foreground">
+                            <CalendarClock size={12} strokeWidth={2} className="shrink-0" />
+                            <span>{t('alerts.startsAt', { date: formatStartDate(item.valid_from, i18n.resolvedLanguage, timezone) })}</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="shrink-0 pt-1 text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>

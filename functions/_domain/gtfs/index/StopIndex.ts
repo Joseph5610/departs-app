@@ -1,16 +1,8 @@
 import type { CityConfig } from '../../../_core/cityConfig';
-import { ApiError } from '../../../_core/errors';
-import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { getDepartureRows, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
+import { boundedStopTargets, requestedStopParts, type StopTargets } from './stopTargets';
 
-/** The stop ids a request named, resolved to the platforms whose rows must actually be read. */
-export interface StopTargets {
-    targetIds: string[];
-    childToRequestedMap: Map<string, string>;
-    /** The station of each target that is a platform. */
-    parentOf: Map<string, string>;
-}
 
 /**
  * A city's static departure data: which platforms a station's departures are attached to, and the
@@ -42,36 +34,8 @@ export class StopIndex {
      * the first check.
      */
     async resolve(stopIds: string[]): Promise<StopTargets> {
-        const relations = await getStopRelations(this.city, stopIds);
-        const targetIds: string[] = [];
-        const childToRequestedMap = new Map<string, string>();
-        const parentOf = new Map<string, string>();
-
-        for (const rawId of stopIds) {
-            const relation = relations.get(rawId);
-
-            if (relation && relation[0] === null && relation.length > 1) {
-                for (let i = 1; i < relation.length; i++) {
-                    const child = relation[i] as string;
-                    targetIds.push(child);
-                    childToRequestedMap.set(child, rawId);
-                    parentOf.set(child, rawId);
-                }
-            } else {
-                targetIds.push(rawId);
-                childToRequestedMap.set(rawId, rawId);
-                if (relation?.[0]) parentOf.set(rawId, relation[0]);
-            }
-
-            if (targetIds.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) {
-                throw new ApiError(
-                    `Too many stops requested; this expands to more than ${GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS} platforms.`,
-                    400
-                );
-            }
-        }
-
-        return { targetIds, childToRequestedMap, parentOf };
+        const relations = await getStopRelations(this.city, requestedStopParts(stopIds));
+        return boundedStopTargets(stopIds, relations);
     }
 
     /** The timetable rows of the given stops; `parentOf` names the station of any that are platforms. */

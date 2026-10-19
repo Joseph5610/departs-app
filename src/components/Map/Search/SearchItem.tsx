@@ -9,7 +9,6 @@ interface SearchItemProps {
     icon: React.ReactNode;
     title: string;
     subtitle?: string;
-    metroLines?: Array<{ name: string, route_color: string }>;
     lines?: LineBadgeData[];
     onClick: () => void;
     variant?: 'default' | 'primary';
@@ -63,9 +62,7 @@ export const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
  * A single row in the search dropdown; Enter on the keyboard-highlighted row triggers onClick.
  * Supports default, primary (line filter), and highlighted (favorite) visual variants.
  */
-export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => {
-    // If we have explicit lines (enriched), use them. Fallback to legacy metroLines.
-    const displayLines = lines || metroLines?.map(m => ({ name: m.name, type: 'metro', route_color: m.route_color }));
+export const SearchItem = ({ icon, title, subtitle, lines, onClick, variant = 'default', highlight = false, testId }: SearchItemProps) => {
 
     return (
         <Autocomplete.Item
@@ -92,7 +89,7 @@ export const SearchItem = ({ icon, title, subtitle, metroLines, lines, onClick, 
                 </span>
                 
                 <div className="flex flex-wrap items-center gap-y-1">
-                    <LineBadges lines={displayLines} />
+                    <LineBadges lines={lines} />
 
                     {subtitle && (
                         <span className="text-muted-foreground/70 text-badge font-medium truncate">

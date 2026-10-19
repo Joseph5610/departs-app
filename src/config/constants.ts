@@ -127,6 +127,8 @@ export const POS_SEARCH = {
 export const MAP_DATA = {
     BOUNDS_DEBOUNCE_MS: 800,
     MIN_ZOOM: 9,
+    /** How often stop badges check whether night lines are due. */
+    NIGHT_LINES_CHECK_MS: 5 * 60_000,
 };
 
 /**
@@ -318,7 +320,9 @@ export const GEOCODING_CONFIG = {
 /** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
 export const DEVICE_CACHE = {
     /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
-    VERSION: 'v50',
+    VERSION: 'v53',
+    /** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
+    STOPS_FILE_VERSION: 1,
     /** Entries older than this are dropped instead of shown while refreshing. */
     MAX_AGE: 14 * DAY_MS,
     /** On a metered connection a copy is refreshed only once older than this, however short its usual stale time. */
@@ -372,6 +376,10 @@ export const RIDE_PUSH_CONFIG = {
 };
 
 export const DEPARTURES_CONFIG = {
+    /** How often an empty metro board re-checks the metro's closed hours. */
+    METRO_CLOSED_CHECK_MS: 60_000,
+    /** Lines a station board's platform section lists before its "more lines" button. */
+    SECTION_PREVIEW_LINES: 3,
     /** Only departures expected within this window count towards the board's delay statistics. */
     DELAY_STATS_WINDOW_MS: 30 * MINUTE_MS,
     /** Home sheet countdowns read in minutes below this; later departures show their clock time instead. */

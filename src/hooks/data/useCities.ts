@@ -3,11 +3,11 @@ import { z } from 'zod/mini';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { CitiesResponse, City } from '@/types';
-import { isCityVisible } from '@/domain/cities';
+import { isCityVisible, lineRulesOf } from '@/domain/cities';
 import { apiFetch } from '@/lib/apiClient';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { QUERY_TIMING_MS } from '@/config/constants';
-import { DEFAULT_LINE_RULES, FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '@/config/cities';
+import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '@/config/cities';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -55,7 +55,7 @@ export function useCityConfig(slug?: string): CityConfig {
 /** The selected city's line conventions, with the generic defaults for anything it doesn't define. */
 export function useLineRules(): LineRules {
     const lineRules = useCityConfig().lineRules;
-    return useMemo(() => ({ ...DEFAULT_LINE_RULES, ...lineRules }), [lineRules]);
+    return useMemo(() => lineRulesOf(lineRules), [lineRules]);
 }
 
 /** The cities a user may pick: the hidden ones only on a device that unlocked them with `?beta=<slug>`. */
