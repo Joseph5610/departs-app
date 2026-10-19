@@ -7,9 +7,8 @@ import { useInfotexts } from '@/hooks/data/useInfotexts';
 import type { SelectedStop, Infotext } from '@/types';
 import { formatDateTime } from '@/domain/time';
 import { boardNotices, noticeText } from '@/domain/alerts';
-import { isStationBoard, platformCodes, platformIdByCode, stationPlatforms } from '@/domain/stops';
+import { boardStopIds, isStationBoard, platformCodes, platformIdByCode } from '@/domain/stops';
 import { useOpenStop } from '@/hooks/features/useOpenStop';
-import { useStops } from '@/hooks/data/useStops';
 import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { PlatformCircle } from '@/components/PlatformCircle';
 
@@ -23,20 +22,19 @@ interface InfoTextsProps {
  */
 export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
     const allInfotexts = useInfotexts();
-    const { stopIndex } = useStops();
     const openPlatform = useOpenStop();
-    const onStation = isStationBoard(selectedStop);
+    const { board } = selectedStop;
+    const onStation = !!board && isStationBoard(board);
 
-    const codes = useMemo(() => onStation ? platformCodes(selectedStop.all_ids ?? [], stopIndex) : null, [onStation, selectedStop, stopIndex]);
+    const codes = useMemo(() => board && onStation ? platformCodes(board.platforms) : null, [onStation, board]);
     const notices = useMemo(
-        () => allInfotexts ? boardNotices(allInfotexts, [selectedStop.stop_id, ...(selectedStop.all_ids || [])], codes) : null,
-        [selectedStop, allInfotexts, codes]);
+        () => allInfotexts ? boardNotices(allInfotexts, board ? boardStopIds(board) : [selectedStop.id], codes) : null,
+        [selectedStop, board, allInfotexts, codes]);
 
     const platformIds = useMemo(() => {
-        if (!notices?.platformCodes.length) return new Map<string, string | null>();
-        const platforms = stationPlatforms(selectedStop.all_ids ?? [], stopIndex);
-        return new Map(notices.platformCodes.map(code => [code, platformIdByCode(platforms, code)]));
-    }, [notices, selectedStop, stopIndex]);
+        if (!notices?.platformCodes.length || !board) return new Map<string, string | null>();
+        return new Map(notices.platformCodes.map(code => [code, platformIdByCode(board.platforms, code)]));
+    }, [notices, board]);
 
     if (!notices || (notices.shown.length === 0 && notices.platformCodes.length === 0)) return null;
     const { shown, platformCodes: codesWithNotices, platformPriority } = notices;

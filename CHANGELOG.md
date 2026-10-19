@@ -4,6 +4,22 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.87.1] - 2026-10-19
+
+### Changed
+
+- Every stop opens under one id: links and favourites saved under an alias or an older PID id open their stop and redirect to its own id.
+- MCP tools resolve a stop name to its station from departs-data's stop index, and answer with the station ids the app and departures use.
+
+### Fixed
+
+- A stop pinned under an alias shows as pinned, and unpinning it no longer leaves a duplicate behind.
+- The full-screen board of a platform section shows its name, platform and notices.
+
+### Removed
+
+- The legacy `/stops` and `/api/<city>/stops` redirects to `map-stops.json`, which departs-data no longer publishes.
+
 ## [0.87.0] - 2026-10-19
 
 ### Added

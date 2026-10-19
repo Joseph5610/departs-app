@@ -16,17 +16,17 @@ import { LineBadge } from '@/components/LineBadge';
 import { DirectionRow } from '@/components/DetailPanel/DepartureBoard/DirectionRow';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
 import { BoardRow, BoardSection, RowHeadsign, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
-import type { FavoriteLine, StopFeature, Departure, DepartureClickHandler } from '@/types';
+import type { BoardStop, FavoriteLine, Departure, DepartureClickHandler } from '@/types';
 
 interface FavoriteLineRowProps {
     favorite: FavoriteLine;
-    stopFeature: StopFeature | undefined;
+    stop: BoardStop | undefined;
     departures: Departure[];
     isFirst: boolean;
 }
 
 /** A pinned line and direction at one stop, laid out like its row on the stop's board, with a way to that board. */
-export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: FavoriteLineRowProps) => {
+export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: FavoriteLineRowProps) => {
     const { t } = useTranslation();
     const { timezone } = useCityConfig();
     const { presetLineFilter } = useSelectionStore(s => s.actions);
@@ -37,11 +37,11 @@ export const FavoriteLineRow = ({ favorite, stopFeature, departures, isFirst }: 
         () => nextDeparturesOf(departures, favorite.line, favorite.headsign, DEPARTURES_CONFIG.VISIBLE_PER_GROUP),
         [departures, favorite.line, favorite.headsign],
     );
-    const routeColor = safeHexColor(next[0]?.route_color || lineColorAt(stopFeature, favorite.line)) || FALLBACK_ROUTE_COLOR;
-    const stopName = stopFeature?.properties.stop_name;
+    const routeColor = safeHexColor(next[0]?.route_color || lineColorAt(stop, favorite.line)) || FALLBACK_ROUTE_COLOR;
+    const stopName = stop?.name;
 
     const openBoard = () => {
-        if (stopFeature) flyTo({ center: stopFeature.geometry.coordinates as [number, number], zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
+        if (stop) flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
         presetLineFilter(favorite.line);
         navigate(paths.stop(favorite.city, favorite.stopId));
     };

@@ -1,9 +1,9 @@
 
-import { useMemo, useCallback, memo } from 'react';
+import { useMemo, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
-import type { StopCollection, StopProperties } from '@/types';
+import type { Entrance, Platform, Station, StopModel } from '@/types';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
@@ -12,10 +12,9 @@ import { useVehicles } from '@/hooks/data/useVehicles';
 import { useStops } from '@/hooks/data/useStops';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
-import { favoriteMarks, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
+import { favoriteMarks, mapStopsWithOverlay, toMapStops, type HiddenNightLinesOf } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { hasDrawnLine } from '@/domain/routes';
-import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
 import { useNetworkLayer } from '@/hooks/derived/useNetworkLayer';
 import { useMapFilters } from '@/hooks/derived/useMapFilters';
@@ -56,12 +55,10 @@ interface MapLayersProps {
     mapLoaded: boolean;
 }
 
-const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
-const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
-const ownStationModes = memoizeLast(withStopModes);
-const ownPlatformModes = memoizeLast(withStopModes);
-const overlayStations = memoizeLast(withStopModes);
-const overlayPlatforms = memoizeLast(withStopModes);
+const shownStops = memoizeLast(mapStopsWithOverlay);
+const stationFeatures = memoizeLast((stations: readonly Station[], hidden: HiddenNightLinesOf) => toMapStops(stations, hidden));
+const platformFeatures = memoizeLast((platforms: readonly (Platform | Entrance)[], hidden: HiddenNightLinesOf) => toMapStops(platforms, hidden));
+const allNetworks = memoizeLast((model: StopModel | null, overlay: readonly StopModel[]) => [model, ...overlay]);
 const starredStops = memoizeLast(favoriteMarks);
 
 /** A collection with a neighbouring network's features appended; the collection itself when there are none. */
@@ -92,21 +89,15 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
-    const { platforms, stations } = useStops();
+    const { model } = useStops();
     const hiddenNightLines = useHiddenNightLines();
-    const ownPlatforms = ownPlatformModes(platforms, hiddenNightLines);
-    const ownStations = ownStationModes(stations, hiddenNightLines);
     const networksInView = useNetworksInView();
     const overlay = useOverlayNetworks(networksInView);
     const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
-    // Where another network's stop stands on one of the selected network's, only the selected one is drawn.
-    const stopsData = useMemo(
-        () => withOverlay(ownPlatforms, withoutTwins(overlayPlatforms(overlay.platforms, hiddenNightLines), platformGrid(platforms ?? null), false)),
-        [ownPlatforms, platforms, overlay.platforms, hiddenNightLines]);
-    const stationsData = useMemo(
-        () => withOverlay(ownStations, withoutTwins(overlayStations(overlay.stations, hiddenNightLines), stationGrid(stations ?? null), true)),
-        [ownStations, stations, overlay.stations, hiddenNightLines]);
-    const starred = starredStops(stationsData, stopsData, favoriteStops);
+    const shown = shownStops(model, overlay.networks, stopTypeFilter);
+    const stationsData = stationFeatures(shown.stations, hiddenNightLines);
+    const stopsData = platformFeatures(shown.platforms, hiddenNightLines);
+    const starred = starredStops(allNetworks(model, overlay.networks), favoriteStops);
     const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
     const platformOrder = useMemo(() => platformSortKey(starred.platformIds), [starred.platformIds]);
@@ -115,8 +106,6 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const networkColors = network?.colors;
     const selectedVehicle = useSelectedVehicle();
     const { selectedVehicleFeature, vehiclesFilter } = useMapFilters(selectedVehicle, tripId || vehicleId, delayFilter);
-
-    const passesStopFilter = useCallback((props: StopProperties | null) => matchesStopTypeFilter(props, stopTypeFilter), [stopTypeFilter]);
 
     const stationText = showStopLabels ? stationBadges.layout?.['text-field'] : '';
 
@@ -147,24 +136,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
         [colorVehiclesByDelay]
     );
 
-    const filterGeoJSON = useCallback((data: StopCollection | null, isEnabled: boolean) => {
-        if (!isEnabled || !data) return EMPTY_FEATURE_COLLECTION;
-        if (stopTypeFilter.length === 0) return data;
-        return {
-            ...data,
-            features: data.features.filter(f => passesStopFilter(f.properties))
-        };
-    }, [stopTypeFilter, passesStopFilter]);
-
-    const filteredStationsData = useMemo(() =>
-        filterGeoJSON(stationsData, showStops),
-        [stationsData, showStops, filterGeoJSON]
-    );
-
-    const filteredStopsData = useMemo(() => 
-        filterGeoJSON(stopsData, showStops), 
-        [stopsData, showStops, filterGeoJSON]
-    );
+    const filteredStationsData = showStops ? stationsData : EMPTY_FEATURE_COLLECTION;
+    const filteredStopsData = showStops ? stopsData : EMPTY_FEATURE_COLLECTION;
 
     // Memoized: react-map-gl re-sends a source to the map worker whenever its `data` identity changes.
     const userLocationData = useMemo(() => userLocation ? {

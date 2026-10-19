@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, MapPin, Star, Clock, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
@@ -9,15 +9,16 @@ import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from '@/lib/cn';
 
-import type { StopFeature, SearchHistoryItem, VehicleFeature } from '@/types';
+import type { Stop, SearchHistoryItem, VehicleFeature } from '@/types';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
 import type { GeocodingResult } from '@/hooks/data/useGeocoding';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 
 interface SearchDropdownProps {
-    results: StopFeature[];
+    results: Stop[];
     searchHistory: SearchHistoryItem[];
-    favoriteStops: string[];
+    /** The pinned stops, by the ids results carry. */
+    favoriteStopIds: ReadonlySet<string>;
     query: string;
     activeFilter: string[] | null;
     queryLines: string[] | null;
@@ -25,7 +26,7 @@ interface SearchDropdownProps {
     vehicleResults: VehicleFeature[];
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
-    onStopSelect: (stop: StopFeature) => void;
+    onStopSelect: (stop: Stop) => void;
     onHistorySelect: (item: SearchHistoryItem) => void;
     onLineSelect: (lines: string[]) => void;
     onPlaceSelect: (result: GeocodingResult) => void;
@@ -65,7 +66,7 @@ const GroupHeading = ({ icon, label, count }: { icon: React.ReactNode; label: st
 export const SearchDropdown = ({
     results,
     searchHistory,
-    favoriteStops,
+    favoriteStopIds,
     query,
     activeFilter,
     queryLines,
@@ -81,21 +82,20 @@ export const SearchDropdown = ({
     onVehicleSelect,
 }: SearchDropdownProps) => {
     const { t } = useTranslation();
-    const favoriteStopIds = useMemo(() => new Set(favoriteStops), [favoriteStops]);
 
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
     const renderStopResults = (testIdPrefix: 'fav' | 'res') => results.map((stop) => {
-        const isFavorite = favoriteStopIds.has(stop.properties.stop_id);
+        const isFavorite = favoriteStopIds.has(stop.id);
         return (
             <SearchItem
-                key={stop.properties.stop_id}
+                key={stop.id}
                 icon={isFavorite ? <Star size={16} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={16} strokeWidth={1.5} />}
-                title={stop.properties.stop_name}
+                title={stop.name}
                 subtitle={stopResultSubtitle(stop, t)}
-                lines={stop.properties.lines}
+                lines={stop.lines}
                 highlight={isFavorite}
-                testId={`search-item-${testIdPrefix}-stop-${stop.properties.stop_id}`}
+                testId={`search-item-${testIdPrefix}-stop-${stop.id}`}
                 onClick={() => onStopSelect(stop)}
             />
         );

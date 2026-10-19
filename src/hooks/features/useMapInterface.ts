@@ -25,7 +25,7 @@ export const useMapInterface = () => {
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { flyTo, easeTo } = useMapMetadataStore(s => s.actions);
 
-    const selectedStop = useSelectedStop();
+    const selectedStopPos = useSelectedStop()?.board?.pos;
     const selectedVehicle = useSelectedVehicle();
     const isMobile = useIsMobile();
 
@@ -74,16 +74,16 @@ export const useMapInterface = () => {
             return;
         }
 
-        if (!isFollowing && !selectedTripId && selectedStop?.coordinates && lastFlownStopId.current !== selectedStopId) {
+        if (!isFollowing && !selectedTripId && selectedStopPos && lastFlownStopId.current !== selectedStopId) {
             lastFlownStopId.current = selectedStopId || null;
             easeTo({
-                center: selectedStop.coordinates,
+                center: selectedStopPos,
                 zoom: Math.max(currentMap.getZoom(), MAP_CAMERA.MIN_STOP_ZOOM),
                 duration: MAP_CAMERA.EASE_MS,
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStop?.coordinates, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStopPos, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
 
     // Selected vehicle pulse, animated on the map layer directly to stay off React renders.
     const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);

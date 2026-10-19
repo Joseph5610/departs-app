@@ -1,5 +1,5 @@
 import { FALLBACK_ROUTE_COLOR, LINE_SEARCH } from '@/config/constants';
-import type { StopFeature } from '@/types';
+import type { StopLine } from '@/types';
 
 export type LineMetadata = { route_color: string; type: string };
 
@@ -23,15 +23,10 @@ export function parseLineQuery(query: string, knownLines: Map<string, LineMetada
 /**
  * Builds an O(1) lookup map for line metadata from a list of stops.
  */
-const getLineMetadataMap = (stops: StopFeature[] | null): Map<string, LineMetadata> => {
+const getLineMetadataMap = (stops: readonly { lines: readonly StopLine[] }[]): Map<string, LineMetadata> => {
     const map = new Map<string, LineMetadata>();
-    if (!stops) return map;
-
     for (const stop of stops) {
-        const lines = stop.properties.lines;
-        if (!lines) continue;
-
-        for (const line of lines) {
+        for (const line of stop.lines) {
             const name = String(line.name).toUpperCase();
             if (!map.has(name)) {
                 map.set(name, {
@@ -60,7 +55,7 @@ export const getRouteTypeI18nKey = (type: string | undefined | null): string => 
 };
 
 /** Every line the city runs, from its stops and its routes file, for recognising a line query. */
-export const knownLineMetadata = (stops: StopFeature[], routesByName: ReadonlyMap<string, LineMetadata>): Map<string, LineMetadata> => {
+export const knownLineMetadata = (stops: readonly { lines: readonly StopLine[] }[], routesByName: ReadonlyMap<string, LineMetadata>): Map<string, LineMetadata> => {
     const map = getLineMetadataMap(stops);
     for (const [name, route] of routesByName) {
         if (!map.has(name)) map.set(name, { route_color: route.route_color, type: route.type });

@@ -11,7 +11,7 @@ import type { PosSearchResult } from '@/domain/pointsOfSale';
 import type { GeocodingResult } from '@/hooks/data/useGeocoding';
 import { WalkDistance } from '@/components/WalkDistance';
 import { StopModeIcon } from '@/components/StopModeIcon';
-import type { SearchHistoryItem, StopFeature, VehicleFeature } from '@/types';
+import type { SearchHistoryItem, Stop, VehicleFeature } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -23,8 +23,8 @@ import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection
 
 interface MobileSearchResultsProps {
     query: string;
-    stopResults: StopFeature[];
-    favoriteStops: StopFeature[];
+    stopResults: Stop[];
+    favoriteStops: Stop[];
     location: [number, number] | null;
     searchHistory: SearchHistoryItem[];
     queryLines: string[] | null;
@@ -32,7 +32,7 @@ interface MobileSearchResultsProps {
     vehicleResults: VehicleFeature[];
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
-    onStopSelect: (stop: StopFeature) => void;
+    onStopSelect: (stop: Stop) => void;
     onHistorySelect: (item: SearchHistoryItem) => void;
     onClearHistory: () => void;
     onLineSelect: (lines: string[]) => void;
@@ -78,23 +78,23 @@ export const MobileSearchResults = ({
     const isEmptyQuery = query === '';
     const hasResults = stopResults.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
 
-    const distanceTo = (stop: StopFeature) => {
-        const info = getStopDistanceInfo(location, stop.geometry.coordinates);
+    const distanceTo = (stop: Stop) => {
+        const info = getStopDistanceInfo(location, stop.pos);
         return info ? <WalkDistance info={info} /> : undefined;
     };
 
-    const stopRow = (stop: StopFeature) => (
+    const stopRow = (stop: Stop) => (
         <ResultRow
-            key={stop.properties.stop_id}
-            icon={<StopModeIcon lines={stop.properties.lines} />}
+            key={stop.id}
+            icon={<StopModeIcon lines={stop.lines} />}
             isStop
-            title={stop.properties.stop_name}
+            title={stop.name}
             subtitle={stopResultSubtitle(stop, t)}
             meta={distanceTo(stop)}
             onClick={() => onStopSelect(stop)}
-            testId={`search-item-res-stop-${stop.properties.stop_id}`}
+            testId={`search-item-res-stop-${stop.id}`}
         >
-            <div className="flex flex-wrap items-center gap-y-1"><LineBadges lines={stop.properties.lines} /></div>
+            <div className="flex flex-wrap items-center gap-y-1"><LineBadges lines={stop.lines} /></div>
         </ResultRow>
     );
 
@@ -105,15 +105,15 @@ export const MobileSearchResults = ({
                     <div className="-mx-6 flex gap-2 overflow-x-auto px-6">
                         {favoriteStops.map(stop => (
                             <Button
-                                key={stop.properties.stop_id}
+                                key={stop.id}
                                 variant="outline"
                                 size="sm"
                                 className="shrink-0 rounded-full bg-card"
                                 onClick={() => onStopSelect(stop)}
-                                data-testid={`search-item-fav-stop-${stop.properties.stop_id}`}
+                                data-testid={`search-item-fav-stop-${stop.id}`}
                             >
                                 <Star size={13} strokeWidth={1.5} className="fill-favorite text-favorite" />
-                                {stop.properties.stop_name}
+                                {stop.name}
                             </Button>
                         ))}
                     </div>

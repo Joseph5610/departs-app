@@ -1,4 +1,4 @@
-import type { StopFeature, Departure, FavoriteLine } from '@/types';
+import type { StopLine, Departure, FavoriteLine } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
 import { boardingKey } from './platforms';
@@ -218,9 +218,9 @@ export const favoritesView = <S>(lines: FavoriteLine[], stops: S[], tab: 'lines'
     };
 };
 
-/** `favoriteKey`s of the lines pinned at one stop of one city. */
-export const favoriteKeysAt = (favorites: FavoriteLine[], city: string, stopId: string | null): string[] =>
-    favorites.filter(fav => fav.city === city && fav.stopId === stopId).map(fav => favoriteKey(fav.line, fav.headsign));
+/** `favoriteKey`s of the lines pinned at one stop of one city, `opens` telling whether a pin's stop id names it. */
+export const favoriteKeysAt = (favorites: FavoriteLine[], city: string, opens: (stopId: string) => boolean): string[] =>
+    favorites.filter(fav => fav.city === city && opens(fav.stopId)).map(fav => favoriteKey(fav.line, fav.headsign));
 
 /**
  * The departures a line group shows. Collapsed groups show the first few, except that a single hidden
@@ -250,9 +250,9 @@ export const groupsHidingTrips = (groups: DepartureLineGroup[], tripIds: Readonl
 };
 
 /** Every line a rider follows: the pinned lines and all lines serving the pinned stops. */
-export const favoriteLineNames = (lines: readonly FavoriteLine[], stops: readonly StopFeature[]): Set<string> => {
+export const favoriteLineNames = (lines: readonly FavoriteLine[], stops: readonly { lines: readonly StopLine[] }[]): Set<string> => {
     const names = new Set<string>();
     for (const fav of lines) names.add(fav.line);
-    for (const stop of stops) for (const line of stop.properties.lines ?? []) names.add(line.name);
+    for (const stop of stops) for (const line of stop.lines) names.add(line.name);
     return names;
 };

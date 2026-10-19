@@ -15,11 +15,11 @@ import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectionStore } from '@/state/selectionStore';
 import { knownLineMetadata, lineBadges, parseLineQuery } from '@/domain/routes';
-import { searchStops, stopHistoryEntry, stopsByIds } from '@/domain/stops';
+import { pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
 import { searchVehicles } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 import { MAP_CAMERA } from '@/config/constants';
-import type { SearchHistoryItem, StopFeature, VehicleFeature } from '@/types';
+import type { SearchHistoryItem, Stop, VehicleFeature } from '@/types';
 
 /** What a pick did: opened a panel for it, or changed the map (a line filter or a place pin). */
 export type SearchPick = 'panel' | 'map';
@@ -44,18 +44,16 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const userLocation = useGeolocationStore(s => s.userLocation);
     const setIsFollowing = useSelectionStore(s => s.actions.setIsFollowing);
 
-    const stops = useStops();
-    const { query, setQuery, results: stopResults, searchIndex } = useStopSearch(stops?.allFeatures || null);
+    const { model } = useStops();
+    const { query, setQuery, results: stopResults, searchIndex } = useStopSearch(model);
     const geocodingResults = useGeocoding(query, userLocation);
     const posResults = usePosSearch(query, isOpen);
 
-    const favoriteStopFeatures = useMemo(() => {
-        if (!stops?.stopIndex || favoriteStops.length === 0) return [];
-        return stopsByIds(stops.stopIndex, favoriteStops);
-    }, [stops, favoriteStops]);
+    const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStops).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops]);
+    const pinnedStopIds = useMemo(() => new Set(pinnedStopList.map(stop => stop.id)), [pinnedStopList]);
 
     const { byName: routesByName } = useRouteMetadata();
-    const lineMetadataMap = useMemo(() => knownLineMetadata(stops.allFeatures?.features || [], routesByName), [stops.allFeatures, routesByName]);
+    const lineMetadataMap = useMemo(() => knownLineMetadata(model ? [...model.stations, ...model.platforms] : [], routesByName), [model, routesByName]);
     const queryLines = useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
     const queryLineBadges = useMemo(() => queryLines && lineBadges(queryLines, lineMetadataMap), [queryLines, lineMetadataMap]);
     const activeFilterBadges = useMemo(() => activeFilter && lineBadges(activeFilter, lineMetadataMap), [activeFilter, lineMetadataMap]);
@@ -74,9 +72,9 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
         onPicked(pick);
     };
 
-    const selectStop = (stop: StopFeature) => {
-        flyToResult(stop.geometry.coordinates as [number, number]);
-        navigate(paths.stop(selectedCity, stop.properties.stop_id));
+    const selectStop = (stop: Stop) => {
+        flyToResult(stop.pos);
+        navigate(paths.stop(selectedCity, stop.id));
         addToHistory(stopHistoryEntry(stop, selectedCity));
         finish('panel');
     };
@@ -150,7 +148,7 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
 
     return {
         query, setQuery,
-        stopResults, favoriteStopFeatures, favoriteStops, searchHistory,
+        stopResults, pinnedStopList, pinnedStopIds, searchHistory,
         vehicleResults, posResults, geocodingResults, queryLines, queryLineBadges,
         activeFilter, activeFilterBadges, lineFilterLabel, selectedPlace, selectedPlaceId,
         selectStop, selectHistory, selectLine, selectVehicle, selectPos, selectPlace, selectTopResult,

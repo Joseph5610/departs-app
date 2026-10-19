@@ -8,9 +8,10 @@ import { LIVE_FETCH_OPTIONS, DEPARTURES_CONFIG } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
 import { enrichLiveDepartures, computeDelayStats as computeBoardDelayStats, favoriteKeysAt, favoritesFirst as pinFavoriteLines, sortByExpectedTime, filterDepartures as filterBoardDepartures, groupDepartures as groupBoardDepartures, withDelayDeltas, withStopPlatforms } from '@/domain/departures';
 import { memoizeLast } from '@/lib/memoize';
+import { canonicalStopId, opensStop } from '@/domain/stops';
 import { useVehicles } from './useVehicles';
 import { useRouteMetadata } from './useRouteMetadata';
-import { useStops } from './useStops';
+import { useResolvedStop, useStops } from './useStops';
 import { useFleetLookup } from './useVehicleMetadata';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -45,10 +46,11 @@ const sortByTime = memoizeLast(sortByExpectedTime);
 export const useBoardDepartures = (stopId: string) => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
+    const departuresId = useResolvedStop(stopId || null)?.departuresId ?? null;
     const query = useQuery<DeparturesResponse, AppError>({
-        queryKey: queryKeys.boardDepartures(selectedCity, stopId),
-        queryFn: ({ signal }) => fetchDepartures(selectedCity, [stopId], signal),
-        enabled: !!stopId && !!selectedCity,
+        queryKey: queryKeys.boardDepartures(selectedCity, departuresId ?? ''),
+        queryFn: ({ signal }) => fetchDepartures(selectedCity, [departuresId!], signal),
+        enabled: !!departuresId && !!selectedCity,
         refetchInterval: refreshMs,
         staleTime: refreshMs,
         retry: false,
@@ -78,34 +80,36 @@ export const useDepartures = () => {
     const departureSort = usePreferencesStore(s => s.departureSort);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
+    const departuresId = useResolvedStop(stopId)?.departuresId ?? null;
 
     const query = useQuery<DeparturesResponse | null, AppError>({
-        queryKey: queryKeys.departures(selectedCity, stopId),
+        queryKey: queryKeys.departures(selectedCity, departuresId),
         queryFn: async ({ client, queryKey, signal }) => {
-            if (!stopId || !selectedCity) {
+            if (!departuresId || !selectedCity) {
                 return null;
             }
-            const data = await fetchDepartures(selectedCity, [stopId], signal);
+            const data = await fetchDepartures(selectedCity, [departuresId], signal);
             if (!data?.departures) return data;
             const previous = client.getQueryState<DeparturesResponse | null>(queryKey);
             const isRecent = !!previous && Date.now() - previous.dataUpdatedAt <= refreshMs * DEPARTURES_CONFIG.DELAY_DELTA_MAX_AGE_REFRESHES;
             return { ...data, departures: withDelayDeltas(data.departures, isRecent ? previous.data?.departures : undefined, previous?.dataUpdatedAt ?? Date.now()) };
         },
-        enabled: !!stopId,
+        enabled: !!departuresId,
         refetchInterval: refreshMs,
         staleTime: refreshMs,
         retry: false,
     });
 
     const dataUpdatedAt = query.dataUpdatedAt || 0;
-    const { stopIndex } = useStops();
-    const liveDepartures = useLiveDepartures(platformsOf(query.data?.departures ?? NO_DEPARTURES, stopIndex), dataUpdatedAt, enrichStopDepartures);
+    const { model } = useStops();
+    const liveDepartures = useLiveDepartures(platformsOf(query.data?.departures ?? NO_DEPARTURES, model), dataUpdatedAt, enrichStopDepartures);
     const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
     const favoriteLines = usePreferencesStore(s => s.favoriteLines);
     const favoriteKeys = useMemo(() => {
-        const keys = favoriteKeysAt(favoriteLines, selectedCity, stopId);
+        const boardId = stopId && canonicalStopId(model, stopId);
+        const keys = boardId ? favoriteKeysAt(favoriteLines, selectedCity, id => opensStop(model, id, boardId)) : [];
         return keys.length > 0 ? new Set(keys) : NO_FAVORITES;
-    }, [favoriteLines, selectedCity, stopId]);
+    }, [favoriteLines, selectedCity, stopId, model]);
     const groupedDepartures = favoritesFirst(groupDepartures(filtered, departureSort), favoriteKeys);
     const delayStats = computeDelayStats(filtered, dataUpdatedAt);
     const isFiltered = !!selectedLine || (requireAirConditioned && hasAirConditioningData) || (requireWheelchairAccessible && hasAccessibilityData);

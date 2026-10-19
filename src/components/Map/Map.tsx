@@ -118,7 +118,7 @@ const MapInner = () => {
             return t('map.vehicleDetails.lineLabel', { line: selectedVehicle.route_short_name });
         }
         if (selectedStop) {
-            return selectedStop.stop_name;
+            return selectedStop.board?.name;
         }
         if (selectedPos) {
             return selectedPos.name;
@@ -171,12 +171,12 @@ const MapInner = () => {
             return {
                 "@context": "https://schema.org",
                 "@type": "TransitStop",
-                "name": selectedStop.stop_name,
+                "name": selectedStop.board?.name,
                 "url": canonicalUrl,
-                "geo": selectedStop.coordinates ? {
+                "geo": selectedStop.board ? {
                     "@type": "GeoCoordinates",
-                    "latitude": selectedStop.coordinates[1],
-                    "longitude": selectedStop.coordinates[0]
+                    "latitude": selectedStop.board.pos[1],
+                    "longitude": selectedStop.board.pos[0]
                 } : undefined
             };
         }
@@ -330,7 +330,7 @@ const MapInner = () => {
                 onClose={sheetCard ? closeSheetCard : closePanel}
                 onBack={!sheetCard && shouldShowBackButton ? handleBack : undefined}
                 title={sheetCard ? sheetCardTitle : detailTitle}
-                platformCode={(!sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.platform_code : undefined}
+                platformCode={(!sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
                 actions={sheetCard ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}

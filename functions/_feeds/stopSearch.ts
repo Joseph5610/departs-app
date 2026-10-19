@@ -1,6 +1,6 @@
 import * as z from 'zod/mini';
 import type { CityConfig } from '../_core/cityConfig';
-import type { AppStopFeature } from '../_core/types';
+import type { AppRouteType } from '../_core/types';
 import { appClient } from '../_core/ApiClient';
 import { ApiError } from '../_core/errors';
 import { EARTH_RADIUS_M } from '../_core/utils/geo';
@@ -16,7 +16,25 @@ const foldName = (value: string): string => value.normalize('NFD').replace(/[̀-
 const stopDetailsBlockSchema = z.lazy(() => z.array(z.array(z.unknown())));
 type StopDetailsBlock = z.infer<typeof stopDetailsBlockSchema>;
 
-type StopLine = NonNullable<AppStopFeature['properties']['lines']>[number];
+/** A line serving a stop, its type a GTFS route type code as departs-data writes it; `toMcpStopLines` names it. */
+export interface StopLine {
+    name: string;
+    type: AppRouteType;
+    route_color: string;
+}
+
+/** A stop of the search index, as `stop_details/` holds it. */
+export interface SearchedStop {
+    /** A station's departures id: a GTFS station id, or its platforms' ids comma-joined where the network knows no stations (PID). */
+    id: string;
+    name: string;
+    platformCode: string | null;
+    isStation: boolean;
+    coordinates: [number, number];
+    lines: StopLine[];
+    /** A platform's station, by its index in the search index. */
+    station?: number;
+}
 
 const isStopLine = (value: unknown): value is StopLine => {
     if (typeof value !== 'object' || value === null) return false;
@@ -73,14 +91,6 @@ export class StopSearch {
         return lo;
     }
 
-    /** A line's folded name; empty for stations. */
-    foldedName(index: number): string {
-        const start = this.offsets[index];
-        const end = this.offsets[index + 1] - 1;
-        const tab = this.text.indexOf('\t', start);
-        return tab === -1 || tab >= end ? '' : this.text.slice(start, tab);
-    }
-
     /**
      * Platforms whose name or id contains `query`, best match first: exact name, then name
      * starting with it, then any containment, then id containment; shorter names win ties, then stop order.
@@ -116,19 +126,6 @@ export class StopSearch {
         return ranked;
     }
 
-    /** Platforms whose folded name is exactly `folded`, in stop order. */
-    withFoldedName(folded: string): number[] {
-        const found: number[] = [];
-        const needle = `\n${folded}\t`;
-        if (this.text.startsWith(needle.slice(1))) found.push(0);
-        let pos = this.text.indexOf(needle);
-        while (pos !== -1) {
-            found.push(this.lineAt(pos + 1));
-            pos = this.text.indexOf(needle, pos + 1);
-        }
-        return found;
-    }
-
     /**
      * The `limit` stops nearest to a point within `radiusM`, nearest first. Ranked on a flat projection,
      * which at a city's scale orders stops as the haversine does; callers read exact distances off the details.
@@ -162,6 +159,10 @@ function staticDataUrl(city: CityConfig): string {
     return `${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}`;
 }
 
+/** A file's URL under the cache generation, so a data rebuild that shifts its rows never meets a cached copy of another file. */
+const generationUrl = (city: CityConfig, file: string): string =>
+    `${staticDataUrl(city)}/${file}?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`;
+
 async function fetchFile(url: string): Promise<Response> {
     // Follows the file's own Cache-Control, so a data rebuild shows up within minutes.
     const res = await appClient.fetch(url, { cf: { cacheEverything: true } });
@@ -171,11 +172,10 @@ async function fetchFile(url: string): Promise<Response> {
 
 /** The city's stop search index, read once per isolate every two hours. */
 export function getStopSearch(city: CityConfig): Promise<StopSearch> {
-    const base = staticDataUrl(city);
     return getOrFetch(`stop_search_${city.slug}`, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         const [text, bin] = await Promise.all([
-            fetchFile(`${base}/stop_search.txt`).then(res => res.text()),
-            fetchFile(`${base}/stop_search.bin`).then(res => res.arrayBuffer()),
+            fetchFile(generationUrl(city, 'stop_search.txt')).then(res => res.text()),
+            fetchFile(generationUrl(city, 'stop_search.bin')).then(res => res.arrayBuffer()),
         ]);
         return new StopSearch(text, bin);
     });
@@ -191,46 +191,40 @@ async function detailsBlock(city: CityConfig, blockId: number): Promise<StopDeta
     const held = detailBlocks.get(key);
     if (held) return held;
 
-    const res = await fetchFile(`${staticDataUrl(city)}/stop_details/${blockId}.json`);
+    const res = await fetchFile(generationUrl(city, `stop_details/${blockId}.json`));
     const parsed = stopDetailsBlockSchema.safeParse(await res.json());
     if (!parsed.success) throw new ApiError(ERROR_MESSAGES.DATA_STRUCTURE_CHANGED, 502);
     detailBlocks.set(key, parsed.data);
     return parsed.data;
 }
 
-/** The given stops as features, read from only the detail blocks that hold them. */
-export async function stopFeatures(city: CityConfig, search: StopSearch, indexes: number[]): Promise<Map<number, AppStopFeature>> {
+/** The given stops, read from only the detail blocks that hold them. */
+export async function stopsAt(city: CityConfig, search: StopSearch, indexes: number[]): Promise<Map<number, SearchedStop>> {
     const blockIds = new Set(indexes.map(i => Math.floor(i / STOP_SEARCH_CONFIG.DETAILS_BLOCK)));
     const blocks = new Map<number, StopDetailsBlock>();
     await Promise.all([...blockIds].map(async (id) => { blocks.set(id, await detailsBlock(city, id)); }));
 
-    const features = new Map<number, AppStopFeature>();
+    const stops = new Map<number, SearchedStop>();
     for (const index of indexes) {
         const detail = blocks.get(Math.floor(index / STOP_SEARCH_CONFIG.DETAILS_BLOCK))?.[index % STOP_SEARCH_CONFIG.DETAILS_BLOCK];
         if (!detail) continue;
-        const [stopId, stopName, platformCode, locationType, lon, lat, lines] = detail;
+        const [stopId, stopName, platformCode, , lon, lat, lines, station] = detail;
         if (typeof stopId !== 'string' || typeof stopName !== 'string' || typeof lon !== 'number' || typeof lat !== 'number') continue;
-        features.set(index, {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [lon, lat] },
-            properties: {
-                stop_id: stopId,
-                stop_name: stopName,
-                platform_code: typeof platformCode === 'string' ? platformCode : null,
-                location_type: typeof locationType === 'number' || typeof locationType === 'string' ? locationType : 0,
-                parent_station: null,
-                zone_id: null,
-                is_station: search.isStation(index),
-                // The stop data carries GTFS route type codes here; `toMcpStopLines` normalizes them.
-                lines: Array.isArray(lines) ? lines.filter(isStopLine) : [],
-            },
+        stops.set(index, {
+            id: stopId,
+            name: stopName,
+            platformCode: typeof platformCode === 'string' ? platformCode : null,
+            isStation: search.isStation(index),
+            coordinates: [lon, lat],
+            lines: Array.isArray(lines) ? lines.filter(isStopLine) : [],
+            station: typeof station === 'number' ? station : undefined,
         });
     }
-    return features;
+    return stops;
 }
 
 /** The city's sitemap stop ids, one URL-encoded id per line; empty when the file cannot be read. */
 export async function getSitemapStopIds(city: CityConfig): Promise<string> {
-    const res = await fetchFile(`${staticDataUrl(city)}/sitemap_stops.txt`);
+    const res = await fetchFile(generationUrl(city, 'sitemap_stops.txt'));
     return res.text();
 }

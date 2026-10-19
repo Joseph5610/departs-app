@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LineBadge } from '@/components/LineBadge';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
-import type { Departure, FavoriteLine, StopFeature } from '@/types';
+import type { BoardStop, Departure, FavoriteLine } from '@/types';
 import { MinutesUntil } from '@/components/MinutesUntil';
 
 interface CardShellProps {
@@ -52,28 +52,27 @@ const NoDepartures = () => {
 };
 
 interface CompactStopCardProps {
-    stopFeature: StopFeature;
+    stop: BoardStop;
     departures: Departure[];
     isLoading: boolean;
 }
 
 /** A pinned stop on the home sheet: its name and next two departures; opens its board. */
-export const CompactStopCard = ({ stopFeature, departures, isLoading }: CompactStopCardProps) => {
+export const CompactStopCard = ({ stop, departures, isLoading }: CompactStopCardProps) => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
     const next = useMemo(() => nextDepartures(departures, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT, true), [departures]);
-    const { stop_id, stop_name } = stopFeature.properties;
 
     const open = () => {
-        flyTo({ center: stopFeature.geometry.coordinates as [number, number], zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop_id));
+        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
+        navigate(paths.stop(selectedCity, stop.id));
     };
 
     return (
-        <CardShell onOpen={open} testId={`favorite-mini-stop-${stop_id}`}>
+        <CardShell onOpen={open} testId={`favorite-mini-stop-${stop.id}`}>
             <div className="flex min-w-0 items-center gap-1.5">
                 <Star size={14} strokeWidth={1.5} className="shrink-0 fill-favorite text-favorite" />
-                <span className="truncate text-title font-semibold text-foreground">{stop_name}</span>
+                <span className="truncate text-title font-semibold text-foreground">{stop.name}</span>
             </div>
             {next.length === 0 ? (isLoading ? <RowsPlaceholder /> : <NoDepartures />) : (
                 <div className="mt-auto flex flex-col gap-2">
@@ -92,13 +91,13 @@ export const CompactStopCard = ({ stopFeature, departures, isLoading }: CompactS
 
 interface CompactLineCardProps {
     favorite: FavoriteLine;
-    stopFeature: StopFeature | undefined;
+    stop: BoardStop | undefined;
     departures: Departure[];
     isLoading: boolean;
 }
 
 /** A pinned line and direction on the home sheet: when it next leaves its stop; opens the stop's board filtered to the line. */
-export const CompactLineCard = ({ favorite, stopFeature, departures, isLoading }: CompactLineCardProps) => {
+export const CompactLineCard = ({ favorite, stop, departures, isLoading }: CompactLineCardProps) => {
     const { t } = useTranslation();
     const { presetLineFilter } = useSelectionStore(s => s.actions);
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
@@ -106,11 +105,11 @@ export const CompactLineCard = ({ favorite, stopFeature, departures, isLoading }
         () => nextDeparturesOf(departures, favorite.line, favorite.headsign, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT),
         [departures, favorite.line, favorite.headsign],
     );
-    const routeColor = next[0]?.route_color || lineColorAt(stopFeature, favorite.line) || FALLBACK_ROUTE_COLOR;
-    const stopName = stopFeature?.properties.stop_name;
+    const routeColor = next[0]?.route_color || lineColorAt(stop, favorite.line) || FALLBACK_ROUTE_COLOR;
+    const stopName = stop?.name;
 
     const open = () => {
-        if (stopFeature) flyTo({ center: stopFeature.geometry.coordinates as [number, number], zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
+        if (stop) flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
         presetLineFilter(favorite.line);
         navigate(paths.stop(favorite.city, favorite.stopId));
     };

@@ -9,8 +9,8 @@
 /** Where the departs-data static files live (per-city folders). */
 export const STATIC_DATA_CONFIG = {
     BASE_URL: 'https://data.departs.app',
-    /** Bump when departs-data moves stops between `stop_index/` and `departure_buckets/` files: drops the Worker's cached copies of both at once. */
-    INDEX_CACHE_GENERATION: 2,
+    /** Bump when departs-data renames or moves stops (`stop_index/`, `departure_buckets/`, the stop search index): drops every cached copy at once. */
+    INDEX_CACHE_GENERATION: 3,
 };
 
 /**

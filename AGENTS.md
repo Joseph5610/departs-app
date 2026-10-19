@@ -110,10 +110,11 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 
 ## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
 
-- **Static Data**: Stop lists (`stops.json`: stations, their platforms and entrances; the app marks stations `is_station: true`), routes, shapes and schedules are built by `departs-data`; the app and `functions/` only read them.
+- **Static Data**: Stop lists (`stops.json`: stations, their platforms and entrances), routes, shapes and schedules are built by `departs-data`; the app and `functions/` only read them.
+- **Stop Model**: The frontend reads `stops.json` as a `StopModel` (`src/domain/stops/model.ts`): stations holding their platforms, every id and alias resolving through `resolveStop`. A stop has ONE id (station id or platform id) in URLs, favourites and query keys; only `departuresRequestId` expands it for a network whose departures API knows no stations (`departuresByPlatforms`). The map gets a slim GeoJSON projection (`toMapStops`); nothing else uses GeoJSON stops.
 - **Parallel Fetching**: Fetch large independent datasets in parallel via `Promise.all` where possible.
 - **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
-- **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppStopFeature`, `AppVehicleFeature`).
+- **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppVehicleFeature`, `AppDeparture`).
 - **Zod Validation Boundaries**: Untrusted inputs (request bodies, MCP tool arguments, KV reads, third-party API responses such as Golemio, DÚK or Turnstile) MUST be validated with Zod before use. The app's own static data from `departs-data` is cast without Zod: its build checks the contract, and parsing large files with Zod costs cold-start CPU.
 
 ## 6. TESTING

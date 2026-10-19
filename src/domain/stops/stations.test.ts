@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { StopCollection, StopFeature } from '@/types';
-import { badgeLines, hidesNightLinesAt, favoriteMarks, isStationBoard, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stationPlatforms, stopBadgeTiles, stopModeList } from './stations';
-
-const stop = (stop_id: string, properties: Partial<StopFeature['properties']> = {}, coordinates: [number, number] = [14.42, 50.08]): StopFeature => ({
-    type: 'Feature',
-    geometry: { type: 'Point', coordinates },
-    properties: { stop_id, stop_name: 'Anděl', location_type: 0, ...properties },
-});
-
-const collection = (...features: StopFeature[]): StopCollection => ({ type: 'FeatureCollection', features });
+import { stopModel } from '@/test/factories';
+import { badgeLines, hidesNightLinesAt, favoriteMarks, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList, toMapStops } from './stations';
 
 describe('stopModeList', () => {
     // Networks write a line's mode as a name (PID) or a GTFS code (IDS JMK, DPMP); both must give one badge order.
@@ -39,39 +31,43 @@ describe('stopBadgeTiles', () => {
 });
 
 describe('favoriteMarks', () => {
-    const platforms = collection(stop('P1'), stop('P2'), stop('Q1,Q1P'));
-    const stations = collection(
-        stop('S', { all_ids: ['P1', 'P2'] }),
-        stop('Q1,Q1P'),
-    );
+    const model = stopModel([
+        { id: 'S', platforms: [{ id: 'P1' }, { id: 'P2' }] },
+        { id: 'Q', platforms: [{ id: 'Q1', aliases: ['Q1P'] }] },
+    ]);
 
     // Below the platforms' zoom only the station is drawn, so a pinned platform must star its station.
     it('stars the station of a pinned platform, and only that platform', () => {
-        expect(favoriteMarks(stations, platforms, ['P2'])).toEqual({ stationIds: ['S'], platformIds: ['P2'] });
+        expect(favoriteMarks([model], ['P2'])).toEqual({ stationIds: ['S'], platformIds: ['P2'] });
     });
 
     it('stars every platform of a pinned station', () => {
-        expect(favoriteMarks(stations, platforms, ['S'])).toEqual({ stationIds: ['S'], platformIds: ['P1', 'P2'] });
+        expect(favoriteMarks([model], ['S'])).toEqual({ stationIds: ['S'], platformIds: ['P1', 'P2'] });
     });
 
-    // A PID station id and a merged platform id are comma-joined; one part pinned is enough.
-    it('matches comma-joined ids part by part', () => {
-        expect(favoriteMarks(stations, platforms, ['Q1P'])).toEqual({ stationIds: ['Q1,Q1P'], platformIds: ['Q1,Q1P'] });
+    // A pin saved under an alias or a pre-stops.json PID id still stars its stop.
+    it('stars a stop pinned under an alias or a comma-joined id', () => {
+        expect(favoriteMarks([model], ['Q1P'])).toEqual({ stationIds: ['Q'], platformIds: ['Q1'] });
+        expect(favoriteMarks([null, model], ['P1,P2'])).toEqual({ stationIds: ['S'], platformIds: ['P1', 'P2'] });
     });
 });
 
-describe('isStationBoard', () => {
-    // PID lists a platform once per fare zone; the app shows the pair as the one platform it is.
-    it('treats a station of one platform, listed once per fare zone, as that platform', () => {
-        expect(isStationBoard({ is_station: true, platform_count: 1 })).toBe(false);
+describe('toMapStops', () => {
+    const model = stopModel([{ id: 'S', platforms: [{ id: 'P1', code: 'A', routes: ['MB', 'T9'] }, { id: 'P2' }] }],
+        [{ id: 'E1', station: 'S', name: 'Vstup', pos: [14.42, 50.08] }]);
+
+    // The map reads a stop's badge, rank and id; a platform's code sits beside its mode tiles.
+    it('draws each stop with its badge tiles and leading mode', () => {
+        const [station, coded] = toMapStops([...model.stations, ...model.platforms]).features.map(f => f.properties);
+        expect(station).toMatchObject({ stop_id: 'S', kind: 'station', badges: 'metro/B/F8B322|tram', mode_rank: 0 });
+        expect(coded).toMatchObject({ stop_id: 'P1', kind: 'platform', badges: 'metro/B/F8B322|tram|code/A' });
     });
 
-    it('treats a station of several platforms as a station', () => {
-        expect(isStationBoard({ is_station: true, platform_count: 2 })).toBe(true);
-    });
-
-    it('treats a platform as a platform', () => {
-        expect(isStationBoard({ platform_count: 2 })).toBe(false);
+    // A train platform only the live feed serves still needs a badge to be tapped.
+    it('gives a platform without lines a tile, and an entrance none', () => {
+        const [plain, entrance] = toMapStops([model.platforms[1]!, ...model.entrances]).features.map(f => f.properties);
+        expect(plain!.badges).toBe('unknown');
+        expect(entrance).toEqual({ stop_id: 'E1', stop_name: 'Vstup', kind: 'entrance' });
     });
 });
 
@@ -96,30 +92,28 @@ describe('badgeLines', () => {
 });
 
 describe('sectionStopId', () => {
-    const index = new Map([
-        ['S', stop('S', { is_station: true })],
-        ['P1', stop('P1', { platform_code: 'A' })],
-        ['P2', stop('P2', { direction: 'Grohova' })],
-        ['P3', stop('P3', { direction: 'Grohova' })],
-        ['M1', stop('M1', { platform_code: '1', lines: [{ name: 'B', type: 'metro', route_color: '#F8B322' }] })],
-    ]);
+    const { platforms } = stopModel([{ id: 'S', platforms: [
+        { id: 'P1', code: 'A' },
+        { id: 'P2', direction: 'Grohova' },
+        { id: 'P3', direction: 'Grohova' },
+        { id: 'M1', code: '1', routes: ['MB'] },
+    ] }]);
     const section = (platform: string | null, direction: string | null, platformStopIds: string[] = []) =>
         ({ platform, direction, groups: [{ subGroups: [{ departures: platformStopIds.map(platformStopId => ({ platformStopId })) }] }] });
-    const ids = ['S', 'P1', 'P2', 'P3', 'M1'];
 
     // A section header opens a board of every platform the section shows, so it lists the same departures.
     it('opens every platform of a code or a direction as one stop', () => {
-        expect(sectionStopId(stationPlatforms(ids, index), section('A', null), 'S')).toBe('P1');
-        expect(sectionStopId(stationPlatforms(ids, index), section(null, 'Grohova'), 'S')).toBe('P2,P3');
+        expect(sectionStopId(platforms, section('A', null), 'S')).toBe('P1');
+        expect(sectionStopId(platforms, section(null, 'Grohova'), 'S')).toBe('P2,P3');
     });
 
     it('opens nothing for a metro section or the board already open', () => {
-        expect(sectionStopId(stationPlatforms(ids, index), section(null, null), 'S')).toBeNull();
-        expect(sectionStopId(stationPlatforms(ids, index), section(null, 'Grohova'), 'P2,P3')).toBeNull();
+        expect(sectionStopId(platforms, section(null, null), 'S')).toBeNull();
+        expect(sectionStopId(platforms, section(null, 'Grohova'), 'P2,P3')).toBeNull();
     });
 
     it('falls back to the departures\' own platforms the stop list does not know', () => {
-        expect(sectionStopId(stationPlatforms(ids, index), section('Z', null, ['X1', 'X1']), 'S')).toBe('X1');
+        expect(sectionStopId(platforms, section('Z', null, ['X1', 'X1']), 'S')).toBe('X1');
     });
 });
 
@@ -148,9 +142,9 @@ describe('nightLinesByNetwork', () => {
     // A neighbouring network's stop follows its own city's night lines, not the selected city's.
     it('reads each stop\'s rules from its own network', () => {
         const byDay = nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks), 'prague', networks);
-        expect(byDay({})).toBeNull();
-        expect(byDay({ city_slug: 'brno' })).toBe(brnoNight);
-        expect(byDay({ city_slug: 'presov' })).toBeNull();
+        expect(byDay(undefined)).toBeNull();
+        expect(byDay('brno')).toBe(brnoNight);
+        expect(byDay('presov')).toBeNull();
     });
 
     // The key stays the same while no network's night hours start or end, so the map keeps its badges.
@@ -161,24 +155,22 @@ describe('nightLinesByNetwork', () => {
     });
 
     it('hides nothing at night', () => {
-        expect(nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks), 'brno', networks)({})).toBeNull();
+        expect(nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks), 'brno', networks)(undefined)).toBeNull();
     });
 });
 
 describe('platformIdByCode', () => {
-    const index = new Map([
-        ['S', stop('S', { is_station: true })],
-        ['T1', stop('T1', { platform_code: '1', lines: [{ name: 'A', type: 'metro', route_color: '#00A562' }] })],
-        ['P1', stop('P1', { platform_code: '1' })],
-        ['PA', stop('PA', { platform_code: 'A' })],
-        ['PA2', stop('PA', { platform_code: 'A' })],
-    ]);
+    const { platforms } = stopModel([{ id: 'S', platforms: [
+        { id: 'T1', code: '1', routes: ['MA'] },
+        { id: 'P1', code: '1' },
+        { id: 'PA', aliases: ['PA2'], code: 'A' },
+    ] }]);
 
     // A notice's platform code opens a board only when it names one platform, never a guess between a metro track and a stop.
-    it('finds the one platform with a code, aliases included, and none when the code is shared', () => {
-        expect(platformIdByCode(stationPlatforms(['S', 'PA', 'PA2'], index), 'A')).toBe('PA');
-        expect(platformIdByCode(stationPlatforms(['S', 'T1', 'P1'], index), '1')).toBeNull();
-        expect(platformIdByCode(stationPlatforms(['S', 'T1'], index), '1')).toBe('T1');
-        expect(platformIdByCode(stationPlatforms(['S', 'PA'], index), 'Z')).toBeNull();
+    it('finds the one platform with a code, and none when the code is shared', () => {
+        expect(platformIdByCode(platforms, 'A')).toBe('PA');
+        expect(platformIdByCode(platforms, '1')).toBeNull();
+        expect(platformIdByCode(platforms.slice(0, 1), '1')).toBe('T1');
+        expect(platformIdByCode(platforms, 'Z')).toBeNull();
     });
 });

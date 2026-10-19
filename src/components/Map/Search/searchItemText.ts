@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 import type { LineBadgeData } from '@/domain/routes';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
-import type { SearchHistoryItem, StopFeature, VehicleFeature } from '@/types';
+import type { SearchHistoryItem, Stop, VehicleFeature } from '@/types';
 
 /** The name a recent search is listed under. */
 export const historyItemTitle = (item: SearchHistoryItem, t: TFunction): string =>
@@ -16,8 +16,8 @@ export const historyItemSubtitle = (item: SearchHistoryItem, t: TFunction): stri
     undefined;
 
 /** The second line under a stop result: its platform, when it has one. */
-export const stopResultSubtitle = (stop: StopFeature, t: TFunction): string | undefined =>
-    stop.properties.platform_code ? t('search.platform', { code: stop.properties.platform_code }) : undefined;
+export const stopResultSubtitle = (stop: Stop, t: TFunction): string | undefined =>
+    stop.kind === 'platform' && stop.code ? t('search.platform', { code: stop.code }) : undefined;
 
 /** The second line under a point of sale: its kind and address. */
 export const posResultSubtitle = ({ pos }: PosSearchResult, t: TFunction): string =>

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MIN, NOW, at, departure } from '@/test/factories';
-import { computeDelayStats, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { MIN, NOW, at, departure, stopModel } from '@/test/factories';
+import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -132,23 +132,20 @@ describe('platformSections', () => {
 });
 
 describe('withStopPlatforms', () => {
-    const stopIndex = new Map([
-        ['Z1', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z1', stop_name: 'Česká', platform_code: '1' } }],
-        ['Z2', { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { stop_id: 'Z2', stop_name: 'Česká', direction: 'Grohova' } }],
-    ] as const) as never;
+    const model = stopModel([{ id: 'S', name: 'Česká', platforms: [{ id: 'Z1', code: '1' }, { id: 'Z2', direction: 'Grohova' }] }]);
 
     // A GTFS city's station board names the station in stopId and the platform in platformStopId.
     it('fills the platform code, else the direction, from the departure\'s stop', () => {
         const deps = withStopPlatforms([
             departure({ tripId: 'a', stopId: 'S', platformStopId: 'Z1' }),
             departure({ tripId: 'b', stopId: 'S', platformStopId: 'Z2' }),
-        ], stopIndex);
+        ], model);
         expect(deps.map(d => [d.platform, d.platformDirection])).toEqual([['1', undefined], [undefined, 'Grohova']]);
     });
 
     it('returns the same list when nothing changes', () => {
         const deps = [departure({ tripId: 'a', platform: 'A', stopId: 'Z1' })];
-        expect(withStopPlatforms(deps, stopIndex)).toBe(deps);
+        expect(withStopPlatforms(deps, model)).toBe(deps);
     });
 });
 
@@ -230,7 +227,7 @@ describe('pinned lines', () => {
 
     // Stop ids repeat across networks, so a pin only counts in the city it was made in.
     it('keys only the pins of this stop in this city', () => {
-        expect(favoriteKeysAt(favorites, 'prague', 'U1')).toEqual([favoriteKey('22', 'Bílá Hora')]);
+        expect(favoriteKeysAt(favorites, 'prague', id => id === 'U1')).toEqual([favoriteKey('22', 'Bílá Hora')]);
     });
 
     it('lists a pinned line\'s next departures in its own direction, soonest first', () => {
@@ -268,11 +265,7 @@ describe('isMetroClosed', () => {
 describe('favoriteLineNames', () => {
     // A disruption matters to a rider on a pinned line or on any line serving a pinned stop.
     it('collects pinned lines and the lines of pinned stops', () => {
-        const stop = (lines: string[]) => ({
-            type: 'Feature' as const,
-            geometry: { type: 'Point' as const, coordinates: [14.42, 50.08] as [number, number] },
-            properties: { stop_id: 's', stop_name: 's', location_type: 0, lines: lines.map(name => ({ name, type: 'tram' as const, route_color: '#000' })) },
-        });
+        const stop = (lines: string[]) => ({ lines: lines.map(name => ({ name, type: 'tram' as const, route_color: '#000' })) });
         const names = favoriteLineNames([{ city: 'prague', stopId: 'x', line: '17', headsign: 'Libuš' }], [stop(['9', '22']), stop(['22'])]);
         expect([...names].sort()).toEqual(['17', '22', '9']);
     });
@@ -303,5 +296,14 @@ describe('platformSections metro', () => {
             departure({ tripId: 't', line: '3', platform: 'A' }),
         ], 'line');
         expect(platformSections(groups, 'line').map(s => [s.metroLine, s.platform])).toEqual([['B', null], ['C', null], [null, 'A']]);
+    });
+});
+
+describe('departuresByStop', () => {
+    // A favourite asked for under its departures request id (a PID station's platforms) is shown under its own id.
+    it('splits a multi-stop response back per stop, stops sharing a request sharing its departures', () => {
+        const deps = [departure({ tripId: 'a', stopId: 'P1,P2' }), departure({ tripId: 'b', stopId: 'Q' })];
+        const byStop = departuresByStop(deps, new Map([['S', 'P1,P2'], ['P1,P2', 'P1,P2'], ['Q', 'Q'], ['R', 'R']]));
+        expect([...byStop].map(([id, list]) => [id, list.map(d => d.tripId)])).toEqual([['S', ['a']], ['P1,P2', ['a']], ['Q', ['b']]]);
     });
 });

@@ -1,17 +1,16 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import type { StopCollection, VehicleCollection, RouteInfo } from '@/types';
+import type { StopModel, VehicleCollection, RouteInfo } from '@/types';
 import { useViewportStore } from '@/state/viewportStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { enrichVehicleRouteMetadata, filterVehiclesToView } from '@/domain/vehicles';
 import { getOrCreate, memoizeLast } from '@/lib/memoize';
-import { concatCollections, tagCity } from '@/domain/cities';
+import { concatCollections, stopsInCity, tagCity } from '@/domain/cities';
 import { NO_TYPE_COLORS } from '@/domain/routes';
 import { buildRouteMetadata, routesQueryOptions } from './useRouteMetadata';
 import { networkVehiclesQueryOptions } from './useVehicles';
 import { stopsQueryOptions } from './useStops';
-import { splitStopCollection } from '@/domain/stops';
 
 const NO_ROUTES = new Map<string, RouteInfo>();
 
@@ -20,20 +19,17 @@ const createPipeline = () => ({
     brand: memoizeLast(enrichVehicleRouteMetadata),
     view: memoizeLast(filterVehiclesToView),
     tagVehicles: memoizeLast(tagCity<VehicleCollection>),
-    split: memoizeLast(splitStopCollection),
-    tagPlatforms: memoizeLast(tagCity<StopCollection>),
-    tagStations: memoizeLast(tagCity<StopCollection>),
+    tagStops: memoizeLast(stopsInCity),
 });
 const pipelines = new Map<string, ReturnType<typeof createPipeline>>();
 const pipelineOf = (city: string) => getOrCreate(pipelines, city, createPipeline);
 
 const concatVehicles = memoizeLast(concatCollections<VehicleCollection>);
-const concatPlatforms = memoizeLast(concatCollections<StopCollection>);
-const concatStations = memoizeLast(concatCollections<StopCollection>);
+const presentModels = memoizeLast((...models: Array<StopModel | null>): StopModel[] => models.filter((m): m is StopModel => !!m));
 
 /**
- * The vehicles in view and the stops of the other networks that run where the map is, each feature
- * carrying its `city_slug` so opening one moves the selection to its network.
+ * The vehicles in view and the stops of the other networks that run where the map is, each vehicle
+ * carrying its `city_slug` and each stop its `city`, so opening one moves the selection to its network.
  */
 export const useOverlayNetworks = (cities: readonly string[]) => {
     const bounds = useViewportStore(s => s.debouncedBounds);
@@ -50,17 +46,14 @@ export const useOverlayNetworks = (cities: readonly string[]) => {
         const routeData = routes[i]?.data;
         const byShortName = routeData ? buildRouteMetadata(routeData, FRONTEND_CITIES_CONFIG[city]?.routeTypeColors ?? NO_TYPE_COLORS).byShortName : NO_ROUTES;
         const branded = p.brand(vehicles[i]?.data, byShortName);
-        const split = p.split(stops[i]?.data);
         return {
             vehicles: p.tagVehicles(p.view(branded, bounds, routeFilter, routeTypeFilter), city),
-            platforms: p.tagPlatforms(split.platforms, city),
-            stations: p.tagStations(split.stations, city),
+            stops: p.tagStops(stops[i]?.data, city),
         };
     });
 
     const allVehicles = concatVehicles(...perNetwork.map(n => n.vehicles));
-    const allPlatforms = concatPlatforms(...perNetwork.map(n => n.platforms));
-    const allStations = concatStations(...perNetwork.map(n => n.stations));
+    const networks = presentModels(...perNetwork.map(n => n.stops));
 
-    return useMemo(() => ({ vehicles: allVehicles, platforms: allPlatforms, stations: allStations }), [allVehicles, allPlatforms, allStations]);
+    return useMemo(() => ({ vehicles: allVehicles, networks }), [allVehicles, networks]);
 };

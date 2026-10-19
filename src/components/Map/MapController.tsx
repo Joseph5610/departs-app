@@ -2,9 +2,11 @@ import { useGeolocationWatcher } from '@/hooks/features/useGeolocation';
 import { useMapInterface } from '@/hooks/features/useMapInterface';
 import { useAutoCitySwitch } from '@/hooks/features/useAutoCitySwitch';
 import { useRouteCitySync } from '@/hooks/features/useRouteCitySync';
+import { useCanonicalStopUrl } from '@/hooks/features/useCanonicalStopUrl';
 
 const MapEngine = () => {
     useRouteCitySync();
+    useCanonicalStopUrl();
     useMapInterface();
     useGeolocationWatcher();
     useAutoCitySwitch();

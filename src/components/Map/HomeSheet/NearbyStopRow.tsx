@@ -24,14 +24,13 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
 
-    const { stop_id, stop_name, lines } = nearby.feature.properties;
-    const coordinates = nearby.feature.geometry.coordinates;
-    const distanceInfo = useMemo(() => getStopDistanceInfo(location, coordinates), [location, coordinates]);
+    const { stop } = nearby;
+    const distanceInfo = useMemo(() => getStopDistanceInfo(location, stop.pos), [location, stop.pos]);
     const next = useMemo(() => nextDepartures(departures, 1, true)[0], [departures]);
 
     const open = () => {
-        flyTo({ center: coordinates, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop_id));
+        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
+        navigate(paths.stop(selectedCity, stop.id));
     };
 
     return (
@@ -39,17 +38,17 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
             variant="settings"
             size="none"
             className="flex-nowrap text-left"
-            render={<button type="button" onClick={open} data-testid={`nearby-stop-${stop_id}`} />}
+            render={<button type="button" onClick={open} data-testid={`nearby-stop-${stop.id}`} />}
         >
             <ItemMedia variant="icon" className="size-9 rounded-full bg-primary/10 text-primary">
-                <StopModeIcon lines={lines} />
+                <StopModeIcon lines={stop.lines} />
             </ItemMedia>
             <ItemContent className="min-w-0 gap-1.5">
                 <ItemTitle className="w-full text-title font-semibold text-foreground">
-                    <span className="truncate">{stop_name}</span>
+                    <span className="truncate">{stop.name}</span>
                 </ItemTitle>
                 <div className="flex flex-wrap items-center gap-1">
-                    {lines?.slice(0, STOP_SEARCH.LINE_BADGE_LIMIT).map(line => (
+                    {stop.lines.slice(0, STOP_SEARCH.LINE_BADGE_LIMIT).map(line => (
                         <LineBadge key={line.name} name={line.name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="sm" />
                     ))}
                 </div>

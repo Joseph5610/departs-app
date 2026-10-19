@@ -39,10 +39,10 @@ export async function handleGetNextDepartures(
         const lat = Number(args.latitude);
         const lon = Number(args.longitude);
         if (!isNaN(lat) && !isNaN(lon)) {
-            const closest = (await nearestStops(resolvedCity, lat, lon, { includeStations: true, limit: 1 }))[0]?.feature;
+            const closest = (await nearestStops(resolvedCity, lat, lon, { includeStations: true, limit: 1 }))[0]?.stop;
             if (closest) {
-                stopId = closest.properties?.stop_id;
-                stopNameResolved = closest.properties?.stop_name;
+                stopId = closest.id;
+                stopNameResolved = closest.name;
             }
         }
     }

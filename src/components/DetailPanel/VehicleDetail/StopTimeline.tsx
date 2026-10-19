@@ -40,16 +40,16 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const sharedExitSequence = linkExitSequence ?? followedExitSequence;
     const { startRide, endRide, markRidePushed, follow, unfollow } = useRideStore(s => s.actions);
 
-    const { stopIndex, platforms, stations } = useStops();
-    const stationGrid = useMemo(() => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M), [stations]);
-    const platformGrid = useMemo(() => indexStops(platforms, SHARED_GROUND.TWIN_STATION_RADIUS_M), [platforms]);
+    const { model } = useStops();
+    const stationGrid = useMemo(() => indexStops(model?.stations.filter(s => !s.alightOnly) ?? [], SHARED_GROUND.TWIN_STATION_RADIUS_M), [model]);
+    const platformGrid = useMemo(() => indexStops(model?.platforms.filter(p => !p.alightOnly) ?? [], SHARED_GROUND.TWIN_STATION_RADIUS_M), [model]);
     const { presetTripHighlight } = useSelectionStore(s => s.actions);
     /** Opens a timeline stop's board; an arrival-only platform (a terminus) opens the nearby same-named stop that has departures. */
     const openStop = useCallback((stop: StopFeature) => {
-        const targetId = boardableStopId(stop, stopIndex, stationGrid, platformGrid);
+        const targetId = boardableStopId(stop, model, stationGrid, platformGrid);
         presetTripHighlight(tripId);
         navigate(paths.stop(selectedCity, targetId));
-    }, [presetTripHighlight, tripId, selectedCity, stopIndex, stationGrid, platformGrid]);
+    }, [presetTripHighlight, tripId, selectedCity, model, stationGrid, platformGrid]);
 
     const followSharedRide = useCallback((sequence: number, stopName: string) => {
         follow({ city: selectedCity, tripId, vehicleId, exitSequence: sequence, exitStopName: stopName });

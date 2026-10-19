@@ -5,7 +5,7 @@ import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
-import type { DepartureClickHandler, SelectedStop, AppError } from '@/types';
+import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
 import { MetroNightMessage } from './MetroNightMessage';
@@ -15,8 +15,7 @@ import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { groupsHidingTrips, isMetroClosed, sectionPreview, stationBoardSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
 import { Button } from '@/components/ui/button';
-import { isStationBoard, sectionStopId, servesMode, stationPlatforms } from '@/domain/stops';
-import { useStops } from '@/hooks/data/useStops';
+import { isStationBoard, sectionStopId, servesMode } from '@/domain/stops';
 import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
@@ -26,8 +25,9 @@ import { LineBadge } from '@/components/LineBadge';
 import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
-import { useRouteParams } from '@/hooks/useRouteParams';
 import { useNowEvery } from '@/hooks/useNow';
+
+const NO_PLATFORMS: Platform[] = [];
 
 interface DepartureBoardProps {
     selectedStop: SelectedStop;
@@ -46,16 +46,14 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
-    const { stopIndex } = useStops();
-    const { stopId: routeStopId } = useRouteParams();
-    // Pins and the departures query both key on the stop id in the URL.
-    const boardStopId = routeStopId ?? selectedStop.stop_id;
+    const { board } = selectedStop;
+    const boardStopId = board?.id ?? selectedStop.id;
     const departureSort = usePreferencesStore(s => s.departureSort);
-    const onStation = isStationBoard(selectedStop);
+    const onStation = !!board && isStationBoard(board);
     const sections = useMemo(
         () => onStation ? stationBoardSections(groupedDepartures, departureSort, favoriteKeys) : null,
         [onStation, groupedDepartures, departureSort, favoriteKeys]);
-    const platforms = useMemo(() => stationPlatforms(selectedStop.all_ids ?? [], stopIndex), [selectedStop.all_ids, stopIndex]);
+    const platforms = board?.platforms ?? NO_PLATFORMS;
     const sectionStopIds = useMemo(
         () => new Map(sections?.map(section => [section.key, sectionStopId(platforms, section, boardStopId)])),
         [sections, platforms, boardStopId]);
@@ -141,7 +139,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (
-                <MetroClosedOr show={!isFiltered && servesMode(selectedStop, 'metro')} timeZone={timezone} closedHours={lineRules.metroClosedHours}>
+                <MetroClosedOr show={!isFiltered && !!board && servesMode(board, 'metro')} timeZone={timezone} closedHours={lineRules.metroClosedHours}>
                     <Empty className="py-12">
                         <EmptyHeader>
                             <EmptyMedia

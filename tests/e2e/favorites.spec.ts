@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockStops, STOPS_FILE_URL } from '../fixtures/stops';
+import { hlavniNadrazi, mockStops, singlePlatformStations, STOPS_FILE_URL } from '../fixtures/stops';
 import { MapPage } from '../page-objects/MapPage';
 
 test.describe('Favorites Tests', () => {
@@ -7,24 +7,7 @@ test.describe('Favorites Tests', () => {
         const mapPage = new MapPage(page);
 
         // Mock stops
-        await mockStops(page, {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-                    properties: {
-                        stop_id: 'U1111Z1P',
-                        stop_name: 'Hlavní nádraží',
-                        platform_code: 'C',
-                        location_type: 0,
-                        parent_station: 'U1111',
-                        zone_id: 'P',
-                        lines: [{ name: 'C', type: 'metro', route_color: 'C0115E' }]
-                    }
-                }
-            ]
-        });
+        await mockStops(page, hlavniNadrazi());
 
         // Mock departures for the stop board and the favorites panel, so the test needs no live feed
         await page.route('**/api/*/departures*', async route => {
@@ -109,6 +92,7 @@ test.describe('Favorites Tests', () => {
     });
 
     test('should pin a line direction from the right-click menu and undo it from the toast', async ({ page }) => {
+        await mockStops(page, hlavniNadrazi());
         await page.route('**/api/*/departures*', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -203,14 +187,7 @@ test.describe('Favorites Tests', () => {
             }));
         });
 
-        await mockStops(page, {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-                properties: { stop_id: 'U1111Z1P', stop_name: 'Hlavní nádraží', platform_code: 'C', location_type: 0, parent_station: 'U1111', zone_id: 'P', lines: [] }
-            }]
-        });
+        await mockStops(page, hlavniNadrazi({}));
         await page.route('**/api/*/departures*', async route => {
             await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures: [] }) });
         });
@@ -240,12 +217,8 @@ test.describe('Favorites Tests', () => {
             }));
         });
 
-        const stop = (stop_id: string, stop_name: string) => ({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-            properties: { stop_id, stop_name, location_type: 0, zone_id: 'P', lines: [] }
-        });
-        await mockStops(page, { type: 'FeatureCollection', features: [stop('S1', 'Alfa'), stop('S2', 'Beta'), stop('S3', 'Gama')] });
+        const stop = (id: string, name: string) => ({ id, name, pos: [14.4332, 50.0831] as [number, number] });
+        await mockStops(page, singlePlatformStations([stop('S1', 'Alfa'), stop('S2', 'Beta'), stop('S3', 'Gama')]));
         await page.route('**/api/*/departures*', async route => {
             await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures: [] }) });
         });
@@ -290,12 +263,8 @@ test.describe('Favorites Tests', () => {
             }));
         });
 
-        const stop = (stop_id: string, stop_name: string) => ({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [14.4332, 50.0831] },
-            properties: { stop_id, stop_name, location_type: 0, zone_id: 'P', lines: [] }
-        });
-        await mockStops(page, { type: 'FeatureCollection', features: [stop('S1', 'Alfa'), stop('S2', 'Beta')] });
+        const stop = (id: string, name: string) => ({ id, name, pos: [14.4332, 50.0831] as [number, number] });
+        await mockStops(page, singlePlatformStations([stop('S1', 'Alfa'), stop('S2', 'Beta')]));
         await page.route('**/api/*/departures*', async route => {
             await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures: [] }) });
         });

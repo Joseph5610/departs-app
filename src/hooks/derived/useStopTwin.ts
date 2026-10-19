@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { StopCollection } from '@/types';
+import type { StopModel } from '@/types';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from './useNetworksInView';
 import { useSelectedStop } from './useSelectedStop';
@@ -12,8 +12,10 @@ export interface StopTwin {
     stopId: string;
 }
 
-const platformGrid = memoizeLast((stops: StopCollection | null) => indexStops(stops, SHARED_GROUND.TWIN_STOP_RADIUS_M));
-const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(stations, SHARED_GROUND.TWIN_STATION_RADIUS_M));
+const platformGrid = memoizeLast((networks: readonly StopModel[]) =>
+    indexStops(networks.flatMap(n => n.platforms.filter(p => !p.alightOnly)), SHARED_GROUND.TWIN_STOP_RADIUS_M));
+const stationGrid = memoizeLast((networks: readonly StopModel[]) =>
+    indexStops(networks.flatMap(n => n.stations.filter(s => !s.alightOnly)), SHARED_GROUND.TWIN_STATION_RADIUS_M));
 
 /**
  * The same place in another network shown on the map: its platform where one stands on the selected
@@ -22,14 +24,12 @@ const stationGrid = memoizeLast((stations: StopCollection | null) => indexStops(
 export const useStopTwin = (): StopTwin | null => {
     const stop = useSelectedStop();
     const networks = useNetworksInView();
-    const { platforms, stations } = useOverlayNetworks(networks);
+    const overlay = useOverlayNetworks(networks).networks;
 
     return useMemo(() => {
-        const point = stop?.coordinates;
-        if (!point) return null;
-        const twin = stopNear(platformGrid(platforms), point)
-            ?? stopNear(stationGrid(stations), point, stopNameKey(stop.stop_name));
-        const city = twin?.properties.city_slug;
-        return twin && city ? { city, stopId: twin.properties.stop_id } : null;
-    }, [stop, platforms, stations]);
+        if (!stop?.board) return null;
+        const { pos, name } = stop.board;
+        const twin = stopNear(platformGrid(overlay), pos) ?? stopNear(stationGrid(overlay), pos, stopNameKey(name));
+        return twin?.city ? { city: twin.city, stopId: twin.id } : null;
+    }, [stop, overlay]);
 };

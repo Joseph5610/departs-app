@@ -39,9 +39,8 @@ export async function handleGetNearestDepartures(
     const timeContext = getMcpTimeContext(resolvedCity, nowMs);
 
     // Stops are independent, so fetch them in one wave; `nearby` is pre-sorted, so order is preserved.
-    const settled = await Promise.all(nearby.map(async ({ feature, distance }) => {
-        const sId = feature.properties?.stop_id;
-        if (!sId) return null;
+    const settled = await Promise.all(nearby.map(async ({ stop, distance }) => {
+        const sId = stop.id;
 
         try {
             const departures = await loadStopDepartures(ctx, city, sId, args, limit);
@@ -50,7 +49,7 @@ export async function handleGetNearestDepartures(
 
             return {
                 stop_id: sId,
-                stop_name: feature.properties?.stop_name,
+                stop_name: stop.name,
                 distance_meters: Math.round(distance),
                 infotexts: stopInfotexts,
                 departures: departures.map((d) => toMcpDeparture(d, timeContext.timezone, nowMs))
