@@ -119,6 +119,23 @@ export const formatDateTime = (value: string | number, locale: string | undefine
     });
 };
 
+/**
+ * When something upcoming starts, short and in `timeZone`: weekday, day and month, plus the time unless it
+ * starts at midnight. Example (cs): "so 24. 10. 7:20", "po 19. 10.".
+ */
+export const formatStartDate = (iso: string, locale: string | undefined, timeZone: string): string => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const atMidnight = secondsOfDayIn(timeZone, date.getTime()) < 60;
+    return date.toLocaleString(locale, {
+        timeZone,
+        weekday: 'short',
+        day: 'numeric',
+        month: 'numeric',
+        ...(atMidnight ? {} : { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' as const }),
+    });
+};
+
 /** Whole minutes from `nowMs` until `iso`, rounded down; zero or less once it is due. */
 export const minutesUntil = (iso: string, nowMs: number): number => Math.floor((Date.parse(iso) - nowMs) / 60_000);
 

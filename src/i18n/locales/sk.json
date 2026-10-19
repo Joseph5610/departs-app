@@ -386,7 +386,7 @@
     "noAlertsSearchDescription": "Žiadne hlásené upozornenia nezodpovedajú zadanému vyhľadávaniu.",
     "moreInfo": "Viac informácií",
     "all": "Všetko",
-    "planned": "Plánované",
+    "startsAt": "Začína {{date}}",
     "validFrom": "Od {{date}}",
     "untilFurtherNotice": "do odvolania",
     "showMore": "Zobraziť ďalšie (+{{count}})",

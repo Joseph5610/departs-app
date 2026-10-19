@@ -379,7 +379,7 @@
     "noAlertsSearchDescription": "No reported alerts match your search query.",
     "moreInfo": "More info",
     "all": "All",
-    "planned": "Planned",
+    "startsAt": "Starts {{date}}",
     "validFrom": "From {{date}}",
     "untilFurtherNotice": "until further notice",
     "showMore": "Show more (+{{count}})",

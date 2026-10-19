@@ -7,7 +7,8 @@ import { useNow } from '@/hooks/useNow';
 import { cn } from '@/lib/cn';
 import { SystemStatusModal } from '@/components/Modals/SystemStatusModal';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { Filter } from 'lucide-react';
+import { AlertTriangle, Filter, WifiOff } from 'lucide-react';
+import { SignalMark } from '@/components/SignalMark';
 
 /**
  * Displays the real-time system connection status pill.
@@ -32,22 +33,21 @@ export const LiveStatus = () => {
     if (!bounds || yieldsToRides) return null;
 
     const getConfig = () => {
-        if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', dot: 'bg-neutral-500' };
-        if (status.type === 'app_error') return { text: t('liveStatus.appError'), color: 'text-destructive', dot: 'bg-destructive shadow-[0_0_8px_var(--color-destructive)]' };
-        if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-orange-500', dot: 'bg-orange-500 shadow-[0_0_8px_var(--color-orange-500)]' };
-        if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_8px_var(--color-amber-500)]' };
-        if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-amber-500', dot: 'bg-amber-500 animate-pulse' };
+        if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', icon: <WifiOff className="size-3 shrink-0" /> };
+        if (status.type === 'app_error') return { text: t('liveStatus.appError'), color: 'text-destructive', icon: <AlertTriangle className="size-3 shrink-0" /> };
+        if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-orange-500', icon: <AlertTriangle className="size-3 shrink-0" /> };
+        if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-amber-500', icon: <SignalMark /> };
+        if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-amber-500', icon: <SignalMark className="animate-pulse" /> };
         if (isFiltered) return {
             text: t('liveStatus.filtered'),
             color: 'text-purple-400',
-            dot: 'bg-purple-500 shadow-[0_0_8px_var(--color-purple-500)]',
-            icon: <Filter className="w-3 h-3 text-purple-400 shrink-0" />,
+            icon: <Filter className="size-3 shrink-0" />,
             showCountdown: true
         };
         return {
             text: t('liveStatus.live'),
             color: 'text-primary',
-            dot: 'bg-primary shadow-[0_0_8px_var(--color-primary)]',
+            icon: <SignalMark />,
             showCountdown: true
         };
     };
@@ -68,11 +68,9 @@ export const LiveStatus = () => {
                     onClick={() => setIsModalOpen(true)}
                     className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
                 >
-                    <div className="flex items-center gap-1.5 h-3">
-                        <div className={cn("w-2 h-2 rounded-full transition-colors duration-500 shrink-0", config.dot)} />
-                        
+                    <div className={cn("flex items-center gap-1.5 h-3", config.color)}>
                         {config.icon}
-                        
+
                         <div className="flex items-center gap-1.5 pt-px">
                             <span className={cn("text-micro font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
                                 {config.text}

@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Brno alerts show validity dates and upcoming closures from IDS JMK's open-data diversions; the GTFS-RT feed stays the source for what runs now.
+- Upcoming alerts say when they start ("Začíná so 24. 10. 7:20") instead of a Planned badge.
+- The map's live pill and the vehicle detail use the departure board's live signal mark instead of glowing dots; the active-filter marker is a funnel badge.
 
 ## [0.86.0] - 2026-10-18
 
