@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Tapping an arrival-only terminus in a vehicle's timeline opens its station's board.
+- Favourite stops belong to the city they were pinned in: another network's stop with the same id is no longer starred or listed, and the limit counts only the current city's pins.
 
 ## [0.87.1] - 2026-10-19
 

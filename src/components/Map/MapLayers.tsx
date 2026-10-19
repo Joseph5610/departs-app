@@ -3,7 +3,7 @@ import { useMemo, memo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { SymbolLayerSpecification } from 'maplibre-gl';
 import { useTheme } from 'next-themes';
-import type { Entrance, Platform, Station, StopModel } from '@/types';
+import type { Entrance, Platform, Station } from '@/types';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
@@ -12,7 +12,7 @@ import { useVehicles } from '@/hooks/data/useVehicles';
 import { useStops } from '@/hooks/data/useStops';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
-import { favoriteMarks, mapStopsWithOverlay, toMapStops, type HiddenNightLinesOf } from '@/domain/stops';
+import { favoriteMarks, mapStopsWithOverlay, pinsByNetwork, toMapStops, type HiddenNightLinesOf } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { hasDrawnLine } from '@/domain/routes';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
@@ -58,7 +58,7 @@ interface MapLayersProps {
 const shownStops = memoizeLast(mapStopsWithOverlay);
 const stationFeatures = memoizeLast((stations: readonly Station[], hidden: HiddenNightLinesOf) => toMapStops(stations, hidden));
 const platformFeatures = memoizeLast((platforms: readonly (Platform | Entrance)[], hidden: HiddenNightLinesOf) => toMapStops(platforms, hidden));
-const allNetworks = memoizeLast((model: StopModel | null, overlay: readonly StopModel[]) => [model, ...overlay]);
+const networkPins = memoizeLast(pinsByNetwork);
 const starredStops = memoizeLast(favoriteMarks);
 
 /** A collection with a neighbouring network's features appended; the collection itself when there are none. */
@@ -97,7 +97,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const shown = shownStops(model, overlay.networks, stopTypeFilter);
     const stationsData = stationFeatures(shown.stations, hiddenNightLines);
     const stopsData = platformFeatures(shown.platforms, hiddenNightLines);
-    const starred = starredStops(allNetworks(model, overlay.networks), favoriteStops);
+    const starred = starredStops(networkPins(favoriteStops, selectedCity, model, overlay.networks));
     const stationBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.stationIds), [selectedCity, starred.stationIds]);
     const platformBadgeImage = useMemo(() => stopBadgeImage(selectedCity, starred.platformIds), [selectedCity, starred.platformIds]);
     const platformOrder = useMemo(() => platformSortKey(starred.platformIds), [starred.platformIds]);

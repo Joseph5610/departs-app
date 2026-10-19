@@ -20,18 +20,18 @@ import { StopModeIcon } from '@/components/StopModeIcon';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
 import { NextDepartureRow } from '@/components/DetailPanel/DepartureBoard/NextDepartureRow';
 import { BoardRow, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
-import type { BoardStop, Departure, DepartureClickHandler } from '@/types';
+import type { BoardStop, Departure, DepartureClickHandler, FavoriteStop } from '@/types';
 
 interface FavoriteStopSectionProps {
-    /** The ids the stop was pinned under, all of which unpinning removes. */
-    pinnedIds: string[];
+    /** The pins that open this stop, all of which unpinning removes. */
+    pins: FavoriteStop[];
     stop: BoardStop;
     departures: Departure[];
     isError: boolean;
 }
 
 /** A pinned stop: its name opens the board, and its next departures follow as board rows. */
-export const FavoriteStopSection = ({ pinnedIds, stop, departures, isError }: FavoriteStopSectionProps) => {
+export const FavoriteStopSection = ({ pins, stop, departures, isError }: FavoriteStopSectionProps) => {
     const { t, i18n } = useTranslation();
     const { timezone } = useCityConfig();
     const flyTo = useMapMetadataStore(s => s.actions.flyTo);
@@ -84,7 +84,7 @@ export const FavoriteStopSection = ({ pinnedIds, stop, departures, isError }: Fa
                     <Button
                         variant="ghost"
                         size="icon-xs"
-                        onClick={() => removeFavoriteStops(pinnedIds)}
+                        onClick={() => removeFavoriteStops(pins)}
                         aria-label={t('map.departures.removeFromFavorites')}
                         className="text-favorite hover:text-favorite-hover focus-visible:ring-2 focus-visible:ring-primary/50"
                     >

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { stopModel } from '@/test/factories';
-import { historyWithStops, lineColorAt, mapStopsOf, pinnedIdsOf, pinnedStops } from './collections';
+import { favoriteStopsIn, historyWithStops, lineColorAt, mapStopsOf, pinnedStops, pinsOf, unclaimedFavoriteStops } from './collections';
+
+const pin = (stopId: string, city = 'brno') => ({ city, stopId });
 
 const model = stopModel([
     { id: 'S1', platforms: [{ id: 'U1Z1', aliases: ['U1Z1P'], routes: ['T9'] }, { id: 'U1Z2', routes: ['MA'] }] },
@@ -11,20 +13,35 @@ const model = stopModel([
 describe('pinnedStops', () => {
     // A pin can name an alias or a pre-stops.json PID id; unpinning and reordering must write that id back.
     it('keeps each pin\'s own id next to the stop it opens', () => {
-        expect(pinnedStops(model, ['S2', 'U1Z1P', 'gone']).map(pin => [pin.id, pin.ids, pin.stop.id])).toEqual([
-            ['S2', ['S2'], 'S2'],
-            ['U1Z1P', ['U1Z1P'], 'U1Z1'],
+        expect(pinnedStops(model, [pin('S2'), pin('U1Z1P'), pin('gone')]).map(p => [p.pin.stopId, p.pins.length, p.stop.id])).toEqual([
+            ['S2', 1, 'S2'],
+            ['U1Z1P', 1, 'U1Z1'],
         ]);
     });
 
     // Unpinning the one card must remove every id it was pinned under, or the card stays.
     it('lists a stop pinned under two of its ids once, at its first pin, with both ids', () => {
-        expect(pinnedStops(model, ['U1Z1P', 'U1Z1']).map(pin => [pin.id, pin.ids])).toEqual([['U1Z1P', ['U1Z1P', 'U1Z1']]]);
+        expect(pinnedStops(model, [pin('U1Z1P'), pin('U1Z1')]).map(p => [p.pin.stopId, p.pins.map(x => x.stopId)])).toEqual([['U1Z1P', ['U1Z1P', 'U1Z1']]]);
     });
 
     it('finds the pins that open a stop, whichever id they were made under', () => {
-        expect(pinnedIdsOf(model, ['U1Z1P', 'S2', 'U1Z1,U1Z1P'], 'U1Z1')).toEqual(['U1Z1P', 'U1Z1,U1Z1P']);
-        expect(pinnedIdsOf(null, ['U1Z1'], 'U1Z1')).toEqual(['U1Z1']);
+        expect(pinsOf(model, [pin('U1Z1P'), pin('S2'), pin('U1Z1,U1Z1P')], 'U1Z1').map(p => p.stopId)).toEqual(['U1Z1P', 'U1Z1,U1Z1P']);
+        expect(pinsOf(null, [pin('U1Z1')], 'U1Z1')).toHaveLength(1);
+    });
+});
+
+describe('favoriteStopsIn', () => {
+    // Stop ids repeat across networks (Prešov's are plain numbers), so a pin counts only in its own city.
+    it('keeps a city\'s own pins, never another city\'s with the same id', () => {
+        expect(favoriteStopsIn([pin('S2'), pin('S2', 'presov')], 'brno', model)).toEqual([pin('S2')]);
+    });
+
+    // Pins saved before pins carried their city stay visible where their stop exists until a city claims them.
+    it('lists a city-less pin where the city\'s stops know it, and offers it to be claimed', () => {
+        const legacy = [{ stopId: 'U1Z1' }, { stopId: 'X9' }];
+        expect(favoriteStopsIn(legacy, 'brno', model)).toEqual([legacy[0]]);
+        expect(unclaimedFavoriteStops(legacy, model)).toEqual([legacy[0]]);
+        expect(unclaimedFavoriteStops([pin('U1Z1')], model)).toEqual([]);
     });
 });
 

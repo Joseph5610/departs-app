@@ -108,7 +108,7 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
                         ))}
                         {allStops.map(pin => (
                             <CompactStopCard
-                                key={pin.id}
+                                key={pin.stop.id}
                                 stop={pin.stop}
                                 departures={departuresByStop.get(pin.stop.id) ?? []}
                                 isLoading={isLoading}

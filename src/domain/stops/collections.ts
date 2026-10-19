@@ -1,4 +1,4 @@
-import type { BoardStop, Entrance, PinnedStop, Platform, SearchHistoryBase, SearchHistoryItem, ShownHistoryItem, Station, Stop, StopLine, StopModel } from '@/types';
+import type { BoardStop, Entrance, FavoriteStop, PinnedStop, Platform, SearchHistoryBase, SearchHistoryItem, ShownHistoryItem, Station, Stop, StopLine, StopModel } from '@/types';
 import { mapStable } from '@/lib/memoize';
 import { servesMode } from './stations';
 import { resolveStop } from './model';
@@ -51,19 +51,34 @@ export const boardsOf = (model: StopModel | null | undefined, ids: readonly stri
     return boards;
 };
 
+/** Whether two pins are the same pin. */
+export const isSameFavoriteStop = (a: FavoriteStop, b: FavoriteStop): boolean => a.stopId === b.stopId && a.city === b.city;
+
+/** The stops pinned in `city`, in pin order: its own pins and the city-less ones its stop list knows. */
+export const favoriteStopsIn = (favorites: readonly FavoriteStop[], city: string, model: StopModel | null | undefined): FavoriteStop[] =>
+    favorites.filter(f => f.city === city || (!f.city && !!model && !!resolveStop(model, f.stopId)));
+
+/** Each network the map draws with the ids of its own pins, for `favoriteMarks`: the selected city's and each neighbour's (`StopModel.city`). */
+export const pinsByNetwork = (favorites: readonly FavoriteStop[], ownCity: string, own: StopModel | null, overlay: readonly StopModel[]) =>
+    [own, ...overlay].map(model => ({ model, pinIds: favoriteStopsIn(favorites, model?.city ?? ownCity, model).map(f => f.stopId) }));
+
+/** The city-less pins `model`'s stop list knows, for its city to claim. */
+export const unclaimedFavoriteStops = (favorites: readonly FavoriteStop[], model: StopModel | null | undefined): FavoriteStop[] =>
+    model ? favorites.filter(f => !f.city && !!resolveStop(model, f.stopId)) : [];
+
 /**
- * The pinned stops the stop model knows, in pin order, each kept with its pinned ids so unpinning and
- * reordering write those ids back; a stop pinned under several ids (an alias, a pre-stops.json PID id) is listed once, at its first pin.
+ * The pinned stops the stop model knows, in pin order, each kept with its pins so unpinning and reordering
+ * write those back; a stop pinned under several ids (an alias, a pre-stops.json PID id) is listed once, at its first pin.
  */
-export const pinnedStops = (model: StopModel | null | undefined, ids: readonly string[]): PinnedStop[] => {
+export const pinnedStops = (model: StopModel | null | undefined, pins: readonly FavoriteStop[]): PinnedStop[] => {
     if (!model) return [];
     const byBoard = new Map<string, PinnedStop>();
-    for (const id of ids) {
-        const stop = resolveStop(model, id);
+    for (const pin of pins) {
+        const stop = resolveStop(model, pin.stopId);
         if (!stop) continue;
-        const pin = byBoard.get(stop.id);
-        if (pin) pin.ids.push(id);
-        else byBoard.set(stop.id, { id, ids: [id], stop });
+        const listed = byBoard.get(stop.id);
+        if (listed) listed.pins.push(pin);
+        else byBoard.set(stop.id, { pin, pins: [pin], stop });
     }
     return [...byBoard.values()];
 };
@@ -76,9 +91,9 @@ export const canonicalStopId = (model: StopModel | null | undefined, id: string)
 export const opensStop = (model: StopModel | null | undefined, id: string, boardId: string): boolean =>
     id === boardId || canonicalStopId(model, id) === boardId;
 
-/** The pinned ids that open `boardId`'s stop, whichever form they were pinned under. */
-export const pinnedIdsOf = (model: StopModel | null | undefined, favoriteIds: readonly string[], boardId: string): string[] =>
-    favoriteIds.filter(id => opensStop(model, id, boardId));
+/** The pins that open `boardId`'s stop, whichever id they were pinned under. */
+export const pinsOf = (model: StopModel | null | undefined, pins: readonly FavoriteStop[], boardId: string): FavoriteStop[] =>
+    pins.filter(pin => opensStop(model, pin.stopId, boardId));
 
 /** The colour of `line` as the stop list records it for this stop, or undefined when the stop does not list it. */
 export const lineColorAt = (stop: { lines: readonly StopLine[] } | null | undefined, line: string): string | undefined =>

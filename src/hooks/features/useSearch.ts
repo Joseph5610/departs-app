@@ -15,7 +15,7 @@ import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectionStore } from '@/state/selectionStore';
 import { lineBadges, parseLineQuery } from '@/domain/routes';
-import { historyWithStops, pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
+import { favoriteStopsIn, historyWithStops, pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
 import { searchVehicles } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 import { MAP_CAMERA } from '@/config/constants';
@@ -52,7 +52,7 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const geocodingResults = useGeocoding(query, userLocation);
     const posResults = usePosSearch(query, isOpen);
 
-    const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStops).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops]);
+    const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStopsIn(favoriteStops, selectedCity, model)).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops, selectedCity]);
     const searchHistory = shownHistory(storedHistory, model, selectedCity);
     const pinnedStopIds = useMemo(() => new Set(pinnedStopList.map(stop => stop.id)), [pinnedStopList]);
 

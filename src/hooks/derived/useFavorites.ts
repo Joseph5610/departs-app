@@ -1,12 +1,13 @@
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useStops } from '@/hooks/data/useStops';
-import { boardsOf, pinnedStops } from '@/domain/stops';
+import { boardsOf, favoriteStopsIn, pinnedStops } from '@/domain/stops';
 import type { FavoriteLine, StopModel } from '@/types';
 import { favoriteLinesIn, favoritesView } from '@/domain/departures';
 import { memoizeLast } from '@/lib/memoize';
 
 const linesIn = memoizeLast(favoriteLinesIn);
 const stopsPinned = memoizeLast(pinnedStops);
+const pinsIn = memoizeLast(favoriteStopsIn);
 const lineStopsOf = memoizeLast((model: StopModel | null, lines: readonly FavoriteLine[]) => boardsOf(model, lines.map(fav => fav.stopId)));
 const viewOf = memoizeLast(favoritesView<ReturnType<typeof pinnedStops>[number]>);
 
@@ -22,9 +23,10 @@ export const useFavorites = () => {
     const { isLoading, model } = useStops();
 
     const allLines = linesIn(favoriteLines, selectedCity);
-    const allStops = stopsPinned(model, favoriteStops);
+    const cityPins = pinsIn(favoriteStops, selectedCity, model);
+    const allStops = stopsPinned(model, cityPins);
 
     const lineStops = lineStopsOf(model, allLines);
 
-    return { allLines, allStops, ...viewOf(allLines, allStops, tab), tab, lineStops, isLoading, pinnedStopCount: favoriteStops.length };
+    return { allLines, allStops, ...viewOf(allLines, allStops, tab), tab, lineStops, isLoading, cityPins, pinnedStopCount: cityPins.length };
 };

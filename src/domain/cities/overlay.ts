@@ -14,6 +14,7 @@ export function concatCollections<T extends { features: unknown[] }>(...collecti
 /** A neighbouring network's stops, each tagged with its `city` so opening one moves the selection there. */
 export const stopsInCity = (model: StopModel | null | undefined, city: string): StopModel | null => model ? {
     ...model,
+    city,
     stations: model.stations.map(s => ({ ...s, city })),
     platforms: model.platforms.map(p => ({ ...p, city })),
 } : null;

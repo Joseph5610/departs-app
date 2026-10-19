@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { SearchHistoryItem, SearchHistoryBase, FavoriteLine } from '@/types';
+import type { SearchHistoryItem, SearchHistoryBase, FavoriteLine, FavoriteStop } from '@/types';
 import { getDefaultCitySlug } from '@/domain/cities';
 import { matchRoutePath } from '@/lib/routes';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -10,6 +10,7 @@ import { z } from 'zod/mini';
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { firstUnique } from '@/lib/search';
 import { isSameFavoriteLine, reorderShown } from '@/domain/departures';
+import { isSameFavoriteStop } from '@/domain/stops';
 
 
 interface PreferencesState {
@@ -22,7 +23,7 @@ interface PreferencesState {
     stopTypeFilter: string[];
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
-    favoriteStops: string[];
+    favoriteStops: FavoriteStop[];
     favoriteLines: FavoriteLine[];
     searchHistory: SearchHistoryItem[];
     mapBaseStyle: 'nolabels' | 'labels';
@@ -57,14 +58,17 @@ interface PreferencesActions {
     setMapBaseStyle: (style: 'nolabels' | 'labels') => void;
     setSelectedCity: (city: string) => void;
     unlockCity: (city: string) => void;
-    toggleFavorite: (stopId: string) => void;
+    /** Pins `pin`, or unpins it when pinned. */
+    toggleFavorite: (pin: FavoriteStop) => void;
     toggleFavoriteLine: (line: FavoriteLine) => void;
     /** Puts the pinned lines the panel shows in this order. */
     reorderFavoriteLines: (shown: FavoriteLine[]) => void;
     /** Puts the pinned stops the panel shows in this order. */
-    reorderFavoriteStops: (shownIds: string[]) => void;
+    reorderFavoriteStops: (shown: FavoriteStop[]) => void;
     /** Unpins a stop pinned under any of these ids. */
-    removeFavoriteStops: (ids: string[]) => void;
+    removeFavoriteStops: (pins: FavoriteStop[]) => void;
+    /** Gives `city` the city-less pins its stop list knows (pins saved before they carried a city). */
+    claimFavoriteStops: (city: string, pins: FavoriteStop[]) => void;
     addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
@@ -126,6 +130,9 @@ const searchHistoryItemSchema = z.discriminatedUnion('type', [
 
 const favoriteLineSchema = z.looseObject({ city: z.string(), stopId: z.string(), line: z.string(), headsign: z.string() });
 
+/** A pin as stored: `{ city, stopId }`, or a bare id saved before pins carried their city. */
+const favoriteStopSchema = z.union([z.string(), z.looseObject({ city: z.optional(z.string()), stopId: z.string() })]);
+
 const stringArraySchema = z.array(z.string());
 
 /** The entries of a stored list that pass `schema`; null when the stored value is not a list at all. */
@@ -161,6 +168,9 @@ export const mergePersisted = (persisted: unknown, current: PreferencesStore): P
         } else if (key === 'searchHistory') {
             const history = validEntries(value, searchHistoryItemSchema);
             if (history) merged[key] = firstUnique(history, searchHistoryKey, Infinity);
+        } else if (key === 'favoriteStops') {
+            const pins = validEntries(value, favoriteStopSchema);
+            if (pins) merged[key] = pins.map((pin): FavoriteStop => (typeof pin === 'string' ? { stopId: pin } : { city: pin.city, stopId: pin.stopId }));
         } else if (key === 'favoriteLines') {
             const favorites = validEntries(value, favoriteLineSchema);
             if (favorites) merged[key] = favorites;
@@ -229,18 +239,18 @@ export const usePreferencesStore = create<PreferencesStore>()(
                     const favoriteLines = reorderShown(state.favoriteLines, shown);
                     return favoriteLines === state.favoriteLines ? state : { favoriteLines };
                 }),
-                reorderFavoriteStops: (shownIds) => set((state) => {
-                    const favoriteStops = reorderShown(state.favoriteStops, shownIds);
+                reorderFavoriteStops: (shown) => set((state) => {
+                    const favoriteStops = reorderShown(state.favoriteStops, shown);
                     return favoriteStops === state.favoriteStops ? state : { favoriteStops };
                 }),
-                removeFavoriteStops: (ids) => set((state) => ({ favoriteStops: state.favoriteStops.filter(id => !ids.includes(id)) })),
-                toggleFavorite: (stopId) =>
+                removeFavoriteStops: (pins) => set((state) => ({ favoriteStops: state.favoriteStops.filter(f => !pins.some(pin => isSameFavoriteStop(f, pin))) })),
+                claimFavoriteStops: (city, pins) => set((state) => pins.length === 0 ? state : {
+                    favoriteStops: state.favoriteStops.map(f => (!f.city && pins.some(pin => isSameFavoriteStop(f, pin)) ? { city, stopId: f.stopId } : f)),
+                }),
+                toggleFavorite: (pin) =>
                     set((state) => {
-                        const exists = state.favoriteStops.includes(stopId);
-                        const newFavorites = exists
-                            ? state.favoriteStops.filter((id) => id !== stopId)
-                            : [...state.favoriteStops, stopId];
-                        return { favoriteStops: newFavorites };
+                        const exists = state.favoriteStops.some(f => isSameFavoriteStop(f, pin));
+                        return { favoriteStops: exists ? state.favoriteStops.filter(f => !isSameFavoriteStop(f, pin)) : [...state.favoriteStops, pin] };
                     }),
                 addToHistory: (baseItem) =>
                     set((state) => {

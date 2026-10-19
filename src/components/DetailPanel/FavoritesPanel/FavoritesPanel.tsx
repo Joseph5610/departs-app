@@ -40,7 +40,7 @@ export const FavoritesPanel = () => {
     const { departuresByStop, isLoading: departuresLoading, isError } = useFavoriteDepartures(stopIds);
 
     const reorderStops = useCallback(
-        (pins: PinnedStop[]) => reorderFavoriteStops(pins.map(pin => pin.id)),
+        (pinned: PinnedStop[]) => reorderFavoriteStops(pinned.map(p => p.pin)),
         [reorderFavoriteStops]
     );
     const moveLine = useCallback(
@@ -134,7 +134,7 @@ export const FavoritesPanel = () => {
                     <Card size="none" variant="inset" className={cn("px-2", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
                         <Reorder.Group as="div" axis="y" values={stops} onReorder={reorderStops} className="flex flex-col">
                             {stops.map((pin, idx) => (
-                                <SortableFavorite key={pin.id} value={pin} sortable={stops.length > 1} onMove={moveStop}>
+                                <SortableFavorite key={pin.stop.id} value={pin} sortable={stops.length > 1} onMove={moveStop}>
                                     {(handle) => (
                                         <FavoriteReorderRow
                                             lead={<StopLead stop={pin.stop} />}
@@ -151,9 +151,9 @@ export const FavoritesPanel = () => {
                     // One card per stop: each is its own small board.
                     <div className={cn("flex flex-col gap-3", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
                         {stops.map(pin => (
-                            <Card key={pin.id} size="none" variant="inset" className="px-2 animate-in fade-in duration-200">
+                            <Card key={pin.stop.id} size="none" variant="inset" className="px-2 animate-in fade-in duration-200">
                                 <FavoriteStopSection
-                                    pinnedIds={pin.ids}
+                                    pins={pin.pins}
                                     stop={pin.stop}
                                     departures={departuresByStop.get(pin.stop.id) ?? []}
                                     isError={isError}

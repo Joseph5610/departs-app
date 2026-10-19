@@ -9,10 +9,17 @@ export interface FavoriteLine {
     headsign: string;
 }
 
-/** A pinned stop: the id as first pinned, which may be an alias or a pre-stops.json PID id, and the stop it opens. */
+/** A stop pinned in one city. */
+export interface FavoriteStop {
+    /** Absent on a pin saved before pins carried their city; the first city whose stops know the id claims it. */
+    city?: string;
+    /** As pinned, which may be an alias or a pre-stops.json PID id. */
+    stopId: string;
+}
+
+/** A pinned stop as listed: its first pin, every pin that opens it (all of which unpinning removes), and the stop. */
 export interface PinnedStop {
-    id: string;
-    /** Every pinned id that opens this stop, all of which unpinning removes. */
-    ids: string[];
+    pin: FavoriteStop;
+    pins: FavoriteStop[];
     stop: BoardStop;
 }

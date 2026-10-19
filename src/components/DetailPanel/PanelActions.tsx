@@ -32,7 +32,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useStops } from '@/hooks/data/useStops';
-import { pinnedIdsOf } from '@/domain/stops';
+import { favoriteStopsIn, pinsOf } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 
 /**
@@ -102,19 +102,20 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
 
     const chipClassName = chips ? 'size-7 rounded-full border border-border/50 bg-card shadow-sm' : undefined;
     // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
-    const pinnedIds = stopId ? pinnedIdsOf(model, favoriteStops, stopId) : [];
-    const isFavorite = pinnedIds.length > 0;
+    const cityPins = favoriteStopsIn(favoriteStops, boardCity, model);
+    const pins = stopId ? pinsOf(model, cityPins, stopId) : [];
+    const isFavorite = pins.length > 0;
     const handleToggleFavorite = () => {
         if (!stopId) return;
         if (isFavorite) {
-            removeFavoriteStops(pinnedIds);
+            removeFavoriteStops(pins);
             return;
         }
-        if (favoriteStops.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
+        if (cityPins.length >= PREFERENCES_LIMITS.FAVORITE_STOPS) {
             toast.error(t('toasts.favoritesLimitReached'));
             return;
         }
-        toggleFavorite(stopId);
+        toggleFavorite({ city: boardCity, stopId });
     };
 
     return (

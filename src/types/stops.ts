@@ -60,6 +60,8 @@ export interface StopModel {
     byId: ReadonlyMap<string, Stop>;
     /** Stations by their own id, which a platform's id or alias never shadows (unlike `byId`). */
     stationsById: ReadonlyMap<string, Station>;
+    /** Set on a neighbouring network's stops shown beside the selected city's. */
+    city?: string;
 }
 
 /**
