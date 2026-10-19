@@ -89,3 +89,8 @@ export function splitRouteAtVehicle(layer: FeatureCollection, lineFeature: Featu
     const { traversed, upcoming } = splitLineAt(measured.line, progress);
     return { type: 'FeatureCollection', features: [lineOf(traversed, 'traversed'), lineOf(upcoming, 'upcoming'), ...otherFeatures] };
 }
+
+/** Whether the route layer already draws its line; while the shape loads the line is empty. */
+export function hasDrawnLine(layer: FeatureCollection | null): boolean {
+    return layer?.features.some(f => f.geometry?.type === 'LineString' && f.geometry.coordinates.length >= 2) ?? false;
+}

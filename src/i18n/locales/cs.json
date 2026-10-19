@@ -75,8 +75,8 @@
       "labelsDescription": "Zobrazit názvy zastávek na mapě"
     },
     "showNetworkLines": {
-      "title": "Síť linek",
-      "description": "Vždy zobrazit linky metra, tramvají nebo trolejbusů na mapě"
+      "title": "Linky MHD",
+      "description": "Zobrazit hlavní linky na mapě"
     },
     "showPointsOfSale": {
       "title": "Prodejní místa",

@@ -14,6 +14,7 @@ import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
 import { favoriteMarks, indexStops, matchesStopTypeFilter, withoutTwins, withStopModes } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
+import { hasDrawnLine } from '@/domain/routes';
 import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
 import { useNetworkLayer } from '@/hooks/derived/useNetworkLayer';
@@ -126,7 +127,8 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
     const routeLine = useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
     const hasRoute = Boolean(routeShapeData?.features.length);
-    const routeLineName = hasRoute ? selectedVehicle?.route_short_name ?? null : null;
+    // The selected line leaves the network only once the trip draws its own, so it never blinks out while the shape loads.
+    const routeLineName = hasDrawnLine(routeShapeData) ? selectedVehicle?.route_short_name ?? null : null;
     const [networkCasing, networkLine] = useMemo(
         () => createNetworkLayers(resolvedTheme === 'light' ? 'light' : 'dark', hasRoute, routeLineName, networkColors ?? []),
         [resolvedTheme, hasRoute, routeLineName, networkColors]);
