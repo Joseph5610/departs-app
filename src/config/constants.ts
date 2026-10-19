@@ -234,7 +234,7 @@ export const TRANSIT_REFRESH_MS = TRANSIT_REFRESH_S * 1000;
 
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
-export const DAY_MS = 24 * HOUR_MS;
+const DAY_MS = 24 * HOUR_MS;
 
 /** React Query timings for the data hooks (in milliseconds). Live polling itself runs on TRANSIT_REFRESH_MS. */
 export const QUERY_TIMING_MS = {
@@ -320,7 +320,7 @@ export const GEOCODING_CONFIG = {
 /** Static data (cities, stops, route colors, fleet, points of sale) kept on the device (IndexedDB) across launches. */
 export const DEVICE_CACHE = {
     /** Bump to discard every device's cached static data; also sent as `?v=` on stops and fleet files so browsers skip their HTTP-cached copy. */
-    VERSION: 'v54',
+    VERSION: 'v55',
     /** The `stops.json` format the app reads (departs-data `STOPS_FILE_VERSION`). */
     STOPS_FILE_VERSION: 1,
     /** Entries older than this are dropped instead of shown while refreshing. */

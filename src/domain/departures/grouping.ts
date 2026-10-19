@@ -1,4 +1,4 @@
-import type { StopLine, Departure, FavoriteLine } from '@/types';
+import type { StopLine, Departure, FavoriteLine, RouteType } from '@/types';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import { routeTypeRank } from '@/domain/routes/routeType';
 import { boardingKey } from './platforms';
@@ -14,7 +14,7 @@ interface DepartureSubGroup {
 export interface DepartureLineGroup {
     lineGroupId: string;
     line: string | number;
-    type: string | number;
+    type: RouteType;
     subGroups: DepartureSubGroup[];
     firstTime: number;
 }

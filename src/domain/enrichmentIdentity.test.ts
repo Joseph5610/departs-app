@@ -8,7 +8,7 @@ import { enrichConnections, enrichVehicleRouteMetadata } from './vehicles';
 // The map and panels re-render on identity, so an enrichment that changes nothing must hand back its input.
 describe('enrichment keeps identity when nothing applies', () => {
     const fleet = { type: 'FeatureCollection' as const, features: [vehicle('trip-1')] };
-    const routes = new Map([[routeJoinKey('bus', '999'), { name: '999', type: 'bus', route_color: 'FFFFFF' }]]);
+    const routes = new Map([[routeJoinKey('bus', '999'), { name: '999', type: 'bus' as const, route_color: 'FFFFFF' }]]);
 
     it('returns the fleet itself without a matching route or patch', () => {
         expect(enrichVehicleRouteMetadata(fleet, routes)).toBe(fleet);

@@ -4,7 +4,8 @@ export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicula
 /** One route's display branding, as published in `<city>/routes.json` (see `useRouteMetadata`). */
 export interface RouteInfo {
     name: string;
-    type: string;
+    /** departs-data publishes the app's vehicle type, never a GTFS `route_type` code. */
+    type: RouteType;
     route_color: string;
 }
 

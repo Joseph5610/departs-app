@@ -20,8 +20,8 @@ describe('nearestStops', () => {
         expect(ids(stops, 2)).toEqual(['near', 'mid']);
     });
 
-    // A station's platforms share a name; the home sheet must list the station once.
-    it('lists platforms of one name once, at the nearest platform', () => {
+    // The home sheet lists a station once, at its nearest platform.
+    it('lists each station once, at its nearest platform', () => {
         const stops = stopModel([
             { id: 'V', name: 'Vltavská', platforms: [{ id: 'A2', pos: [HERE[0], HERE[1] + 300 / 111_195], routes: ['T17'] }, { id: 'A1', pos: [HERE[0], HERE[1] + 120 / 111_195], routes: ['T17'] }] },
             { id: 'T', name: 'Tusarova', platforms: [{ id: 'B', pos: [HERE[0], HERE[1] + 200 / 111_195], routes: ['T17'] }] },

@@ -8,10 +8,10 @@ import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { InterchangeBadges } from '@/components/InterchangeBadges';
 import { TimelineTime } from './TimelineTime';
 import { StopConnections, StopContinuation } from './StopTransfers';
-import type { StopFeature } from './types';
+import type { TimelineStop } from './types';
 
 export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop, isPicking = false, onPickExit }: {
-    stop: StopFeature,
+    stop: TimelineStop,
     routeName: string,
     isPast: boolean,
     effectiveSequence: number | null,
@@ -25,7 +25,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
     /** Between the vehicle and the ride's exit. */
     isOnJourney?: boolean,
     /** Opens a stop's board from the timeline. */
-    onOpenStop: (stop: StopFeature) => void,
+    onOpenStop: (stop: TimelineStop) => void,
     /** The rider is picking their stop: the row picks instead of opening the stop, and rows that can't be picked dim. */
     isPicking?: boolean,
     /** Set on the rows that can be picked. */

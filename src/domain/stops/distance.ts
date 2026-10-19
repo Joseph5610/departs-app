@@ -34,8 +34,8 @@ export interface NearbyStop {
 }
 
 /**
- * The stops closest to `location` within `maxDistanceM`, nearest first, one per stop name so a station's
- * platforms list once, at the nearest. Only platforms served by a line count.
+ * The stops closest to `location` within `maxDistanceM`, nearest first, one per station: its nearest platform.
+ * Only platforms served by a line count.
  */
 export const nearestStops = (
     platforms: readonly Platform[],
@@ -44,13 +44,13 @@ export const nearestStops = (
     maxDistanceM: number
 ): NearbyStop[] => {
     if (!location) return [];
-    const byName = new Map<string, NearbyStop>();
+    const byStation = new Map<string, NearbyStop>();
     for (const stop of platforms) {
         if (stop.alightOnly || !stop.lines.length) continue;
         const distance = calculateDistance(location, stop.pos);
         if (distance > maxDistanceM) continue;
-        const kept = byName.get(stop.name);
-        if (!kept || distance < kept.distance) byName.set(stop.name, { stop, distance });
+        const kept = byStation.get(stop.station);
+        if (!kept || distance < kept.distance) byStation.set(stop.station, { stop, distance });
     }
-    return [...byName.values()].sort((a, b) => a.distance - b.distance).slice(0, limit);
+    return [...byStation.values()].sort((a, b) => a.distance - b.distance).slice(0, limit);
 };

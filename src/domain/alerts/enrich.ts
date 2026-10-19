@@ -1,5 +1,4 @@
 import type { RSSItem, RouteInfo } from '@/types';
-import { normalizeRouteType } from '@/domain/routes/routeType';
 import { mapStable } from '@/lib/memoize';
 
 /**
@@ -22,7 +21,7 @@ export function enrichAlertLineMetadata(
             const upper = key.toUpperCase();
             const route = (entry.route_id && byId.get(entry.route_id)) || byName.get(upper) || byKordisNumeric.get(upper);
             return route
-                ? { ...entry, name: route.name, type: normalizeRouteType(route.type), route_color: route.route_color }
+                ? { ...entry, name: route.name, type: route.type, route_color: route.route_color }
                 : { ...entry, name: entry.name ?? key, type: entry.type ?? 'unknown' as const };
         });
         return line_metadata === alert.line_metadata ? alert : { ...alert, line_metadata };

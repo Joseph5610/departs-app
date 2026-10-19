@@ -14,7 +14,7 @@ import { useViewportStore } from '@/state/viewportStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectionStore } from '@/state/selectionStore';
-import { knownLineMetadata, lineBadges, parseLineQuery } from '@/domain/routes';
+import { lineBadges, parseLineQuery } from '@/domain/routes';
 import { pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
 import { searchVehicles } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
@@ -53,10 +53,9 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const pinnedStopIds = useMemo(() => new Set(pinnedStopList.map(stop => stop.id)), [pinnedStopList]);
 
     const { byName: routesByName } = useRouteMetadata();
-    const lineMetadataMap = useMemo(() => knownLineMetadata(model ? [...model.stations, ...model.platforms] : [], routesByName), [model, routesByName]);
-    const queryLines = useMemo(() => parseLineQuery(query, lineMetadataMap), [query, lineMetadataMap]);
-    const queryLineBadges = useMemo(() => queryLines && lineBadges(queryLines, lineMetadataMap), [queryLines, lineMetadataMap]);
-    const activeFilterBadges = useMemo(() => activeFilter && lineBadges(activeFilter, lineMetadataMap), [activeFilter, lineMetadataMap]);
+    const queryLines = useMemo(() => parseLineQuery(query, routesByName), [query, routesByName]);
+    const queryLineBadges = useMemo(() => queryLines && lineBadges(queryLines, routesByName), [queryLines, routesByName]);
+    const activeFilterBadges = useMemo(() => activeFilter && lineBadges(activeFilter, routesByName), [activeFilter, routesByName]);
 
     const { networkVehicles } = useVehicles();
     const vehicleResults = useMemo(() => searchVehicles(query, networkVehicles), [query, networkVehicles]);

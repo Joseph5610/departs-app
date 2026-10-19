@@ -156,7 +156,7 @@ export async function nearestStops(
 }
 
 /** A stop's lines with the vehicle type as a word (`tram`), whatever form the city's stop data uses. */
-export function toMcpStopLines(stop: SearchedStop) {
+function toMcpStopLines(stop: SearchedStop) {
     return stop.lines.map(line => ({ ...line, type: normalizeRouteType(line.type) }));
 }
 

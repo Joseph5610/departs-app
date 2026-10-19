@@ -91,11 +91,11 @@ export const stopTime = (sequence: number, time: string, overrides: Partial<Stop
 
 /** Routes the stop builders name: trams 9 and 17, metro A and B, bus 67. */
 export const ROUTES: Record<string, RouteInfo> = {
-    T9: { name: '9', type: '0', route_color: '#7A0603' },
-    T17: { name: '17', type: '0', route_color: '#7A0603' },
-    MA: { name: 'A', type: '1', route_color: '#00A562' },
-    MB: { name: 'B', type: '1', route_color: '#F8B322' },
-    B67: { name: '67', type: '3', route_color: '#007DA8' },
+    T9: { name: '9', type: 'tram', route_color: '#7A0603' },
+    T17: { name: '17', type: 'tram', route_color: '#7A0603' },
+    MA: { name: 'A', type: 'metro', route_color: '#00A562' },
+    MB: { name: 'B', type: 'metro', route_color: '#F8B322' },
+    B67: { name: '67', type: 'bus', route_color: '#007DA8' },
 };
 
 const STOP_POS: [number, number] = [14.42, 50.08];

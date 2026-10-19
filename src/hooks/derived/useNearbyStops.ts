@@ -10,7 +10,7 @@ const NO_PLATFORMS: Platform[] = [];
 const nearest = memoizeLast((platforms: readonly Platform[], location: [number, number] | null): NearbyStop[] =>
     nearestStops(platforms, location, NEARBY_STOPS.LIMIT, NEARBY_STOPS.MAX_DISTANCE_M));
 
-/** The stops nearest the user's location, one per name, or none until the location is known. */
+/** The stops nearest the user's location, one per station, or none until the location is known. */
 export const useNearbyStops = () => {
     const userLocation = useGeolocationStore(s => s.userLocation);
     const { model, isLoading } = useStops();

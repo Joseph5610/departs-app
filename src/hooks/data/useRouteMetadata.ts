@@ -4,15 +4,17 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { apiFetch } from '@/lib/apiClient';
-import { EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import { ROUTE_TYPE_ORDER } from '@/config/transit';
 import { EMPTY_ROUTE_METADATA, indexRouteMetadata, NO_TYPE_COLORS, type RouteMetadata, type RouteTypeColors } from '@/domain/routes';
 import type { RouteInfo } from '@/types';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { queryKeys } from '@/lib/queryKeys';
 
+/** departs-data publishes the app's vehicle types; a GTFS `route_type` code is rejected, never translated here. */
 const routesFileSchema = z.record(z.string(), z.object({
     name: z.string(),
-    type: z.string(),
+    type: z.enum([...ROUTE_TYPE_ORDER, 'unknown']),
     route_color: z.string(),
 }));
 
@@ -31,7 +33,7 @@ export const buildRouteMetadata = (data: Record<string, RouteInfo>, typeColors: 
 
 export const routesQueryOptions = (city: string) => queryOptions({
     queryKey: queryKeys.routeMetadata(city),
-    queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/routes.json`)),
+    queryFn: async () => routesFileSchema.parse(await apiFetch<unknown>(`${EXTERNAL_URLS.STATIC_DATA}/${city}/routes.json?v=${DEVICE_CACHE.VERSION}`)),
     staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.STATIC_METADATA_STALE),
     gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,
     persister: routesPersister,

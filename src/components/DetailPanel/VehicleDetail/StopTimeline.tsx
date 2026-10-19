@@ -12,7 +12,7 @@ import { StopTimelineItem } from './StopTimelineItem';
 import { countStopsLeft, exitArrival, followKey } from '@/domain/rides';
 import { firstTransferSequence as firstTransfer, lastStopOf, nextStopSequence as nextSequence, pastStopsCount as countPastStops } from '@/domain/vehicles';
 import { StopConnections, StopContinuation } from './StopTransfers';
-import type { StopFeature, StopTimelineProps } from './types';
+import type { TimelineStop, StopTimelineProps } from './types';
 import { paths } from '@/lib/routes';
 import { navigate } from '@/lib/history';
 import { useSelectionStore } from '@/state/selectionStore';
@@ -44,8 +44,8 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const stationGrid = useMemo(() => indexStops(model?.stations.filter(s => !s.alightOnly) ?? [], SHARED_GROUND.TWIN_STATION_RADIUS_M), [model]);
     const platformGrid = useMemo(() => indexStops(model?.platforms.filter(p => !p.alightOnly) ?? [], SHARED_GROUND.TWIN_STATION_RADIUS_M), [model]);
     const { presetTripHighlight } = useSelectionStore(s => s.actions);
-    /** Opens a timeline stop's board; an arrival-only platform (a terminus) opens the nearby same-named stop that has departures. */
-    const openStop = useCallback((stop: StopFeature) => {
+    /** Opens a timeline stop's board; an arrival-only platform (a terminus) opens its station, see `boardableStopId`. */
+    const openStop = useCallback((stop: TimelineStop) => {
         const targetId = boardableStopId(stop, model, stationGrid, platformGrid);
         presetTripHighlight(tripId);
         navigate(paths.stop(selectedCity, targetId));

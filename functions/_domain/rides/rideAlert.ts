@@ -16,7 +16,7 @@ export const liveStopSequence = (detail: RideDetail): number | null => {
 };
 
 /** Stops after `current` up to and including the exit. */
-export const stopsLeft = (detail: RideDetail, current: number, exitSequence: number): number => {
+const stopsLeft = (detail: RideDetail, current: number, exitSequence: number): number => {
     let count = 0;
     for (const s of detail.stop_times?.features ?? []) {
         const seq = Number(s.properties.stop_sequence);

@@ -11,14 +11,14 @@ const network = (...properties: NetworkLineCollection['features'][number]['prope
 });
 
 describe('colorNetwork', () => {
-    it('paints merged pieces in their mode colour, GTFS extended types included', () => {
-        const { lines } = colorNetwork(network({ route_type: 0 }, { route_type: 800 }), MODE_COLORS);
+    it('paints merged pieces in their mode colour', () => {
+        const { lines } = colorNetwork(network({ route_type: 'tram' }, { route_type: 'trolleybus' }), MODE_COLORS);
         expect(lines.features.map(f => f.properties.route_color)).toEqual(['#D40000', '#13856B']);
     });
 
     // A metro line keeps its own colour (A green, B yellow), not the mode's.
     it('keeps a line its own colour and lists each colour once', () => {
-        const { lines, colors } = colorNetwork(network({ route_type: 1, name: 'A', route_color: '#00A562' }, { route_type: 0 }, { route_type: 0 }), MODE_COLORS);
+        const { lines, colors } = colorNetwork(network({ route_type: 'metro', name: 'A', route_color: '#00A562' }, { route_type: 'tram' }, { route_type: 'tram' }), MODE_COLORS);
         expect(lines.features[0]!.properties.route_color).toBe('#00A562');
         expect(colors).toEqual(['#00A562', '#D40000']);
     });

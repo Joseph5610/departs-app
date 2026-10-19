@@ -66,13 +66,16 @@ export function withoutTwins<T extends Placed>(other: readonly T[], own: StopGri
 }
 
 /**
- * The stop whose board a timeline stop opens: itself, or for an arrival-only platform (a terminus) or
- * one the stop list lacks, the nearby same-named station or platform that has departures.
+ * The stop whose board a timeline stop opens: itself; for an arrival-only platform (a terminus) its station;
+ * where that has no departures either, or the stop list lacks the stop, the nearby same-named station or
+ * platform that has departures.
  */
 export function boardableStopId(stop: StopTimeFeature, model: StopModel | null, stations: StopGrid<{ id: string } & Placed>, platforms: StopGrid<{ id: string } & Placed>): string {
     const stopId = String(stop.properties.stop_id);
     const known = model?.byId.get(stopId);
     if (known && !known.alightOnly) return known.id;
+    const station = known?.kind === 'platform' ? model?.stationsById.get(known.station) : undefined;
+    if (station && !station.alightOnly) return station.id;
     const point = (stop.geometry?.coordinates ?? known?.pos) as [number, number] | undefined;
     const nameKey = stopNameKey(stop.properties.stop_name);
     const boardable = point && (stopNear(stations, point, nameKey) ?? stopNear(platforms, point, nameKey));

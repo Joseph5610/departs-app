@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.87.2] - 2026-10-20
+
+### Changed
+
+- Route types come from departs-data as the app's own vehicle types; the app no longer reads GTFS route type codes.
+- Nearby stops list each station once, at its nearest platform.
+
+### Fixed
+
+- Tapping an arrival-only terminus in a vehicle's timeline opens its station's board.
+
 ## [0.87.1] - 2026-10-19
 
 ### Changed

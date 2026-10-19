@@ -5,7 +5,7 @@ import { indexStops, withoutTwins } from './twins';
 import { SHARED_GROUND } from '@/config/constants';
 
 /** Whether a stop passes the map's stop-type filter; an empty filter passes every stop. */
-export const matchesStopTypeFilter = (stop: { lines: readonly StopLine[] }, stopTypeFilter: readonly string[]): boolean => {
+const matchesStopTypeFilter = (stop: { lines: readonly StopLine[] }, stopTypeFilter: readonly string[]): boolean => {
     if (stopTypeFilter.length === 0) return true;
     return (stopTypeFilter.includes('metro') && servesMode(stop, 'metro')) || (stopTypeFilter.includes('train') && servesMode(stop, 'train'));
 };

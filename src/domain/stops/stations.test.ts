@@ -3,13 +3,12 @@ import { stopModel } from '@/test/factories';
 import { badgeLines, hidesNightLinesAt, favoriteMarks, nightLinesByNetwork, networksHidingNightLines, platformIdByCode, sectionStopId, stopBadgeTiles, stopModeList, toMapStops } from './stations';
 
 describe('stopModeList', () => {
-    // Networks write a line's mode as a name (PID) or a GTFS code (IDS JMK, DPMP); both must give one badge order.
-    it('normalizes named and GTFS-coded modes into ROUTE_TYPE_ORDER without duplicates', () => {
+    it('orders a stop\'s modes as ROUTE_TYPE_ORDER, each once', () => {
         expect(stopModeList({
             lines: [
-                { name: '9', type: '3' as never, route_color: '' },
+                { name: '9', type: 'bus', route_color: '' },
                 { name: '25', type: 'trolleybus', route_color: '' },
-                { name: '1', type: '0' as never, route_color: '' },
+                { name: '1', type: 'tram', route_color: '' },
                 { name: '2', type: 'tram', route_color: '' },
                 { name: 'B', type: 'metro', route_color: '#F8B322' },
             ],

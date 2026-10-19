@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { apiFetch } from '@/lib/apiClient';
-import { EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
 import { queryKeys } from '@/lib/queryKeys';
 import type { NetworkLineCollection } from '@/types';
 
@@ -14,7 +14,7 @@ export function useNetworkLines(): NetworkLineCollection | null {
 
     const { data } = useQuery({
         queryKey: queryKeys.networkLines(selectedCity),
-        queryFn: ({ signal }) => apiFetch<NetworkLineCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/network.json`, { signal }),
+        queryFn: ({ signal }) => apiFetch<NetworkLineCollection>(`${EXTERNAL_URLS.STATIC_DATA}/${selectedCity}/network.json?v=${DEVICE_CACHE.VERSION}`, { signal }),
         enabled: hasNetworkLines && show,
         staleTime: QUERY_TIMING_MS.STATIC_METADATA_STALE,
         gcTime: QUERY_TIMING_MS.STATIC_METADATA_GC,

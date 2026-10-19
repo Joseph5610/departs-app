@@ -137,7 +137,7 @@ export const formatStartDate = (iso: string, locale: string | undefined, timeZon
 };
 
 /** Whole minutes from `nowMs` until `iso`, rounded down; zero or less once it is due. */
-export const minutesUntil = (iso: string, nowMs: number): number => Math.floor((Date.parse(iso) - nowMs) / 60_000);
+const minutesUntil = (iso: string, nowMs: number): number => Math.floor((Date.parse(iso) - nowMs) / 60_000);
 
 /** How a glanceable countdown reads: due now, in whole minutes, or (from `minutesLimit` away) as its clock time. */
 export type MinutesCountdown = { kind: 'now' } | { kind: 'minutes'; minutes: number } | { kind: 'clock' };

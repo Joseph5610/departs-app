@@ -35,7 +35,7 @@ Scheduled GitHub Actions in `departs-data` download each network's timetables, c
 
 **Self-host** if you need your own schedule, networks or availability. Fork the [`departs-data` repository](https://github.com/Joseph5610/departs-data): its GitHub Actions build the data on a schedule and publish it to GitHub Pages. You can also run the build scripts yourself and host the output on any static host. With a domain on Cloudflare, serve the data through a proxied `data.<domain>` to get the edge caching from step 7.
 
-**Check:** `curl -sI <data-host>/<city>/map-stops.json` returns `200` for each network you build, where `<city>` is the folder name the build publishes (e.g. `prague`).
+**Check:** `curl -sI <data-host>/<city>/stops.json` returns `200` for each network you build, where `<city>` is the folder name the build publishes (e.g. `prague`).
 
 ## 2. Fork the app and set your hostnames
 
@@ -143,7 +143,7 @@ Use 301 and enable *preserve query string*, *subpath matching* and *preserve pat
 - **Web Analytics**: enable it in one place, either for the zone (automatic injection) or in the Pages project; both together count each page view twice.
 - **Speed** (Speed > Optimization): Rocket Loader, Early Hints and Brotli on; Polish and Mirage off. Rocket Loader rewrites the page's `<script>` tags to defer them, so if the app or PWA boot misbehaves on `<domain>` but not on `pages.dev`, turn it off first.
 
-**Check:** run `curl -sI https://<domain>/api/cities` twice; the second response has `cf-cache-status: HIT`. If you serve the data through your zone, `curl -sI https://data.<domain>/<city>/map-stops.json` shows `cf-cache-status`.
+**Check:** run `curl -sI https://<domain>/api/cities` twice; the second response has `cf-cache-status: HIT`. If you serve the data through your zone, `curl -sI https://data.<domain>/<city>/stops.json` shows `cf-cache-status`.
 
 ## Ongoing operation
 

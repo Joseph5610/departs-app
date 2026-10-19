@@ -1,12 +1,12 @@
 import type { RouteInfo, RouteType } from '@/types';
-import { normalizeRouteType, routeJoinKey } from './routeType';
+import { routeJoinKey } from './routeType';
 import type { RouteLookup } from './metadata';
 
 /**
  * The route of a `type|name` join key in `routes.json`. A miss leaves the caller's `route_color`
  * untouched. Keyed on type too: a line number can be reused across modes (DÚK trolleybus 70 vs bus 70).
  */
-export const brandFrom = (name: string | undefined, type: string | undefined, byShortName: RouteLookup): RouteInfo | undefined =>
+export const brandFrom = (name: string | undefined, type: RouteType | undefined, byShortName: RouteLookup): RouteInfo | undefined =>
     name ? byShortName.get(routeJoinKey(type, name)) : undefined;
 
 /**
@@ -24,7 +24,7 @@ const resolveLineType = (
     if (routeId) {
         const route = byId.get(routeId);
         return route
-            ? { line: route.name, type: normalizeRouteType(route.type), route_color: route.route_color }
+            ? { line: route.name, type: route.type, route_color: route.route_color }
             : { line: line ?? routeId, type: type ?? 'unknown' };
     }
     const route = brandFrom(line, type, byShortName);

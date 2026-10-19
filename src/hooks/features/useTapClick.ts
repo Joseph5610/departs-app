@@ -7,7 +7,7 @@ import type { Departure, DepartureClickHandler } from '@/types';
  * Click handlers that fire `onTap` only for a tap, not for the release of a drag that started on the element
  * (scrolling the board or swiping the sheet). Keyboard activation always counts.
  */
-export const useTapClick = (onTap: () => void) => {
+const useTapClick = (onTap: () => void) => {
     const start = useRef<{ x: number; y: number } | null>(null);
     return {
         onPointerDown: (e: React.PointerEvent) => {

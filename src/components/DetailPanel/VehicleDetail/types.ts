@@ -7,10 +7,10 @@ export interface DisplayVehicle extends VehicleDetail {
     effectiveSequence: number | null;
 }
 
-export type StopFeature = Required<Required<DisplayVehicle>['stop_times']>['features'][number];
+export type TimelineStop = Required<Required<DisplayVehicle>['stop_times']>['features'][number];
 
 export interface StopTimelineProps {
-    stopTimes: StopFeature[];
+    stopTimes: TimelineStop[];
     routeName: DisplayVehicle['routeName'];
     effectiveSequence: DisplayVehicle['effectiveSequence'];
     delay?: number | null;

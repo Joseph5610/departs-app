@@ -1,5 +1,5 @@
 import type { BoardStop, Entrance, MapStopCollection, MapStopFeature, Platform, RouteType, Stop, StopLine, StopModel } from '@/types';
-import { normalizeRouteType, routeTypeRank } from '@/domain/routes';
+import { routeTypeRank } from '@/domain/routes';
 import type { LineRules } from '@/config/cities';
 import { isWithinLocalHours } from '@/domain/time';
 import { resolveStop } from './model';
@@ -15,13 +15,13 @@ export const PLATFORM_CODE_TILE = 'code';
 
 /** Whether any of a stop's lines is of `mode`. */
 export const servesMode = (props: WithLines, mode: RouteType): boolean =>
-    props.lines.some(line => normalizeRouteType(line.type) === mode);
+    props.lines.some(line => line.type === mode);
 
 /** The modes serving a stop in ROUTE_TYPE_ORDER (metro before train before tram...), without `unknown`. */
 export const stopModeList = (props: WithLines): RouteType[] => {
     const modes = new Set<RouteType>();
     for (const line of props.lines) {
-        const mode = normalizeRouteType(line.type);
+        const mode = line.type;
         if (mode !== 'unknown') modes.add(mode);
     }
     return [...modes].sort((a, b) => routeTypeRank(a) - routeTypeRank(b));
@@ -35,7 +35,7 @@ export const stopBadgeTiles = (props: WithLines, modes = stopModeList(props)): s
     const tiles: string[] = [];
     for (const mode of modes) {
         if (mode !== 'metro') { tiles.push(mode); continue; }
-        const metro = props.lines.filter(line => normalizeRouteType(line.type) === 'metro').sort((a, b) => a.name.localeCompare(b.name));
+        const metro = props.lines.filter(line => line.type === 'metro').sort((a, b) => a.name.localeCompare(b.name));
         if (metro.length === 0) tiles.push(mode);
         for (const line of metro) tiles.push([mode, line.name, line.route_color.replace('#', '')].join(TILE_PART_SEPARATOR));
     }

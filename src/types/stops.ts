@@ -58,6 +58,8 @@ export interface StopModel {
     platforms: Platform[];
     entrances: Entrance[];
     byId: ReadonlyMap<string, Stop>;
+    /** Stations by their own id, which a platform's id or alias never shadows (unlike `byId`). */
+    stationsById: ReadonlyMap<string, Station>;
 }
 
 /**
