@@ -1,4 +1,5 @@
-import type { BoardStop, Entrance, PinnedStop, Platform, SearchHistoryBase, Station, Stop, StopLine, StopModel } from '@/types';
+import type { BoardStop, Entrance, PinnedStop, Platform, SearchHistoryBase, SearchHistoryItem, ShownHistoryItem, Station, Stop, StopLine, StopModel } from '@/types';
+import { mapStable } from '@/lib/memoize';
 import { servesMode } from './stations';
 import { resolveStop } from './model';
 import { indexStops, withoutTwins } from './twins';
@@ -84,12 +85,12 @@ export const lineColorAt = (stop: { lines: readonly StopLine[] } | null | undefi
     stop?.lines.find(l => l.name === line)?.route_color;
 
 /** A search history entry for a stop picked in `city`. */
-export const stopHistoryEntry = (stop: Stop, city: string): SearchHistoryBase => ({
-    type: 'stop',
-    city_slug: city,
-    stop_id: stop.id,
-    stop_name: stop.name,
-    platform_code: stop.kind === 'platform' ? stop.code : undefined,
-    lines: stop.lines,
-    coordinates: stop.pos,
-});
+export const stopHistoryEntry = (stop: Stop, city: string): SearchHistoryBase => ({ type: 'stop', city_slug: city, stop_id: stop.id, stop_name: stop.name });
+
+/** Search history as listed: each stop of `city` read from today's stop list (`model`), any other entry as stored. */
+export const historyWithStops = (history: SearchHistoryItem[], model: StopModel | null, city: string): ShownHistoryItem[] =>
+    mapStable(history, (item): ShownHistoryItem => {
+        if (item.type !== 'stop' || !model || (item.city_slug ?? city) !== city) return item;
+        const stop = resolveStop(model, item.stop_id);
+        return stop ? { ...item, stop } : item;
+    });

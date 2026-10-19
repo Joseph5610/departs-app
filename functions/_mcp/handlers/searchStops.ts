@@ -7,7 +7,7 @@ import { findStopsByName, toMcpStop } from "../utils";
  * 
  * @param args - Tool arguments containing `query`, `city` (default: 'prague'), and optional `limit`.
  * @param resolvedCity - Normalized city slug (a `CITY_REGISTRY` key).
- * @returns Filtered stop list with coordinates, line list, and whether each is a station (`is_centroid`).
+ * @returns Filtered stop list with coordinates, line list, and whether each is a station (`is_station`).
  */
 export async function handleSearchStops(
     args: Record<string, unknown>,

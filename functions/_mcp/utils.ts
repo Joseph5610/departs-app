@@ -160,13 +160,13 @@ function toMcpStopLines(stop: SearchedStop) {
     return stop.lines.map(line => ({ ...line, type: normalizeRouteType(line.type) }));
 }
 
-/** A stop as the stop tools answer with it; `is_centroid` names a station, as the tools have always called it. */
+/** A stop as the stop tools answer with it. */
 export function toMcpStop(stop: SearchedStop) {
     return {
         stop_id: stop.id,
         stop_name: stop.name,
         platform_code: stop.platformCode,
-        is_centroid: stop.isStation,
+        is_station: stop.isStation,
         coordinates: stop.coordinates,
         lines: toMcpStopLines(stop),
     };

@@ -329,8 +329,6 @@ export const DEVICE_CACHE = {
     METERED_STALE: DAY_MS,
     DB_NAME: 'departs',
     STORE_NAME: 'query_cache',
-    /** Stores left by earlier cache implementations, deleted on startup. */
-    LEGACY_STORE_NAMES: ['stops_cache'],
 };
 
 /** The full-screen departure board. */

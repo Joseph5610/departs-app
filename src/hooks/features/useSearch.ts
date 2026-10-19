@@ -15,13 +15,16 @@ import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useSelectionStore } from '@/state/selectionStore';
 import { lineBadges, parseLineQuery } from '@/domain/routes';
-import { pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
+import { historyWithStops, pinnedStops, searchStops, stopHistoryEntry } from '@/domain/stops';
 import { searchVehicles } from '@/domain/vehicles';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 import { MAP_CAMERA } from '@/config/constants';
+import { memoizeLast } from '@/lib/memoize';
 import type { SearchHistoryItem, Stop, VehicleFeature } from '@/types';
 
 /** What a pick did: opened a panel for it, or changed the map (a line filter or a place pin). */
+const shownHistory = memoizeLast(historyWithStops);
+
 export type SearchPick = 'panel' | 'map';
 
 /**
@@ -31,7 +34,7 @@ export type SearchPick = 'panel' | 'map';
 export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void) => {
     const { t } = useTranslation();
     const favoriteStops = usePreferencesStore(s => s.favoriteStops);
-    const searchHistory = usePreferencesStore(s => s.searchHistory);
+    const storedHistory = usePreferencesStore(s => s.searchHistory);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { addToHistory } = usePreferencesStore(s => s.actions);
 
@@ -50,6 +53,7 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const posResults = usePosSearch(query, isOpen);
 
     const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStops).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops]);
+    const searchHistory = shownHistory(storedHistory, model, selectedCity);
     const pinnedStopIds = useMemo(() => new Set(pinnedStopList.map(stop => stop.id)), [pinnedStopList]);
 
     const { byName: routesByName } = useRouteMetadata();

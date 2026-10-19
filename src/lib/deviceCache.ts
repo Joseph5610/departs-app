@@ -114,10 +114,7 @@ export function refreshDeviceCacheWhenUnmetered(queryClient: QueryClient): void 
     });
 }
 
-/** Drops expired or outdated entries and stores from earlier cache implementations; run once per launch. */
+/** Drops expired or outdated entries; run once per launch. */
 export function pruneDeviceCache(): void {
     void maintenance.persisterGc().catch(() => undefined);
-    for (const storeName of DEVICE_CACHE.LEGACY_STORE_NAMES) {
-        void localforage.dropInstance({ name: DEVICE_CACHE.DB_NAME, storeName }).catch(() => undefined);
-    }
 }

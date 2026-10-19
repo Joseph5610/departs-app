@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { stopModel } from '@/test/factories';
-import { lineColorAt, mapStopsOf, pinnedIdsOf, pinnedStops } from './collections';
+import { historyWithStops, lineColorAt, mapStopsOf, pinnedIdsOf, pinnedStops } from './collections';
 
 const model = stopModel([
     { id: 'S1', platforms: [{ id: 'U1Z1', aliases: ['U1Z1P'], routes: ['T9'] }, { id: 'U1Z2', routes: ['MA'] }] },
@@ -48,5 +48,25 @@ describe('mapStopsOf', () => {
         const { stations, platforms } = mapStopsOf(model, ['metro']);
         expect(stations.map(s => s.id)).toEqual(['S1']);
         expect(platforms.map(p => p.id)).toEqual(['U1Z2']);
+    });
+});
+
+describe('historyWithStops', () => {
+    const history = [
+        { type: 'stop' as const, city_slug: 'brno', stop_id: 'U1Z1P', stop_name: 'Old name', timestamp: 1 },
+        { type: 'stop' as const, city_slug: 'prague', stop_id: 'U1Z1', stop_name: 'Elsewhere', timestamp: 2 },
+        { type: 'line' as const, lines: ['9'], timestamp: 3 },
+    ];
+
+    // A recent stop shows today's name, platform and lines, however long ago it was searched.
+    it('reads the selected city\'s stops from today\'s stop list and keeps the others as stored', () => {
+        const shown = historyWithStops(history, model, 'brno');
+        expect(shown[0]).toMatchObject({ stop_name: 'Old name', stop: { id: 'U1Z1', name: 'S1' } });
+        expect(shown[1]).toBe(history[1]);
+        expect(shown[2]).toBe(history[2]);
+    });
+
+    it('returns the history itself when no stop resolves', () => {
+        expect(historyWithStops(history, null, 'brno')).toBe(history);
     });
 });

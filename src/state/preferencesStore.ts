@@ -118,7 +118,7 @@ const coordinatesSchema = z.tuple([z.number(), z.number()]);
 
 /** Each stored entry is checked on its own, so one corrupt entry is dropped instead of the whole list. */
 const searchHistoryItemSchema = z.discriminatedUnion('type', [
-    z.looseObject({ type: z.literal('stop'), timestamp: z.number(), stop_id: z.string(), stop_name: z.string(), coordinates: coordinatesSchema }),
+    z.looseObject({ type: z.literal('stop'), timestamp: z.number(), stop_id: z.string(), stop_name: z.string() }),
     z.looseObject({ type: z.literal('line'), timestamp: z.number(), lines: z.array(z.string()) }),
     z.looseObject({ type: z.literal('place'), timestamp: z.number(), place_id: z.string(), name: z.string(), coordinates: coordinatesSchema }),
     z.looseObject({ type: z.literal('pos'), timestamp: z.number(), pos_id: z.string(), name: z.string(), coordinates: coordinatesSchema }),

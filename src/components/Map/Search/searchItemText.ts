@@ -1,17 +1,17 @@
 import type { TFunction } from 'i18next';
 import type { LineBadgeData } from '@/domain/routes';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
-import type { SearchHistoryItem, Stop, VehicleFeature } from '@/types';
+import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
 
 /** The name a recent search is listed under. */
-export const historyItemTitle = (item: SearchHistoryItem, t: TFunction): string =>
-    item.type === 'stop' ? item.stop_name :
+export const historyItemTitle = (item: ShownHistoryItem, t: TFunction): string =>
+    item.type === 'stop' ? item.stop?.name ?? item.stop_name :
     item.type === 'place' || item.type === 'pos' ? item.name :
     t('search.lineFilter', { line: item.lines.join(', '), count: item.lines.length });
 
 /** The second line under a recent search: a stop's platform or a place's address. */
-export const historyItemSubtitle = (item: SearchHistoryItem, t: TFunction): string | undefined =>
-    item.type === 'stop' && item.platform_code ? t('search.platform', { code: item.platform_code }) :
+export const historyItemSubtitle = (item: ShownHistoryItem, t: TFunction): string | undefined =>
+    item.type === 'stop' && item.stop?.code ? t('search.platform', { code: item.stop.code }) :
     item.type === 'place' || item.type === 'pos' ? item.subtitle :
     undefined;
 

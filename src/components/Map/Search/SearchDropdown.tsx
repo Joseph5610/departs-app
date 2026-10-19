@@ -9,14 +9,14 @@ import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from '@/lib/cn';
 
-import type { Stop, SearchHistoryItem, VehicleFeature } from '@/types';
+import type { Stop, ShownHistoryItem, VehicleFeature } from '@/types';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
 import type { GeocodingResult } from '@/hooks/data/useGeocoding';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 
 interface SearchDropdownProps {
     results: Stop[];
-    searchHistory: SearchHistoryItem[];
+    searchHistory: readonly ShownHistoryItem[];
     /** The pinned stops, by the ids results carry. */
     favoriteStopIds: ReadonlySet<string>;
     query: string;
@@ -27,7 +27,7 @@ interface SearchDropdownProps {
     geocodingResults: GeocodingResult[];
     posResults: PosSearchResult[];
     onStopSelect: (stop: Stop) => void;
-    onHistorySelect: (item: SearchHistoryItem) => void;
+    onHistorySelect: (item: ShownHistoryItem) => void;
     onLineSelect: (lines: string[]) => void;
     onPlaceSelect: (result: GeocodingResult) => void;
     onPosSelect: (result: PosSearchResult) => void;
@@ -114,7 +114,7 @@ export const SearchDropdown = ({
                                 icon={<HistoryItemIcon type={item.type} />}
                                 title={historyItemTitle(item, t)}
                                 subtitle={historyItemSubtitle(item, t)}
-                                lines={item.type === 'stop' ? item.lines : undefined}
+                                lines={item.type === 'stop' ? item.stop?.lines : undefined}
                                 testId={`search-item-hist-${searchHistoryKey(item)}`}
                                 onClick={() => onHistorySelect(item)}
                             />

@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Route types come from departs-data as the app's own vehicle types; the app no longer reads GTFS route type codes.
 - Nearby stops list each station once, at its nearest platform.
+- Recent searches show a stop's current name, platform and lines from the stop list, and store only its id and name.
+- MCP stop tools mark a station with `is_station` instead of `is_centroid`.
 
 ### Fixed
 
