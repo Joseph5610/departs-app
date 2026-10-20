@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Nearby stops list each station once, at its nearest platform.
 - Recent searches show a stop's current name, platform and lines from the stop list, and store only its id and name.
 - MCP stop tools mark a station with `is_station` instead of `is_centroid`.
+- Departures are asked for the same way in every city, a station and the platforms shown (`U1146:U1146Z22`); the Worker reads them without its stop index.
 
 ### Fixed
 

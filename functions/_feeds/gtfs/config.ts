@@ -54,6 +54,8 @@ export const GTFS_CONFIG = {
     STOP_INDEX_MAX_SHARDS: 4,
     /** Parsed `stop_index/` shards kept per isolate, ~2KB each. */
     STOP_INDEX_CACHE_MAX_ENTRIES: 16,
+    /** Stations' platform lists kept per isolate, read from the departure buckets. */
+    STATION_PLATFORMS_CACHE_MAX_ENTRIES: 2048,
 } as const;
 
 /*

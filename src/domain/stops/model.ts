@@ -104,11 +104,14 @@ export const resolveStop = (model: StopModel, id: string): BoardStop | null => {
 };
 
 /**
- * The `stopId` a departures request names a board by. A network whose departures API knows no stations
- * (`byPlatforms`, Golemio) is asked for every platform and alias; any other takes the board's own id.
+ * The `stopId` a departures request names a board by, the same in every city: its station and the platforms it
+ * shows, aliases included (`U1146:U1146Z22`). The station tells the Worker where the rows are filed, the platforms
+ * which of them to read, so it needs no stop list of its own.
  */
-export const departuresRequestId = (board: BoardStop, byPlatforms: boolean): string =>
-    byPlatforms ? board.platforms.flatMap(platformIds).join(',') || board.id : board.id;
+export const departuresRequestId = (board: BoardStop): string => {
+    const station = board.kind === 'station' ? board.id : board.platforms[0]?.station ?? board.id;
+    return `${station}:${board.platforms.flatMap(platformIds).join(',')}`;
+};
 
 /** Every id departures and notices may name a board's stops by: its own, its station's, its platforms' and their aliases. */
 export const boardStopIds = (board: BoardStop): string[] =>
@@ -126,11 +129,11 @@ export const isStationBoard = (board: Pick<BoardStop, 'kind' | 'platforms'>): bo
     board.kind === 'station' && board.platforms.length > 1;
 
 /**
- * The stop a URL id opens and the id its departures are requested by. Until the stop list loads, any other
- * network is asked for the URL id as it stands; a `byPlatforms` one waits, since it must name every platform.
+ * The stop a URL id opens and the id its departures are requested by, once the stop list has loaded; an id the
+ * list does not know is asked for as it stands.
  */
-export const selectStop = (id: string, model: StopModel | null, byPlatforms: boolean): SelectedStop => {
+export const selectStop = (id: string, model: StopModel | null): SelectedStop => {
     const board = model ? resolveStop(model, id) : null;
-    const departuresId = board ? departuresRequestId(board, byPlatforms) : model || !byPlatforms ? id : null;
+    const departuresId = board ? departuresRequestId(board) : model ? id : null;
     return { id, board, departuresId };
 };

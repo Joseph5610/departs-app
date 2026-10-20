@@ -9,7 +9,6 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { EXTERNAL_URLS, QUERY_TIMING_MS, DEVICE_CACHE } from '@/config/constants';
 import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
 import { buildStopModel, selectStop } from '@/domain/stops';
-import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { queryKeys } from '@/lib/queryKeys';
 import { routesQueryOptions } from './useRouteMetadata';
 
@@ -69,8 +68,6 @@ export const useStops = () => {
 
 /** The stop `stopId` opens in the selected city, with the id its departures are requested by. */
 export const useResolvedStop = (stopId: string | null): SelectedStop | null => {
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { model } = useStops();
-    const byPlatforms = !!FRONTEND_CITIES_CONFIG[selectedCity]?.departuresByPlatforms;
-    return useMemo(() => (stopId ? selectStop(stopId, model, byPlatforms) : null), [stopId, model, byPlatforms]);
+    return useMemo(() => (stopId ? selectStop(stopId, model) : null), [stopId, model]);
 };

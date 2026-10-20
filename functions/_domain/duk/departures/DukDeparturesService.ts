@@ -15,7 +15,7 @@ import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type D
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
-import { requestedStopParts } from '../../gtfs/index/stopTargets';
+import { checkRequestedStops } from '../../gtfs/index/stopTargets';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
@@ -49,7 +49,8 @@ export class DukDeparturesService implements DeparturesUseCase {
         }
         const stopIndex = getStopIndex(this.city);
 
-        const relations = await stopIndex.relationsOf(requestedStopParts(stopIds)).catch(() => new Map<string, StopRelation>());
+        checkRequestedStops(stopIds);
+        const relations = await stopIndex.relationsOf(stopIds).catch(() => new Map<string, StopRelation>());
         const requests = stopIds.map(id => toStopRequest(id, relations));
         const nodes = [...new Set(requests.map(r => r.node))];
 

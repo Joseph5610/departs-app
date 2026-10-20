@@ -6,7 +6,7 @@ import { API_LIMITS } from './config';
  */
 
 // Sanitizer function to prevent path traversal
-const sanitizeId = (id: string) => id.replace(/[^a-zA-Z0-9_,-]/g, '');
+const sanitizeId = (id: string) => id.replace(/[^a-zA-Z0-9_,:-]/g, '');
 
 /** A query param given once or repeated, always as an array. */
 const arrayParam = () => z._default(

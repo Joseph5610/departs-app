@@ -8,7 +8,7 @@ import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
 import { distanceMeters } from "../_core/utils/geo";
-import { stopIdParts } from "../_core/utils/stopIds";
+import { requestParts } from "../_core/utils/stopIds";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -94,7 +94,8 @@ export function resolveCity(citySlug: string | undefined, env: Env): { city: Cit
     return { city: getCityUseCases(slug, env), citySlug: slug };
 }
 
-type RankedStop = { stop: SearchedStop; distance: number };
+/** A stop nearest a point, with the `stopId` its departures are asked for: a platform names its station. */
+type RankedStop = { stop: SearchedStop; distance: number; departuresId: string };
 
 /** The city's stop search index; throws for a city without static stop data. */
 function stopSearchOf(citySlug: string): { city: CityConfig; search: Promise<StopSearch> } {
@@ -143,13 +144,16 @@ export async function nearestStops(
     const search = await pending;
     const ranked = search.nearest(lat, lon, options);
     const stops = await stopsAt(city, search, ranked.map(r => r.index));
+    const stationRows = [...new Set([...stops.values()].flatMap(s => s.station ?? []))];
+    const stations = await stopsAt(city, search, stationRows);
     const radiusM = options.radiusM ?? Infinity;
     return ranked
         .flatMap(({ index }) => {
             const stop = stops.get(index);
             if (!stop) return [];
             const [stopLon, stopLat] = stop.coordinates;
-            return [{ stop, distance: distanceMeters(lat, lon, stopLat, stopLon) }];
+            const station = stop.station === undefined ? undefined : stations.get(stop.station);
+            return [{ stop, distance: distanceMeters(lat, lon, stopLat, stopLon), departuresId: station ? `${station.id}:${stop.id}` : stop.id }];
         })
         .filter(stop => stop.distance <= radiusM)
         .sort((a, b) => a.distance - b.distance);
@@ -219,7 +223,8 @@ export function toMcpDeparture(d: AppDeparture, timezone: string, nowMs: number)
 
 /**
  * A stop's departures, narrowed by the tool's optional `line` and `route_type` arguments and
- * capped at `limit`. `stopId` may be a comma-joined platform list.
+ * capped at `limit`. `stopId` may be a comma-joined platform list, each platform answered on its own, or a
+ * `station:platforms` value, answered as one stop.
  */
 export async function loadStopDepartures(
     ctx: McpContext,
@@ -230,7 +235,7 @@ export async function loadStopDepartures(
 ): Promise<AppDeparture[]> {
     const searchParams = new URLSearchParams();
     searchParams.set("limit", String(limit));
-    for (const id of stopId.split(',')) {
+    for (const id of stopId.includes(':') ? [stopId] : stopId.split(',')) {
         if (id.trim()) searchParams.append("stopId", id.trim());
     }
 
@@ -265,7 +270,7 @@ export async function loadInfotexts(ctx: McpContext, city: CityUseCases, citySlu
 /** The infotexts that name any platform of `stopId`, as exposed to MCP clients. */
 export function toMcpStopInfotexts(infotexts: AppInfotext[], stopId: string) {
     // `stop_id` may be a comma-joined platform list; match the parts exactly.
-    const targetIds = new Set(stopIdParts(stopId).map((id) => id.toLowerCase()));
+    const targetIds = new Set(requestParts(stopId).map((id) => id.toLowerCase()));
     if (targetIds.size === 0) return [];
 
     return infotexts

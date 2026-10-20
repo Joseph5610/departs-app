@@ -5,7 +5,7 @@ import { ApiError } from "../../../_core/errors";
 import { getDepartureBoards } from "../../../_feeds/golemio/departures";
 import { mapGolemioDepartures } from "./golemioDeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../_core/schemas";
-import { stopIdParts } from '../../../_core/utils/stopIds';
+import { requestParts } from '../../../_core/utils/stopIds';
 import { getLiveConnections } from "../../../_feeds/golemio/connections";
 
 /** Prague departure boards: Golemio's boards for the requested platforms, with PID connections. */
@@ -25,7 +25,7 @@ export class GolemioDeparturesService implements DeparturesUseCase {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
-        const data = await getDepartureBoards(ctx.env, stopIds.map(stopIdParts));
+        const data = await getDepartureBoards(ctx.env, stopIds.map(requestParts));
 
         const connections = await getLiveConnections(data.flatMap(group => group.map(item => item.trip?.id)));
         return mapGolemioDepartures(data, stopIds, connections);

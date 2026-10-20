@@ -39,7 +39,7 @@ test.describe('Routing Tests', () => {
 
         await page.goto('/prague/stop/U1040Z1P%2CU1040Z1%2CU1040Z2P');
         await expect(page).toHaveURL(/\/prague\/stop\/U1040-1$/, { timeout: 15000 });
-        await expect.poll(() => requested).toContain('U1040Z1,U1040Z1P,U1040Z2P');
+        await expect.poll(() => requested).toContain('U1040-1:U1040Z1,U1040Z1P,U1040Z2P');
 
         await page.goto('/prague/stop/U1040Z1%2CU1040Z1P');
         await expect(page).toHaveURL(/\/prague\/stop\/U1040Z1$/, { timeout: 15000 });

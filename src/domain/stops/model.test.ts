@@ -63,26 +63,22 @@ describe('resolveStop', () => {
 });
 
 describe('departuresRequestId', () => {
-    // Golemio knows no stations: a PID board is asked for as every id of its platforms.
-    it('names every platform and alias for a network without station ids', () => {
-        expect(departuresRequestId(resolveStop(andel(), 'U1040-1')!, true)).toBe('U1040Z1P,U1040Z101P,U1040Z102P');
-        expect(departuresRequestId(resolveStop(andel(), 'U1040Z101P')!, true)).toBe('U1040Z101P,U1040Z102P');
-    });
-
-    it('names the board itself anywhere else', () => {
-        expect(departuresRequestId(resolveStop(andel(), 'U1040-1')!, false)).toBe('U1040-1');
+    // The station tells the Worker where the rows are filed, the platforms which to read; Golemio takes the platforms.
+    it('names a board\'s station and the platforms it shows, aliases included', () => {
+        expect(departuresRequestId(resolveStop(andel(), 'U1040-1')!)).toBe('U1040-1:U1040Z1P,U1040Z101P,U1040Z102P');
+        expect(departuresRequestId(resolveStop(andel(), 'U1040Z101P')!)).toBe('U1040-1:U1040Z101P,U1040Z102P');
+        expect(departuresRequestId(resolveStop(andel(), 'U1040Z1P,U1040Z101P')!)).toBe('U1040-1:U1040Z1P,U1040Z101P,U1040Z102P');
     });
 });
 
 describe('selectStop', () => {
-    // The board asks for departures as soon as it opens; only a network that needs the platforms waits for the stop list.
-    it('asks for the URL id while the stop list loads, unless the network needs its platforms', () => {
-        expect(selectStop('U1271', null, false)).toEqual({ id: 'U1271', board: null, departuresId: 'U1271' });
-        expect(selectStop('U1040-1', null, true).departuresId).toBeNull();
+    it('asks for departures once the stop list has loaded', () => {
+        expect(selectStop('U1040-1', null)).toEqual({ id: 'U1040-1', board: null, departuresId: null });
+        expect(selectStop('U1040Z1P', andel()).departuresId).toBe('U1040-1:U1040Z1P');
     });
 
     it('asks for the URL id of a stop the list does not know', () => {
-        expect(selectStop('X9', andel(), true).departuresId).toBe('X9');
+        expect(selectStop('X9', andel()).departuresId).toBe('X9');
     });
 });
 

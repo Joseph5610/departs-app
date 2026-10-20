@@ -22,6 +22,8 @@ export async function handleGetNextDepartures(
 ): Promise<unknown> {
     let stopId = args.stop_id as string | undefined;
     let stopNameResolved: string | undefined;
+    /** The `stopId` departures are asked for, where it names more than the stop itself (a platform's station). */
+    let departuresId: string | undefined;
     const limit = Number(args.limit) || MCP_DEFAULTS.RESULT_LIMIT;
 
     // Without a stop id, resolve it from the stop name, else from the nearest stop to the coordinates.
@@ -39,10 +41,11 @@ export async function handleGetNextDepartures(
         const lat = Number(args.latitude);
         const lon = Number(args.longitude);
         if (!isNaN(lat) && !isNaN(lon)) {
-            const closest = (await nearestStops(resolvedCity, lat, lon, { includeStations: true, limit: 1 }))[0]?.stop;
+            const closest = (await nearestStops(resolvedCity, lat, lon, { includeStations: true, limit: 1 }))[0];
             if (closest) {
-                stopId = closest.id;
-                stopNameResolved = closest.name;
+                stopId = closest.stop.id;
+                departuresId = closest.departuresId;
+                stopNameResolved = closest.stop.name;
             }
         }
     }
@@ -52,7 +55,7 @@ export async function handleGetNextDepartures(
     }
 
     const [departures, infotexts] = await Promise.all([
-        loadStopDepartures(ctx, city, stopId, args, limit),
+        loadStopDepartures(ctx, city, departuresId ?? stopId, args, limit),
         loadInfotexts(ctx, city, resolvedCity)
     ]);
 

@@ -1,7 +1,7 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { ApiError } from '../../../_core/errors';
-import { stopIdParts } from '../../../_core/utils/stopIds';
+import { requestParts } from '../../../_core/utils/stopIds';
 
 /** The stop ids a request named, resolved to the platforms whose rows must actually be read. */
 export interface StopTargets {
@@ -17,11 +17,9 @@ const tooManyStops = () => new ApiError(
     400
 );
 
-/** Every id the requested values name, rejected before any lookup when they already exceed the platform cap. */
-export function requestedStopParts(stopIds: readonly string[]): string[] {
-    const parts = stopIds.flatMap(stopIdParts);
-    if (parts.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) throw tooManyStops();
-    return parts;
+/** Rejects a request before any lookup when the ids its values name already exceed the platform cap. */
+export function checkRequestedStops(stopIds: readonly string[]): void {
+    if (stopIds.flatMap(requestParts).length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) throw tooManyStops();
 }
 
 /** `stopTargets`, rejected when the stations expand past the platform cap. */
@@ -42,7 +40,7 @@ export function stopTargets(stopIds: readonly string[], relations: ReadonlyMap<s
     const parentOf = new Map<string, string>();
 
     for (const requested of stopIds) {
-        for (const id of stopIdParts(requested)) {
+        for (const id of requestParts(requested)) {
             const relation = relations.get(id);
             if (relation && relation[0] === null && relation.length > 1) {
                 for (const child of relation.slice(1) as string[]) {

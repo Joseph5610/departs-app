@@ -7,7 +7,6 @@ import { departuresByStop, enrichLiveDepartures } from '@/domain/departures';
 import { memoizeLast } from '@/lib/memoize';
 import { queryKeys } from '@/lib/queryKeys';
 import { selectStop } from '@/domain/stops';
-import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import type { StopModel } from '@/types';
 import { useStops } from './useStops';
 
@@ -15,10 +14,10 @@ const enrichFavoriteDepartures = memoizeLast(enrichLiveDepartures);
 const splitByStop = memoizeLast(departuresByStop);
 
 /** Each stop's departures request id, for the stops whose one can be told yet. */
-const requestsOf = memoizeLast((stopIds: string[], model: StopModel | null, byPlatforms: boolean): Map<string, string> => {
+const requestsOf = memoizeLast((stopIds: string[], model: StopModel | null): Map<string, string> => {
     const requests = new Map<string, string>();
     for (const id of stopIds) {
-        const request = selectStop(id, model, byPlatforms).departuresId;
+        const request = selectStop(id, model).departuresId;
         if (request) requests.set(id, request);
     }
     return requests;
@@ -33,7 +32,7 @@ export const useFavoriteDepartures = (stopIds: string[]) => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
     const { model } = useStops();
-    const requests = requestsOf(stopIds, model, !!FRONTEND_CITIES_CONFIG[selectedCity]?.departuresByPlatforms);
+    const requests = requestsOf(stopIds, model);
     const requestIds = useMemo(() => [...new Set(requests.values())], [requests]);
 
     const query = useQuery<DeparturesResponse | null, AppError>({

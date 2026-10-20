@@ -25,6 +25,13 @@ describe('toStopRequest', () => {
         expect(toStopRequest('952-1,952', relations)).toEqual({ id: '952-1,952', node: '952', posts: null });
     });
 
+    // A station board names every platform of its station; one whole-station board answers it, not one per post.
+    it('reads a station:platforms value as those posts, or the whole station when it names them all', () => {
+        expect(toStopRequest('952:952-3', relations)).toEqual({ id: '952:952-3', node: '952', posts: ['3'] });
+        expect(toStopRequest('952:952-1,952-2,952-3', relations)).toEqual({ id: '952:952-1,952-2,952-3', node: '952', posts: null });
+        expect(toStopRequest('952:', relations)).toEqual({ id: '952:', node: '952', posts: null });
+    });
+
     // One Portabo board per node: a part on another node would be read as a post of the first.
     it('ignores parts on another node than the first', () => {
         expect(toStopRequest('952-1,77-2', relations)).toEqual({ id: '952-1,77-2', node: '952', posts: ['1'] });
@@ -41,5 +48,6 @@ describe('stationOfRequest', () => {
         expect(stationOfRequest('952', relations)).toBe('952');
         expect(stationOfRequest('952-1,952-3', relations)).toBe('952');
         expect(stationOfRequest('77-1', relations)).toBeNull();
+        expect(stationOfRequest('77:77-1', relations)).toBe('77');
     });
 });

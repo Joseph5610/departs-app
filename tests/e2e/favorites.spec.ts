@@ -19,7 +19,8 @@ test.describe('Favorites Tests', () => {
                         {
                             tripId: 'trip-1',
                             vehicleId: 'veh-1',
-                            stopId: 'U1111Z1P',
+                            // The API answers each departure under the stop value it was asked for.
+                            stopId: new URL(route.request().url()).searchParams.get('stopId'),
                             line: 'C',
                             headsign: 'Letňany',
                             type: '1',

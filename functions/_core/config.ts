@@ -10,7 +10,7 @@
 export const STATIC_DATA_CONFIG = {
     BASE_URL: 'https://data.departs.app',
     /** Bump when departs-data renames or moves stops (`stop_index/`, `departure_buckets/`, the stop search index): drops every cached copy at once. */
-    INDEX_CACHE_GENERATION: 3,
+    INDEX_CACHE_GENERATION: 4,
 };
 
 /**

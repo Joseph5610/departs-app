@@ -1,5 +1,5 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { stopIdParts } from '../../../_core/utils/stopIds';
+import { parseStopRequest, requestParts } from '../../../_core/utils/stopIds';
 
 /** A requested stop resolved to its Portabo node and the posts to read; null posts read the whole station. */
 export interface StopRequest {
@@ -22,20 +22,26 @@ const partOf = (id: string, relation: StopRelation | undefined): { node: string;
 
 /**
  * A requested value as its Portabo node and posts. A comma-joined value is one stop made of several platforms
- * of a node (one direction's); a station among them, or a bare node, reads the whole station. Parts on another
- * node than the first are ignored. An id the stop index does not know is read as a platform or a bare node.
+ * of a node (one direction's); a station among them, a bare node, or every platform of the named station reads
+ * the whole station. Parts on another node than the first are ignored. An id the data does not know is read as
+ * a platform or a bare node.
  */
 export function toStopRequest(id: string, relations: ReadonlyMap<string, StopRelation>): StopRequest {
-    const all = stopIdParts(id).map(part => partOf(part, relations.get(part)));
+    const { station, parts: named } = parseStopRequest(id);
+    const all = named.map(part => partOf(part, relations.get(part)));
     const node = all[0]?.node ?? id;
     const parts = all.filter(p => p.node === node);
-    const posts = parts.some(p => p.post === null) ? null : [...new Set(parts.map(p => p.post as string))];
+    const ofStation = station ? relations.get(station) : undefined;
+    const isWholeStation = ofStation?.[0] === null && ofStation.slice(1).every(platform => named.includes(platform as string));
+    const posts = isWholeStation || parts.some(p => p.post === null) ? null : [...new Set(parts.map(p => p.post as string))];
     return { id, node, posts };
 }
 
 /** The station whose platforms a requested value's board labels: its first part's station, if the data knows it. */
 export function stationOfRequest(id: string, relations: ReadonlyMap<string, StopRelation>): string | null {
-    const first = stopIdParts(id)[0];
+    const { station } = parseStopRequest(id);
+    if (station) return station;
+    const first = requestParts(id)[0];
     const relation = first ? relations.get(first) : undefined;
     if (!first || !relation) return null;
     return relation[0] === null ? first : relation[0];

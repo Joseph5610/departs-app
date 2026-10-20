@@ -1,7 +1,7 @@
 import type { CityConfig } from '../../../_core/cityConfig';
-import { getDepartureRows, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
+import { getDepartureRows, getStationPlatforms, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
-import { boundedStopTargets, requestedStopParts, type StopTargets } from './stopTargets';
+import { boundedStopTargets, checkRequestedStops, type StopTargets } from './stopTargets';
 
 
 /**
@@ -11,18 +11,14 @@ import { boundedStopTargets, requestedStopParts, type StopTargets } from './stop
 export class StopIndex {
     constructor(private readonly city: CityConfig) {}
 
-    /** Each of `stopIds` the data knows, with its station (a platform) or its platforms (a station). */
-    relationsOf(stopIds: string[]): Promise<Map<string, StopRelation>> {
-        return getStopRelations(this.city, stopIds);
+    /** Each stop the requested values name that the data knows, with its station (a platform) or its platforms (a station). */
+    relationsOf(values: string[]): Promise<Map<string, StopRelation>> {
+        return getStopRelations(this.city, values);
     }
 
     /** The platforms of each of `stationIds` that has any. */
-    async childrenOf(stationIds: string[]): Promise<Map<string, string[]>> {
-        const children = new Map<string, string[]>();
-        for (const [id, relation] of await getStopRelations(this.city, stationIds)) {
-            if (relation[0] === null) children.set(id, relation.slice(1) as string[]);
-        }
-        return children;
+    childrenOf(stationIds: string[]): Promise<Map<string, string[]>> {
+        return getStationPlatforms(this.city, stationIds);
     }
 
     /**
@@ -34,7 +30,8 @@ export class StopIndex {
      * the first check.
      */
     async resolve(stopIds: string[]): Promise<StopTargets> {
-        const relations = await getStopRelations(this.city, requestedStopParts(stopIds));
+        checkRequestedStops(stopIds);
+        const relations = await getStopRelations(this.city, stopIds);
         return boundedStopTargets(stopIds, relations);
     }
 
