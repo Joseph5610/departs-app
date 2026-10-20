@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Tapping an arrival-only terminus in a vehicle's timeline opens its station's board.
+- Prague station boards show the full two hours: each platform is asked from Golemio on its own, since it caps every stop group at 24 departures (a big station like Letňany showed only its next quarter hour).
 - Favourite stops belong to the city they were pinned in: another network's stop with the same id is no longer starred or listed, and the limit counts only the current city's pins.
 
 ## [0.87.1] - 2026-10-19

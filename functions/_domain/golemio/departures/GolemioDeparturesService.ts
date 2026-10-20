@@ -7,8 +7,10 @@ import { mapGolemioDepartures } from "./golemioDeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../_core/schemas";
 import { requestParts } from '../../../_core/utils/stopIds';
 import { getLiveConnections } from "../../../_feeds/golemio/connections";
+import { GOLEMIO_CONFIG } from "../../../_feeds/golemio/config";
+import { byRequest, stopGroups } from "./stopGroups";
 
-/** Prague departure boards: Golemio's boards for the requested platforms, with PID connections. */
+/** Prague departure boards: Golemio's boards for the requested platforms, each platform asked for on its own, with PID connections. */
 export class GolemioDeparturesService implements DeparturesUseCase {
     /**
      * Fetches departures for a given stop, processes and normalizes the data,
@@ -25,7 +27,8 @@ export class GolemioDeparturesService implements DeparturesUseCase {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
-        const data = await getDepartureBoards(ctx.env, stopIds.map(requestParts));
+        const { groups, requestOf } = stopGroups(stopIds.map(requestParts), GOLEMIO_CONFIG.MAX_STOP_GROUPS);
+        const data = byRequest(await getDepartureBoards(ctx.env, groups), requestOf, stopIds.length);
 
         const connections = await getLiveConnections(data.flatMap(group => group.map(item => item.trip?.id)));
         return mapGolemioDepartures(data, stopIds, connections);
