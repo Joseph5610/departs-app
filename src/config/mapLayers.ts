@@ -107,7 +107,15 @@ export const STOP_BADGE = {
     } satisfies Record<RouteType, string>,
 } as const;
 
-const MAP_FONT_STACK = ['Montserrat Medium', 'Arial Unicode MS Regular'];
+const MAP_FONT_STACK = ['Montserrat SemiBold', 'Arial Unicode MS Regular'];
+
+/** Our labels' glyphs, served from `public/` so the basemap provider cannot change how they render; `ranges` lists the files there. */
+export const MAP_GLYPHS = {
+    fontStack: MAP_FONT_STACK.join(','),
+    /** Served immutable for a year (`public/_headers`) and kept by the service worker: changed glyphs need a new folder name. */
+    path: '/fonts/montserrat-semibold',
+    ranges: [0, 256, 512, 768, 1024, 1280, 7424, 7680, 8192, 8448, 8704, 9216, 9472, 9984, 11264, 42752, 43776, 64256],
+} as const;
 const IS_ENTRANCE: ExpressionSpecification = ['==', ['get', 'kind'], 'entrance'];
 const MAP_TOKENS = {
     zoom: {

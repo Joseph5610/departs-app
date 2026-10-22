@@ -113,6 +113,20 @@ export const departuresRequestId = (board: BoardStop): string => {
     return `${station}:${board.platforms.flatMap(platformIds).join(',')}`;
 };
 
+/**
+ * Every id the stop a departure was requested under goes by: `id` is a board id or a `departuresRequestId`
+ * (`station:platforms`), whose platforms are what it names. An id the model doesn't know is kept as given.
+ */
+export const departureStopIds = (model: StopModel | null, id: string): Set<string> => {
+    const colon = id.indexOf(':');
+    // A station without platforms names none after the colon: the station itself is the stop.
+    const named = stopIdParts(colon < 0 ? id : id.slice(colon + 1) || id.slice(0, colon));
+    return new Set(named.flatMap(part => {
+        const board = model ? resolveStop(model, part) : null;
+        return board ? boardStopIds(board) : [part];
+    }));
+};
+
 /** Every id departures and notices may name a board's stops by: its own, its station's, its platforms' and their aliases. */
 export const boardStopIds = (board: BoardStop): string[] =>
     [...new Set([board.id, ...board.platforms.flatMap(platformIds)])];

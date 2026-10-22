@@ -103,7 +103,7 @@ export const useDepartures = () => {
     const dataUpdatedAt = query.dataUpdatedAt || 0;
     const { model } = useStops();
     const liveDepartures = useLiveDepartures(platformsOf(query.data?.departures ?? NO_DEPARTURES, model), dataUpdatedAt, enrichStopDepartures);
-    const { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
+    const { filtered, hiddenByVehicleFilters, hasAirConditioningData, hasAccessibilityData, hasRequestStop } = filterDepartures(liveDepartures, selectedLine, requireAirConditioned, requireWheelchairAccessible);
     const favoriteLines = usePreferencesStore(s => s.favoriteLines);
     const favoriteKeys = useMemo(() => {
         const boardId = stopId && canonicalStopId(model, stopId);
@@ -131,5 +131,6 @@ export const useDepartures = () => {
         hasAirConditioningData,
         hasAccessibilityData,
         hasRequestStop,
-    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop]);
+        hiddenByVehicleFilters,
+    }), [data, liveDepartures, isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, delayStats, isFiltered, selectedLine, hasAirConditioningData, hasAccessibilityData, hasRequestStop, hiddenByVehicleFilters]);
 };

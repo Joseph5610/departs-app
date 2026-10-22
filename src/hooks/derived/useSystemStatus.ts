@@ -52,7 +52,8 @@ export const useSystemStatus = (): SystemStatus => {
 /** Whether the live pill steps aside for the ride cards: a ride is shown and there is nothing to warn about. */
 export const useLiveStatusYieldsToRides = (): boolean => {
     const status = useSystemStatus();
-    const hasRide = useRideStore(s => s.ride !== null || s.followed !== null);
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const hasRide = useRideStore(s => s.trips.some(trip => trip.city === selectedCity) || s.followed?.city === selectedCity);
     const isFiltered = usePreferencesStore(
         s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
     );

@@ -144,10 +144,29 @@ export const STOP_SEARCH_CONFIG = {
     RADIUS_MARGIN: 1.01,
 };
 
-/** Ride-mode Web Push: the `RideWatch` Durable Object and its push sender (`_core/push/webPush.ts`). */
+/**
+ * My trip Web Push: the `RideWatch` Durable Object (one per trip, every device's alerts on it: before the trip leaves
+ * the rider's stop and before their exit) and its push sender (`_core/push/webPush.ts`).
+ */
 export const RIDE_PUSH = {
-    /** Notification tag of a ride's alerts, so `arrived` replaces `next`; the app's own alerts and `push-sw.js` use it too. */
+    /** Notification tag of a ride's exit alerts, with the trip id appended, so `arrived` replaces `next`; the app's own alerts use it too. */
     TAG: 'ride-own',
+    /** Notification tag of a boarding alert, with the trip id appended, so `cancelled` replaces `soon` and trips don't replace each other. */
+    BOARD_TAG: 'departure-reminder',
+    /** Longest lead (minutes before the departure) a boarding alert may ask for: the app's fixed leads or the user's walk. */
+    MAX_LEAD_MIN: 60,
+    /** Checks start this long before a boarding alert is due (and before the departure, for the exit watch), so the delay is known in time. */
+    FIRST_CHECK_BEFORE_MS: 10 * 60_000,
+    /** Checks closing in on a boarding alert halve the time left, but never come closer together than this. */
+    MIN_CHECK_INTERVAL_MS: 30_000,
+    /** A boarding alert due within this is sent now rather than after one more check. */
+    SEND_WINDOW_MS: 30_000,
+    /** How far ahead a boarding stop may be; a timetable time is compared within one day either way. */
+    MAX_AHEAD_MS: 12 * 3600_000,
+    /** Without a live position, the rider counts as boarded this long after the expected departure (the app's `BOARD_GRACE_MS`). */
+    BOARD_GRACE_MS: 2 * 60_000,
+    /** Placeholder in a boarding alert's texts the minutes left are put into. */
+    MINUTES_TOKEN: '{min}',
     /** VAPID `sub` claim; Apple rejects pushes without one. */
     VAPID_SUBJECT: 'mailto:info@departs.app',
     /** How long a VAPID token stays valid; push services refuse more than 24 h. */
@@ -161,14 +180,17 @@ export const RIDE_PUSH = {
     /** Alarm interval while every rider is further away or the trip has not started. */
     FAR_INTERVAL_S: 90,
     NEAR_STOPS: 2,
-    /** A rider older than this is dropped, matching the app's `RIDE_CONFIG.MAX_AGE_MS`. */
+    /** A rider older than this, counted from their departure when boarding later, is dropped (the app's `RIDE_CONFIG.MAX_AGE_MS`). */
     MAX_AGE_MS: 4 * 3600_000,
-    /** Alarm interval after a failed detail read. */
+    /** Alarm interval after a failed detail read, doubling with each failure in a row up to `MAX_RETRY_INTERVAL_S`. */
     RETRY_INTERVAL_S: 30,
-    /** Failed detail reads in a row after which the trip is given up (~10 min). */
+    MAX_RETRY_INTERVAL_S: 300,
+    /** Failed detail reads in a row after which riders watching their exit are given up (with the backoff, about an hour). */
     MAX_FAILURES: 20,
-    /** The same for a trip that never answered, so a made-up trip id costs almost nothing. */
+    /** The same for a trip whose detail never answered at all, so a made-up trip id costs almost nothing. */
     MAX_FAILURES_UNSEEN: 2,
+    /** A trip without a known vehicle looks it up in the city's fleet at most this often (a multi-MB read). */
+    VEHICLE_LOOKUP_INTERVAL_MS: 2 * 60_000,
     /** Largest `/api/[city]/ride` body; a real one is under 1 KB. */
     MAX_BODY_BYTES: 8192,
     /**
@@ -178,12 +200,15 @@ export const RIDE_PUSH = {
     ALERT_OPTIONS: {
         next: { requireInteraction: true, renotify: true, vibrate: [300, 150, 300, 150, 600] },
         arrived: { renotify: true, vibrate: [150] },
+        soon: { renotify: true, vibrate: [300, 150, 300] },
+        cancelled: { renotify: true, vibrate: [150] },
     },
     /** Riders one trip's Durable Object accepts; more is abuse, not a crowded tram. */
     MAX_RIDERS: 50,
     /** A trip whose vehicle has had no live position this long (it finished or left the feed) is given up. */
     LOST_MS: 10 * 60_000,
 } as const;
+
 
 /** Push services a ride subscription may point at; the ride-push Worker POSTs to nothing else. */
 export const PUSH_SERVICE_HOSTS = [/^fcm\.googleapis\.com$/, /^([a-z0-9-]+\.)*push\.apple\.com$/, /^updates\.push\.services\.mozilla\.com$/, /^([a-z0-9-]+\.)*notify\.windows\.com$/];

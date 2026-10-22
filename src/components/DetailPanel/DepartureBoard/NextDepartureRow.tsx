@@ -10,6 +10,8 @@ import { useDepartureTap } from '@/hooks/features/useTapClick';
 import type { Departure, DepartureClickHandler } from '@/types';
 import { BoardRow, RowHeadsign, RowTimeLine, type RowAction } from './BoardRow';
 import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
+import { MyTripBell } from './MyTripBell';
+import { useMyTripEntry } from '@/hooks/features/useMyTripEntry';
 
 interface NextDepartureRowProps {
     departure: Departure;
@@ -50,6 +52,7 @@ export const NextDepartureRow = memo(({
     const { forHeadsign } = useInterchanges();
     const mark = useTripMark(dep.tripId, isHighlighted);
     const tap = useDepartureTap(dep, onDepartureClick);
+    const remind = useMyTripEntry(dep);
 
     return (
         <BoardRow
@@ -59,6 +62,7 @@ export const NextDepartureRow = memo(({
             onKeyDown={activateOnKey}
             data-testid={testId ?? `departure-item-${dep.tripId}`}
             action={action}
+            remindAction={remind ? { onTrigger: remind.open, label: remind.label, isActive: remind.isSet } : undefined}
             below={children}
             className={cn(
                 "cursor-pointer outline-none before:absolute before:-inset-y-2 before:-left-1.5 before:-right-2 before:-z-10 before:rounded-xl before:transition-colors hover:before:bg-foreground/5 focus-visible:before:ring-2 focus-visible:before:ring-primary/50",
@@ -74,6 +78,7 @@ export const NextDepartureRow = memo(({
                 <ExpectedTime departure={dep} timeZone={timeZone} />
                 {track && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.trackCode', { code: track })}</span></>}
                 {platform && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.platformCode', { code: platform })}</span></>}
+                <MyTripBell departure={dep} />
             </RowTimeLine>
             <span className="col-start-3 row-start-2 mt-1 flex h-5 items-center justify-self-end"><Amenities departure={dep} /></span>
 

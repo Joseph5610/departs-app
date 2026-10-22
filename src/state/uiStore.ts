@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { MyTripTarget } from '@/types';
 
 interface UiState {
     isSettingsOpen: boolean;
@@ -9,6 +10,8 @@ interface UiState {
     isMcpModalOpen: boolean;
     /** The phone's city picker, a card in the map sheet. */
     isCityPickerOpen: boolean;
+    /** The trip the My trip sheet is open for. */
+    myTripTarget: MyTripTarget | null;
 }
 
 interface UiActions {
@@ -18,6 +21,8 @@ interface UiActions {
     openAlert: (guid: string) => void;
     setIsMcpModalOpen: (open: boolean) => void;
     setIsCityPickerOpen: (open: boolean) => void;
+    openMyTrip: (target: MyTripTarget) => void;
+    closeMyTrip: () => void;
 }
 
 export interface UiStore extends UiState {
@@ -32,6 +37,7 @@ export const useUiStore = create<UiStore>()((set) => ({
     focusedAlertGuid: null,
     isMcpModalOpen: false,
     isCityPickerOpen: false,
+    myTripTarget: null,
 
     actions: {
         setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
@@ -40,5 +46,7 @@ export const useUiStore = create<UiStore>()((set) => ({
         openAlert: (guid) => set({ isAlertsOpen: true, focusedAlertGuid: guid }),
         setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
         setIsCityPickerOpen: (open) => set({ isCityPickerOpen: open }),
+        openMyTrip: (target) => set({ myTripTarget: target }),
+        closeMyTrip: () => set({ myTripTarget: null }),
     },
 }));

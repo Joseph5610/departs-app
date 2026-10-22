@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { boardingPlace, departureKey, visibleInGroup } from '@/domain/departures';
 import { useTripMark } from '@/hooks/derived/useTripMark';
+import { MyTripBell } from './MyTripBell';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
 import { usePinLine } from '@/hooks/features/usePinLine';
 import type { Departure, DepartureClickHandler } from '@/types';
@@ -151,6 +152,7 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
         >
             <span className="flex min-w-0 items-center gap-3 text-body-sm text-muted-foreground">
                 <ExpectedTime departure={dep} timeZone={timeZone} />
+                <MyTripBell departure={dep} onlyWhenSet />
                 <Amenities departure={dep} />
             </span>
             <LiveCountdown departure={dep} size="md" />

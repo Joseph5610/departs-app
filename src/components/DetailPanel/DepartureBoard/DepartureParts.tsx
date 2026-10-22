@@ -18,9 +18,9 @@ import type { Departure } from '@/types';
 import { Countdown } from './Countdown';
 import { LiveIndicator } from './LiveIndicator';
 
-/** The label a marked departure carries. */
-const TRIP_MARK_LABEL: Record<TripMark, string> = {
-    riding: 'map.departures.yourTrip',
+/** The label a marked departure carries; the user's own trip has its filled bell instead. */
+const TRIP_MARK_LABEL: Record<TripMark, string | null> = {
+    riding: null,
     watched: 'map.departures.watchedTrip',
     viewed: 'map.departures.viewedTrip',
 };
@@ -89,7 +89,8 @@ export const Amenities = ({ departure: dep }: { departure: Departure }) => (
 export const TripNotes = ({ departure: dep, mark, className }: { departure: Departure; mark: TripMark | null; className?: string }) => {
     const { t } = useTranslation();
     const notice = dep.isCanceled ? null : feederNotice(dep.connections);
-    if (!notice && !dep.continues_as && !mark) return null;
+    const markLabel = mark ? TRIP_MARK_LABEL[mark] : null;
+    if (!notice && !dep.continues_as && !markLabel) return null;
     return (
         <span className={cn("flex min-w-0 flex-col gap-1 text-xs leading-tight text-muted-foreground", className)}>
             {notice && <FeederNoticeText notice={notice} />}
@@ -105,7 +106,7 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
                     </span>
                 </span>
             )}
-            {mark && <span className="micro-label text-primary">{t(TRIP_MARK_LABEL[mark])}</span>}
+            {markLabel && <span className="micro-label text-primary">{t(markLabel)}</span>}
         </span>
     );
 };

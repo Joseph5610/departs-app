@@ -1,6 +1,6 @@
 import { RIDE_CONFIG } from '@/config/constants';
 import { addSecondsToTime, formatClock, secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
-import { isTripEnded, liveStopSequence, secondsSinceTripEnd } from '@/domain/vehicles/tripEnd';
+import { isTripEnded, liveStopSequence, secondsSinceTripEnd } from '@/domain/vehicles';
 import type { Ride, RidePhase, RideStatus, StopTimeFeature, VehicleDetail } from '@/types';
 
 /** Identity of a ride: one exit on one trip. */
@@ -22,6 +22,18 @@ export const exitArrival = (stops: StopTimeFeature[], exitSequence: number, dela
     if (!p) return null;
     const time = p.realtime_arrival_time || (p.arrival_time && typeof delay === 'number' ? addSecondsToTime(p.arrival_time, delay) : p.arrival_time) || null;
     return { stopName: p.stop_name, time: time ? formatClock(time) : null, rawTime: time };
+};
+
+/** The stops a rider can pick as their exit: those after `afterSequence`, with their expected arrival. */
+export const exitChoices = (stops: StopTimeFeature[], afterSequence: number, delay: number | null | undefined): { sequence: number; stopName: string; time: string | null }[] => {
+    const choices: { sequence: number; stopName: string; time: string | null }[] = [];
+    for (const s of stops) {
+        const sequence = Number(s.properties.stop_sequence);
+        if (sequence <= afterSequence) continue;
+        const arrival = exitArrival([s], sequence, delay);
+        if (arrival) choices.push({ sequence, stopName: arrival.stopName, time: arrival.time });
+    }
+    return choices;
 };
 
 /** Seconds since a timetable time, wrapped across midnight; negative while it is still ahead. */
@@ -80,14 +92,10 @@ export const deriveRide = (ride: Ride | null, detail: VehicleDetail | undefined,
     };
 };
 
-/** A ride at its last stop or arrived, which the bar brings to the front. */
-const isRideUrgent = (status: RideStatus | null): boolean => status?.phase === 'next' || status?.phase === 'arrived';
 
 /** Whether a ride has a bar yet: not while its trip is still loading. */
 export const isRideShown = (status: RideStatus | null): boolean => !!status && status.phase !== 'loading';
 
-/** Whether the followed ride goes in front of the user's own: only when it alone is urgent. */
-export const followedRideFirst = (own: RideStatus | null, followed: RideStatus | null): boolean => isRideUrgent(followed) && !isRideUrgent(own);
 
 /**
  * The alert a phase change calls for: reaching the stop before the exit, or arriving, once per ride.

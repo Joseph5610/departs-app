@@ -8,6 +8,7 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
+import { VehicleFilterNotice } from './VehicleFilterNotice';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
@@ -42,7 +43,7 @@ interface DepartureBoardProps {
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
-    const { isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, isFiltered, selectedLine, data } = useDepartures();
+    const { isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, isFiltered, selectedLine, data, hiddenByVehicleFilters } = useDepartures();
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
@@ -58,9 +59,11 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
         () => new Map(sections?.map(section => [section.key, sectionStopId(platforms, section, boardStopId)])),
         [sections, platforms, boardStopId]);
     const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
-    const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
+    const trips = useRideStore(s => s.trips);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
-    const marked = useMemo(() => new Set([highlightedTripId, rideTripId, followedTripId].filter((id): id is string => !!id)), [highlightedTripId, rideTripId, followedTripId]);
+    const marked = useMemo(
+        () => new Set([highlightedTripId, followedTripId, ...trips.map(trip => trip.tripId)].filter((id): id is string => !!id)),
+        [highlightedTripId, followedTripId, trips]);
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
     /** Groups whose viewed or ridden trip sits below the collapsed rows open once, then follow the user's toggle. */
     const autoExpanded = useRef(new Set<string>());
@@ -136,6 +139,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     </script>
                 </Helmet>
             )}
+            <VehicleFilterNotice hiddenCount={hiddenByVehicleFilters} />
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (

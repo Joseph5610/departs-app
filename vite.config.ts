@@ -111,7 +111,8 @@ export default defineConfig({
         globIgnores: ['**/AdminRoutes-*'],
         importScripts: ['/push-sw.js'],
         // Generated icons aren't picked up by includeManifestIcons; #boot-splash needs pwa-192x192.png offline.
-        globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico'],
+        // The labels' glyphs every user needs (Latin and Czech/Slovak letters) install with the app; other ranges load on use.
+        globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico', 'fonts/*/0-255.pbf', 'fonts/*/256-511.pbf'],
         navigateFallback: '/',
         navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/, /\.txt$/],
         manifestTransforms: [
@@ -126,6 +127,17 @@ export default defineConfig({
           }
         ],
         runtimeCaching: [
+          {
+            // Our own label glyphs (`MAP_GLYPHS`): a range is fetched once, when a label first needs it. Same origin only:
+            // a RegExp route matches a cross-origin URL only from its start, so CARTO's glyphs keep their rule below.
+            urlPattern: /\/fonts\/[^/]+\/\d+-\d+\.pbf$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'map-glyphs',
+              expiration: { maxEntries: 50, maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Cache CARTO Map Style & Tiles JSON
             urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(gl|vector)\/.*\.json$/i,

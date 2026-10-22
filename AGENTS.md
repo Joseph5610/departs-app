@@ -22,7 +22,7 @@ Non-negotiable. Any violation is a system-level bug.
 | `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer ID, MapRef and camera actions           |
 | `PWAStore`         | `pwaStore.ts`         | PWA installation and update status                                    |
 | `UiStore`          | `uiStore.ts`          | Which app-level modals are open (not persisted)                       |
-| `RideStore`        | `rideStore.ts`        | Active ride: trip, vehicle and exit stop sequence (Persisted)         |
+| `RideStore`        | `rideStore.ts`        | My trips (boarding stop, exit, alert lead) and a followed ride (Persisted) |
 | `EnrichmentStore`  | `enrichmentStore.ts`  | WebSocket push patches by trip/vehicle ID, pruned after silence TTL   |
 
 ### Hook Data Flow (Strict Hierarchy)

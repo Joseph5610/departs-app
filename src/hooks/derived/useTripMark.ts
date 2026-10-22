@@ -4,7 +4,7 @@ import { useRideStore } from '@/state/rideStore';
 export type TripMark = 'riding' | 'watched' | 'viewed';
 
 export const useTripMark = (tripId: string | undefined, isHighlighted: boolean): TripMark | null => {
-    const isRiding = useRideStore(s => !!tripId && s.ride?.tripId === tripId);
+    const isRiding = useRideStore(s => !!tripId && s.trips.some(trip => trip.tripId === tripId));
     const isWatched = useRideStore(s => !!tripId && s.followed?.tripId === tripId);
     if (isRiding) return 'riding';
     if (isWatched) return 'watched';

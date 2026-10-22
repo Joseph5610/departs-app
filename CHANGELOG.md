@@ -4,6 +4,25 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.88.0] - 2026-10-21
+
+### Added
+
+- My trip: take a departure (its bell, a swipe right or the right-click menu) with where you board and/or get off; up to three trips, shown as bars over the map and a card on the trip.
+- An alert before your trip leaves your stop, with your walk to the stop as one of the lead times.
+- Share a whole trip, boarding stop included; a shared trip is followed from boarding to arrival.
+- A stop's board says when the air-conditioned or wheelchair filter hides departures, with a button to show them all.
+- Feedback diagnostics include the active vehicle and line filters.
+
+### Changed
+
+- Trip alerts are watched by one server watch per trip, which finds the trip's vehicle itself, so a trip saved before its vehicle runs still gets live alerts.
+
+### Fixed
+
+- Map stop labels load their font from the app itself, so the basemap provider can no longer change how they look; the common glyphs install with the app and the rest are cached once used.
+- The live fleet is fetched once per refresh, not once per screen that shows it.
+
 ## [0.87.2] - 2026-10-20
 
 ### Changed

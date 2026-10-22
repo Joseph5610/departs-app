@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { Ride, RideStatus, VehicleDetail } from '@/types';
+import type { Ride, VehicleDetail } from '@/types';
 import { MIN, NOW, stopTime, vehicleDetail } from '@/test/factories';
-import { countStopsLeft, deriveRide, exitArrival, followedRideFirst, rideAlertFor } from './status';
+import { countStopsLeft, deriveRide, exitArrival, rideAlertFor } from './status';
 
 // NOW is 14:00 in Prague; the trip runs 13:50–14:30 and the rider gets off at stop 4 (14:20).
 const stops = [stopTime(1, '13:50:00'), stopTime(2, '14:00:00'), stopTime(3, '14:10:00'), stopTime(4, '14:20:00'), stopTime(5, '14:30:00')];
@@ -105,12 +105,3 @@ describe('rideAlertFor', () => {
     });
 });
 
-describe('followedRideFirst', () => {
-    const status = (phase: RideStatus['phase']) => ({ ...deriveRide(ride, atStop(2), false, NOW, TZ)!, phase });
-
-    it('puts the followed ride in front only when it alone is urgent', () => {
-        expect(followedRideFirst(status('riding'), status('next'))).toBe(true);
-        expect(followedRideFirst(status('arrived'), status('next'))).toBe(false);
-        expect(followedRideFirst(null, status('riding'))).toBe(false);
-    });
-});
