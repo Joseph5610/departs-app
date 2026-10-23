@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.87.3] - 2026-10-23
+
+### Fixed
+
+- Brno vehicles no longer show trips from the wrong time after a daily timetable update.
+
 ## [0.87.2] - 2026-10-20
 
 ### Changed

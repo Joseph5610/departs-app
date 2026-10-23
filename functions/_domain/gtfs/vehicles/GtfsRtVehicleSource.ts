@@ -26,14 +26,14 @@ export class GtfsRtVehicleSource implements NetworkVehicles {
     private async index(feed?: Snapshot<GtfsRtFeed>): Promise<VehicleIndex | null> {
         try {
             const clock = getLocalClock(this.city.timezone);
-            const [snapshot, routes, schedule, tripAliases] = await Promise.all([
+            const [snapshot, routes, schedule] = await Promise.all([
                 feed ?? getGtfsRtSnapshot(this.city),
                 getGtfsRoutes(this.city),
                 getSchedule(this.city, clock),
-                getGtfsTripAliases(this.city),
             ]);
             // Mapping against no schedule would blank the map.
             if (!schedule) return null;
+            const tripAliases = await getGtfsTripAliases(this.city, schedule);
             return new VehicleIndex(snapshot, routes, this.mapping, { schedule, tripAliases, clock });
         } catch (e) {
             console.error(`GTFS-RT index unavailable for ${this.city.slug}:`, e instanceof Error ? e.message : e);

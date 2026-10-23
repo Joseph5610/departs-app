@@ -3,6 +3,7 @@ import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
 import { EMPTY_TRIP_RUNS, TripRuns, type TripRunsFile } from './TripRuns';
+import type { Schedule } from './schedule';
 
 export interface GtfsRoute {
     name: string;
@@ -73,9 +74,20 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 /**
  * Trip ids of older timetable exports -> the current trip (`feed_index/trip_alias_runs.json`), for networks whose
  * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
+ *
+ * Every publish renumbers the trips, so the table is read for the build `schedule` came from (its first service
+ * day) and kept no longer than the schedule: one from another publish maps the feed onto unrelated trips.
  */
-export async function getGtfsTripAliases(city: CityConfig): Promise<TripRuns> {
-    return (city.feed?.hasTripAliases ? await getStaticFile(city, 'feed_index/trip_alias_runs.json', (text) => new TripRuns(JSON.parse(text) as TripRunsFile)) : null) ?? EMPTY_TRIP_RUNS;
+export async function getGtfsTripAliases(city: CityConfig, schedule: Schedule): Promise<TripRuns> {
+    if (!city.feed?.hasTripAliases) return EMPTY_TRIP_RUNS;
+    const build = schedule.days[0] ?? '';
+    const aliases = await getStaticFile(
+        city,
+        `feed_index/trip_alias_runs.json?build=${build}`,
+        (text) => new TripRuns(JSON.parse(text) as TripRunsFile),
+        UPSTREAM_TTL_S.SCHEDULE_DATA,
+    );
+    return aliases ?? EMPTY_TRIP_RUNS;
 }
 
 /**
@@ -83,10 +95,10 @@ export async function getGtfsTripAliases(city: CityConfig): Promise<TripRuns> {
  * fetched again soon. Emptiness is judged from the text: asking a parsed table of thousands of keys
  * whether it has any costs as much as listing them all.
  */
-async function getStaticFile<T>(city: CityConfig, file: string, parse: (text: string) => T): Promise<T | null> {
+async function getStaticFile<T>(city: CityConfig, file: string, parse: (text: string) => T, cacheTtl: number = UPSTREAM_TTL_S.STATIC_DATA): Promise<T | null> {
     return getOrFetch(`gtfs_${file}_${city.slug}`, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/${file}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/${file}`, { cacheTtl });
             if (!res.ok) {
                 console.error(`Error fetching ${file} for ${city.slug}: ${res.status}`);
                 return null;
