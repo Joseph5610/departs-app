@@ -107,6 +107,8 @@ export const API_LIMITS = {
      * it only ever rejects abuse rather than a heavy user.
      */
     DEPARTURE_STOP_IDS: 50,
+    /** The most departures per line and direction a departures request may ask to be cut to. */
+    DEPARTURE_PER_LINE_MAX: 10,
     FEEDBACK_MESSAGE_MIN_CHARS: 5,
     FEEDBACK_MESSAGE_MAX_CHARS: 2000,
     /** Feedback and crash reports expire from KV after this; the privacy policy states the same period. */

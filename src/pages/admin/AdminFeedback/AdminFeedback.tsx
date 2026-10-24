@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
 import type { StoredFeedback } from '@/types';
 import { apiFetch } from '@/lib/apiClient';
+import { formatTimeAgo } from '@/domain/time';
 
 import { Badge } from '@/components/ui/badge';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -18,12 +18,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { buildAgentPrompt } from './agentPrompt';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { useNowEvery } from '@/hooks/useNow';
+import { UI_TIMING_MS } from '@/config/constants';
 
 export const AdminFeedback = () => {
     const [filterText, setFilterText] = useState('');
     const [filterType, setFilterType] = useState<'all' | 'feedback' | 'crash'>('all');
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
     const [showMobileDetail, setShowMobileDetail] = useState(false);
+    const now = useNowEvery(UI_TIMING_MS.MINUTES_TICK);
 
     const { data, isLoading, isError, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
         queryKey: ['adminFeedback'],
@@ -187,7 +190,7 @@ export const AdminFeedback = () => {
                                         </Badge>
                                     </div>
                                     <span className="text-caption font-mono text-muted-foreground/70 whitespace-nowrap">
-                                        {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                        {formatTimeAgo(item.timestamp, now, 'en')}
                                     </span>
                                 </div>
                                 <p className="text-xs line-clamp-2 text-foreground/90 font-medium leading-relaxed">
@@ -221,7 +224,7 @@ export const AdminFeedback = () => {
                                             {selectedItem.type.replace('_', ' ')}
                                         </Badge>
                                         <span className="text-xs font-mono text-muted-foreground/70">
-                                            {formatDistanceToNow(new Date(selectedItem.timestamp), { addSuffix: true })}
+                                            {formatTimeAgo(selectedItem.timestamp, now, 'en')}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
