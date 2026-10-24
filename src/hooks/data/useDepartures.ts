@@ -19,10 +19,11 @@ export interface DeparturesResponse {
     departures: Departure[];
 }
 
-/** Departures of one or more stops; `stopId` repeats per stop. */
-export const fetchDepartures = (city: string, stopIds: string[], signal?: AbortSignal): Promise<DeparturesResponse> => {
+/** Departures of one or more stops; `stopId` repeats per stop. `perLine` cuts each line and direction to its next few. */
+export const fetchDepartures = (city: string, stopIds: string[], signal?: AbortSignal, perLine?: number): Promise<DeparturesResponse> => {
     const params = new URLSearchParams();
     for (const id of stopIds) params.append('stopId', id);
+    if (perLine) params.set('perLine', String(perLine));
     return apiFetch<DeparturesResponse>(`/${city}/departures?${params.toString()}`, { ...LIVE_FETCH_OPTIONS, signal });
 };
 

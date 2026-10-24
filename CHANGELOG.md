@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.87.6] - 2026-10-24
+
+### Changed
+
+- The mobile home sheet refreshes its favourite and nearby departures only every two minutes while lowered, and at once when pulled up.
+- Favourite and nearby departures download only the next few departures of each line, cutting their data use.
+
 ## [0.87.5] - 2026-10-24
 
 ### Changed

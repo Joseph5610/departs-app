@@ -73,8 +73,8 @@ interface MobileSheetProps {
     selfScrolling?: boolean;
     /** The home's fixed top row (search); in the header so a mouse can drag the sheet by it. */
     homeHeader?: React.ReactNode;
-    /** The home content, told whether the sheet is at full height (the only height its list scrolls at). */
-    home?: (isFull: boolean) => React.ReactNode;
+    /** The home content, told whether the sheet is at full height (the only height its list scrolls at) and at its peek (where none of it shows). */
+    home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Rides above the sheet's top edge, hidden at full height. */
     floating?: (hidden: boolean) => React.ReactNode;
     onDismiss: () => void;
@@ -259,7 +259,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                     }
                 >
                     {!isOpen ? (
-                        <div key="home" className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{home?.(isFull)}</div>
+                        <div key="home" className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{home?.(isFull, detent === 'peek')}</div>
                     ) : selfScrolling ? (
                         <div key={cardKey} className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{children}</div>
                     ) : (

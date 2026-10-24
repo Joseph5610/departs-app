@@ -59,7 +59,7 @@ import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
-const renderMobileHome = (isFull: boolean) => <HomeSections isFull={isFull} />;
+const renderMobileHome = (isFull: boolean, isPeek: boolean) => <HomeSections isFull={isFull} isPeek={isPeek} />;
 
 /**
  * Manages the layout of the map and its overlays.
