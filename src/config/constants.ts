@@ -63,6 +63,8 @@ export const SHEET = {
 export const NEARBY_STOPS = {
     LIMIT: 4,
     MAX_DISTANCE_M: 1500,
+    /** The list is worked out again only once the user has moved this far, so GPS jitter does not refetch its departures. */
+    REFRESH_DISTANCE_M: 50,
 };
 
 export const STOP_SEARCH = {
