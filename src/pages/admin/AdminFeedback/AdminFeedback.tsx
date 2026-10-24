@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatDistanceToNow } from 'date-fns';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
@@ -18,6 +17,16 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { buildAgentPrompt } from './agentPrompt';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+
+const relativeTime = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+const TIME_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [['year', 31_536_000], ['month', 2_592_000], ['day', 86_400], ['hour', 3600], ['minute', 60]];
+
+/** "5 minutes ago", in the largest whole unit. */
+const timeAgo = (timestamp: string): string => {
+    const seconds = (Date.parse(timestamp) - Date.now()) / 1000;
+    const [unit, size] = TIME_UNITS.find(([, s]) => Math.abs(seconds) >= s) ?? ['second', 1];
+    return relativeTime.format(Math.round(seconds / size), unit);
+};
 
 export const AdminFeedback = () => {
     const [filterText, setFilterText] = useState('');
@@ -187,7 +196,7 @@ export const AdminFeedback = () => {
                                         </Badge>
                                     </div>
                                     <span className="text-caption font-mono text-muted-foreground/70 whitespace-nowrap">
-                                        {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                        {timeAgo(item.timestamp)}
                                     </span>
                                 </div>
                                 <p className="text-xs line-clamp-2 text-foreground/90 font-medium leading-relaxed">
@@ -221,7 +230,7 @@ export const AdminFeedback = () => {
                                             {selectedItem.type.replace('_', ' ')}
                                         </Badge>
                                         <span className="text-xs font-mono text-muted-foreground/70">
-                                            {formatDistanceToNow(new Date(selectedItem.timestamp), { addSuffix: true })}
+                                            {timeAgo(selectedItem.timestamp)}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">

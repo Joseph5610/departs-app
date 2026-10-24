@@ -1,6 +1,5 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Helmet } from 'react-helmet-async';
 import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
@@ -130,11 +129,9 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     return (
         <div className="flex flex-col gap-3">
             {jsonLd && (
-                <Helmet>
-                    <script type="application/ld+json">
-                        {JSON.stringify(jsonLd)}
-                    </script>
-                </Helmet>
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
             )}
             <InfoTexts selectedStop={selectedStop} />
             
