@@ -119,6 +119,15 @@ export const formatDateTime = (value: string | number, locale: string | undefine
     });
 };
 
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [['year', 31_536_000], ['month', 2_592_000], ['day', 86_400], ['hour', 3600], ['minute', 60], ['second', 1]];
+
+/** How long ago (or until) `iso` is, in its largest whole unit. Example (en): "5 minutes ago", "yesterday". */
+export const formatTimeAgo = (iso: string, nowMs: number, locale: string | undefined): string => {
+    const seconds = (Date.parse(iso) - nowMs) / 1000;
+    const [unit, size] = RELATIVE_UNITS.find(([, s]) => Math.abs(seconds) >= s) ?? ['second', 1];
+    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(Math.round(seconds / size), unit);
+};
+
 /**
  * When something upcoming starts, short and in `timeZone`: weekday, day and month, plus the time unless it
  * starts at midnight. Example (cs): "so 24. 10. 7:20", "po 19. 10.".
