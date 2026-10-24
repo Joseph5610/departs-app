@@ -6,6 +6,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { apiFetch } from '@/lib/apiClient';
 import { bucketOf } from '@/lib/staticBuckets';
+import { createTimetablePersister } from '@/lib/deviceCache';
 import { EXTERNAL_URLS, QUERY_TIMING_MS, TRIP_SHAPES_CONFIG } from '@/config/constants';
 import type { TripShape } from '@/domain/routes';
 import { queryKeys } from '@/lib/queryKeys';
@@ -15,6 +16,11 @@ import { queryKeys } from '@/lib/queryKeys';
 const tripShapeBucketSchema = z.record(z.string(), z.string());
 const shapePointSchema = z.union([z.tuple([z.number(), z.number()]), z.tuple([z.number(), z.number(), z.number()])]);
 const shapeSegmentsSchema = z.array(z.array(shapePointSchema));
+/** Each shape is validated when selected, so a bucket is checked only for its shape. */
+const shapeBucketSchema = z.record(z.string(), z.unknown());
+
+const tripShapeIdsPersister = createTimetablePersister((data) => tripShapeBucketSchema.parse(data));
+const shapeBucketPersister = createTimetablePersister((data) => shapeBucketSchema.parse(data));
 
 export interface TripShapeResult {
     /** Null for other cities, or when the trip has no shape. */
@@ -27,6 +33,7 @@ export interface TripShapeResult {
  * The precise route geometry of a trip, read straight from the static data CDN for cities with
  * `hasTripShapes`: its shape id from `trip_shape_buckets/`, then its segments from `shape_buckets/`,
  * flattened into one line.
+ * Both buckets are kept on the device for a few hours.
  */
 export function useTripShape(tripId: string | null | undefined): TripShapeResult {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -44,6 +51,7 @@ export function useTripShape(tripId: string | null | undefined): TripShapeResult
         select: selectShapeId,
         staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
         gcTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
+        persister: tripShapeIdsPersister,
     });
 
     const shapeBucket = shapeId ? bucketOf(shapeId, TRIP_SHAPES_CONFIG.SHAPE_BUCKET_COUNT) : undefined;
@@ -65,6 +73,7 @@ export function useTripShape(tripId: string | null | undefined): TripShapeResult
         select: selectShape,
         staleTime: QUERY_TIMING_MS.TRIP_SHAPES_STALE,
         gcTime: QUERY_TIMING_MS.TRIP_SHAPES_GC,
+        persister: shapeBucketPersister,
     });
 
     if (!hasTripShapes) return { shape: null, isLoading: false };

@@ -73,16 +73,25 @@ const storage: AsyncStorage<unknown> = {
     },
 };
 
-const createPersister = (parseData: (data: unknown) => unknown) => experimental_createQueryPersister<unknown>({
+interface Lifetime {
+    maxAge: number;
+    prefix?: string;
+}
+
+const STATIC: Lifetime = { maxAge: DEVICE_CACHE.MAX_AGE };
+const TIMETABLE: Lifetime = { maxAge: DEVICE_CACHE.TIMETABLE_MAX_AGE, prefix: DEVICE_CACHE.TIMETABLE_PREFIX };
+
+const createPersister = (parseData: (data: unknown) => unknown, { maxAge, prefix }: Lifetime) => experimental_createQueryPersister<unknown>({
     storage,
     buster: DEVICE_CACHE.VERSION,
-    maxAge: DEVICE_CACHE.MAX_AGE,
+    maxAge,
+    prefix,
     serialize: (query) => query,
     // A malformed entry throws here and is removed by the persister, falling back to a download.
     deserialize: (value) => toPersistedQuery(value, parseData),
 });
 
-const maintenance = createPersister((data) => data);
+const maintenance = [createPersister((data) => data, STATIC), createPersister((data) => data, TIMETABLE)];
 
 /**
  * `persister` for a query of static data: the last copy is read from the device (IndexedDB) on a
@@ -90,7 +99,10 @@ const maintenance = createPersister((data) => data);
  * `parseData` must validate the copy like the query's own download, so a copy saved by an older
  * release in a different format is discarded instead of shown.
  */
-export const createDevicePersister = (parseData: (data: unknown) => unknown) => createPersister(parseData).persisterFn;
+export const createDevicePersister = (parseData: (data: unknown) => unknown) => createPersister(parseData, STATIC).persisterFn;
+
+/** Like `createDevicePersister`, for files rebuilt with every timetable export: a copy is kept only for `DEVICE_CACHE.TIMETABLE_MAX_AGE`. */
+export const createTimetablePersister = (parseData: (data: unknown) => unknown) => createPersister(parseData, TIMETABLE).persisterFn;
 
 /**
  * `staleTime` for device-cached queries: `ms` normally, but on a metered connection a copy is kept for
@@ -116,5 +128,5 @@ export function refreshDeviceCacheWhenUnmetered(queryClient: QueryClient): void 
 
 /** Drops expired or outdated entries; run once per launch. */
 export function pruneDeviceCache(): void {
-    void maintenance.persisterGc().catch(() => undefined);
+    for (const persister of maintenance) void persister.persisterGc().catch(() => undefined);
 }
