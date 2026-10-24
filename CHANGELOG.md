@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.87.4] - 2026-10-24
+
+### Changed
+
+- The map's always-visible network lines are kept on the device instead of downloaded on every launch.
+
 ## [0.87.3] - 2026-10-23
 
 ### Fixed
