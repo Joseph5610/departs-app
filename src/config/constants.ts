@@ -327,6 +327,10 @@ export const DEVICE_CACHE = {
     MAX_AGE: 14 * DAY_MS,
     /** On a metered connection a copy is refreshed only once older than this, however short its usual stale time. */
     METERED_STALE: DAY_MS,
+    /** Files rebuilt with every daily timetable export (route shapes) are kept on the device only this long; stays below `TRIP_SHAPES_STALE`. */
+    TIMETABLE_MAX_AGE: 3 * HOUR_MS,
+    /** Key prefix of the timetable entries, so pruning applies their own lifetime. */
+    TIMETABLE_PREFIX: 'timetable',
     DB_NAME: 'departs',
     STORE_NAME: 'query_cache',
 };
