@@ -3,8 +3,8 @@ import { RIDE_PUSH } from '../_core/config';
 import { sendPush, type PushTarget, type VapidKeys } from '../_core/push/webPush';
 import type { AppVehicleDetail } from '../_core/types';
 import { minutesUntilDeparture } from '../_domain/rides/departureAlert';
-import { liveStopSequence } from '../_domain/rides/rideAlert';
-import { carriedAlerts, firstCheckAt, needsLiveDetail, riderStep, timingOf, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
+import { currentStop, observe } from '../_domain/rides/observation';
+import { carriedPhase, firstCheckAt, isWatchingExit, laterPhase, needsLiveDetail, riderStep, timingOf, type RiderPhase, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
 
 export interface RidePushEnv {
     /** The departs.app origin whose `/api` answers vehicle details (a `[vars]` entry, overridden for local dev). */
@@ -33,7 +33,7 @@ export interface Rider {
     navigate: string;
     /** Set by the app per save; a removal names it, so one meant for a replaced registration can't drop the new one. Null from an app predating revisions. */
     revision: number | null;
-    alerted: TripAlert[];
+    phase: RiderPhase;
     expiresAt: number;
 }
 
@@ -42,7 +42,7 @@ export interface Rider {
  * registration `revision` names. Both come from `/api/[city]/ride`, which validated them.
  */
 export type RideWatchRequest =
-    | { action: 'add'; trip: RideTrip; rider: Omit<Rider, 'alerted' | 'expiresAt'> }
+    | { action: 'add'; trip: RideTrip; rider: Omit<Rider, 'phase' | 'expiresAt'> }
     | { action: 'remove'; endpoint: string; revision: number | null };
 
 /**
@@ -59,6 +59,9 @@ const ridePayload = (rider: Rider, alert: TripAlert, tripId: string, minutes: nu
         notification: { title: fill(text.title), body: fill(text.body), ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: `${tag}:${tripId}` },
     });
 };
+
+/** A rider's phase; one registered before 0.88 is aboard, with `next` sent or not. Drop with the legacy key in `ride.ts`. */
+const phaseOf = (rider: Rider & { alerted?: string[] }): RiderPhase => rider.phase ?? (rider.alerted?.includes('next') ? 'near' : 'ride');
 
 const RIDER_PREFIX = 'rider:';
 const riderKey = (endpoint: string) => `${RIDER_PREFIX}${endpoint}`;
@@ -90,11 +93,12 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         const trip = await storage.get<RideTrip>('trip');
         // A device's vehicle id is only a hint, taken while none is known; `readDetail` checks it and drops a wrong one.
         if (!trip || (!trip.vehicleId && command.trip.vehicleId)) await storage.put<RideTrip>('trip', { ...command.trip, vehicleId: trip?.vehicleId ?? command.trip.vehicleId });
-        const alerted = carriedAlerts(await storage.get<Rider>(key), command.rider);
-        await storage.put<Rider>(key, { ...command.rider, alerted, expiresAt: expiryOf(command.rider, now) });
+        const previous = await storage.get<Rider>(key);
+        const phase = carriedPhase(previous && { ...previous, phase: phaseOf(previous) }, command.rider);
+        await storage.put<Rider>(key, { ...command.rider, phase, expiresAt: expiryOf(command.rider, now) });
         // However often riders are added, the trip is read at most once per near interval.
         const lastRun = (await storage.get<number>('ranAt')) ?? 0;
-        const due = Math.max(firstCheckAt({ ...command.rider, alerted }, now), lastRun + RIDE_PUSH.NEAR_INTERVAL_S * 1000);
+        const due = Math.max(firstCheckAt({ ...command.rider, phase }, now), lastRun + RIDE_PUSH.NEAR_INTERVAL_S * 1000);
         const alarm = await storage.getAlarm();
         if (alarm === null || alarm > due) await storage.setAlarm(due);
         return new Response(null, { status: 204 });
@@ -120,23 +124,25 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         }
 
         const needsLive = [...riders.values()].some(rider => needsLiveDetail(rider, now));
-        const detail = await this.readDetail(trip, needsLive);
-        const failures = detail ? 0 : ((await storage.get<number>('failures')) ?? 0) + 1;
+        const observation = observe(await this.readDetail(trip, needsLive));
+        const isFailed = observation.kind === 'failed';
+        const failures = isFailed ? ((await storage.get<number>('failures')) ?? 0) + 1 : 0;
         await storage.put('failures', failures);
-        if (detail) await storage.put('seen', true);
-        if (detail && liveStopSequence(detail) !== null) await storage.put('liveAt', now);
+        if (!isFailed) await storage.put('seen', true);
+        if (currentStop(observation) !== null) await storage.put('liveAt', now);
         const liveAt = await storage.get<number>('liveAt');
         // A vehicle that was live and vanished (it finished, or left the feed) ends the exit watches of those aboard.
-        const isLost = liveAt !== undefined && now - liveAt > RIDE_PUSH.LOST_MS && (!detail || liveStopSequence(detail) === null);
+        const isLost = liveAt !== undefined && now - liveAt > RIDE_PUSH.LOST_MS && currentStop(observation) === null;
         // "Unseen" is a trip whose detail never answered at all, not one still on its timetable before going live.
         const isGivenUp = failures >= ((await storage.get<boolean>('seen')) ? RIDE_PUSH.MAX_FAILURES : RIDE_PUSH.MAX_FAILURES_UNSEEN);
         const backoffAt = now + Math.min(RIDE_PUSH.RETRY_INTERVAL_S * 2 ** Math.min(Math.max(failures - 1, 0), 4), RIDE_PUSH.MAX_RETRY_INTERVAL_S) * 1000;
 
         let next = Number.POSITIVE_INFINITY;
         for (const [key, rider] of riders) {
-            const step = riderStep(rider, detail, now);
+            const step = riderStep({ ...rider, phase: phaseOf(rider) }, observation, now);
+            let isGone = false;
             for (const alert of step.send) {
-                const minutes = rider.board ? minutesUntilDeparture(detail, timingOf(rider.board), now) : 0;
+                const minutes = rider.board ? minutesUntilDeparture(observation, timingOf(rider.board), now) : 0;
                 const payload = ridePayload(rider, alert, trip.tripId, minutes);
                 if (!payload) continue;
                 // One broken subscription must not stop the trip's other riders.
@@ -145,23 +151,23 @@ export class RideWatch extends DurableObject<RidePushEnv> {
                     return 0;
                 });
                 console.log(JSON.stringify({ push: alert, trip: trip.tripId, status }));
-                if (status === 0 || status === 404 || status === 410) step.done = true;
+                if (status === 0 || status === 404 || status === 410) isGone = true;
             }
             // A trip that keeps failing (or was never found) is given up for everyone; a vanished vehicle ends the exit watches.
-            const isStranded = isGivenUp || (step.watchingExit && isLost);
+            const isStranded = isGivenUp || (isWatchingExit(step.phase) && isLost);
             const stored = await storage.get<Rider>(key);
             if (!stored) continue;
-            // Replaced by the device meanwhile: the new registration only learns what was just sent, keeping its own schedule.
+            // Replaced by the device meanwhile: the new registration only moves past what was just sent, keeping its own schedule.
             if (stored.revision !== rider.revision) {
-                const sent = carriedAlerts({ ...rider, alerted: step.alerted }, stored).filter(a => !stored.alerted.includes(a));
-                if (sent.length > 0) await storage.put<Rider>(key, { ...stored, alerted: [...stored.alerted, ...sent] });
+                const phase = laterPhase(phaseOf(stored), carriedPhase({ ...rider, phase: step.phase }, stored));
+                if (phase !== stored.phase) await storage.put<Rider>(key, { ...stored, phase });
                 continue;
             }
-            if (step.done || isStranded) await storage.delete(key);
+            if (step.phase === 'done' || isGone || isStranded) await storage.delete(key);
             else {
-                if (step.alerted.length !== rider.alerted.length) await storage.put<Rider>(key, { ...stored, alerted: step.alerted });
+                if (step.phase !== rider.phase) await storage.put<Rider>(key, { ...stored, phase: step.phase });
                 // After a failed read everyone retries later each time, so a failing trip reaches `isGivenUp` in about an hour.
-                const at = !detail && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
+                const at = isFailed && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
                 if (at !== null) next = Math.min(next, at);
             }
         }

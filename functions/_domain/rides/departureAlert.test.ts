@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppVehicleDetail } from '../../_core/types';
+import { observe } from './observation';
 import { departureAlertFor, minutesUntilDeparture, nextCheckAt, predictedDepartureMs } from './departureAlert';
 
 const NOW = Date.UTC(2026, 9, 20, 10, 0, 0);
@@ -10,8 +11,8 @@ const stop = (stop_sequence: number, realtime?: string) => ({
     properties: { stop_id: `s${stop_sequence}`, stop_name: `Stop ${stop_sequence}`, stop_sequence, arrival_time: '12:10:00', departure_time: '12:10:00', realtime_departure_time: realtime },
 });
 
-const detail = (extra: Partial<AppVehicleDetail> = {}) => ({
-    state_position: 'on_track' as AppVehicleDetail['state_position'],
+const detail = (extra: Partial<AppVehicleDetail> = {}) => observe({
+    state_position: 'on_track',
     last_stop_sequence: 2,
     delay: 0 as number | null,
     stop_times: { features: [stop(1), stop(2), stop(3), stop(4)] },
@@ -30,7 +31,7 @@ describe('predictedDepartureMs', () => {
     it('falls back to the trip delay, then to the timetable', () => {
         expect(predictedDepartureMs(detail({ delay: 180 }), timing)).toBe(timing.scheduledMs + 3 * MIN);
         expect(predictedDepartureMs(detail({ delay: null }), timing)).toBe(timing.scheduledMs);
-        expect(predictedDepartureMs(null, timing)).toBe(timing.scheduledMs);
+        expect(predictedDepartureMs(observe(null), timing)).toBe(timing.scheduledMs);
     });
 
     it('ignores the delay of a timetable-only detail', () => {
@@ -61,12 +62,12 @@ describe('departureAlertFor', () => {
     });
 
     it('reminds on the timetable when no detail could be read', () => {
-        expect(departureAlertFor(null, timing, NOW + 15 * MIN)).toBe('soon');
+        expect(departureAlertFor(observe(null), timing, NOW + 15 * MIN)).toBe('soon');
     });
 
     // A failed read says nothing about a late trip: only a detail without a position drops it on the clock.
     it('waits after the timetable departure while no detail could be read', () => {
-        expect(departureAlertFor(null, timing, NOW + 21 * MIN)).toBeNull();
+        expect(departureAlertFor(observe(null), timing, NOW + 21 * MIN)).toBeNull();
         expect(departureAlertFor(detail({ is_static_fallback: true }), timing, NOW + 21 * MIN)).toBe('passed');
     });
 
@@ -84,7 +85,7 @@ describe('departureAlertFor', () => {
 
 describe('nextCheckAt', () => {
     it('sleeps until the first check before the reminder is due', () => {
-        expect(nextCheckAt(null, timing, NOW)).toBe(NOW + 5 * MIN);
+        expect(nextCheckAt(observe(null), timing, NOW)).toBe(NOW + 5 * MIN);
     });
 
     it('halves the time left, never under the minimum interval nor past the due moment', () => {
@@ -96,6 +97,6 @@ describe('nextCheckAt', () => {
 describe('minutesUntilDeparture', () => {
     it('rounds to whole minutes, at least one', () => {
         expect(minutesUntilDeparture(detail({ delay: 60 }), timing, NOW + 15 * MIN)).toBe(6);
-        expect(minutesUntilDeparture(null, timing, NOW + 20 * MIN)).toBe(1);
+        expect(minutesUntilDeparture(observe(null), timing, NOW + 20 * MIN)).toBe(1);
     });
 });

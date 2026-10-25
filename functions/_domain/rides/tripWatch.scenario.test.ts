@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppVehicleDetail } from '../../_core/types';
+import { observe } from './observation';
 import { firstCheckAt, riderStep, type TripAlert, type WatchRider } from './tripWatch';
 
 const NOW = Date.UTC(2026, 9, 20, 10, 0, 0);
@@ -51,10 +52,10 @@ const simulate = (rider: WatchRider, world: World, registeredAt = NOW, untilMin 
     let current = rider;
     let at = firstCheckAt(rider, registeredAt);
     for (let i = 0; i < 1000 && at <= NOW + untilMin * MIN; i++) {
-        const step = riderStep(current, read(world, at), at);
+        const step = riderStep(current, observe(read(world, at)), at);
         for (const alert of step.send) sent.push({ alert, at: (at - NOW) / MIN });
-        if (step.done || step.nextAt === null) break;
-        current = { ...current, alerted: step.alerted };
+        if (step.nextAt === null) break;
+        current = { ...current, phase: step.phase };
         at = Math.max(step.nextAt, at + 1000);
     }
     return sent;
@@ -67,7 +68,7 @@ const sentAt = (sent: Sent[], alert: TripAlert) => sent.find(s => s.alert === al
 const rider = (extra: Partial<WatchRider> = {}): WatchRider => ({
     exitSequence: 6,
     board: { sequence: 3, scheduledMs: scheduledAt(3), leadMin: 5 },
-    alerted: [],
+    phase: 'remind',
     ...extra,
 });
 
@@ -124,6 +125,6 @@ describe('trip watch scenarios', () => {
     it('carries a sent boarding alert across a re-save that adds an exit', () => {
         const before = simulate(rider({ exitSequence: null }), {}, NOW, 9);
         expect(alertsOf(before)).toEqual(['soon']);
-        expect(alertsOf(simulate(rider({ alerted: ['soon'] }), {}, NOW + 9 * MIN))).toEqual(['next', 'arrived']);
+        expect(alertsOf(simulate(rider({ phase: 'board' }), {}, NOW + 9 * MIN))).toEqual(['next', 'arrived']);
     });
 });
