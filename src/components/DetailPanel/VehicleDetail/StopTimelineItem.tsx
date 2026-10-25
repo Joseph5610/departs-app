@@ -9,6 +9,7 @@ import { InterchangeBadges } from '@/components/InterchangeBadges';
 import { TimelineTime } from './TimelineTime';
 import { StopConnections, StopContinuation } from './StopTransfers';
 import type { TimelineStop } from './types';
+import type { JourneyMark } from '@/types';
 
 export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop }: {
     stop: TimelineStop,
@@ -21,7 +22,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
     /** The line's own last stop; its transfer card is rendered outside the line's gutter instead. */
     isLastStop: boolean,
     /** A stop of the user's trip: where they get off (`own`) or board (`board`), or the exit a shared ride link marks (`shared`). */
-    exitKind: 'own' | 'board' | 'shared' | null,
+    exitKind: JourneyMark,
     /** Between the vehicle and the ride's exit. */
     isOnJourney?: boolean,
     /** Opens a stop's board from the timeline. */

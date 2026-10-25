@@ -27,6 +27,18 @@ const rider = (extra: Partial<WatchRider> = {}): WatchRider => ({
 });
 
 describe('riderStep', () => {
+    // One failed read after the timetable departure must not lose the alert of a trip running late.
+    it('keeps a pending boarding alert through a failed read, then sends it late-but-due', () => {
+        const step = riderStep(rider(), null, NOW + 21 * MIN);
+        expect(step).toMatchObject({ send: [], alerted: [], done: false });
+        expect(riderStep(rider(), detail(2, { delay: 360 }), NOW + 22 * MIN)).toMatchObject({ send: ['soon'], alerted: ['soon'] });
+    });
+
+    it('ends boarding on the clock when a live position stalls before the stop', () => {
+        const stalled = rider({ alerted: ['soon'] });
+        expect(riderStep(stalled, detail(2), NOW + 23 * MIN)).toMatchObject({ watchingExit: true });
+    });
+
     it('waits for the boarding alert, then sends it once inside the lead', () => {
         expect(riderStep(rider(), detail(1), NOW)).toMatchObject({ send: [], done: false, nextAt: NOW + 5 * MIN });
         expect(riderStep(rider(), detail(2), NOW + 15 * MIN)).toMatchObject({ send: ['soon'], alerted: ['soon'], done: false });
@@ -103,7 +115,8 @@ describe('carriedAlerts', () => {
 describe('boarding alert without a live position', () => {
     // A trip whose timetable departure is behind, with no position to say otherwise, is gone: no late "leaves in 1 min".
     it('is dropped once the departure is behind', () => {
-        expect(riderStep(rider({ exitSequence: null }), null, NOW + 21 * MIN)).toMatchObject({ send: [], alerted: ['soon'] });
+        const timetable = detail(null, { is_static_fallback: true });
+        expect(riderStep(rider({ exitSequence: null }), timetable, NOW + 21 * MIN)).toMatchObject({ send: [], alerted: ['soon'] });
         expect(riderStep(rider({ exitSequence: null, alerted: ['soon'] }), null, NOW + 23 * MIN)).toMatchObject({ send: [], done: true });
     });
 });

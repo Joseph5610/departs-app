@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { JourneyRow } from '@/components/JourneyRow';
 import { LineBadge } from '@/components/LineBadge';
 import { MY_TRIP_CONFIG } from '@/config/constants';
-import { boardingsBefore, defaultLead, exitsAfter } from '@/domain/rides';
+import { sheetSelection, tripFromSheet, type TripDraft } from '@/domain/rides';
 import { useMyTripSheet } from '@/hooks/derived/useMyTripSheet';
 import { useMyTripActions } from '@/hooks/features/useMyTripActions';
 import { navigate } from '@/lib/history';
@@ -49,50 +49,29 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
     const { save, end } = useMyTripActions();
     const { setBoardingStop } = useSelectionStore(s => s.actions);
     const [open, setOpen] = useState<Section>(target.section ?? null);
-    const [draftBoard, setDraftBoard] = useState<number | null | undefined>(undefined);
-    const [draftLead, setDraftLead] = useState<number | null | undefined>(undefined);
-    const [draftExit, setDraftExit] = useState<number | null | undefined>(undefined);
+    const [draft, setDraft] = useState<TripDraft>({});
     const [isChoosingBoard, setIsChoosingBoard] = useState(false);
 
     const line = detail?.route_short_name ?? '';
-    const boardSequence = draftBoard !== undefined ? draftBoard : existing ? existing.board?.sequence ?? null : openedAt;
-    const boarding = boardings.find(b => b.sequence === boardSequence) ?? null;
-    const lead = draftLead !== undefined ? draftLead
-        : existing?.board && existing.board.sequence === boardSequence ? existing.board.leadMin
-        : boarding ? defaultLead(boarding.leads, boarding.walkLead) : null;
-    const exitSequence = draftExit !== undefined ? draftExit : existing && !existing.toEnd ? existing.exitSequence : null;
-    const exit = exitSequence === null ? null : exits.find(e => e.sequence === exitSequence) ?? null;
-    const exitsAfterBoard = exitsAfter(exits, boarding?.sequence ?? null);
-    const boardsBeforeExit = boardingsBefore(boardings, exitSequence);
+    const selection = sheetSelection({ draft, existing, openedAt, boardings, exits });
+    const { boarding, lead, exit, exits: exitsAfterBoard, boardings: boardsBeforeExit } = selection;
     const toggle = (section: Section) => setOpen(current => (current === section ? null : section));
 
     const pickBoarding = (sequence: number | null) => {
-        setDraftBoard(sequence);
-        setDraftLead(undefined);
+        setDraft(current => ({ ...current, board: sequence, lead: undefined }));
         setIsChoosingBoard(false);
         if (sequence === null) setOpen('exit');
     };
 
     const pickExit = (sequence: number | null) => {
-        setDraftExit(sequence);
+        setDraft(current => ({ ...current, exit: sequence }));
         setOpen(null);
     };
 
     const saveTrip = () => {
         if (!lastStop) return;
-        const exitStop = exit ?? { sequence: lastStop.sequence, stopName: lastStop.stopName };
-        const saved = save({
-            // An edit keeps the trip's vehicle: the server files its alerts under it.
-            city: target.city, tripId: target.tripId, vehicleId: existing ? existing.vehicleId : target.vehicleId,
-            exitSequence: exitStop.sequence, exitStopName: exitStop.stopName, toEnd: exit === null,
-            // A boarding already behind (no longer offered) stays as it was unless the user picked another: dropping it would
-            // re-register the trip and repeat its alerts.
-            board: boarding ? {
-                sequence: boarding.sequence, stopId: target.stopId ?? boarding.stopId, stopName: boarding.stopName,
-                scheduledMs: boarding.scheduledMs, leadMin: lead,
-            } : draftBoard === undefined ? existing?.board ?? null : null,
-            start: boarding ? null : start ?? existing?.start ?? null,
-        }, line, exitStop.stopName);
+        const trip = tripFromSheet({ target, existing, selection, draft, openedAt, start, lastStop });
+        const saved = save(trip, line, trip.exitStopName ?? lastStop.stopName);
         if (saved) onClose();
     };
 
@@ -141,7 +120,7 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
                                 ) : (
                                     <ToggleGroup
                                         value={[lead === null ? LEAD_OFF : String(lead)]}
-                                        onValueChange={(value: string[]) => setDraftLead(value.length && value[0] !== LEAD_OFF ? Number(value[0]) : null)}
+                                        onValueChange={(value: string[]) => setDraft(current => ({ ...current, lead: value.length && value[0] !== LEAD_OFF ? Number(value[0]) : null }))}
                                         variant="choice"
                                         size="sm"
                                         spacing={1.5}

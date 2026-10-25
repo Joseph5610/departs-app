@@ -4,7 +4,7 @@ import { sendPush, type PushTarget, type VapidKeys } from '../_core/push/webPush
 import type { AppVehicleDetail } from '../_core/types';
 import { minutesUntilDeparture } from '../_domain/rides/departureAlert';
 import { liveStopSequence } from '../_domain/rides/rideAlert';
-import { carriedAlerts, firstCheckAt, needsLiveDetail, riderStep, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
+import { carriedAlerts, firstCheckAt, needsLiveDetail, riderStep, timingOf, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
 
 export interface RidePushEnv {
     /** The departs.app origin whose `/api` answers vehicle details (a `[vars]` entry, overridden for local dev). */
@@ -136,7 +136,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         for (const [key, rider] of riders) {
             const step = riderStep(rider, detail, now);
             for (const alert of step.send) {
-                const minutes = minutesUntilDeparture(detail, { boardSequence: rider.board?.sequence ?? 0, scheduledMs: rider.board?.scheduledMs ?? now, leadMin: rider.board?.leadMin ?? 0 }, now);
+                const minutes = rider.board ? minutesUntilDeparture(detail, timingOf(rider.board), now) : 0;
                 const payload = ridePayload(rider, alert, trip.tripId, minutes);
                 if (!payload) continue;
                 // One broken subscription must not stop the trip's other riders.
@@ -147,8 +147,8 @@ export class RideWatch extends DurableObject<RidePushEnv> {
                 console.log(JSON.stringify({ push: alert, trip: trip.tripId, status }));
                 if (status === 0 || status === 404 || status === 410) step.done = true;
             }
-            // Without a detail an exit can't be watched: a rider still riding to one is dropped once reads keep failing.
-            const isStranded = step.watchingExit && (isLost || isGivenUp);
+            // A trip that keeps failing (or was never found) is given up for everyone; a vanished vehicle ends the exit watches.
+            const isStranded = isGivenUp || (step.watchingExit && isLost);
             const stored = await storage.get<Rider>(key);
             if (!stored) continue;
             // Replaced by the device meanwhile: the new registration only learns what was just sent, keeping its own schedule.
@@ -160,8 +160,8 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             if (step.done || isStranded) await storage.delete(key);
             else {
                 if (step.alerted.length !== rider.alerted.length) await storage.put<Rider>(key, { ...stored, alerted: step.alerted });
-                // After a failed read, only those riding to an exit retry, and later each time; the others keep their own time.
-                const at = !detail && step.watchingExit && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
+                // After a failed read everyone retries later each time, so a failing trip reaches `isGivenUp` in about an hour.
+                const at = !detail && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
                 if (at !== null) next = Math.min(next, at);
             }
         }

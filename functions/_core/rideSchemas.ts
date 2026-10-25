@@ -48,6 +48,7 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
     z.object({
         action: z.literal('remove'),
         tripId: idSchema,
+        vehicleId: z.optional(z.nullable(idSchema)),
         revision: z.optional(z.nullable(z.number())),
         endpoint: endpointSchema,
     }),

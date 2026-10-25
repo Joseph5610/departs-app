@@ -1,7 +1,7 @@
 import { RIDE_PUSH } from '../../_core/config';
 import type { AppVehicleDetail } from '../../_core/types';
-import { departureAlertFor, nextCheckAt, predictedDepartureMs } from './departureAlert';
-import { isNearExit, liveStopSequence, rideAlertFor, type RideAlert } from './rideAlert';
+import { departureAlertFor, nextCheckAt, predictedDepartureMs, type DepartureReminderTiming } from './departureAlert';
+import { hasLeftStop, isNearExit, rideAlertFor, type RideAlert } from './rideAlert';
 
 /** `soon`/`cancelled`: before the trip leaves the rider's stop; `next`/`arrived`: before and at their exit. */
 export type TripAlert = 'soon' | 'cancelled' | RideAlert;
@@ -36,13 +36,16 @@ export interface RiderStep {
     nextAt: number | null;
 }
 
+/** A boarding stop as the departure alert reads it; no lead counts as 0. */
+export const timingOf = (board: WatchBoard): DepartureReminderTiming =>
+    ({ boardSequence: board.sequence, scheduledMs: board.scheduledMs, leadMin: board.leadMin ?? 0 });
+
 /** Whether the rider is past boarding: no boarding stop, the vehicle left it, or (without a position) its departure is behind. */
 const isBoarded = (detail: WatchDetail | null, board: WatchBoard | null, now: number): boolean => {
     if (!board) return true;
-    const current = detail ? liveStopSequence(detail) : null;
-    if (current !== null && (current > board.sequence || (current === board.sequence && detail?.state_position !== 'at_stop'))) return true;
-    const timing = { boardSequence: board.sequence, scheduledMs: board.scheduledMs, leadMin: board.leadMin ?? 0 };
-    return now > predictedDepartureMs(detail, timing) + RIDE_PUSH.BOARD_GRACE_MS;
+    // The clock ends boarding even with a live position, which can stall at a stop.
+    if (detail && hasLeftStop(detail, board.sequence)) return true;
+    return now > predictedDepartureMs(detail, timingOf(board)) + RIDE_PUSH.BOARD_GRACE_MS;
 };
 
 /**
@@ -56,9 +59,8 @@ export const riderStep = (rider: WatchRider, detail: WatchDetail | null, now: nu
     const board = rider.board;
     let nextAt = Number.POSITIVE_INFINITY;
 
-    const boardPending = !!board && board.leadMin !== null && !alerted.includes('soon') && !alerted.includes('cancelled');
-    if (board && board.leadMin !== null && boardPending) {
-        const timing = { boardSequence: board.sequence, scheduledMs: board.scheduledMs, leadMin: board.leadMin };
+    if (board && board.leadMin !== null && !alerted.includes('soon') && !alerted.includes('cancelled')) {
+        const timing = timingOf(board);
         const decision = departureAlertFor(detail, timing, now);
         if (decision === 'cancelled') return { send: ['cancelled'], alerted: [...alerted, 'cancelled'], done: true, watchingExit: false, nextAt: null };
         if (decision === 'soon') send.push('soon');
@@ -71,8 +73,7 @@ export const riderStep = (rider: WatchRider, detail: WatchDetail | null, now: nu
         if (!alerted.includes('soon')) return { send, alerted, done: false, watchingExit: false, nextAt };
         // Kept until the trip has left, so a re-save adding an exit knows the boarding alert already went.
         if (isBoarded(detail, board, now)) return { send, alerted, done: true, watchingExit: false, nextAt: null };
-        const timing = { boardSequence: board.sequence, scheduledMs: board.scheduledMs, leadMin: board.leadMin };
-        return { send, alerted, done: false, watchingExit: false, nextAt: predictedDepartureMs(detail, timing) + RIDE_PUSH.BOARD_GRACE_MS };
+        return { send, alerted, done: false, watchingExit: false, nextAt: predictedDepartureMs(detail, timingOf(board)) + RIDE_PUSH.BOARD_GRACE_MS };
     }
 
     if (isBoarded(detail, board, now)) {
@@ -88,8 +89,7 @@ export const riderStep = (rider: WatchRider, detail: WatchDetail | null, now: nu
         return { send, alerted, done: false, watchingExit: true, nextAt };
     }
     if (board) {
-        const timing = { boardSequence: board.sequence, scheduledMs: board.scheduledMs, leadMin: board.leadMin ?? 0 };
-        const watchFrom = predictedDepartureMs(detail, timing) - RIDE_PUSH.FIRST_CHECK_BEFORE_MS;
+        const watchFrom = predictedDepartureMs(detail, timingOf(board)) - RIDE_PUSH.FIRST_CHECK_BEFORE_MS;
         nextAt = Math.min(nextAt, watchFrom > now ? watchFrom : now + RIDE_PUSH.FAR_INTERVAL_S * 1000);
     }
     return { send, alerted, done: false, watchingExit: false, nextAt };

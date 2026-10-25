@@ -11,7 +11,7 @@ import { useRideStore } from '@/state/rideStore';
 import { MyTripCard } from './MyTripCard';
 import type { JourneyLeg } from '@/components/JourneyRow';
 import { StopTimelineItem } from './StopTimelineItem';
-import { boardingAt, countStopsLeft, exitArrival, followKey, stopDepartureClock } from '@/domain/rides';
+import { boardingAt, countStopsLeft, exitArrival, followKey, isOnJourney, journeyMark, journeySpan, linkSequence, stopDepartureClock } from '@/domain/rides';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { useNowEvery } from '@/hooks/useNow';
 import { firstTransferSequence as firstTransfer, lastStopOf, nextStopSequence as nextSequence, pastStopsCount as countPastStops } from '@/domain/vehicles';
@@ -39,8 +39,8 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const rideExitSequence = myTrip && !myTrip.toEnd ? myTrip.exitSequence : null;
     const followedTrip = useRideStore(s => (s.followed?.tripId === tripId ? s.followed : null));
     const unfollowedKey = useRideStore(s => s.unfollowedKey);
-    const linkExitSequence = sharedExitParam !== null && Number.isFinite(Number(sharedExitParam)) ? Number(sharedExitParam) : null;
-    const linkBoardSequence = sharedBoardParam !== null && Number.isFinite(Number(sharedBoardParam)) ? Number(sharedBoardParam) : null;
+    const linkExitSequence = linkSequence(sharedExitParam);
+    const linkBoardSequence = linkSequence(sharedBoardParam);
     /** Where a shared trip gets on and off: from the link, else from the trip being followed on this trip. */
     const sharedExitSequence = linkExitSequence ?? (followedTrip && !followedTrip.toEnd ? followedTrip.exitSequence : null);
     const sharedBoardSequence = linkBoardSequence ?? followedTrip?.board?.sequence ?? null;
@@ -81,8 +81,8 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
     const lastStop = useMemo(() => lastStopOf(stopTimes), [stopTimes]);
     const lastStopSequence = lastStop ? Number(lastStop.properties.stop_sequence) : null;
     const lastStopIsPast = hasEnded || lastStopSequence !== null && effectiveSequence !== null && lastStopSequence < effectiveSequence;
-    const sharedExit = sharedExitSequence !== null ? exitArrival(stopTimes, sharedExitSequence, delay) : null;
-    const sharedBoard = sharedBoardSequence !== null ? boardingAt(stopTimes, sharedBoardSequence, now, timezone) : null;
+    const sharedExit = useMemo(() => (sharedExitSequence !== null ? exitArrival(stopTimes, sharedExitSequence, delay) : null), [stopTimes, sharedExitSequence, delay]);
+    const sharedBoard = useMemo(() => (sharedBoardSequence !== null ? boardingAt(stopTimes, sharedBoardSequence, now, timezone) : null), [stopTimes, sharedBoardSequence, now, timezone]);
     const sharedDepart = sharedBoardSequence !== null ? stopDepartureClock(stopTimes, sharedBoardSequence, delay) : null;
     /** The shared trip as followed: to its exit, else to the trip's end. */
     const sharedKeySequence = sharedExitSequence ?? lastStopSequence;
@@ -108,11 +108,7 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
         if (unfollowedKey === followKey({ tripId, exitSequence: sharedKeySequence }) || isFollowingShared) return;
         followSharedTrip();
     }, [hasLink, sharedKeySequence, hasEnded, myTrip, unfollowedKey, tripId, isFollowingShared, followSharedTrip]);
-    /** The stretch still to ride: from the user's boarding stop (or the vehicle) to their exit, the trip's end, or a followed exit. */
-    const journeyEnd = myTrip?.exitSequence ?? sharedExitSequence;
-    /** The user's boarding stop while the vehicle hasn't reached it yet. */
-    const boardSequence = myTrip?.board && (effectiveSequence ?? 0) < myTrip.board.sequence ? myTrip.board.sequence : null;
-    const journeyStart = Math.max(effectiveSequence ?? 0, boardSequence ?? 0);
+    const journey = journeySpan(myTrip, effectiveSequence, sharedExitSequence);
     const rideExit = rideExitSequence !== null ? exitArrival(stopTimes, rideExitSequence, delay) : null;
     const rideExitStopName = rideExitSequence === null ? null : rideExit?.stopName ?? '';
     const rideStopsLeft = useMemo(
@@ -229,10 +225,8 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                                     delay={delay}
                                     isFirstTransfer={Number(stop.properties.stop_sequence) === firstTransferSequence}
                                     isLastStop={Number(stop.properties.stop_sequence) === lastStopSequence}
-                                    exitKind={Number(stop.properties.stop_sequence) === myTrip?.exitSequence ? 'own'
-                                        : Number(stop.properties.stop_sequence) === boardSequence ? 'board'
-                                        : Number(stop.properties.stop_sequence) === sharedExitSequence ? 'shared' : null}
-                                    isOnJourney={!hasEnded && journeyEnd !== null && Number(stop.properties.stop_sequence) > journeyStart && Number(stop.properties.stop_sequence) <= journeyEnd}
+                                    exitKind={journeyMark(Number(stop.properties.stop_sequence), journey)}
+                                    isOnJourney={!hasEnded && isOnJourney(Number(stop.properties.stop_sequence), journey)}
                                     onOpenStop={openStop}
                                 />
                             ))

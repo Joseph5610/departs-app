@@ -121,6 +121,15 @@ describe('withRegistration', () => {
     });
 });
 
+describe('withRegistration boarding alert mark', () => {
+    // The server carries a sent boarding alert across a re-save at the same stop; the app must not alert it again either.
+    it('keeps the alerted mark at the same stop with another lead, and drops it at another stop', () => {
+        const alerted = trip({ board: { ...trip().board!, alerted: true } });
+        expect(withRegistration(trip({ board: { ...trip().board!, leadMin: 10 } }), alerted, 2).board?.alerted).toBe(true);
+        expect(withRegistration(trip({ board: { ...trip().board!, sequence: 2 } }), alerted, 2).board?.alerted).toBeUndefined();
+    });
+});
+
 describe('boardingsBefore and exitsAfter', () => {
     it('keep boarding before the exit and the exit after boarding', () => {
         const stops = [{ sequence: 2 }, { sequence: 3 }, { sequence: 4 }];

@@ -187,7 +187,7 @@ export const RIDE_PUSH = {
     /** Alarm interval after a failed detail read, doubling with each failure in a row up to `MAX_RETRY_INTERVAL_S`. */
     RETRY_INTERVAL_S: 30,
     MAX_RETRY_INTERVAL_S: 300,
-    /** Failed detail reads in a row after which riders watching their exit are given up (with the backoff, about an hour). */
+    /** Failed detail reads in a row after which the trip's riders are given up (with the backoff, about an hour). */
     MAX_FAILURES: 20,
     /** The same for a trip whose detail never answered at all, so a made-up trip id costs almost nothing. */
     MAX_FAILURES_UNSEEN: 2,

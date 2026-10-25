@@ -64,6 +64,12 @@ describe('departureAlertFor', () => {
         expect(departureAlertFor(null, timing, NOW + 15 * MIN)).toBe('soon');
     });
 
+    // A failed read says nothing about a late trip: only a detail without a position drops it on the clock.
+    it('waits after the timetable departure while no detail could be read', () => {
+        expect(departureAlertFor(null, timing, NOW + 21 * MIN)).toBeNull();
+        expect(departureAlertFor(detail({ is_static_fallback: true }), timing, NOW + 21 * MIN)).toBe('passed');
+    });
+
     it('reports a cancelled trip', () => {
         expect(departureAlertFor(detail({ state_position: 'canceled' }), timing, NOW)).toBe('cancelled');
     });

@@ -15,6 +15,16 @@ export const liveStopSequence = (detail: RideDetail): number | null => {
     return seq === null || seq === undefined ? null : Number(seq);
 };
 
+/**
+ * Whether the vehicle has left the stop at `sequence`: it passed it, or reported it and isn't standing there any more.
+ * Null without a live position (the app's `hasLeftStop`).
+ */
+export const hasLeftStop = (detail: RideDetail & Pick<AppVehicleDetail, 'state_position'>, sequence: number): boolean | null => {
+    const current = liveStopSequence(detail);
+    if (current === null) return null;
+    return current > sequence || (current === sequence && detail.state_position !== 'at_stop');
+};
+
 /** Stops after `current` up to and including the exit. */
 const stopsLeft = (detail: RideDetail, current: number, exitSequence: number): number => {
     let count = 0;

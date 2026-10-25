@@ -77,6 +77,9 @@ export interface BoardingStatus {
 /** A My trip's state: boarding, or under way (the ride's own status). */
 export type MyTripStatus = BoardingStatus | { phase: 'riding'; trip: MyTrip; ride: RideStatus };
 
+/** How a timeline stop belongs to a journey: the user's exit, their boarding stop ahead, or a shared trip's exit. */
+export type JourneyMark = 'own' | 'board' | 'shared' | null;
+
 /** `own`: the user's ride; `followed`: someone else's ride opened from a shared link. */
 export type RideKind = 'own' | 'followed';
 

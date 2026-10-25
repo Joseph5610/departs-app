@@ -23,7 +23,7 @@ export const useTripDetail = (city: string, tripId: string | null, vehicleId: st
     const { byShortName } = useRouteMetadata();
     const { dataUpdatedAt: fleetUpdatedAt, isError: isFleetFailing } = useQuery({
         ...networkVehiclesReaderOptions(city),
-        enabled: !!city,
+        enabled: !!city && city === selectedCity,
         notifyOnChangeProps: ['dataUpdatedAt', 'isError'],
     });
 
@@ -32,10 +32,10 @@ export const useTripDetail = (city: string, tripId: string | null, vehicleId: st
         queryKey: queryKeys.vehicleDetail(city, vehicleId, tripId, fleetUpdatedAt),
         queryFn: () => fetchVehicleDetail(city, vehicleId, tripId!),
         enabled: !!tripId && !!city,
-        // The fleet refresh in the key re-reads it; a timer of its own would fetch it twice whenever both fire. Only while
-        // the fleet fails (and its time stands still) does the detail poll by itself.
+        // The map polls only the selected city's fleet, whose refresh in the key re-reads the detail; another city's trip,
+        // or one while that fleet fails, polls by itself.
         staleTime: refreshMs,
-        refetchInterval: isFleetFailing ? refreshMs : false,
+        refetchInterval: city !== selectedCity || isFleetFailing ? refreshMs : false,
         gcTime: QUERY_TIMING_MS.LIVE_GC,
         // Only the same trip's previous detail bridges a refresh, including the moment a planned trip gains its vehicle.
         placeholderData: (previous, previousQuery) =>

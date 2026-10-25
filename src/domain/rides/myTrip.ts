@@ -72,8 +72,8 @@ export const isTripExpired = (trip: Pick<MyTrip, 'startedAt' | 'board' | 'start'
  */
 export const withRegistration = <T extends Omit<MyTrip, 'startedAt'>>(next: T, previous: MyTrip | undefined, revision: number): T => {
     const isSame = !!previous && tripPushKey(previous) === tripPushKey(next);
-    // The same boarding keeps its "already alerted" mark, so an edit doesn't alert it again.
-    const wasAlerted = !!previous?.board?.alerted && previous.board.sequence === next.board?.sequence && previous.board.leadMin === next.board.leadMin;
+    // The same boarding stop keeps its "already alerted" mark, whatever the lead, as the server's `carriedAlerts` does.
+    const wasAlerted = !!previous?.board?.alerted && previous.board.sequence === next.board?.sequence;
     const board = next.board && wasAlerted ? { ...next.board, alerted: true } : next.board;
     return isSame ? { ...next, board, revision: previous.revision, pushed: previous.pushed } : { ...next, board, revision, pushed: undefined };
 };

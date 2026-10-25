@@ -70,12 +70,12 @@ export const closeRideNotifications = async (tag: string): Promise<void> => {
 };
 
 /** Stops the server pushing a trip's alerts: only the registration `trip.revision` names, so a newer one stays. */
-export const stopTripPush = async (trip: Pick<MyTrip, 'city' | 'tripId' | 'revision'>): Promise<void> => {
+export const stopTripPush = async (trip: Pick<MyTrip, 'city' | 'tripId' | 'vehicleId' | 'revision'>): Promise<void> => {
     try {
         const subscription = await (await pushManager())?.getSubscription();
         if (subscription) {
             await postRide(trip.city, {
-                action: 'remove', tripId: trip.tripId, revision: trip.revision ?? null, endpoint: subscription.endpoint,
+                action: 'remove', tripId: trip.tripId, vehicleId: trip.vehicleId, revision: trip.revision ?? null, endpoint: subscription.endpoint,
             });
         }
     } catch {

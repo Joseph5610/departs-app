@@ -1,7 +1,7 @@
 import { RIDE_PUSH } from '../../_core/config';
 import type { AppVehicleDetail } from '../../_core/types';
 import { toSecs, wrapDaySeconds } from '../../_core/utils/time';
-import { liveStopSequence } from './rideAlert';
+import { hasLeftStop } from './rideAlert';
 
 /** `soon`: the trip leaves the rider's stop within their lead time; `cancelled`: the feed reports the trip cancelled. */
 export type DepartureAlert = 'soon' | 'cancelled';
@@ -33,11 +33,10 @@ export const predictedDepartureMs = (detail: DepartureDetail | null, timing: Dep
 /** What a reminder is due now; a timetable-only detail (or none) reminds on the timetable time. */
 export const departureAlertFor = (detail: DepartureDetail | null, timing: DepartureReminderTiming, now: number): DepartureAlertDecision => {
     if (detail?.state_position === 'canceled') return 'cancelled';
-    // Standing at the rider's stop it hasn't left yet: the reminder still goes out.
-    const current = detail ? liveStopSequence(detail) : null;
-    if (current !== null && (current > timing.boardSequence || (current === timing.boardSequence && detail?.state_position !== 'at_stop'))) return 'passed';
-    // Without a live position the clock tells: once the departure is behind, "leaves in a minute" would be a lie.
-    if (current === null && now > predictedDepartureMs(detail, timing)) return 'passed';
+    const left = detail ? hasLeftStop(detail, timing.boardSequence) : null;
+    if (left) return 'passed';
+    // Without a live position the clock tells, once the departure is behind; a failed read (no detail) tells nothing yet.
+    if (left === null && now > predictedDepartureMs(detail, timing)) return detail ? 'passed' : null;
     const dueAt = predictedDepartureMs(detail, timing) - timing.leadMin * 60_000;
     return dueAt - now <= RIDE_PUSH.SEND_WINDOW_MS ? 'soon' : null;
 };
