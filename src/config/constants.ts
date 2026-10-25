@@ -63,6 +63,8 @@ export const SHEET = {
 export const NEARBY_STOPS = {
     LIMIT: 4,
     MAX_DISTANCE_M: 1500,
+    /** The list is worked out again only once the user has moved this far, so GPS jitter does not refetch its departures. */
+    REFRESH_DISTANCE_M: 50,
 };
 
 export const STOP_SEARCH = {
@@ -402,6 +404,10 @@ export const DEPARTURES_CONFIG = {
     FAVORITE_CARD_COUNT: 2,
     /** Departures shown per direction before the board offers to expand it. */
     VISIBLE_PER_GROUP: 3,
+    /** Favourites and nearby cards fetch only this many departures per line and direction: the rows they show, plus one just leaving. */
+    FAVORITES_PER_LINE: 4,
+    /** How often the home sheet's departures refresh while it sits at its peek, where none of them show. */
+    PEEK_REFRESH_MS: 2 * MINUTE_MS,
     /** A pointer that moves further than this between press and release scrolled or swiped instead of tapping a departure. */
     TAP_SLOP_PX: 10,
     /** How far a board row is swiped left before releasing it pins or unpins its line. */

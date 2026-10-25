@@ -13,7 +13,7 @@ const SITE_PLACEHOLDER = /%(SITE_[A-Z_]+)%/g
 const ALLOWED_LICENSES = '(MIT OR ISC OR BSD-2-Clause OR BSD-3-Clause OR Apache-2.0 OR 0BSD OR Unlicense OR OFL-1.1)'
 
 /** Packages bundled through CSS, which the licence plugin does not see. */
-const CSS_PACKAGES = ['@fontsource-variable/geist', '@fontsource-variable/fira-code']
+const CSS_PACKAGES = ['@fontsource-variable/geist']
 
 interface LicenseNotice { name: string | null; version: string | null; license: string | null; licenseText: string | null }
 

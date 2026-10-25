@@ -24,10 +24,12 @@ import { CompactLineCard, CompactStopCard } from './CompactFavoriteCard';
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
     isFull: boolean;
+    /** At the peek only the search row shows, so the departures refresh rarely. */
+    isPeek: boolean;
 }
 
 /** The mobile home under the search button: disruptions, favourites, nearby stops and the network links. */
-export const HomeSections = ({ isFull }: HomeSectionsProps) => {
+export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const userLocation = useGeolocationStore(s => s.userLocation);
@@ -47,7 +49,7 @@ export const HomeSections = ({ isFull }: HomeSectionsProps) => {
         return [...ids];
     }, [allStops, allLines, nearby]);
 
-    const { departuresByStop, isLoading } = useFavoriteDepartures(stopIds);
+    const { departuresByStop, isLoading } = useFavoriteDepartures(stopIds, isPeek);
     const myIncidents = useMemo(
         () => incidentsOnLines(alerts, favoriteLineNames(allLines, allStops.map(pin => pin.stop))),
         [alerts, allLines, allStops],

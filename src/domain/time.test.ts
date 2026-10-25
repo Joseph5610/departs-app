@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatExpectedClock, formatStartDate, formatTimetableClock, isWithinLocalHours, minutesCountdown } from './time';
+import { formatExpectedClock, formatTimeAgo, formatStartDate, formatTimetableClock, isWithinLocalHours, minutesCountdown } from './time';
 
 // Board times follow the city's zone, so they agree with its trips' timetable times on any device.
 describe('formatTimetableClock', () => {
@@ -59,5 +59,19 @@ describe('formatStartDate', () => {
 
     it('shows the time of a start during the day', () => {
         expect(formatStartDate('2026-10-24T05:20:00Z', 'cs', 'Europe/Prague')).toBe('so 24. 10. 7:20');
+    });
+});
+
+describe('formatTimeAgo', () => {
+    const now = Date.parse('2026-10-24T12:00:00Z');
+
+    it('reads in the largest whole unit', () => {
+        expect(formatTimeAgo('2026-10-24T11:55:00Z', now, 'en')).toBe('5 minutes ago');
+        expect(formatTimeAgo('2026-10-24T09:00:00Z', now, 'en')).toBe('3 hours ago');
+        expect(formatTimeAgo('2026-10-23T12:00:00Z', now, 'en')).toBe('yesterday');
+    });
+
+    it('reads seconds under a minute', () => {
+        expect(formatTimeAgo('2026-10-24T11:59:30Z', now, 'en')).toBe('30 seconds ago');
     });
 });

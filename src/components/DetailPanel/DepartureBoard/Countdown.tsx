@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { differenceInSeconds, parseISO } from 'date-fns';
 import { useNow } from '@/hooks/useNow';
 
 interface CountdownProps {
@@ -17,10 +15,8 @@ interface CountdownProps {
 export const Countdown = ({ timestamp }: CountdownProps) => {
     const { t } = useTranslation();
     
-    const targetDate = useMemo(() => parseISO(timestamp), [timestamp]);
-
     const now = useNow();
-    const secondsLeft = differenceInSeconds(targetDate, now);
+    const secondsLeft = Math.trunc((Date.parse(timestamp) - now) / 1000);
 
     if (secondsLeft <= 0) {
         return <span className="animate-pulse text-emerald-600 dark:text-emerald-400">{t('map.departures.now')}</span>;

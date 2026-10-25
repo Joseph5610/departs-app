@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useCallback, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { closeDetail, goBack, navigate, useBackTarget } from '@/lib/history';
@@ -8,7 +8,6 @@ import MapGL, { Marker } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/lib/maplibreWorker';
-import { Helmet } from 'react-helmet-async';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '@/components/DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '@/components/DetailPanel/DepartureBoard/DepartureBoardHeader';
@@ -59,7 +58,7 @@ import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
-const renderMobileHome = (isFull: boolean) => <HomeSections isFull={isFull} />;
+const renderMobileHome = (isFull: boolean, isPeek: boolean) => <HomeSections isFull={isFull} isPeek={isPeek} />;
 
 /**
  * Manages the layout of the map and its overlays.
@@ -164,6 +163,8 @@ const MapInner = () => {
     ), [sheetCard]);
 
     const displayTitle = panelTitle ? `${panelTitle} - ${SITE.NAME}` : SITE.TITLE;
+    // Rewrites index.html's own <title>: a rendered one would leave the document with two.
+    useEffect(() => { document.title = displayTitle; }, [displayTitle]);
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href.split('?')[0] : `${SITE.URL}/`;
 
     const jsonLd = useMemo(() => {
@@ -198,13 +199,10 @@ const MapInner = () => {
 
     return (
         <>
-            <Helmet>
-                <title>{displayTitle}</title>
-                <link rel="canonical" href={canonicalUrl} />
-                <script type="application/ld+json">
-                    {JSON.stringify(jsonLd)}
-                </script>
-            </Helmet>
+            <link rel="canonical" href={canonicalUrl} />
+            <script type="application/ld+json">
+                {JSON.stringify(jsonLd)}
+            </script>
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}

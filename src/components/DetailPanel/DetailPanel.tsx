@@ -31,8 +31,8 @@ interface DetailPanelProps {
     floating?: (hidden: boolean) => React.ReactNode;
     /** Mobile only: the home's top row, in the sheet header while no panel is open. */
     homeHeader?: React.ReactNode;
-    /** Mobile only: shown in the sheet while no panel is open; told whether the sheet is at full height. */
-    home?: (isFull: boolean) => React.ReactNode;
+    /** Mobile only: shown in the sheet while no panel is open; told whether the sheet is at full height and whether at its peek. */
+    home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Mobile only: the height the panel opens at least at. */
     minSnap?: 'half' | 'full';
     /** Mobile only: the content brings its own scroll container. */

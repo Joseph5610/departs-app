@@ -47,6 +47,10 @@ export const departuresQuerySchema = z.lazy(() => z.object({
         ids => ids.length <= API_LIMITS.DEPARTURE_STOP_IDS,
         `A departures request may name at most ${API_LIMITS.DEPARTURE_STOP_IDS} stops.`
     )),
+    perLine: z.optional(z.pipe(z.string(), z.transform(Number)).check(z.refine(
+        n => Number.isInteger(n) && n >= 1 && n <= API_LIMITS.DEPARTURE_PER_LINE_MAX,
+        `perLine must be an integer from 1 to ${API_LIMITS.DEPARTURE_PER_LINE_MAX}.`
+    ))),
 }));
 
 /**

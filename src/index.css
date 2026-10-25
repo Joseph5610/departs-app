@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/fira-code";
 
 @custom-variant dark (&:is(.dark *));
 /* Base UI marks orientation with data-orientation, not bare data-horizontal/data-vertical attributes. */
@@ -56,7 +55,7 @@
   --sidebar-border: oklch(0.9674 0.0013 286.3752);
   --sidebar-ring: oklch(0.6959 0.1491 162.4796);
   --font-sans: 'Geist Variable', ui-sans-serif, sans-serif, system-ui;
-  --font-mono: 'Fira Code Variable', ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --letter-spacing: -0.015em;
   --shadow-2xs: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
   --shadow-xs: 0px 1px 3px 0px rgb(0 0 0 / 0.06);
@@ -108,7 +107,7 @@
   --sidebar-border: oklch(0.2739 0.0055 286.0326);
   --sidebar-ring: oklch(0.6959 0.1491 162.4796);
   --font-sans: 'Geist Variable', ui-sans-serif, sans-serif, system-ui;
-  --font-mono: 'Fira Code Variable', ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --letter-spacing: -0.015em;
 }
 
@@ -141,7 +140,7 @@
   --color-favorite: oklch(76.9% 0.188 70.08);
   --color-favorite-hover: oklch(82.8% 0.189 84.429);
   --font-sans: 'Geist Variable', ui-sans-serif, sans-serif, system-ui;
-  --font-mono: 'Fira Code Variable', ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --tracking-normal: -0.015em;
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
