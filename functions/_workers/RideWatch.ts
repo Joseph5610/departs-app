@@ -4,7 +4,7 @@ import { sendPush, type PushTarget, type VapidKeys } from '../_core/push/webPush
 import type { AppVehicleDetail } from '../_core/types';
 import { minutesUntilDeparture } from '../_domain/rides/departureAlert';
 import { currentStop, observe } from '../_domain/rides/observation';
-import { carriedPhase, firstCheckAt, isWatchingExit, laterPhase, needsLiveDetail, riderStep, timingOf, type RiderPhase, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
+import { firstCheckAt, initialPhase, isWatchingExit, needsLiveDetail, riderStep, timingOf, type RiderPhase, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
 
 export interface RidePushEnv {
     /** The departs.app origin whose `/api` answers vehicle details (a `[vars]` entry, overridden for local dev). */
@@ -31,19 +31,16 @@ export interface Rider {
     texts: RideTexts;
     /** The app page the notification opens: the trip, on the origin the rider registered from. */
     navigate: string;
-    /** Set by the app per save; a removal names it, so one meant for a replaced registration can't drop the new one. Null from an app predating revisions. */
-    revision: number | null;
     phase: RiderPhase;
+    /** When this registration was stored, so an alarm can tell the rider was replaced while it ran. */
+    registeredAt: number;
     expiresAt: number;
 }
 
-/**
- * `add` adds or replaces a device's rider, keeping the alerts it already had; `remove` drops it only while it is the
- * registration `revision` names. Both come from `/api/[city]/ride`, which validated them.
- */
+/** `add` adds or replaces a device's rider, starting afresh; `remove` drops it. Both come from `/api/[city]/ride`, which validated them. */
 export type RideWatchRequest =
-    | { action: 'add'; trip: RideTrip; rider: Omit<Rider, 'phase' | 'expiresAt'> }
-    | { action: 'remove'; endpoint: string; revision: number | null };
+    | { action: 'add'; trip: RideTrip; rider: Omit<Rider, 'phase' | 'registeredAt' | 'expiresAt'> }
+    | { action: 'remove'; endpoint: string };
 
 /**
  * A Declarative Web Push message (WebKit, iOS/macOS 18.4+): Safari shows it without running the service worker;
@@ -81,9 +78,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         const storage = this.ctx.storage;
         const now = Date.now();
         if (command.action === 'remove') {
-            const key = riderKey(command.endpoint);
-            const stored = await storage.get<Rider>(key);
-            if (stored && (stored.revision ?? null) === command.revision) await storage.delete(key);
+            await storage.delete(riderKey(command.endpoint));
             return new Response(null, { status: 204 });
         }
 
@@ -93,9 +88,8 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         const trip = await storage.get<RideTrip>('trip');
         // A device's vehicle id is only a hint, taken while none is known; `readDetail` checks it and drops a wrong one.
         if (!trip || (!trip.vehicleId && command.trip.vehicleId)) await storage.put<RideTrip>('trip', { ...command.trip, vehicleId: trip?.vehicleId ?? command.trip.vehicleId });
-        const previous = await storage.get<Rider>(key);
-        const phase = carriedPhase(previous && { ...previous, phase: phaseOf(previous) }, command.rider);
-        await storage.put<Rider>(key, { ...command.rider, phase, expiresAt: expiryOf(command.rider, now) });
+        const phase = initialPhase(command.rider);
+        await storage.put<Rider>(key, { ...command.rider, phase, registeredAt: now, expiresAt: expiryOf(command.rider, now) });
         // However often riders are added, the trip is read at most once per near interval.
         const lastRun = (await storage.get<number>('ranAt')) ?? 0;
         const due = Math.max(firstCheckAt({ ...command.rider, phase }, now), lastRun + RIDE_PUSH.NEAR_INTERVAL_S * 1000);
@@ -157,12 +151,8 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             const isStranded = isGivenUp || (isWatchingExit(step.phase) && isLost);
             const stored = await storage.get<Rider>(key);
             if (!stored) continue;
-            // Replaced by the device meanwhile: the new registration only moves past what was just sent, keeping its own schedule.
-            if (stored.revision !== rider.revision) {
-                const phase = laterPhase(phaseOf(stored), carriedPhase({ ...rider, phase: step.phase }, stored));
-                if (phase !== stored.phase) await storage.put<Rider>(key, { ...stored, phase });
-                continue;
-            }
+            // Replaced by the device meanwhile: the new registration keeps its own phase and schedule.
+            if (stored.registeredAt !== rider.registeredAt) continue;
             if (step.phase === 'done' || isGone || isStranded) await storage.delete(key);
             else {
                 if (step.phase !== rider.phase) await storage.put<Rider>(key, { ...stored, phase: step.phase });

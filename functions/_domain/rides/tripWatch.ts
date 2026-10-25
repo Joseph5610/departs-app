@@ -12,11 +12,6 @@ export type TripAlert = 'soon' | 'cancelled' | RideAlert;
  */
 export type RiderPhase = 'remind' | 'board' | 'ride' | 'near' | 'done';
 
-const PHASE_ORDER: readonly RiderPhase[] = ['remind', 'board', 'ride', 'near', 'done'];
-
-/** The further on of two phases. */
-export const laterPhase = (a: RiderPhase, b: RiderPhase): RiderPhase => (PHASE_ORDER.indexOf(a) >= PHASE_ORDER.indexOf(b) ? a : b);
-
 export interface WatchBoard {
     /** The rider's boarding stop on the trip. */
     sequence: number;
@@ -118,20 +113,6 @@ export const firstCheckAt = (rider: WatchRider, now: number): number => {
     const step = riderStep(rider, { kind: 'failed' }, now);
     if (step.send.length > 0 || isWatchingExit(step.phase)) return now;
     return Math.max(now, step.nextAt ?? now);
-};
-
-/**
- * Where a replacing registration starts: past its boarding alert while it boards at the same stop and that alert
- * went, past `next` while it gets off at the same stop and that went. So a re-save doesn't send them again.
- */
-export const carriedPhase = (previous: WatchRider | undefined, next: WatchRequest): RiderPhase => {
-    const start = initialPhase(next);
-    if (!previous) return start;
-    const sameBoard = !!previous.board && previous.board.sequence === next.board?.sequence;
-    const sameExit = previous.exitSequence !== null && previous.exitSequence === next.exitSequence;
-    let phase = start === 'remind' && sameBoard && previous.phase !== 'remind' ? 'board' : start;
-    if (sameExit && previous.phase === 'near' && phase !== 'remind') phase = 'near';
-    return phase;
 };
 
 /** Whether the rider is in the stretch where a live position matters: their boarding alert is close, or they ride to an exit. */

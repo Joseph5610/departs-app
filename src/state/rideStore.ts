@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { MyTrip, Ride } from '@/types';
-import { followKey } from '@/domain/rides';
+import { followKey, tripPushKey } from '@/domain/rides';
 import { MY_TRIP_CONFIG } from '@/config/constants';
 
 
@@ -18,10 +18,8 @@ interface RideActions {
     /** Adds or replaces the user's trip on that trip; false when the limit is reached by other trips. */
     saveTrip: (trip: Omit<MyTrip, 'startedAt'>) => boolean;
     endTrip: (tripId: string) => void;
-    /** Marks a trip's push registration as taken by the server; ignored once a newer save replaced it. */
-    markTripPushed: (tripId: string, revision: number) => void;
-    /** Marks that the app already alerted a trip's boarding itself. */
-    markBoardAlerted: (tripId: string) => void;
+    /** Marks a trip as pushed by the server; ignored once a save changed what it asks to push (`pushKey`). */
+    markTripPushed: (tripId: string, pushKey: string) => void;
     follow: (trip: Omit<MyTrip, 'startedAt'>) => void;
     /** Stops following; `remember` keeps the link from following the same ride again. */
     unfollow: (remember: boolean) => void;
@@ -49,11 +47,8 @@ export const useRideStore = create<RideStore>()(
                     return true;
                 },
                 endTrip: (tripId) => set((state) => ({ trips: state.trips.filter(t => t.tripId !== tripId) })),
-                markTripPushed: (tripId, revision) => set((state) => ({
-                    trips: state.trips.map(t => (t.tripId === tripId && t.revision === revision ? { ...t, pushed: true } : t)),
-                })),
-                markBoardAlerted: (tripId) => set((state) => ({
-                    trips: state.trips.map(t => (t.tripId === tripId && t.board ? { ...t, board: { ...t.board, alerted: true } } : t)),
+                markTripPushed: (tripId, pushKey) => set((state) => ({
+                    trips: state.trips.map(t => (t.tripId === tripId && tripPushKey(t) === pushKey ? { ...t, pushed: true } : t)),
                 })),
                 follow: (trip) => set({ followed: { ...trip, startedAt: Date.now() }, unfollowedKey: null }),
                 unfollow: (remember) => set((state) => ({

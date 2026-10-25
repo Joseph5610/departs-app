@@ -122,9 +122,10 @@ describe('trip watch scenarios', () => {
         expect(alertsOf(simulate(rider(), { cancelAt: 2 * MIN }))).toEqual(['cancelled']);
     });
 
-    it('carries a sent boarding alert across a re-save that adds an exit', () => {
-        const before = simulate(rider({ exitSequence: null }), {}, NOW, 9);
-        expect(alertsOf(before)).toEqual(['soon']);
-        expect(alertsOf(simulate(rider({ phase: 'board' }), {}, NOW + 9 * MIN))).toEqual(['next', 'arrived']);
+    // An edit replaces the registration: a boarding alert still due goes again with the time left, never after the vehicle left.
+    it('starts a re-save afresh', () => {
+        expect(alertsOf(simulate(rider({ exitSequence: null }), {}, NOW, 9))).toEqual(['soon']);
+        expect(alertsOf(simulate(rider(), {}, NOW + 9 * MIN))).toEqual(['soon', 'next', 'arrived']);
+        expect(alertsOf(simulate(rider(), {}, NOW + 12.6 * MIN))).toEqual(['next', 'arrived']);
     });
 });

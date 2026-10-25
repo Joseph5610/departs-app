@@ -65,18 +65,9 @@ export const watchFrom = (trip: Pick<MyTrip, 'board' | 'start'>): { sequence: nu
 /** Whether a trip is long over by the clock alone, e.g. one in another city that nothing has looked at since. */
 export const isTripExpired = (trip: Pick<MyTrip, 'startedAt' | 'board' | 'start'>, now: number): boolean => now - tripStartMs(trip) > RIDE_CONFIG.MAX_AGE_MS;
 
-/**
- * A saved trip's push registration: the previous one's revision (none for a ride from before revisions) and `pushed`
- * mark when what it asks the server for is unchanged, else `revision` (a new one) and not pushed yet, so the app
- * alerts itself until the server confirms.
- */
-export const withRegistration = <T extends Omit<MyTrip, 'startedAt'>>(next: T, previous: MyTrip | undefined, revision: number): T => {
-    const isSame = !!previous && tripPushKey(previous) === tripPushKey(next);
-    // The same boarding stop keeps its "already alerted" mark, whatever the lead, as the server's `carriedAlerts` does.
-    const wasAlerted = !!previous?.board?.alerted && previous.board.sequence === next.board?.sequence;
-    const board = next.board && wasAlerted ? { ...next.board, alerted: true } : next.board;
-    return isSame ? { ...next, board, revision: previous.revision, pushed: previous.pushed } : { ...next, board, revision, pushed: undefined };
-};
+/** A saved trip keeps its `pushed` mark while what it asks the server for is unchanged; a changed one is registered anew. */
+export const withPushState = <T extends Omit<MyTrip, 'startedAt'>>(next: T, previous: MyTrip | undefined): T =>
+    ({ ...next, pushed: previous && tripPushKey(previous) === tripPushKey(next) ? previous.pushed : undefined });
 
 /** The stops the user can board at with their exit picked: those before it. */
 export const boardingsBefore = <T extends { sequence: number }>(choices: readonly T[], exitSequence: number | null): T[] =>

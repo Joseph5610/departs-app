@@ -21,8 +21,6 @@ export interface TripBoarding {
     /** Timetable departure from the stop, epoch ms. */
     scheduledMs: number;
     leadMin: number | null;
-    /** The app already alerted this boarding itself, so a reload or remount doesn't alert again. */
-    alerted?: boolean;
 }
 
 /**
@@ -40,11 +38,6 @@ export interface MyTrip extends Ride {
     /** Without a boarding stop, the trip's first departure when it was saved before running: it ages and is watched from then. */
     start?: TripStart | null;
     toEnd: boolean;
-    /**
-     * Names the trip's push registration on the server (new on every save that changes what is pushed), so removing an
-     * older one can't drop a newer one. `pushed` says the server took this one. Null for a trip from before My trip.
-     */
-    revision?: number | null;
 }
 
 /** The trip the My trip sheet is open for, and the stop it was opened at (a board id or request id). */

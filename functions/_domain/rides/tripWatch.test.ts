@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AppVehicleDetail } from '../../_core/types';
 import { observe } from './observation';
-import { carriedPhase, firstCheckAt, laterPhase, needsLiveDetail, riderStep, type WatchRider } from './tripWatch';
+import { firstCheckAt, initialPhase, needsLiveDetail, riderStep, type WatchRider } from './tripWatch';
 
 const NOW = Date.UTC(2026, 9, 20, 10, 0, 0);
 const MIN = 60_000;
@@ -102,20 +102,11 @@ describe('firstCheckAt when an alert is already due', () => {
     });
 });
 
-describe('carriedPhase', () => {
-    // A re-save with another lead or exit must not send what already went.
-    it('starts past the boarding alert at the same stop and past next at the same exit', () => {
-        const sent = rider({ phase: 'near' });
-        expect(carriedPhase(sent, rider())).toBe('near');
-        expect(carriedPhase(sent, rider({ exitSequence: 5 }))).toBe('board');
-        expect(carriedPhase(sent, rider({ board: { sequence: 2, scheduledMs: NOW, leadMin: 5 } }))).toBe('remind');
-        expect(carriedPhase(rider({ phase: 'remind' }), rider({ exitSequence: 5 }))).toBe('remind');
-        expect(carriedPhase(undefined, rider({ board: null }))).toBe('board');
-    });
-
-    it('never moves a phase backwards', () => {
-        expect(laterPhase('near', 'board')).toBe('near');
-        expect(laterPhase('remind', 'ride')).toBe('ride');
+describe('initialPhase', () => {
+    it('starts at the boarding alert, else waiting to board, else with nothing to do', () => {
+        expect(initialPhase(rider())).toBe('remind');
+        expect(initialPhase(rider({ board: null }))).toBe('board');
+        expect(initialPhase(rider({ board: null, exitSequence: null }))).toBe('done');
     });
 });
 

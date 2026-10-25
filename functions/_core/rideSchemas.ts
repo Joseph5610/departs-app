@@ -40,7 +40,6 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
         vehicleId: z.nullable(idSchema),
         exitSequence: z.nullable(sequenceSchema),
         board: z.optional(z.nullable(boardSchema)),
-        revision: z.optional(z.nullable(z.number().check(z.int(), z.nonnegative()))),
         subscription: subscriptionSchema,
         texts: z.object({ next: z.optional(textSchema), arrived: z.optional(textSchema), soon: z.optional(textSchema), cancelled: z.optional(textSchema) }),
         path: tripPathSchema,
@@ -49,7 +48,6 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
         action: z.literal('remove'),
         tripId: idSchema,
         vehicleId: z.optional(z.nullable(idSchema)),
-        revision: z.optional(z.nullable(z.number())),
         endpoint: endpointSchema,
     }),
 ]);

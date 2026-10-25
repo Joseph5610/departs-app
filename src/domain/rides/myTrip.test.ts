@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MyTrip, VehicleDetail } from '@/types';
-import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripStartOf, tripUrgency, watchFrom, withRegistration } from './myTrip';
+import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripStartOf, tripUrgency, watchFrom, withPushState } from './myTrip';
 
 const TZ = 'Europe/Prague';
 // 2026-10-20 12:00:00 in Prague.
@@ -108,25 +108,13 @@ describe('tripStartOf', () => {
     });
 });
 
-describe('withRegistration', () => {
-    // An unchanged trip keeps its server registration; a changed one gets a new one, not pushed until the server confirms.
-    it('keeps the revision and pushed mark only while the pushed alerts are unchanged', () => {
-        const saved = trip({ revision: 1, pushed: true });
-        expect(withRegistration(trip(), saved, 2)).toMatchObject({ revision: 1, pushed: true });
-        // A ride from before revisions keeps having none, so its removal still names the registration the server has.
-        expect(withRegistration(trip(), trip({ pushed: true }), 2)).toMatchObject({ revision: undefined, pushed: true });
-        const moved = withRegistration(trip({ exitSequence: 4 }), saved, 2);
-        expect(moved).toMatchObject({ revision: 2 });
-        expect(moved.pushed).toBeUndefined();
-    });
-});
-
-describe('withRegistration boarding alert mark', () => {
-    // The server carries a sent boarding alert across a re-save at the same stop; the app must not alert it again either.
-    it('keeps the alerted mark at the same stop with another lead, and drops it at another stop', () => {
-        const alerted = trip({ board: { ...trip().board!, alerted: true } });
-        expect(withRegistration(trip({ board: { ...trip().board!, leadMin: 10 } }), alerted, 2).board?.alerted).toBe(true);
-        expect(withRegistration(trip({ board: { ...trip().board!, sequence: 2 } }), alerted, 2).board?.alerted).toBeUndefined();
+describe('withPushState', () => {
+    // An unchanged trip keeps its server registration; a changed one is not pushed until the server confirms it.
+    it('keeps the pushed mark only while the pushed alerts are unchanged', () => {
+        const saved = trip({ pushed: true });
+        expect(withPushState(trip({ exitStopName: 'Renamed' }), saved).pushed).toBe(true);
+        expect(withPushState(trip({ exitSequence: 4 }), saved).pushed).toBeUndefined();
+        expect(withPushState(trip(), undefined).pushed).toBeUndefined();
     });
 });
 

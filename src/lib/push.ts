@@ -27,6 +27,17 @@ export type RidePushResult = { ok: true } | { ok: false; reason: string };
 const postRide = (city: string, body: object) =>
     apiFetch(`/${city}/ride`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
+const queues = new Map<string, Promise<unknown>>();
+
+/** Runs a trip's registrations one after another, so a removal can't overtake the save before it on the network. */
+const inOrder = <T>(tripId: string, task: () => Promise<T>): Promise<T> => {
+    const run = (queues.get(tripId) ?? Promise.resolve()).then(task, task);
+    const settled = run.catch(() => undefined);
+    queues.set(tripId, settled);
+    void settled.then(() => { if (queues.get(tripId) === settled) queues.delete(tripId); });
+    return run;
+};
+
 const failure = (error: unknown): RidePushResult =>
     ({ ok: false, reason: error instanceof Error ? `${error.name}: ${error.message}` : String(error) });
 
@@ -37,8 +48,7 @@ const ensureSubscription = async (manager: PushManager): Promise<PushSubscriptio
 /**
  * Subscribes to push and asks the server to push this trip's alerts: before it leaves the user's stop (a boarding
  * stop with a lead) and before their exit (unless ridden to its end). Replaces the device's earlier registration on
- * the trip, which keeps the alerts already sent. Must run from a tap: iOS only lets `subscribe` ask for notification
- * permission there.
+ * the trip, starting afresh. Must run from a tap: iOS only lets `subscribe` ask for notification permission there.
  */
 export const startTripPush = async (trip: MyTrip, texts: TripPushTexts, path: string): Promise<RidePushResult> => {
     try {
@@ -46,10 +56,10 @@ export const startTripPush = async (trip: MyTrip, texts: TripPushTexts, path: st
         const manager = await pushManager();
         if (!manager) return { ok: false, reason: 'No service worker is registered' };
         const subscription = await ensureSubscription(manager);
-        await postRide(trip.city, {
+        await inOrder(trip.tripId, () => postRide(trip.city, {
             action: 'add', tripId: trip.tripId, vehicleId: trip.vehicleId, exitSequence: trip.toEnd ? null : trip.exitSequence,
-            board: watchFrom(trip), revision: trip.revision, subscription: subscription.toJSON(), texts, path,
-        });
+            board: watchFrom(trip), subscription: subscription.toJSON(), texts, path,
+        }));
         return { ok: true };
     } catch (error) {
         return failure(error);
@@ -69,16 +79,16 @@ export const closeRideNotifications = async (tag: string): Promise<void> => {
     }
 };
 
-/** Stops the server pushing a trip's alerts: only the registration `trip.revision` names, so a newer one stays. */
-export const stopTripPush = async (trip: Pick<MyTrip, 'city' | 'tripId' | 'vehicleId' | 'revision'>): Promise<void> => {
+/** Stops the server pushing a trip's alerts. */
+export const stopTripPush = (trip: Pick<MyTrip, 'city' | 'tripId' | 'vehicleId'>): Promise<void> => inOrder(trip.tripId, async () => {
     try {
         const subscription = await (await pushManager())?.getSubscription();
         if (subscription) {
             await postRide(trip.city, {
-                action: 'remove', tripId: trip.tripId, vehicleId: trip.vehicleId, revision: trip.revision ?? null, endpoint: subscription.endpoint,
+                action: 'remove', tripId: trip.tripId, vehicleId: trip.vehicleId, endpoint: subscription.endpoint,
             });
         }
     } catch {
         // The server drops the rider on its own once the trip arrives or expires.
     }
-};
+});
