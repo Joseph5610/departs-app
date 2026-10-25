@@ -1,21 +1,20 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTripDetail } from '@/hooks/data/useVehicleDetail';
-import { networkVehiclesQueryOptions, useEnrichmentPatches } from '@/hooks/data/useVehicles';
+import { networkVehiclesReaderOptions, useEnrichmentPatches } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import type { Ride, RideStatus, VehicleCollection, VehicleDetail } from '@/types';
+import type { MyTrip, MyTripStatus, Ride, VehicleCollection, VehicleDetail } from '@/types';
 import { liveStopSequence, vehicleIdOnTrip } from '@/domain/vehicles';
-import { deriveRide } from '@/domain/rides';
+import { deriveMyTrip } from '@/domain/rides';
 import { applyEnrichment } from '@/domain/realtime';
 import { useCityConfig } from '@/hooks/data/useCities';
 
-/** A ride's progress, from its trip's live detail with the live enrichment applied. Null without the ride or once it has expired. */
-export const useRideStatus = (ride: Ride | null, now: number): RideStatus | null => {
-    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
+/** A ride's trip detail, live enrichment applied, bridging a dropped vehicle or failed refresh with the last live one. */
+const useRideDetail = (ride: Ride | null) => {
     const tripId = ride?.tripId ?? null;
     const selectVehicleOnTrip = useCallback((fleet: VehicleCollection | null) => vehicleIdOnTrip(fleet, tripId), [tripId]);
     const { data: vehicleOnTrip } = useQuery({
-        ...networkVehiclesQueryOptions(ride?.city ?? '', refreshMs),
+        ...networkVehiclesReaderOptions(ride?.city ?? ''),
         enabled: !!ride && !ride.vehicleId,
         select: selectVehicleOnTrip,
     });
@@ -38,6 +37,12 @@ export const useRideStatus = (ride: Ride | null, now: number): RideStatus | null
         () => fetched && ride?.city === selectedCity ? applyEnrichment(fetched, fetched.gtfs_trip_id, fetched.vehicle_id, byTripId, byVehicleId, dataUpdatedAt) : fetched,
         [fetched, ride?.city, selectedCity, byTripId, byVehicleId, dataUpdatedAt],
     );
-    const { timezone } = useCityConfig(ride?.city);
-    return useMemo(() => deriveRide(ride, detail, isError, now, timezone), [ride, detail, isError, now, timezone]);
+    return { detail, isError };
+};
+
+/** A My trip's state, boarding countdown or ride; null without the trip or once it is over. */
+export const useMyTripStatus = (trip: MyTrip | null, now: number): MyTripStatus | null => {
+    const { detail, isError } = useRideDetail(trip);
+    const { timezone } = useCityConfig(trip?.city);
+    return useMemo(() => (trip ? deriveMyTrip(trip, detail, isError, now, timezone) : null), [trip, detail, isError, now, timezone]);
 };

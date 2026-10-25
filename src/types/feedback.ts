@@ -30,6 +30,8 @@ const diagnosticDataSchema = z.object({
   showVehicles: z.boolean().optional(),
   showStops: z.boolean().optional(),
   mapBaseStyle: z.string().optional(),
+  vehicleFilters: z.array(z.string()).optional(),
+  lineFilter: z.string().optional(),
   
   theme: z.string().optional(),
   locale: z.string().optional(),

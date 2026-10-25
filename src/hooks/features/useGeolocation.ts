@@ -7,6 +7,7 @@ import { useGeolocationStore, type FocusRequest } from '@/state/geolocationStore
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useViewportStore } from '@/state/viewportStore';
 import { useRideStore } from '@/state/rideStore';
+import { isTripUnderway } from '@/domain/rides';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useVisibleCities } from '@/hooks/data/useCities';
 import { useNetworkCoverage } from '@/hooks/data/useNetworkCoverage';
@@ -118,7 +119,7 @@ const focusOnUser = (map: ReturnType<MapRef['getMap']>, location: [number, numbe
             accuracyM,
             userMoved: useViewportStore.getState().userMovedAt > requestedAt,
             hasOpenEntity: hasOpenEntity(),
-            hasActiveRide: !!useRideStore.getState().ride,
+            hasActiveRide: useRideStore.getState().trips.some(trip => trip.city === selectedCity && isTripUnderway(trip, Date.now())),
             zoomSteps: LAUNCH_VIEW.ZOOM_BY_ACCURACY,
         });
         if (!target) return;

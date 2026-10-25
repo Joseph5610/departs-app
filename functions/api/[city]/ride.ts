@@ -26,11 +26,31 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
     if (!parsed.success) return createErrorResponse('Invalid payload.', 400);
     const body = parsed.data;
 
+    if (body.action === 'add') {
+        const board = body.board ?? null;
+        // Nothing to alert, or a boarding stop not within the hours ahead the timetable comparison covers.
+        if (body.exitSequence === null && board?.leadMin == null) return createErrorResponse('Nothing to alert.', 400);
+        if (board && (board.scheduledMs < Date.now() - RIDE_PUSH.MAX_AGE_MS || board.scheduledMs > Date.now() + RIDE_PUSH.MAX_AHEAD_MS)) {
+            return createErrorResponse('Departure is out of range.', 400);
+        }
+    }
+
     const command: RideWatchRequest = body.action === 'add'
-        ? { action: 'add', trip: { city: slug, tripId: body.tripId, vehicleId: body.vehicleId }, rider: { subscription: body.subscription, exitSequence: body.exitSequence, texts: body.texts, navigate: new URL(body.path, request.url).href } }
-        : { action: 'remove', endpoint: body.endpoint, exitSequence: body.exitSequence };
-    // Keyed by vehicle too, so one request can't point other riders of the trip at a different vehicle.
-    const stub = env.RIDE_WATCH.get(env.RIDE_WATCH.idFromName(`${slug}:${body.tripId}:${body.vehicleId ?? ''}`));
+        ? {
+            action: 'add',
+            trip: { city: slug, tripId: body.tripId, vehicleId: body.vehicleId },
+            rider: {
+                subscription: body.subscription,
+                exitSequence: body.exitSequence,
+                board: body.board ?? null,
+                texts: body.texts,
+                navigate: new URL(body.path, request.url).href,
+                revision: body.revision ?? null,
+            },
+        }
+        : { action: 'remove', endpoint: body.endpoint, revision: body.revision ?? null };
+    // One watch per trip, whatever vehicle a device knew: it finds the vehicle itself, so every rider reads the same detail.
+    const stub = env.RIDE_WATCH.get(env.RIDE_WATCH.idFromName(`${slug}:${body.tripId}`));
     const response = await stub.fetch('https://ride.internal/', { method: 'POST', body: JSON.stringify(command) });
     if (response.status === 429) return createErrorResponse('Too many riders on this trip.', 429);
     return response.ok ? createSuccessResponse({ ok: true }, 0) : createErrorResponse('Ride push failed.', 502);

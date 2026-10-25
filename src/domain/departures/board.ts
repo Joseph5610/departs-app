@@ -1,6 +1,7 @@
 import { isWithinLocalHours } from '@/domain/time';
 import type { Departure } from '@/types';
 
+/** The board's departures after the line and vehicle filters; `hiddenByVehicleFilters` counts what the vehicle filters alone removed. */
 export const filterDepartures = (departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean, requireWheelchairAccessible: boolean) => {
     const hasAirConditioningData = departures.some(dep => dep.is_air_conditioned === true);
     const hasAccessibilityData = departures.some(dep => dep.is_wheelchair_accessible === true);
@@ -10,6 +11,7 @@ export const filterDepartures = (departures: Departure[], selectedLine: string |
     if (selectedLine) {
         filtered = filtered.filter(dep => String(dep.line).toUpperCase() === selectedLine.toUpperCase());
     }
+    const lineFiltered = filtered.length;
     // Ignore the persistent AC preference at stops without AC data, so the board never goes empty unexpectedly.
     if (requireAirConditioned && hasAirConditioningData) {
         filtered = filtered.filter(dep => dep.is_air_conditioned === true);
@@ -17,7 +19,7 @@ export const filterDepartures = (departures: Departure[], selectedLine: string |
     if (requireWheelchairAccessible && hasAccessibilityData) {
         filtered = filtered.filter(dep => dep.is_wheelchair_accessible === true);
     }
-    return { filtered, hasAirConditioningData, hasAccessibilityData, hasRequestStop };
+    return { filtered, hiddenByVehicleFilters: lineFiltered - filtered.length, hasAirConditioningData, hasAccessibilityData, hasRequestStop };
 };
 
 /** Whether an empty board at a metro station is explained by the metro's closed hours `[from, to)`, in the city's zone. */

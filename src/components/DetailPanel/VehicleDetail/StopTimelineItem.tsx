@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Hand } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -10,7 +10,7 @@ import { TimelineTime } from './TimelineTime';
 import { StopConnections, StopContinuation } from './StopTransfers';
 import type { TimelineStop } from './types';
 
-export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop, isPicking = false, onPickExit }: {
+export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop }: {
     stop: TimelineStop,
     routeName: string,
     isPast: boolean,
@@ -20,16 +20,12 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
     isFirstTransfer: boolean,
     /** The line's own last stop; its transfer card is rendered outside the line's gutter instead. */
     isLastStop: boolean,
-    /** The stop the active ride gets off at (`own`), or the one a shared ride link marks (`shared`). */
-    exitKind: 'own' | 'shared' | null,
+    /** A stop of the user's trip: where they get off (`own`) or board (`board`), or the exit a shared ride link marks (`shared`). */
+    exitKind: 'own' | 'board' | 'shared' | null,
     /** Between the vehicle and the ride's exit. */
     isOnJourney?: boolean,
     /** Opens a stop's board from the timeline. */
-    onOpenStop: (stop: TimelineStop) => void,
-    /** The rider is picking their stop: the row picks instead of opening the stop, and rows that can't be picked dim. */
-    isPicking?: boolean,
-    /** Set on the rows that can be picked. */
-    onPickExit?: (sequence: number, stopName: string) => void
+    onOpenStop: (stop: TimelineStop) => void
 }) => {
     const { t } = useTranslation();
     const { forStop } = useInterchanges();
@@ -55,32 +51,18 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
     const nameClass = isCurrent ? "text-primary font-bold" : isNext ? "text-foreground font-bold" : isPast ? "text-muted-foreground" : "text-foreground font-medium";
     const time = stopDisplayTimes(stop, isPast, isCurrent, isLastStop, delay);
 
-    const isPickable = !!onPickExit;
-    const pickThis = () => onPickExit?.(stopSeq, stop.properties.stop_name);
-
     return (
         <>
             <div
                 className={cn(
                     "group flex justify-between items-center relative py-2 min-h-11 transition-opacity duration-300",
-                    isPast || (isPicking && !isPickable) ? "opacity-40" : "opacity-100",
-                    isPickable && "cursor-pointer outline-none"
+                    isPast ? "opacity-40" : "opacity-100"
                 )}
-                {...(isPickable ? {
-                    role: 'button',
-                    tabIndex: 0,
-                    'aria-label': t('ride.pickStop', { stop: stop.properties.stop_name }),
-                    onClick: pickThis,
-                    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickThis(); } },
-                } : {})}
             >
-                {isPickable && (
-                    <span className="absolute inset-y-0.5 -left-8 -right-2 rounded-xl transition-colors group-hover:bg-primary/10 group-active:bg-primary/15 group-focus-visible:ring-2 group-focus-visible:ring-primary/50" aria-hidden="true" />
-                )}
                 <div className={cn(
                     "absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full z-0 shadow-md transition-colors duration-300",
-                    isExit ? "bg-background ring-[3px] ring-primary"
-                        : isPickable ? "bg-background ring-2 ring-primary/70"
+                    exitKind === 'own' ? "bg-primary ring-[3px] ring-primary/30"
+                        : isExit ? "bg-background ring-[3px] ring-primary"
                         : isOnJourney ? "bg-primary/70"
                         : isPast ? "bg-foreground/20" : "bg-foreground/50"
                 )} />
@@ -104,7 +86,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                         </span>
                     ) : <span />}
                     <div className="flex items-center gap-1.5 min-w-0">
-                        {!isPicking && rawStopId ? (
+                        {rawStopId ? (
                             <button
                                 type="button"
                                 onClick={() => onOpenStop(stop)}
@@ -136,7 +118,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                         </div>
                     </div>
                     {isExit ? (
-                        <span className="col-start-2 text-micro font-bold uppercase tracking-wider text-primary leading-none mt-0.5">{exitKind === 'shared' ? t('share.sharedExit') : t('ride.yourStop')}</span>
+                        <span className="col-start-2 text-micro font-bold uppercase tracking-wider text-primary leading-none mt-0.5">{exitKind === 'shared' ? t('share.sharedExit') : exitKind === 'board' ? t('myTrip.kickerBoard') : t('ride.yourStop')}</span>
                     ) : null}
                 </div>
                 <TimelineTime {...time} isPast={isPast} />

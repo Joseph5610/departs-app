@@ -1,6 +1,6 @@
 import type React from 'react';
 import { cn } from '@/lib/cn';
-import { Star } from 'lucide-react';
+import { BellRing, Star } from 'lucide-react';
 import { splitLastWord, wrappableName } from '@/lib/strings';
 import { useSwipeAction } from '@/hooks/features/useSwipeAction';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
@@ -13,7 +13,7 @@ export const BoardSection = ({ continuesLine = false, children }: { continuesLin
     <section className={cn("pt-1.5 pb-2.5", continuesLine && "-mt-4")}>{children}</section>
 );
 
-/** What swiping a row left, or picking it from the row's right-click menu, does. */
+/** What swiping a row (left: pin, right: remind), or picking it from the row's right-click menu, does. */
 export interface RowAction {
     onTrigger: () => void;
     /** The action's name in the right-click menu. */
@@ -24,6 +24,8 @@ export interface RowAction {
 
 interface BoardRowProps extends React.HTMLAttributes<HTMLDivElement> {
     action?: RowAction;
+    /** The departure reminder: a swipe to the right, and the menu's second item. */
+    remindAction?: RowAction;
     /** Content under the row in the headsign column, e.g. the later departures. */
     below?: React.ReactNode;
 }
@@ -32,35 +34,49 @@ interface BoardRowProps extends React.HTMLAttributes<HTMLDivElement> {
  * The board's row grid: badge, headsign and time columns. `children` are the lead row's cells (badge,
  * headsign, countdown, then time line, amenities and notes); the element holding them, which gets the other
  * props, shares the grid's tracks, so `below` aligns to its cells. With an `action`, the row slides left
- * under a swipe to reveal a star and runs it past the threshold; a right click offers it in a menu.
+ * under a swipe to reveal a star and runs it past the threshold, with a `remindAction` it slides right to reveal
+ * a bell; a right click offers both in a menu.
  */
-export const BoardRow = ({ action, ...props }: BoardRowProps) => {
-    if (!action) return <RowBody {...props} />;
+export const BoardRow = ({ action, remindAction, ...props }: BoardRowProps) => {
+    if (!action && !remindAction) return <RowBody {...props} />;
     return (
         <ContextMenu>
             <ContextMenuTrigger
                 // Touch has the swipe; a long press stays a tap's start rather than opening the menu.
                 onTouchStart={(e) => e.preventBaseUIHandler()}
-                render={(trigger) => <RowBody action={action} outer={trigger} {...props} />}
+                render={(trigger) => <RowBody action={action} remindAction={remindAction} outer={trigger} {...props} />}
             />
             <ContextMenuContent>
-                <ContextMenuItem onClick={action.onTrigger}>
-                    <Star strokeWidth={1.75} className="text-favorite" fill={action.isActive ? 'currentColor' : 'none'} />
-                    {action.label}
-                </ContextMenuItem>
+                {action && (
+                    <ContextMenuItem onClick={action.onTrigger}>
+                        <Star strokeWidth={1.75} className="text-favorite" fill={action.isActive ? 'currentColor' : 'none'} />
+                        {action.label}
+                    </ContextMenuItem>
+                )}
+                {remindAction && (
+                    <ContextMenuItem onClick={remindAction.onTrigger}>
+                        <BellRing strokeWidth={1.75} className="text-primary" />
+                        {remindAction.label}
+                    </ContextMenuItem>
+                )}
             </ContextMenuContent>
         </ContextMenu>
     );
 };
 
 /** The row itself; `outer` are the context menu trigger's props, which go on the element under the pointer. */
-const RowBody = ({ action, below, className, children, outer, ...lead }: BoardRowProps & { outer?: React.ComponentProps<'div'> }) => {
-    const { contentRef, handlers } = useSwipeAction(action?.onTrigger);
+const RowBody = ({ action, remindAction, below, className, children, outer, ...lead }: BoardRowProps & { outer?: React.ComponentProps<'div'> }) => {
+    const { contentRef, handlers } = useSwipeAction(action?.onTrigger, remindAction?.onTrigger);
     return (
         <div {...outer} {...handlers} className="group/row relative touch-pan-y">
             {action && (
-                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-(--swipe,0)">
+                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-favorite opacity-(--swipe-left,0)">
                     <Star size={22} strokeWidth={1.75} className="transition-transform group-data-armed/row:scale-125" fill={action.isActive ? 'currentColor' : 'none'} />
+                </span>
+            )}
+            {remindAction && (
+                <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-primary opacity-(--swipe-right,0)">
+                    <BellRing size={22} strokeWidth={remindAction.isActive ? 2.25 : 1.75} className="transition-transform group-data-armed/row:scale-125" />
                 </span>
             )}
             {/* Ending on text, whose line box leaves room under the glyphs, the row's bottom padding is that much shorter. */}
