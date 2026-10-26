@@ -16,7 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Trip alerts are watched by one server watch per trip, which finds the trip's vehicle itself, so a trip saved before its vehicle runs still gets live alerts.
+- Trip alerts are watched by one server watch per trip, so a trip saved before its vehicle runs still gets live alerts.
+- A Prague trip opened without its vehicle shows live position and delay once a vehicle runs it, as in the other cities.
+- The app and the server decide a trip's boarding and exit moments by the same rules, so the countdown and the pushed alerts agree.
 
 ### Fixed
 

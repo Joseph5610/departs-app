@@ -380,8 +380,6 @@ export const DEPARTURE_REMINDER_TAG = 'departure-reminder';
 export const MY_TRIP_CONFIG = {
     /** Trips the user can have active at once, e.g. a tram and the metro they change to. */
     MAX_TRIPS: 3,
-    /** Without a live position, the trip counts as boarded this long after its expected departure from the user's stop. */
-    BOARD_GRACE_MS: 2 * MINUTE_MS,
     /** Minutes before the departure the user can pick, besides their walk to the stop. */
     LEAD_MINUTES: [2, 5, 10, 15] as const,
     /** The lead preselected when the user's walk to the stop is unknown. */

@@ -1,3 +1,4 @@
+import { stopsLeft } from '@shared/rides';
 import { RIDE_CONFIG } from '@/config/constants';
 import { addSecondsToTime, formatClock, secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
 import { isTripEnded, liveStopSequence, secondsSinceTripEnd } from '@/domain/vehicles';
@@ -7,14 +8,7 @@ import type { Ride, RidePhase, RideStatus, StopTimeFeature, VehicleDetail } from
 export const followKey = (ride: Pick<Ride, 'tripId' | 'exitSequence'>): string => `${ride.tripId}:${ride.exitSequence}`;
 
 /** Stops after `current` up to and including the exit. */
-export const countStopsLeft = (stops: StopTimeFeature[], current: number, exitSequence: number): number => {
-    let count = 0;
-    for (const s of stops) {
-        const seq = Number(s.properties.stop_sequence);
-        if (seq > current && seq <= exitSequence) count++;
-    }
-    return count;
-};
+export const countStopsLeft = stopsLeft;
 
 /** The stop at `exitSequence` and its expected arrival (`HH:MM`): realtime, else scheduled plus the trip's delay. */
 export const exitArrival = (stops: StopTimeFeature[], exitSequence: number, delay: number | null | undefined): { stopName: string; time: string | null; rawTime: string | null } | null => {

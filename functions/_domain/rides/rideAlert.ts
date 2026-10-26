@@ -1,18 +1,12 @@
 import { RIDE_PUSH } from '../../_core/config';
+import { stopsLeft as countStopsLeft } from '../../../shared/rides';
 import { currentStop, type ObservedDetail, type TripObservation } from './observation';
 
 /** `next`: the vehicle left the stop before the exit; `arrived`: it reached the exit or the trip's end. */
 export type RideAlert = 'next' | 'arrived';
 
-/** Stops after `current` up to and including the exit. */
-const stopsLeft = (detail: ObservedDetail, current: number, exitSequence: number): number => {
-    let count = 0;
-    for (const s of detail.stop_times?.features ?? []) {
-        const seq = Number(s.properties.stop_sequence);
-        if (seq > current && seq <= exitSequence) count++;
-    }
-    return count;
-};
+const stopsLeft = (detail: ObservedDetail, current: number, exitSequence: number): number =>
+    countStopsLeft(detail.stop_times?.features ?? [], current, exitSequence);
 
 const lastSequence = (detail: ObservedDetail): number | null => {
     let last: number | null = null;

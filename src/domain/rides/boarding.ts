@@ -1,8 +1,7 @@
 import { MY_TRIP_CONFIG, WALKING } from '@/config/constants';
 import type { StopDistanceInfo } from '@/domain/stops';
 import { addSecondsToTime, calculateTimeDifferenceSecs, formatClock, secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
-import { liveStopSequence } from '@/domain/vehicles';
-import type { StopTimeFeature, TripBoarding, VehicleDetail } from '@/types';
+import type { StopTimeFeature, TripBoarding } from '@/types';
 
 /** The epoch ms of a timetable time nearest to `now` (within 12 h either way), read in the city's zone. */
 export const timetableInstantMs = (time: string, now: number, timeZone: string): number => {
@@ -81,15 +80,6 @@ export const boardingChoices = (
     return choices;
 };
 
-/**
- * Whether the vehicle has left the stop at `sequence`: it passed it, or reported it and isn't standing there any more.
- * Null without a live position.
- */
-export const hasLeftStop = (detail: Pick<VehicleDetail, 'is_static_fallback' | 'state_position' | 'last_stop_sequence'>, sequence: number): boolean | null => {
-    const current = liveStopSequence(detail);
-    if (current === null) return null;
-    return current > sequence || (current === sequence && detail.state_position !== 'at_stop');
-};
 
 /** The trip's call at `sequence` as a boarding stop without an alert, e.g. from a shared link; null when the trip has no such stop. */
 export const boardingAt = (stops: StopTimeFeature[], sequence: number, now: number, timeZone: string): TripBoarding | null => {
@@ -113,12 +103,4 @@ export const stopDepartureClock = (stops: StopTimeFeature[], sequence: number, d
     return p ? expectedDepartureClock(p, delaySecs) : null;
 };
 
-/**
- * Seconds the trip runs late at the stop at `sequence`: that stop's own realtime departure, else the trip's delay
- * (the server's `delayAtStop`, so the app's countdown and the push agree).
- */
-export const delayAtStop = (stops: StopTimeFeature[], sequence: number, tripDelaySecs: number | null | undefined): number | null => {
-    const p = stops.find(s => Number(s.properties.stop_sequence) === sequence)?.properties;
-    if (p?.realtime_departure_time && p.departure_time) return calculateTimeDifferenceSecs(p.realtime_departure_time, p.departure_time);
-    return typeof tripDelaySecs === 'number' ? tripDelaySecs : null;
-};
+export { delayAtStop, hasLeftStop } from '@shared/rides';

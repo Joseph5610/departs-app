@@ -1,4 +1,5 @@
 import type { AppVehicleDetail } from '../../_core/types';
+import { hasLeftStop as leftStop, liveStopSequence } from '../../../shared/rides';
 
 export type ObservedDetail = Pick<AppVehicleDetail, 'is_static_fallback' | 'state_position' | 'last_stop_sequence' | 'stop_times' | 'delay'>;
 
@@ -13,25 +14,18 @@ export type TripObservation =
     | { kind: 'timetable' }
     | { kind: 'realtime'; detail: ObservedDetail; current: number | null };
 
-const NOT_STARTED = new Set(['before_track', 'before_track_delayed']);
-
 export const observe = (detail: ObservedDetail | null): TripObservation => {
     if (!detail) return { kind: 'failed' };
     if (detail.state_position === 'canceled') return { kind: 'cancelled' };
     if (detail.is_static_fallback) return { kind: 'timetable' };
-    const seq = detail.last_stop_sequence;
-    const current = NOT_STARTED.has(detail.state_position ?? '') || seq === null || seq === undefined ? null : Number(seq);
-    return { kind: 'realtime', detail, current };
+    return { kind: 'realtime', detail, current: liveStopSequence(detail) };
 };
 
 /** The stop the live vehicle last passed; null without a live position. */
 export const currentStop = (observation: TripObservation): number | null => (observation.kind === 'realtime' ? observation.current : null);
 
-/**
- * Whether the vehicle has left the stop at `sequence`: it passed it, or reported it and isn't standing there any more.
- * Null without a live position (the app's `hasLeftStop`).
- */
-export const hasLeftStop = (observation: TripObservation, sequence: number): boolean | null => {
-    if (observation.kind !== 'realtime' || observation.current === null) return null;
-    return observation.current > sequence || (observation.current === sequence && observation.detail.state_position !== 'at_stop');
-};
+/** The live detail, for the shared rules; null without realtime. */
+export const liveDetail = (observation: TripObservation): ObservedDetail | null => (observation.kind === 'realtime' ? observation.detail : null);
+
+/** Whether the vehicle has left the stop at `sequence`; null without a live position. */
+export const hasLeftStop = (observation: TripObservation, sequence: number): boolean | null => leftStop(liveDetail(observation), sequence);

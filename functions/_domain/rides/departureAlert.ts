@@ -1,6 +1,6 @@
 import { RIDE_PUSH } from '../../_core/config';
-import { toSecs, wrapDaySeconds } from '../../_core/utils/time';
-import { hasLeftStop, type ObservedDetail, type TripObservation } from './observation';
+import { delayAtStop } from '../../../shared/rides';
+import { hasLeftStop, type TripObservation } from './observation';
 
 /** `soon`: the trip leaves the rider's stop within their lead time; `cancelled`: the feed reports the trip cancelled. */
 export type DepartureAlert = 'soon' | 'cancelled';
@@ -16,16 +16,10 @@ export interface DepartureReminderTiming {
     leadMin: number;
 }
 
-/** Seconds the trip runs late at the rider's stop: that stop's own realtime time, else the trip's delay, else on time. */
-const delayAtStop = (detail: ObservedDetail, boardSequence: number): number => {
-    const stop = detail.stop_times?.features.find(s => Number(s.properties.stop_sequence) === boardSequence)?.properties;
-    if (stop?.realtime_departure_time && stop.departure_time) return wrapDaySeconds(toSecs(stop.realtime_departure_time) - toSecs(stop.departure_time));
-    return typeof detail.delay === 'number' ? detail.delay : 0;
-};
-
 /** When the trip is expected to leave the rider's stop: with the realtime delay, else on the timetable. */
 export const predictedDepartureMs = (observation: TripObservation, timing: DepartureReminderTiming): number =>
-    observation.kind === 'realtime' ? timing.scheduledMs + delayAtStop(observation.detail, timing.boardSequence) * 1000 : timing.scheduledMs;
+    observation.kind === 'realtime' ? timing.scheduledMs + (delayAtStop(observation.detail.stop_times?.features ?? [], timing.boardSequence, observation.detail.delay) ?? 0) * 1000
+        : timing.scheduledMs;
 
 /**
  * What a reminder is due now. Without a live position the clock drops it once the departure is behind, except after a

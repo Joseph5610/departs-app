@@ -1,6 +1,7 @@
 import { RIDE_PUSH } from '../../_core/config';
 import { departureAlertFor, nextCheckAt, predictedDepartureMs, type DepartureReminderTiming } from './departureAlert';
-import { hasLeftStop, type TripObservation } from './observation';
+import { isBoardingOver, TRIP_RULES } from '../../../shared/rides';
+import { liveDetail, type TripObservation } from './observation';
 import { isNearExit, rideAlertFor, type RideAlert } from './rideAlert';
 
 /** `soon`/`cancelled`: before the trip leaves the rider's stop; `next`/`arrived`: before and at their exit. */
@@ -50,18 +51,14 @@ export const initialPhase = (request: WatchRequest): RiderPhase =>
 export const isWatchingExit = (phase: RiderPhase): boolean => phase === 'ride' || phase === 'near';
 
 /** Whether the rider is past boarding: no boarding stop, the vehicle left it, or (by the clock) its departure is behind. */
-const isBoarded = (observation: TripObservation, board: WatchBoard | null, now: number): boolean => {
-    if (!board) return true;
-    // The clock ends boarding even with a live position, which can stall at a stop.
-    if (hasLeftStop(observation, board.sequence)) return true;
-    return now > predictedDepartureMs(observation, timingOf(board)) + RIDE_PUSH.BOARD_GRACE_MS;
-};
+const isBoarded = (observation: TripObservation, board: WatchBoard | null, now: number): boolean =>
+    !board || isBoardingOver(liveDetail(observation), board.sequence, predictedDepartureMs(observation, timingOf(board)), now);
 
 /** When a rider waiting to board needs a look: once boarded without an exit, else when the exit watch starts. */
 const boardWakeAt = (rider: WatchRequest, observation: TripObservation, now: number): number => {
     if (!rider.board) return now;
     const predicted = predictedDepartureMs(observation, timingOf(rider.board));
-    if (rider.exitSequence === null) return predicted + RIDE_PUSH.BOARD_GRACE_MS;
+    if (rider.exitSequence === null) return predicted + TRIP_RULES.BOARD_GRACE_MS;
     const watchFrom = predicted - RIDE_PUSH.FIRST_CHECK_BEFORE_MS;
     return watchFrom > now ? watchFrom : now + RIDE_PUSH.FAR_INTERVAL_S * 1000;
 };

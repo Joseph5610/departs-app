@@ -45,6 +45,16 @@ export default defineConfig([
     },
   },
 
+  // Rules shared by the app and the backend: plain TypeScript that imports nothing, so both builds compile it.
+  {
+    files: ['shared/**/*.ts'],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
+    rules: {
+      '@typescript-eslint/no-unused-vars': noUnusedVars,
+      'no-restricted-imports': ['error', { patterns: [{ regex: String.raw`^(?!vitest$|\./)`, message: 'shared/ imports only its own files, so both builds can compile it.' }] }],
+    },
+  },
+
   // Backend: Workers runtime, no React. `caches` and the Cloudflare types come from
   // @cloudflare/workers-types, which only tsc sees, so they are declared here for no-undef.
   {

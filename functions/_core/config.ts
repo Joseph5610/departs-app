@@ -165,8 +165,6 @@ export const RIDE_PUSH = {
     SEND_WINDOW_MS: 30_000,
     /** How far ahead a boarding stop may be; a timetable time is compared within one day either way. */
     MAX_AHEAD_MS: 12 * 3600_000,
-    /** Without a live position, the rider counts as boarded this long after the expected departure (the app's `BOARD_GRACE_MS`). */
-    BOARD_GRACE_MS: 2 * 60_000,
     /** Placeholder in a boarding alert's texts the minutes left are put into. */
     MINUTES_TOKEN: '{min}',
     /** VAPID `sub` claim; Apple rejects pushes without one. */

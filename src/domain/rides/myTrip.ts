@@ -1,7 +1,8 @@
 import { MY_TRIP_CONFIG, RIDE_CONFIG } from '@/config/constants';
 import { formatTimetableClock } from '@/domain/time';
 import type { MyTrip, MyTripStatus, RideStatus, TripStart, VehicleDetail } from '@/types';
-import { delayAtStop, hasLeftStop, reminderCountdown } from './boarding';
+import { isBoardingOver } from '@shared/rides';
+import { delayAtStop, reminderCountdown } from './boarding';
 import { deriveRide, exitArrival } from './status';
 
 /**
@@ -19,7 +20,7 @@ export const deriveMyTrip = (trip: MyTrip, detail: VehicleDetail | undefined, is
         const stopDelay = !detail || detail.is_static_fallback ? 0 : delayAtStop(stops, board.sequence, detail.delay);
         const { expectedMs, minutes } = reminderCountdown(board.scheduledMs, stopDelay, now);
         // The clock ends boarding too: a live position can stall (a gap in the feed) and must not keep it open forever.
-        const isBefore = (detail ? hasLeftStop(detail, board.sequence) : null) !== true && now < expectedMs + MY_TRIP_CONFIG.BOARD_GRACE_MS;
+        const isBefore = !isBoardingOver(detail, board.sequence, expectedMs, now);
         // Decided before the ride's own phase, whose timetable clock wraps at 12 h and would end a trip saved for tonight.
         if (isBefore) {
             return {
