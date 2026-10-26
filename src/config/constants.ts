@@ -383,6 +383,8 @@ export const MY_TRIP_CONFIG = {
     DEFAULT_LEAD_MIN: 5,
     /** A trip counts as under way (e.g. for where the map opens) from this long before its departure from the user's stop. */
     UNDERWAY_BEFORE_MS: 10 * MINUTE_MS,
+    /** A withdrawal the server never confirmed is sent again until this old; by then the server has dropped the trip itself. */
+    WITHDRAWAL_KEEP_MS: DAY_MS,
     /** How often the trip re-checks which reminder leads still fit before the departure. */
     CLOCK_MS: 30_000,
 };

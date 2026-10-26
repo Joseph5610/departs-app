@@ -76,6 +76,18 @@ describe('trip push requests', () => {
         expect(sent).toEqual(['add t1', 'remove t1']);
     });
 
+    // I4: a removal that didn't reach the server must be known, so it can be sent again.
+    it('reports whether the server took a removal', async () => {
+        const { manager, answer } = fakePushManager();
+        usePushManager(manager);
+        answer();
+        await startTripPush(trip('t1'), {}, '/prague/trip/t1');
+        refuse = action => action === 'remove';
+        expect(await stopTripPush(trip('t1'))).toBe(false);
+        refuse = () => false;
+        expect(await stopTripPush(trip('t1'))).toBe(true);
+    });
+
     it("doesn't hold one trip's requests behind another's", async () => {
         const { manager, answer } = fakePushManager();
         usePushManager(manager);

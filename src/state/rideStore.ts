@@ -12,6 +12,8 @@ interface RideState {
     followed: MyTrip | null;
     /** The shared ride (`tripId:exitSequence`) the user stopped following, so its link doesn't follow it again. */
     unfollowedKey: string | null;
+    /** Trips the server was asked to stop pushing without confirming it (e.g. ended offline): asked again once back online. */
+    withdrawals: { city: string; tripId: string; at: number }[];
 }
 
 interface RideActions {
@@ -23,6 +25,8 @@ interface RideActions {
     follow: (trip: Omit<MyTrip, 'startedAt'>) => void;
     /** Stops following; `remember` keeps the link from following the same ride again. */
     unfollow: (remember: boolean) => void;
+    queueWithdrawal: (trip: Pick<MyTrip, 'city' | 'tripId'>) => void;
+    clearWithdrawal: (tripId: string) => void;
 }
 
 export interface RideStore extends RideState {
@@ -38,12 +42,17 @@ export const useRideStore = create<RideStore>()(
             trips: [],
             followed: null,
             unfollowedKey: null,
+            withdrawals: [],
             actions: {
                 saveTrip: (trip) => {
                     const others = get().trips.filter(t => t.tripId !== trip.tripId);
                     if (others.length >= MAX_TRIPS) return false;
                     const existing = get().trips.find(t => t.tripId === trip.tripId);
-                    set({ trips: [...others, { ...trip, startedAt: existing?.startedAt ?? Date.now() }] });
+                    // Taking the trip again cancels a withdrawal still owed, which would remove the new registration.
+                    set(state => ({
+                        trips: [...others, { ...trip, startedAt: existing?.startedAt ?? Date.now() }],
+                        withdrawals: state.withdrawals.filter(w => w.tripId !== trip.tripId),
+                    }));
                     return true;
                 },
                 endTrip: (tripId) => set((state) => ({ trips: state.trips.filter(t => t.tripId !== tripId) })),
@@ -55,6 +64,10 @@ export const useRideStore = create<RideStore>()(
                     followed: null,
                     unfollowedKey: remember && state.followed ? followKey(state.followed) : state.unfollowedKey,
                 })),
+                queueWithdrawal: ({ city, tripId }) => set((state) => ({
+                    withdrawals: [...state.withdrawals.filter(w => w.tripId !== tripId), { city, tripId, at: Date.now() }],
+                })),
+                clearWithdrawal: (tripId) => set((state) => ({ withdrawals: state.withdrawals.filter(w => w.tripId !== tripId) })),
             },
         }),
         {
@@ -75,7 +88,7 @@ export const useRideStore = create<RideStore>()(
                     unfollowedKey: old?.unfollowedKey ?? null,
                 };
             },
-            partialize: (state) => ({ trips: state.trips, followed: state.followed, unfollowedKey: state.unfollowedKey }),
+            partialize: (state) => ({ trips: state.trips, followed: state.followed, unfollowedKey: state.unfollowedKey, withdrawals: state.withdrawals }),
         }
     )
 );

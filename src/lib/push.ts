@@ -76,16 +76,13 @@ export const closeRideNotifications = async (tag: string): Promise<void> => {
     }
 };
 
-/** Stops the server pushing a trip's alerts. */
-export const stopTripPush = (trip: Pick<MyTrip, 'city' | 'tripId'>): Promise<void> => inOrder(trip.tripId, async () => {
+/** Stops the server pushing a trip's alerts; false when the removal didn't reach it, so it can be sent again. */
+export const stopTripPush = (trip: Pick<MyTrip, 'city' | 'tripId'>): Promise<boolean> => inOrder(trip.tripId, async () => {
     try {
         const subscription = await (await pushManager())?.getSubscription();
-        if (subscription) {
-            await postRide(trip.city, {
-                action: 'remove', tripId: trip.tripId, endpoint: subscription.endpoint,
-            });
-        }
+        if (subscription) await postRide(trip.city, { action: 'remove', tripId: trip.tripId, endpoint: subscription.endpoint });
+        return true;
     } catch {
-        // The server drops the rider on its own once the trip arrives or expires.
+        return false;
     }
 });
