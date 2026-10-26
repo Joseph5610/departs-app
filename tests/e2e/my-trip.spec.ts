@@ -14,8 +14,8 @@ const stop = (sequence: number, id: string, name: string, offsetMs: number) => (
     properties: { stop_id: id, stop_name: name, stop_sequence: sequence, arrival_time: pragueTime(offsetMs), departure_time: pragueTime(offsetMs) },
 });
 
-/** A trip leaving Hlavní nádraží in 20 min, not yet running, with two stops after it. */
-async function mockTrip(page: Page) {
+/** A trip leaving Hlavní nádraží in 20 min with two stops after it; `running`: its vehicle has left the first stop. */
+async function mockTrip(page: Page, { running = false } = {}) {
     await mockStops(page, hlavniNadrazi());
     await page.route('**/api/*/departures*', route => route.fulfill({
         status: 200,
@@ -33,7 +33,7 @@ async function mockTrip(page: Page) {
         contentType: 'application/json',
         body: JSON.stringify({
             gtfs_trip_id: new URL(route.request().url()).searchParams.get('tripId') ?? 'trip-1', vehicle_id: 'veh-1', route_short_name: 'C', trip_headsign: 'Letňany', route_type: 'metro',
-            route_color: 'C0115E', delay: 0, is_static_fallback: true, state_position: 'unknown', last_stop_sequence: null,
+            route_color: 'C0115E', delay: 0, is_static_fallback: !running, state_position: running ? 'on_track' : 'unknown', last_stop_sequence: running ? 1 : null,
             stop_times: { features: [stop(1, 'U1111Z1P', 'Hlavní nádraží', 20 * MIN), stop(2, 'U2222', 'Florenc', 25 * MIN), stop(3, 'U3333', 'Vysočanská', 30 * MIN)] },
         }),
     }));
@@ -127,7 +127,7 @@ test.describe('My trip', () => {
 
     // Already aboard and riding to the end is a valid trip: tracked in the bar, with no alerts.
     test('saves a trip taken already aboard to its end', async ({ page }) => {
-        await mockTrip(page);
+        await mockTrip(page, { running: true });
         await page.goto('/prague/trip/trip-1/veh-1');
         await page.getByRole('button', { name: /taking this trip|Jedu tímto spojem/ }).first().click();
         const save = page.getByTestId('my-trip-save');
@@ -136,6 +136,21 @@ test.describe('My trip', () => {
         await expect(save).toBeHidden();
         expect(await storedTrips(page)).toMatchObject([{ tripId: 'trip-1', board: null, toEnd: true }]);
         await expect(page.getByTestId('my-trip-card')).toBeVisible();
+    });
+
+    // Only a running trip can be taken already aboard: one not yet running boards at a stop.
+    test('boards a trip not yet running at its first stop, without the aboard choice', async ({ page }) => {
+        await mockTrip(page);
+        await page.goto('/prague/trip/trip-1/veh-1');
+        await page.getByRole('button', { name: /taking this trip|Jedu tímto spojem/ }).first().click();
+        const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
+        await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
+        await sheet.getByRole('button', { name: /Another stop|Jiná zastávka/ }).click();
+        await expect(sheet.getByRole('button', { name: /No boarding stop|Bez nástupu/ })).toHaveCount(0);
+        await expect(sheet.locator('button[aria-pressed=true]')).toHaveText(/Hlavní nádraží/);
+        await sheet.getByTestId('my-trip-save').click();
+        await expect(sheet).toBeHidden();
+        expect(await storedTrips(page)).toMatchObject([{ tripId: 'trip-1', board: { sequence: 1 } }]);
     });
 
     test('edits a saved trip in place: still one trip, the new exit', async ({ page }) => {

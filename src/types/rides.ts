@@ -27,16 +27,9 @@ export interface TripBoarding {
  * A trip the user takes: from a stop (`board`) and/or to an exit. Without a picked exit (`toEnd`) it is ridden to its
  * last stop, which `exitSequence` then names, and that end gets no alert. At least one of `board` and an exit is set.
  */
-/** A trip's first call and its timetable departure, epoch ms. */
-export interface TripStart {
-    sequence: number;
-    scheduledMs: number;
-}
-
 export interface MyTrip extends Ride {
+    /** Null only for a trip the user is already aboard, which therefore runs. */
     board: TripBoarding | null;
-    /** Without a boarding stop, the trip's first departure when it was saved before running: it ages and is watched from then. */
-    start?: TripStart | null;
     toEnd: boolean;
 }
 

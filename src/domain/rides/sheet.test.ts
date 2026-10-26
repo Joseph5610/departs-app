@@ -23,16 +23,23 @@ const saved = (extra: Partial<MyTrip> = {}): MyTrip => ({
 
 describe('sheetSelection', () => {
     it('opens on the stop the sheet was opened at, with the walk lead, riding to the end', () => {
-        expect(sheetSelection({ draft: {}, existing: null, openedAt: 3, boardings, exits })).toMatchObject({ boarding: { sequence: 3 }, lead: 7, exit: null });
+        expect(sheetSelection({ draft: {}, existing: null, openedAt: 3, isRunning: true, boardings, exits })).toMatchObject({ boarding: { sequence: 3 }, lead: 7, exit: null });
     });
 
     it('shows the saved trip, and a draft over it', () => {
-        expect(sheetSelection({ draft: {}, existing: saved(), openedAt: 3, boardings, exits })).toMatchObject({ boarding: { sequence: 2 }, lead: 10, exit: { sequence: 4 } });
-        expect(sheetSelection({ draft: { board: 3, exit: null }, existing: saved(), openedAt: 3, boardings, exits })).toMatchObject({ boarding: { sequence: 3 }, lead: 7, exit: null });
+        expect(sheetSelection({ draft: {}, existing: saved(), openedAt: 3, isRunning: true, boardings, exits })).toMatchObject({ boarding: { sequence: 2 }, lead: 10, exit: { sequence: 4 } });
+        expect(sheetSelection({ draft: { board: 3, exit: null }, existing: saved(), openedAt: 3, isRunning: true, boardings, exits })).toMatchObject({ boarding: { sequence: 3 }, lead: 7, exit: null });
+    });
+
+    // Only a running trip can be taken already aboard: one not yet running needs a boarding stop.
+    it('boards a trip not yet running at its first stop, unless the user picked one', () => {
+        expect(sheetSelection({ draft: {}, existing: null, openedAt: null, isRunning: false, boardings, exits }).boarding?.sequence).toBe(2);
+        expect(sheetSelection({ draft: {}, existing: null, openedAt: null, isRunning: true, boardings, exits }).boarding).toBeNull();
+        expect(sheetSelection({ draft: { board: 4 }, existing: null, openedAt: null, isRunning: false, boardings, exits }).boarding?.sequence).toBe(4);
     });
 
     it('offers exits after the boarding and boardings before the exit', () => {
-        const selection = sheetSelection({ draft: { board: 3, exit: 4 }, existing: null, openedAt: null, boardings, exits });
+        const selection = sheetSelection({ draft: { board: 3, exit: 4 }, existing: null, openedAt: null, isRunning: true, boardings, exits });
         expect(selection.exits.map(e => e.sequence)).toEqual([4, 5]);
         expect(selection.boardings.map(b => b.sequence)).toEqual([2, 3]);
     });
@@ -40,7 +47,7 @@ describe('sheetSelection', () => {
 
 describe('tripFromSheet', () => {
     const save = (draft: Parameters<typeof tripFromSheet>[0]['draft'], existing: MyTrip | null = null) =>
-        tripFromSheet({ target, existing, selection: sheetSelection({ draft, existing, openedAt: 3, boardings, exits }), draft, openedAt: 3, start: null, lastStop });
+        tripFromSheet({ target, existing, selection: sheetSelection({ draft, existing, openedAt: 3, isRunning: true, boardings, exits }), draft, openedAt: 3, lastStop });
 
     // The board id reopens the sheet on the stop: it must be the stop picked, not the one the sheet came from.
     it('keeps the opened board id only for that stop', () => {

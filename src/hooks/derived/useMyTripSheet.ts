@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { MY_TRIP_CONFIG } from '@/config/constants';
-import { boardingChoices, boardingSequence, exitChoices, isLeadPossible, tripStartOf, walkLeadMinutes } from '@/domain/rides';
+import { boardingChoices, boardingSequence, exitChoices, isLeadPossible, walkLeadMinutes } from '@/domain/rides';
 import { departureStopIds, getStopDistanceInfo } from '@/domain/stops';
 import { lastStopOf, liveStopSequence } from '@/domain/vehicles';
 import { useCityConfig } from '@/hooks/data/useCities';
@@ -44,7 +44,7 @@ export const useMyTripSheet = (target: MyTripTarget) => {
         boardings,
         openedAt,
         exits,
-        start: tripStartOf(boardings, current, now),
+        isRunning: current !== null,
         lastStop: last ? { sequence: Number(last.properties.stop_sequence), stopName: last.properties.stop_name } : null,
         existing,
     };

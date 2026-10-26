@@ -45,7 +45,7 @@ const LEAD_OFF = 'off';
 /** The sheet edits a draft of the trip; nothing changes until the user saves it. `undefined` keeps the default. */
 const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: () => void }) => {
     const { t } = useTranslation();
-    const { detail, isLoading, boardings, openedAt, exits, start, lastStop, existing } = useMyTripSheet(target);
+    const { detail, isLoading, boardings, openedAt, exits, isRunning, lastStop, existing } = useMyTripSheet(target);
     const { save, end } = useMyTripActions();
     const { setBoardingStop } = useSelectionStore(s => s.actions);
     const [open, setOpen] = useState<Section>(target.section ?? null);
@@ -53,7 +53,7 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
     const [isChoosingBoard, setIsChoosingBoard] = useState(false);
 
     const line = detail?.route_short_name ?? '';
-    const selection = sheetSelection({ draft, existing, openedAt, boardings, exits });
+    const selection = sheetSelection({ draft, existing, openedAt, isRunning, boardings, exits });
     const { boarding, lead, exit, exits: exitsAfterBoard, boardings: boardsBeforeExit } = selection;
     const toggle = (section: Section) => setOpen(current => (current === section ? null : section));
 
@@ -70,7 +70,7 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
 
     const saveTrip = () => {
         if (!lastStop) return;
-        const trip = tripFromSheet({ target, existing, selection, draft, openedAt, start, lastStop });
+        const trip = tripFromSheet({ target, existing, selection, draft, openedAt, lastStop });
         const saved = save(trip, line, trip.exitStopName ?? lastStop.stopName);
         if (saved) onClose();
     };
@@ -107,7 +107,7 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
                     <div className="border-t border-border/50">
                         {isChoosingBoard || !boarding ? (
                             <StopList
-                                leading={{ label: t('myTrip.aboard'), isSelected: !boarding, onPick: () => pickBoarding(null) }}
+                                leading={isRunning ? { label: t('myTrip.aboard'), isSelected: !boarding, onPick: () => pickBoarding(null) } : null}
                                 stops={boardsBeforeExit}
                                 selected={boarding?.sequence ?? null}
                                 onPick={pickBoarding}
@@ -179,18 +179,20 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
     );
 };
 
-/** The stops a section picks from, with their times, after a leading choice (aboard already, to the end); the picked one checked. */
+/** The stops a section picks from, with their times, after a leading choice if any (aboard already, to the end); the picked one checked. */
 const StopList = ({ leading, stops, selected, onPick }: {
-    leading: { label: string; isSelected: boolean; onPick: () => void };
+    leading: { label: string; isSelected: boolean; onPick: () => void } | null;
     stops: { sequence: number; stopName: string; time: string | null }[];
     selected: number | null;
     onPick: (sequence: number) => void;
 }) => (
     <div className="max-h-[32dvh] overflow-y-auto overscroll-contain">
         <ul className="flex flex-col py-1">
-            <li>
-                <StopChoice label={leading.label} time={null} isSelected={leading.isSelected} onClick={leading.onPick} isMuted />
-            </li>
+            {leading && (
+                <li>
+                    <StopChoice label={leading.label} time={null} isSelected={leading.isSelected} onClick={leading.onPick} isMuted />
+                </li>
+            )}
             {stops.map(stop => (
                 <li key={stop.sequence}>
                     <StopChoice label={stop.stopName} time={stop.time} isSelected={stop.sequence === selected} onClick={() => onPick(stop.sequence)} />

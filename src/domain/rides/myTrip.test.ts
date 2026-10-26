@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MyTrip, VehicleDetail } from '@/types';
-import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripStartOf, tripUrgency, watchFrom, withPushState, registrationChange } from './myTrip';
+import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripUrgency, withPushState, registrationChange } from './myTrip';
 
 const TZ = 'Europe/Prague';
 // 2026-10-20 12:00:00 in Prague.
@@ -31,12 +31,6 @@ const trip = (extra: Partial<MyTrip> = {}): MyTrip => ({
 });
 
 describe('deriveMyTrip', () => {
-    // A trip planned ahead ends more than 12 h away: the wrapped timetable clock must not read it as long arrived.
-    it('waits for a trip saved hours ahead without a boarding stop, rather than ending it', () => {
-        const late = detail(null, { stop_times: { type: 'FeatureCollection', features: [stop(1, '23:50:00'), stop(2, '00:10:00'), stop(3, '00:20:00')] } });
-        const planned = trip({ board: null, exitSequence: 3, toEnd: true, start: { sequence: 1, scheduledMs: NOW + (11 * 60 + 50) * MIN } });
-        expect(deriveMyTrip(planned, late, false, NOW, TZ)).toMatchObject({ phase: 'riding', ride: { phase: 'waiting' } });
-    });
 
     it('counts down to boarding until the vehicle reaches the stop', () => {
         const status = deriveMyTrip(trip(), detail(1), false, NOW, TZ);
@@ -97,23 +91,8 @@ describe('isTripExpired', () => {
         expect(isTripExpired(trip({ board: null }), NOW + 5 * 60 * MIN)).toBe(true);
     });
 
-    // Without a boarding stop, a trip saved before it runs ages (and is watched) from its first departure.
-    it('ages a trip without a boarding stop from its first departure', () => {
-        const later = trip({ board: null, start: { sequence: 1, scheduledMs: NOW + 5 * 60 * MIN } });
-        expect(isTripExpired(later, NOW + 6 * 60 * MIN)).toBe(false);
-        expect(isTripUnderway(later, NOW)).toBe(false);
-        expect(watchFrom(later)).toEqual({ sequence: 1, scheduledMs: NOW + 5 * 60 * MIN, leadMin: null });
-    });
 });
 
-describe('tripStartOf', () => {
-    it('is the first call only while the trip has not run', () => {
-        const calls = [{ sequence: 1, scheduledMs: NOW + 30 * MIN }, { sequence: 2, scheduledMs: NOW + 35 * MIN }];
-        expect(tripStartOf(calls, null, NOW)).toEqual({ sequence: 1, scheduledMs: NOW + 30 * MIN });
-        expect(tripStartOf(calls, 0, NOW)).toBeNull();
-        expect(tripStartOf(calls, null, NOW + 31 * MIN)).toBeNull();
-    });
-});
 
 describe('withPushState', () => {
     // An unchanged trip keeps its server registration; a changed one is not pushed until the server confirms it.

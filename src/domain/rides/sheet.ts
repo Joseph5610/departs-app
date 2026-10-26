@@ -1,4 +1,4 @@
-import type { MyTrip, MyTripTarget, TripStart } from '@/types';
+import type { MyTrip, MyTripTarget } from '@/types';
 import { defaultLead, type BoardingChoice } from './boarding';
 import { boardingsBefore, exitsAfter } from './myTrip';
 
@@ -29,16 +29,19 @@ export interface SheetSelection {
 
 /**
  * What the sheet shows picked: the user's draft, else their saved trip, else the stop it was opened at with the walk's
- * lead (or the default); the exit is the draft's or the saved one, else none (to the end).
+ * lead (or the default); the exit is the draft's or the saved one, else none (to the end). Only a running trip can be
+ * taken already aboard: one that hasn't run yet boards at its first stop until the user picks another.
  */
-export const sheetSelection = ({ draft, existing, openedAt, boardings, exits }: {
+export const sheetSelection = ({ draft, existing, openedAt, isRunning, boardings, exits }: {
     draft: TripDraft;
     existing: MyTrip | null;
     openedAt: number | null;
+    isRunning: boolean;
     boardings: readonly SheetBoarding[];
     exits: readonly SheetExit[];
 }): SheetSelection => {
-    const boardSequence = draft.board !== undefined ? draft.board : existing ? existing.board?.sequence ?? null : openedAt;
+    const picked = draft.board !== undefined ? draft.board : existing ? existing.board?.sequence ?? null : openedAt;
+    const boardSequence = picked ?? (isRunning ? null : boardings[0]?.sequence ?? null);
     const boarding = boardings.find(b => b.sequence === boardSequence) ?? null;
     const lead = draft.lead !== undefined ? draft.lead
         : existing?.board && existing.board.sequence === boardSequence ? existing.board.leadMin
@@ -49,17 +52,16 @@ export const sheetSelection = ({ draft, existing, openedAt, boardings, exits }: 
 };
 
 /**
- * The trip the sheet saves. An edit keeps the trip's vehicle (its push registration names it). The boarding keeps the
- * board id the sheet was opened at only while it is that stop; a boarding already behind (no longer offered) stays as
- * saved unless the user picked another, as dropping it would re-register the trip and repeat its alerts.
+ * The trip the sheet saves. An edit keeps the trip's vehicle. The boarding keeps the board id the sheet was opened at
+ * only while it is that stop; a boarding already behind (no longer offered) stays as saved unless the user picked
+ * another, as dropping it would re-register the trip and repeat its alerts.
  */
-export const tripFromSheet = ({ target, existing, selection, draft, openedAt, start, lastStop }: {
+export const tripFromSheet = ({ target, existing, selection, draft, openedAt, lastStop }: {
     target: MyTripTarget;
     existing: MyTrip | null;
     selection: Pick<SheetSelection, 'boarding' | 'lead' | 'exit'>;
     draft: TripDraft;
     openedAt: number | null;
-    start: TripStart | null;
     lastStop: { sequence: number; stopName: string };
 }): Omit<MyTrip, 'startedAt'> => {
     const { boarding, lead, exit } = selection;
@@ -80,6 +82,5 @@ export const tripFromSheet = ({ target, existing, selection, draft, openedAt, st
                 leadMin: lead,
             }
             : draft.board === undefined ? existing?.board ?? null : null,
-        start: boarding ? null : start ?? existing?.start ?? null,
     };
 };

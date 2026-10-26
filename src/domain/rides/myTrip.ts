@@ -1,6 +1,6 @@
 import { MY_TRIP_CONFIG, RIDE_CONFIG } from '@/config/constants';
 import { formatTimetableClock } from '@/domain/time';
-import type { MyTrip, MyTripStatus, RideStatus, TripStart, VehicleDetail } from '@/types';
+import type { MyTrip, MyTripStatus, RideStatus, VehicleDetail } from '@/types';
 import { isBoardingOver } from '@shared/rides';
 import { delayAtStop, reminderCountdown } from './boarding';
 import { deriveRide, exitArrival } from './status';
@@ -41,30 +41,19 @@ export const deriveMyTrip = (trip: MyTrip, detail: VehicleDetail | undefined, is
     return ride ? { phase: 'riding', trip, ride } : null;
 };
 
-/** When a trip begins for its expiry: its departure from the user's stop or its first stop, else when it was saved. */
-const tripStartMs = (trip: Pick<MyTrip, 'startedAt' | 'board' | 'start'>): number =>
-    Math.max(trip.startedAt, trip.board?.scheduledMs ?? trip.start?.scheduledMs ?? 0);
+/** When a trip begins for its expiry: its departure from the user's stop, else (already aboard) when it was saved. */
+const tripStartMs = (trip: Pick<MyTrip, 'startedAt' | 'board'>): number => Math.max(trip.startedAt, trip.board?.scheduledMs ?? 0);
 
 /** Whether a trip is under way: taken aboard, or its departure is close; a trip saved for later is not. */
-export const isTripUnderway = (trip: Pick<MyTrip, 'board' | 'start'>, now: number): boolean => {
-    const departs = trip.board ?? trip.start;
-    return !departs || now >= departs.scheduledMs - MY_TRIP_CONFIG.UNDERWAY_BEFORE_MS;
-};
+export const isTripUnderway = (trip: Pick<MyTrip, 'board'>, now: number): boolean =>
+    !trip.board || now >= trip.board.scheduledMs - MY_TRIP_CONFIG.UNDERWAY_BEFORE_MS;
 
-/** A trip's first departure, while it hasn't run yet (no live stop and its first call still ahead). */
-export const tripStartOf = (calls: readonly TripStart[], currentSequence: number | null, now: number): TripStart | null => {
-    const first = calls[0];
-    return currentSequence === null && first && first.scheduledMs > now ? { sequence: first.sequence, scheduledMs: first.scheduledMs } : null;
-};
-
-/** Where the server starts watching: the boarding stop with its alert, else the first stop of a trip not yet running, without one. */
-export const watchFrom = (trip: Pick<MyTrip, 'board' | 'start'>): { sequence: number; scheduledMs: number; leadMin: number | null } | null => {
-    if (trip.board) return { sequence: trip.board.sequence, scheduledMs: trip.board.scheduledMs, leadMin: trip.board.leadMin };
-    return trip.start ? { ...trip.start, leadMin: null } : null;
-};
+/** Where the server starts watching: the boarding stop with its alert; null for a trip already aboard. */
+export const watchFrom = (trip: Pick<MyTrip, 'board'>): { sequence: number; scheduledMs: number; leadMin: number | null } | null =>
+    trip.board ? { sequence: trip.board.sequence, scheduledMs: trip.board.scheduledMs, leadMin: trip.board.leadMin } : null;
 
 /** Whether a trip is long over by the clock alone, e.g. one in another city that nothing has looked at since. */
-export const isTripExpired = (trip: Pick<MyTrip, 'startedAt' | 'board' | 'start'>, now: number): boolean => now - tripStartMs(trip) > RIDE_CONFIG.MAX_AGE_MS;
+export const isTripExpired = (trip: Pick<MyTrip, 'startedAt' | 'board'>, now: number): boolean => now - tripStartMs(trip) > RIDE_CONFIG.MAX_AGE_MS;
 
 /** A saved trip keeps its `pushed` mark while what it asks the server for is unchanged; a changed one is registered anew. */
 export const withPushState = <T extends Omit<MyTrip, 'startedAt'>>(next: T, previous: MyTrip | undefined): T =>
