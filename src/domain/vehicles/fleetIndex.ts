@@ -10,10 +10,3 @@ export const indexVehicles = (collection: VehicleCollection | null) => {
     }
     return { vehicleIndex, tripIndex };
 };
-
-/** The vehicle running `tripId`, or null when the trip has no live vehicle. */
-export const vehicleIdOnTrip = (fleet: VehicleCollection | null, tripId: string | null): string | null => {
-    if (!fleet || !tripId) return null;
-    for (const f of fleet.features) if (f.properties.gtfs_trip_id === tripId) return f.properties.vehicle_id || null;
-    return null;
-};

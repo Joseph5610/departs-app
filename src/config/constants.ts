@@ -367,14 +367,30 @@ export const RIDE_CONFIG = {
     ARRIVED_STALE_MS: 2 * MINUTE_MS,
     /** The same for a ride only the clock ended (no live position), counted from the trip's end, which needs a grace period first. */
     ARRIVED_BY_CLOCK_STALE_MS: 10 * MINUTE_MS,
+    /** How long a stack of bars opened by hovering waits before folding once the mouse left it. */
+    STACK_FOLD_DELAY_MS: 300,
     /** Vibration when the next stop is the rider's (Android; iOS ignores it). */
     VIBRATE_PATTERN: [200, 100, 200],
 };
 
+/** My trip: a trip the user takes, from a stop (with an alert before it leaves) and/or to an exit (with an alert before it). */
+export const MY_TRIP_CONFIG = {
+    /** Trips the user can have active at once, e.g. a tram and the metro they change to. */
+    MAX_TRIPS: 3,
+    /** Minutes before the departure the user can pick, besides their walk to the stop. */
+    LEAD_MINUTES: [2, 5, 10, 15] as const,
+    /** The lead preselected when the user's walk to the stop is unknown. */
+    DEFAULT_LEAD_MIN: 5,
+    /** A trip counts as under way (e.g. for where the map opens) from this long before its departure from the user's stop. */
+    UNDERWAY_BEFORE_MS: 10 * MINUTE_MS,
+    /** A withdrawal the server never confirmed is sent again until this old; by then the server has dropped the trip itself. */
+    WITHDRAWAL_KEEP_MS: DAY_MS,
+    /** How often the trip re-checks which reminder leads still fit before the departure. */
+    CLOCK_MS: 30_000,
+};
+
 /** Ride-mode Web Push through the `departs-ride-push` Worker. */
 export const RIDE_PUSH_CONFIG = {
-    /** Tag of the own ride's notifications, pushed (`RIDE_PUSH.TAG` on the server) or shown by the app. */
-    NOTIFICATION_TAG: 'ride-own',
     /** VAPID public key; its private half is that Worker's `VAPID_PRIVATE_KEY` secret. */
     VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };

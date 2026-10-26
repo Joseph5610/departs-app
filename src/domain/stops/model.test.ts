@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ROUTES, stopModel, stopsFile } from '@/test/factories';
-import { boardStopIds, buildStopModel, departuresRequestId, isStationBoard, platformCodes, resolveStop, selectStop } from './model';
+import { boardStopIds, buildStopModel, departureStopIds, departuresRequestId, isStationBoard, platformCodes, resolveStop, selectStop } from './model';
 
 /** Anděl as PID publishes it: a tram platform, a metro platform merged from two ids, an entrance. */
 const andel = () => stopModel([{
@@ -68,6 +68,20 @@ describe('departuresRequestId', () => {
         expect(departuresRequestId(resolveStop(andel(), 'U1040-1')!)).toBe('U1040-1:U1040Z1P,U1040Z101P,U1040Z102P');
         expect(departuresRequestId(resolveStop(andel(), 'U1040Z101P')!)).toBe('U1040-1:U1040Z101P,U1040Z102P');
         expect(departuresRequestId(resolveStop(andel(), 'U1040Z1P,U1040Z101P')!)).toBe('U1040-1:U1040Z1P,U1040Z101P,U1040Z102P');
+    });
+});
+
+describe('departureStopIds', () => {
+    // A board's departures carry the request id they were asked under, not a plain stop id.
+    it('reads the platforms out of a request id, aliases included', () => {
+        expect([...departureStopIds(andel(), 'U1040-1:U1040Z101P,U1040Z102P')]).toEqual(['U1040Z101P', 'U1040Z102P']);
+        expect([...departureStopIds(andel(), 'U1040Z1P')]).toEqual(['U1040Z1P']);
+        expect([...departureStopIds(null, 'X1')]).toEqual(['X1']);
+    });
+
+    // A station with no platforms is requested as `station:`: the station is the stop.
+    it('reads a request id naming no platforms as its station', () => {
+        expect([...departureStopIds(null, 'X1:')]).toEqual(['X1']);
     });
 });
 

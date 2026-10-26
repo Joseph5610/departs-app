@@ -2,6 +2,7 @@ import type React from 'react';
 import { useRef } from 'react';
 import { DEPARTURES_CONFIG } from '@/config/constants';
 import type { Departure, DepartureClickHandler } from '@/types';
+import { useSelectionStore } from '@/state/selectionStore';
 
 /**
  * Click handlers that fire `onTap` only for a tap, not for the release of a drag that started on the element
@@ -25,8 +26,12 @@ const useTapClick = (onTap: () => void) => {
     };
 };
 
-/** Tap handlers that open `dep`'s trip, for any element showing a departure. */
-export const useDepartureTap = (dep: Departure, onDepartureClick: DepartureClickHandler) =>
-    useTapClick(() => {
-        if (dep.tripId) onDepartureClick(dep.tripId, dep.vehicleId, dep);
+/** Tap handlers that open `dep`'s trip, for any element showing a departure; the trip learns the stop it was opened from. */
+export const useDepartureTap = (dep: Departure, onDepartureClick: DepartureClickHandler) => {
+    const { setBoardingStop } = useSelectionStore(s => s.actions);
+    return useTapClick(() => {
+        if (!dep.tripId) return;
+        setBoardingStop(dep.tripId, dep.platformStopId ?? dep.stopId ?? null);
+        onDepartureClick(dep.tripId, dep.vehicleId, dep);
     });
+};

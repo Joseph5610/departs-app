@@ -51,7 +51,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
     const { share } = useShare();
     const shareTrip = useShareTrip();
     const queryClient = useQueryClient();
-    const ride = useRideStore(s => s.ride);
+    const trips = useRideStore(s => s.trips);
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();
     const { setIsFeedbackOpen } = useUiStore(s => s.actions);
@@ -70,7 +70,9 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
 
     const handleShare = useCallback(() => {
         if (tripId) {
-            const exit = ride?.tripId === tripId
+            // A trip ridden to its end has no exit of the user's to share.
+            const ride = trips.find(trip => trip.tripId === tripId && !trip.toEnd);
+            const exit = ride
                 ? exitArrival(selectedVehicle?.stop_times?.features ?? [], ride.exitSequence, selectedVehicle?.delay)
                 : null;
             shareTrip({
@@ -96,7 +98,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                 stopId
             });
         }
-    }, [share, shareTrip, t, tripId, vehicleId, routeName, stopId, stopName, selectedVehicle, ride, queryClient, boardCity, departuresId]);
+    }, [share, shareTrip, t, tripId, vehicleId, routeName, stopId, stopName, selectedVehicle, trips, queryClient, boardCity, departuresId]);
 
     if (!tripId && !stopId) return null;
 

@@ -54,6 +54,7 @@ const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default:
 const SettingsCardContent = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsContent })));
 const CityPickerCard = lazy(() => import('./CityPickerCard').then(m => ({ default: m.CityPickerCard })));
 const AlertsCardContent = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsContent })));
+const MyTripSheet = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripSheet })));
 const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
@@ -90,6 +91,7 @@ const MapInner = () => {
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const isFeedbackOpen = useUiStore(s => s.isFeedbackOpen);
     const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
+    const isMyTripOpen = useUiStore(s => !!s.myTripTarget);
     const isCityPickerOpen = useUiStore(s => s.isCityPickerOpen);
     const { setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen } = useUiStore(s => s.actions);
     const { resolvedTheme } = useTheme();
@@ -323,6 +325,9 @@ const MapInner = () => {
             </MountWhenOpened>
             <MountWhenOpened when={isMcpModalOpen}>
                 <McpModal />
+            </MountWhenOpened>
+            <MountWhenOpened when={isMyTripOpen}>
+                <MyTripSheet />
             </MountWhenOpened>
             <DetailPanel
                 isOpen={!!sheetCard || isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}

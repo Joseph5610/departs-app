@@ -1,4 +1,5 @@
-const DAY_S = 86_400;
+/** Seconds in a day. */
+export const DAY_S = 86_400;
 const HALF_DAY_S = DAY_S / 2;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -38,6 +39,10 @@ export const secondsOfDayIn = (timeZone: string, ms: number): number => {
     }
     return timeToSeconds(format.format(ms));
 };
+
+/** The zone's offset from UTC at `ms`, in seconds (e.g. 7200 in Prague's summer). */
+export const utcOffsetSeconds = (timeZone: string, ms: number): number =>
+    wrapDaySeconds(secondsOfDayIn(timeZone, ms) - (Math.floor(ms / 1000) % 86_400));
 
 const weekdayFormats = new Map<string, Intl.DateTimeFormat>();
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

@@ -1,64 +1,94 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Ride } from '@/types';
-import { followKey } from '@/domain/rides';
+import type { MyTrip, Ride } from '@/types';
+import { followKey, tripPushKey } from '@/domain/rides';
+import { MY_TRIP_CONFIG } from '@/config/constants';
 
 
 interface RideState {
-    ride: Ride | null;
-    followed: Ride | null;
+    /** The user's trips (My trip), at most `MY_TRIP_CONFIG.MAX_TRIPS`, one per trip. */
+    trips: MyTrip[];
+    /** Someone else's trip, opened from a shared link: read-only, with their boarding stop and/or exit. */
+    followed: MyTrip | null;
     /** The shared ride (`tripId:exitSequence`) the user stopped following, so its link doesn't follow it again. */
     unfollowedKey: string | null;
+    /** Trips the server was asked to stop pushing without confirming it (e.g. ended offline): asked again once back online. */
+    withdrawals: { city: string; tripId: string; at: number }[];
 }
 
 interface RideActions {
-    startRide: (ride: Omit<Ride, 'startedAt'>) => void;
-    endRide: () => void;
-    /** Marks the ride with this exit as pushed by the server; ignored once another ride replaced it. */
-    markRidePushed: (tripId: string, exitSequence: number) => void;
-    follow: (ride: Omit<Ride, 'startedAt'>) => void;
+    /** Adds or replaces the user's trip on that trip; false when the limit is reached by other trips. */
+    saveTrip: (trip: Omit<MyTrip, 'startedAt'>) => boolean;
+    endTrip: (tripId: string) => void;
+    /** Marks a trip as pushed by the server; ignored once a save changed what it asks to push (`pushKey`). */
+    markTripPushed: (tripId: string, pushKey: string) => void;
+    follow: (trip: Omit<MyTrip, 'startedAt'>) => void;
     /** Stops following; `remember` keeps the link from following the same ride again. */
     unfollow: (remember: boolean) => void;
+    queueWithdrawal: (trip: Pick<MyTrip, 'city' | 'tripId'>) => void;
+    clearWithdrawal: (tripId: string) => void;
 }
 
 export interface RideStore extends RideState {
     actions: RideActions;
 }
 
+const MAX_TRIPS = MY_TRIP_CONFIG.MAX_TRIPS;
 
-/** The user's ride and one followed ride; persisted so a reload or a PWA relaunch keeps them. */
+/** The user's trips and one followed ride; persisted so a reload or a PWA relaunch keeps them. */
 export const useRideStore = create<RideStore>()(
     persist(
-        (set) => ({
-            ride: null,
+        (set, get) => ({
+            trips: [],
             followed: null,
             unfollowedKey: null,
+            withdrawals: [],
             actions: {
-                startRide: (ride) => set({ ride: { ...ride, startedAt: Date.now() } }),
-                endRide: () => set({ ride: null }),
-                markRidePushed: (tripId, exitSequence) => set((state) => (
-                    state.ride?.tripId === tripId && state.ride.exitSequence === exitSequence ? { ride: { ...state.ride, pushed: true } } : state
-                )),
-                follow: (ride) => set({ followed: { ...ride, startedAt: Date.now() }, unfollowedKey: null }),
+                saveTrip: (trip) => {
+                    const others = get().trips.filter(t => t.tripId !== trip.tripId);
+                    if (others.length >= MAX_TRIPS) return false;
+                    const existing = get().trips.find(t => t.tripId === trip.tripId);
+                    // Taking the trip again cancels a withdrawal still owed, which would remove the new registration.
+                    set(state => ({
+                        trips: [...others, { ...trip, startedAt: existing?.startedAt ?? Date.now() }],
+                        withdrawals: state.withdrawals.filter(w => w.tripId !== trip.tripId),
+                    }));
+                    return true;
+                },
+                endTrip: (tripId) => set((state) => ({ trips: state.trips.filter(t => t.tripId !== tripId) })),
+                markTripPushed: (tripId, pushKey) => set((state) => ({
+                    trips: state.trips.map(t => (t.tripId === tripId && tripPushKey(t) === pushKey ? { ...t, pushed: true } : t)),
+                })),
+                follow: (trip) => set({ followed: { ...trip, startedAt: Date.now() }, unfollowedKey: null }),
                 unfollow: (remember) => set((state) => ({
                     followed: null,
                     unfollowedKey: remember && state.followed ? followKey(state.followed) : state.unfollowedKey,
                 })),
+                queueWithdrawal: ({ city, tripId }) => set((state) => ({
+                    withdrawals: [...state.withdrawals.filter(w => w.tripId !== tripId), { city, tripId, at: Date.now() }],
+                })),
+                clearWithdrawal: (tripId) => set((state) => ({ withdrawals: state.withdrawals.filter(w => w.tripId !== tripId) })),
             },
         }),
         {
             name: 'departs-ride',
             storage: createJSONStorage(() => localStorage),
-            version: 2,
-            migrate: (persisted) => {
-                const old = (persisted as { ride?: (Ride & { watching?: boolean }) | null } | null)?.ride ?? null;
-                if (!old) return { ride: null, followed: null, unfollowedKey: null };
-                const { watching, ...ride } = old;
-                return watching
-                    ? { ride: null, followed: ride, unfollowedKey: null }
-                    : { ride, followed: null, unfollowedKey: null };
+            version: 4,
+            migrate: (persisted, version) => {
+                const old = persisted as { ride?: (Ride & { watching?: boolean }) | null; trips?: MyTrip[]; followed?: Ride | MyTrip | null; unfollowedKey?: string | null } | null;
+                const asTrip = (ride: Ride): MyTrip => ({ board: null, toEnd: false, ...ride });
+                if (version < 2 && old?.ride?.watching) {
+                    const { watching: _watching, ...ride } = old.ride;
+                    return { trips: [], followed: asTrip(ride), unfollowedKey: null };
+                }
+                const ride = old?.ride ?? null;
+                return {
+                    trips: old?.trips ?? (ride ? [asTrip(ride)] : []),
+                    followed: old?.followed ? asTrip(old.followed) : null,
+                    unfollowedKey: old?.unfollowedKey ?? null,
+                };
             },
-            partialize: (state) => ({ ride: state.ride, followed: state.followed, unfollowedKey: state.unfollowedKey }),
+            partialize: (state) => ({ trips: state.trips, followed: state.followed, unfollowedKey: state.unfollowedKey, withdrawals: state.withdrawals }),
         }
     )
 );

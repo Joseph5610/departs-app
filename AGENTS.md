@@ -22,7 +22,7 @@ Non-negotiable. Any violation is a system-level bug.
 | `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer ID, MapRef and camera actions           |
 | `PWAStore`         | `pwaStore.ts`         | PWA installation and update status                                    |
 | `UiStore`          | `uiStore.ts`          | Which app-level modals are open (not persisted)                       |
-| `RideStore`        | `rideStore.ts`        | Active ride: trip, vehicle and exit stop sequence (Persisted)         |
+| `RideStore`        | `rideStore.ts`        | My trips (boarding stop, exit, alert lead) and a followed ride (Persisted) |
 | `EnrichmentStore`  | `enrichmentStore.ts`  | WebSocket push patches by trip/vehicle ID, pruned after silence TTL   |
 
 ### Hook Data Flow (Strict Hierarchy)
@@ -35,6 +35,7 @@ Non-negotiable. Any violation is a system-level bug.
 ### Source Layout
 
 - **`src/domain/<area>/`**: pure transit logic, one folder per area (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`) plus `domain/time.ts` and `domain/delay.ts`. Functions over immutable data, no classes, no React, no stores. Code outside a folder imports only its `index.ts` (`@/domain/vehicles`); files inside an area import each other directly.
+- **`shared/`**: transit rules both the app and `functions/` apply (e.g. `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and pushed alerts agree. Plain TypeScript importing only its own files; the app imports it as `@shared/…`, `functions/` by relative path.
 - **`src/lib/`**: app infrastructure only (API client, memoization, history and URLs, device cache, geometry, search helpers, `map/` icons and initial view). Transit rules NEVER go here.
 - **No `utils/` folder.** A new helper goes into the `domain/` area it belongs to, or `lib/` if it is infrastructure.
 - `domain/` MUST NOT import hooks, stores or components; hooks and components import `domain/`.

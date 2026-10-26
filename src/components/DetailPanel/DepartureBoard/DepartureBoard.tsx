@@ -58,9 +58,11 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
         () => new Map(sections?.map(section => [section.key, sectionStopId(platforms, section, boardStopId)])),
         [sections, platforms, boardStopId]);
     const shownGroups = useMemo(() => sections?.flatMap(section => section.groups) ?? groupedDepartures, [sections, groupedDepartures]);
-    const rideTripId = useRideStore(s => s.ride?.tripId ?? null);
+    const trips = useRideStore(s => s.trips);
     const followedTripId = useRideStore(s => s.followed?.tripId ?? null);
-    const marked = useMemo(() => new Set([highlightedTripId, rideTripId, followedTripId].filter((id): id is string => !!id)), [highlightedTripId, rideTripId, followedTripId]);
+    const marked = useMemo(
+        () => new Set([highlightedTripId, followedTripId, ...trips.map(trip => trip.tripId)].filter((id): id is string => !!id)),
+        [highlightedTripId, followedTripId, trips]);
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
     /** Groups whose viewed or ridden trip sits below the collapsed rows open once, then follow the user's toggle. */
     const autoExpanded = useRef(new Set<string>());

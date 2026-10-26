@@ -12,6 +12,60 @@ export interface Ride {
     pushed?: boolean;
 }
 
+/** Where the user boards their trip, and how early the alert before it leaves comes (null: no alert). */
+export interface TripBoarding {
+    sequence: number;
+    /** The board id the trip was taken from, so the sheet reopens for that stop. */
+    stopId: string | null;
+    stopName: string;
+    /** Timetable departure from the stop, epoch ms. */
+    scheduledMs: number;
+    leadMin: number | null;
+}
+
+/**
+ * A trip the user takes: from a stop (`board`) and/or to an exit. Without a picked exit (`toEnd`) it is ridden to its
+ * last stop, which `exitSequence` then names, and that end gets no alert. At least one of `board` and an exit is set.
+ */
+export interface MyTrip extends Ride {
+    /** Null only for a trip the user is already aboard, which therefore runs. */
+    board: TripBoarding | null;
+    toEnd: boolean;
+}
+
+/** The trip the My trip sheet is open for, and the stop it was opened at (a board id or request id). */
+export interface MyTripTarget {
+    city: string;
+    tripId: string;
+    vehicleId: string | null;
+    /** Null from the map or a trip: no boarding stop given, so the user may already be aboard. */
+    stopId: string | null;
+    /** The section the sheet opens on. */
+    section?: 'board' | 'exit';
+}
+
+/** A My trip before its vehicle reaches the user's stop: the countdown to boarding. */
+export interface BoardingStatus {
+    phase: 'boarding';
+    trip: MyTrip;
+    stopName: string;
+    departureTime: string;
+    minutes: number;
+    /** Inside the alert's lead time. */
+    isSoon: boolean;
+    routeName: string;
+    routeColor: string;
+    headsign: string;
+    /** The exit's expected arrival, for sharing the whole trip. */
+    arrivalTime: string | null;
+}
+
+/** A My trip's state: boarding, or under way (the ride's own status). */
+export type MyTripStatus = BoardingStatus | { phase: 'riding'; trip: MyTrip; ride: RideStatus };
+
+/** How a timeline stop belongs to a journey: the user's exit, their boarding stop ahead, or a shared trip's exit. */
+export type JourneyMark = 'own' | 'board' | 'shared' | null;
+
 /** `own`: the user's ride; `followed`: someone else's ride opened from a shared link. */
 export type RideKind = 'own' | 'followed';
 

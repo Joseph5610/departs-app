@@ -8,6 +8,8 @@ interface SelectionState {
     /** The trip the opened stop was reached from, highlighted on its board. */
     highlightedTripId: string | null;
     pendingTripId: string | null;
+    /** The stop a trip was opened from, from a departure board: where a departure reminder is offered. */
+    boardingStop: { tripId: string; stopId: string } | null;
 }
 
 interface SelectionActions {
@@ -16,6 +18,7 @@ interface SelectionActions {
     clearLineFilter: () => void;
     presetLineFilter: (line: string) => void;
     presetTripHighlight: (tripId: string) => void;
+    setBoardingStop: (tripId: string, stopId: string | null) => void;
     /** Applies the presets for a newly opened stop, or clears the filter and highlight when none is pending. */
     resetStopSelection: () => void;
 }
@@ -30,6 +33,7 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
     pendingLine: null,
     highlightedTripId: null,
     pendingTripId: null,
+    boardingStop: null,
 
     actions: {
         setIsFollowing: (isFollowing) => set({ isFollowing }),
@@ -44,6 +48,8 @@ export const useSelectionStore = create<SelectionStore>((set) => ({
         presetLineFilter: (line) => set({ pendingLine: line }),
 
         presetTripHighlight: (tripId) => set({ pendingTripId: tripId }),
+
+        setBoardingStop: (tripId, stopId) => set({ boardingStop: stopId ? { tripId, stopId } : null }),
 
         resetStopSelection: () => set((state) => ({
             selectedLine: state.pendingLine,
