@@ -97,6 +97,16 @@ describe.each(SCENARIOS)('a trip across $name', scenario => {
         expect(states.some(({ status }) => status?.phase === 'riding' && status.ride.phase === 'next')).toBe(true);
     });
 
+    // A trip saved hours ahead must count down to the right departure, not one 12 h off.
+    it('counts down to boarding from a trip saved eleven hours ahead', () => {
+        const early = at(1) - 11 * 60 * MIN;
+        const trip = savedTrip(scenario, early, true);
+        expect(trip.board?.scheduledMs).toBe(at(BOARD));
+        for (const { now, status } of sweep(scenario, trip, early, at(BOARD) - MIN)) {
+            expect(status, new Date(now).toISOString()).toMatchObject({ phase: 'boarding', departureTime: scenario.stops[BOARD - 1].local.slice(0, 5) });
+        }
+    });
+
     it('rides a trip taken already aboard to its exit', () => {
         const boardedAt = at(1) + 2 * MIN;
         const states = sweep(scenario, savedTrip(scenario, boardedAt, false), boardedAt, at(EXIT) - 15_000);

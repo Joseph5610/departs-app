@@ -104,19 +104,19 @@ describe('trip watch alarms', () => {
     });
 
     // I4: a subscription the push service says is gone gets nothing more, and doesn't stop the others.
-    it('drops a rider whose subscription is gone', async () => {
+    it.each([404, 410])('drops a rider whose subscription is gone (%i)', async gone => {
         await add(storage, 'a', NOW);
         await add(storage, 'b', NOW);
-        const { pushed } = await run(storage, {}, { status: p => (p.device === 'a' ? 410 : 201) });
+        const { pushed } = await run(storage, {}, { status: p => (p.device === 'a' ? gone : 201) });
         expect(titles(pushed, 'a')).toEqual(['soon']);
         expect(titles(pushed, 'b')).toEqual(['soon', 'next', 'arrived']);
     });
 
     // I3: a push the service didn't take is sent again, and the rider doesn't move past it meanwhile.
-    it('retries an undelivered push until the service takes it', async () => {
+    it.each([429, 503, 0])('retries a push the service didn\'t take (%i) until it does', async refused => {
         await add(storage, 'a', NOW);
         let refusals = 2;
-        const { pushed, delivered } = await run(storage, {}, { status: p => (p.title === 'soon' && refusals-- > 0 ? (refusals ? 503 : 0) : 201) });
+        const { pushed, delivered } = await run(storage, {}, { status: p => (p.title === 'soon' && refusals-- > 0 ? refused : 201) });
         expect(titles(pushed)).toEqual(['soon', 'soon', 'soon', 'next', 'arrived']);
         expect(titles(delivered)).toEqual(['soon', 'next', 'arrived']);
         expect(pushed[1].at - pushed[0].at).toBeCloseTo(RIDE_PUSH.RETRY_INTERVAL_S / 60);
