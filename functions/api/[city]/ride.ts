@@ -2,7 +2,7 @@ import { createErrorResponse, createSuccessResponse } from "../../_core/apiUtils
 import { ridePushRequestSchema } from "../../_core/rideSchemas";
 import type { Env } from "../../_core/types";
 import { getCity } from "../../_cities";
-import type { RideWatchRequest } from "../../_workers/RideWatch";
+import type { RideWatchRequest } from "../../_domain/rides/watchRun";
 import { RIDE_PUSH } from "../../_core/config";
 
 const parseJson = (raw: string): unknown => {
