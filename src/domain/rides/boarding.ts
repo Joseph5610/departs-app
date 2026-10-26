@@ -1,13 +1,16 @@
+import { TRIP_RULES } from '@shared/rides';
 import { RIDE_PROTOCOL } from '@shared/rides';
 import { MY_TRIP_CONFIG, WALKING } from '@/config/constants';
 import type { StopDistanceInfo } from '@/domain/stops';
-import { addSecondsToTime, calculateTimeDifferenceSecs, formatClock, secondsOfDayIn, timeToSeconds, utcOffsetSeconds, wrapDaySeconds } from '@/domain/time';
+import { addSecondsToTime, calculateTimeDifferenceSecs, DAY_S, formatClock, secondsOfDayIn, timeToSeconds, utcOffsetSeconds } from '@/domain/time';
 import type { StopTimeFeature, TripBoarding } from '@/types';
 
-/** The epoch ms of a timetable time nearest to `now` (within 12 h either way), read in the city's zone. */
+/** The epoch ms of a timetable time, read in the city's zone: from `TIMETABLE_BEHIND_MS` behind now to a day less that ahead. */
 export const timetableInstantMs = (time: string, now: number, timeZone: string): number => {
     const nowS = Math.floor(now / 1000);
-    const sameOffset = (nowS + wrapDaySeconds(timeToSeconds(time) - secondsOfDayIn(timeZone, now))) * 1000;
+    const behindS = TRIP_RULES.TIMETABLE_BEHIND_MS / 1000;
+    const aheadS = (((timeToSeconds(time) - secondsOfDayIn(timeZone, now) + behindS) % DAY_S) + DAY_S) % DAY_S - behindS;
+    const sameOffset = (nowS + aheadS) * 1000;
     // Across a DST switch the clock jumps an hour against elapsed time.
     return sameOffset - (utcOffsetSeconds(timeZone, sameOffset) - utcOffsetSeconds(timeZone, now)) * 1000;
 };

@@ -157,8 +157,6 @@ export const RIDE_PUSH = {
     MIN_CHECK_INTERVAL_MS: 30_000,
     /** A boarding alert due within this is sent now rather than after one more check. */
     SEND_WINDOW_MS: 30_000,
-    /** How far ahead a boarding stop may be; a timetable time is compared within one day either way. */
-    MAX_AHEAD_MS: 12 * 3600_000,
     /** VAPID `sub` claim; Apple rejects pushes without one. */
     VAPID_SUBJECT: 'mailto:info@departs.app',
     /** How long a VAPID token stays valid; push services refuse more than 24 h. */

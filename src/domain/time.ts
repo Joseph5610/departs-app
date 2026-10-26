@@ -1,4 +1,5 @@
-const DAY_S = 86_400;
+/** Seconds in a day. */
+export const DAY_S = 86_400;
 const HALF_DAY_S = DAY_S / 2;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');

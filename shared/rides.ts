@@ -6,6 +6,10 @@
 export const TRIP_RULES = {
     /** Without a live position, the rider counts as boarded this long after the expected departure from their stop. */
     BOARD_GRACE_MS: 2 * 60_000,
+    /** A boarding stop's timetable time is read as at most this long behind now, else as up to `TIMETABLE_AHEAD_MS` ahead. */
+    TIMETABLE_BEHIND_MS: 3 * 3600_000,
+    /** How far ahead a boarding stop may be: together with `TIMETABLE_BEHIND_MS`, one day. */
+    TIMETABLE_AHEAD_MS: 21 * 3600_000,
 };
 
 /** The push protocol between the app and the server's ride watch. */

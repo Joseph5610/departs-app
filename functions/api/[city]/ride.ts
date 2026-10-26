@@ -4,6 +4,7 @@ import type { Env } from "../../_core/types";
 import { getCity } from "../../_cities";
 import type { RideWatchRequest } from "../../_domain/rides/watchRun";
 import { RIDE_PUSH } from "../../_core/config";
+import { TRIP_RULES } from "../../../shared/rides";
 
 const parseJson = (raw: string): unknown => {
     try {
@@ -30,7 +31,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }
         const board = body.board ?? null;
         // Nothing to alert, or a boarding stop not within the hours ahead the timetable comparison covers.
         if (body.exitSequence === null && board?.leadMin == null) return createErrorResponse('Nothing to alert.', 400);
-        if (board && (board.scheduledMs < Date.now() - RIDE_PUSH.MAX_AGE_MS || board.scheduledMs > Date.now() + RIDE_PUSH.MAX_AHEAD_MS)) {
+        if (board && (board.scheduledMs < Date.now() - RIDE_PUSH.MAX_AGE_MS || board.scheduledMs > Date.now() + TRIP_RULES.TIMETABLE_AHEAD_MS)) {
             return createErrorResponse('Departure is out of range.', 400);
         }
     }

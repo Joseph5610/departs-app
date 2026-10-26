@@ -14,6 +14,13 @@ describe('timetableInstantMs', () => {
         expect(timetableInstantMs('12:20:00', NOW, TZ)).toBe(NOW + 20 * MIN);
     });
 
+    // I5: a boarding stop can be far ahead (tomorrow's first bus), but hardly hours behind.
+    it('reads a time up to three hours behind as today, and one further behind as tomorrow', () => {
+        expect(timetableInstantMs('09:30:00', NOW, TZ)).toBe(NOW - 150 * MIN);
+        expect(timetableInstantMs('08:30:00', NOW, TZ)).toBe(NOW + (20 * 60 + 30) * MIN);
+        expect(timetableInstantMs('05:10:00', NOW + 4.5 * 60 * MIN, TZ)).toBe(NOW + (17 * 60 + 10) * MIN);
+    });
+
     // A service-day time past 24:00 is the same night's early morning.
     it('places times past midnight on the right day', () => {
         const lateEvening = Date.UTC(2026, 9, 20, 21, 50, 0);
