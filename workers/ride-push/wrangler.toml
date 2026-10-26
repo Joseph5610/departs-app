@@ -1,4 +1,5 @@
 name = "departs-ride-push"
+# Workers Builds deploys this from master when a build watch path changes (docs/ride-push-deployment.md, step 5).
 main = "../../functions/_workers/ridePush.ts"
 compatibility_date = "2026-03-17"
 # Reached only through the Pages `RIDE_WATCH` binding; no public URL.
