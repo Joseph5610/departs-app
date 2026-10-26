@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
+import { isBoardingAlertDue, type BoardingSeen } from '@/domain/rides';
 import type { MyTripStatus } from '@/types';
 import { alertRider } from './useRideAlerts';
 
@@ -16,12 +17,12 @@ export const useBoardingAlert = (status: MyTripStatus | null) => {
     const title = boarding ? t('myTrip.boardPushTitle', { line: boarding.routeName, stop: boarding.stopName }) : '';
     const body = boarding ? t('myTrip.boardPushBody', { min: boarding.minutes }) : '';
     const pushed = boarding?.trip.pushed ?? false;
-    const seen = useRef<{ tripId: string | null; isSoon: boolean } | null>(null);
+    const seen = useRef<BoardingSeen | null>(null);
 
     useEffect(() => {
         const previous = seen.current;
         seen.current = { tripId, isSoon };
-        if (!tripId || !isSoon || previous?.tripId !== tripId || previous.isSoon) return;
+        if (!tripId || !isBoardingAlertDue(previous, seen.current)) return;
         void alertRider(title, body, tripNotificationTag(RIDE_PROTOCOL.BOARD_TAG, tripId), pushed);
     }, [tripId, isSoon, title, body, pushed]);
 };

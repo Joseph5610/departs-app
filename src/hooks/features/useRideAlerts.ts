@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { RIDE_CONFIG } from '@/config/constants';
 import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
 import { SITE } from '@/config/site';
-import type { RideKind, RidePhase, RideStatus } from '@/types';
-import { rideAlertFor } from '@/domain/rides';
+import type { RideKind, RideStatus } from '@/types';
+import { NO_RIDE_ALERTS, rideAlertStep, type RideAlertState } from '@/domain/rides';
 import { useWakeLock } from './useWakeLock';
 
 /**
@@ -43,9 +43,7 @@ export const useRideAlerts = (status: RideStatus | null, kind: RideKind, { isOve
 }) => {
     const { t } = useTranslation();
     const watching = kind === 'followed';
-    const lastPhase = useRef<RidePhase | null>(null);
-    /** Phases already alerted for the current ride, so a phase regained after a failed refresh doesn't alert again. */
-    const alerted = useRef<{ ride: number | null; phases: Set<RidePhase> }>({ ride: null, phases: new Set() });
+    const alerts = useRef<RideAlertState>(NO_RIDE_ALERTS);
 
     const phase = status?.phase ?? null;
     const exitStopName = status?.exitStopName ?? '';
@@ -60,13 +58,9 @@ export const useRideAlerts = (status: RideStatus | null, kind: RideKind, { isOve
     }, [isOver, end]);
 
     useEffect(() => {
-        if (phase === 'loading' || phase === 'unavailable') return;
-        if (alerted.current.ride !== rideKey) alerted.current = { ride: rideKey, phases: new Set() };
-        const previous = lastPhase.current ?? (afterBoarding ? 'waiting' : null);
-        lastPhase.current = phase;
-        const alert = rideAlertFor(previous, phase, alerted.current.phases);
-        if (!alert || silent) return;
-        alerted.current.phases.add(alert);
+        const { state, alert } = rideAlertStep(alerts.current, { ride: rideKey, phase, afterBoarding, silent });
+        alerts.current = state;
+        if (!alert) return;
         const tag = watching ? 'ride-followed' : tripNotificationTag(RIDE_PROTOCOL.EXIT_TAG, tripId);
         if (alert === 'next') void alertRider(t(watching ? 'share.watchNext' : 'ride.nextStop'), exitStopName, tag, pushed);
         else void alertRider(t(watching ? 'share.watchArrived' : 'ride.arrived', { stop: exitStopName }), SITE.NAME, tag, pushed);
